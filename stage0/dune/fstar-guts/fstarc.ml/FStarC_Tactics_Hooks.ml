@@ -56,7 +56,7 @@ let comb2 (f : ('u___a -> ('u___b -> 'u___c))) (x : ('u___a) tres_m) (y : ('u___
       let tmp1 = (tmp, gs) in
       (Simplified ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | ((Simplified (t1, gs1)), (Simplified (t2, gs2))) -> (let tmp = (f t1 t2) in
-      let tmp1 = (tmp, (FStarC_List.op_At gs1 gs2)) in
+      let tmp1 = (tmp, (BatList.append gs1 gs2)) in
       (Simplified ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | tmp -> (let tmp1 = (explode x) in
       (match tmp1 with
@@ -64,7 +64,7 @@ let comb2 (f : ('u___a -> ('u___b -> 'u___c))) (x : ('u___a) tres_m) (y : ('u___
           (match tmp2 with
             | (n2, p2, gs2) -> (let tmp3 = (f n1 n2) in
               let tmp4 = (f p1 p2) in
-              let tmp5 = (tmp3, tmp4, (FStarC_List.op_At gs1 gs2)) in
+              let tmp5 = (tmp3, tmp4, (BatList.append gs1 gs2)) in
               (Dual ((match tmp5 with (custard_tup, _, _) -> custard_tup), (match tmp5 with (_, custard_tup, _) -> custard_tup), (match tmp5 with (_, _, custard_tup) -> custard_tup))))
           ))
       ))
@@ -81,7 +81,7 @@ let rec comb_list__aux (rs : (('u___a) tres_m) list) (acc : (('u___a) list) tres
   )
 
 let comb_list (rs : (('u___a) tres_m) list) : (('u___a) list) tres_m =
-  (comb_list__aux (FStarC_List.rev rs) (tpure []))
+  (comb_list__aux (BatList.rev rs) (tpure []))
 
 let emit (gs : (FStarC_Tactics_Types.goal) list) (y : ('u___a) tres_m) : ('u___a) tres_m =
   (comb2 (fun tmp x -> x) (Simplified ((), gs)) y)
@@ -118,12 +118,12 @@ let rec traverse (f : (pol -> (FStarC_TypeChecker_Env.env -> ((FStarC_Syntax_Syn
                       | (qn, qp, gs2) -> (let tmp13 = (FStarC_Syntax_Util.mk_imp pn qp) in
                         let tmp14 = (FStarC_Syntax_Util.mk_imp qn pp) in
                         let t1 = (FStarC_Syntax_Util.mk_conj tmp13 tmp14) in
-                        (Simplified ((t1).FStarC_Syntax_Syntax.n, (FStarC_List.op_At gs1 gs2))))
+                        (Simplified ((t1).FStarC_Syntax_Syntax.n, (BatList.append gs1 gs2))))
                     ))
                 ))
             ))
           | (hd, args) -> (let r0 = (traverse f pol e hd) in
-            let r1 = (FStarC_List.fold_right (fun tmp4 r -> (match tmp4 with
+            let r1 = (BatList.fold_right (fun tmp4 r -> (match tmp4 with
                 | (a, q) -> (let r' = (traverse f pol e a) in
                   (comb2 (fun a1 args1 -> ((a1, q) :: args1)) r' r))
               )) args (tpure [])) in
@@ -133,7 +133,7 @@ let rec traverse (f : (pol -> (FStarC_TypeChecker_Env.env -> ((FStarC_Syntax_Syn
       | (FStarC_Syntax_Syntax.Tm_abs (tmp2)) -> (let tmp3 = (FStarC_Syntax_Util.abs_formals t) in
         (match tmp3 with
           | (bs, topen, k) -> (let e' = (FStarC_TypeChecker_Env.push_binders e bs) in
-            let r0 = (FStarC_List.map (fun b -> (let r = (traverse f (flip pol) e ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+            let r0 = (BatList.map (fun b -> (let r = (traverse f (flip pol) e ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
               (comb1 (fun s' -> { FStarC_Syntax_Syntax.binder_bv = (let tmp4 = (b).FStarC_Syntax_Syntax.binder_bv in
                 { FStarC_Syntax_Syntax.ppname = (tmp4).FStarC_Syntax_Syntax.ppname;
                   index = (tmp4).FStarC_Syntax_Syntax.index;
@@ -153,7 +153,7 @@ let rec traverse (f : (pol -> (FStarC_TypeChecker_Env.env -> ((FStarC_Syntax_Syn
           asc2 = u__3;
           eff_opt = ef } : FStarC_Syntax_Syntax.term'__Tm_ascribed__payload)))) tmp2))
       | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = sc; ret_opt = asc_opt; brs = brs; rc_opt = lopt; _ })) -> (let tmp2 = (traverse f pol e sc) in
-        let tmp3 = (FStarC_List.map (fun br -> (let tmp3 = (FStarC_Syntax_Subst.open_branch br) in
+        let tmp3 = (BatList.map (fun br -> (let tmp3 = (FStarC_Syntax_Subst.open_branch br) in
           (match tmp3 with
             | (pat, w, exp) -> (let bvs = (FStarC_Syntax_Syntax.pat_bvs pat) in
               let e1 = (FStarC_TypeChecker_Env.push_bvs e bvs) in
@@ -182,7 +182,7 @@ let rec traverse (f : (pol -> (FStarC_TypeChecker_Env.env -> ((FStarC_Syntax_Syn
       (match tmp2 with
         | (tmp3, p', gs') -> (Dual ({ FStarC_Syntax_Syntax.n = tn;
             pos = (t).FStarC_Syntax_Syntax.pos;
-            hash_code = (t).FStarC_Syntax_Syntax.hash_code }, p', (FStarC_List.op_At gs gs')))
+            hash_code = (t).FStarC_Syntax_Syntax.hash_code }, p', (BatList.append gs gs')))
       ))
   ))
 
@@ -224,17 +224,23 @@ let by_tactic_interp (pol : pol) (e : FStarC_TypeChecker_Env.env) (t : (FStarC_S
         | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((assertion, None) :: [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.spinoff_lid) -> (match pol with
             | StrictlyPositive -> (let tmp4 = (FStarC_Syntax_Util.mk_squash assertion) in
               let tmp5 = (FStarC_Tactics_Types.goal_of_goal_ty e tmp4) in
-              let g = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp5) in
+              let g = (match tmp5 with
+                  | (u__1, u__2) -> u__1
+                ) in
               let g1 = (FStarC_Tactics_Types.set_label "spun-off assertion" g) in
               (Simplified (FStarC_Syntax_Util.t_true, (g1 :: []))))
             | Pos -> (let tmp4 = (FStarC_Syntax_Util.mk_squash assertion) in
               let tmp5 = (FStarC_Tactics_Types.goal_of_goal_ty e tmp4) in
-              let g = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp5) in
+              let g = (match tmp5 with
+                  | (u__1, u__2) -> u__1
+                ) in
               let g1 = (FStarC_Tactics_Types.set_label "spun-off assertion" g) in
               (Simplified (FStarC_Syntax_Util.t_true, (g1 :: []))))
             | Both -> (let tmp4 = (FStarC_Syntax_Util.mk_squash assertion) in
               let tmp5 = (FStarC_Tactics_Types.goal_of_goal_ty e tmp4) in
-              let g = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp5) in
+              let g = (match tmp5 with
+                  | (u__1, u__2) -> u__1
+                ) in
               let g1 = (FStarC_Tactics_Types.set_label "spun-off assertion" g) in
               (Dual (assertion, FStarC_Syntax_Util.t_true, (g1 :: []))))
             | Neg -> (Simplified (assertion, []))
@@ -259,7 +265,7 @@ let getprop (e : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') F
   (let tn = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.HNF :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))) e t) in
   (FStarC_Syntax_Util.un_squash tn))
 
-let preprocess (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (bool * ((FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Options.option_val) FStarC_PSMap.t)) list) =
+let preprocess (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (bool * ((FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (string, FStarC_Options.option_val) FStarC_AVLMap.tree)) list) =
   (FStarC_Errors.with_ctx "While preprocessing VC with a tactic" (fun tmp -> (let tmp1 = (!(dbg_Tac)) in
   (if tmp1 then (let tmp2 = (FStarC_TypeChecker_Env.all_binders env) in
   let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binder tmp2) in
@@ -278,7 +284,7 @@ let preprocess (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Syntax.
       let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binder tmp5) in
       let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t') in
       (FStarC_Format.print2 "Main goal simplified to: %s |- %s\n" tmp6 tmp7)) else ());
-      let s = (FStarC_List.fold_left (fun tmp5 g -> (match tmp5 with
+      let s = (BatList.fold_left (fun tmp5 g -> (match tmp5 with
           | (n, gs1) -> (let tmp6 = (FStarC_Tactics_Types.goal_type g) in
             let tmp7 = (getprop (FStarC_Tactics_Types.goal_env g) tmp6) in
             let phi = (match tmp7 with
@@ -294,14 +300,14 @@ let preprocess (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Syntax.
             let tmp11 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tmp10) in
             (FStarC_Format.print2 "Got goal #%s: %s\n" tmp9 tmp11)) else ());
             let tmp9 = (FStarC_Class_PP.fStarC_Class_PP_pp__int n) in
-            let tmp10 = (FStar_Pprint.op_Hat_Slash_Hat tmp9 (if ((=) (FStarC_Tactics_Types.get_label g) "") then FStar_Pprint.empty else (FStar_Pprint.parens (FStar_Pprint.doc_of_string (FStarC_Tactics_Types.get_label g))))) in
-            let tmp11 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "Could not prove goal #") tmp10) in
+            let tmp10 = (PPrint.(^/^) tmp9 (if ((=) (FStarC_Tactics_Types.get_label g) "") then PPrint.empty else (PPrint.parens (PPrint.string (FStarC_Tactics_Types.get_label g))))) in
+            let tmp11 = (PPrint.(^^) (PPrint.string "Could not prove goal #") tmp10) in
             let label = (tmp11 :: []) in
             let gt' = (FStarC_TypeChecker_Util.label label (FStarC_Tactics_Types.goal_range g) phi) in
             ((Prims.op_Plus n Prims.int_one), (((FStarC_Tactics_Types.goal_env g), gt', (FStarC_Tactics_Types.goal_opts g)) :: gs1)))
         )) initial gs) in
       (match s with
-        | (tmp5, gs1) -> (let gs2 = (FStarC_List.rev gs1) in
+        | (tmp5, gs1) -> (let gs2 = (BatList.rev gs1) in
           let tmp6 = (FStarC_Options.peek ()) in
           let tmp7 = (env, t', tmp6) in
           let tmp8 = (tmp7 :: gs2) in
@@ -328,7 +334,7 @@ let handle_smt_goal (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Sy
           (FStarC_Errors.with_ctx "While handling an SMT goal with a tactic" (fun tmp3 -> (let tmp4 = (FStarC_Syntax_Util.mk_squash goal1) in
           let tmp5 = (run_tactic_on_typ (tau).FStarC_Syntax_Syntax.pos (FStarC_TypeChecker_Env.get_range env) tau env tmp4) in
           (match tmp5 with
-            | (gs, tmp6) -> (FStarC_List.map (fun g -> (let tmp7 = (FStarC_Tactics_Types.goal_type g) in
+            | (gs, tmp6) -> (BatList.map (fun g -> (let tmp7 = (FStarC_Tactics_Types.goal_type g) in
               let tmp8 = (getprop (FStarC_Tactics_Types.goal_env g) tmp7) in
               (match tmp8 with
                 | (Some (vc)) -> (let tmp9 = (!(dbg_Tac)) in
@@ -346,7 +352,7 @@ let synthesize (env : FStarC_TypeChecker_Env.env) (typ : (FStarC_Syntax_Syntax.t
   (FStarC_Errors.with_ctx "While synthesizing term with a tactic" (fun tmp -> (if (env).FStarC_TypeChecker_Env.flychecking then (let tmp1 = (FStarC_TypeChecker_Util.fvar_env env FStarC_Parser_Const.magic_lid) in
   (FStarC_Syntax_Syntax.mk_Tm_app tmp1 ((FStarC_Syntax_Syntax.as_arg FStarC_Syntax_Util.exp_unit) :: []) (typ).FStarC_Syntax_Syntax.pos)) else (let tmp1 = (run_tactic_on_typ (tau).FStarC_Syntax_Syntax.pos rng tau env typ) in
   (match tmp1 with
-    | (gs, w) -> ((FStarC_List.iter (fun g -> (let tmp2 = (FStarC_Tactics_Types.goal_type g) in
+    | (gs, w) -> ((BatList.iter (fun g -> (let tmp2 = (FStarC_Tactics_Types.goal_type g) in
       let tmp3 = (getprop (FStarC_Tactics_Types.goal_env g) tmp2) in
       (match tmp3 with
         | (Some (vc)) -> (let tmp4 = (!(dbg_Tac)) in
@@ -371,10 +377,10 @@ let run_tactic_on_all_implicits (rng_tac : FStarC_Range_Type.range) (rng_goal : 
 let solve_implicits (env : FStarC_TypeChecker_Env.env) (tau : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (imps : (FStarC_TypeChecker_Common.implicit) list) : unit =
   (FStarC_Errors.with_ctx "While solving implicits with a tactic" (fun tmp -> (if (env).FStarC_TypeChecker_Env.flychecking then () else (let gs = (run_tactic_on_all_implicits (tau).FStarC_Syntax_Syntax.pos (FStarC_TypeChecker_Env.get_range env) tau env imps) in
   let tmp1 = (FStarC_Options.profile_enabled None "FStarC.TypeChecker") in
-  (if tmp1 then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length gs)) in
+  (if tmp1 then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) gs)) in
   (FStarC_Format.print1 "solve_implicits produced %s goals\n" tmp2)) else ());
   (FStarC_Options.with_saved_options (fun tmp2 -> ((ignore (FStarC_Options.set_options "--no_tactics"));
-  (FStarC_List.iter (fun g -> ((FStarC_Options.set (FStarC_Tactics_Types.goal_opts g));
+  (BatList.iter (fun g -> ((FStarC_Options.set (FStarC_Tactics_Types.goal_opts g));
   let tmp3 = (FStarC_Tactics_Types.goal_type g) in
   let tmp4 = (getprop (FStarC_Tactics_Types.goal_env g) tmp3) in
   (match tmp4 with
@@ -416,12 +422,12 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
           local_state = (ps).FStarC_Tactics_Types.local_state;
           urgency = (ps).FStarC_Tactics_Types.urgency;
           dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure } in
-      let tmp3 = (if is_typed then (if (Prims.op_Greater (FStarC_List.length lids) Prims.int_one) then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_87 lids) in
+      let tmp3 = (if is_typed then (if (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) lids) Prims.int_one) then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 lids) in
         let tmp4 = (FStarC_Format.fmt1 "Typed splice: unexpected lids length (> 1) (%s)" tmp3) in
         (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp4)) else (let tmp3 = (if (match lids with
             | [] -> true
             | tmp3 -> false
-          ) then (None, None) else (let tmp3 = (FStarC_TypeChecker_Env.try_lookup_val_decl env (FStarC_List.hd lids)) in
+          ) then (None, None) else (let tmp3 = (FStarC_TypeChecker_Env.try_lookup_val_decl env (BatList.hd lids)) in
           (match tmp3 with
             | None -> (None, None)
             | (Some (((uvs, tval), tmp4))) -> (let tmp5 = (FStarC_Syntax_Subst.open_univ_vars uvs tval) in
@@ -493,15 +499,15 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
                         | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp12, ({ FStarC_Syntax_Syntax.lbname = tmp13; lbunivs = lbunivs; lbtyp = tmp14; lbeff = tmp15; lbdef = tmp16; lbattrs = tmp17; lbpos = tmp18; _ } :: [])); lids = tmp19; _ })) -> lbunivs
                         | tmp12 -> []
                       ) in
-                    (if (not (us_equals uv_t1 actual_uv)) then (let tmp12 = (FStarC_Ident.fStarC_Class_Show_show__lident (FStarC_List.hd lids)) in
+                    (if (not (us_equals uv_t1 actual_uv)) then (let tmp12 = (FStarC_Ident.fStarC_Class_Show_show__lident (BatList.hd lids)) in
                     let tmp13 = (FStarC_Ident.fStarC_Class_Show_show__list_ident actual_uv) in
                     let tmp14 = (FStarC_Ident.fStarC_Class_Show_show__list_ident uv_t1) in
                     let tmp15 = (FStarC_Format.fmt3 "Typed splice: val declaration for %s is universe polymorphic in %s, expected %s" tmp12 tmp13 tmp14) in
                     (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp15)) else ()))
                   | tmp5 -> ()
                 );
-                let sig_blobs = (FStarC_List.op_At sig_blobs_before (sig_blob :: sig_blobs_after)) in
-                let sigelts = (FStarC_List.map (fun tmp5 -> (match tmp5 with
+                let sig_blobs = (BatList.append sig_blobs_before (sig_blob :: sig_blobs_after)) in
+                let sigelts = (BatList.map (fun tmp5 -> (match tmp5 with
                     | (checked, se, blob_opt) -> { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
                         sigrng = (se).FStarC_Syntax_Syntax.sigrng;
                         sigquals = (se).FStarC_Syntax_Syntax.sigquals;
@@ -526,7 +532,7 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
         ))) else (FStarC_Tactics_Interpreter.run_tactic_on_ps (tau1).FStarC_Syntax_Syntax.pos (tau1).FStarC_Syntax_Syntax.pos false FStarC_Syntax_Embeddings.e_unit () (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_sigelt) tau1 true ps1)) in
       (match tmp3 with
         | (gs, sigelts) -> (let proc_lb = (fun lb -> (match lb with
-              | { FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv)); lbunivs = tmp4; lbtyp = tmp5; lbeff = tmp6; lbdef = lbdef; lbattrs = tmp7; lbpos = tmp8; _ } -> (let tmp9 = (FStarC_List.tryFind (fun i -> (FStarC_Ident.lid_equals i (fv).FStarC_Syntax_Syntax.fv_name)) lids) in
+              | { FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv)); lbunivs = tmp4; lbtyp = tmp5; lbeff = tmp6; lbdef = lbdef; lbattrs = tmp7; lbpos = tmp8; _ } -> (let tmp9 = (List.find_opt (fun i -> (FStarC_Ident.lid_equals i (fv).FStarC_Syntax_Syntax.fv_name)) lids) in
                 let r = (match tmp9 with
                     | (Some (i)) -> (FStarC_Ident.fStarC_Class_HasRange_pos__lident i)
                     | tmp10 -> rng
@@ -540,8 +546,8 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
                   lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
                   lbpos = (lb).FStarC_Syntax_Syntax.lbpos })
             )) in
-          let sigelts1 = (FStarC_List.map (fun se -> (match (se).FStarC_Syntax_Syntax.sigel with
-              | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, lbs); lids = lids1; _ })) -> (let tmp4 = (FStarC_List.map proc_lb lbs) in
+          let sigelts1 = (BatList.map (fun se -> (match (se).FStarC_Syntax_Syntax.sigel with
+              | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, lbs); lids = lids1; _ })) -> (let tmp4 = (BatList.map proc_lb lbs) in
                 let tmp5 = (is_rec, tmp4) in
                 let tmp6 = ({ FStarC_Syntax_Syntax.lbs = tmp5; lids = lids1 } : FStarC_Syntax_Syntax.sigelt'__Sig_let__payload) in
                 let tmp7 = (FStarC_Syntax_Syntax.Sig_let (tmp6)) in
@@ -554,7 +560,7 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
                   sigopts = (se).FStarC_Syntax_Syntax.sigopts })
               | tmp4 -> se
             )) sigelts) in
-          (FStarC_Options.with_saved_options (fun tmp4 -> (FStarC_List.iter (fun g1 -> ((FStarC_Options.set (FStarC_Tactics_Types.goal_opts g1));
+          (FStarC_Options.with_saved_options (fun tmp4 -> (BatList.iter (fun g1 -> ((FStarC_Options.set (FStarC_Tactics_Types.goal_opts g1));
           let tmp5 = (FStarC_Tactics_Types.goal_type g1) in
           let tmp6 = (getprop (FStarC_Tactics_Types.goal_env g1) tmp5) in
           (match tmp6 with
@@ -565,11 +571,11 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
               (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g1) guard))
             | None -> (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "splice left open goals")
           ))) gs)));
-          let lids' = (FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt sigelts1) in
-          (FStarC_List.iter (fun lid -> (let tmp4 = (FStarC_List.tryFind (FStarC_Ident.lid_equals lid) lids') in
+          let lids' = ((fun f l -> BatList.flatten (BatList.map f l)) FStarC_Syntax_Util.lids_of_sigelt sigelts1) in
+          (BatList.iter (fun lid -> (let tmp4 = (List.find_opt (FStarC_Ident.lid_equals lid) lids') in
           (match tmp4 with
             | None when (not (env).FStarC_TypeChecker_Env.flychecking) -> (let tmp5 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
-              let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_87 lids') in
+              let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 lids') in
               let tmp7 = (FStarC_Format.fmt2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" tmp5 tmp6) in
               (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_SplicedUndef tmp7))
             | tmp5 -> ()
@@ -577,17 +583,17 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
           let tmp4 = (!(dbg_Tac)) in
           (if tmp4 then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_sigelt sigelts1) in
           (FStarC_Format.print1 "splice: got decls = {\n\n%s\n\n}\n" tmp5)) else ());
-          let sigelts2 = (FStarC_List.map (fun se -> ((match (se).FStarC_Syntax_Syntax.sigel with
+          let sigelts2 = (BatList.map (fun se -> ((match (se).FStarC_Syntax_Syntax.sigel with
               | (FStarC_Syntax_Syntax.Sig_datacon (tmp5)) -> (let tmp6 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
-                let tmp7 = (FStar_Pprint.doc_of_string tmp6) in
-                let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Tactic returned bad sigelt:") tmp7) in
+                let tmp7 = (PPrint.string tmp6) in
+                let tmp8 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic returned bad sigelt:") tmp7) in
                 let tmp9 = (tmp8 :: ((FStarC_Errors_Msg.text "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt.") :: [])) in
-                (FStarC_Errors.fStarC_Errors_raise_error__range_list_document rng FStarC_Errors_Codes.Error_BadSplice tmp9))
+                (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_BadSplice tmp9))
               | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp5)) -> (let tmp6 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
-                let tmp7 = (FStar_Pprint.doc_of_string tmp6) in
-                let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Tactic returned bad sigelt:") tmp7) in
+                let tmp7 = (PPrint.string tmp6) in
+                let tmp8 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic returned bad sigelt:") tmp7) in
                 let tmp9 = (tmp8 :: ((FStarC_Errors_Msg.text "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt.") :: [])) in
-                (FStarC_Errors.fStarC_Errors_raise_error__range_list_document rng FStarC_Errors_Codes.Error_BadSplice tmp9))
+                (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_BadSplice tmp9))
               | tmp5 -> ()
             );
             { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
@@ -597,15 +603,15 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
               sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
               sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
               sigopts = (se).FStarC_Syntax_Syntax.sigopts })) sigelts1) in
-          (if is_typed then () else (FStarC_List.iter (fun se -> (FStarC_List.iter (fun q -> (if (FStarC_Syntax_Syntax.is_internal_qualifier q) then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__qualifier q) in
+          (if is_typed then () else (BatList.iter (fun se -> (BatList.iter (fun q -> (if (FStarC_Syntax_Syntax.is_internal_qualifier q) then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__qualifier q) in
           let tmp6 = (FStarC_Format.fmt1 "The qualifier %s is internal." tmp5) in
           let tmp7 = (FStarC_Errors_Msg.text tmp6) in
           let tmp8 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
-          let tmp9 = (FStar_Pprint.arbitrary_string tmp8) in
+          let tmp9 = (PPrint.arbitrary_string tmp8) in
           let tmp10 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "It cannot be attached to spliced declaration:") tmp9) in
           let tmp11 = (tmp10 :: []) in
           let tmp12 = (tmp7 :: tmp11) in
-          (FStarC_Errors.fStarC_Errors_raise_error__range_list_document rng FStarC_Errors_Codes.Error_InternalQualifier tmp12)) else ())) (se).FStarC_Syntax_Syntax.sigquals)) sigelts2));
+          (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_InternalQualifier tmp12)) else ())) (se).FStarC_Syntax_Syntax.sigquals)) sigelts2));
           sigelts2)
       ))
   )))))
@@ -625,7 +631,7 @@ let postprocess (env : FStarC_TypeChecker_Env.env) (tau : (FStarC_Syntax_Syntax.
       let goal = (FStarC_Syntax_Util.mk_squash tmp3) in
       let tmp4 = (run_tactic_on_typ (tau).FStarC_Syntax_Syntax.pos (tm).FStarC_Syntax_Syntax.pos tau env goal) in
       (match tmp4 with
-        | (gs, w) -> ((FStarC_List.iter (fun g -> (let tmp5 = (FStarC_Tactics_Types.goal_type g) in
+        | (gs, w) -> ((BatList.iter (fun g -> (let tmp5 = (FStarC_Tactics_Types.goal_type g) in
           let tmp6 = (getprop (FStarC_Tactics_Types.goal_env g) tmp5) in
           (match tmp6 with
             | (Some (vc)) -> (let tmp7 = (!(dbg_Tac)) in

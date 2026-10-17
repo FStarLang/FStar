@@ -75,10 +75,6 @@ $(DEPSTEM).pdf: $(DEPSTEM) .force
 
 all-checked: $(ALL_CHECKED_FILES)
 
-# stage0 predates --codegen OCaml for Custard.  A stage0 bump overwrites this
-# file with generic-1.mk, which drops this line.
-CUSTARD_CODEGEN := --codegen Custard --custard_backend OCaml
-
 # Extraction: a single whole-program Custard pass.  Included last, because its rule's prerequisite is the list of
 # checked files the .depend above defines.
 include mk/custard-extract.mk

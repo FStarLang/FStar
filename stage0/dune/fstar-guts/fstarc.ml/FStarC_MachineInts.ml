@@ -66,16 +66,16 @@ let u___int_to_t_lid_for (k : machint_kind) : FStarC_Ident.lident =
   (FStarC_Ident.lid_of_path path FStarC_Range_Type.dummyRange))
 
 let explicit_args (args : (('a * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (('a * (FStarC_Syntax_Syntax.arg_qualifier) option)) list =
-  (FStarC_List.filter (fun tmp -> (match tmp with
+  (BatList.filter (fun tmp -> (match tmp with
     | (tmp1, q) -> (not (FStarC_Syntax_Syntax.is_aqual_implicit q))
   )) args)
 
 let e_machint (k : machint_kind) : (machint) FStarC_Syntax_Embeddings_Base.embedding =
-  (let with_meta_ds = (fun r t m -> (match m with
+  (let with_meta_ds = (Obj.magic ((fun r t m -> (match m with
       | None -> t
       | (Some (m1)) -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_meta (({ FStarC_Syntax_Syntax.tm = t;
           meta = (FStarC_Syntax_Syntax.Meta_desugared (m1)) } : FStarC_Syntax_Syntax.term'__Tm_meta__payload))) r)
-    )) in
+    )))) in
   let em = (fun x rng shadow cb -> (let it = (FStarC_Syntax_Embeddings_Base.embed FStarC_Syntax_Embeddings.e_int (x).u__0 rng None cb) in
     let int_to_t = (int_to_t_for k) in
     let proofs = (int_to_t_proof_args k) in

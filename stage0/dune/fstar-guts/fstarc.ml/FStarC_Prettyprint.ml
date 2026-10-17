@@ -15,30 +15,30 @@ let generate (m : printing_mode) (filenames : (string) list) : unit =
     (match tmp with
       | (modul, comments) -> (let outf = (match m1 with
             | FromTempToStdout -> None
-            | FromTempToFile -> (let outf = (FStarC_Util.open_file_for_writing filename) in
+            | FromTempToFile -> (let outf = (Stdlib.open_out_bin filename) in
               (Some (outf)))
-            | ToTempFile -> (let outf = (FStarC_Util.open_file_for_writing (temp_file_name filename)) in
+            | ToTempFile -> (let outf = (Stdlib.open_out_bin (temp_file_name filename)) in
               (Some (outf)))
           ) in
-        let comments1 = (FStarC_List.rev comments) in
+        let comments1 = (BatList.rev comments) in
         let tmp1 = (FStarC_Parser_ToDocument.modul_with_comments_to_document modul comments1) in
         let leftover_comments = (match tmp1 with
             | (doc, comments2) -> ((match outf with
                 | (Some (f)) -> (FStarC_Util.append_to_file f (FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) doc))
-                | None -> (FStarC_Pprint.pretty_out_channel (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) doc FStarC_Util.stdout)
+                | None -> (FStarC_Pprint.pretty_out_channel (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) doc Stdlib.stdout)
               );
               comments2)
           ) in
         let left_over_doc = (if (not (FStarC_List.isEmpty leftover_comments)) then (let tmp2 = (FStarC_Parser_ToDocument.comments_to_document leftover_comments) in
           let tmp3 = (tmp2 :: []) in
-          let tmp4 = (FStar_Pprint.hardline :: tmp3) in
-          let tmp5 = (FStar_Pprint.hardline :: tmp4) in
-          (FStar_Pprint.concat tmp5)) else (if ((=) m1 FromTempToStdout) then (FStar_Pprint.concat (FStar_Pprint.hardline :: (FStar_Pprint.hardline :: []))) else FStar_Pprint.empty)) in
+          let tmp4 = (PPrint.hardline :: tmp3) in
+          let tmp5 = (PPrint.hardline :: tmp4) in
+          (PPrint.concat tmp5)) else (if ((=) m1 FromTempToStdout) then (PPrint.concat (PPrint.hardline :: (PPrint.hardline :: []))) else PPrint.empty)) in
         (match outf with
-          | None -> (FStarC_Pprint.pretty_out_channel (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) left_over_doc FStarC_Util.stdout)
+          | None -> (FStarC_Pprint.pretty_out_channel (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) left_over_doc Stdlib.stdout)
           | (Some (outf1)) -> ((FStarC_Util.append_to_file outf1 (FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) left_over_doc));
-            (FStarC_Util.close_out_channel outf1))
+            (Stdlib.close_out outf1))
         ))
     ))) in
-  (FStarC_List.iter (parse_and_prettyprint m) filenames))
+  (BatList.iter (parse_and_prettyprint m) filenames))
 

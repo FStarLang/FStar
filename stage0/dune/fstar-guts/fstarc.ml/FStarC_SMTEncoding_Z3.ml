@@ -9,8 +9,8 @@ type bgproc = {
   ctxt : FStarC_SMTEncoding_SolverState.solver_state;
 }
 
-let warn_handler (suf : (FStar_Pprint.document) list) (s : string) : unit =
-  (FStarC_Errors.fStarC_Errors_log_issue0__list_document FStarC_Errors_Codes.Warning_UnexpectedZ3Output (FStarC_List.op_At ((FStar_Pprint.op_Hat_Hat (FStarC_Errors_Msg.text "Unexpected output from Z3:") (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (FStar_Pprint.blank (Prims.of_int (2))) (FStar_Pprint.align (FStar_Pprint.dquotes (FStar_Pprint.arbitrary_string s)))))) :: []) suf))
+let warn_handler (suf : (PPrint.document) list) (s : string) : unit =
+  (FStarC_Errors.fStarC_Errors_log_issue0__list_ocaml_document FStarC_Errors_Codes.Warning_UnexpectedZ3Output (BatList.append ((PPrint.(^^) (FStarC_Errors_Msg.text "Unexpected output from Z3:") (PPrint.(^^) PPrint.hardline (PPrint.(^^) (FStar_Pprint.blank (Prims.of_int (2))) (PPrint.align (PPrint.dquotes (PPrint.arbitrary_string s)))))) :: []) suf))
 
 let u__already_warned_solver_mismatch : (bool ref) =
   (ref false)
@@ -18,46 +18,52 @@ let u__already_warned_solver_mismatch : (bool ref) =
 let u__already_warned_version_mismatch : (bool ref) =
   (ref false)
 
-let check_z3version (p : FStarC_Util.proc) : unit =
+let check_z3version (p : FStarC_Util.proc_rec) : unit =
   (let getinfo = (fun arg -> (let s = (FStarC_Util.ask_process p (FStarC_Format.fmt1 "(get-info :%s)\n(echo \"Done!\")\n" arg) (fun tmp -> "Killed") (warn_handler [])) in
     (if (FStarC_Util.starts_with s (Prims.strcat "(:" arg)) then (let ss = (FStarC_String.split (34 :: []) s) in
-    (FStarC_List.nth ss Prims.int_one)) else ((warn_handler [] s);
+    ((fun l i -> BatList.nth l (Z.to_int i)) ss Prims.int_one)) else ((warn_handler [] s);
     (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Error_Z3InvocationError (FStarC_Format.fmt1 "Could not run Z3 from `%s'" (FStarC_Util.proc_prog p))))))) in
   let name = (getinfo "name") in
   let tmp = (if ((<>) name "Z3") then (let tmp = (!(u__already_warned_solver_mismatch)) in
     (not tmp)) else false) in
   (if tmp then (let tmp1 = (FStarC_Options.z3_version ()) in
   let tmp2 = (FStarC_Find_Z3.z3_install_suggestion tmp1) in
-  let tmp3 = (FStarC_List.op_At ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Unexpected SMT solver: expected to be talking to Z3, got %s." name)) :: []) tmp2) in
-  (FStarC_Errors.fStarC_Errors_log_issue0__list_document FStarC_Errors_Codes.Warning_SolverMismatch tmp3);
+  let tmp3 = (BatList.append ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Unexpected SMT solver: expected to be talking to Z3, got %s." name)) :: []) tmp2) in
+  (FStarC_Errors.fStarC_Errors_log_issue0__list_ocaml_document FStarC_Errors_Codes.Warning_SolverMismatch tmp3);
   ((u__already_warned_solver_mismatch) := true)) else ());
   let tmp1 = (getinfo "version") in
   let tmp2 = (FStarC_Util.split tmp1 "-") in
-  let tmp3 = (FStarC_List.hd tmp2) in
+  let tmp3 = (BatList.hd tmp2) in
   let ver_found = (FStarC_Util.trim_string tmp3) in
   let tmp4 = (FStarC_Options.z3_version ()) in
   let ver_conf = (FStarC_Util.trim_string tmp4) in
   let tmp5 = (if ((<>) ver_conf ver_found) then (let tmp5 = (!(u__already_warned_version_mismatch)) in
     (not tmp5)) else false) in
-  (if tmp5 then ((FStarC_Errors.fStarC_Errors_log_issue0__list_document FStarC_Errors_Codes.Warning_SolverMismatch (FStarC_List.op_At ((FStarC_Errors_Msg.text (FStarC_Format.fmt3 "Unexpected Z3 version for ‘%s’: expected ‘%s’, got ‘%s’." (FStarC_Util.proc_prog p) ver_conf ver_found)) :: []) (FStarC_Find_Z3.z3_install_suggestion ver_conf)));
+  (if tmp5 then ((FStarC_Errors.fStarC_Errors_log_issue0__list_ocaml_document FStarC_Errors_Codes.Warning_SolverMismatch (BatList.append ((FStarC_Errors_Msg.text (FStarC_Format.fmt3 "Unexpected Z3 version for ‘%s’: expected ‘%s’, got ‘%s’." (FStarC_Util.proc_prog p) ver_conf ver_found)) :: []) (FStarC_Find_Z3.z3_install_suggestion ver_conf)));
   (FStarC_Errors.stop_if_err ());
   ((u__already_warned_version_mismatch) := true)) else ());
   ())
 
-let new_z3proc (id : string) (cmd_and_args : (string * (string) list)) : FStarC_Util.proc =
-  (let proc = (try (FStarC_Util.start_process id (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst cmd_and_args) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd cmd_and_args) (fun s -> ((=) s "Done!"))) with
-      | u__cexn -> (let tmp = (FStarC_Util.print_exn u__cexn) in
-        let tmp1 = (FStar_Pprint.arbitrary_string tmp) in
+let new_z3proc (id : string) (cmd_and_args : (string * (string) list)) : FStarC_Util.proc_rec =
+  (let proc = (try (FStarC_Util.start_process id (match cmd_and_args with
+      | (u__1, u__2) -> u__1
+    ) (match cmd_and_args with
+      | (u__1, u__2) -> u__2
+    ) (fun s -> ((=) s "Done!"))) with
+      | u__cexn -> (let tmp = (Printexc.to_string u__cexn) in
+        let tmp1 = (PPrint.arbitrary_string tmp) in
         let tmp2 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Exception:") tmp1) in
         let tmp3 = (tmp2 :: []) in
-        let tmp4 = ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Command:") (FStarC_Errors_Msg.fquotes (FStar_Pprint.arbitrary_string (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst cmd_and_args)))) :: tmp3) in
+        let tmp4 = ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Command:") (FStarC_Errors_Msg.fquotes (PPrint.arbitrary_string (match cmd_and_args with
+            | (u__1, u__2) -> u__1
+          )))) :: tmp3) in
         let tmp5 = ((FStarC_Errors_Msg.text "Could not start SMT solver process.") :: tmp4) in
-        (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_Z3InvocationError tmp5))
+        (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_Z3InvocationError tmp5))
     ) in
   (check_z3version proc);
   proc)
 
-let new_z3proc_with_id : ((string * (string) list) -> FStarC_Util.proc) =
+let new_z3proc_with_id : ((string * (string) list) -> FStarC_Util.proc_rec) =
   (let ctr = (ref (Prims.of_int (-1))) in
   (fun cmd_and_args -> ((FStarC_Util.incr ctr);
   let tmp = (!(ctr)) in
@@ -70,10 +76,10 @@ let z3_cmd_and_args (tmp : unit) : (string * (string) list) =
   let tmp1 = (FStarC_Find_Z3.locate_z3 ver) in
   let cmd = (match tmp1 with
       | (Some (fn)) -> fn
-      | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_Z3InvocationError (FStarC_List.op_At ((FStarC_Errors_Msg.text "Z3 solver not found.") :: ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Required version: ") (FStar_Pprint.doc_of_string ver)) :: [])) (FStarC_Find_Z3.z3_install_suggestion ver)))
+      | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_Z3InvocationError (BatList.append ((FStarC_Errors_Msg.text "Z3 solver not found.") :: ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Required version: ") (PPrint.string ver)) :: [])) (FStarC_Find_Z3.z3_install_suggestion ver)))
     ) in
   let tmp2 = (FStarC_Options.z3_cliopt ()) in
-  let cmd_args = (FStarC_List.append ("-smt2" :: ("-in" :: [])) tmp2) in
+  let cmd_args = (BatList.append ("-smt2" :: ("-in" :: [])) tmp2) in
   (cmd, cmd_args))
 
 type query_log = {
@@ -98,7 +104,7 @@ let query_logging : query_log =
     ))) in
   let next_file_name = (fun tmp -> (let n = (get_module_name ()) in
     let tmp1 = (!(used_file_names)) in
-    let tmp2 = (FStarC_List.tryFind (fun tmp2 -> (match tmp2 with
+    let tmp2 = (List.find_opt (fun tmp2 -> (match tmp2 with
         | (m, tmp3) -> ((=) n m)
       )) tmp1) in
     let file_name = (match tmp2 with
@@ -115,7 +121,7 @@ let query_logging : query_log =
     (FStarC_Format.fmt1 "queries-%s.smt2" file_name))) in
   let new_log_file = (fun tmp -> (let file_name = (next_file_name ()) in
     ((current_file_name) := (Some (file_name)));
-    let c = (FStarC_Util.open_file_for_writing file_name) in
+    let c = (Stdlib.open_out_bin file_name) in
     ((log_file_opt) := (Some ((c, file_name))));
     (c, file_name))) in
   let get_log_file = (fun tmp -> (let tmp1 = (!(log_file_opt)) in
@@ -135,7 +141,7 @@ let query_logging : query_log =
   let close_log = (fun tmp -> (let tmp1 = (!(log_file_opt)) in
     (match tmp1 with
       | None -> ()
-      | (Some ((c, tmp2))) -> ((FStarC_Util.close_out_channel c);
+      | (Some ((c, tmp2))) -> ((Stdlib.close_out c);
         ((log_file_opt) := None))
     ))) in
   { get_module_name = get_module_name;
@@ -272,8 +278,8 @@ type z3status =
 type z3result = {
   z3result_status : z3status;
   z3result_time : Prims.int;
-  z3result_initial_statistics : (string) FStarC_SMap.t;
-  z3result_statistics : (string) FStarC_SMap.t;
+  z3result_initial_statistics : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
+  z3result_statistics : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
   z3result_log_file : (string) option;
 }
 
@@ -281,28 +287,28 @@ let z3_options (ver : string) : string =
   (let opts = ("(set-option :global-decls false)" :: ("(set-option :smt.mbqi false)" :: ("(set-option :auto_config false)" :: ("(set-option :model true)" :: ("(set-option :smt.case_split 3)" :: ("(set-option :smt.relevancy 2)" :: [])))))) in
   let tmp = (FStarC_Misc.version_ge ver "4.12.3") in
   let tmp1 = (if tmp then ("(set-option :rewriter.enable_der false)" :: ("(set-option :rewriter.sort_disjunctions false)" :: ("(set-option :pi.decompose_patterns false)" :: ("(set-option :smt.arith.solver 6)" :: [])))) else ("(set-option :smt.arith.solver 2)" :: [])) in
-  let opts1 = (FStarC_List.op_At opts tmp1) in
-  (Prims.strcat (FStarC_String.concat "\n" opts1) "\n"))
+  let opts1 = (BatList.append opts tmp1) in
+  (Prims.strcat (BatString.concat "\n" opts1) "\n"))
 
 let context_profile (theory : (FStarC_SMTEncoding_Term.decl) list) : unit =
-  (let tmp = (FStarC_List.fold_left (fun tmp d -> (match tmp with
+  (let tmp = (BatList.fold_left (fun tmp d -> (match tmp with
       | (out, u__total) -> (match d with
-          | (FStarC_SMTEncoding_Term.Module (name, decls)) -> (let decls1 = (FStarC_List.filter (fun tmp1 -> (match tmp1 with
+          | (FStarC_SMTEncoding_Term.Module (name, decls)) -> (let decls1 = (BatList.filter (fun tmp1 -> (match tmp1 with
                 | (FStarC_SMTEncoding_Term.Assume (tmp2)) -> true
                 | tmp2 -> false
               )) decls) in
-            let n = (FStarC_List.length decls1) in
+            let n = ((fun l -> Z.of_int (BatList.length l)) decls1) in
             (((name, n) :: out), (Prims.op_Plus n u__total)))
           | tmp1 -> (out, u__total)
         )
     )) ([], Prims.int_zero) theory) in
   (match tmp with
-    | (modules, total_decls) -> (let modules1 = (FStarC_List.sortWith (fun tmp1 tmp2 -> (match (tmp1, tmp2) with
+    | (modules, total_decls) -> (let modules1 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun tmp1 tmp2 -> (match (tmp1, tmp2) with
           | ((tmp3, n), (tmp4, m)) -> (Prims.op_Minus m n)
         )) modules) in
       (if ((<>) modules1 []) then (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int total_decls) in
       (FStarC_Format.print1 "Z3 Proof Stats: context_profile with %s assertions\n" tmp1)) else ());
-      (FStarC_List.iter (fun tmp1 -> (match tmp1 with
+      (BatList.iter (fun tmp1 -> (match tmp1 with
         | (m, n) -> (if ((<>) n Prims.int_zero) then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
           (FStarC_Format.print2 "Z3 Proof Stats: %s produced %s SMT decls\n" m tmp2)) else ())
       )) modules1))
@@ -321,13 +327,13 @@ let mk_input (fresh : bool) (theory : (FStarC_SMTEncoding_Term.decl) list) : (st
   let tmp6 = (FStarC_Format.fmt1 "(set-option :smt.random-seed %s)\n" tmp5) in
   let options1 = (Prims.strcat options tmp6) in
   let tmp7 = (FStarC_Options.z3_smtopt ()) in
-  let tmp8 = (FStarC_String.concat "\n" tmp7) in
+  let tmp8 = (BatString.concat "\n" tmp7) in
   let tmp9 = (Prims.strcat tmp8 "\n\n") in
   let options2 = (Prims.strcat options1 tmp9) in
   let tmp10 = (FStarC_Options.print_z3_statistics ()) in
   (if tmp10 then (context_profile theory1) else ());
-  let tmp11 = (FStarC_List.map (FStarC_SMTEncoding_Term.declToSmt options2) theory1) in
-  let r = (FStarC_String.concat "\n" tmp11) in
+  let tmp11 = (BatList.map (FStarC_SMTEncoding_Term.declToSmt options2) theory1) in
+  let r = (BatString.concat "\n" tmp11) in
   let tmp12 = (FStarC_Options.log_queries ()) in
   let log_file_name = (if tmp12 then (let tmp13 = ((query_logging).write_to_log fresh r) in
     (Some (tmp13))) else None) in
@@ -335,10 +341,10 @@ let mk_input (fresh : bool) (theory : (FStarC_SMTEncoding_Term.decl) list) : (st
 
 let rec smt_output_chunks__aux (cur : ((string) list) option) (acc : ((string) list) list) (out : (string) list) (lines : (string) list) : (((string) list) list * (string) list) =
   (match lines with
-    | [] -> ((FStarC_List.rev acc), (FStarC_List.rev out))
+    | [] -> ((BatList.rev acc), (BatList.rev out))
     | (l :: lines1) -> (if ((=) l "<goal>") then (smt_output_chunks__aux (Some ([])) acc out lines1) else (if ((=) l "</goal>") then (match cur with
         | None -> (smt_output_chunks__aux None acc out lines1)
-        | (Some (c)) -> (smt_output_chunks__aux None ((FStarC_List.rev c) :: acc) out lines1)
+        | (Some (c)) -> (smt_output_chunks__aux None ((BatList.rev c) :: acc) out lines1)
       ) else (match cur with
         | None -> (smt_output_chunks__aux None acc (l :: out) lines1)
         | (Some (c)) -> (smt_output_chunks__aux (Some ((l :: c))) acc out lines1)
@@ -349,12 +355,12 @@ let smt_output_chunks (lines : (string) list) : (((string) list) list * (string)
   (smt_output_chunks__aux None [] [] lines)
 
 let warn_unexpected (log_file : (string) option) (lines : (string) list) : unit =
-  (let tmp = (FStarC_List.filter (fun l -> ((((<>) l "") && ((<>) l "Done!")) && ((<>) l "killed"))) lines) in
+  (let tmp = (BatList.filter (fun l -> ((((<>) l "") && ((<>) l "Done!")) && ((<>) l "killed"))) lines) in
   (match tmp with
     | [] -> ()
-    | remaining -> (let msg = (FStarC_String.concat "\n" remaining) in
+    | remaining -> (let msg = (BatString.concat "\n" remaining) in
       let suf = (match log_file with
-          | (Some (log_file1)) -> ((FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Log file:") (FStar_Pprint.doc_of_string log_file1)) :: [])
+          | (Some (log_file1)) -> ((PPrint.(^/^) (FStarC_Errors_Msg.text "Log file:") (PPrint.string log_file1)) :: [])
           | None -> []
         ) in
       (warn_handler suf msg))
@@ -385,7 +391,7 @@ let smt_output_sections (log_file : (string) option) (r : FStarC_Range_Type.rang
       | (Some ((prefix, suffix))) -> (let tmp1 = (smt_output_sections__until (end_tag tag) suffix) in
         (match tmp1 with
           | None -> (FStarC_Effect.failwith (Prims.strcat "Parse error: " (Prims.strcat (end_tag tag) " not found")))
-          | (Some ((section, suffix1))) -> ((Some (section)), (FStarC_List.op_At prefix suffix1))
+          | (Some ((section, suffix1))) -> ((Some (section)), (BatList.append prefix suffix1))
         ))
     ))) in
   let tmp = (find_section "initial_stats" lines) in
@@ -393,7 +399,7 @@ let smt_output_sections (log_file : (string) option) (r : FStarC_Range_Type.rang
     | (initial_stats_opt, lines1) -> (let tmp1 = (find_section "result" lines1) in
       (match tmp1 with
         | (result_opt, lines2) -> (let result = (match result_opt with
-              | None -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Unexpected output from Z3: no result section found:\n%s" (FStarC_String.concat "\n" lines2)))
+              | None -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Unexpected output from Z3: no result section found:\n%s" (BatString.concat "\n" lines2)))
               | (Some (result)) -> result
             ) in
           let tmp2 = (find_section "reason-unknown" lines2) in
@@ -410,25 +416,25 @@ let smt_output_sections (log_file : (string) option) (r : FStarC_Range_Type.rang
       ))
   ))
 
-let parse_stats (smt_stats : ((string) list) option) : (string) FStarC_SMap.t =
-  (let statistics = (FStarC_SMap.create Prims.int_zero) in
+let parse_stats (smt_stats : ((string) list) option) : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (let statistics = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (match smt_stats with
     | None -> statistics
     | (Some (lines)) -> (let parse_line = (fun line -> (let pline = (FStarC_Util.split (FStarC_Util.trim_string line) ":") in
         (match pline with
           | ("(" :: (entry :: [])) -> (let tokens = (FStarC_Util.split entry " ") in
-            let key = (FStarC_List.hd tokens) in
-            let ltok = (FStarC_List.nth tokens (Prims.op_Minus (FStarC_List.length tokens) Prims.int_one)) in
-            let value = (if (FStarC_Util.ends_with ltok ")") then (FStarC_Util.substring ltok Prims.int_zero (Prims.op_Minus (FStarC_String.length ltok) Prims.int_one)) else ltok) in
-            (FStarC_SMap.add statistics key value))
+            let key = (BatList.hd tokens) in
+            let ltok = ((fun l i -> BatList.nth l (Z.to_int i)) tokens (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) tokens) Prims.int_one)) in
+            let value = (if (FStarC_Util.ends_with ltok ")") then ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) ltok Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) ltok) Prims.int_one)) else ltok) in
+            (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace statistics key value))
           | ("" :: (entry :: [])) -> (let tokens = (FStarC_Util.split entry " ") in
-            let key = (FStarC_List.hd tokens) in
-            let ltok = (FStarC_List.nth tokens (Prims.op_Minus (FStarC_List.length tokens) Prims.int_one)) in
-            let value = (if (FStarC_Util.ends_with ltok ")") then (FStarC_Util.substring ltok Prims.int_zero (Prims.op_Minus (FStarC_String.length ltok) Prims.int_one)) else ltok) in
-            (FStarC_SMap.add statistics key value))
+            let key = (BatList.hd tokens) in
+            let ltok = ((fun l i -> BatList.nth l (Z.to_int i)) tokens (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) tokens) Prims.int_one)) in
+            let value = (if (FStarC_Util.ends_with ltok ")") then ((fun s i j -> BatString.sub s (Z.to_int i) (Z.to_int j)) ltok Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) ltok) Prims.int_one)) else ltok) in
+            (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace statistics key value))
           | tmp -> ()
         ))) in
-      (FStarC_List.iter parse_line lines);
+      (BatList.iter parse_line lines);
       statistics)
   ))
 
@@ -462,19 +468,19 @@ let status_string (s : z3status) : string =
       )))
   )
 
-let doZ3Exe (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : bool) (input : string) (queryid : string) : ((z3status * (string) FStarC_SMap.t * (string) FStarC_SMap.t)) list =
-  (let parse = (fun z3out -> (let lines = (FStarC_List.map FStarC_Util.trim_string (FStarC_String.split (10 :: []) z3out)) in
+let doZ3Exe (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : bool) (input : string) (queryid : string) : ((z3status * (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t * (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t)) list =
+  (let parse = (fun z3out -> (let lines = (BatList.map FStarC_Util.trim_string (FStarC_String.split (10 :: []) z3out)) in
     let tmp = (smt_output_chunks lines) in
     (match tmp with
       | (chunks, leftover) -> ((warn_unexpected log_file leftover);
-        (FStarC_List.map (fun chunk -> (let smt_output = (smt_output_sections log_file r chunk) in
+        (BatList.map (fun chunk -> (let smt_output = (smt_output_sections log_file r chunk) in
         let initial_statistics = (parse_stats (smt_output).smt_initial_statistics) in
         let statistics = (parse_stats (smt_output).smt_statistics) in
-        let reason_unknown = (FStarC_Option.map (fun x -> (let ru = (FStarC_String.concat " " x) in
-          (if (FStarC_Util.starts_with ru "(:reason-unknown \"") then (let reason = (FStarC_Util.substring_from ru (FStarC_String.length "(:reason-unknown \"")) in
-          (FStarC_String.substring reason Prims.int_zero (Prims.op_Minus (FStarC_String.length reason) (Prims.of_int (2))))) else ru))) (smt_output).smt_reason_unknown) in
+        let reason_unknown = (FStarC_Option.map (fun x -> (let ru = (BatString.concat " " x) in
+          (if (FStarC_Util.starts_with ru "(:reason-unknown \"") then (let reason = ((fun s i -> BatString.tail s (Z.to_int i)) ru ((fun s -> Z.of_int (BatUTF8.length s)) "(:reason-unknown \"")) in
+          ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) reason Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) reason) (Prims.of_int (2))))) else ru))) (smt_output).smt_reason_unknown) in
         let tmp1 = (FStarC_Debug.any ()) in
-        (if tmp1 then (FStarC_Format.print1 "Z3 says: %s\n" (FStarC_String.concat "\n" (smt_output).smt_result)) else ());
+        (if tmp1 then (FStarC_Format.print1 "Z3 says: %s\n" (BatString.concat "\n" (smt_output).smt_result)) else ());
         let status = (match (smt_output).smt_result with
             | ("unsat" :: []) -> UNSAT
             | ("sat" :: []) -> (SAT (reason_unknown))
@@ -483,13 +489,13 @@ let doZ3Exe (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : 
             | ("killed" :: []) -> (let tmp2 = (!(bg_z3_proc)) in
               ((tmp2).restart ());
               KILLED)
-            | tmp2 -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Unexpected output from Z3: got output result: %s\n" (FStarC_String.concat "\n" (smt_output).smt_result)))
+            | tmp2 -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Unexpected output from Z3: got output result: %s\n" (BatString.concat "\n" (smt_output).smt_result)))
           ) in
         (status, initial_statistics, statistics))) chunks))
     ))) in
   let log_result = (fun fwrite rs -> (match log_file with
       | (Some (fname)) -> ((fwrite fname (Prims.strcat "; QUERY ID: " queryid));
-        (FStarC_List.iter (fun tmp -> (match tmp with
+        (BatList.iter (fun tmp -> (match tmp with
           | (res, tmp1, tmp2) -> (let tmp3 = (status_string res) in
             let tmp4 = (Prims.strcat "; STATUS: " tmp3) in
             (fwrite fname tmp4))
@@ -501,9 +507,9 @@ let doZ3Exe (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : 
   let kill_handler = (fun tmp1 -> "\nkilled\n") in
   let out = (FStarC_Util.ask_process proc input kill_handler (warn_handler [])) in
   let r1 = (parse (FStarC_Util.trim_string out)) in
-  (log_result (fun fname s -> (let h = (FStarC_Util.open_file_for_appending fname) in
+  (log_result (fun fname s -> (let h = ((fun fn -> Stdlib.open_out_gen [Stdlib.Open_append; Stdlib.Open_wronly; Stdlib.Open_creat; Stdlib.Open_binary] 0o644 fn) fname) in
   (FStarC_Util.append_to_file h s);
-  (FStarC_Util.close_out_channel h))) r1);
+  (Stdlib.close_out h))) r1);
   (FStarC_Util.kill_process proc);
   r1) else (let tmp = (!(bg_z3_proc)) in
   let out = ((tmp).ask input) in
@@ -520,7 +526,7 @@ let z3_job (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : b
         (raise u__cexn))
     )) tmp1 "FStarC.SMTEncoding.Z3 (aggregate query time)") in
   (match tmp2 with
-    | (results, elapsed_time) -> (FStarC_List.map (fun tmp3 -> (match tmp3 with
+    | (results, elapsed_time) -> (BatList.map (fun tmp3 -> (match tmp3 with
         | (status, initial_statistics, statistics) -> { z3result_status = status;
             z3result_time = elapsed_time;
             z3result_initial_statistics = initial_statistics;
@@ -531,7 +537,7 @@ let z3_job (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : b
 
 let ask (r : FStarC_Range_Type.range) (qry : (FStarC_SMTEncoding_Term.decl) list) (queryid : string) (fresh : bool) : (z3result) list =
   (let theory = (with_solver_state FStarC_SMTEncoding_SolverState.flush) in
-  let theory1 = (FStarC_List.op_At theory (FStarC_List.op_At ((FStarC_SMTEncoding_Term.Push (Prims.int_zero)) :: qry) ((FStarC_SMTEncoding_Term.Pop (Prims.int_zero)) :: ((FStarC_SMTEncoding_Term.Echo ("Done!")) :: (FStarC_SMTEncoding_Term.EmptyLine :: []))))) in
+  let theory1 = (BatList.append theory (BatList.append ((FStarC_SMTEncoding_Term.Push (Prims.int_zero)) :: qry) ((FStarC_SMTEncoding_Term.Pop (Prims.int_zero)) :: ((FStarC_SMTEncoding_Term.Echo ("Done!")) :: (FStarC_SMTEncoding_Term.EmptyLine :: []))))) in
   let tmp = (mk_input fresh theory1) in
   (match tmp with
     | (input, log_file_name) -> (z3_job log_file_name r fresh input queryid)
@@ -539,8 +545,8 @@ let ask (r : FStarC_Range_Type.range) (qry : (FStarC_SMTEncoding_Term.decl) list
 
 let ask_text (r : FStarC_Range_Type.range) (qry : (FStarC_SMTEncoding_Term.decl) list) (queryid : string) : string =
   (let theory = (reading_solver_state FStarC_SMTEncoding_SolverState.all_decls) in
-  let query_tail = (FStarC_List.op_At ((FStarC_SMTEncoding_Term.Push (Prims.int_zero)) :: qry) ((FStarC_SMTEncoding_Term.Pop (Prims.int_zero)) :: ((FStarC_SMTEncoding_Term.Echo ("Done!")) :: []))) in
-  let theory1 = (FStarC_List.op_At theory query_tail) in
+  let query_tail = (BatList.append ((FStarC_SMTEncoding_Term.Push (Prims.int_zero)) :: qry) ((FStarC_SMTEncoding_Term.Pop (Prims.int_zero)) :: ((FStarC_SMTEncoding_Term.Echo ("Done!")) :: []))) in
+  let theory1 = (BatList.append theory query_tail) in
   let tmp = (mk_input true theory1) in
   (match tmp with
     | (input, log_file_name) -> input

@@ -50,14 +50,43 @@ type op =
   | BvMod
   | BvMul
   | BvUlt
+  | BvConcat
+  | BvRepeat of Prims.int
   | BvExtRol
   | BvExtRor
   | BvRol of Prims.int
   | BvRor of Prims.int
   | BvUext of Prims.int
+  | BvSext of Prims.int
+  | BvExtract of Prims.int * Prims.int
   | BvNot
+  | BvNeg
+  | BvNand
+  | BvNor
+  | BvXnor
+  | BvComp
+  | BvUle
+  | BvUgt
+  | BvUge
+  | BvSlt
+  | BvSle
+  | BvSgt
+  | BvSge
+  | BvSdiv
+  | BvSrem
+  | BvSmod
+  | BvAshr
+  | BvNego
+  | BvUaddo
+  | BvSaddo
+  | BvUmulo
+  | BvSmulo
+  | BvUsubo
+  | BvSsubo
+  | BvSdivo
   | NatToBv of Prims.int
   | BvToNat
+  | SBvToInt
   | ITE
   | Var of string
 
@@ -76,7 +105,7 @@ type term =
   | App of op * (term) list * FStarC_Range_Type.range
   | Quant of qop * ((term) list) list * (Prims.int) option * (sort) list * term * FStarC_Range_Type.range
   | Let of (term) list * term
-  | Labeled of term * (FStar_Pprint.document) list * FStarC_Range_Type.range
+  | Labeled of term * (PPrint.document) list * FStarC_Range_Type.range
 
 
 type fact_db_id =
@@ -121,11 +150,11 @@ let rec free_top_level_names__free_top_level_names (acc : (string) FStarC_RBSet.
   (match t with
     | (FreeV ({ u__0 = nm; u__1 = tmp; u__2 = tmp1; _ })) -> (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string_4 nm acc)
     | (App ((Var (s)), args, tmp)) -> (let acc1 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string_4 s acc) in
-      (FStarC_List.fold_left free_top_level_names__free_top_level_names acc1 args))
-    | (App (tmp, args, tmp1)) -> (FStarC_List.fold_left free_top_level_names__free_top_level_names acc args)
-    | (Quant (tmp, pats, tmp1, tmp2, body, tmp3)) -> (let acc1 = (FStarC_List.fold_left (fun acc1 pats1 -> (FStarC_List.fold_left free_top_level_names__free_top_level_names acc1 pats1)) acc pats) in
+      (BatList.fold_left free_top_level_names__free_top_level_names acc1 args))
+    | (App (tmp, args, tmp1)) -> (BatList.fold_left free_top_level_names__free_top_level_names acc args)
+    | (Quant (tmp, pats, tmp1, tmp2, body, tmp3)) -> (let acc1 = (BatList.fold_left (fun acc1 pats1 -> (BatList.fold_left free_top_level_names__free_top_level_names acc1 pats1)) acc pats) in
       (free_top_level_names__free_top_level_names acc1 body))
-    | (Let (tms, t1)) -> (let acc1 = (FStarC_List.fold_left free_top_level_names__free_top_level_names acc tms) in
+    | (Let (tms, t1)) -> (let acc1 = (BatList.fold_left free_top_level_names__free_top_level_names acc tms) in
       (free_top_level_names__free_top_level_names acc1 t1))
     | (Labeled (t1, tmp, tmp1)) -> (free_top_level_names__free_top_level_names acc t1)
     | tmp -> acc
@@ -205,6 +234,9 @@ let op_to_string (tmp : op) : string =
     | BvMod -> "bvurem"
     | BvMul -> "bvmul"
     | BvUlt -> "bvult"
+    | BvConcat -> "concat"
+    | (BvRepeat (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+      (FStarC_Format.fmt1 "(_ repeat %s)" tmp1))
     | BvExtRol -> "ext_rotate_left"
     | BvExtRor -> "ext_rotate_right"
     | (BvRol (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
@@ -214,9 +246,39 @@ let op_to_string (tmp : op) : string =
     | BvToNat -> "bv2int"
     | (BvUext (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
       (FStarC_Format.fmt1 "(_ zero_extend %s)" tmp1))
+    | (BvSext (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+      (FStarC_Format.fmt1 "(_ sign_extend %s)" tmp1))
+    | (BvExtract (i, j)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+      let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int j) in
+      (FStarC_Format.fmt2 "(_ extract %s %s)" tmp1 tmp2))
     | BvNot -> "bvnot"
+    | BvNeg -> "bvneg"
+    | BvNand -> "bvnand"
+    | BvNor -> "bvnor"
+    | BvXnor -> "bvxnor"
+    | BvComp -> "bvcomp"
+    | BvUle -> "bvule"
+    | BvUgt -> "bvugt"
+    | BvUge -> "bvuge"
+    | BvSlt -> "bvslt"
+    | BvSle -> "bvsle"
+    | BvSgt -> "bvsgt"
+    | BvSge -> "bvsge"
+    | BvSdiv -> "bvsdiv"
+    | BvSrem -> "bvsrem"
+    | BvSmod -> "bvsmod"
+    | BvAshr -> "bvashr"
+    | BvNego -> "bvnego"
+    | BvUaddo -> "bvuaddo"
+    | BvSaddo -> "bvsaddo"
+    | BvUmulo -> "bvumulo"
+    | BvSmulo -> "bvsmulo"
+    | BvUsubo -> "bvusubo"
+    | BvSsubo -> "bvssubo"
+    | BvSdivo -> "bvsdivo"
     | (NatToBv (n)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
       (FStarC_Format.fmt1 "(_ int2bv %s)" tmp1))
+    | SBvToInt -> "sbv_to_int"
     | (Var (s)) -> s
   )
 
@@ -227,11 +289,11 @@ let qop_to_string (tmp : qop) : string =
   )
 
 let rec print_smt_term_list (l : (term) list) : string =
-  (let tmp = (FStarC_List.map print_smt_term l) in
-  (FStarC_String.concat " " tmp))
+  (let tmp = (BatList.map print_smt_term l) in
+  (BatString.concat " " tmp))
 
 and print_smt_term_list_list (l : ((term) list) list) : string =
-  (FStarC_List.fold_left (fun s l1 -> (let tmp = (print_smt_term_list l1) in
+  (BatList.fold_left (fun s l1 -> (let tmp = (print_smt_term_list l1) in
   let tmp1 = (Prims.strcat tmp " ] ") in
   let tmp2 = (Prims.strcat "; [ " tmp1) in
   (Prims.strcat s tmp2))) "" l)
@@ -286,7 +348,7 @@ let mk_U_name (s : string) : term =
   (mkFreeV (mk_fv (s, univ_sort)))
 
 let mk_decls_trivial (decls : (decl) list) : (decls_elt) list =
-  (let tmp = (FStarC_List.collect (fun tmp -> (match tmp with
+  (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp -> (match tmp with
       | (Assume (a)) -> ((a).assumption_name :: [])
       | tmp1 -> []
     )) decls) in
@@ -336,12 +398,16 @@ let boxBoolFun : (string * string) =
   (mkBoxFunctions "BoxBool")
 
 let boxBool (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxBoolFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxBoolFun) t)
+  (maybe_elim_box (match boxBoolFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxBoolFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let isInjective (s : string) : bool =
-  (if (Prims.op_Greater_Equals (FStar_String.strlen s) (Prims.of_int (3))) then (let tmp = (FStarC_String.substring s Prims.int_zero (Prims.of_int (3))) in
+  (if (Prims.op_Greater_Equals (FStar_String.strlen s) (Prims.of_int (3))) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero (Prims.of_int (3))) in
   let tmp1 = ((=) tmp "Box") in
-  (if tmp1 then (let tmp2 = (FStarC_List.existsML (fun c -> ((=) c 46)) (FStar_String.list_of_string s)) in
+  (if tmp1 then (let tmp2 = (BatList.exists (fun c -> ((=) c 46)) ((fun s -> BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))) s)) in
   (not tmp2)) else false)) else false)
 
 let mkApp' (tmp : (op * (term) list)) : term =
@@ -412,10 +478,39 @@ let rec check_pattern_ok__aux (t : term) : (term) option =
           | BvMod -> false
           | BvMul -> false
           | BvUlt -> false
+          | BvConcat -> false
+          | (BvRepeat (tmp1)) -> false
           | (BvUext (tmp1)) -> false
+          | (BvSext (tmp1)) -> false
+          | (BvExtract (u__1, u__2)) -> false
           | BvNot -> false
+          | BvNeg -> false
+          | BvNand -> false
+          | BvNor -> false
+          | BvXnor -> false
+          | BvComp -> false
+          | BvUle -> false
+          | BvUgt -> false
+          | BvUge -> false
+          | BvSlt -> false
+          | BvSle -> false
+          | BvSgt -> false
+          | BvSge -> false
+          | BvSdiv -> false
+          | BvSrem -> false
+          | BvSmod -> false
+          | BvAshr -> false
+          | BvNego -> false
+          | BvUaddo -> false
+          | BvSaddo -> false
+          | BvUmulo -> false
+          | BvSmulo -> false
+          | BvUsubo -> false
+          | BvSsubo -> false
+          | BvSdivo -> false
           | (NatToBv (tmp1)) -> false
           | BvToNat -> false
+          | SBvToInt -> false
           | ITE -> false
         ) in
       (if (not head_ok) then (Some (t)) else (check_pattern_ok__aux_l terms)))
@@ -474,31 +569,31 @@ let rec abstr__aux (index_of : (fv -> (Prims.int) option)) (ix : Prims.int) (t :
         | None -> t
         | (Some (i)) -> (mkBoundV (Prims.op_Plus i ix))
       ))
-    | (App (op, tms, r)) -> (let tmp = (FStarC_List.map ((abstr__aux index_of) ix) tms) in
+    | (App (op, tms, r)) -> (let tmp = (BatList.map ((abstr__aux index_of) ix) tms) in
       let tmp1 = (op, tmp) in
       let tmp2 = (mkApp' tmp1) in
       (set_range tmp2 r))
     | (Labeled (t1, r1, r2)) -> (let tmp = ((abstr__aux index_of) ix t1) in
       (Labeled (tmp, r1, r2)))
-    | (Quant (qop, pats, wopt, vars, body, r)) -> (let n = (FStarC_List.length vars) in
-      let tmp = (FStarC_List.map (FStarC_List.map ((abstr__aux index_of) (Prims.op_Plus ix n))) pats) in
+    | (Quant (qop, pats, wopt, vars, body, r)) -> (let n = ((fun l -> Z.of_int (BatList.length l)) vars) in
+      let tmp = (BatList.map (BatList.map ((abstr__aux index_of) (Prims.op_Plus ix n))) pats) in
       let tmp1 = ((abstr__aux index_of) (Prims.op_Plus ix n) body) in
       let tmp2 = (qop, tmp, wopt, vars, tmp1) in
       (mkQuant r false tmp2))
-    | (Let (es, body)) -> (let tmp = (FStarC_List.fold_left (fun tmp e -> (match tmp with
+    | (Let (es, body)) -> (let tmp = (BatList.fold_left (fun tmp e -> (match tmp with
           | (ix1, l) -> (let tmp1 = ((abstr__aux index_of) ix1 e) in
             let tmp2 = (tmp1 :: l) in
             ((Prims.op_Plus ix1 Prims.int_one), tmp2))
         )) (ix, []) es) in
       (match tmp with
         | (ix1, es_rev) -> (let tmp1 = ((abstr__aux index_of) ix1 body) in
-          let tmp2 = ((FStarC_List.rev es_rev), tmp1) in
+          let tmp2 = ((BatList.rev es_rev), tmp1) in
           (mkLet tmp2))
       ))
   )
 
 let abstr (fvs : (fv) list) (t : term) : term =
-  (let nvars = (FStarC_List.length fvs) in
+  (let nvars = ((fun l -> Z.of_int (BatList.length l)) fvs) in
   let index_of = (fun fv -> (let tmp = (FStarC_Util.try_find_index (fv_eq fv) fvs) in
     (match tmp with
       | None -> None
@@ -511,8 +606,8 @@ let fv_sort (x : fv) : sort =
 
 let mkQuant' (r : FStarC_Range_Type.range) (tmp : (qop * ((term) list) list * (Prims.int) option * (fv) list * term)) : term =
   (match tmp with
-    | (qop, pats, wopt, vars, body) -> (let tmp1 = (FStarC_List.map (FStarC_List.map (abstr vars)) pats) in
-      let tmp2 = (FStarC_List.map fv_sort vars) in
+    | (qop, pats, wopt, vars, body) -> (let tmp1 = (BatList.map (BatList.map (abstr vars)) pats) in
+      let tmp2 = (BatList.map fv_sort vars) in
       let tmp3 = (abstr vars body) in
       let tmp4 = (qop, tmp1, wopt, tmp2, tmp3) in
       (mkQuant r true tmp4))
@@ -524,7 +619,7 @@ let mkForall (r : FStarC_Range_Type.range) (tmp : (((term) list) list * (fv) lis
   )
 
 let escape (s : string) : string =
-  (FStarC_Util.replace_char s 39 95)
+  ((fun s c1 c2 -> let c1 = BatUChar.chr c1 and c2 = BatUChar.chr c2 in BatUTF8.map (fun x -> if BatUChar.eq x c1 then c2 else x) s) s 39 95)
 
 let mk_Term_unit : term =
   (mkApp ("Tm_unit", []))
@@ -539,7 +634,7 @@ let mk_U_max (t0 : term) (t1 : term) : term =
   (mkApp ("U_max", (t0 :: (t1 :: []))))
 
 let mkInteger (i : string) : term =
-  (Integer ((FStarC_Util.ensure_decimal i)))
+  (Integer (((fun s -> Z.to_string (Z.of_string s)) i)))
 
 let mkInteger' (i : Prims.int) : term =
   (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
@@ -606,19 +701,19 @@ let rec hash_of_term' (t : term) : string =
       let tmp1 = (Prims.strcat ":" tmp) in
       (Prims.strcat (fv_name x) tmp1))
     | (App (op, tms, tmp)) -> (let tmp1 = (op_to_string op) in
-      let tmp2 = (FStarC_List.map hash_of_term tms) in
-      let tmp3 = (FStarC_String.concat " " tmp2) in
+      let tmp2 = (BatList.map hash_of_term tms) in
+      let tmp3 = (BatString.concat " " tmp2) in
       let tmp4 = (Prims.strcat tmp3 ")") in
       let tmp5 = (Prims.strcat tmp1 tmp4) in
       (Prims.strcat "(" tmp5))
     | (Labeled (t1, tmp, tmp1)) -> (hash_of_term t1)
-    | (Quant (qop, pats, wopt, sorts, body, tmp)) -> (let tmp1 = (FStarC_List.map strSort sorts) in
-      let tmp2 = (FStarC_String.concat " " tmp1) in
+    | (Quant (qop, pats, wopt, sorts, body, tmp)) -> (let tmp1 = (BatList.map strSort sorts) in
+      let tmp2 = (BatString.concat " " tmp1) in
       let tmp3 = (hash_of_term body) in
       let tmp4 = (weightToSmtStr wopt) in
-      let tmp5 = (FStarC_List.map (fun pats1 -> (let tmp5 = (FStarC_List.map hash_of_term pats1) in
-        (FStarC_String.concat " " tmp5))) pats) in
-      let tmp6 = (FStarC_String.concat "; " tmp5) in
+      let tmp5 = (BatList.map (fun pats1 -> (let tmp5 = (BatList.map hash_of_term pats1) in
+        (BatString.concat " " tmp5))) pats) in
+      let tmp6 = (BatString.concat "; " tmp5) in
       let tmp7 = (Prims.strcat tmp6 "))") in
       let tmp8 = (Prims.strcat " " tmp7) in
       let tmp9 = (Prims.strcat tmp4 tmp8) in
@@ -629,8 +724,8 @@ let rec hash_of_term' (t : term) : string =
       let tmp14 = (Prims.strcat " (" tmp13) in
       let tmp15 = (Prims.strcat (qop_to_string qop) tmp14) in
       (Prims.strcat "(" tmp15))
-    | (Let (es, body)) -> (let tmp = (FStarC_List.map hash_of_term es) in
-      let tmp1 = (FStarC_String.concat " " tmp) in
+    | (Let (es, body)) -> (let tmp = (BatList.map hash_of_term es) in
+      let tmp1 = (BatString.concat " " tmp) in
       let tmp2 = (hash_of_term body) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat ") " tmp3) in
@@ -658,7 +753,11 @@ let boxIntFun : (string * string) =
   (mkBoxFunctions "BoxInt")
 
 let unboxInt (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxIntFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxIntFun) t)
+  (maybe_elim_box (match boxIntFun with
+    | (u__1, u__2) -> u__2
+  ) (match boxIntFun with
+    | (u__1, u__2) -> u__1
+  ) t)
 
 let mkLTE (tmp : (term * term)) : term =
   (mk_bin_op LTE tmp)
@@ -673,7 +772,11 @@ let mkGT (tmp : (term * term)) : term =
   (mk_bin_op GT tmp)
 
 let unboxBool (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxBoolFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxBoolFun) t)
+  (maybe_elim_box (match boxBoolFun with
+    | (u__1, u__2) -> u__2
+  ) (match boxBoolFun with
+    | (u__1, u__2) -> u__1
+  ) t)
 
 let mkAnd (tmp : (term * term)) : term =
   (match tmp with
@@ -682,9 +785,9 @@ let mkAnd (tmp : (term * term)) : term =
         | (tmp1, (App (TrueOp, tmp2, tmp3))) -> t1
         | ((App (FalseOp, tmp1, tmp2)), tmp3) -> mkFalse
         | (tmp1, (App (FalseOp, tmp2, tmp3))) -> mkFalse
-        | ((App (And, ts1, tmp1)), (App (And, ts2, tmp2))) -> (mkApp' (And, (FStarC_List.op_At ts1 ts2)))
+        | ((App (And, ts1, tmp1)), (App (And, ts2, tmp2))) -> (mkApp' (And, (BatList.append ts1 ts2)))
         | (tmp1, (App (And, ts2, tmp2))) -> (mkApp' (And, (t1 :: ts2)))
-        | ((App (And, ts1, tmp1)), tmp2) -> (mkApp' (And, (FStarC_List.op_At ts1 (t2 :: []))))
+        | ((App (And, ts1, tmp1)), tmp2) -> (mkApp' (And, (BatList.append ts1 (t2 :: []))))
         | tmp1 -> (mkApp' (And, (t1 :: (t2 :: []))))
       )
   )
@@ -696,17 +799,19 @@ let mkOr (tmp : (term * term)) : term =
         | (tmp1, (App (TrueOp, tmp2, tmp3))) -> mkTrue
         | ((App (FalseOp, tmp1, tmp2)), tmp3) -> t2
         | (tmp1, (App (FalseOp, tmp2, tmp3))) -> t1
-        | ((App (Or, ts1, tmp1)), (App (Or, ts2, tmp2))) -> (mkApp' (Or, (FStarC_List.op_At ts1 ts2)))
+        | ((App (Or, ts1, tmp1)), (App (Or, ts2, tmp2))) -> (mkApp' (Or, (BatList.append ts1 ts2)))
         | (tmp1, (App (Or, ts2, tmp2))) -> (mkApp' (Or, (t1 :: ts2)))
-        | ((App (Or, ts1, tmp1)), tmp2) -> (mkApp' (Or, (FStarC_List.op_At ts1 (t2 :: []))))
+        | ((App (Or, ts1, tmp1)), tmp2) -> (mkApp' (Or, (BatList.append ts1 (t2 :: []))))
         | tmp1 -> (mkApp' (Or, (t1 :: (t2 :: []))))
       )
   )
 
 let getBoxedInteger (t : term) : (Prims.int) option =
   (match t with
-    | (App ((Var (s)), (t2 :: []), tmp)) when ((=) s (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxIntFun)) -> (match t2 with
-        | (Integer (n)) -> (let tmp1 = (FStarC_Util.int_of_string n) in
+    | (App ((Var (s)), (t2 :: []), tmp)) when ((=) s (match boxIntFun with
+      | (u__1, u__2) -> u__1
+    )) -> (match t2 with
+        | (Integer (n)) -> (let tmp1 = (Z.of_string n) in
           (Some (tmp1)))
         | tmp1 -> None
       )
@@ -720,9 +825,13 @@ let boxBitVecFun (sz : Prims.int) : (string * string) =
 
 let unboxBitVec (sz : Prims.int) (t : term) : term =
   (let tmp = (boxBitVecFun sz) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__2
+    ) in
   let tmp2 = (boxBitVecFun sz) in
-  let tmp3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp2) in
+  let tmp3 = (match tmp2 with
+      | (u__1, u__2) -> u__1
+    ) in
   (elim_box true tmp1 tmp3 t))
 
 let mkBvUlt (tmp : (term * term)) : term =
@@ -805,18 +914,22 @@ let mk_Valid (t : term) : term =
 let mk_decls (name : string) (key : string) (decls : (decl) list) (aux_decls : (decls_elt) list) : (decls_elt) list =
   (let tmp = (FStarC_Util.digest_of_string key) in
   let tmp1 = (Some (tmp)) in
-  let sm = (FStarC_SMap.create (Prims.of_int (20))) in
-  (FStarC_List.iter (fun elt -> (FStarC_List.iter (fun s -> (FStarC_SMap.add sm s "0")) (elt).a_names)) aux_decls);
-  (FStarC_List.iter (fun d -> (match d with
-    | (Assume (a)) -> (FStarC_SMap.add sm (a).assumption_name "0")
+  let sm = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
+  (BatList.iter (fun elt -> (BatList.iter (fun s -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace sm s "0")) (elt).a_names)) aux_decls);
+  (BatList.iter (fun d -> (match d with
+    | (Assume (a)) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace sm (a).assumption_name "0")
     | tmp2 -> ()
   )) decls);
-  let tmp2 = (FStarC_SMap.keys sm) in
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key1 tmp2 acc -> (key1 :: acc)) sm []) in
   let tmp3 = { sym_name = (Some (name)); key = tmp1; decls = decls; a_names = tmp2 } in
   (tmp3 :: []))
 
 let boxInt (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxIntFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxIntFun) t)
+  (maybe_elim_box (match boxIntFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxIntFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let mk_String_const (s : string) : term =
   (mkApp ("FString_const", ((String (s)) :: [])))
@@ -825,7 +938,11 @@ let boxStringFun : (string * string) =
   (mkBoxFunctions "BoxString")
 
 let boxString (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxStringFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxStringFun) t)
+  (maybe_elim_box (match boxStringFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxStringFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let u___range_c : (Prims.int ref) =
   (ref Prims.int_zero)
@@ -847,7 +964,11 @@ let boxRealFun : (string * string) =
   (mkBoxFunctions "BoxReal")
 
 let boxReal (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxRealFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxRealFun) t)
+  (maybe_elim_box (match boxRealFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxRealFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let mk_HasType (v : term) (t : term) : term =
   (let tmp = (mkApp ("HasType", (v :: (t :: [])))) in
@@ -865,7 +986,7 @@ let mk_HasTypeWithFuel (f : (term) option) (v : term) (t : term) : term =
   )
 
 let mk_and_l (l : (term) list) : term =
-  (FStarC_List.fold_right (fun p1 p2 -> (mkAnd (p1, p2))) l mkTrue)
+  (BatList.fold_right (fun p1 p2 -> (mkAnd (p1, p2))) l mkTrue)
 
 let mkImp (tmp : (term * term)) : term =
   (match tmp with
@@ -902,7 +1023,7 @@ let mkIff (tmp : (term * term)) : term =
 
 let mkLet' (tmp : (((fv * term)) list * term)) : term =
   (match tmp with
-    | (bindings, body) -> (let tmp1 = (FStarC_List.split bindings) in
+    | (bindings, body) -> (let tmp1 = (BatList.split bindings) in
       (match tmp1 with
         | (vars, es) -> (let tmp2 = (abstr vars body) in
           let tmp3 = (es, tmp2) in
@@ -939,10 +1060,10 @@ let rec freevars (t : term) : (fv) list =
     | (BoundV (tmp)) -> []
     | (FreeV (fv)) when (fv_force fv) -> []
     | (FreeV (fv)) -> (fv :: [])
-    | (App (tmp, tms, tmp1)) -> (FStarC_List.collect freevars tms)
-    | (Quant (tmp, pats, tmp1, tmp2, t1, tmp3)) -> (FStarC_List.collect freevars (t1 :: (FStarC_List.flatten pats)))
+    | (App (tmp, tms, tmp1)) -> ((fun f l -> BatList.flatten (BatList.map f l)) freevars tms)
+    | (Quant (tmp, pats, tmp1, tmp2, t1, tmp3)) -> ((fun f l -> BatList.flatten (BatList.map f l)) freevars (t1 :: (BatList.flatten pats)))
     | (Labeled (t1, tmp, tmp1)) -> (freevars t1)
-    | (Let (es, body)) -> (FStarC_List.collect freevars (body :: es))
+    | (Let (es, body)) -> ((fun f l -> BatList.flatten (BatList.map f l)) freevars (body :: es))
   )
 
 let free_variables (t : term) : (fv) list =
@@ -987,7 +1108,11 @@ let mkMod (tmp : (term * term)) : term =
   (mk_bin_op Mod tmp)
 
 let unboxReal (t : term) : term =
-  (maybe_elim_box (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxRealFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxRealFun) t)
+  (maybe_elim_box (match boxRealFun with
+    | (u__1, u__2) -> u__2
+  ) (match boxRealFun with
+    | (u__1, u__2) -> u__1
+  ) t)
 
 let mkRealDiv (tmp : (term * term)) : term =
   (mk_bin_op RealDiv tmp)
@@ -1013,12 +1138,12 @@ let constr_id_of_sort (sort : sort) : string =
 let fresh_constructor (rng : FStarC_Range_Type.range) (tmp : (string * (sort) list * sort * Prims.int)) : decl =
   (match tmp with
     | (name, arg_sorts, sort, id) -> (let id1 = (FStarC_Class_Show.fStarC_Class_Show_show__int id) in
-      let bvars = (FStarC_List.mapi (fun i s -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+      let bvars = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i s -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
         let tmp2 = (Prims.strcat "x_" tmp1) in
         let tmp3 = (tmp2, s) in
         let tmp4 = (mk_fv tmp3) in
         (mkFreeV tmp4))) arg_sorts) in
-      let bvar_names = (FStarC_List.map fv_of_term bvars) in
+      let bvar_names = (BatList.map fv_of_term bvars) in
       let capp = (mkApp (name, bvars)) in
       let tmp1 = (constr_id_of_sort sort) in
       let tmp2 = (tmp1, (capp :: [])) in
@@ -1044,7 +1169,7 @@ let norng : FStarC_Range_Type.range =
 
 let mkDefineFun (tmp : (string * (fv) list * sort * term * (string) option)) : decl =
   (match tmp with
-    | (nm, vars, s, tm, c) -> (let tmp1 = (FStarC_List.map fv_sort vars) in
+    | (nm, vars, s, tm, c) -> (let tmp1 = (BatList.map fv_sort vars) in
       let tmp2 = (abstr vars tm) in
       (DefineFun (nm, tmp1, s, tmp2, c)))
   )
@@ -1057,10 +1182,10 @@ let injective_constructor (rng : FStarC_Range_Type.range) (x : (string * (constr
         let tmp1 = (tmp, s) in
         let tmp2 = (mk_fv tmp1) in
         (mkFreeV tmp2))) in
-      let bvars = (FStarC_List.mapi (fun i f -> (bvar i (f).field_sort)) fields) in
-      let bvar_names = (FStarC_List.map fv_of_term bvars) in
+      let bvars = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i f -> (bvar i (f).field_sort)) fields) in
+      let bvar_names = (BatList.map fv_of_term bvars) in
       let capp = (mkApp (name, bvars)) in
-      let tmp = (FStarC_List.mapi (fun i tmp -> (if (tmp).field_projectible then (let cproj_app = (mkApp ((tmp).field_name, (capp :: []))) in
+      let tmp = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp -> (if (tmp).field_projectible then (let cproj_app = (mkApp ((tmp).field_name, (capp :: []))) in
         let proj_name = (DeclFun ((tmp).field_name, (sort :: []), (tmp).field_sort, (Some ("Projector")))) in
         let tmp1 = (bvar i (tmp).field_sort) in
         let tmp2 = (cproj_app, tmp1) in
@@ -1072,12 +1197,12 @@ let injective_constructor (rng : FStarC_Range_Type.range) (x : (string * (constr
             assumption_name = (escape (Prims.strcat "projection_inverse_" (tmp).field_name));
             assumption_fact_ids = [] } in
         (proj_name :: ((Assume (a)) :: []))) else [])) fields) in
-      (FStarC_List.flatten tmp))
+      (BatList.flatten tmp))
   )
 
 let constructor_to_decl (rng : FStarC_Range_Type.range) (constr : constructor_t) : (decl) list =
   (let sort = (constr).constr_sort in
-  let field_sorts = (FStarC_List.map (fun f -> (f).field_sort) (constr).constr_fields) in
+  let field_sorts = (BatList.map (fun f -> (f).field_sort) (constr).constr_fields) in
   let cdecl = (DeclFun ((constr).constr_name, field_sorts, (constr).constr_sort, (Some ("Constructor")))) in
   let cid = (match (constr).constr_id with
       | None -> []
@@ -1087,16 +1212,16 @@ let constructor_to_decl (rng : FStarC_Range_Type.range) (constr : constructor_t)
   let disc_name = (discriminator_name constr) in
   let xfv = (mk_fv ("x", sort)) in
   let xx = (mkFreeV xfv) in
-  let tmp = (FStarC_List.mapi (fun i tmp -> (if (tmp).field_projectible then (let tmp1 = (mkApp ((tmp).field_name, (xx :: []))) in
+  let tmp = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp -> (if (tmp).field_projectible then (let tmp1 = (mkApp ((tmp).field_name, (xx :: []))) in
     (tmp1, [])) else (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
     let tmp2 = (Prims.strcat "f_" tmp1) in
     let tmp3 = (tmp2, (tmp).field_sort) in
     let fi = (mk_fv tmp3) in
     let tmp4 = (mkFreeV fi) in
     (tmp4, (fi :: []))))) (constr).constr_fields) in
-  let tmp1 = (FStarC_List.split tmp) in
+  let tmp1 = (BatList.split tmp) in
   let disc = (match tmp1 with
-      | (proj_terms, ex_vars) -> (let ex_vars1 = (FStarC_List.flatten ex_vars) in
+      | (proj_terms, ex_vars) -> (let ex_vars1 = (BatList.flatten ex_vars) in
         let tmp2 = (mkApp ((constr).constr_name, proj_terms)) in
         let tmp3 = (xx, tmp2) in
         let disc_inv_body = (mkEq tmp3) in
@@ -1118,20 +1243,20 @@ let constructor_to_decl (rng : FStarC_Range_Type.range) (constr : constructor_t)
         (mkDefineFun (disc_name, (xfv :: []), Bool_sort, disc_ax, (Some ("Discriminator definition")))))
     ) in
   let projs = (injective_constructor rng ((constr).constr_name, (constr).constr_fields, sort)) in
-  let base = (if (not (constr).constr_base) then [] else (let tmp2 = (FStarC_List.filter (fun f -> (f).field_projectible) (constr).constr_fields) in
-    let arg_sorts = (FStarC_List.map (fun f -> (f).field_sort) tmp2) in
+  let base = (if (not (constr).constr_base) then [] else (let tmp2 = (BatList.filter (fun f -> (f).field_projectible) (constr).constr_fields) in
+    let arg_sorts = (BatList.map (fun f -> (f).field_sort) tmp2) in
     let base_name = (Prims.strcat (constr).constr_name "@base") in
     let decl = (DeclFun (base_name, arg_sorts, Term_sort, (Some ("Constructor base")))) in
-    let formals = (FStarC_List.mapi (fun i f -> (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+    let formals = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i f -> (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
       let tmp4 = (Prims.strcat "x" tmp3) in
       let tmp5 = (tmp4, (f).field_sort) in
       (mk_fv tmp5))) (constr).constr_fields) in
-    let tmp3 = (FStarC_List.map (fun fv -> (mkFreeV fv)) formals) in
+    let tmp3 = (BatList.map (fun fv -> (mkFreeV fv)) formals) in
     let tmp4 = ((constr).constr_name, tmp3) in
     let constructed_term = (mkApp tmp4) in
-    let tmp5 = (FStarC_List.map2 (fun f fld -> (if (fld).field_projectible then (f :: []) else [])) formals (constr).constr_fields) in
-    let inj_formals = (FStarC_List.flatten tmp5) in
-    let tmp6 = (FStarC_List.map (fun fv -> (mkFreeV fv)) inj_formals) in
+    let tmp5 = (BatList.map2 (fun f fld -> (if (fld).field_projectible then (f :: []) else [])) formals (constr).constr_fields) in
+    let inj_formals = (BatList.flatten tmp5) in
+    let tmp6 = (BatList.map (fun fv -> (mkFreeV fv)) inj_formals) in
     let tmp7 = (base_name, tmp6) in
     let base_term = (mkApp tmp7) in
     let eq = (mkEq (constructed_term, base_term)) in
@@ -1144,13 +1269,17 @@ let constructor_to_decl (rng : FStarC_Range_Type.range) (constr : constructor_t)
         assumption_name = (escape (Prims.strcat "constructor_base_" (constr).constr_name));
         assumption_fact_ids = [] } in
     (decl :: ((Assume (a)) :: [])))) in
-  (FStarC_List.op_At ((Caption ((FStarC_Format.fmt1 "<start constructor %s>" (constr).constr_name))) :: (cdecl :: [])) (FStarC_List.op_At cid (FStarC_List.op_At projs (FStarC_List.op_At (disc :: []) (FStarC_List.op_At base ((Caption ((FStarC_Format.fmt1 "</end constructor %s>" (constr).constr_name))) :: [])))))))
+  (BatList.append ((Caption ((FStarC_Format.fmt1 "<start constructor %s>" (constr).constr_name))) :: (cdecl :: [])) (BatList.append cid (BatList.append projs (BatList.append (disc :: []) (BatList.append base ((Caption ((FStarC_Format.fmt1 "</end constructor %s>" (constr).constr_name))) :: [])))))))
 
 let mkBvConstructor (sz : Prims.int) : ((decl) list * string * string) =
   (let tmp = (boxBitVecFun sz) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   let tmp2 = (boxBitVecFun sz) in
-  let tmp3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp2) in
+  let tmp3 = (match tmp2 with
+      | (u__1, u__2) -> u__2
+    ) in
   let tmp4 = { field_name = tmp3;
       field_sort = (BitVec_sort (sz));
       field_projectible = true } in
@@ -1168,9 +1297,13 @@ let mkBvAnd (tmp : (term * term)) : term =
 
 let boxBitVec (sz : Prims.int) (t : term) : term =
   (let tmp = (boxBitVecFun sz) in
-  let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+  let tmp1 = (match tmp with
+      | (u__1, u__2) -> u__1
+    ) in
   let tmp2 = (boxBitVecFun sz) in
-  let tmp3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp2) in
+  let tmp3 = (match tmp2 with
+      | (u__1, u__2) -> u__2
+    ) in
   (elim_box true tmp1 tmp3 t))
 
 let mkBvXor (tmp : (term * term)) : term =
@@ -1178,6 +1311,18 @@ let mkBvXor (tmp : (term * term)) : term =
 
 let mkBvOr (tmp : (term * term)) : term =
   (mk_bin_op BvOr tmp)
+
+let mkBvNand (tmp : (term * term)) : term =
+  (mk_bin_op BvNand tmp)
+
+let mkBvNor (tmp : (term * term)) : term =
+  (mk_bin_op BvNor tmp)
+
+let mkBvXnor (tmp : (term * term)) : term =
+  (mk_bin_op BvXnor tmp)
+
+let mkBvComp (tmp : (term * term)) : term =
+  (mk_bin_op BvComp tmp)
 
 let mkBvAdd (tmp : (term * term)) : term =
   (mk_bin_op BvAdd tmp)
@@ -1209,11 +1354,11 @@ let mkBvShr (sz : Prims.int) (tmp : (term * term)) : term =
 let mkBvRol (sz : Prims.int) (tmp : (term * term)) : term =
   (match tmp with
     | (t1, t2) -> (match t2 with
-        | (Integer (n)) -> (let tmp1 = (FStarC_Util.int_of_string n) in
+        | (Integer (n)) -> (let tmp1 = (Z.of_string n) in
           let tmp2 = (BvRol (tmp1)) in
           let tmp3 = (tmp2, (t1 :: [])) in
           (mkApp' tmp3))
-        | (App ((Var (proj)), ((App ((Var (box)), ((Integer (n)) :: []), tmp1)) :: []), tmp2)) when (((=) proj "BoxInt_proj_0") && ((=) box "BoxInt")) -> (let tmp3 = (FStarC_Util.int_of_string n) in
+        | (App ((Var (proj)), ((App ((Var (box)), ((Integer (n)) :: []), tmp1)) :: []), tmp2)) when (((=) proj "BoxInt_proj_0") && ((=) box "BoxInt")) -> (let tmp3 = (Z.of_string n) in
           let tmp4 = (BvRol (tmp3)) in
           let tmp5 = (tmp4, (t1 :: [])) in
           (mkApp' tmp5))
@@ -1228,11 +1373,11 @@ let mkBvRol (sz : Prims.int) (tmp : (term * term)) : term =
 let mkBvRor (sz : Prims.int) (tmp : (term * term)) : term =
   (match tmp with
     | (t1, t2) -> (match t2 with
-        | (Integer (n)) -> (let tmp1 = (FStarC_Util.int_of_string n) in
+        | (Integer (n)) -> (let tmp1 = (Z.of_string n) in
           let tmp2 = (BvRor (tmp1)) in
           let tmp3 = (tmp2, (t1 :: [])) in
           (mkApp' tmp3))
-        | (App ((Var (proj)), ((App ((Var (box)), ((Integer (n)) :: []), tmp1)) :: []), tmp2)) when (((=) proj "BoxInt_proj_0") && ((=) box "BoxInt")) -> (let tmp3 = (FStarC_Util.int_of_string n) in
+        | (App ((Var (proj)), ((App ((Var (box)), ((Integer (n)) :: []), tmp1)) :: []), tmp2)) when (((=) proj "BoxInt_proj_0") && ((=) box "BoxInt")) -> (let tmp3 = (Z.of_string n) in
           let tmp4 = (BvRor (tmp3)) in
           let tmp5 = (tmp4, (t1 :: [])) in
           (mkApp' tmp5))
@@ -1306,14 +1451,89 @@ let mkBvMul' (sz : Prims.int) (tmp : (term * term)) : term =
     | (t1, t2) -> (mkApp' (BvMul, (t1 :: (t2 :: []))))
   )
 
+let mkBvUle (tmp : (term * term)) : term =
+  (mk_bin_op BvUle tmp)
+
+let mkBvUgt (tmp : (term * term)) : term =
+  (mk_bin_op BvUgt tmp)
+
+let mkBvUge (tmp : (term * term)) : term =
+  (mk_bin_op BvUge tmp)
+
+let mkBvSlt (tmp : (term * term)) : term =
+  (mk_bin_op BvSlt tmp)
+
+let mkBvSle (tmp : (term * term)) : term =
+  (mk_bin_op BvSle tmp)
+
+let mkBvSgt (tmp : (term * term)) : term =
+  (mk_bin_op BvSgt tmp)
+
+let mkBvSge (tmp : (term * term)) : term =
+  (mk_bin_op BvSge tmp)
+
+let mkBvSdiv (tmp : (term * term)) : term =
+  (mk_bin_op BvSdiv tmp)
+
+let mkBvSrem (tmp : (term * term)) : term =
+  (mk_bin_op BvSrem tmp)
+
+let mkBvSmod (tmp : (term * term)) : term =
+  (mk_bin_op BvSmod tmp)
+
+let mkBvAshr (tmp : (term * term)) : term =
+  (mk_bin_op BvAshr tmp)
+
+let mkBvNego (t : term) : term =
+  (mkApp' (BvNego, (t :: [])))
+
+let mkBvUaddo (tmp : (term * term)) : term =
+  (mk_bin_op BvUaddo tmp)
+
+let mkBvSaddo (tmp : (term * term)) : term =
+  (mk_bin_op BvSaddo tmp)
+
+let mkBvUmulo (tmp : (term * term)) : term =
+  (mk_bin_op BvUmulo tmp)
+
+let mkBvSmulo (tmp : (term * term)) : term =
+  (mk_bin_op BvSmulo tmp)
+
+let mkBvUsubo (tmp : (term * term)) : term =
+  (mk_bin_op BvUsubo tmp)
+
+let mkBvSsubo (tmp : (term * term)) : term =
+  (mk_bin_op BvSsubo tmp)
+
+let mkBvSdivo (tmp : (term * term)) : term =
+  (mk_bin_op BvSdivo tmp)
+
+let mkBvConcat (tmp : (term * term)) : term =
+  (mk_bin_op BvConcat tmp)
+
+let mkBvRepeat (n : Prims.int) (t : term) : term =
+  (mkApp' ((BvRepeat (n)), (t :: [])))
+
 let mkBvUext (sz : Prims.int) (t : term) : term =
   (mkApp' ((BvUext (sz)), (t :: [])))
+
+let mkBvSext (sz : Prims.int) (t : term) : term =
+  (mkApp' ((BvSext (sz)), (t :: [])))
+
+let mkBvExtract (i : Prims.int) (j : Prims.int) (t : term) : term =
+  (mkApp' ((BvExtract (i, j)), (t :: [])))
 
 let mkBvNot (t : term) : term =
   (mkApp' (BvNot, (t :: [])))
 
+let mkBvNeg (t : term) : term =
+  (mkApp' (BvNeg, (t :: [])))
+
 let mkBvToNat (t : term) : term =
   (mkApp' (BvToNat, (t :: [])))
+
+let mkSBvToInt (t : term) : term =
+  (mkApp' (SBvToInt, (t :: [])))
 
 let mk_LexCons (x1 : term) (x2 : term) (x3 : term) : term =
   (mkApp ("LexCons", (x1 :: (x2 :: (x3 :: [])))))
@@ -1337,7 +1557,11 @@ let boxPropFun : (string * string) =
   (mkBoxFunctions "BoxProp")
 
 let boxProp (t : term) : term =
-  (elim_box true (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxPropFun) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxPropFun) t)
+  (elim_box true (match boxPropFun with
+    | (u__1, u__2) -> u__1
+  ) (match boxPropFun with
+    | (u__1, u__2) -> u__2
+  ) t)
 
 let rec n_fuel (n : Prims.int) : term =
   (if ((=) n Prims.int_zero) then (mkApp ("ZFuel", [])) else (let tmp = (n_fuel (Prims.op_Minus n Prims.int_one)) in
@@ -1359,7 +1583,7 @@ let fresh_token (tmp : (term * (fv) list * sort)) (id : Prims.int) : decl =
       let a_name = (Prims.strcat "fresh_token_" tok_name) in
       let tmp1 = (mkInteger' id) in
       let tmp2 = (constr_id_of_sort sort) in
-      let tmp3 = (FStarC_List.map (fun f -> (mkFreeV f)) univ_fvs) in
+      let tmp3 = (BatList.map (fun f -> (mkFreeV f)) univ_fvs) in
       let tmp4 = (tok_name, tmp3) in
       let tmp5 = (mkApp tmp4) in
       let tmp6 = (tmp5 :: []) in
@@ -1381,34 +1605,34 @@ let rec inst__aux (tms : (term) list) (n : Prims.int) (shift : Prims.int) (t : t
     | (String (tmp)) -> t
     | (Real (tmp)) -> t
     | (FreeV (tmp)) -> t
-    | (BoundV (i)) -> (if ((Prims.op_Less_Equals Prims.int_zero (Prims.op_Minus i shift)) && (Prims.op_Less (Prims.op_Minus i shift) n)) then (FStarC_List.nth tms (Prims.op_Minus i shift)) else t)
-    | (App (op, tms1, r)) -> (let tmp = (FStarC_List.map ((inst__aux tms n) shift) tms1) in
+    | (BoundV (i)) -> (if ((Prims.op_Less_Equals Prims.int_zero (Prims.op_Minus i shift)) && (Prims.op_Less (Prims.op_Minus i shift) n)) then ((fun l i -> BatList.nth l (Z.to_int i)) tms (Prims.op_Minus i shift)) else t)
+    | (App (op, tms1, r)) -> (let tmp = (BatList.map ((inst__aux tms n) shift) tms1) in
       let tmp1 = (op, tmp) in
       let tmp2 = (mkApp' tmp1) in
       (set_range tmp2 r))
     | (Labeled (t1, r1, r2)) -> (let tmp = ((inst__aux tms n) shift t1) in
       (Labeled (tmp, r1, r2)))
-    | (Quant (qop, pats, wopt, vars, body, r)) -> (let m = (FStarC_List.length vars) in
+    | (Quant (qop, pats, wopt, vars, body, r)) -> (let m = ((fun l -> Z.of_int (BatList.length l)) vars) in
       let shift1 = (Prims.op_Plus shift m) in
-      let tmp = (FStarC_List.map (FStarC_List.map ((inst__aux tms n) shift1)) pats) in
+      let tmp = (BatList.map (BatList.map ((inst__aux tms n) shift1)) pats) in
       let tmp1 = ((inst__aux tms n) shift1 body) in
       let tmp2 = (qop, tmp, wopt, vars, tmp1) in
       (mkQuant r false tmp2))
-    | (Let (es, body)) -> (let tmp = (FStarC_List.fold_left (fun tmp e -> (match tmp with
+    | (Let (es, body)) -> (let tmp = (BatList.fold_left (fun tmp e -> (match tmp with
           | (ix, es1) -> (let tmp1 = ((inst__aux tms n) shift e) in
             let tmp2 = (tmp1 :: es1) in
             ((Prims.op_Plus shift Prims.int_one), tmp2))
         )) (shift, []) es) in
       (match tmp with
         | (shift1, es_rev) -> (let tmp1 = ((inst__aux tms n) shift1 body) in
-          let tmp2 = ((FStarC_List.rev es_rev), tmp1) in
+          let tmp2 = ((BatList.rev es_rev), tmp1) in
           (mkLet tmp2))
       ))
   )
 
 let inst (tms : (term) list) (t : term) : term =
-  (let tms1 = (FStarC_List.rev tms) in
-  let n = (FStarC_List.length tms1) in
+  (let tms1 = (BatList.rev tms) in
+  let n = ((fun l -> Z.of_int (BatList.length l)) tms1) in
   ((inst__aux tms1 n) Prims.int_zero t))
 
 let subst (t : term) (fv : fv) (s : term) : term =
@@ -1423,25 +1647,25 @@ let mk_Precedes (u0 : term) (u1 : term) (x1 : term) (x2 : term) (x3 : term) (x4 
   (mk_Valid tmp))
 
 let decls_list_of (l : (decls_elt) list) : (decl) list =
-  (FStarC_List.collect (fun elt -> (elt).decls) l)
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun elt -> (elt).decls) l)
 
-let form_core (children : (FStar_Pprint.document) list) : FStar_Pprint.document =
-  (FStar_Pprint.parens (FStar_Pprint.nest Prims.int_one (FStar_Pprint.group (FStar_Pprint.separate (FStar_Pprint.break_ Prims.int_one) children))))
+let form_core (children : (PPrint.document) list) : PPrint.document =
+  (PPrint.parens (FStar_Pprint.nest Prims.int_one (PPrint.group (PPrint.separate (FStar_Pprint.break_ Prims.int_one) children))))
 
-let form (fn : string) (args : (FStar_Pprint.document) list) : FStar_Pprint.document =
-  (form_core ((FStar_Pprint.doc_of_string fn) :: args))
+let form (fn : string) (args : (PPrint.document) list) : PPrint.document =
+  (form_core ((PPrint.string fn) :: args))
 
-let rec docSort (x : sort) : FStar_Pprint.document =
+let rec docSort (x : sort) : PPrint.document =
   (match x with
-    | Bool_sort -> (FStar_Pprint.doc_of_string "Bool")
-    | Int_sort -> (FStar_Pprint.doc_of_string "Int")
-    | Term_sort -> (FStar_Pprint.doc_of_string "Term")
-    | String_sort -> (FStar_Pprint.doc_of_string "FString")
-    | Fuel_sort -> (FStar_Pprint.doc_of_string "Fuel")
+    | Bool_sort -> (PPrint.string "Bool")
+    | Int_sort -> (PPrint.string "Int")
+    | Term_sort -> (PPrint.string "Term")
+    | String_sort -> (PPrint.string "FString")
+    | Fuel_sort -> (PPrint.string "Fuel")
     | (BitVec_sort (n)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-      let tmp1 = (FStar_Pprint.doc_of_string tmp) in
+      let tmp1 = (PPrint.string tmp) in
       let tmp2 = (tmp1 :: []) in
-      let tmp3 = ((FStar_Pprint.doc_of_string "BitVec") :: tmp2) in
+      let tmp3 = ((PPrint.string "BitVec") :: tmp2) in
       (form "_" tmp3))
     | (Array (s1, s2)) -> (let tmp = (docSort s1) in
       let tmp1 = (docSort s2) in
@@ -1450,16 +1674,16 @@ let rec docSort (x : sort) : FStar_Pprint.document =
       (form "Array" tmp3))
     | (Arrow (s1, s2)) -> (let tmp = (docSort s1) in
       let tmp1 = (docSort s2) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string " ->") tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp tmp2) in
-      let tmp4 = (FStar_Pprint.parens tmp3) in
-      let tmp5 = (FStar_Pprint.group tmp4) in
+      let tmp2 = (PPrint.(^/^) (PPrint.string " ->") tmp1) in
+      let tmp3 = (PPrint.(^^) tmp tmp2) in
+      let tmp4 = (PPrint.parens tmp3) in
+      let tmp5 = (PPrint.group tmp4) in
       (FStar_Pprint.nest Prims.int_one tmp5))
-    | (Sort (s)) -> (FStar_Pprint.doc_of_string s)
+    | (Sort (s)) -> (PPrint.string s)
   )
 
-let name_binders_inner (prefix_opt : (string) option) (outer_names : (fv) list) (start : Prims.int) (sorts : (sort) list) : ((fv) list * (FStar_Pprint.document) list * Prims.int) =
-  (let tmp = (FStarC_List.fold_left (fun tmp s -> (match tmp with
+let name_binders_inner (prefix_opt : (string) option) (outer_names : (fv) list) (start : Prims.int) (sorts : (sort) list) : ((fv) list * (PPrint.document) list * Prims.int) =
+  (let tmp = (BatList.fold_left (fun tmp s -> (match tmp with
       | (names, binders, n) -> (let prefix = (match s with
             | Term_sort -> "@x"
             | tmp1 -> "@u"
@@ -1477,60 +1701,60 @@ let name_binders_inner (prefix_opt : (string) option) (outer_names : (fv) list) 
         (names1, (b :: binders), (Prims.op_Plus n Prims.int_one)))
     )) (outer_names, [], start) sorts) in
   (match tmp with
-    | (names, binders, n) -> (names, (FStarC_List.rev binders), n)
+    | (names, binders, n) -> (names, (BatList.rev binders), n)
   ))
 
-let name_macro_binders (sorts : (sort) list) : ((fv) list * (FStar_Pprint.document) list) =
+let name_macro_binders (sorts : (sort) list) : ((fv) list * (PPrint.document) list) =
   (let tmp = (name_binders_inner (Some ("__")) [] Prims.int_zero sorts) in
   (match tmp with
-    | (names, binders, n) -> ((FStarC_List.rev names), binders)
+    | (names, binders, n) -> ((BatList.rev names), binders)
   ))
 
-let mk_pattern (pat : FStar_Pprint.document) : FStar_Pprint.document =
-  (FStar_Pprint.nest Prims.int_one (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string ":pattern") pat)))
+let mk_pattern (pat : PPrint.document) : PPrint.document =
+  (FStar_Pprint.nest Prims.int_one (PPrint.group (PPrint.(^/^) (PPrint.string ":pattern") pat)))
 
-let weightToSmt (tmp : (Prims.int) option) : (FStar_Pprint.document) list =
+let weightToSmt (tmp : (Prims.int) option) : (PPrint.document) list =
   (match tmp with
     | None -> []
     | (Some (i)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-      let tmp2 = (FStar_Pprint.doc_of_string tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string ":weight") tmp2) in
-      let tmp4 = (FStar_Pprint.group tmp3) in
+      let tmp2 = (PPrint.string tmp1) in
+      let tmp3 = (PPrint.(^/^) (PPrint.string ":weight") tmp2) in
+      let tmp4 = (PPrint.group tmp3) in
       let tmp5 = (FStar_Pprint.nest Prims.int_one tmp4) in
       (tmp5 :: []))
   )
 
-let mk_qid (id : string) : FStar_Pprint.document =
-  (FStar_Pprint.nest Prims.int_one (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string ":qid") (FStar_Pprint.doc_of_string id))))
+let mk_qid (id : string) : PPrint.document =
+  (FStar_Pprint.nest Prims.int_one (PPrint.group (PPrint.(^/^) (PPrint.string ":qid") (PPrint.string id))))
 
-let mk_tag (f : FStar_Pprint.document) (attrs : (FStar_Pprint.document) list) : FStar_Pprint.document =
-  (form_core ((FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "! ") f) :: attrs))
+let mk_tag (f : PPrint.document) (attrs : (PPrint.document) list) : PPrint.document =
+  (form_core ((PPrint.(^^) (PPrint.string "! ") f) :: attrs))
 
-let binder (fn : string) (b : FStar_Pprint.document) (args : (FStar_Pprint.document) list) : FStar_Pprint.document =
-  (form_core ((FStar_Pprint.nest Prims.int_one (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string fn) b))) :: args))
+let binder (fn : string) (b : PPrint.document) (args : (PPrint.document) list) : PPrint.document =
+  (form_core ((FStar_Pprint.nest Prims.int_one (PPrint.group (PPrint.(^/^) (PPrint.string fn) b))) :: args))
 
-let rec termToSmt__aux' (string_id_counter : (Prims.int ref)) (string_cache : (string) FStarC_SMap.t) (next_qid : (unit -> string)) (remove_guard_free : (((term) list) list -> ((term) list) list)) (depth : Prims.int) (n : Prims.int) (names : (fv) list) (t : term) : FStar_Pprint.document =
+let rec termToSmt__aux' (string_id_counter : (Prims.int ref)) (string_cache : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (next_qid : (unit -> string)) (remove_guard_free : (((term) list) list -> ((term) list) list)) (depth : Prims.int) (n : Prims.int) (names : (fv) list) (t : term) : PPrint.document =
   (let aux = ((termToSmt__aux string_id_counter string_cache next_qid remove_guard_free) (Prims.op_Plus depth Prims.int_one)) in
   (match t with
-    | (Integer (i)) -> (FStar_Pprint.doc_of_string i)
-    | (Real (r)) -> (FStar_Pprint.doc_of_string (FStarC_Real.to_smt_string r))
-    | (String (s)) -> (let id_opt = (FStarC_SMap.try_find string_cache s) in
+    | (Integer (i)) -> (PPrint.string i)
+    | (Real (r)) -> (PPrint.string (FStarC_Real.to_smt_string r))
+    | (String (s)) -> (let id_opt = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt string_cache s) in
       let tmp = (match id_opt with
           | (Some (id)) -> id
           | None -> (let tmp = (!(string_id_counter)) in
             let id = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp) in
             (FStarC_Util.incr string_id_counter);
-            (FStarC_SMap.add string_cache s id);
+            (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace string_cache s id);
             id)
         ) in
-      (FStar_Pprint.doc_of_string tmp))
-    | (BoundV (i)) -> (FStar_Pprint.doc_of_string (fv_name (FStarC_List.nth names i)))
-    | (FreeV (x)) when (fv_force x) -> (form (fv_name x) ((FStar_Pprint.doc_of_string "Dummy_value") :: []))
-    | (FreeV (x)) -> (FStar_Pprint.doc_of_string (fv_name x))
+      (PPrint.string tmp))
+    | (BoundV (i)) -> (PPrint.string (fv_name ((fun l i -> BatList.nth l (Z.to_int i)) names i)))
+    | (FreeV (x)) when (fv_force x) -> (form (fv_name x) ((PPrint.string "Dummy_value") :: []))
+    | (FreeV (x)) -> (PPrint.string (fv_name x))
     | (App (op, [], tmp)) -> (let tmp1 = (op_to_string op) in
-      (FStar_Pprint.doc_of_string tmp1))
+      (PPrint.string tmp1))
     | (App (op, tms, tmp)) -> (let tmp1 = (op_to_string op) in
-      let tmp2 = (FStarC_List.map (aux n names) tms) in
+      let tmp2 = (BatList.map (aux n names) tms) in
       (form tmp1 tmp2))
     | (Labeled (t1, tmp, tmp1)) -> (aux n names t1)
     | (Quant (qop, pats, wopt, sorts, body, tmp)) -> (let qid = (next_qid ()) in
@@ -1540,18 +1764,18 @@ let rec termToSmt__aux' (string_id_counter : (Prims.int ref)) (string_cache : (s
           let pats_str = (match pats1 with
               | ([] :: []) -> []
               | [] -> []
-              | tmp2 -> (FStarC_List.map (fun pats2 -> (let tmp3 = (FStarC_List.map (aux n1 names1) pats2) in
+              | tmp2 -> (BatList.map (fun pats2 -> (let tmp3 = (BatList.map (aux n1 names1) pats2) in
                 let tmp4 = (form_core tmp3) in
                 (mk_pattern tmp4))) pats1)
             ) in
           let tmp2 = (aux n1 names1 body) in
           let tmp3 = (weightToSmt wopt) in
-          let tmp4 = (FStarC_List.op_At tmp3 (FStarC_List.op_At pats_str ((mk_qid qid) :: []))) in
+          let tmp4 = (BatList.append tmp3 (BatList.append pats_str ((mk_qid qid) :: []))) in
           let tmp5 = (mk_tag tmp2 tmp4) in
           let tmp6 = (tmp5 :: []) in
           (binder (qop_to_string qop) (form_core binders) tmp6))
       ))
-    | (Let (es, body)) -> (let tmp = (FStarC_List.fold_left (fun tmp e -> (match tmp with
+    | (Let (es, body)) -> (let tmp = (BatList.fold_left (fun tmp e -> (match tmp with
           | (names0, binders, n0) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int n0) in
             let nm = (Prims.strcat "@lb" tmp1) in
             let names01 = ((mk_fv (nm, Term_sort)) :: names0) in
@@ -1567,34 +1791,34 @@ let rec termToSmt__aux' (string_id_counter : (Prims.int ref)) (string_cache : (s
       ))
   ))
 
-and termToSmt__aux (string_id_counter : (Prims.int ref)) (string_cache : (string) FStarC_SMap.t) (next_qid : (unit -> string)) (remove_guard_free : (((term) list) list -> ((term) list) list)) : (Prims.int -> (Prims.int -> ((fv) list -> (term -> FStar_Pprint.document)))) =
+and termToSmt__aux (string_id_counter : (Prims.int ref)) (string_cache : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (next_qid : (unit -> string)) (remove_guard_free : (((term) list) list -> ((term) list) list)) : (Prims.int -> (Prims.int -> ((fv) list -> (term -> PPrint.document)))) =
   (termToSmt__aux' string_id_counter string_cache next_qid remove_guard_free)
 
-let termToSmt : (bool -> (string -> (term -> FStar_Pprint.document))) =
+let termToSmt : (bool -> (string -> (term -> PPrint.document))) =
   (let string_id_counter = (ref Prims.int_zero) in
-  let string_cache = (FStarC_SMap.create (Prims.of_int (20))) in
+  let string_cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
   (fun print_ranges enclosing_name t -> (let ctr = (ref Prims.int_zero) in
   let next_qid = (fun depth -> (let n = (!(ctr)) in
     (FStarC_Util.incr ctr);
     (if ((=) n Prims.int_zero) then enclosing_name else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
     (FStarC_Format.fmt2 "%s.%s" enclosing_name tmp))))) in
-  let remove_guard_free = (fun pats -> (FStarC_List.map (fun ps -> (FStarC_List.map (fun tm -> (match tm with
+  let remove_guard_free = (fun pats -> (BatList.map (fun ps -> (BatList.map (fun tm -> (match tm with
       | (App ((Var ("Prims.guard_free")), ((BoundV (tmp)) :: []), tmp1)) -> tm
       | (App ((Var ("Prims.guard_free")), (p :: []), tmp)) -> p
       | tmp -> tm
     )) ps)) pats)) in
   ((termToSmt__aux string_id_counter string_cache next_qid remove_guard_free) Prims.int_zero Prims.int_zero [] t))))
 
-let mk_named (id : string) : FStar_Pprint.document =
-  (FStar_Pprint.nest Prims.int_one (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (FStar_Pprint.doc_of_string ":named") (FStar_Pprint.doc_of_string id))))
+let mk_named (id : string) : PPrint.document =
+  (FStar_Pprint.nest Prims.int_one (PPrint.group (PPrint.(^/^) (PPrint.string ":named") (PPrint.string id))))
 
-let render (eta : FStar_Pprint.document) : string =
+let render (eta : PPrint.document) : string =
   (FStarC_Pprint.pretty_string (FStarC_Util.float_of_string "1.0") (Prims.of_int (100)) eta)
 
 let rec mkPrelude (z3options : string) : string =
   (let basic = (Prims.strcat z3options "(declare-sort FString)\n(declare-fun FString_constr_id (FString) Int)\n\n(declare-sort Term)\n(declare-sort Universe)\n(declare-fun U_zero () Universe)\n(declare-fun U_succ (Universe) Universe)\n(declare-fun ulevel ((Universe)) Int)\n(declare-fun Univ (Int) Universe)\n(assert (= (ulevel U_zero) 0))\n(assert (forall ((u Universe)) (! (= (ulevel (U_succ u)) (+ 1 (ulevel u))) :pattern ((ulevel (U_succ u))))))\n(assert (forall ((u Universe)) (! (>= (ulevel u) 0) :pattern ((ulevel u)))))\n(assert (forall ((u Universe)) (! (= (Univ (ulevel u)) u) :pattern ((ulevel u)))))\n(assert (forall ((i Int)) (! (implies (>= i 0) (= (ulevel (Univ i)) i)) :pattern ((Univ i)))))\n(declare-fun U_max (Universe Universe) Universe)\n(assert (forall ((u1 Universe) (u2 Universe))\n(! (= (U_max u1 u2)\n(ite (<= (ulevel u1) (ulevel u2)) u2 u1))\n:pattern ((U_max u1 u2)))))\n(declare-fun U_unif (Int) Universe)\n(declare-fun U_unknown () Universe)\n(declare-fun Term_constr_id (Term) Int)\n(declare-sort Dummy_sort)\n(declare-fun Dummy_value () Dummy_sort)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreType (Term) Term)\n(declare-fun Valid (Term) Bool)\n(declare-fun HasTypeFuel (Fuel Term Term) Bool)\n(define-fun HasTypeZ ((x Term) (t Term)) Bool\n(HasTypeFuel ZFuel x t))\n(define-fun HasType ((x Term) (t Term)) Bool\n(HasTypeFuel MaxIFuel x t))\n(declare-fun IsTotFun (Term) Bool)\n\n                ;;fuel irrelevance\n(assert (forall ((f Fuel) (x Term) (t Term))\n(! (= (HasTypeFuel (SFuel f) x t)\n(HasTypeZ x t))\n:pattern ((HasTypeFuel (SFuel f) x t)))))\n(declare-fun NoHoist (Term Bool) Bool)\n;;no-hoist\n(assert (forall ((dummy Term) (b Bool))\n(! (= (NoHoist dummy b) b)\n:pattern ((NoHoist dummy b)))))\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Term)) (HasTypeZ x t)))\n(declare-fun ApplyTF (Term Fuel) Term)\n(declare-fun ApplyTT (Term Term) Term)\n(declare-fun Prec (Term Term) Bool)\n(assert (forall ((x Term) (y Term) (z Term))\n(! (implies (and (Prec x y) (Prec y z)) (Prec x z))\n:pattern ((Prec x z) (Prec x y)))))\n(assert (forall ((x Term) (y Term))\n(implies (Prec x y)\n(not (Prec y x)))))\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Tm_uvar (Int) Term)\n(define-fun Reify ((x Term)) Term x)\n(declare-fun Prims.precedes (Universe Universe Term Term Term Term) Term)\n(declare-fun Range_const (Int) Term)\n(declare-fun _mul (Int Int) Int)\n(declare-fun _div (Int Int) Int)\n(declare-fun _mod (Int Int) Int)\n(declare-fun __uu__PartialApp () Term)\n(assert (forall ((x Int) (y Int)) (! (= (_mul x y) (* x y)) :pattern ((_mul x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_div x y) (div x y)) :pattern ((_div x y)))))\n(assert (forall ((x Int) (y Int)) (! (= (_mod x y) (mod x y)) :pattern ((_mod x y)))))\n(declare-fun _rmul (Real Real) Real)\n(declare-fun _rdiv (Real Real) Real)\n(assert (forall ((x Real) (y Real)) (! (= (_rmul x y) (* x y)) :pattern ((_rmul x y)))))\n(assert (forall ((x Real) (y Real)) (! (= (_rdiv x y) (/ x y)) :pattern ((_rdiv x y)))))\n(define-fun Unreachable () Bool false)") in
   let as_constr = (fun x -> (match x with
-      | (name, fields, sort, id, u__injective) -> (let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+      | (name, fields, sort, id, u__injective) -> (let tmp = (BatList.map (fun tmp -> (match tmp with
             | (field_name, field_sort, field_projectible) -> { field_name = field_name;
                 field_sort = field_sort;
                 field_projectible = field_projectible }
@@ -1605,98 +1829,118 @@ let rec mkPrelude (z3options : string) : string =
           constr_id = (Some (id));
           constr_base = false })
     )) in
-  let constrs = (FStarC_List.map as_constr (("FString_const", (("FString_const_proj_0", Int_sort, true) :: []), String_sort, Prims.int_zero, true) :: (("Tm_type", (("Tm_type_0", (Sort ("Universe")), true) :: []), Term_sort, (Prims.of_int (2)), true) :: (("Tm_arrow", (("Tm_arrow_id", Int_sort, true) :: []), Term_sort, (Prims.of_int (3)), false) :: (("Tm_unit", [], Term_sort, (Prims.of_int (6)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxIntFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxIntFun), Int_sort, true) :: []), Term_sort, (Prims.of_int (7)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxBoolFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxBoolFun), Bool_sort, true) :: []), Term_sort, (Prims.of_int (8)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxStringFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxStringFun), String_sort, true) :: []), Term_sort, (Prims.of_int (9)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxRealFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxRealFun), (Sort ("Real")), true) :: []), Term_sort, (Prims.of_int (10)), true) :: (("LexCons", (("LexCons_0", Term_sort, true) :: (("LexCons_1", Term_sort, true) :: (("LexCons_2", Term_sort, true) :: []))), Term_sort, (Prims.of_int (11)), true) :: (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst boxPropFun), (((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd boxPropFun), Bool_sort, true) :: []), Term_sort, (Prims.of_int (12)), true) :: []))))))))))) in
-  let tmp = (FStarC_List.collect (constructor_to_decl norng) constrs) in
-  let tmp1 = (FStarC_List.map (declToSmt z3options) tmp) in
-  let bcons = (FStarC_String.concat "\n" tmp1) in
+  let constrs = (BatList.map as_constr (("FString_const", (("FString_const_proj_0", Int_sort, true) :: []), String_sort, Prims.int_zero, true) :: (("Tm_type", (("Tm_type_0", (Sort ("Universe")), true) :: []), Term_sort, (Prims.of_int (2)), true) :: (("Tm_arrow", (("Tm_arrow_id", Int_sort, true) :: []), Term_sort, (Prims.of_int (3)), false) :: (("Tm_unit", [], Term_sort, (Prims.of_int (6)), true) :: (((match boxIntFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxIntFun with
+      | (u__1, u__2) -> u__2
+    ), Int_sort, true) :: []), Term_sort, (Prims.of_int (7)), true) :: (((match boxBoolFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxBoolFun with
+      | (u__1, u__2) -> u__2
+    ), Bool_sort, true) :: []), Term_sort, (Prims.of_int (8)), true) :: (((match boxStringFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxStringFun with
+      | (u__1, u__2) -> u__2
+    ), String_sort, true) :: []), Term_sort, (Prims.of_int (9)), true) :: (((match boxRealFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxRealFun with
+      | (u__1, u__2) -> u__2
+    ), (Sort ("Real")), true) :: []), Term_sort, (Prims.of_int (10)), true) :: (("LexCons", (("LexCons_0", Term_sort, true) :: (("LexCons_1", Term_sort, true) :: (("LexCons_2", Term_sort, true) :: []))), Term_sort, (Prims.of_int (11)), true) :: (((match boxPropFun with
+      | (u__1, u__2) -> u__1
+    ), (((match boxPropFun with
+      | (u__1, u__2) -> u__2
+    ), Bool_sort, true) :: []), Term_sort, (Prims.of_int (12)), true) :: []))))))))))) in
+  let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (constructor_to_decl norng) constrs) in
+  let tmp1 = (BatList.map (declToSmt z3options) tmp) in
+  let bcons = (BatString.concat "\n" tmp1) in
   let precedes_partial_app = "\n(declare-fun Prims.precedes@tok (Universe Universe) Term)\n(assert\n(forall ((u0 Universe) (u1 Universe) (@x0 Term) (@x1 Term) (@x2 Term) (@x3 Term))\n(! (= (ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1) @x0) @x1) @x2) @x3)\n(Prims.precedes u0 u1 @x0 @x1 @x2 @x3))\n:pattern ((ApplyTT (ApplyTT (ApplyTT (ApplyTT (Prims.precedes@tok u0 u1) @x0) @x1) @x2) @x3)))))\n" in
   let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(declare-fun Prims.lex_t () Term)\n(declare-fun LexTop () Term)\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t (LexCons t1 x1 x2) (LexCons t2 y1 y2)))\n(or (Valid (Prims.precedes u0 u1 t1 t2 x1 y1))\n(and (= x1 y1)\n(Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t x2 y2)))))))\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term) (e1 Term) (e2 Term))\n(! (iff (Valid (Prims.precedes u0 u1 t1 t2 e1 e2))\n(Valid (Prims.precedes U_zero U_zero Prims.lex_t Prims.lex_t e1 e2)))\n:pattern (Prims.precedes u0 u1 t1 t2 e1 e2))))\n(assert (forall ((u0 Universe) (u1 Universe) (t1 Term) (t2 Term))\n(! (iff (Valid (Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)) \n(Prec t1 t2))\n:pattern ((Prims.precedes u0 u1 Prims.lex_t Prims.lex_t t1 t2)))))\n" in
   let tm_type_typing = "(assert (forall ((u Universe) (t Term))\n(! (iff (HasType (Tm_type u) t)\n(= t (Tm_type (U_succ u))))\n:pattern ((HasType (Tm_type u) t)))))\n" in
   (Prims.strcat basic (Prims.strcat bcons (Prims.strcat precedes_partial_app (Prims.strcat lex_ordering tm_type_typing)))))
 
-and declToSmt' (print_captions : bool) (z3options : string) (decl : decl) : FStar_Pprint.document =
+and declToSmt' (print_captions : bool) (z3options : string) (decl : decl) : PPrint.document =
   (let with_caption = (fun c body -> (match c with
-      | (Some (c1)) when print_captions -> (let tmp = (FStarC_List.map FStarC_Util.trim_string (FStarC_String.split (10 :: []) c1)) in
-        let c2 = (FStarC_String.concat " " tmp) in
-        (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string (Prims.strcat "; " c2)) (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline body)))
+      | (Some (c1)) when print_captions -> (let tmp = (BatList.map FStarC_Util.trim_string (FStarC_String.split (10 :: []) c1)) in
+        let c2 = (BatString.concat " " tmp) in
+        (PPrint.(^^) (PPrint.string (Prims.strcat "; " c2)) (PPrint.(^^) PPrint.hardline body)))
       | tmp -> body
     )) in
   (match decl with
     | DefPrelude -> (let tmp = (mkPrelude z3options) in
-      (FStar_Pprint.doc_of_string tmp))
-    | (Module (s, decls)) -> (let res = (FStarC_Pprint.separate_map FStar_Pprint.hardline (declToSmt' print_captions z3options) decls) in
+      (PPrint.string tmp))
+    | (Module (s, decls)) -> (let res = (FStarC_Pprint.separate_map PPrint.hardline (declToSmt' print_captions z3options) decls) in
       let tmp = (FStarC_Options.keep_query_captions ()) in
-      (if tmp then (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length decls)) in
-      let tmp2 = (FStar_Pprint.doc_of_string tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (FStar_Pprint.doc_of_string " decls")) in
-      let tmp4 = (FStar_Pprint.parens tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp4 FStar_Pprint.hardline) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string s) tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string ";;; End ") tmp6) in
-      let tmp8 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat res tmp8) in
-      let tmp10 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp9) in
-      let tmp11 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string s) tmp10) in
-      (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string ";;; Start ") tmp11)) else res))
-    | (Caption (c)) -> (if print_captions then (FStarC_Pprint.separate_map FStar_Pprint.hardline (fun s -> (FStar_Pprint.doc_of_string (Prims.strcat "; " s))) (FStarC_Util.splitlines c)) else FStar_Pprint.empty)
-    | (DeclFun (f, argsorts, retsort, c)) -> (let tmp = (FStarC_List.map docSort argsorts) in
+      (if tmp then (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) decls)) in
+      let tmp2 = (PPrint.string tmp1) in
+      let tmp3 = (PPrint.(^^) tmp2 (PPrint.string " decls")) in
+      let tmp4 = (PPrint.parens tmp3) in
+      let tmp5 = (PPrint.(^^) tmp4 PPrint.hardline) in
+      let tmp6 = (PPrint.(^^) (PPrint.string s) tmp5) in
+      let tmp7 = (PPrint.(^^) (PPrint.string ";;; End ") tmp6) in
+      let tmp8 = (PPrint.(^^) PPrint.hardline tmp7) in
+      let tmp9 = (PPrint.(^^) res tmp8) in
+      let tmp10 = (PPrint.(^^) PPrint.hardline tmp9) in
+      let tmp11 = (PPrint.(^^) (PPrint.string s) tmp10) in
+      (PPrint.(^^) (PPrint.string ";;; Start ") tmp11)) else res))
+    | (Caption (c)) -> (if print_captions then (FStarC_Pprint.separate_map PPrint.hardline (fun s -> (PPrint.string (Prims.strcat "; " s))) (FStarC_Util.splitlines c)) else PPrint.empty)
+    | (DeclFun (f, argsorts, retsort, c)) -> (let tmp = (BatList.map docSort argsorts) in
       let tmp1 = (form_core tmp) in
       let tmp2 = (docSort retsort) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
-      let tmp5 = ((FStar_Pprint.doc_of_string f) :: tmp4) in
+      let tmp5 = ((PPrint.string f) :: tmp4) in
       let tmp6 = (form "declare-fun" tmp5) in
       (with_caption c tmp6))
     | (DefineFun (f, arg_sorts, retsort, body, c)) -> (let tmp = (name_macro_binders arg_sorts) in
       (match tmp with
-        | (names, binders) -> (let tmp1 = (FStarC_List.map (fun x -> (mkFreeV x)) names) in
+        | (names, binders) -> (let tmp1 = (BatList.map (fun x -> (mkFreeV x)) names) in
           let body1 = (inst tmp1 body) in
           let tmp2 = (docSort retsort) in
           let tmp3 = (tmp2 :: []) in
           let tmp4 = ((form_core binders) :: tmp3) in
-          let tmp5 = ((FStar_Pprint.doc_of_string f) :: tmp4) in
-          let tmp6 = ((FStar_Pprint.doc_of_string "define-fun") :: tmp5) in
-          let tmp7 = (FStar_Pprint.separate (FStar_Pprint.break_ Prims.int_one) tmp6) in
+          let tmp5 = ((PPrint.string f) :: tmp4) in
+          let tmp6 = ((PPrint.string "define-fun") :: tmp5) in
+          let tmp7 = (PPrint.separate (FStar_Pprint.break_ Prims.int_one) tmp6) in
           let tmp8 = (FStar_Pprint.nest Prims.int_one tmp7) in
-          let tmp9 = (FStar_Pprint.group tmp8) in
+          let tmp9 = (PPrint.group tmp8) in
           let tmp10 = (termToSmt print_captions (escape f) body1) in
           let tmp11 = (tmp10 :: []) in
           let tmp12 = (tmp9 :: tmp11) in
           let tmp13 = (form_core tmp12) in
           (with_caption c tmp13))
       ))
-    | (Assume (a)) -> (let fact_ids_to_string = (fun ids -> (FStarC_List.map (fun tmp -> (match tmp with
+    | (Assume (a)) -> (let fact_ids_to_string = (fun ids -> (BatList.map (fun tmp -> (match tmp with
           | (Name (n)) -> (Prims.strcat "Name " (FStarC_Ident.string_of_lid n))
           | (Namespace (ns)) -> (Prims.strcat "Namespace " (FStarC_Ident.string_of_lid ns))
           | (Tag (t)) -> (Prims.strcat "Tag " t)
         )) ids)) in
       let fids = (if print_captions then (let tmp = (fact_ids_to_string (a).assumption_fact_ids) in
-        let tmp1 = (FStarC_String.concat "; " tmp) in
+        let tmp1 = (BatString.concat "; " tmp) in
         (FStarC_Format.fmt1 ";;; Fact-ids: %s\n" tmp1)) else "") in
       let n = (a).assumption_name in
       let tmp = (termToSmt print_captions n (a).assumption_term) in
       let tmp1 = (mk_tag tmp ((mk_named n) :: [])) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (form "assert" tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string fids) tmp3) in
+      let tmp4 = (PPrint.(^^) (PPrint.string fids) tmp3) in
       (with_caption (a).assumption_caption tmp4))
     | (Eval (t)) -> (let tmp = (termToSmt print_captions "eval" t) in
       let tmp1 = (tmp :: []) in
       (form "eval" tmp1))
-    | (Echo (s)) -> (form "echo" ((FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "\"") (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string s) (FStar_Pprint.doc_of_string "\""))) :: []))
-    | (RetainAssumptions (tmp)) -> FStar_Pprint.empty
-    | CheckSat -> (FStar_Pprint.doc_of_string "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")")
-    | EmptyLine -> FStar_Pprint.empty
+    | (Echo (s)) -> (form "echo" ((PPrint.(^^) (PPrint.string "\"") (PPrint.(^^) (PPrint.string s) (PPrint.string "\""))) :: []))
+    | (RetainAssumptions (tmp)) -> PPrint.empty
+    | CheckSat -> (PPrint.string "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")")
+    | EmptyLine -> PPrint.empty
     | (Push (n)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-      let tmp1 = (FStar_Pprint.doc_of_string tmp) in
-      (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "(push) ;; push{") tmp1))
+      let tmp1 = (PPrint.string tmp) in
+      (PPrint.(^^) (PPrint.string "(push) ;; push{") tmp1))
     | (Pop (n)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-      let tmp1 = (FStar_Pprint.doc_of_string tmp) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 (FStar_Pprint.doc_of_string "}pop")) in
-      (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "(pop) ;; ") tmp2))
-    | (SetOption (s, v)) -> (form "set-option" ((FStar_Pprint.doc_of_string (Prims.strcat ":" s)) :: ((FStar_Pprint.doc_of_string v) :: [])))
-    | GetStatistics -> (FStar_Pprint.doc_of_string "(echo \"<statistics>\") (get-info :all-statistics) (echo \"</statistics>\")")
-    | GetReasonUnknown -> (FStar_Pprint.doc_of_string "(echo \"<reason-unknown>\") (get-info :reason-unknown) (echo \"</reason-unknown>\")")
+      let tmp1 = (PPrint.string tmp) in
+      let tmp2 = (PPrint.(^^) tmp1 (PPrint.string "}pop")) in
+      (PPrint.(^^) (PPrint.string "(pop) ;; ") tmp2))
+    | (SetOption (s, v)) -> (form "set-option" ((PPrint.string (Prims.strcat ":" s)) :: ((PPrint.string v) :: [])))
+    | GetStatistics -> (PPrint.string "(echo \"<statistics>\") (get-info :all-statistics) (echo \"</statistics>\")")
+    | GetReasonUnknown -> (PPrint.string "(echo \"<reason-unknown>\") (get-info :reason-unknown) (echo \"</reason-unknown>\")")
   ))
 
 and declToSmt (z3options : string) (decl : decl) : string =

@@ -11,8 +11,8 @@ let open_comb (r : FStarC_Range_Type.range) (n : Prims.int) (mname : FStarC_Iden
         let tmp1 = (FStarC_Syntax_Syntax.new_univ_name (Some (r))) in
         let tmp2 = (tmp1 :: []) in
         (tmp :: tmp2))) in
-      (tmp, t)) else (if ((=) (FStarC_List.length us) n) then (FStarC_Syntax_Subst.open_univ_vars us t) else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-      let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length us)) in
+      (tmp, t)) else (if ((=) ((fun l -> Z.of_int (BatList.length l)) us) n) then (FStarC_Syntax_Subst.open_univ_vars us t) else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
+      let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) us)) in
       let tmp2 = (FStarC_Format.fmt4 "The '%s' combinator of effect %s must be polymorphic in exactly %s universe(s), but it has %s" name (FStarC_Ident.string_of_lid mname) tmp tmp1) in
       (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_UnexpectedEffect tmp2))))
   )
@@ -34,7 +34,7 @@ let repr_app (repr_ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term'
 
 let check_total_repr (env : FStarC_TypeChecker_Env.env) (mname : FStarC_Ident.lident) (repr_ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (r : FStarC_Range_Type.range) : unit =
   (match repr_ts with
-    | (us, tmp) -> (let u_a = (FStarC_List.hd us) in
+    | (us, tmp) -> (let u_a = (BatList.hd us) in
       let env1 = (FStarC_TypeChecker_Env.push_univ_vars env us) in
       let tmp1 = (u_type r u_a) in
       let bv_a = (FStarC_Syntax_Syntax.new_bv (Some (r)) tmp1) in
@@ -59,7 +59,7 @@ let check_total_repr (env : FStarC_TypeChecker_Env.env) (mname : FStarC_Ident.li
 
 let repr_universe (env : FStarC_TypeChecker_Env.env) (repr_ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (r : FStarC_Range_Type.range) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (match repr_ts with
-    | (us, tmp) -> (let u_a = (FStarC_List.hd us) in
+    | (us, tmp) -> (let u_a = (BatList.hd us) in
       let env1 = (FStarC_TypeChecker_Env.push_univ_vars env us) in
       let tmp1 = (u_type r u_a) in
       let bv_a = (FStarC_Syntax_Syntax.new_bv (Some (r)) tmp1) in
@@ -78,7 +78,7 @@ let tc_eff_decl (env : FStarC_TypeChecker_Env.env) (ed : FStarC_Syntax_Syntax.ef
     | (Some (combs)) -> (let r = (FStarC_Ident.range_of_lid (ed).FStarC_Syntax_Syntax.mname) in
       let tmp = (open_comb r Prims.int_one (ed).FStarC_Syntax_Syntax.mname "repr" (combs).FStarC_Syntax_Syntax.repr) in
       let repr_ts = (match tmp with
-          | (us, t) -> (let u_a = (FStarC_List.hd us) in
+          | (us, t) -> (let u_a = (BatList.hd us) in
             let tmp1 = (u_type r u_a) in
             let tmp2 = (FStarC_Syntax_Syntax.new_bv (Some (r)) tmp1) in
             let b_a = (FStarC_Syntax_Syntax.mk_binder tmp2) in
@@ -91,7 +91,7 @@ let tc_eff_decl (env : FStarC_TypeChecker_Env.env) (ed : FStarC_Syntax_Syntax.ef
         ) in
       let tmp1 = (open_comb r Prims.int_one (ed).FStarC_Syntax_Syntax.mname "return" (combs).FStarC_Syntax_Syntax.return_repr) in
       let return_ts = (match tmp1 with
-          | (us, t) -> (let u_a = (FStarC_List.hd us) in
+          | (us, t) -> (let u_a = (BatList.hd us) in
             let tmp2 = (u_type r u_a) in
             let bv_a = (FStarC_Syntax_Syntax.new_bv (Some (r)) tmp2) in
             let a = (FStarC_Syntax_Syntax.bv_to_name bv_a) in
@@ -105,7 +105,7 @@ let tc_eff_decl (env : FStarC_TypeChecker_Env.env) (ed : FStarC_Syntax_Syntax.ef
         ) in
       let tmp2 = (open_comb r (Prims.of_int (2)) (ed).FStarC_Syntax_Syntax.mname "bind" (combs).FStarC_Syntax_Syntax.bind_repr) in
       let bind_ts = (match tmp2 with
-          | (us, t) -> (let tmp3 = ((FStarC_List.hd us), (FStarC_List.hd (FStarC_List.tl us))) in
+          | (us, t) -> (let tmp3 = ((BatList.hd us), (BatList.hd (BatList.tl us))) in
             (match tmp3 with
               | (u_a, u_b) -> (let tmp4 = (u_type r u_a) in
                 let bv_a = (FStarC_Syntax_Syntax.new_bv (Some (r)) tmp4) in
@@ -130,7 +130,7 @@ let tc_eff_decl (env : FStarC_TypeChecker_Env.env) (ed : FStarC_Syntax_Syntax.ef
                 (check_comb env us expected t))
             ))
         ) in
-      (if (FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect quals) then (check_total_repr env (ed).FStarC_Syntax_Syntax.mname repr_ts r) else ());
+      (if (BatList.mem FStarC_Syntax_Syntax.TotalEffect quals) then (check_total_repr env (ed).FStarC_Syntax_Syntax.mname repr_ts r) else ());
       let tmp3 = (repr_universe env repr_ts r) in
       let tmp4 = { FStarC_Syntax_Syntax.repr = repr_ts;
           return_repr = return_ts;
@@ -159,7 +159,7 @@ let tc_lift (env : FStarC_TypeChecker_Env.env) (sub : FStarC_Syntax_Syntax.sub_e
           ) in
         let tmp = (open_comb r Prims.int_one (sub).FStarC_Syntax_Syntax.target "lift" ts) in
         (match tmp with
-          | (us, t) -> (let u_a = (FStarC_List.hd us) in
+          | (us, t) -> (let u_a = (BatList.hd us) in
             let tmp1 = (u_type r u_a) in
             let bv_a = (FStarC_Syntax_Syntax.new_bv (Some (r)) tmp1) in
             let a = (FStarC_Syntax_Syntax.bv_to_name bv_a) in

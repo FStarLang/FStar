@@ -166,7 +166,7 @@ let rec on_subterms__descend_binders (recurse : (FStarC_TypeChecker_Env.env -> (
             | FStarC_Tactics_Types.Abort -> (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn ((orig).FStarC_Syntax_Syntax.n, t_flag))
             | tmp2 -> (let tmp3 = (recurse_option_residual_comp env retyping_subst k recurse) in
               (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn tmp3 (fun tmp4 -> (match tmp4 with
-                | (k1, k_flag) -> (let bs1 = (FStarC_List.rev accum_binders) in
+                | (k1, k_flag) -> (let bs1 = (BatList.rev accum_binders) in
                   let subst = (FStarC_Syntax_Subst.closing_of_binders bs1) in
                   let bs2 = (FStarC_Syntax_Subst.close_binders bs1) in
                   let t3 = (FStarC_Syntax_Subst.subst subst t2) in

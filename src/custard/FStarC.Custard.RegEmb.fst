@@ -552,17 +552,24 @@ and unembed_fun (st:Extract.state) (gty:typ)
 let native_lid (s:string) : name =
   { ns = ["FStarC"; "Tactics"; "Native"]; id = s; spec = None }
 
-(* [FStarC.Tactics.Native.register_plugin] and [register_tactic] exist only in
-   the hand-written [src/ml/FStarC_Tactics_Native.ml]: the module's interface
-   does not declare them, because nothing in F* calls them -- only generated
-   code does.  So there is nothing to request, and the reference is a
-   [DExternal] this module puts there itself. *)
+(* [FStarC.Tactics.Native.register_plugin] and [register_tactic] are called
+   only by generated code.  When the interface declares them (as it does when
+   the compiler itself is extracted), they are requested like any other
+   definition, so that an F* implementation gets extracted.  Otherwise, e.g.
+   when extracting a user plugin without the compiler's modules loaded, the
+   reference is a [DExternal] this module puts there itself, resolved against
+   the compiler library at link time. *)
 let register_fn (st:Extract.state) (which:string) (ty:cty) : ML name =
-  let nm = native_lid which in
-  Extract.emit st ("regemb-extern:" ^ which)
-    (DExternal { dx_name = nm; dx_typars = []; dx_ty = ty;
-                 dx_target = None; dx_header = None; dx_flags = [] });
-  nm
+  let l = Ident.lid_of_str ("FStarC.Tactics.Native." ^ which) in
+  if Some? (TcEnv.lookup_sigelt (Extract.tcenv st) l) then
+    Extract.request_lid st l
+  else begin
+    let nm = native_lid which in
+    Extract.emit st ("regemb-extern:" ^ which)
+      (DExternal { dx_name = nm; dx_typars = []; dx_ty = ty;
+                   dx_target = None; dx_header = None; dx_flags = [] });
+    nm
+  end
 
 let ir_call (f:name) (fty:cty) (args:list expr) : ML expr =
   let rec res (t:cty) (n:int) : ML cty =

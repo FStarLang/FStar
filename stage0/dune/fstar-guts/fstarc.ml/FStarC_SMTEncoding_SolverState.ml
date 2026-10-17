@@ -14,7 +14,7 @@ type given_decls =
 
 type decls_at_level = {
   pruning_state : FStarC_SMTEncoding_Pruning.pruning_state;
-  given_decl_names : (bool) FStarC_PSMap.t;
+  given_decl_names : (string, bool) FStarC_AVLMap.tree;
   all_decls_at_level_rev : (given_decls) list;
   given_some_decls : bool;
   to_flush_rev : ((FStarC_SMTEncoding_Term.decl) list) list;
@@ -25,10 +25,10 @@ type solver_state = {
   levels : (decls_at_level) list;
   pending_flushes_rev : (FStarC_SMTEncoding_Term.decl) list;
   using_facts_from : ((((string) list * bool)) list) option;
-  retain_assumptions : (bool) FStarC_PSMap.t;
+  retain_assumptions : (string, bool) FStarC_AVLMap.tree;
 }
 
-let empty_decl_names : (bool) FStarC_PSMap.t =
+let empty_decl_names : (string, bool) FStarC_AVLMap.tree =
   (FStarC_PSMap.empty ())
 
 let init_given_decls_at_level : decls_at_level =
@@ -53,11 +53,11 @@ let peek (s : solver_state) : (decls_at_level * (decls_at_level) list) =
     | (hd :: tl) -> (hd, tl)
   )
 
-let add_name (x : string) (s : (bool) FStarC_PSMap.t) : (bool) FStarC_PSMap.t =
+let add_name (x : string) (s : (string, bool) FStarC_AVLMap.tree) : (string, bool) FStarC_AVLMap.tree =
   (FStarC_PSMap.add s x true)
 
 let add_retain_names (names : ((string) list) list) (s : solver_state) : solver_state =
-  (let ra = (FStarC_List.fold_left (FStarC_List.fold_left (fun ra name -> (add_name name ra))) (s).retain_assumptions names) in
+  (let ra = (BatList.fold_left (BatList.fold_left (fun ra name -> (add_name name ra))) (s).retain_assumptions names) in
   { levels = (s).levels;
     pending_flushes_rev = (s).pending_flushes_rev;
     using_facts_from = (s).using_facts_from;
@@ -71,12 +71,12 @@ let force_given (g : given_decls) : (FStarC_SMTEncoding_Term.decl) list =
 
 let rec flatten (d : FStarC_SMTEncoding_Term.decl) : (FStarC_SMTEncoding_Term.decl) list =
   (match d with
-    | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> (FStarC_List.collect flatten ds)
+    | (FStarC_SMTEncoding_Term.Module (tmp, ds)) -> ((fun f l -> BatList.flatten (BatList.map f l)) flatten ds)
     | tmp -> (d :: [])
   )
 
 let add_retain_assumptions (ds : (FStarC_SMTEncoding_Term.decl) list) (s : solver_state) : solver_state =
-  (let tmp = (FStarC_List.collect (fun tmp -> (match tmp with
+  (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp -> (match tmp with
       | (FStarC_SMTEncoding_Term.RetainAssumptions (names)) -> (names :: [])
       | tmp1 -> []
     )) ds) in
@@ -84,7 +84,7 @@ let add_retain_assumptions (ds : (FStarC_SMTEncoding_Term.decl) list) (s : solve
 
 let give_delay_assumptions (resetting : bool) (g : given_decls) (s : solver_state) : solver_state =
   (match g with
-    | (Given_lazy (ld)) when (FStarC_Options_Ext.enabled "prune_decls") -> (let rest = (FStarC_List.collect (fun tmp -> (match tmp with
+    | (Given_lazy (ld)) when (FStarC_Options_Ext.enabled "prune_decls") -> (let rest = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp -> (match tmp with
           | (FStarC_SMTEncoding_Pruning.Sum_other (d)) -> (d :: [])
           | tmp1 -> []
         )) (ld).ld_sums) in
@@ -106,7 +106,7 @@ let give_delay_assumptions (resetting : bool) (g : given_decls) (s : solver_stat
               given_some_decls = (hd1).given_some_decls;
               to_flush_rev = (hd1).to_flush_rev;
               pruning_roots = (hd1).pruning_roots } in
-          let tmp2 = (FStarC_List.collect (fun tmp2 -> (match tmp2 with
+          let tmp2 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp2 -> (match tmp2 with
               | (FStarC_SMTEncoding_Pruning.Sum_retain (names)) -> (names :: [])
               | tmp3 -> []
             )) (ld).ld_sums) in
@@ -116,11 +116,11 @@ let give_delay_assumptions (resetting : bool) (g : given_decls) (s : solver_stat
             retain_assumptions = (s).retain_assumptions }))))
       ))
     | tmp -> (let ds = (force_given g) in
-      let decls = (FStarC_List.collect flatten ds) in
-      let tmp1 = (FStarC_List.partition FStarC_SMTEncoding_Term.uu___is_Assume decls) in
+      let decls = ((fun f l -> BatList.flatten (BatList.map f l)) flatten ds) in
+      let tmp1 = (BatList.partition FStarC_SMTEncoding_Term.uu___is_Assume decls) in
       (match tmp1 with
         | (assumptions, rest) -> (let tmp2 = (FStarC_Options_Ext.enabled "prune_decls") in
-          let tmp3 = (if tmp2 then (let tmp3 = (FStarC_List.partition (fun d -> ((match d with
+          let tmp3 = (if tmp2 then (let tmp3 = (BatList.partition (fun d -> ((match d with
                 | (FStarC_SMTEncoding_Term.DeclFun (u__0, u__1, u__2, u__3)) -> true
                 | tmp3 -> false
               ) || (match d with
@@ -128,7 +128,7 @@ let give_delay_assumptions (resetting : bool) (g : given_decls) (s : solver_stat
                 | tmp3 -> false
               ))) rest) in
             (match tmp3 with
-              | (decls_and_defs, rest1) -> (let tmp4 = (FStarC_List.filter (fun d -> (not (((match d with
+              | (decls_and_defs, rest1) -> (let tmp4 = (BatList.filter (fun d -> (not (((match d with
                     | (FStarC_SMTEncoding_Term.Caption (u__0)) -> true
                     | tmp4 -> false
                   ) || (match d with
@@ -168,13 +168,13 @@ let give_delay_assumptions (resetting : bool) (g : given_decls) (s : solver_stat
       ))
   )
 
-let decl_names_contains (x : string) (s : (bool) FStarC_PSMap.t) : bool =
+let decl_names_contains (x : string) (s : (string, bool) FStarC_AVLMap.tree) : bool =
   (match (FStarC_PSMap.try_find s x) with
     | (Some (v)) -> true
     | tmp -> false
   )
 
-let filter_using_facts_from (using_facts_from : ((((string) list * bool)) list) option) (retain_assumptions : (bool) FStarC_PSMap.t) (already_given_decl_ : (string -> bool)) (ds : (FStarC_SMTEncoding_Term.decl) list) : (FStarC_SMTEncoding_Term.decl) list =
+let filter_using_facts_from (using_facts_from : ((((string) list * bool)) list) option) (retain_assumptions : (string, bool) FStarC_AVLMap.tree) (already_given_decl_ : (string -> bool)) (ds : (FStarC_SMTEncoding_Term.decl) list) : (FStarC_SMTEncoding_Term.decl) list =
   (match using_facts_from with
     | None -> ds
     | (Some ((([], true) :: []))) -> ds
@@ -185,9 +185,9 @@ let filter_using_facts_from (using_facts_from : ((((string) list * bool)) list) 
               | tmp2 -> false
             )) (a).FStarC_SMTEncoding_Term.assumption_fact_ids))
         )) in
-      let already_given_map = (FStarC_SMap.create (Prims.of_int (1000))) in
-      let add_assumption = (fun a -> (FStarC_SMap.add already_given_map (a).FStarC_SMTEncoding_Term.assumption_name true)) in
-      let already_given = (fun a -> (let tmp = (FStarC_SMap.try_find already_given_map (a).FStarC_SMTEncoding_Term.assumption_name) in
+      let already_given_map = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (1000)))) in
+      let add_assumption = (fun a -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace already_given_map (a).FStarC_SMTEncoding_Term.assumption_name true)) in
+      let already_given = (fun a -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt already_given_map (a).FStarC_SMTEncoding_Term.assumption_name) in
         let tmp1 = (match tmp with
             | (Some (v)) -> true
             | tmp1 -> false
@@ -201,16 +201,16 @@ let filter_using_facts_from (using_facts_from : ((((string) list * bool)) list) 
             (d :: [])) else []))
           | tmp -> (d :: [])
         )) in
-      let ds' = (FStarC_List.collect map_decl ds) in
+      let ds' = ((fun f l -> BatList.flatten (BatList.map f l)) map_decl ds) in
       let tmp = (FStarC_Options_Ext.get "debug_using_facts_from") in
       let tmp1 = ((<>) tmp "") in
-      (if tmp1 then (let orig_n = (FStarC_List.length ds) in
-      let new_n = (FStarC_List.length ds') in
+      (if tmp1 then (let orig_n = ((fun l -> Z.of_int (BatList.length l)) ds) in
+      let new_n = ((fun l -> Z.of_int (BatList.length l)) ds') in
       (if ((<>) orig_n new_n) then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 orig_n) in
-      let tmp3 = (FStarC_List.map FStarC_SMTEncoding_Term.decl_to_string_short ds) in
+      let tmp3 = (BatList.map FStarC_SMTEncoding_Term.decl_to_string_short ds) in
       let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp3) in
       let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 new_n) in
-      let tmp6 = (FStarC_List.map FStarC_SMTEncoding_Term.decl_to_string_short ds') in
+      let tmp6 = (BatList.map FStarC_SMTEncoding_Term.decl_to_string_short ds') in
       let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp6) in
       (FStarC_Format.print4 "Pruned using facts from:\n\tOriginal (%s): [%s];\n\tPruned (%s): [%s]\n" tmp2 tmp4 tmp5 tmp7)) else ())) else ());
       ds')
@@ -221,11 +221,11 @@ let already_given_decl (s : solver_state) (aname : string) : bool =
 
 let give_now (resetting : bool) (g : given_decls) (s : solver_state) : solver_state =
   (let ds = (force_given g) in
-  let decls = (FStarC_List.collect flatten ds) in
+  let decls = ((fun f l -> BatList.flatten (BatList.map f l)) flatten ds) in
   let tmp = (peek s) in
   (match tmp with
     | (hd, tl) -> (let ds_to_flush = (filter_using_facts_from (s).using_facts_from (s).retain_assumptions (already_given_decl s) decls) in
-      let given = (FStarC_List.fold_left (Obj.magic ((fun given d -> (match d with
+      let given = (BatList.fold_left (Obj.magic ((fun given d -> (match d with
           | (FStarC_SMTEncoding_Term.Assume (a)) -> (add_name (a).FStarC_SMTEncoding_Term.assumption_name given)
           | tmp1 -> given
         )))) (hd).given_decl_names ds_to_flush) in
@@ -259,12 +259,12 @@ let give (ds : (FStarC_SMTEncoding_Term.decl) list) : (solver_state -> solver_st
   (give_aux false (Given (ds)))
 
 let depth (s : solver_state) : Prims.int =
-  (FStarC_List.length (s).levels)
+  ((fun l -> Z.of_int (BatList.length l)) (s).levels)
 
 let push (s : solver_state) : solver_state =
   (let tmp = (peek s) in
   (match tmp with
-    | (hd, tmp1) -> (let push_ = (FStarC_SMTEncoding_Term.Push ((FStarC_List.length (s).levels))) in
+    | (hd, tmp1) -> (let push_ = (FStarC_SMTEncoding_Term.Push (((fun l -> Z.of_int (BatList.length l)) (s).levels))) in
       let next = { pruning_state = (hd).pruning_state;
           given_decl_names = (hd).given_decl_names;
           all_decls_at_level_rev = [];
@@ -288,7 +288,7 @@ let pop (s : solver_state) : solver_state =
         pending_flushes_rev = (s).pending_flushes_rev;
         using_facts_from = (s).using_facts_from;
         retain_assumptions = (s).retain_assumptions } else { levels = tl;
-        pending_flushes_rev = ((FStarC_SMTEncoding_Term.Pop ((FStarC_List.length tl))) :: (s).pending_flushes_rev);
+        pending_flushes_rev = ((FStarC_SMTEncoding_Term.Pop (((fun l -> Z.of_int (BatList.length l)) tl))) :: (s).pending_flushes_rev);
         using_facts_from = (s).using_facts_from;
         retain_assumptions = (s).retain_assumptions }))
   ))
@@ -334,7 +334,7 @@ let reset (using_facts_from : ((((string) list * bool)) list) option) (s : solve
             pending_flushes_rev = (s_new2).pending_flushes_rev;
             using_facts_from = (s_new2).using_facts_from;
             retain_assumptions = (s_new2).retain_assumptions } in
-        let s1 = (FStarC_List.fold_right (if now then (give_now true) else (give_aux true)) (level).all_decls_at_level_rev s_new3) in
+        let s1 = (BatList.fold_right (if now then (give_now true) else (give_aux true)) (level).all_decls_at_level_rev s_new3) in
         let tmp1 = (set_pruning_roots level s1) in
         (tmp1, (match (level).pruning_roots with
           | (Some (v)) -> true
@@ -342,7 +342,9 @@ let reset (using_facts_from : ((((string) list * bool)) list) option) (s : solve
         )))
     ))) in
   let tmp = ((reset__rebuild rebuild_level) (s).levels s_new1) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp))
+  (match tmp with
+    | (u__1, u__2) -> u__1
+  ))
 
 let start_query (msg : string) (roots : (FStarC_SMTEncoding_Term.decl) list) (qry : (FStarC_SMTEncoding_Term.decl) list) (s : solver_state) : solver_state =
   (let tmp = (peek s) in
@@ -395,21 +397,21 @@ let decl_rank (d : FStarC_SMTEncoding_Term.decl) : Prims.int =
 let compare_decls (d0 : FStarC_SMTEncoding_Term.decl) (d1 : FStarC_SMTEncoding_Term.decl) : Prims.int =
   (let r = (Prims.op_Minus (decl_rank d0) (decl_rank d1)) in
   (if ((<>) r Prims.int_zero) then r else (match (d0, d1) with
-    | ((FStarC_SMTEncoding_Term.DeclFun (a0, tmp, tmp1, tmp2)), (FStarC_SMTEncoding_Term.DeclFun (a1, tmp3, tmp4, tmp5))) -> (FStarC_Util.compare a0 a1)
-    | ((FStarC_SMTEncoding_Term.DefineFun (a0, tmp, tmp1, tmp2, tmp3)), (FStarC_SMTEncoding_Term.DefineFun (a1, tmp4, tmp5, tmp6, tmp7))) -> (FStarC_Util.compare a0 a1)
-    | ((FStarC_SMTEncoding_Term.Assume ({ FStarC_SMTEncoding_Term.assumption_term = tmp; assumption_caption = tmp1; assumption_name = a0; assumption_fact_ids = tmp2; _ })), (FStarC_SMTEncoding_Term.Assume ({ FStarC_SMTEncoding_Term.assumption_term = tmp3; assumption_caption = tmp4; assumption_name = a1; assumption_fact_ids = tmp5; _ }))) -> (FStarC_Util.compare a0 a1)
+    | ((FStarC_SMTEncoding_Term.DeclFun (a0, tmp, tmp1, tmp2)), (FStarC_SMTEncoding_Term.DeclFun (a1, tmp3, tmp4, tmp5))) -> ((fun s1 s2 -> Z.of_int (BatString.compare s1 s2)) a0 a1)
+    | ((FStarC_SMTEncoding_Term.DefineFun (a0, tmp, tmp1, tmp2, tmp3)), (FStarC_SMTEncoding_Term.DefineFun (a1, tmp4, tmp5, tmp6, tmp7))) -> ((fun s1 s2 -> Z.of_int (BatString.compare s1 s2)) a0 a1)
+    | ((FStarC_SMTEncoding_Term.Assume ({ FStarC_SMTEncoding_Term.assumption_term = tmp; assumption_caption = tmp1; assumption_name = a0; assumption_fact_ids = tmp2; _ })), (FStarC_SMTEncoding_Term.Assume ({ FStarC_SMTEncoding_Term.assumption_term = tmp3; assumption_caption = tmp4; assumption_name = a1; assumption_fact_ids = tmp5; _ }))) -> ((fun s1 s2 -> Z.of_int (BatString.compare s1 s2)) a0 a1)
     | tmp -> Prims.int_zero
   )))
 
 let prune_level (roots : (FStarC_SMTEncoding_Term.decl) list) (hd : decls_at_level) (s : solver_state) : decls_at_level =
   (let to_give = (FStarC_SMTEncoding_Pruning.prune (hd).pruning_state roots) in
-  let tmp = (FStarC_List.fold_left (fun tmp to_give1 -> (match tmp with
+  let tmp = (BatList.fold_left (fun tmp to_give1 -> (match tmp with
       | (decl_name_set, can_give) -> (let name = (name_of_decl to_give1) in
         (if (not (decl_names_contains name decl_name_set)) then ((add_name name decl_name_set), (to_give1 :: can_give)) else (decl_name_set, can_give)))
     )) ((hd).given_decl_names, []) to_give) in
   (match tmp with
     | (given_decl_names, can_give) -> (let can_give1 = (filter_using_facts_from (s).using_facts_from (s).retain_assumptions (already_given_decl s) can_give) in
-      let can_give2 = (FStarC_List.sortWith compare_decls can_give1) in
+      let can_give2 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) compare_decls can_give1) in
       { pruning_state = (hd).pruning_state;
         given_decl_names = given_decl_names;
         all_decls_at_level_rev = (hd).all_decls_at_level_rev;
@@ -436,10 +438,10 @@ let flush (s : solver_state) : ((FStarC_SMTEncoding_Term.decl) list * solver_sta
       pending_flushes_rev = (s).pending_flushes_rev;
       using_facts_from = (s).using_facts_from;
       retain_assumptions = (s).retain_assumptions }) else s) in
-  let tmp1 = (FStarC_List.collect (fun level -> (level).to_flush_rev) (s1).levels) in
-  let tmp2 = (FStarC_List.rev tmp1) in
-  let to_flush = (FStarC_List.flatten tmp2) in
-  let levels = (FStarC_List.map (fun level -> { pruning_state = (level).pruning_state;
+  let tmp1 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun level -> (level).to_flush_rev) (s1).levels) in
+  let tmp2 = (BatList.rev tmp1) in
+  let to_flush = (BatList.flatten tmp2) in
+  let levels = (BatList.map (fun level -> { pruning_state = (level).pruning_state;
       given_decl_names = (level).given_decl_names;
       all_decls_at_level_rev = (level).all_decls_at_level_rev;
       given_some_decls = ((level).given_some_decls || (match (level).to_flush_rev with
@@ -452,7 +454,7 @@ let flush (s : solver_state) : ((FStarC_SMTEncoding_Term.decl) list * solver_sta
       pending_flushes_rev = [];
       using_facts_from = (s1).using_facts_from;
       retain_assumptions = (s1).retain_assumptions } in
-  let flushed = (FStar_List_Tot_Base.op_At (FStarC_List.rev (s1).pending_flushes_rev) to_flush) in
+  let flushed = (FStar_List_Tot_Base.op_At (BatList.rev (s1).pending_flushes_rev) to_flush) in
   (flushed, s11))
 
 let all_decls (s : solver_state) : (FStarC_SMTEncoding_Term.decl) list =

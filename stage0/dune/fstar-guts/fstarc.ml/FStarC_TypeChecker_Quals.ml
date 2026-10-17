@@ -85,9 +85,9 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Synta
         | (FStarC_Syntax_Syntax.Sig_let (tmp1)) -> false
         | tmp1 -> true
       ) else false) in
-    (if tmp1 then (FStarC_Errors.fStarC_Errors_raise_error__sigelt_list_document se1 FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation ((FStarC_Errors_Msg.text "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings.") :: [])) else ()))) in
+    (if tmp1 then (FStarC_Errors.fStarC_Errors_raise_error__sigelt_list_ocaml_document se1 FStarC_Errors_Codes.Fatal_InconsistentQualifierAnnotation ((FStarC_Errors_Msg.text "Illegal attribute: the `no_subtyping` attribute is allowed only on let-bindings.") :: [])) else ()))) in
   (check_no_subtyping_attribute se);
-  let quals = (FStarC_List.filter (fun x -> (not ((=) x FStarC_Syntax_Syntax.Logic))) (FStarC_Syntax_Util.quals_of_sigelt se)) in
+  let quals = (BatList.filter (fun x -> (not ((=) x FStarC_Syntax_Syntax.Logic))) (FStarC_Syntax_Util.quals_of_sigelt se)) in
   let tmp = (FStarC_Util.for_some (fun tmp -> (match tmp with
       | FStarC_Syntax_Syntax.OnlyName -> true
       | tmp1 -> false
@@ -96,28 +96,28 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Synta
   (if tmp1 then (let r = (FStarC_Syntax_Util.range_of_sigelt se) in
   let no_dup_quals = (FStarC_Util.remove_dups (fun x y -> ((=) x y)) quals) in
   let err = (fun msg -> (let tmp2 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
-    let tmp3 = (FStar_Pprint.doc_of_string tmp2) in
+    let tmp3 = (PPrint.string tmp2) in
     let tmp4 = (FStarC_Errors_Msg.fquotes tmp3) in
     let tmp5 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Invalid qualifiers for declaration") tmp4) in
     let tmp6 = (tmp5 :: []) in
     let tmp7 = (FStar_List_Tot_Base.op_At tmp6 msg) in
-    (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted tmp7))) in
-  (if ((<>) (FStarC_List.length quals) (FStarC_List.length no_dup_quals)) then (err ((FStarC_Errors_Msg.text "Duplicate qualifiers.") :: [])) else ());
+    (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted tmp7))) in
+  (if ((<>) ((fun l -> Z.of_int (BatList.length l)) quals) ((fun l -> Z.of_int (BatList.length l)) no_dup_quals)) then (err ((FStarC_Errors_Msg.text "Duplicate qualifiers.") :: [])) else ());
   (match (pairwise_compat qual_compat quals) with
     | (Some ((q, q'))) -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__qualifier q) in
       let tmp3 = (FStarC_Errors_Msg.fquotes tmp2) in
       let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__qualifier q') in
       let tmp5 = (FStarC_Errors_Msg.fquotes tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 (FStarC_Errors_Msg.text "are not compatible.")) in
-      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "and") tmp6) in
-      let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat tmp3 tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Qualifiers") tmp8) in
+      let tmp6 = (PPrint.(^/^) tmp5 (FStarC_Errors_Msg.text "are not compatible.")) in
+      let tmp7 = (PPrint.(^/^) (FStarC_Errors_Msg.text "and") tmp6) in
+      let tmp8 = (PPrint.(^/^) tmp3 tmp7) in
+      let tmp9 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Qualifiers") tmp8) in
       let tmp10 = (tmp9 :: []) in
       (err tmp10))
     | None -> ()
   );
   (match (se).FStarC_Syntax_Syntax.sigel with
-    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, tmp2); lids = tmp3; _ })) -> ((if (is_rec && (FStarC_List.contains FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen quals)) then (err ((FStarC_Errors_Msg.text "Recursive definitions cannot be marked inline.") :: [])) else ());
+    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, tmp2); lids = tmp3; _ })) -> ((if (is_rec && (BatList.mem FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen quals)) then (err ((FStarC_Errors_Msg.text "Recursive definitions cannot be marked inline.") :: [])) else ());
       let tmp4 = (FStarC_Util.for_some (fun x -> (assumption x)) quals) in
       (if tmp4 then (err ((FStarC_Errors_Msg.text "Definitions cannot be marked `assume`.") :: [])) else ());
       let tmp5 = (FStarC_Util.for_some (fun x -> (has_eq x)) quals) in
@@ -126,7 +126,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Synta
     | (FStarC_Syntax_Syntax.Sig_bundle (tmp2)) -> (let tmp3 = (FStarC_Util.for_all (fun x -> ((((((=) x FStarC_Syntax_Syntax.Inline_for_extraction) || ((=) x FStarC_Syntax_Syntax.NoExtract)) || (inferred x)) || (visibility x)) || (has_eq x))) quals) in
       let tmp4 = (not tmp3) in
       (if tmp4 then (err []) else ());
-      let tmp5 = (FStarC_List.existsb (fun tmp5 -> (match tmp5 with
+      let tmp5 = (BatList.exists (fun tmp5 -> (match tmp5 with
           | FStarC_Syntax_Syntax.Unopteq -> true
           | tmp6 -> false
         )) quals) in
@@ -140,7 +140,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Synta
     | (FStarC_Syntax_Syntax.Sig_new_effect (ed)) -> (let tmp2 = (FStarC_Util.for_all (fun x -> ((((((=) x FStarC_Syntax_Syntax.TotalEffect) || ((=) x FStarC_Syntax_Syntax.Assumption)) || (inferred x)) || (visibility x)) || (reification x))) quals) in
       let tmp3 = (not tmp2) in
       (if tmp3 then (err []) else ());
-      let assumed = (FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals) in
+      let assumed = (BatList.mem FStarC_Syntax_Syntax.Assumption quals) in
       (match (ed).FStarC_Syntax_Syntax.combinators with
         | None -> (if (not assumed) then (err ((FStarC_Errors_Msg.text "An effect declaration with no representation is an assumption; write `assume effect`.") :: [])) else ())
         | (Some (tmp4)) -> (if assumed then (err ((FStarC_Errors_Msg.text "The combinators of an effect definition are checked, so it cannot be marked `assume`.") :: [])) else ())
@@ -148,7 +148,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Synta
     | (FStarC_Syntax_Syntax.Sig_sub_effect (sub)) -> (let tmp2 = (FStarC_Util.for_all (fun x -> ((((=) x FStarC_Syntax_Syntax.Assumption) || (inferred x)) || (visibility x))) quals) in
       let tmp3 = (not tmp2) in
       (if tmp3 then (err []) else ());
-      let assumed = (FStarC_List.contains FStarC_Syntax_Syntax.Assumption quals) in
+      let assumed = (BatList.mem FStarC_Syntax_Syntax.Assumption quals) in
       (match (sub).FStarC_Syntax_Syntax.lift with
         | None -> (if (not assumed) then (err ((FStarC_Errors_Msg.text "A sub-effect with no lift is an assumption; write `assume sub_effect`.") :: [])) else ())
         | (Some (tmp4)) -> (if assumed then (err ((FStarC_Errors_Msg.text "The lift of a sub-effect is checked, so it cannot be marked `assume`.") :: [])) else ())
@@ -158,6 +158,21 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Synta
       (if tmp4 then (err []) else ()))
     | tmp2 -> ()
   )) else ())))
+
+let rec is_arity (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (let tmp = (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: []) env t) in
+  let t1 = (FStarC_Syntax_Util.unrefine tmp) in
+  let tmp1 = (FStarC_Syntax_Subst.compress t1) in
+  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
+  (match tmp2 with
+    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> true
+    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals_comp t1) in
+      (match tmp4 with
+        | (bs, c) -> (let tmp5 = (FStarC_TypeChecker_Env.push_binders env bs) in
+          (is_arity tmp5 (FStarC_Syntax_Util.comp_result c)))
+      ))
+    | tmp3 -> false
+  ))
 
 let non_info_norm_weak (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (let steps = ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.EraseUniverses :: (FStarC_TypeChecker_Env.Primops :: (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.HNF :: (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.Unascribe :: (FStarC_TypeChecker_Env.ForExtraction :: [])))))))))) in
@@ -178,8 +193,8 @@ let check_erasable (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Sy
     ) then (let tmp = (FStarC_Option.must attrs_opt) in
     (FStarC_Syntax_Util.has_attribute tmp FStarC_Parser_Const.erasable_attr)) else false))) lids) in
   let se_has_erasable_attr = (FStarC_Syntax_Util.has_attribute (se).FStarC_Syntax_Syntax.sigattrs FStarC_Parser_Const.erasable_attr) in
-  (if ((val_exists && val_has_erasable_attr) && (not se_has_erasable_attr)) then (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ((FStarC_Errors_Msg.text "Mismatch of attributes between declaration and definition.") :: ((FStarC_Errors_Msg.text "Declaration is marked `erasable` but the definition is not.") :: []))) else ());
-  (if ((val_exists && (not val_has_erasable_attr)) && se_has_erasable_attr) then (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ((FStarC_Errors_Msg.text "Mismatch of attributes between declaration and definition.") :: ((FStarC_Errors_Msg.text "Definition is marked `erasable` but the declaration is not.") :: []))) else ());
+  (if ((val_exists && val_has_erasable_attr) && (not se_has_erasable_attr)) then (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ((FStarC_Errors_Msg.text "Mismatch of attributes between declaration and definition.") :: ((FStarC_Errors_Msg.text "Declaration is marked `erasable` but the definition is not.") :: []))) else ());
+  (if ((val_exists && (not val_has_erasable_attr)) && se_has_erasable_attr) then (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ((FStarC_Errors_Msg.text "Mismatch of attributes between declaration and definition.") :: ((FStarC_Errors_Msg.text "Definition is marked `erasable` but the declaration is not.") :: []))) else ());
   let tmp = (if (not se_has_erasable_attr) then (let tmp = (FStarC_Options.ide ()) in
     (not tmp)) else false) in
   (if tmp then (match (se).FStarC_Syntax_Syntax.sigel with
@@ -193,16 +208,21 @@ let check_erasable (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Sy
           )) then (let tmp3 = (FStarC_Syntax_Util.abs_formals (lb).FStarC_Syntax_Syntax.lbdef) in
           (match tmp3 with
             | (tmp4, body, tmp5) -> (match val_decl with
-                | (Some (((us, t), tmp6))) -> (let tmp7 = (non_info_norm_weak env body) in
-                  (if tmp7 then (let tmp8 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv lbname) in
-                  let tmp9 = (FStarC_Format.fmt1 "Values of type ‘%s’ will be erased during extraction, but its interface hides this fact." tmp8) in
-                  let tmp10 = (FStarC_Errors_Msg.text tmp9) in
-                  let tmp11 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv lbname) in
-                  let tmp12 = (FStarC_Format.fmt1 "Add the ‘erasable’ attribute to the ‘val %s’ declaration for this symbol in the interface" tmp11) in
-                  let tmp13 = (FStarC_Errors_Msg.text tmp12) in
-                  let tmp14 = (tmp13 :: []) in
-                  let tmp15 = (tmp10 :: tmp14) in
-                  (FStarC_Errors.fStarC_Errors_log_issue__fv_list_document lbname FStarC_Errors_Codes.Error_MustEraseMissing tmp15)) else ()))
+                | (Some (((us, t), tmp6))) -> (let tmp7 = (FStarC_Syntax_Subst.open_univ_vars us t) in
+                  (match tmp7 with
+                    | (us1, t1) -> (let tmp8 = (FStarC_TypeChecker_Env.push_univ_vars env us1) in
+                      let defines_type = (is_arity tmp8 t1) in
+                      let tmp9 = (if defines_type then (non_info_norm_weak env body) else false) in
+                      (if tmp9 then (let tmp10 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv lbname) in
+                      let tmp11 = (FStarC_Format.fmt1 "Values of type ‘%s’ will be erased during extraction, but its interface hides this fact." tmp10) in
+                      let tmp12 = (FStarC_Errors_Msg.text tmp11) in
+                      let tmp13 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv lbname) in
+                      let tmp14 = (FStarC_Format.fmt1 "Add the ‘erasable’ attribute to the ‘val %s’ declaration for this symbol in the interface" tmp13) in
+                      let tmp15 = (FStarC_Errors_Msg.text tmp14) in
+                      let tmp16 = (tmp15 :: []) in
+                      let tmp17 = (tmp12 :: tmp16) in
+                      (FStarC_Errors.fStarC_Errors_log_issue__fv_list_ocaml_document lbname FStarC_Errors_Codes.Error_MustEraseMissing tmp17)) else ()))
+                  ))
               )
           )) else ()))
       ))
@@ -214,7 +234,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Sy
           | tmp3 -> false
         )) quals) in
       let tmp3 = (not tmp2) in
-      (if tmp3 then (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ((FStarC_Errors_Msg.text "Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked ‘noeq’.") :: [])) else ()))
+      (if tmp3 then (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ((FStarC_Errors_Msg.text "Incompatible attributes and qualifiers: erasable types do not support decidable equality and must be marked ‘noeq’.") :: [])) else ()))
     | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp1)) -> ()
     | (FStarC_Syntax_Syntax.Sig_fail (tmp1)) -> ()
     | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (false, (lb :: [])); lids = tmp1; _ })) -> (let tmp2 = (FStarC_Syntax_Util.abs_formals (lb).FStarC_Syntax_Syntax.lbdef) in
@@ -222,18 +242,18 @@ let check_erasable (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Sy
         | (tmp3, body, tmp4) -> (let tmp5 = (FStarC_TypeChecker_Normalize.non_info_norm env body) in
           let tmp6 = (not tmp5) in
           (if tmp6 then (let tmp7 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' body) in
-          let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat tmp7 (FStarC_Errors_Msg.text "is considered informative.")) in
-          let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "The term") tmp8) in
+          let tmp8 = (PPrint.(^/^) tmp7 (FStarC_Errors_Msg.text "is considered informative.")) in
+          let tmp9 = (PPrint.(^/^) (FStarC_Errors_Msg.text "The term") tmp8) in
           let tmp10 = (tmp9 :: []) in
           let tmp11 = ((FStarC_Errors_Msg.text "Illegal attribute: the ‘erasable’ attribute is only permitted on inductive type definitions and abbreviations for non-informative types.") :: tmp10) in
-          (FStarC_Errors.fStarC_Errors_raise_error__syntax_term'_list_document body FStarC_Errors_Codes.Fatal_QualifierListNotPermitted tmp11)) else ()))
+          (FStarC_Errors.fStarC_Errors_raise_error__syntax_term'_list_ocaml_document body FStarC_Errors_Codes.Fatal_QualifierListNotPermitted tmp11)) else ()))
       ))
-    | (FStarC_Syntax_Syntax.Sig_new_effect ({ FStarC_Syntax_Syntax.mname = eff_name; cattributes = tmp1; combinators = tmp2; eff_attrs = tmp3; extraction_mode = tmp4; _ })) -> (if (not (FStarC_List.contains FStarC_Syntax_Syntax.TotalEffect quals)) then (let tmp5 = (FStarC_Ident.fStarC_Class_PP_pp__lident eff_name) in
-      let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 (FStarC_Errors_Msg.text "is marked erasable but only total effects are allowed to be erasable.")) in
-      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Effect") tmp6) in
+    | (FStarC_Syntax_Syntax.Sig_new_effect ({ FStarC_Syntax_Syntax.mname = eff_name; cattributes = tmp1; combinators = tmp2; eff_attrs = tmp3; extraction_mode = tmp4; _ })) -> (if (not (BatList.mem FStarC_Syntax_Syntax.TotalEffect quals)) then (let tmp5 = (FStarC_Ident.fStarC_Class_PP_pp__lident eff_name) in
+      let tmp6 = (PPrint.(^/^) tmp5 (FStarC_Errors_Msg.text "is marked erasable but only total effects are allowed to be erasable.")) in
+      let tmp7 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Effect") tmp6) in
       let tmp8 = (tmp7 :: []) in
-      (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted tmp8)) else ())
-    | tmp1 -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ((FStarC_Errors_Msg.text "Illegal attribute: the ‘erasable’ attribute is only permitted on inductive type definitions and abbreviations for non-informative types.") :: []))
+      (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted tmp8)) else ())
+    | tmp1 -> (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_QualifierListNotPermitted ((FStarC_Errors_Msg.text "Illegal attribute: the ‘erasable’ attribute is only permitted on inductive type definitions and abbreviations for non-informative types.") :: []))
   ) else ()))
 
 let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env) (rng : FStarC_Range_Type.range) (se : FStarC_Syntax_Syntax.sigelt) : unit =
@@ -246,19 +266,19 @@ let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env) (rng :
       | (tmp1, res) -> (let tmp2 = (FStarC_Syntax_Util.is_total_comp res) in
         let tmp3 = (not tmp2) in
         (if tmp3 then (let tmp4 = (FStarC_Ident.fStarC_Class_PP_pp__lident (FStarC_Syntax_Util.comp_effect_name res)) in
-        let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "This instance has effect") tmp4) in
+        let tmp5 = (PPrint.(^/^) (FStarC_Errors_Msg.text "This instance has effect") tmp4) in
         let tmp6 = (tmp5 :: []) in
         let tmp7 = ((FStarC_Errors_Msg.text "Instances are expected to be total.") :: tmp6) in
-        (FStarC_Errors.fStarC_Errors_log_issue__range_list_document rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance tmp7)) else ());
+        (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance tmp7)) else ());
         let t = (FStarC_Syntax_Util.unrefine (FStarC_Syntax_Util.comp_result res)) in
         let tmp4 = (FStarC_Syntax_Util.head_and_args_full t) in
         (match tmp4 with
           | (head, tmp5) -> (let err = (fun tmp6 -> (let tmp7 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t) in
-              let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat tmp7 (FStarC_Errors_Msg.text "is not a class.")) in
-              let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Type") tmp8) in
+              let tmp8 = (PPrint.(^/^) tmp7 (FStarC_Errors_Msg.text "is not a class.")) in
+              let tmp9 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Type") tmp8) in
               let tmp10 = (tmp9 :: []) in
               let tmp11 = ((FStarC_Errors_Msg.text "Instances must define instances of ‘class’ types.") :: tmp10) in
-              (FStarC_Errors.fStarC_Errors_log_issue__range_list_document rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance tmp11))) in
+              (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance tmp11))) in
             let tmp6 = (FStarC_Syntax_Util.un_uinst head) in
             let tmp7 = (tmp6).FStarC_Syntax_Syntax.n in
             (match tmp7 with
@@ -271,15 +291,15 @@ let check_typeclass_instance_attribute (env : FStarC_TypeChecker_Env.env) (rng :
     ))) in
   (if is_tc_instance then (match (se).FStarC_Syntax_Syntax.sigel with
     | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (false, (lb :: [])); lids = tmp; _ })) -> (check_instance_typ (lb).FStarC_Syntax_Syntax.lbtyp)
-    | (FStarC_Syntax_Syntax.Sig_let (tmp)) -> (FStarC_Errors.fStarC_Errors_log_issue__range_list_document rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance ((FStarC_Errors_Msg.text "An `instance` definition is expected to be non-recursive and of a type that is a `class`.") :: []))
+    | (FStarC_Syntax_Syntax.Sig_let (tmp)) -> (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance ((FStarC_Errors_Msg.text "An `instance` definition is expected to be non-recursive and of a type that is a `class`.") :: []))
     | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = tmp; us = tmp1; t = t; _ })) -> (check_instance_typ t)
     | tmp -> (let tmp1 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
-      let tmp2 = (FStar_Pprint.arbitrary_string tmp1) in
+      let tmp2 = (PPrint.arbitrary_string tmp1) in
       let tmp3 = (FStarC_Errors_Msg.fquotes tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "It is not allowed for") tmp3) in
+      let tmp4 = (PPrint.(^/^) (FStarC_Errors_Msg.text "It is not allowed for") tmp3) in
       let tmp5 = (tmp4 :: []) in
       let tmp6 = ((FStarC_Errors_Msg.text "The ‘instance’ attribute is only allowed on ‘let’ and ‘val’ declarations.") :: tmp5) in
-      (FStarC_Errors.fStarC_Errors_log_issue__range_list_document rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance tmp6))
+      (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_UnexpectedTypeclassInstance tmp6))
   ) else ()))
 
 let check_sigelt_quals_post (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : unit =

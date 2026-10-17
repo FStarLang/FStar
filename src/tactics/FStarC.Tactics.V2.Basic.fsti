@@ -131,6 +131,9 @@ let remaining_uvars_t = list remaining_uvar_t
 let issues = list FStarC.Errors.issue
 let refl_tac (a : Type) = tac (option a & issues)
 
+val no_uvars_in_term       : term -> ML bool
+val no_uvars_in_g          : env -> ML bool
+
 val refl_is_non_informative           : env -> typ -> ML (refl_tac unit)
 val refl_check_subtyping              : env -> typ -> typ -> ML (refl_tac unit)
 val t_refl_check_equiv                : smt_ok:bool -> unfolding_ok:bool -> env -> typ -> typ -> ML (refl_tac unit)

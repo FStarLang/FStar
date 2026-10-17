@@ -28,13 +28,13 @@ let take_prefix (prefix: string) (s: string) =
 
 let err str r = Inl { FPAU.message = [(*TODO*)]; FPAU.range = r }
 
-let mk_ident (id_str: string) (r: FStarC_Range.t): I.ident =
+let mk_ident (id_str: string) (r: FStarC_Range_Type.t): I.ident =
   I.mk_ident (id_str, r)
 
-let mk_lident (id_str: string) (r: FStarC_Range.t): I.lident =
+let mk_lident (id_str: string) (r: FStarC_Range_Type.t): I.lident =
   I.lid_of_str id_str
 
-let parse_let (contents: string) (r: FStarC_Range.t): (FPAU.error_message, FPA.decl list) either =
+let parse_let (contents: string) (r: FStarC_Range_Type.t): (FPAU.error_message, FPA.decl list) either =
   match String.split_on_char ':' contents with
   | [id_str; expr_str] ->
     let id = mk_ident id_str r in
@@ -48,7 +48,7 @@ let parse_let (contents: string) (r: FStarC_Range.t): (FPAU.error_message, FPA.d
     Inr [let_decl]
   | _ -> err "bad let" r
 
-let parse_line (contents: string) (r: FStarC_Range.t): (FPAU.error_message, FPA.decl list) either =
+let parse_line (contents: string) (r: FStarC_Range_Type.t): (FPAU.error_message, FPA.decl list) either =
   match take_prefix "module:" contents with
   | Some mod_name ->
       let lid = mk_lident mod_name r in
@@ -64,7 +64,7 @@ let parse_line (contents: string) (r: FStarC_Range.t): (FPAU.error_message, FPA.
         if contents = "" then Inr []
         else err "bad decl" r
 
-let parse_tiny_decls (contents: string) (r: FStarC_Range.t): (FPAU.error_message, FPA.decl list) either =
+let parse_tiny_decls (contents: string) (r: FStarC_Range_Type.t): (FPAU.error_message, FPA.decl list) either =
   let rec go acc ls =
     match ls with
     | [] -> Inr acc

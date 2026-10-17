@@ -4,20 +4,11 @@
 let empty (tmp : unit) : ('a) list =
   []
 
-let fStarC_Class_Setlike_empty__ident_list_ident (tmp : unit) : (FStarC_Ident.ident) list =
-  (empty ())
-
-let fStarC_FlatSet_singleton__ident (x : FStarC_Ident.ident) : (FStarC_Ident.ident) list =
-  (x :: [])
-
-let fStarC_Class_Setlike_singleton__ident_list_ident (tmp : FStarC_Ident.ident) : (FStarC_Ident.ident) list =
-  (fStarC_FlatSet_singleton__ident tmp)
-
 let elems (s : ('a) list) : ('a) list =
   s
 
 let for_all (p : ('a -> bool)) (s : ('a) list) : bool =
-  (FStarC_List.for_all p s)
+  (BatList.for_all p s)
 
 let is_empty (s : ('a) list) : bool =
   (match s with
@@ -25,12 +16,6 @@ let is_empty (s : ('a) list) : bool =
     | tmp -> false
   )
 
-let fStarC_Class_Setlike_empty__ident_list_ident_7 (tmp : unit) : (FStarC_Ident.ident) list =
-  (empty ())
-
-let fStarC_Class_Setlike_is_empty__ident_list_ident (tmp : (FStarC_Ident.ident) list) : bool =
-  (is_empty tmp)
-
 let for_any (p : ('a -> bool)) (s : ('a) list) : bool =
-  (FStarC_List.existsb p s)
+  (BatList.exists p s)
 

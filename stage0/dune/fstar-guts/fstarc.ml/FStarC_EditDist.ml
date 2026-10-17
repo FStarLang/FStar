@@ -5,8 +5,8 @@ let rec edit_distance__go (s1 : string) (s2 : string) (lookup : (Prims.int -> (P
   (if ((=) i1 l1) then (Prims.op_Minus l2 i2) else (if ((=) i2 l2) then (Prims.op_Minus l1 i1) else (let tmp = (lookup i1 i2) in
   (match tmp with
     | (Some (d)) -> d
-    | None -> (let tmp1 = (FStarC_String.get s1 i1) in
-      let tmp2 = (FStarC_String.get s2 i2) in
+    | None -> (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s1 i1) in
+      let tmp2 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s2 i2) in
       let tmp3 = ((=) tmp1 tmp2) in
       let d = (if tmp3 then ((edit_distance__go s1 s2 lookup set l1 l2) (Prims.op_Plus i1 Prims.int_one) (Prims.op_Plus i2 Prims.int_one)) else (let d1 = ((edit_distance__go s1 s2 lookup set l1 l2) (Prims.op_Plus i1 Prims.int_one) i2) in
         let d2 = ((edit_distance__go s1 s2 lookup set l1 l2) i1 (Prims.op_Plus i2 Prims.int_one)) in
@@ -17,20 +17,20 @@ let rec edit_distance__go (s1 : string) (s2 : string) (lookup : (Prims.int -> (P
   ))))
 
 let edit_distance (s1 : string) (s2 : string) : Prims.int =
-  (let cache = (FStarC_IMap.create (Prims.of_int (10))) in
-  let lookup = (fun i j -> (let tmp = (FStarC_IMap.try_find cache i) in
+  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.create (FStarC_SmallInt.of_int (Prims.of_int (10)))) in
+  let lookup = (fun i j -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.find_opt cache i) in
     (match tmp with
-      | (Some (m)) -> (FStarC_IMap.try_find m j)
+      | (Some (m)) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.find_opt m j)
       | None -> None
     ))) in
-  let set = (fun i j d -> (let tmp = (FStarC_IMap.try_find cache i) in
+  let set = (fun i j d -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.find_opt cache i) in
     let m = (match tmp with
         | (Some (m)) -> m
-        | None -> (FStarC_IMap.create (Prims.of_int (10)))
+        | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.create (FStarC_SmallInt.of_int (Prims.of_int (10))))
       ) in
-    (FStarC_IMap.add m j d);
-    (FStarC_IMap.add cache i m))) in
-  let l1 = (FStarC_String.length s1) in
-  let l2 = (FStarC_String.length s2) in
+    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.replace m j d);
+    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.replace cache i m))) in
+  let l1 = ((fun s -> Z.of_int (BatUTF8.length s)) s1) in
+  let l2 = ((fun s -> Z.of_int (BatUTF8.length s)) s2) in
   ((edit_distance__go s1 s2 lookup set l1 l2) Prims.int_zero Prims.int_zero))
 

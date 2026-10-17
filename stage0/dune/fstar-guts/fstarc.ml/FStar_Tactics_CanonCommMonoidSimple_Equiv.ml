@@ -23,7 +23,11 @@ let where (x : FStarC_Reflection_Types.term) (xs : (FStarC_Reflection_Types.term
   (where_aux Prims.int_zero x xs)
 
 let update (x : Prims.int) (xa : 'a) (am : (((Prims.int * 'a)) list * 'a)) : (((Prims.int * 'a)) list * 'a) =
-  (((x, xa) :: (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst am)), (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd am))
+  (((x, xa) :: (match am with
+    | (u__1, u__2) -> u__1
+  )), (match am with
+    | (u__1, u__2) -> u__2
+  ))
 
 let fatom (t : FStarC_Reflection_Types.term) (ts : (FStarC_Reflection_Types.term) list) (am : (((Prims.int * FStarC_Reflection_Types.term)) list * FStarC_Reflection_Types.term)) : ((FStarC_Tactics_Types.proofstate ref) -> (exp * (FStarC_Reflection_Types.term) list * (((Prims.int * FStarC_Reflection_Types.term)) list * FStarC_Reflection_Types.term))) =
   (Obj.magic ((fun ps -> (let x = (where t ts ps) in

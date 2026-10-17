@@ -12,7 +12,9 @@ let is_smt_reifiable_function (en : FStarC_TypeChecker_Env.env) (t : (FStarC_Syn
   let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
   (match tmp1 with
     | (FStarC_Syntax_Syntax.Tm_arrow (tmp2)) -> (let tmp3 = (FStarC_Syntax_Util.arrow_node_formals_comp_ln t) in
-      let tmp4 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp3) in
+      let tmp4 = (match tmp3 with
+          | (u__1, u__2) -> u__2
+        ) in
       let tmp5 = (FStarC_Syntax_Util.comp_effect_name tmp4) in
       (is_smt_reifiable_effect en tmp5))
     | tmp2 -> false
@@ -128,6 +130,18 @@ let mkBvXor (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)
 let mkBvOr (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
   (FStarC_SMTEncoding_Term.mkBvOr tmp)
 
+let mkBvNand (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvNand tmp)
+
+let mkBvNor (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvNor tmp)
+
+let mkBvXnor (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvXnor tmp)
+
+let mkBvComp (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvComp tmp)
+
 let mkBvAdd (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
   (FStarC_SMTEncoding_Term.mkBvAdd tmp)
 
@@ -179,14 +193,89 @@ let mkBvMul' (tmp : Prims.int) (tmp1 : (FStarC_SMTEncoding_Term.term * FStarC_SM
 let mkBvUlt (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
   (FStarC_SMTEncoding_Term.mkBvUlt tmp)
 
+let mkBvUle (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvUle tmp)
+
+let mkBvUgt (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvUgt tmp)
+
+let mkBvUge (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvUge tmp)
+
+let mkBvSlt (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSlt tmp)
+
+let mkBvSle (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSle tmp)
+
+let mkBvSgt (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSgt tmp)
+
+let mkBvSge (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSge tmp)
+
+let mkBvSdiv (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSdiv tmp)
+
+let mkBvSrem (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSrem tmp)
+
+let mkBvSmod (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSmod tmp)
+
+let mkBvAshr (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvAshr tmp)
+
+let mkBvNego (tmp : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvNego tmp)
+
+let mkBvUaddo (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvUaddo tmp)
+
+let mkBvSaddo (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSaddo tmp)
+
+let mkBvUmulo (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvUmulo tmp)
+
+let mkBvSmulo (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSmulo tmp)
+
+let mkBvUsubo (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvUsubo tmp)
+
+let mkBvSsubo (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSsubo tmp)
+
+let mkBvSdivo (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvSdivo tmp)
+
+let mkBvConcat (tmp : (FStarC_SMTEncoding_Term.term * FStarC_SMTEncoding_Term.term)) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvConcat tmp)
+
+let mkBvRepeat (tmp : Prims.int) : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.term) =
+  (FStarC_SMTEncoding_Term.mkBvRepeat tmp)
+
 let mkBvUext (tmp : Prims.int) : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.term) =
   (FStarC_SMTEncoding_Term.mkBvUext tmp)
+
+let mkBvSext (tmp : Prims.int) : (FStarC_SMTEncoding_Term.term -> FStarC_SMTEncoding_Term.term) =
+  (FStarC_SMTEncoding_Term.mkBvSext tmp)
+
+let mkBvExtract (tmp : Prims.int) (j : Prims.int) (t : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvExtract tmp j t)
 
 let mkBvNot (tmp : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
   (FStarC_SMTEncoding_Term.mkBvNot tmp)
 
+let mkBvNeg (tmp : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkBvNeg tmp)
+
 let mkBvToNat (tmp : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
   (FStarC_SMTEncoding_Term.mkBvToNat tmp)
+
+let mkSBvToInt (tmp : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkSBvToInt tmp)
 
 let mkNatToBv (tmp : Prims.int) (t : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
   (FStarC_SMTEncoding_Term.mkNatToBv tmp t)

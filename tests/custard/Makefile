@@ -209,7 +209,7 @@ GREP_MonoTypes   += "| Prims_Nil__int ->"
 # only do if the key printer distinguishes them.  The run itself is the real
 # assertion (the output is "abAB", not "abab"); this checks the shape.
 GREP_KeyNames = "keyNames_apply__tweak" "keyNames_apply__tweak_1" \
-                "FStar_String.lowercase" "FStar_String.uppercase"
+                "BatString.lowercase_ascii" "BatString.uppercase_ascii"
 
 # Section 8.4: a garbage-collected reference is an OCaml 'ref', not a
 # one-element array, and it is never freed.

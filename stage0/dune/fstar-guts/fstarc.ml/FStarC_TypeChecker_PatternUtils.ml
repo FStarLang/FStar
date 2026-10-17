@@ -5,7 +5,7 @@ let rec elaborate_pat__aux (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax
   (match (formals, pats) with
     | ([], []) -> []
     | ([], (tmp :: tmp1)) -> (FStarC_Errors.fStarC_Errors_raise_error__lident_string (fv).FStarC_Syntax_Syntax.fv_name FStarC_Errors_Codes.Fatal_TooManyPatternArguments "Too many pattern arguments")
-    | ((tmp :: tmp1), []) -> (FStarC_List.map (fun fml -> (let tmp2 = ((fml).FStarC_Syntax_Syntax.binder_bv, (fml).FStarC_Syntax_Syntax.binder_qual) in
+    | ((tmp :: tmp1), []) -> (BatList.map (fun fml -> (let tmp2 = ((fml).FStarC_Syntax_Syntax.binder_bv, (fml).FStarC_Syntax_Syntax.binder_qual) in
       (match tmp2 with
         | (t, imp) -> (match imp with
             | (Some ((FStarC_Syntax_Syntax.Implicit (inaccessible)))) -> (let a = (FStarC_Syntax_Syntax.new_bv (Some ((FStarC_Syntax_Syntax.range_of_bv t))) FStarC_Syntax_Syntax.tun) in
@@ -49,7 +49,7 @@ let rec elaborate_pat (env : FStarC_TypeChecker_Env.env) (p : (FStarC_Syntax_Syn
   (let maybe_dot = (fun inaccessible a r -> (if inaccessible then (FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_dot_term (None)) r) else (FStarC_Syntax_Syntax.withinfo (FStarC_Syntax_Syntax.Pat_var (a)) r))) in
   (match (p).FStarC_Syntax_Syntax.v with
     | (FStarC_Syntax_Syntax.Pat_cons ({ FStarC_Syntax_Syntax.fv_name = tmp; fv_qual = (Some ((FStarC_Syntax_Syntax.Unresolved_constructor (tmp1)))); _ }, tmp2, tmp3)) -> p
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let pats1 = (FStarC_List.map (fun tmp -> (match tmp with
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let pats1 = (BatList.map (fun tmp -> (match tmp with
           | (p1, imp) -> (let tmp1 = (elaborate_pat env p1) in
             (tmp1, imp))
         )) pats) in
@@ -100,7 +100,7 @@ let rec pat_as_exp__pat_as_arg_with_env (inst_pat_cons_univs : bool) (intro_bv :
         | (x1, g, env1) -> (let e = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_name (x1)) (p).FStarC_Syntax_Syntax.p) in
           ((x1 :: []), (x1 :: []), [], env1, e, g, p))
       ))
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (FStarC_List.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (BatList.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
           | ((b, a, w, env1, args, guard, pats1), (p1, imp)) -> (let tmp2 = ((pat_as_exp__pat_as_arg_with_env inst_pat_cons_univs intro_bv) env1 p1) in
             (match tmp2 with
               | (b', a', w', env2, te, guard', pat) -> (let arg = (if imp then (FStarC_Syntax_Syntax.iarg te) else (FStarC_Syntax_Syntax.as_arg te)) in
@@ -127,8 +127,8 @@ let rec pat_as_exp__pat_as_arg_with_env (inst_pat_cons_univs : bool) (intro_bv :
                 (tmp3, (Some (us)))))
             ))) in
           (match tmp1 with
-            | (hd1, us_opt1) -> (let e = (FStarC_Syntax_Syntax.mk_Tm_app hd1 (FStarC_List.rev args) (p).FStarC_Syntax_Syntax.p) in
-              ((FStarC_List.flatten (FStarC_List.rev b)), (FStarC_List.flatten (FStarC_List.rev a)), (FStarC_List.flatten (FStarC_List.rev w)), env1, e, guard, { FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt1, (FStarC_List.rev pats1)));
+            | (hd1, us_opt1) -> (let e = (FStarC_Syntax_Syntax.mk_Tm_app hd1 (BatList.rev args) (p).FStarC_Syntax_Syntax.p) in
+              ((BatList.flatten (BatList.rev b)), (BatList.flatten (BatList.rev a)), (BatList.flatten (BatList.rev w)), env1, e, guard, { FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt1, (BatList.rev pats1)));
                 p = (p).FStarC_Syntax_Syntax.p }))
           ))
       ))
@@ -178,7 +178,7 @@ let rec raw_pat_as_exp__aux (env : FStarC_TypeChecker_Env.env) (bs : (FStarC_Syn
       )
     | (FStarC_Syntax_Syntax.Pat_var (x)) -> (let tmp = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_name (x)) (p).FStarC_Syntax_Syntax.p) in
       (tmp, (x :: bs)))
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (FStarC_List.fold_right (fun tmp tmp1 -> (match (tmp, tmp1) with
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (BatList.fold_right (fun tmp tmp1 -> (match (tmp, tmp1) with
           | ((p1, i), (args, bs1)) -> (let tmp2 = ((raw_pat_as_exp__aux env) bs1 p1) in
             (match tmp2 with
               | (ep, bs2) -> (((ep, (FStarC_Syntax_Syntax.as_aqual_implicit i)) :: args), bs2)

@@ -15,14 +15,8 @@ open FStarC.Effect
 open FStarC.Class.Deq
 open FStarC.Class.Hashable
 
-[@@custard_extern "int"]
-private assume new type ocaml_int : Type0
-
-[@@custard_extern "Z.to_int"]
-private assume val to_ocaml_int (x:int) : ocaml_int
-
-[@@custard_extern "Z.of_int"]
-private assume val of_ocaml_int (x:ocaml_int) : int
+(* [Hashtbl.S] counts in OCaml's [int], which is [FStarC.SmallInt.t]. *)
+module SI = FStarC.SmallInt
 
 (* Hashtbl.HashedType *)
 noeq type hashed_type = {
@@ -34,7 +28,7 @@ noeq type hashed_type = {
 (* Hashtbl.S with type key = k, restricted to what is used. *)
 noeq type hashtbl_s (k:Type0) = {
   t: Type0 -> Type0;
-  create: #a:Type0 -> ocaml_int -> ML (t a);
+  create: #a:Type0 -> SI.t -> ML (t a);
   clear: #a:Type0 -> t a -> ML unit;
   copy: #a:Type0 -> t a -> ML (t a);
   remove: #a:Type0 -> t a -> k -> ML unit;
@@ -43,7 +37,7 @@ noeq type hashtbl_s (k:Type0) = {
   mem: #a:Type0 -> t a -> k -> ML bool;
   iter: #a:Type0 -> (k -> a -> ML unit) -> t a -> ML unit;
   fold: #a:Type0 -> #b:Type0 -> (k -> a -> b -> ML b) -> t a -> b -> ML b;
-  length: #a:Type0 -> t a -> ML ocaml_int;
+  length: #a:Type0 -> t a -> ML SI.t;
 }
 
 [@@custard_functor "Hashtbl.Make"]
@@ -66,7 +60,7 @@ let t (k:Type0) {| deq k |} {| hashable k |} (v:Type0) : Type0 =
 
 inline_for_extraction
 let create (#k:Type0) {| deq k |} {| hashable k |} (#v:Type0) (n:int) : ML (t k v) =
-  (hashtbl_make (hashed k)).create (to_ocaml_int n)
+  (hashtbl_make (hashed k)).create (SI.of_int n)
 
 inline_for_extraction
 let clear (#k:Type0) {| deq k |} {| hashable k |} (#v:Type0) (m:t k v) : ML unit =
@@ -105,7 +99,7 @@ let fold (#k:Type0) {| deq k |} {| hashable k |} (#v #a:Type0)
 
 inline_for_extraction
 let size (#k:Type0) {| deq k |} {| hashable k |} (#v:Type0) (m:t k v) : ML int =
-  of_ocaml_int ((hashtbl_make (hashed k)).length m)
+  SI.to_int ((hashtbl_make (hashed k)).length m)
 
 inline_for_extraction
 let of_list (#k:Type0) {| deq k |} {| hashable k |} (#v:Type0) (l:list (k & v)) : ML (t k v) =

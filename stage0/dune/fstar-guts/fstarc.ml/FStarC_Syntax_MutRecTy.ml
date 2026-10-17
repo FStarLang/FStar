@@ -17,7 +17,7 @@ let rec disentangle_abbrevs_from_bundle__unfold_abbrev_fv (type_abbrev_sigelts :
     | None -> (let tmp2 = (FStarC_Util.find_map type_abbrev_sigelts replacee) in
       (match tmp2 with
         | (Some (se)) -> (let tmp3 = (!(in_progress)) in
-          let tmp4 = (FStarC_List.existsb (fun x -> (FStarC_Ident.lid_equals x (fv).FStarC_Syntax_Syntax.fv_name)) tmp3) in
+          let tmp4 = (BatList.exists (fun x -> (FStarC_Ident.lid_equals x (fv).FStarC_Syntax_Syntax.fv_name)) tmp3) in
           (if tmp4 then (let msg = (FStarC_Format.fmt1 "Cycle on %s in mutually recursive type abbreviations" (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) in
           (FStarC_Errors.fStarC_Errors_raise_error__lident_string (fv).FStarC_Syntax_Syntax.fv_name FStarC_Errors_Codes.Fatal_CycleInRecTypeAbbreviation msg)) else ((disentangle_abbrevs_from_bundle__unfold_abbrev type_abbrev_sigelts rev_unfolded_type_abbrevs in_progress remove_not_unfolded) se)))
         | tmp3 -> t
@@ -26,7 +26,7 @@ let rec disentangle_abbrevs_from_bundle__unfold_abbrev_fv (type_abbrev_sigelts :
 
 and disentangle_abbrevs_from_bundle__unfold_abbrev (type_abbrev_sigelts : (FStarC_Syntax_Syntax.sigelt) list) (rev_unfolded_type_abbrevs : ((FStarC_Syntax_Syntax.sigelt) list ref)) (in_progress : ((FStarC_Ident.lident) list ref)) (remove_not_unfolded : (FStarC_Ident.lident -> unit)) (x : FStarC_Syntax_Syntax.sigelt) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (match (x).FStarC_Syntax_Syntax.sigel with
-    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (false, (lb :: [])); lids = tmp; _ })) -> (let quals = (FStarC_List.filter (fun tmp1 -> (match tmp1 with
+    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (false, (lb :: [])); lids = tmp; _ })) -> (let quals = (BatList.filter (fun tmp1 -> (match tmp1 with
           | FStarC_Syntax_Syntax.Noeq -> false
           | tmp2 -> true
         )) (x).FStarC_Syntax_Syntax.sigquals) in
@@ -58,7 +58,7 @@ and disentangle_abbrevs_from_bundle__unfold_abbrev (type_abbrev_sigelts : (FStar
           sigopts = (x).FStarC_Syntax_Syntax.sigopts } :: tmp3) in
       ((rev_unfolded_type_abbrevs) := tmp4);
       let tmp5 = (!(in_progress)) in
-      let tmp6 = (FStarC_List.tl tmp5) in
+      let tmp6 = (BatList.tl tmp5) in
       ((in_progress) := tmp6);
       tm')
     | tmp -> (FStarC_Effect.failwith "mutrecty: disentangle_abbrevs_from_bundle: rename_abbrev: impossible")
@@ -70,17 +70,17 @@ let rec disentangle_abbrevs_from_bundle__aux (type_abbrev_sigelts : (FStarC_Synt
     | (x :: tmp2) -> ((ignore ((disentangle_abbrevs_from_bundle__unfold_abbrev type_abbrev_sigelts rev_unfolded_type_abbrevs in_progress remove_not_unfolded) x));
       ((disentangle_abbrevs_from_bundle__aux type_abbrev_sigelts rev_unfolded_type_abbrevs in_progress not_unfolded_yet remove_not_unfolded) ()))
     | tmp2 -> (let tmp3 = (!(rev_unfolded_type_abbrevs)) in
-      (FStarC_List.rev tmp3))
+      (BatList.rev tmp3))
   ))
 
 let disentangle_abbrevs_from_bundle (sigelts : (FStarC_Syntax_Syntax.sigelt) list) (quals : (FStarC_Syntax_Syntax.qualifier) list) (members : (FStarC_Ident.lident) list) (rng : FStarC_Range_Type.range) : (FStarC_Syntax_Syntax.sigelt * (FStarC_Syntax_Syntax.sigelt) list) =
-  (let sigattrs = (FStarC_List.collect (fun s -> (match (s).FStarC_Syntax_Syntax.sigel with
+  (let sigattrs = ((fun f l -> BatList.flatten (BatList.map f l)) (fun s -> (match (s).FStarC_Syntax_Syntax.sigel with
       | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp)) -> (s).FStarC_Syntax_Syntax.sigattrs
       | (FStarC_Syntax_Syntax.Sig_let (tmp)) -> (s).FStarC_Syntax_Syntax.sigattrs
       | tmp -> []
     )) sigelts) in
   let sigattrs1 = (FStarC_Syntax_Util.deduplicate_terms sigattrs) in
-  let type_abbrev_sigelts = (FStarC_List.collect (fun x -> (match (x).FStarC_Syntax_Syntax.sigel with
+  let type_abbrev_sigelts = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match (x).FStarC_Syntax_Syntax.sigel with
       | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (false, ({ FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (tmp)); lbunivs = tmp1; lbtyp = tmp2; lbeff = tmp3; lbdef = tmp4; lbattrs = tmp5; lbpos = tmp6; _ } :: [])); lids = tmp7; _ })) -> (x :: [])
       | (FStarC_Syntax_Syntax.Sig_let (tmp)) -> (FStarC_Effect.failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrev_sigelts: impossible")
       | tmp -> []
@@ -93,7 +93,7 @@ let disentangle_abbrevs_from_bundle (sigelts : (FStarC_Syntax_Syntax.sigelt) lis
         sigattrs = sigattrs1;
         sigopens_and_abbrevs = [];
         sigopts = None }, [])
-    | tmp -> (let type_abbrevs = (FStarC_List.map (fun x -> (match (x).FStarC_Syntax_Syntax.sigel with
+    | tmp -> (let type_abbrevs = (BatList.map (fun x -> (match (x).FStarC_Syntax_Syntax.sigel with
           | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp1, ({ FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv)); lbunivs = tmp2; lbtyp = tmp3; lbeff = tmp4; lbdef = tmp5; lbattrs = tmp6; lbpos = tmp7; _ } :: [])); lids = tmp8; _ })) -> (fv).FStarC_Syntax_Syntax.fv_name
           | tmp1 -> (FStarC_Effect.failwith "mutrecty: disentangle_abbrevs_from_bundle: type_abbrevs: impossible")
         )) type_abbrev_sigelts) in
@@ -101,13 +101,13 @@ let disentangle_abbrevs_from_bundle (sigelts : (FStarC_Syntax_Syntax.sigelt) lis
       let in_progress = (ref []) in
       let not_unfolded_yet = (ref type_abbrev_sigelts) in
       let remove_not_unfolded = (fun lid -> (let tmp1 = (!(not_unfolded_yet)) in
-        let tmp2 = (FStarC_List.filter (fun x -> (match (x).FStarC_Syntax_Syntax.sigel with
+        let tmp2 = (BatList.filter (fun x -> (match (x).FStarC_Syntax_Syntax.sigel with
             | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp2, ({ FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv)); lbunivs = tmp3; lbtyp = tmp4; lbeff = tmp5; lbdef = tmp6; lbattrs = tmp7; lbpos = tmp8; _ } :: [])); lids = tmp9; _ })) -> (not (FStarC_Ident.lid_equals lid (fv).FStarC_Syntax_Syntax.fv_name))
             | tmp2 -> true
           )) tmp1) in
         ((not_unfolded_yet) := tmp2))) in
       let unfolded_type_abbrevs = ((disentangle_abbrevs_from_bundle__aux type_abbrev_sigelts rev_unfolded_type_abbrevs in_progress not_unfolded_yet remove_not_unfolded) ()) in
-      let filter_out_type_abbrevs = (fun l -> (FStarC_List.filter (fun lid -> (FStarC_List.for_all (fun lid' -> (not (FStarC_Ident.lid_equals lid lid'))) type_abbrevs)) l)) in
+      let filter_out_type_abbrevs = (fun l -> (BatList.filter (fun lid -> (BatList.for_all (fun lid' -> (not (FStarC_Ident.lid_equals lid lid'))) type_abbrevs)) l)) in
       let find_in_unfolded = (fun fv -> (FStarC_Util.find_map unfolded_type_abbrevs (fun x -> (match (x).FStarC_Syntax_Syntax.sigel with
           | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp1, ({ FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv')); lbunivs = tmp2; lbtyp = tmp3; lbeff = tmp4; lbdef = tm; lbattrs = tmp5; lbpos = tmp6; _ } :: [])); lids = tmp7; _ })) when (FStarC_Ident.lid_equals (fv').FStarC_Syntax_Syntax.fv_name (fv).FStarC_Syntax_Syntax.fv_name) -> (Some (tm))
           | tmp1 -> None
@@ -154,7 +154,7 @@ let disentangle_abbrevs_from_bundle (sigelts : (FStarC_Syntax_Syntax.sigelt) lis
           | (FStarC_Syntax_Syntax.Sig_let (tmp1)) -> []
           | tmp1 -> (FStarC_Effect.failwith "mutrecty: inductives_with_abbrevs_unfolded: unfold_in_sig: impossible")
         )) in
-      let inductives_with_abbrevs_unfolded = (FStarC_List.collect unfold_in_sig sigelts) in
+      let inductives_with_abbrevs_unfolded = ((fun f l -> BatList.flatten (BatList.map f l)) unfold_in_sig sigelts) in
       let new_members = (filter_out_type_abbrevs members) in
       let new_bundle = { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_bundle (({ FStarC_Syntax_Syntax.ses = inductives_with_abbrevs_unfolded;
             lids = new_members } : FStarC_Syntax_Syntax.sigelt'__Sig_bundle__payload)));

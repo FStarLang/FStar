@@ -4,9 +4,8 @@
 # is passed to the compiler's build, this file is passed to this unit's own
 # extraction with --custard_entrypoints.
 #
-# Everything here is called from hand-written OCaml or from another unit, so
-# nothing inside this unit reaches it and it would be dropped.  See
-# doc/ref/custard.md section 12.11.
+# Everything here is called from another unit, so nothing inside this unit
+# reaches it and it would be dropped.  See doc/ref/custard.md section 12.11.
 #
 # Blank lines and lines starting with `#' are ignored.
 
@@ -17,7 +16,75 @@
 PulseSyntaxExtension.ASTBuilder.desugar_pulse
 PulseSyntaxExtension.ASTBuilder.parse_pulse
 
-# Pulse_RuntimeUtils.ml.  These two exist only to give FStarC.FlatSet.union a
-# call site; see pulse/src/custard-entrypoints.txt and section 12.13.
-PulseSyntaxExtension.Env.union_ctx_uvars
-PulseSyntaxExtension.Env.union_univ_uvars
+# Pulse.RuntimeUtils and Pulse.Extract.CompilerLib: as with ASTBuilder,
+# src/checker has only their interfaces, so the checker unit compiles calls
+# to them to external references, and their implementations are here.  This
+# lists every function of the two interfaces (but the erased magic).
+Pulse.RuntimeUtils.extend_context
+Pulse.RuntimeUtils.with_context
+Pulse.RuntimeUtils.with_error_bound
+Pulse.RuntimeUtils.try_quietly
+Pulse.RuntimeUtils.get_error_bound
+Pulse.RuntimeUtils.with_extv
+Pulse.RuntimeUtils.print_context
+Pulse.RuntimeUtils.debug_at_level_no_module
+Pulse.RuntimeUtils.debug_at_level
+Pulse.RuntimeUtils.print_exn
+Pulse.RuntimeUtils.next_id
+Pulse.RuntimeUtils.binder_set_range
+Pulse.RuntimeUtils.binder_range
+Pulse.RuntimeUtils.range_of_term
+Pulse.RuntimeUtils.start_of_range
+Pulse.RuntimeUtils.set_range
+Pulse.RuntimeUtils.set_use_range
+Pulse.RuntimeUtils.error_code_uninstantiated_variable
+Pulse.RuntimeUtils.is_range_zero
+Pulse.RuntimeUtils.union_ranges
+Pulse.RuntimeUtils.env_get_range
+Pulse.RuntimeUtils.env_set_range
+Pulse.RuntimeUtils.env_set_context
+Pulse.RuntimeUtils.embed_st_term_for_extraction
+Pulse.RuntimeUtils.unembed_st_term_for_extraction
+Pulse.RuntimeUtils.unembed_pulse_decl
+Pulse.RuntimeUtils.push_univ_vars
+Pulse.RuntimeUtils.debug_subst
+Pulse.RuntimeUtils.deep_compress
+Pulse.RuntimeUtils.deep_compress_safe
+Pulse.RuntimeUtils.no_uvars_in_term
+Pulse.RuntimeUtils.deep_transform_to_unary_applications
+Pulse.RuntimeUtils.map_seal
+Pulse.RuntimeUtils.float_one
+Pulse.RuntimeUtils.lax_check_term_with_unknown_universes
+Pulse.RuntimeUtils.new_implicit_var
+Pulse.RuntimeUtils.try_solve_single_valued_implicits
+Pulse.RuntimeUtils.tc_term_phase1
+Pulse.RuntimeUtils.teq_nosmt_force
+Pulse.RuntimeUtils.teq_nosmt_force_phase1
+Pulse.RuntimeUtils.teq_nosmt_phase1
+Pulse.RuntimeUtils.whnf_lax
+Pulse.RuntimeUtils.hnf_lax
+Pulse.RuntimeUtils.beta_lax
+Pulse.RuntimeUtils.norm_well_typed_term
+Pulse.RuntimeUtils.add_attribute
+Pulse.RuntimeUtils.get_attributes
+Pulse.RuntimeUtils.add_noextract_qual
+Pulse.RuntimeUtils.must_erase_for_extraction
+Pulse.RuntimeUtils.magic_s
+Pulse.RuntimeUtils.profile
+Pulse.RuntimeUtils.mk_app_flat
+Pulse.RuntimeUtils.record_stats
+Pulse.RuntimeUtils.stack_dump
+Pulse.RuntimeUtils.push_options
+Pulse.RuntimeUtils.pop_options
+Pulse.RuntimeUtils.set_options
+Pulse.RuntimeUtils.universe_of_well_typed_term
+Pulse.RuntimeUtils.try_lookup_lid
+
+Pulse.Extract.CompilerLib.unit_tm
+Pulse.Extract.CompilerLib.unit_ty
+Pulse.Extract.CompilerLib.mk_return
+Pulse.Extract.CompilerLib.mk_meta_monadic
+Pulse.Extract.CompilerLib.mk_pure_let
+Pulse.Extract.CompilerLib.mk_let
+Pulse.Extract.CompilerLib.mk_if
+Pulse.Extract.CompilerLib.mk_extracted_as_attr
