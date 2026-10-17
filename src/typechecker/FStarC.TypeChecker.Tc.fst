@@ -991,12 +991,14 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
         CoreCheck.phase2 env "this term"
           (fun () ->
             let t, c = CoreCheck.elaborate env tc_term t0 in
-            let c =
+            (* [c] is shown as phase 1 inferred it, e.g. with its universe
+               unification variables; Core needs them removed. *)
+            let c_core =
               N.normalize_comp [Env.DefaultUnivsToZero; Env.CheckNoUvars; Env.Beta;
                                 Env.DoNotUnfoldPureLets; Env.CompressUvars;
                                 Env.Exclude Env.Zeta; Env.Exclude Env.Iota;
                                 Env.NoFullNorm] env c in
-            match Core.check_term_at_comp env t c with
+            match Core.check_term_at_comp env t c_core with
             | Inl g -> t, c, Option.map (fun (g, _) -> pp g) g
             | Inr err -> CoreCheck.raise_core_error env "this term" err)
           (fun () ->
