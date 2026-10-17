@@ -364,3 +364,29 @@ FStarC.Tactics.InterpFuns.mk_tactic_interpretation_20
 # tests/semiring/CanonCommSemiring.ml.fixup.
 FStarC.Tactics.Interpreter.e_tactic_1_alt
 FStarC.Syntax.Embeddings.mk_any_emb
+
+# The norm-step API.  The compiler uses only some of these, and a plugin
+# compiled against this unit that uses another would otherwise emit its own
+# copy, into a helper module that can collide with one already in the binary
+# (issue #4692).  FStarC.NormSteps shares these keys; see
+# Builtins.fstarc_mirror_of.
+FStar.NormSteps.delta
+FStar.NormSteps.delta_attr
+FStar.NormSteps.delta_fully
+FStar.NormSteps.delta_namespace
+FStar.NormSteps.delta_once
+FStar.NormSteps.delta_only
+FStar.NormSteps.delta_qualifier
+FStar.NormSteps.hnf
+FStar.NormSteps.iota
+FStar.NormSteps.nbe
+FStar.NormSteps.norm_debug
+FStar.NormSteps.primops
+FStar.NormSteps.reduce_projections
+FStar.NormSteps.reify_
+FStar.NormSteps.simplify
+FStar.NormSteps.unascribe
+FStar.NormSteps.unmeta
+FStar.NormSteps.weak
+FStar.NormSteps.zeta
+FStar.NormSteps.zeta_full

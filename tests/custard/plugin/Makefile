@@ -17,7 +17,7 @@ FSTAR_ROOT ?= ../../..
 # plugin.test rule below instead.
 FSTAR_FILES := CustardPlugin.fst CustardPluginAux.fst CustardRulePlugin.fst \
                CustardRuleTest.fst CustardRuleArity.fst CustardRuleBare.fst \
-               CustardRuleOverArity.fst
+               CustardRuleOverArity.fst CustardNormSteps.fst
 
 # CustardRulePlugin registers a rule, so its *source* names FStarC.Custard's
 # own types: unlike an ordinary plugin, this one has to be checked with the
@@ -203,3 +203,51 @@ $(OUTPUT_DIR)/CustardRuleOverArity.diag: $(OUTPUT_DIR)/CustardPlugin.cmxs \
 all: $(OUTPUT_DIR)/CustardRuleArity.diag
 all: $(OUTPUT_DIR)/CustardRuleBare.diag
 all: $(OUTPUT_DIR)/CustardRuleOverArity.diag
+
+# ------------------------------------------------------- norm steps, split
+
+# Issue 4692.  A --with_fstarc unit split against the compiler's .cui.  Both
+# spellings of a norm step have to resolve to the compiler's FStarC_NormSteps
+# rather than to a copy, and the library modules this unit compiles itself
+# (FStar.Order.le, FStar.Set) must be in files named after the unit:
+# fstar.exe already contains the Pulse plugin's, and dynlink refuses a second
+# module of a name already loaded.
+NS_DIR  := $(OUTPUT_DIR)/normsteps
+NS_UNIT := CustardNormStepsUnit
+NS_HELPER := $(NS_UNIT)_FStar_Order
+NS_SET    := $(NS_UNIT)_FStar_Set
+
+$(NS_DIR)/CustardNormSteps.ml: $(CACHE_DIR)/CustardNormSteps.fst.checked
+	$(call msg, "EXTRACT SPLIT", CustardNormSteps)
+	$(Q)rm -rf $(NS_DIR) && mkdir -p $(NS_DIR)
+	$(Q)$(FSTAR) --codegen OCaml --custard_split --custard_unit $(NS_UNIT) \
+	  --custard_link $(FSTAR_LIBDIR)/fstarc/fstarc.cui \
+	  --custard_entry_module CustardNormSteps --odir $(NS_DIR) \
+	  CustardNormSteps.fst
+
+$(NS_DIR)/CustardNormSteps.cmxs: $(NS_DIR)/CustardNormSteps.ml
+	$(call msg, "NORMSTEPS", CustardNormSteps)
+	$(Q)ls $(NS_DIR) | grep -q NormSteps_ \
+	  && { echo "ERROR: a copy of the norm steps was emitted"; ls $(NS_DIR); exit 1; } || true
+	$(Q)grep -q 'norm_step =' $< \
+	  && { echo "ERROR: norm_step was redeclared"; exit 1; } || true
+	$(Q)grep -qF 'FStarC_NormSteps.weak' $< \
+	  || { echo "ERROR: FStar.NormSteps.weak is not the compiler's"; exit 1; }
+	$(Q)grep -qF 'FStarC_NormSteps.Weak' $< \
+	  || { echo "ERROR: FStarC.NormSteps.Weak is not the compiler's"; exit 1; }
+	$(Q)test -f $(NS_DIR)/$(NS_HELPER).ml -a -f $(NS_DIR)/$(NS_SET).ml \
+	  -a ! -f $(NS_DIR)/FStar_Set.ml \
+	  || { echo "ERROR: a library module is not named after the unit"; ls $(NS_DIR); exit 1; }
+	$(Q)cd $(NS_DIR) && $(FSTAR_EXE) --ocamlenv ocamlfind ocamlopt -shared \
+	  -package fstar.compiler -o CustardNormSteps.cmxs \
+	  $(NS_HELPER).ml $(NS_SET).ml CustardNormSteps.ml
+
+$(NS_DIR)/loaded: $(NS_DIR)/CustardNormSteps.cmxs
+	$(Q)$(FSTAR) --load_cmxs $(abspath $(NS_DIR))/CustardNormSteps \
+	  CustardRuleBare.fst > $(NS_DIR)/load.log 2>&1 \
+	  || { echo "ERROR: the split plugin did not load"; cat $(NS_DIR)/load.log; exit 1; }
+	$(Q)grep -qF 'CustardNormSteps: 6 le mem' $(NS_DIR)/load.log \
+	  || { echo "ERROR: the split plugin did not run"; cat $(NS_DIR)/load.log; exit 1; }
+	touch $@
+
+all: $(NS_DIR)/loaded

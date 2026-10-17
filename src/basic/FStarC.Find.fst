@@ -160,6 +160,11 @@ let rec path_is_at_or_below (root:string) (path:string) : ML bool =
     let parent = Filepath.dirname path in
     parent <> path && path_is_at_or_below root parent
 
+let is_library_file (path : string) : ML bool =
+  let p = Filepath.normalize_file_path path in
+  lib_roots () |> List.existsb (fun r ->
+    path_is_at_or_below (Filepath.normalize_file_path r) p)
+
 let module_include_covers_path (inc: module_include_path) (path: string): ML bool =
   let incnorm = Filepath.normalize_file_path inc.dir in
   let pathnorm = Filepath.normalize_file_path path in

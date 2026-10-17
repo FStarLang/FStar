@@ -1240,6 +1240,18 @@ let stub_aliases : list (string & string) = [
   "FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop";
 ]
 
+(* Issue #4692.  [FStarC.NormSteps] is not a stub but a copy: the compiler
+   refers to [FStar.NormSteps], which {!no_fstar_stubs} names
+   [FStarC.NormSteps], so the compiler unit exports the type and its values
+   under the ulib keys.  A [--with_fstarc] plugin that writes [FStarC.NormSteps]
+   asks for the same declarations under the other key, and a miss compiles a
+   second, incompatible [norm_step].  {!Extract.unstub_lid} uses this to ask
+   with the key the compiler used. *)
+let fstarc_mirror_of (ns : list string) : option (list string) =
+  match ns with
+  | "FStarC" :: "NormSteps" :: rest -> Some ("FStar" :: "NormSteps" :: rest)
+  | _ -> None
+
 (* [FStar.Bytes.bytes] is [struct { uint32_t length; const char *data; }] in
    krmllib's [compat.h], which every karamel-generated program includes; the
    direct-to-C backend has to ask for it by name. *)
