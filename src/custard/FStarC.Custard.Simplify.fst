@@ -124,7 +124,7 @@ let anf_expr (x0:expr) : ML expr =
         let e = norm e in
         if is_pure e.eff || atomic e then e
         else begin
-          let v = uniq "tmp" (GenSym.next_id ()) in
+          let v = uniq "uu__tmp" (GenSym.next_id ()) in
           acc := (v, e.ty, e) :: !acc;
           { e with e = EVar v; eff = E_Pure }
         end in
@@ -547,6 +547,15 @@ let rebuild_proj_id (x:expr) : ML (option expr) =
         | _ -> None))
   | _ -> None
 
+let keeps_unused_named_lets () : ML bool =
+  match Options.codegen_name () with
+  | "KrmlC" | "KrmlRust" -> true
+  | _ -> false
+
+let is_programmer_name (v:string) : ML bool =
+  let b = base_name v in
+  not (b = "" || b = "_" || (String.length b >= 4 && String.substring b 0 4 = "uu__"))
+
 let rec simpl (x:expr) : ML expr =
   match x.e with
   | ELet (v, ty, e1, e2) ->
@@ -586,6 +595,12 @@ let rec simpl (x:expr) : ML expr =
        motion, so the test is [is_droppable] and not [is_pure] -- a read whose
        value nothing wants goes, rather than becoming a [(void)] of itself. *)
     else if is_droppable e1 then e2
+    (* karamel keeps an unused binding the programmer named, as a variable
+       marked unused, and turns one it may inline -- a [uu__] name -- into a
+       discarded expression; an [ESeq] would lose the name and so the
+       distinction. *)
+    else if keeps_unused_named_lets () && is_programmer_name v then
+      { x with e = ELet (v, ty, e1, e2) }
     else { x with e = ESeq (e1, e2) })
 
   | ESeq (e1, e2) ->
@@ -3063,7 +3078,7 @@ let rec unit_args_expr (x:expr) : ML expr =
          | _ ->
            if is_pure e.eff then { e with e = EConst CUnit }
            else begin
-             let v = uniq "tmp" (GenSym.next_id ()) in
+             let v = uniq "uu__tmp" (GenSym.next_id ()) in
              acc := (v, e.ty, e) :: !acc;
              { e with e = EConst CUnit; eff = E_Pure }
            end in

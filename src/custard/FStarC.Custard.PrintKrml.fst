@@ -869,9 +869,9 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
 
        Freshened against the enclosing scope because [find] resolves a
        reference by the *first* matching name: [Rename] gives a local its bare
-       source spelling, so a program with its own [discarded] in scope would
+       source spelling, so a program with its own [uu__discarded] in scope would
        otherwise have every reference to it captured by this binder. *)
-    let x = fresh_local env "discarded" in
+    let x = fresh_local env "uu__discarded" in
     let t = match e1.ty with
             | TBuf _ | TRef (_, _) -> krml_typ env e1.ty
             | _ -> K.TAny in
@@ -913,11 +913,11 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.EBufCreate ((match l with LStack -> K.Stack | LHeap -> K.ManuallyManaged),
                   krml_expr env init, krml_expr env len)
   | EOp ({ po_op = BufRead }, [b; i]) ->
-    K.EBufRead (krml_expr env b, krml_expr env i)
+    K.EBufRead (krml_expr env b, krml_index env b i)
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
-    K.EBufWrite (krml_expr env b, krml_expr env i, krml_expr env v)
+    K.EBufWrite (krml_expr env b, krml_index env b i, krml_expr env v)
   | EOp ({ po_op = BufSub }, [b; i]) ->
-    K.EBufSub (krml_expr env b, krml_expr env i)
+    K.EBufSub (krml_expr env b, krml_index env b i)
   | EOp ({ po_op = BufFree }, [b]) -> K.EBufFree (krml_expr env b)
   | EOp ({ po_op = BufNull }, []) ->
     K.EBufNull (match e.ty with TBuf t | TRef (_, t) -> krml_typ env t | _ -> K.TAny)
@@ -1071,6 +1071,17 @@ and krml_branch (env:kenv) (br:branch) : ML K.branch =
 
 and repeat_unit (n:int) : ML (list unit) =
   if n <= 0 then [] else () :: repeat_unit (n - 1)
+
+(* A reference holds one value, not a run, so its read, write and address are
+   all at index 0.  karamel prints [b[_zero_for_deref]] as [*b] (and
+   [&b[_zero_for_deref]] as [b]), which is how C spells an access through a
+   pointer to one value; a literal 0 would print as [b[0U]], which is how it
+   spells the first element of an array. *)
+and krml_index (env:kenv) (b:expr) (i:expr) : ML K.expr =
+  match b.ty, i.e with
+  | TRef (_, _), EConst (CInt (0, _, _)) ->
+    K.EQualified (["Pulse"; "Lib"; "Pervasives"], "_zero_for_deref")
+  | _ -> krml_expr env i
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)

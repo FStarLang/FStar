@@ -1340,10 +1340,25 @@ let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
    same way: every reference goes through [name_of_bv] on this very [bv], so
    there is nothing else to rewrite.  The index is deliberately preserved --
    it is the disambiguator [uniq] appends and the key of [st.letdefs],
-   [st.effletdefs] and [st.lettys]. *)
+   [st.effletdefs] and [st.lettys].
+
+   A local [let] marked [CInline] -- in hand-written code, or the reads of
+   [_break]-style flags that Pulse's goto elimination introduces -- asks to be
+   inlined into its use.  The way to say that is a [uu__] name, which is what
+   karamel inlines ([Helpers.is_uu]) and what {!Rename} spells without the
+   prefix everywhere else. *)
 let rename_let_bv (top:term) (b:bv) (body:term) (lbattrs:list term)
   : ML (bv & term) =
-  match rename_let_name top lbattrs with
+  let s =
+    let renamed = rename_let_name top lbattrs in
+    let base = match renamed with
+               | Some s -> s
+               | None -> Ident.string_of_id b.ppname in
+    if U.has_attribute lbattrs PC.c_inline_attr &&
+       not (String.length base >= 4 && String.substring base 0 4 = "uu__")
+    then Some ("uu__" ^ base)
+    else renamed in
+  match s with
   | None -> b, body
   | Some s ->
     let b' = { b with ppname = Ident.mk_ident (s, Ident.range_of_id b.ppname) } in
