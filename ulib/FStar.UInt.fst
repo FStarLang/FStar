@@ -480,8 +480,10 @@ let lemma_zero_extends #n m a =
   let r = zero_extends m a in
   append_lemma #m #n hd0 av;
   assert (r = from_vec eav);
-  from_vec_propriety #(n+m) eav 1;
   assert (from_vec #m hd0 = 0);
+  mul_zero_left_is_zero (pow2 n);
+  inverse_num_lemma a;
+  assert (r = from_vec av);
   assert (r = a)
 
 let lemma_one_extend #n a =

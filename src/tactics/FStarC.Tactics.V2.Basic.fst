@@ -2240,7 +2240,7 @@ let t_commute_applied_match () : ML (tac unit) = wrap_err "t_commute_applied_mat
   )
 
 let string_to_term (e: Env.env) (s: string): ML (tac term)
-  = let open FStarC.Parser.ParseIt in
+  = let open FStarC.Parser.Frontend in
     let frag_of_text s = { frag_fname= "<string_of_term>"
                          ; frag_line = 1 ; frag_col  = 0
                          ; frag_text = s } in
@@ -2509,12 +2509,161 @@ let refl_typing_builtin_wrapper (label:string) (f:unit -> ML ('a & list refl_gua
   in
   return (o, errs)
 
+(* Early-exit checks for unresolved unification variables.
+
+   [term_has_uvar check_tm t] is true iff
+     (check_tm /\ Free.uvars t is non-empty) \/ Free.univs t is non-empty.
+
+   It mirrors exactly the traversal of FStarC.Syntax.Free.free_names_and_uvs'
+   (with use_cache=Def: it does not descend into the types of uvars), visiting
+   the same subterms and universes, but it builds no sets (Free computes
+   names, uvars, univs, univ_names and fvars all at once, with quadratic
+   FlatSet unions) and stops at the first unification variable found.
+   [Free.uvars t] contains exactly the unresolved Tm_uvar nodes reached after
+   compression, and [Free.univs t] the U_unif nodes reached after
+   Subst.compress_univ. *)
+let rec univ_has_uvar (u:universe) : ML bool =
+  match SS.compress_univ u with
+  | U_unif _ -> true
+  | U_succ u -> univ_has_uvar u
+  | U_max us -> univs_have_uvar us
+  | _ -> false
+and univs_have_uvar (us:list universe) : ML bool =
+  match us with
+  | [] -> false
+  | u::us -> univ_has_uvar u || univs_have_uvar us
+
+let rec term_has_uvar (check_tm:bool) (t:term) : ML bool =
+  let t = SS.compress t in
+  match t.n with
+  | Tm_delayed _ -> failwith "Impossible"
+  | Tm_uvar _ -> check_tm
+  | Tm_type u -> univ_has_uvar u
+  | Tm_name _
+  | Tm_bvar _
+  | Tm_fvar _
+  | Tm_constant _
+  | Tm_lazy _
+  | Tm_unknown -> false
+  | Tm_uinst (t, us) ->
+    term_has_uvar check_tm t || univs_have_uvar us
+  | Tm_abs {b; body; rc_opt} ->
+    term_has_uvar check_tm b.binder_bv.sort ||
+    term_has_uvar check_tm body ||
+    (match rc_opt with
+     | Some { residual_typ = Some t } -> term_has_uvar check_tm t
+     | _ -> false)
+  | Tm_arrow {b; comp} ->
+    term_has_uvar check_tm b.binder_bv.sort ||
+    comp_has_uvar check_tm comp
+  | Tm_refine {b; phi} ->
+    term_has_uvar check_tm b.sort ||
+    term_has_uvar check_tm phi
+  | Tm_app {hd; arg=(a, _)} ->
+    term_has_uvar check_tm hd ||
+    term_has_uvar check_tm a
+  | Tm_match {scrutinee; ret_opt; brs; rc_opt} ->
+    (match rc_opt with
+     | Some { residual_typ = Some t } -> term_has_uvar check_tm t
+     | _ -> false) ||
+    term_has_uvar check_tm scrutinee ||
+    (match ret_opt with
+     | None -> false
+     | Some (b, asc) ->
+       term_has_uvar check_tm b.binder_bv.sort ||
+       ascription_has_uvar check_tm asc) ||
+    branches_have_uvar check_tm brs
+  | Tm_ascribed {tm; asc} ->
+    term_has_uvar check_tm tm ||
+    ascription_has_uvar check_tm asc
+  | Tm_let {lbs; body} ->
+    term_has_uvar check_tm body ||
+    lbs_have_uvar check_tm (snd lbs)
+  | Tm_quoted (tm, qi) ->
+    (match qi.qkind with
+     | Quote_static -> terms_have_uvar check_tm (snd qi.antiquotations)
+     | Quote_dynamic -> term_has_uvar check_tm tm)
+  | Tm_meta {tm; meta} ->
+    term_has_uvar check_tm tm ||
+    (match meta with
+     | Meta_pattern (_, args) -> args_list_have_uvar check_tm args
+     | Meta_monadic (_, t') -> term_has_uvar check_tm t'
+     | Meta_monadic_lift (_, _, t') -> term_has_uvar check_tm t'
+     | Meta_labeled _
+     | Meta_desugared _
+     | Meta_named _ -> false)
+
+and terms_have_uvar (check_tm:bool) (ts:list term) : ML bool =
+  match ts with
+  | [] -> false
+  | t::ts -> term_has_uvar check_tm t || terms_have_uvar check_tm ts
+
+and args_have_uvar (check_tm:bool) (args:args) : ML bool =
+  match args with
+  | [] -> false
+  | (a, _)::args -> term_has_uvar check_tm a || args_have_uvar check_tm args
+
+and args_list_have_uvar (check_tm:bool) (l:list args) : ML bool =
+  match l with
+  | [] -> false
+  | args::l -> args_have_uvar check_tm args || args_list_have_uvar check_tm l
+
+and bv_sorts_have_uvar (check_tm:bool) (bvs:list bv) : ML bool =
+  match bvs with
+  | [] -> false
+  | x::bvs -> term_has_uvar check_tm x.sort || bv_sorts_have_uvar check_tm bvs
+
+and branches_have_uvar (check_tm:bool) (brs:list branch) : ML bool =
+  match brs with
+  | [] -> false
+  | (p, wopt, t)::brs ->
+    bv_sorts_have_uvar check_tm (pat_bvs p) ||
+    (match wopt with
+     | None -> false
+     | Some w -> term_has_uvar check_tm w) ||
+    term_has_uvar check_tm t ||
+    branches_have_uvar check_tm brs
+
+and lbs_have_uvar (check_tm:bool) (lbs:list letbinding) : ML bool =
+  match lbs with
+  | [] -> false
+  | lb::lbs ->
+    term_has_uvar check_tm lb.lbtyp ||
+    term_has_uvar check_tm lb.lbdef ||
+    lbs_have_uvar check_tm lbs
+
+and ascription_has_uvar (check_tm:bool) (asc:ascription) : ML bool =
+  let asc, tacopt, _ = asc in
+  (match asc with
+   | Inl t -> term_has_uvar check_tm t
+   | Inr c -> comp_has_uvar check_tm c) ||
+  (match tacopt with
+   | None -> false
+   | Some tac -> term_has_uvar check_tm tac)
+
+and comp_has_uvar (check_tm:bool) (c:comp) : ML bool =
+  match c.n with
+  | Comp ct ->
+    term_has_uvar check_tm ct.result_typ ||
+    (match List.tryFind (function DECREASES _ -> true | _ -> false) ct.flags with
+     | Some (DECREASES dec_order) -> dec_order_has_uvar check_tm dec_order
+     | _ -> false) ||
+    (match List.tryFind (function SMTPAT _ -> true | _ -> false) ct.flags with
+     | Some (SMTPAT p) -> term_has_uvar check_tm p
+     | _ -> false)
+
+and dec_order_has_uvar (check_tm:bool) (d:decreases_order) : ML bool =
+  match d with
+  | Decreases_lex l -> terms_have_uvar check_tm l
+  | Decreases_wf (rel, e) ->
+    term_has_uvar check_tm rel ||
+    term_has_uvar check_tm e
+
 let no_uvars_in_term (t:term)  : ML (bool) =
-  t |> Free.uvars |> is_empty &&
-  t |> Free.univs |> is_empty
+  not (term_has_uvar true t)
 
 let no_univ_uvars_in_term (t:term)  : ML (bool) =
-  t |> Free.univs |> is_empty
+  not (term_has_uvar false t)
 
 let no_uvars_in_g (g:env)  : ML (bool) =
   g.gamma |> BU.for_all (function

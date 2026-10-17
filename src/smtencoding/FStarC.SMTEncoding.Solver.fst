@@ -95,12 +95,21 @@ This used to be defined as exactly 544656 since that roughtly
 corresponded to 5 seconds in some "blessed" setting. But rlimit units
 are only very roughly correlated to time, and having this very non-round
 number makes reading SMT query dumps pretty confusing. So, for new
-solvers, we now just make it 500k. *)
+solvers, we now just make it 500k.
+
+Z3's rlimit is a 32-bit unsigned integer. Older versions of Z3 silently
+truncated larger values (5.0.0 still does), but newer ones reject them, so we
+cap the rlimit at the largest one Z3 accepts. *)
+let max_z3_rlimit : int = 4294967295
+
 let convert_rlimit (r : int) : ML int =
-  if Misc.version_ge (Options.z3_version ()) "4.12.3" then
-    500000 * r
-  else
-    544656 * r
+  let z3_rlimit =
+    if Misc.version_ge (Options.z3_version ()) "4.12.3" then
+      500000 * r
+    else
+      544656 * r
+  in
+  if z3_rlimit > max_z3_rlimit then max_z3_rlimit else z3_rlimit
 
 (* The block sent to the solver for a single proof obligation: the fuel
 settings, the negated goal, and the check-sat itself, all in their own

@@ -71,3 +71,21 @@ let string_of_list l =
   BatList.iter (fun c -> BatUTF8.Buf.add_char b (BatUChar.chr c)) l;
   BatUTF8.Buf.contents b
 let string_of_char (c:char) = BatString.of_char (Char.chr c)
+
+let byte_length (s:string) : int = String.length s
+let[@inline] byte_at (s:string) (i:int) : int =
+  if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1
+let code_point_at_slow (s:string) (i:int) : int =
+  try BatUChar.code (BatUTF8.look s i) with _ -> 0xFFFD
+let[@inline] code_point_at (s:string) (i:int) : int =
+  let b = byte_at s i in
+  if b < 0x80 then b else code_point_at_slow s i
+let[@inline] next_code_point (s:string) (i:int) : int =
+  let b = byte_at s i in
+  let w = if b < 0x80 then 1 else if b < 0xE0 then 2 else if b < 0xF0 then 3 else 4 in
+  let j = i + w and n = String.length s in
+  if j < n then j else n
+let byte_substring (s:string) (i:int) (j:int) : string =
+  let n = String.length s in
+  let i = if i > 0 then i else 0 and j = if j < n then j else n in
+  if j <= i then "" else String.sub s i (j - i)

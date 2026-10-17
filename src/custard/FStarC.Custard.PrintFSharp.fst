@@ -381,7 +381,7 @@ let reject_fwidth (fw:fwidth) : ML unit =
            narrower that arithmetic is defined on, so such a program would \
            compute at a width it did not ask for (sections 38 and 122.5).");
     text "Use FStar.Float32 or FStar.Float64, or extract with \
-          --custard_backend C." ]
+          --codegen C." ]
 
 (* Types F# already has.  Emitting a declaration for one of these would
    shadow the real thing; a monomorphized clone carries a [spec] suffix and is
@@ -434,31 +434,25 @@ let rec ty (t:cty) : ML string =
   | TFloat Float64 -> "float"
   | TFloat Float32 -> "float32"
   | TFloat fw -> reject_fwidth fw; "float"
-  (* Section 122.14.  A [unit] argument is not an argument: the IR drops such
-     a binder from a definition that has another one, exactly as the C backend
-     drops it from a signature, and an arrow type that kept it would disagree
-     with the definition it describes.  The disagreement is invisible while a
-     function is only called -- a call site consults the definition -- and
-     surfaces the moment one is passed as a value.
-
-     An arrow whose every argument is [unit] keeps one, because a definition
-     with no binders at all is a value rather than a function, and a value is
-     evaluated once. *)
+  (* Section 135.  An arrow is printed with every argument it has.  The IR
+     already decides which [unit] arguments a top-level definition deletes,
+     and a function value keeps all of them, so this matches both the
+     definitions and the closures.  Section 122.14 used to drop every [unit]
+     argument here, which disagreed with a closure applied at a type
+     variable. *)
   | TArrow _ ->
     let rec split (t:cty) : ML (list cty & cty) =
       match t with
       | TArrow (a, _, b) -> let args, r = split b in (a :: args, r)
       | _ -> ([], t) in
     let args, ret = split t in
-    let kept = args |> List.filter (fun a -> not (TUnit? a)) in
-    let kept = if Nil? kept then [TUnit] else kept in
-    "(" ^ String.concat " -> " (List.map ty kept) ^ " -> " ^ ty ret ^ ")"
+    "(" ^ String.concat " -> " (List.map ty args) ^ " -> " ^ ty ret ^ ")"
   | TTuple ts -> "(" ^ String.concat " * " (List.map ty ts) ^ ")"
   (* Section 8.4: a buffer is a .NET array.  Faithful for everything but
      [BufSub], which needs an interior pointer; that one is refused at run
      time rather than mistranslated. *)
   | TBuf t -> "(" ^ ty t ^ ")[]"
-  | TRef t -> "(" ^ ty t ^ " ref)"
+  | TRef (_, t) -> "(" ^ ty t ^ " ref)"
   | TInline _ ->
     failwith "Custard: an inline-field marker reached the F# backend"
   | TConst _ ->
@@ -468,7 +462,7 @@ let rec ty (t:cty) : ML string =
       text "[wmma::fragment<matrix_a, 16, 16, 16, half, row_major>] is one \
             type and [wmma::fragment<matrix_b, ...>] another; F# has no such \
             construction, so section 69 is a C-backend feature \
-            (--custard_backend C).";
+            (--codegen C).";
       text "The unparameterized form still works everywhere: a \
             [@@custard_extern] target with no [{0}] placeholder names one \
             target type, and its arguments are dropped." ]
@@ -506,8 +500,8 @@ let rec erased_pun (a:cty) (b:cty) : bool =
   | TApp (n1, a1), TApp (n2, a2) ->
     (Cons? a1 || Cons? a2) && not (n1 = n2 && a1 = a2)
   | TBuf t1, TBuf t2 -> not (t1 = t2)
-  | TRef t1, TRef t2 -> not (t1 = t2)
-  | TBuf t1, TRef t2 | TRef t1, TBuf t2 -> erased_pun t1 t2
+  | TRef (_, t1), TRef (_, t2) -> not (t1 = t2)
+  | TBuf t1, TRef (_, t2) | TRef (_, t1), TBuf t2 -> erased_pun t1 t2
   | _ -> false
 
 let reject_coercion (a:cty) (b:cty) : ML string =
@@ -521,7 +515,7 @@ let reject_coercion (a:cty) (b:cty) : ML string =
           (section 122.6.2).";
     text "The change is under a type constructor rather than at the top of \
           the type, which is where an erased field can be.  Extract this \
-          program with --custard_backend OCaml, or give the declaration a \
+          program with --codegen OCaml, or give the declaration a \
           type whose erased part is a field rather than a parameter." ]
 
 (* -------------------------------------------------------------------- *)
@@ -826,11 +820,9 @@ let rec term (ind:string) (e:expr) : ML string =
   | ECtor (n, args) ->
     join_at ind ("(" ^ ctor_ref n ^ " (") ", " term args ^ "))"
   | ETuple es -> join_at ind "(" ", " term es ^ ")"
-  (* Section 122.14, the call side of the same rule. *)
+  (* Section 135: every argument, as the IR passes it. *)
   | EApp (hd, args) ->
-    let kept = args |> List.filter (fun (a:expr) -> not (TUnit? a.ty)) in
-    let kept = if Nil? kept then args else kept in
-    join_at ind "(" " " term (hd :: kept) ^ ")"
+    join_at ind "(" " " term (hd :: args) ^ ")"
   (* Section 122.10.  Every binder carries its type.  F#'s inference is
      weaker than OCaml's -- it is left-to-right and has no principal types for
      a field access -- so a lambda whose parameter is only used as the subject
@@ -1030,7 +1022,7 @@ let rec term (ind:string) (e:expr) : ML string =
      that nothing downstream has to infer it -- which at a type variable it
      could not. *)
   | EAny -> "(Unchecked.defaultof<" ^ ty e.ty ^ ">)"
-  | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
+  | EAbort s | EUnreachable s -> "(failwith \"" ^ escape s ^ "\")"
   | EWhile (c, body) ->
     let pre = "(while " in
     let hd = pre ^ term (after ind pre) c ^ " do\n" in
@@ -1452,7 +1444,7 @@ let reject_unrealized (p:program) : ML unit =
                backend accepts (section 122).");
         text "Give it a target with [@@custard_extern \"...\"] and supply \
               that name yourself, or extract this program with \
-              --custard_backend OCaml." ]
+              --codegen OCaml." ]
     | _ -> ())
 
 (* A realized *type* is the same situation one level up.  The ones .NET
@@ -1471,7 +1463,7 @@ let reject_realized_types (p:program) : ML unit =
         text ("Its declaration says what shape the type has, but not what it \
                is: the definition is in ulib/ml, and there is no F# \
                counterpart of that library (section 122.9).");
-        text "Extract this program with --custard_backend OCaml, or keep it \
+        text "Extract this program with --codegen OCaml, or keep it \
               to the fragment the C backend compiles." ]
     | _ -> ())
 
@@ -1490,7 +1482,7 @@ let reject_target_only_types (p:program) : ML unit =
             text ("Its target spelling [" ^ target ^ "] has a placeholder for \
                    an argument, so two instantiations of it are two different \
                    target types; F# has no such construction.  Section 69 is \
-                   a C-backend feature (--custard_backend C).") ]
+                   a C-backend feature (--codegen C).") ]
         | CReference ->
           E.raise_error0 E.Error_CustardBadReference [
             text ("Custard: the type " ^ string_of_name t.dt_name ^
@@ -1499,7 +1491,7 @@ let reject_target_only_types (p:program) : ML unit =
             text "The attribute says that values of the type are handles, so \
                   a binding of one has to alias rather than copy, which is \
                   C++ [T &x = ...] and F# has no way to spell.  Section 70.2 \
-                  is a C-backend feature (--custard_backend C)." ]
+                  is a C-backend feature (--codegen C)." ]
         | _ -> ())
     | _ -> ())
 
@@ -1523,7 +1515,7 @@ let rec mentions_tyvar (t:cty) : ML bool =
   | TVar _ -> true
   | TArrow (a, _, b) -> mentions_tyvar a || mentions_tyvar b
   | TTuple ts -> ts |> List.existsb mentions_tyvar
-  | TBuf t | TRef t | TInline t -> mentions_tyvar t
+  | TBuf t | TRef (_, t) | TInline t -> mentions_tyvar t
   | TApp (_, args) -> args |> List.existsb mentions_tyvar
   | _ -> false
 
@@ -1542,12 +1534,9 @@ let rec mentions_tyvar (t:cty) : ML bool =
    application is not: [a -> ML (b -> c)] expanded past its first arrow would
    run the [ML] part only once [b] arrived.
 
-   The binders follow the arrow-type convention of section 122.14 -- a [unit]
-   argument is dropped unless every argument is one -- because the type every
-   *use* sees is printed by that convention, and the definition has to have
-   that type.  A prefix that would need a lone [unit] binder while the type
-   goes on to take real arguments cannot be spelled consistently, and is left
-   to the refusal. *)
+   The binders are those of the arrow type, every one of them, [unit]
+   included (section 135), because the type every *use* sees is printed that
+   way and the definition has to have that type. *)
 let eta_generic_value (l:dlet) : ML dlet =
   let rec spine (t:cty) : ML (list cty & cty & eff) =
     match t with
@@ -1559,19 +1548,12 @@ let eta_generic_value (l:dlet) : ML dlet =
   let args, ret, ef = spine l.dl_ret in
   let named = args |> List.mapi (fun i a ->
                 (a, (if i = 0 then "custard_eta" else "custard_eta" ^ show i))) in
-  let kept = named |> List.filter (fun (a, _) -> not (TUnit? a)) in
-  if Nil? kept && TArrow? ret then l
-  else
-    let kept = if Nil? kept then [List.hd named] else kept in
-    let bs = kept |> List.map (fun (a, x) -> { b_name = x; b_ty = a }) in
-    let actuals = named |> List.map (fun (a, x) ->
-                    if TUnit? a && not (List.existsb (fun (_, y) -> y = x) kept)
-                    then mk (EConst CUnit) TUnit E_Pure
-                    else mk (EVar x) a E_Pure) in
-    let body = match l.dl_body.e with
-               | EApp (f, xs) -> mk (EApp (f, xs @ actuals)) ret ef
-               | _ -> mk (EApp (l.dl_body, actuals)) ret ef in
-    { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
+  let bs = named |> List.map (fun (a, x) -> { b_name = x; b_ty = a }) in
+  let actuals = named |> List.map (fun (a, x) -> mk (EVar x) a E_Pure) in
+  let body = match l.dl_body.e with
+             | EApp (f, xs) -> mk (EApp (f, xs @ actuals)) ret ef
+             | _ -> mk (EApp (l.dl_body, actuals)) ret ef in
+  { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
 
 let eta_generic_values (p:program) : ML program =
   p |> List.map (fun d ->
@@ -1599,7 +1581,7 @@ let reject_generic_values (p:program) : ML unit =
         text ("F#'s value restriction does not generalize such a definition, \
                so it cannot be written at all (section 122.11).  " ^ why);
         text "Give it a parameter, specialize it at the type it is wanted at, \
-              or extract with --custard_backend OCaml." ]
+              or extract with --codegen OCaml." ]
     | _ -> ())
 
 (* -------------------------------------------------------------------- *)

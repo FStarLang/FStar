@@ -23,6 +23,8 @@ open FStarC.Custard.Syntax
 module BU  = FStarC.Util
 module Builtins = FStarC.Custard.Builtins
 module Dep = FStarC.Parser.Dep
+module Find = FStarC.Find
+module Loader = FStarC.Custard.Loader
 module HashTable = FStarC.HashTable
 
 let module_of (n:name) : ML string =
@@ -199,15 +201,45 @@ let emits (d:decl) : ML bool =
    | DType t -> not (has_flag t.dt_flags Realized)
    | _ -> true)
 
+(* The prefix of a file that holds declarations which are not at home.  Such a
+   file is named after somebody else's module, and two units may well make one
+   for the same module: Pulse's plugin, linked into [fstar.exe], had a
+   [Custard_FStarC_NormSteps], and a second plugin with one of its own failed
+   to load, since OCaml has one module per name in a process (issue #4692).
+   So a named OCaml unit uses its own name as the prefix, as in
+   [PulseChecker_FStar_Order].  karamel is left alone: there the file name
+   becomes the C symbols' prefix, which a consumer's [-bundle] flags are
+   written against. *)
+let unit_prefix () : ML (option string) =
+  match Options.custard_unit () with
+  | Some u when Options.codegen_name () = "OCaml" -> Some u
+  | _ -> None
+
+let mangle_prefix () : ML string =
+  match unit_prefix () with
+  | Some u -> u ^ "."
+  | None -> "Custard."
+
+(* A module of F*'s own library, compiled by a unit that links against
+   another.  Such a unit is a plugin, dynlinked into a process that may
+   already hold another plugin's copy of [FStar.Set] -- Pulse's, in
+   [fstar.exe] -- so the file is named after the unit as well.  The unit's
+   own modules keep their names: a hand-written realization refers to them by
+   those. *)
+let is_shared_library_module (deps:Dep.deps) (m:string) : ML bool =
+  Some? (unit_prefix ()) && Cons? (Options.custard_links ()) &&
+  List.existsb Find.is_library_file (Loader.candidate_files deps m)
+
 (* A realized module already has a [.ml], and a few of its symbols are
    compiled anyway: [Prims.pow2] and [FStar.List.Tot.Base.map] have F* bodies
    and no rule claiming them, so Custard emits its own copies.  They cannot go
    in the file the realization occupies, and they are not what anything else
    refers to that module by, so they go in a file of their own -- under
    mangled names, since nothing there is at home. *)
-let file_of (m:string) : ML string =
+let file_of (deps:Dep.deps) (m:string) : ML string =
   if Builtins.is_realized_module (String.split ['.'] m)
-  then "Custard." ^ m else m
+     || is_shared_library_module deps m
+  then mangle_prefix () ^ m else m
 
 (* The files a linked unit already emitted (section 12.9).  A unit is free to
    re-specialize an upstream definition -- section 12.6 says that is its own
@@ -220,11 +252,11 @@ let file_of (m:string) : ML string =
    So a file name an upstream unit owns is not available to this one, and the
    declaration goes to a mangled file instead.  The prefix is applied until it
    is free, because an upstream unit may itself have mangled the same name. *)
-let avoid (foreign : list string) (m:string) : ML string =
+let avoid (deps:Dep.deps) (foreign : list string) (m:string) : ML string =
   let rec go (f:string) (fuel:int) : ML string =
     if fuel = 0 || not (List.mem f foreign) then f
-    else go ("Custard." ^ f) (fuel - 1) in
-  go (file_of m) 10
+    else go (mangle_prefix () ^ f) (fuel - 1) in
+  go (file_of deps m) 10
 
 let run (deps:Dep.deps) (foreign:list string) (prog:program)
   : ML (list (string & program)) =
@@ -292,7 +324,7 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
     let ds = match HashTable.try_find chunks m with
              | Some r -> List.rev !r
              | None -> [] in
-    if ds = [] then [] else [(avoid foreign m, ds)]) in
+    if ds = [] then [] else [(avoid deps foreign m, ds)]) in
   (* Section 75.3.  A module that contributed no declaration still has to
      exist.  [-bundle] and [-no-prefix] select on module *names*, and karamel
      treats a pattern that names a module it was not given as a fatal error --
@@ -311,7 +343,7 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
      name is not parity but a collision, and the realization is the thing it
      would shadow. *)
   let want_empties =
-    List.mem (Options.custard_backend ()) ["KrmlC"; "KrmlRust"] in
+    List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"] in
   let empties =
     if not want_empties then []
     else Dep.topological_order deps (fun m -> m) |> List.collect (fun m ->

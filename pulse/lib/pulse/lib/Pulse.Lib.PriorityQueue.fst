@@ -562,7 +562,7 @@ let sift_up_swap_part2 #t {| total_order t |}
         // Need to prove li <> child. If li = child, then i = parent_idx child = p. But i <> p.
         // So li <> child. We can prove this using: left_idx i = li = child implies parent_idx child = i.
         // But parent_idx child = p. So i = p. Contradiction with i <> p.
-        assert (li = child ==> parent_idx child = i);  // from left_idx_inj
+        if li = child then left_idx_inj i child;
         // But parent_idx child = p and i <> p, so li <> child.
         assert (li <> child);
         swap_index_other s child p i;
@@ -587,7 +587,7 @@ let sift_up_swap_part2 #t {| total_order t |}
       )
       else (
         // Same reasoning as for left child
-        assert (ri = child ==> parent_idx child = i);
+        if ri = child then right_idx_inj i child;
         assert (ri <> child);
         swap_index_other s child p i;
         swap_index_other s child p ri;
@@ -978,7 +978,8 @@ let sift_down_swap_heap_down_at #t {| total_order t |}
                     (parent > 0 ==> Seq.index s (parent_idx parent) <=? Seq.index s child) /\
                     i <> child)
           (ensures heap_down_at (swap_seq s parent child) i)
-  = let s' = swap_seq s parent child in
+  = assert (child > 0);
+    let s' = swap_seq s parent child in
     let v = Seq.index s child in
     let u = Seq.index s parent in
     swap_length s parent child;

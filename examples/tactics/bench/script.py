@@ -39,7 +39,7 @@ def run_fstar(module, options):
     return result
 
 def gen_native_plugin(module_name):
-    options = ['--codegen', 'Plugin', '--extract', module_name]
+    options = ['--codegen', 'Plugin']
     return run_fstar(module_name, options)
 
 def format_table(module_name, checking_time, smt_time, tactic_time, seed, config, errors, tablefmt, include_headers):

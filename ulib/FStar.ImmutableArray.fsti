@@ -79,3 +79,26 @@ let elem_precedes (#a:Type u#a) (s:t a) (i : nat{i < length s})
       assert (memP (index l i) l);
       memP_precedes (index l i) l
     )
+
+(* The array with the element at [i] replaced by [v].  Extracted code may
+   update the array in place when nothing else refers to it. *)
+val upd (#a:Type u#a) (s:t a) (i:nat{ i < length s }) (v:a)
+  : Tot (t a)
+
+val length_upd (#a:Type u#a) (s:t a) (i:nat{ i < length s }) (v:a)
+  : Lemma (length (upd s i v) == length s)
+          [SMTPat (length (upd s i v))]
+
+val index_upd (#a:Type u#a) (s:t a) (i:nat{ i < length s }) (v:a)
+              (j:nat{ j < length s })
+  : Lemma (index (upd s i v) j == (if i = j then v else index s j))
+          [SMTPat (index (upd s i v) j)]
+
+(* The array with [v] appended.  Extracted code may append in place, with
+   room to spare, when nothing else refers to the array. *)
+val push (#a:Type u#a) (s:t a) (v:a)
+  : Tot (t a)
+
+val to_list_push (#a:Type u#a) (s:t a) (v:a)
+  : Lemma (to_list (push s v) == FStar.List.Tot.append (to_list s) [v])
+          [SMTPat (to_list (push s v))]

@@ -26,8 +26,12 @@ FStarC.Hooks
 FStarC.Interactive.Ide
 FStarC.Reflection.V2.Interpreter
 
-# FStarC.Parser.AST and friends: the hand-written grammar in
-# src/ml/FStarC_Parser_Parse.mly builds the surface AST directly.
+# FStarC.Parser.AST and friends: public API for language-extension plugins
+# (e.g. tests/extension-lang/TinyPlugin.ml), which build the surface AST and
+# register parsers from hand-written OCaml.
+FStarC.GenSym.get_gensym_state
+FStarC.GenSym.set_gensym_state
+FStarC.Options.Ext.get
 FStarC.Parser.AST.Util.extension_lang_parser
 FStarC.Parser.AST.Util.mk_extension_lang_parser
 FStarC.Parser.AST.Util.parse_extension_lang
@@ -124,7 +128,7 @@ FStarC.Syntax.Syntax.uvar
 FStarC.Syntax.Syntax.uvars
 FStarC.Syntax.Syntax.var
 
-# Errors: FStarC_Errors is realized in part, and the .mly reports through it.
+# Errors, named by the realizations and by plugins.
 FStar.Errors.Msg.error_message
 FStar.Errors.Msg.mkmsg
 FStarC.Errors.Codes.error_setting
@@ -132,24 +136,6 @@ FStarC.Errors.context_t
 FStarC.Errors.error
 FStarC.Errors.log_issue_text
 FStarC.Errors.raise_error_text
-FStarC.Errors.update_flags
-
-# The ML extraction AST, spelled out by FStarC_Extraction_ML_PrintML.ml.
-FStarC.Extraction.ML.Syntax.metadata
-FStarC.Extraction.ML.Syntax.mlattribute
-FStarC.Extraction.ML.Syntax.mlbranch
-FStarC.Extraction.ML.Syntax.mlident
-FStarC.Extraction.ML.Syntax.mlidents
-FStarC.Extraction.ML.Syntax.mlletbinding
-FStarC.Extraction.ML.Syntax.mlloc
-FStarC.Extraction.ML.Syntax.mlmodule
-FStarC.Extraction.ML.Syntax.mlmodulebody
-FStarC.Extraction.ML.Syntax.mlpath
-FStarC.Extraction.ML.Syntax.mlsig
-FStarC.Extraction.ML.Syntax.mlsymbol
-FStarC.Extraction.ML.Syntax.mlsymbols
-FStarC.Extraction.ML.Syntax.mltydecl
-FStarC.Extraction.ML.Syntax.mltyscheme
 
 # Typechecker and tactic types named by the plugin and NBE realizations.
 FStarC.Tactics.Monad.tac
@@ -329,15 +315,6 @@ FStarC.Tactics.V2.Basic.with_compat_pre_core
 FStarC.Tactics.V2.Basic.with_error_context
 FStarC.Tactics.V2.Basic.write
 
-# Named by the menhir grammars in src/ml, which are hand-written OCaml and so
-# outside the extracted program: a real literal and an integer literal are both
-# built in a semantic action.  A type mentioned only there is unfolded rather
-# than emitted unless it is a root, and a function called only there is not
-# compiled at all.
-FStarC.Const.parse_int_literal
-FStarC.Real.of_string
-FStarC.Real.real
-
 # Section 34: Custard's own extension point.  A plugin registers a rule by
 # calling this, through no request the extraction can see, so the symbol has
 # to be a root or it is not in the binary the plugin is loaded into.  The two
@@ -346,12 +323,11 @@ FStarC.Custard.Builtins.register_post_rule
 FStarC.Custard.Builtins.register_pre_rule
 FStarC.Custard.Builtins.register_rule
 
-# Named by the *ML* extraction's plugin registration code
-# (FStarC.Extraction.ML.RegEmb), which writes OCaml names into a plugin's
-# generated .ml rather than calling them from F*.  The plugin is compiled
-# against the compiler it will be loaded into, so every name it can write has
-# to be in that binary; nothing in the extracted program reaches them, since
-# the compiler's own plugins are registered by Custard's RegEmb instead.
+# Plugin registration helpers that hand-written plugin code (and plugins
+# built for older compilers) name in OCaml rather than calling them from F*.
+# The plugin is compiled against the compiler it will be loaded into, so every
+# such name has to be in that binary; nothing in the extracted program reaches
+# them, since the compiler's own plugins are registered by Custard's RegEmb.
 # FStarC.Tactics.Native's are hand-written OCaml and so are always there.
 FStarC.Ident.lid_of_str
 FStarC.Syntax.Embeddings.debug_wrap
@@ -388,3 +364,29 @@ FStarC.Tactics.InterpFuns.mk_tactic_interpretation_20
 # tests/semiring/CanonCommSemiring.ml.fixup.
 FStarC.Tactics.Interpreter.e_tactic_1_alt
 FStarC.Syntax.Embeddings.mk_any_emb
+
+# The norm-step API.  The compiler uses only some of these, and a plugin
+# compiled against this unit that uses another would otherwise emit its own
+# copy, into a helper module that can collide with one already in the binary
+# (issue #4692).  FStarC.NormSteps shares these keys; see
+# Builtins.fstarc_mirror_of.
+FStar.NormSteps.delta
+FStar.NormSteps.delta_attr
+FStar.NormSteps.delta_fully
+FStar.NormSteps.delta_namespace
+FStar.NormSteps.delta_once
+FStar.NormSteps.delta_only
+FStar.NormSteps.delta_qualifier
+FStar.NormSteps.hnf
+FStar.NormSteps.iota
+FStar.NormSteps.nbe
+FStar.NormSteps.norm_debug
+FStar.NormSteps.primops
+FStar.NormSteps.reduce_projections
+FStar.NormSteps.reify_
+FStar.NormSteps.simplify
+FStar.NormSteps.unascribe
+FStar.NormSteps.unmeta
+FStar.NormSteps.weak
+FStar.NormSteps.zeta
+FStar.NormSteps.zeta_full

@@ -24,11 +24,23 @@ open FStarC.Syntax.Syntax
 module H = FStarC.Hash
 open FStarC.Class.Hashable
 
-val ext_hash_term (t:term) : ML H.hash_code
-val ext_hash_term_no_memo (t:term) : ML H.hash_code
+(* The hash code of a term, computed eagerly when it was built. It is purely
+   syntactic: it does not look through delayed substitutions, solved uvars or
+   lazy terms. *)
+val ext_hash_term (t:term) : H.hash_code
+(* Syntactic equality, consistent with ext_hash_term: equal terms have equal
+   hash codes. Like the hash code, it does not look through delayed
+   substitutions, solved uvars or lazy terms, so it is only complete on deeply
+   compressed terms. Uvars are compared by their unique id, and names by their
+   index (ignoring their sorts). *)
 val equal_term (t0 t1:term) : ML bool
 
-(* uses ext_hash_term (with memo) *)
+(* Like equal_term, but compressing every subterm first: equality up to
+   delayed substitutions and solved uvars. This is NOT consistent with
+   ext_hash_term, so do not use it as the equality of a hash map. *)
+val equal_term_upto_compress (t0 t1:term) : ML bool
+
+(* uses ext_hash_term *)
 instance val hashable_term : hashable term
 
 instance val hashable_lident     : hashable Ident.lident

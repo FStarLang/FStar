@@ -186,6 +186,13 @@ let lookup_extension_parser (ext:string) : ML _ =
     else None
   | r -> r
 
+let comments : ref (list (string & range)) = mk_ref []
+let add_comments cs = comments := cs @ !comments
+let flush_comments () =
+  let cs = !comments in
+  comments := [];
+  cs
+
 let mk_extension_lang_parser f = { parse_decls = f }
 
 let as_open_namespaces_and_abbrevs (ls:list decl)

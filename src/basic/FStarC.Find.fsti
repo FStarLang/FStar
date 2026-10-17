@@ -62,6 +62,10 @@ val lib_root () : ML (option string)
 all transitive includes. *)
 val expand_include_d (dirname : string) : ML (list string)
 
+(* Whether a file lies under the F* library (or, with --with_fstarc, the
+   compiler's installed sources) rather than in the user's own tree. *)
+val is_library_file (path : string) : ML bool
+
 (* A counter that is bumped whenever the include path (or any other setting
 affecting file resolution) changes. Clients caching results derived from the
 include path can compare it to detect that their caches are stale. *)

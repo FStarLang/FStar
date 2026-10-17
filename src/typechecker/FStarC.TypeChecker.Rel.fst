@@ -108,6 +108,57 @@ let term_is_uvar (uv:ctx_uvar) (t:term) : ML bool =
 let binders_as_bv_set (bs:binders) : ML (FlatSet.t bv) =
   Setlike.from_list (List.map (fun b -> b.binder_bv) bs)
 
+(* The binder lists below are typically uvar contexts, which can be very
+   long (hundreds of binders in big Pulse functions). Building a FlatSet
+   from them with [binders_as_bv_set] is quadratic (FlatSet.from_list
+   dedups with a linear scan per element), and so is [FlatSet.subset]
+   against such a set. The helpers below answer the same membership
+   questions in O(n log n) using an RBSet (ordered by bv index, i.e. the
+   same equality as [S.bv_eq] / the [ord_bv] instance used by FlatSet), or
+   in linear time for the common cases. *)
+let binders_as_bv_rbset (bs:binders) : ML (RBSet.t bv) =
+  List.fold_left (fun s b -> add b.binder_bv s) (Setlike.empty ()) bs
+
+(* Is every name in [fvs] in the RBSet [s]? *)
+let names_subset_rbset (fvs:FlatSet.t bv) (s:RBSet.t bv) : ML bool =
+  List.for_all (fun x -> mem x s) (elems fvs)
+
+(* [names_subset_binders fvs bs] is [subset fvs (binders_as_bv_set bs)] *)
+let names_subset_binders (fvs:FlatSet.t bv) (bs:binders) : ML bool =
+  match elems fvs with
+  | [] -> true
+  | xs ->
+    if List.length xs <= 8
+    then (* few names: linear scans of bs are cheaper than building a set *)
+      List.for_all (fun x -> List.existsb (fun b -> S.bv_eq x b.binder_bv) bs) xs
+    else names_subset_rbset fvs (binders_as_bv_rbset bs)
+
+(* Is [bs1] a prefix of [bs2] (comparing binders by their bv)? *)
+let rec binders_prefix_of (bs1 bs2:binders) : ML bool =
+  match bs1, bs2 with
+  | [], _ -> true
+  | b1::bs1, b2::bs2 -> S.bv_eq b1.binder_bv b2.binder_bv && binders_prefix_of bs1 bs2
+  | _ -> false
+
+(* [binders_included bs1 bs2 s2] is
+     [subset (binders_as_bv_set bs1) (binders_as_bv_set bs2)],
+   where [s2 ()] must return [binders_as_bv_rbset bs2] (it is only called
+   when needed, so callers can cache it). The fast path covers the common
+   case of a context [bs1] that is a prefix of the context [bs2]. *)
+let binders_included (bs1 bs2:binders) (s2:unit -> ML (RBSet.t bv)) : ML bool =
+  BU.physical_equality bs1 bs2 ||
+  binders_prefix_of bs1 bs2 ||
+  (let s2 = s2 () in
+   List.for_all (fun b -> mem b.binder_bv s2) bs1)
+
+(* A memoizing thunk *)
+let memo_thunk (f:unit -> ML 'a) : ML (unit -> ML 'a) =
+  let r = mk_ref None in
+  fun () ->
+    match !r with
+    | Some x -> x
+    | None -> let x = f () in r := Some x; x
+
 (* lazy string, for error reporting *)
 type lstring = Thunk.t string
 
@@ -1268,10 +1319,10 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : ML worklist
       let _, kept =
         List.fold_left
           (fun (scope, kept) (b:binder) ->
-            if subset (Free.names b.binder_bv.sort) scope
+            if names_subset_rbset (Free.names b.binder_bv.sort) scope
             then add b.binder_bv scope, b::kept
             else scope, kept)
-          (binders_as_bv_set pfx, [])
+          (binders_as_bv_rbset pfx, [])
           bs
       in
       List.rev kept
@@ -1368,11 +1419,10 @@ let restrict_escaping_uvars (env:env) (xs:list bv) (t:term) : ML guard_t =
 let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list ctx_uvar) wl : ML worklist =
   match bs with
   | [] ->
-    let ctx_tgt = binders_as_bv_set tgt.ctx_uvar_binders in
+    let ctx_tgt = memo_thunk (fun () -> binders_as_bv_rbset tgt.ctx_uvar_binders) in
     List.fold_right 
       (fun (src:ctx_uvar) wl ->
-        let ctx_src = binders_as_bv_set src.ctx_uvar_binders in
-        if subset ctx_src ctx_tgt
+        if binders_included src.ctx_uvar_binders tgt.ctx_uvar_binders ctx_tgt
         then wl // no need to restrict source, it's context is included in the context of the tgt
         else restrict_ctx env tgt [] src wl)
       sources
@@ -3149,18 +3199,17 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
           let uvars, occurs_ok, msg = occurs_check ctx_u rhs in
           if not occurs_ok
           then Inl ("quasi-pattern, occurs-check failed: " ^ (Option.must msg)), wl
-          else let fvs_lhs = binders_as_bv_set (ctx_u.ctx_uvar_binders@bs) in
-               let fvs_rhs = Free.names rhs in
-               if not (subset fvs_rhs fvs_lhs)
+          else let fvs_rhs = Free.names rhs in
+               if not (names_subset_binders fvs_rhs (ctx_u.ctx_uvar_binders@bs))
                then Inl ("quasi-pattern, free names on the RHS are not included in the LHS"), wl
                (* Restrict the RHS uvars *over* bs (as in the pattern case), so
                   that they can still depend on the variables that
                   the solution abstracts over. Uvars whose context is already
                   included in the LHS's context need no restriction. *)
                else
-                 let ctx_lhs = binders_as_bv_set ctx_u.ctx_uvar_binders in
+                 let ctx_lhs = memo_thunk (fun () -> binders_as_bv_rbset ctx_u.ctx_uvar_binders) in
                  let uvars = uvars |> List.filter (fun (src:ctx_uvar) ->
-                   not (subset (binders_as_bv_set src.ctx_uvar_binders) ctx_lhs)) in
+                   not (binders_included src.ctx_uvar_binders ctx_u.ctx_uvar_binders ctx_lhs)) in
                  let sol, bs = mk_solution env lhs bs rhs in
                  Inr sol, restrict_all_uvars env ctx_u bs uvars wl
     in
@@ -3341,7 +3390,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         let uvars_head, occurs_ok, _ = occurs_check ctx_uv head in
         if not occurs_ok
         then inapplicable "occurs check failed" None
-        else if not (Free.names head `subset` binders_as_bv_set ctx_uv.ctx_uvar_binders)
+        else if not (names_subset_binders (Free.names head) ctx_uv.ctx_uvar_binders)
         then inapplicable "free name inclusion failed" None
         else (
           let t_head, _ =
@@ -3428,7 +3477,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         match fst subst with
         | [] | [[]] -> true
         | _ -> 
-          Free.names rhs `subset` binders_as_bv_set ctx_uv.ctx_uvar_binders &&
+          names_subset_binders (Free.names rhs) ctx_uv.ctx_uvar_binders &&
           FStarC.Syntax.Util.term_eq rhs (SS.subst' subst rhs)
       in
       let lhs, wl =
@@ -3443,7 +3492,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         if !dbg_Rel then
           Format.print_string "it's a pattern\n";
         let rhs = sn env rhs in
-        let fvs1 = binders_as_bv_set (ctx_uv.ctx_uvar_binders @ lhs_binders) in
+        let lhs_ctx = ctx_uv.ctx_uvar_binders @ lhs_binders in
         let fvs2 = Free.names rhs in
         //if !dbg_Rel then
         //  Format.print4 "lhs \t= %s\n\
@@ -3478,7 +3527,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
         then giveup_or_defer orig wl
                Deferred_occur_check_failed
                (Thunk.mkv <| "occurs-check failed: " ^ (Option.must msg))
-        else if subset fvs2 fvs1
+        else if names_subset_binders fvs2 lhs_ctx
         then let sol, bs = mk_solution env lhs lhs_binders rhs in
              let wl = restrict_all_uvars env ctx_uv bs uvars wl in
              solve (solve_prob orig None sol wl)
@@ -3487,8 +3536,8 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
           let msg = mklstr (fun () ->
                                 Format.fmt3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
                                            (show fvs2)
-                                           (show fvs1)
-                                           (show (ctx_uv.ctx_uvar_binders @ lhs_binders))) in
+                                           (show (binders_as_bv_set lhs_ctx))
+                                           (show lhs_ctx)) in
           giveup_or_defer orig wl Deferred_free_names_check_failed msg
         else imitate orig env wl lhs rhs
 
@@ -3631,7 +3680,7 @@ let rec solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
             else
               let uvars_o, occurs_ok, _ = occurs_check u_b t_o in
               if not occurs_ok then None
-              else if not (Free.names t_o `subset` binders_as_bv_set u_b.ctx_uvar_binders)
+              else if not (names_subset_binders (Free.names t_o) u_b.ctx_uvar_binders)
               then None
               else Some ([TERM(u_b, t_o)], restrict_all_uvars env u_b [] uvars_o wl)
           in
@@ -4789,6 +4838,12 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             Callers with a better answer than an SMT obligation can turn even
             this off with [eq_norm_heuristic_ok]; see tests/tactics/TestBV.fst,
             and the note above [same_formula] in [meet_or_join]. *)
+         let hnf env t : ML term =
+           norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.2"
+             [Env.HNF; Env.UnfoldUntil delta_constant; Env.Primops;
+              Env.Beta; Env.Eager_unfolding; Env.Iota] env t
+           |> U.unmeta
+         in
          let rec equal env t1 t2 : ML bool =
            match TEQ.eq_tm env t1 t2 with
            | TEQ.Equal -> true
@@ -4796,12 +4851,7 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
            | TEQ.Unknown ->
              if not wl.eq_norm_heuristic_ok then false
              else
-             let hnf t =
-               norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.2"
-                 [Env.HNF; Env.UnfoldUntil delta_constant; Env.Primops;
-                  Env.Beta; Env.Eager_unfolding; Env.Iota] env t
-               |> U.unmeta
-             in
+             let hnf = hnf env in
              let t1 = hnf t1 in
              let t2 = hnf t2 in
              match TEQ.eq_tm env t1 t2 with
@@ -4850,8 +4900,47 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
            let t2 = full t2 in
            U.term_eq t1 t2 || TEQ.eq_tm env t1 t2 = TEQ.Equal
          in
+         (* Try congruence before unfolding anything: walk both terms in
+            lockstep while their heads agree, and reduce only where they
+            first differ, comparing the results with no further recursion.
+            This costs one pass over the terms as written.
+
+            The lazy reduction in [equal] unfolds the head first, and that
+            can be exponential when the difference is buried in an argument
+            that is cheap to decide: in [Mkst?.f #nat (kf #nat s)] vs
+            [Mkst?.f #word (kf #word s)], with [word] an abbreviation for
+            [nat], it unfolds [kf] into a definition that uses its argument
+            twice and then compares both copies separately, at every level of
+            the call graph (#4663). Congruence decides it by comparing
+            [nat] with [word].
+
+            A [false] here is not conclusive (the heads may compute to equal
+            terms from different arguments), so we then fall through to
+            [equal] and [equal_by_full_norm] as before.
+
+            At the root, when the heads differ, the reduce-and-compare step
+            would be exactly [equal]'s first step, so a failure there would
+            repeat it. Leave that case to [equal]. *)
+         let rec congruent (root:bool) t1 t2 : ML bool =
+           match TEQ.eq_tm env t1 t2 with
+           | TEQ.Equal -> true
+           | TEQ.NotEqual -> false
+           | TEQ.Unknown ->
+             let h1, args1 = U.head_and_args_full t1 in
+             let h2, args2 = U.head_and_args_full t2 in
+             if not (Nil? args1)
+                && List.length args1 = List.length args2
+                && TEQ.eq_tm env h1 h2 = TEQ.Equal
+             then List.forall2 (fun (a1, _) (a2, _) -> congruent false a1 a2) args1 args2
+             else if root then false
+             else
+               let t1 = hnf env t1 in
+               let t2 = hnf env t2 in
+               TEQ.eq_tm env t1 t2 = TEQ.Equal || U.term_eq t1 t2
+         in
          let equal t1 t2 : ML bool =
-           equal env t1 t2
+           (wl.eq_norm_heuristic_ok && congruent true t1 t2)
+           || equal env t1 t2
            || (wl.eq_norm_heuristic_ok && equal_by_full_norm t1 t2)
          in
          if (Env.is_interpreted wl.tcenv head1 || Env.is_interpreted wl.tcenv head2) //we have something like (+ x1 x2) =?= (- y1 y2)
@@ -5479,6 +5568,10 @@ let dedup_vc (vc:term) : ML term =
     | Tm_fvar fv -> S.fv_eq_lid fv lid
     | _ -> false
   in
+  (* SynHash.equal_term does not look through delayed substitutions, so push
+     them all the way down: once on the whole VC, and again after opening a
+     binder (as SS.open_term_1 delays its substitution on the body). *)
+  let compress_all (t:term) : ML term = FStarC.Syntax.Visit.visit_term false (fun t -> t) t in
   let rec go (known:SynHash.term_map unit) (t:term) : ML (term & SynHash.term_map unit) =
     let t0 = SS.compress t in
     let hd, args = U.head_and_args_full t0 in
@@ -5502,7 +5595,7 @@ let dedup_vc (vc:term) : ML term =
       (match (SS.compress f).n with
        | Tm_abs {b; body; rc_opt} ->
          let b, body = SS.open_term_1 b body in
-         let body, _ = go known body in
+         let body, _ = go known (compress_all body) in
          let known = SynHash.term_map_add t0 () known in
          if U.is_t_true body
          then U.t_true, known
@@ -5515,7 +5608,7 @@ let dedup_vc (vc:term) : ML term =
 
     | _ -> t0, SynHash.term_map_add t0 () known
   in
-  fst (go (SynHash.term_map_empty #unit) vc)
+  fst (go (SynHash.term_map_empty #unit) (compress_all vc))
 
 let do_discharge_vc use_env_range_msg env vc : ML unit =
   let open FStarC.Pprint in

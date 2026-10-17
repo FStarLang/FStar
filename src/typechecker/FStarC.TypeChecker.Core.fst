@@ -426,8 +426,10 @@ let result a = context -> cache_t -> ML (__result (success a))
 
 let equal_term_for_hash t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term_for_hash"
+(* A fast path for relating terms, so up to delayed substitutions and solved
+   uvars: unlike the cache keys, these terms are not deeply compressed. *)
 let equal_term t1 t2 =
-  FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
+  FStarC.Profiling.profile (fun _ -> Hash.equal_term_upto_compress t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = {
   table = HashTable.create 1048576; //2^20
   guard_table = HashTable.create 1048576; //2^20
@@ -878,19 +880,26 @@ let insert_guard (g:env) (guard:typ)
   = let! cache = get_cache () in
     put_cache {cache with guard_map = FStarC.Syntax.Hash.term_map_add guard { ge_gamma = g.tcenv.gamma } cache.guard_map }
 
+(* The cache is keyed by syntactic equality (FStarC.Syntax.Hash.equal_term),
+   which does not look through delayed substitutions or solved uvars, so the
+   keys are deeply compressed. *)
+let cache_key (t:term) : ML term = FStarC.Syntax.Compress.deep_compress true true t
+
 let guard (g:env) (guard:typ)
   : result unit
-  = match! raw_lookup_guard guard with
-    | Some ge ->
-      if ge.ge_gamma `context_included` g.tcenv.gamma
-      then return () //cache hit 
-      else (
-        insert_guard g guard ;!
-        return_with_guard () (Some guard)
-      )
-    | _ ->
-      insert_guard g guard ;!
-      return_with_guard () (Some guard)
+  = fun ctx cache ->
+    let guard = cache_key guard in
+    (match! raw_lookup_guard guard with
+     | Some ge ->
+       if ge.ge_gamma `context_included` g.tcenv.gamma
+       then return () //cache hit 
+       else (
+         insert_guard g guard ;!
+         return_with_guard () (Some guard)
+       )
+     | _ ->
+       insert_guard g guard ;!
+       return_with_guard () (Some guard)) ctx cache
 
 
 (* Emit [guard], a transformation (closure, weakening) of a guard that a
@@ -900,8 +909,10 @@ let guard (g:env) (guard:typ)
    sub-computation, whose guard is not otherwise part of the result. *)
 let reemit_guard (g:env) (guard:typ)
   : result unit
-  = insert_guard g guard ;!
-    return_with_guard () (Some guard)
+  = fun ctx cache ->
+    let guard = cache_key guard in
+    (insert_guard g guard ;!
+     return_with_guard () (Some guard)) ctx cache
 
 let with_binders (#a:Type) (initial_env:env) (xs:binders) (us:universes) (f:result a)
   : result a
@@ -1305,6 +1316,24 @@ let push_branch_hypothesis (g:env) (hyp:typ) : ML env =
 
 (* The obligation that no branch is missing, given the path condition after
    the last branch, labeled as by TcTerm. *)
+(* A match whose scrutinee has type bool (up to refinement) and whose
+   branches include both constant patterns `true` and `false` (without
+   when clauses) is exhaustive, so its residual path condition is false
+   and needs no SMT query. Pulse's elaborated `if`s produce many of these. *)
+let match_covers_bool (g:env) (t_sc:typ) (brs:list branch) : ML bool =
+  let has b =
+    List.existsb
+      (fun (p, w, _) ->
+        None? w &&
+        (match p.v with
+         | Pat_constant (FStarC.Const.Const_bool b') -> b = b'
+         | _ -> false))
+      brs
+  in
+  has true && has false &&
+  U.is_fvar PC.bool_lid
+    (t_sc |> N.normalize_refinement N.whnf_steps g.tcenv |> U.unrefine)
+
 let exhaustiveness_obligation (r:R.t) (path_condition:typ) : ML (option typ) =
   if U.is_t_false path_condition then None
   else Some (TcUtil.label Err.exhaustiveness_check r (U.mk_imp path_condition U.t_false))
@@ -2406,11 +2435,12 @@ and is_prop (g:env) (t:term) : ML (result unit) =
 
 and memo_check (g:env) (e:term)
   : ML (result (eff & typ))
-  = let check_then_memo g e =
+  = let key = cache_key e in
+    let check_then_memo g e =
       with_guard (do_check_and_promote g e)
       (function
       | Inl (res, guard) ->
-        insert g e (res, guard);!
+        insert g key (res, guard);!
         return_with_guard res guard
 
       | Inr err ->
@@ -2419,7 +2449,7 @@ and memo_check (g:env) (e:term)
     if not g.should_read_cache
     then check_then_memo g e
     else (
-      with_guard (lookup g e)
+      with_guard (lookup g key)
       (function
       | Inr _ ->
         check_then_memo g e
@@ -2821,6 +2851,7 @@ and do_check (g:env) (e:term)
 
   | Tm_match {scrutinee=sc; ret_opt=Some (as_x, (Inl returns_ty, None, eq)); brs=branches; rc_opt} ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
+    let all_branches = branches in
     let! u_sc = universe_of_well_typed_term g t_sc in
     let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
     let g_as_x, as_x, returns_ty = open_term g as_x returns_ty in
@@ -2833,6 +2864,7 @@ and do_check (g:env) (e:term)
       : ML (result eff)
       = match branches with
         | [] ->
+          if match_covers_bool g t_sc all_branches then return acc_eff else
           (match exhaustiveness_obligation e.pos path_condition with
            | None -> return acc_eff
            | Some phi -> guard g phi ;! return acc_eff)
@@ -3173,6 +3205,7 @@ and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
 and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option residual_comp) (expected:option typ)
   : ML (result (eff & typ))
   = let! eff_sc, t_sc = check "scrutinee" g sc in
+    let branches0 = branches in
     let! u_sc = universe_of_well_typed_term g t_sc in
     (* With no expected type, the match's type is the residual type phase 1
        recorded, which is typically unrefined. As in [TcUtil.bind_cases], it is
@@ -3245,6 +3278,7 @@ and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option 
              fail_str "could not compute a type for the match"
 
            | Some (eff, t) ->
+             if match_covers_bool g t_sc branches0 then return (eff, t, []) else
              match exhaustiveness_obligation r path_condition with
              | None -> return (eff, t, [])
              | Some phi -> guard g phi ;! return (eff, t, []))

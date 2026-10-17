@@ -67,6 +67,14 @@ val goal_context : goal_tree -> goal -> ML (list ctx_elt)
    the set of roots for context pruning. *)
 val all_decls : goal_tree -> ML (list decl)
 
+(* [split_goals_under msg env bs q] is [split_goals msg env (forall bs. q)],
+   for binders [bs] open in [q], without building the closed formula. *)
+val split_goals_under : option (unit -> ML string)
+                     -> env_t
+                     -> bs:S.binders
+                     -> q:S.term
+                     -> ML (goal_tree & decls_t)
+
 (* Traverse a verification condition, skolemizing universal quantifiers,
    turning the left-hand sides of implications into hypotheses, and encoding
    the leaves as individual goals. *)

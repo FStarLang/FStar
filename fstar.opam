@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2026.10.04~dev"
+version: "2026.10.16-rc1"
 maintainer: "guimartinez@microsoft.com"
 authors: "Nik Swamy <nswamy@microsoft.com>,Jonathan Protzenko <protz@microsoft.com>,Tahina Ramananandro <taramana@microsoft.com>"
 homepage: "http://fstar-lang.org"
@@ -37,7 +37,7 @@ install: [
 post-messages: [
   """
 F* requires specific versions of Z3 to work correctly, and will refuse to run
-if the version string does not match. You should have z3-4.8.5 and z3-4.13.3
+if the version string does not match. You should have z3-4.8.5 and z3-5.3.0
 in your $PATH. For details, see
 https://github.com/FStarLang/FStar/blob/master/INSTALL.md#runtime-dependency-particular-version-of-z3.
 """ {success}

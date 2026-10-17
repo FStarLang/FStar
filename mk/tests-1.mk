@@ -8,10 +8,6 @@ DEPFLAGS += --already_cached '-FStar'
 # dependency analysis will complain about modules such as
 # FStar.Stubs.Reflection.V2.Builtins not being checked, which is irrelevant.
 
-# All other files have been extracted already into fstar-guts.
-EXTRACT :=
-EXTRACT += --extract +FStarC.Tests
-
 # hack, reuse checked files from guts
 OTHERFLAGS += --include $(CACHE_DIR)/../fstarc.checked
 DEPFLAGS += --include $(CACHE_DIR)/../fstarc.checked
