@@ -2101,6 +2101,10 @@ let rec prune (x:expr) : ML expr =
        all, so there is nothing to choose between them: it is just the first
        of them, with the scrutinee kept only if evaluating it is observable. *)
     (match live, brs with
+     (* A match with no branches at all, on a value of an empty type, is the
+        degenerate case: F* proved it is never entered.  Neither OCaml nor F#
+        can even spell one, so it must not reach a printer. *)
+     | [], [] -> take x s { x with e = EUnreachable "empty match" }
      | [], (_, _, b) :: _ -> take x s b
      (* One live branch is the same situation one step on: the match was
         exhaustive before pruning, so if every other arm is unreachable this
