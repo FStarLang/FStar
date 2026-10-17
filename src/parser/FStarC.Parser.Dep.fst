@@ -1595,15 +1595,18 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
      interface, and the implementation if it is befriended or stands in for
      a missing interface. *)
   let resolve_dep map lid key is_friend : ML (option module_name) =
+    let r = range_of_lid lid in
+    let has_range = Range.file_of_range r <> Range.file_of_range Range.dummyRange in
+    let rng = Some (if has_range then r else file_range) in
+    (* In fly-deps mode an interface also carries the friends of its
+       implementation; blame the file the dependence comes from, and resolve
+       it in that file's context (e.g. [A.fsti] carries the friends of
+       [A-model.fst]). *)
+    let from = if has_range then Range.file_of_range r else filename in
+    let tgt = if from = filename then tgt else target_of_file from in
     match module_of_key map tgt key with
     | None -> None
     | Some m ->
-      let r = range_of_lid lid in
-      let has_range = Range.file_of_range r <> Range.file_of_range Range.dummyRange in
-      let rng = Some (if has_range then r else file_range) in
-      (* In fly-deps mode an interface also carries the friends of its
-         implementation; blame the file the dependence comes from. *)
-      let from = if has_range then Range.file_of_range r else filename in
       if m <> own_module then begin
         let i = select_or_fail rng m KIntf tgt in
         check_stable rng from m KIntf tgt i;
@@ -2070,10 +2073,25 @@ let build_dep_graph_for_files
         color = White;
       } in
       deps_add_dep dep_graph file_name dep_node;
+      (* The cycle detection below peeks past the interfaces this file uses,
+         through the keys of its context: e.g. a file [B-model.fst] uses
+         [A.fsti] under [a-model], whose implementation [A-model.fst] is not
+         an [mo_root] of [A.fsti] (that is only its common implementation). *)
+      let impls_in_context =
+        if peek_past_interfaces () then
+          deps |> List.collect (function
+            | UseInterface k
+            | PreferInterface k ->
+              (match implementation_of_internal file_system_map k with
+               | Some f when f <> file_name -> [f]
+               | _ -> [])
+            | _ -> [])
+        else []
+      in
       List.iter
             discover_one
             (List.map (file_of_dep file_system_map all_cmd_line_files)
-                      (deps @ mo_roots))
+                      (deps @ mo_roots) @ impls_in_context)
     end
   in
   profile (fun () -> List.iter discover_one files) "FStarC.Parser.Dep.discover"; 

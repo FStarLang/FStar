@@ -83,3 +83,13 @@ loaded with `--load_cmxs A`).  IDE module completion lists module names
 without the tag and only offers modules visible from the current file.
 
 See `tests/targets`.
+
+## Models in the libraries
+
+An interface without an implementation is just a list of axioms.  So every
+`.fsti` in `ulib/` and `pulse/lib/` must come with an implementation: an
+`.fst` when it is extracted, or otherwise (e.g. when the implementation is
+native) a `-model.fst` showing that the interface is consistent.  Model
+implementations must not use `assume`, `admit`, etc.  This is checked in CI
+by `make check-fsti-impls` (`.scripts/check_fsti_impls.py`), and the
+remaining exceptions are listed in `.scripts/fsti_without_impl.txt`.
