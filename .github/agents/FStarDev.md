@@ -41,8 +41,8 @@ FStar/
 ├── stage3/                 # Stage2 + Pulse plugin linked in
 ├── pulse/                  # Pulse language implementation
 │   ├── src/checker/        # Pulse typechecker (F* source, extracted to OCaml plugin)
-│   ├── src/syntax_extension/ # Pulse syntax desugaring
-│   ├── src/ml/             # Hand-written OCaml for Pulse (runtime utils)
+│   ├── src/syntax_extension/ # Pulse syntax desugaring; F* implementations of
+│   │                       #   Pulse.RuntimeUtils / Pulse.Extract.CompilerLib
 │   ├── lib/                # Pulse standard library (common/, pulse/)
 │   ├── mk/                 # Build infrastructure (test.mk, common.mk, locate.mk)
 │   ├── test/               # Pulse tests

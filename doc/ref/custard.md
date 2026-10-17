@@ -5184,6 +5184,10 @@ So no entry point was needed for `union` after all, and this is the general
 shape of the answer for any monomorphized compiler function a realization
 wants: name it from F\*, at the type you mean, and call the wrapper.
 
+(Later, `Pulse_RuntimeUtils.ml` itself was replaced by an F\* implementation,
+`pulse/src/syntax_extension/Pulse.RuntimeUtils.fst`, which calls
+`FlatSet.union` directly and needs no wrapper; see "What is left" below.)
+
 With that, `PulseSyntaxExtension_Env.ml` and `Pulse_RuntimeUtils.ml` both
 compile against the built compiler with no unresolved symbol.
 
@@ -5298,8 +5302,23 @@ build does not make.
 
 #### What is left
 
-1. **Nothing, for the plugin itself.**  The one realization whose names
-   differ, `pulse/src/ml/Pulse_Extract_CompilerLib.ml`, is now written
+1. **Nothing, for the plugin itself.**  There are no hand-written
+   realizations left: `Pulse.RuntimeUtils` and `Pulse.Extract.CompilerLib`
+   are implemented in F\* under `pulse/src/syntax_extension`, extracted with
+   the plugin, and `pulse/src/ml` is gone.  The only OCaml is two
+   `@@custard_extern` declarations in `*-ocaml.fst` files (an `Ephemeron`
+   memo table, and `Cfg.translate_norm_steps`, named externally to avoid
+   reaching the compiler's `FStarC.NormSteps.norm_step` type from a unit that
+   also sees ulib's copy of it).  Two lessons from the port: a checker
+   *interface* whose implementation lives in another unit must not declare
+   type abbreviations (Custard treats them as realized and expects the
+   implementation to define them by name), so `Pulse.RuntimeUtils.range` and
+   `context` moved to an ordinary module, `Pulse.RuntimeUtils.Types`; and the
+   implementing `.fst` must not be a `CUSTARD_ROOT` (error 117), the
+   entry-point list suffices.
+
+   Historically, the one realization whose names
+   differ, `pulse/src/ml/Pulse_Extract_CompilerLib.ml`, was written
    against Custard's names; it had a Custard-flavoured copy beside it for as
    long as an ML-extracted compiler was still built, and §12.15 retired that.
    The two differences are both about the record a constructor's payload
@@ -7954,8 +7973,8 @@ for it would be a call where an access belongs.  That is right for everything
 inside the extracted program, and wrong for one that is named as a root.
 
 A root exists precisely because something *outside* the program calls it --
-`--custard_entrypoints` is how the hand-written OCaml under `pulse/src/ml`
-reaches the compiler, by OCaml name, through no request Custard can see
+`--custard_entrypoints` is how the Pulse plugin (once hand-written OCaml
+under `pulse/src/ml`, now extracted separately) reaches the compiler, by OCaml name, through no request Custard can see
 (section 12.13).  That caller has nothing to inline into.  Adding the name to
 `pulse/src/custard-entrypoints.txt` was therefore not enough on its own: the
 declaration was extracted, marked `Root`, and then dropped anyway.

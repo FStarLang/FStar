@@ -22,7 +22,7 @@
 FStarC.Platform.unix
 FStarC.Util.kill_all
 
-# Called from Pulse's hand-written OCaml (pulse/src/ml).
+# Named by the Pulse plugin (extracted separately, so not reached from here).
 FStarC.Util.ends_with
 FStarC.Util.float_of_string
 FStarC.Util.stack_dump

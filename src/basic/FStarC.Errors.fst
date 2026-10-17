@@ -626,6 +626,40 @@ let with_ctx_if (b:bool) (s:string) (f : unit -> ML 'a) : ML 'a =
   else
     f ()
 
+let with_ctxs (ss : list string) (f : unit -> ML 'a) : ML 'a =
+  match ss with
+  | [] -> f ()
+  | _ ->
+  List.iter error_context.push (List.rev ss);
+  if Options.trace_error ()
+  then (
+    (* As in with_ctx, do not catch anything: the contexts are only popped
+       on success. *)
+    let r = f () in
+    List.iter (fun _ -> ignore (error_context.pop ())) ss;
+    r
+  ) else (
+    let r = try Inr (f ()) with | ex -> Inl ex in
+    (* Unwind the levels, innermost first, as each with_ctx would: add the
+       context to a Failure, then pop (an exception from pop replaces the
+       pending result). *)
+    let r =
+      List.fold_left (fun r _ ->
+        let r =
+          match r with
+          | Inl (Failure msg) ->
+            Inl (Failure (msg ^ rendermsg [ctx_doc (error_context.get ())]))
+          | r -> r
+        in
+        try ignore (error_context.pop ()); r
+        with | ex -> Inl ex)
+      r ss
+    in
+    match r with
+    | Inr r -> r
+    | Inl e -> raise e
+  )
+
 //
 // returns errors, other issues, result if any
 // restores handler back
