@@ -2088,10 +2088,23 @@ let build_dep_graph_for_files
             | _ -> [])
         else []
       in
+      (* --dep lists every file of a module, whatever its tag: the files of
+         the other targets (e.g. [A-ocaml.fst], [A-model.fst]) are reached
+         by no reference from a common file, but have to be checked too
+         (doc/ref/targets.md). *)
+      let other_variants =
+        if Some? (Options.dep ()) && peek_past_interfaces () then
+          variants_of (lowercase_module_name file_name)
+          |> List.collect (fun v ->
+               (match v.v_intf with Some f -> [f] | None -> []) @
+               (match v.v_impl with Some f -> [f] | None -> []))
+          |> List.filter (fun f -> f <> file_name)
+        else []
+      in
       List.iter
             discover_one
             (List.map (file_of_dep file_system_map all_cmd_line_files)
-                      (deps @ mo_roots) @ impls_in_context)
+                      (deps @ mo_roots) @ impls_in_context @ other_variants)
     end
   in
   profile (fun () -> List.iter discover_one files) "FStarC.Parser.Dep.discover"; 

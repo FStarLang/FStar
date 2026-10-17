@@ -55,10 +55,10 @@ let rec find_user_tac_for_uvar__attr_list_elements (e : (FStarC_Syntax_Syntax.te
 let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env) (u : FStarC_Syntax_Syntax.ctx_uvar) : (FStarC_Syntax_Syntax.sigelt) option =
   (match (u).FStarC_Syntax_Syntax.ctx_uvar_meta with
     | (Some ((FStarC_Syntax_Syntax.Ctx_uvar_meta_attr (a)))) -> (let hooks = (FStarC_TypeChecker_Env.lookup_attr env (FStarC_Ident.string_of_lid FStarC_Parser_Const.resolve_implicits_attr_string)) in
-      let candidates = (FStarC_List.filter (fun hook -> (FStarC_Util.for_some (FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool env a) (hook).FStarC_Syntax_Syntax.sigattrs)) hooks) in
+      let candidates = (BatList.filter (fun hook -> (FStarC_Util.for_some (FStarC_TypeChecker_TermEqAndSimplify.eq_tm_bool env a) (hook).FStarC_Syntax_Syntax.sigattrs)) hooks) in
       let candidates1 = (FStarC_Util.remove_dups (fun s0 s1 -> (let l0 = (FStarC_Syntax_Util.lids_of_sigelt s0) in
         let l1 = (FStarC_Syntax_Util.lids_of_sigelt s1) in
-        (if ((=) (FStarC_List.length l0) (FStarC_List.length l1)) then (FStarC_List.forall2 (fun l01 l11 -> (FStarC_Ident.lid_equals l01 l11)) l0 l1) else false))) candidates) in
+        (if ((=) ((fun l -> Z.of_int (BatList.length l)) l0) ((fun l -> Z.of_int (BatList.length l)) l1)) then (BatList.for_all2 (fun l01 l11 -> (FStarC_Ident.lid_equals l01 l11)) l0 l1) else false))) candidates) in
       let is_overridden = (fun candidate -> (let candidate_lids = (FStarC_Syntax_Util.lids_of_sigelt candidate) in
         (FStarC_Util.for_some (fun other -> (FStarC_Util.for_some (fun attr -> (let tmp = (FStarC_Syntax_Util.head_and_args_full attr) in
         (match tmp with
@@ -79,19 +79,19 @@ let find_user_tac_for_uvar (env : FStarC_TypeChecker_Env.env) (u : FStarC_Syntax
               | tmp4 -> false
             ))
         ))) (other).FStarC_Syntax_Syntax.sigattrs)) candidates1))) in
-      let candidates2 = (FStarC_List.filter (fun c -> (let tmp = (is_overridden c) in
+      let candidates2 = (BatList.filter (fun c -> (let tmp = (is_overridden c) in
         (not tmp))) candidates1) in
       (match candidates2 with
         | [] -> None
         | (c :: []) -> (Some (c))
-        | tmp -> (let candidate_names = (fun candidates3 -> (FStarC_List.collect FStarC_Syntax_Util.lids_of_sigelt candidates3)) in
+        | tmp -> (let candidate_names = (fun candidates3 -> ((fun f l -> BatList.flatten (BatList.map f l)) FStarC_Syntax_Util.lids_of_sigelt candidates3)) in
           let candidates3 = (candidate_names candidates2) in
           let attr = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' a) in
           let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__list_lident candidates3) in
-          let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates") tmp1) in
+          let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Please resolve the ambiguity by using the `override_resolve_implicits_handler` attribute to choose among these candidates") tmp1) in
           let tmp3 = (tmp2 :: []) in
-          let tmp4 = ((FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Multiple resolve_implicits hooks are eligible for attribute") (FStar_Pprint.doc_of_string attr)) :: tmp3) in
-          (FStarC_Errors.fStarC_Errors_raise_error__ctx_uvar_list_document u FStarC_Errors_Codes.Warning_AmbiguousResolveImplicitsHook tmp4);
+          let tmp4 = ((PPrint.(^/^) (FStarC_Errors_Msg.text "Multiple resolve_implicits hooks are eligible for attribute") (PPrint.string attr)) :: tmp3) in
+          (FStarC_Errors.fStarC_Errors_raise_error__ctx_uvar_list_ocaml_document u FStarC_Errors_Codes.Warning_AmbiguousResolveImplicitsHook tmp4);
           None)
       ))
     | tmp -> None
@@ -290,7 +290,9 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env) (g : FStar
                     let tmp8 = (FStarC_TypeChecker_Env.new_implicit_var_aux reason ((tp).FStarC_TypeChecker_Common.lhs).FStarC_Syntax_Syntax.pos env2 goal_ty FStarC_Syntax_Syntax.Strict None false) in
                     (match tmp8 with
                       | (goal, ctx_uvar, tmp9) -> (let imp = { FStarC_TypeChecker_Common.imp_reason = "";
-                            imp_uvar = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst ctx_uvar);
+                            imp_uvar = (match ctx_uvar with
+                              | (u__1, u__2) -> u__1
+                            );
                             imp_tm = goal;
                             imp_range = ((tp).FStarC_TypeChecker_Common.lhs).FStarC_Syntax_Syntax.pos } in
                         let tmp10 = (is_flex (tp).FStarC_TypeChecker_Common.lhs) in
@@ -315,9 +317,9 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env) (g : FStar
         )
     )) in
   let tmp = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__tuple3_deferred_reason_string_prob (g).FStarC_TypeChecker_Common.deferred_to_tac) in
-  let eqs = (FStarC_List.map prob_as_implicit tmp) in
-  let tmp1 = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__implicit_clist_implicit (g).FStarC_TypeChecker_Common.implicits) in
-  let tmp2 = (FStarC_List.fold_right (fun imp tmp2 -> (match tmp2 with
+  let eqs = (BatList.map prob_as_implicit tmp) in
+  let tmp1 = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_to_list__implicit_clist_implicit_3 (g).FStarC_TypeChecker_Common.implicits) in
+  let tmp2 = (BatList.fold_right (fun imp tmp2 -> (match tmp2 with
       | (more, imps) -> (let tmp3 = (FStarC_Syntax_Unionfind.find (((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((imp).FStarC_TypeChecker_Common.imp_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
         (match tmp3 with
           | (Some (tmp4)) -> (more, (imp :: imps))
@@ -329,22 +331,22 @@ let solve_deferred_to_tactic_goals (env : FStarC_TypeChecker_Env.env) (g : FStar
         ))
     )) tmp1 ([], [])) in
   (match tmp2 with
-    | (more, imps) -> (let bucketize = (fun is -> (let map = (FStarC_SMap.create (Prims.of_int (17))) in
-        (FStarC_List.iter (fun tmp3 -> (match tmp3 with
+    | (more, imps) -> (let bucketize = (fun is -> (let map = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (17)))) in
+        (BatList.iter (fun tmp3 -> (match tmp3 with
           | (i, s) -> (match (FStarC_Syntax_Util.lid_of_sigelt s) with
               | None -> (FStarC_Effect.failwith "Unexpected: tactic without a name")
               | (Some (l)) -> (let lstr = (FStarC_Ident.string_of_lid l) in
-                let tmp4 = (FStarC_SMap.try_find map lstr) in
+                let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt map lstr) in
                 (match tmp4 with
-                  | None -> (FStarC_SMap.add map lstr ((i :: []), s))
-                  | (Some ((is1, s1))) -> ((FStarC_SMap.remove map lstr);
-                    (FStarC_SMap.add map lstr ((i :: is1), s1)))
+                  | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace map lstr ((i :: []), s))
+                  | (Some ((is1, s1))) -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.remove map lstr);
+                    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace map lstr ((i :: is1), s1)))
                 ))
             )
         )) is);
-        (FStarC_SMap.fold map (fun tmp3 is1 out -> (is1 :: out)) []))) in
-      let buckets = (bucketize (FStarC_List.op_At eqs more)) in
-      (FStarC_List.iter (fun tmp3 -> (match tmp3 with
+        (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun tmp3 is1 out -> (is1 :: out)) map []))) in
+      let buckets = (bucketize (BatList.append eqs more)) in
+      (BatList.iter (fun tmp3 -> (match tmp3 with
         | (imps1, sigel) -> (solve_goals_with_tac env g imps1 sigel)
       )) buckets);
       let tmp3 = (FStarC_TypeChecker_Common.fStarC_Class_Listlike_from_list__implicit_clist_implicit imps) in

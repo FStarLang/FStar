@@ -19,7 +19,9 @@ let mixed_binary_op (as_a : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.
   )
 
 let arg_as_list (e : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (a : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) : (('u___a) list) option =
-  (FStarC_TypeChecker_Primops_Base.try_unembed_simple (FStarC_Syntax_Embeddings.e_list e) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst a))
+  (FStarC_TypeChecker_Primops_Base.try_unembed_simple (FStarC_Syntax_Embeddings.e_list e) (match a with
+    | (u__1, u__2) -> u__1
+  ))
 
 let bogus_cbs : FStarC_TypeChecker_NBETerm.nbe_cbs =
   { FStarC_TypeChecker_NBETerm.iapp = (fun h u__args -> h);
@@ -44,7 +46,9 @@ let mixed_ternary_op (as_a : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax
   )
 
 let arg_as_int (a : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) : (Prims.int) option =
-  (FStarC_TypeChecker_Primops_Base.try_unembed_simple FStarC_Syntax_Embeddings.e_int (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst a))
+  (FStarC_TypeChecker_Primops_Base.try_unembed_simple FStarC_Syntax_Embeddings.e_int (match a with
+    | (u__1, u__2) -> u__1
+  ))
 
 let as_primitive_step (is_strong : bool) (tmp : (FStarC_Ident.lident * Prims.int * Prims.int * (FStarC_TypeChecker_Primops_Base.psc -> (((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) -> ((FStarC_Syntax_Syntax.universe) list -> ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)))) * (FStarC_TypeChecker_NBETerm.nbe_cbs -> ((FStarC_Syntax_Syntax.universe) list -> (((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list -> (FStarC_TypeChecker_NBETerm.t) option))))) : FStarC_TypeChecker_Primops_Base.primitive_step =
   (match tmp with
@@ -74,7 +78,7 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
         let tmp7 = (FStarC_TypeChecker_NBETerm.Lazy ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))) in
         (FStarC_TypeChecker_NBETerm.mk_t tmp7))
     )) (fun universes elt_t tmp -> (match tmp with
-      | (l, lst) -> (let blob = (FStar_ImmutableArray_Base.of_list lst) in
+      | (l, lst) -> (let blob = (Array.of_list lst) in
         (Some ((universes, elt_t, (l, (FStar_Dyn.mkdyn blob))))))
     )) univs args)) in
   let of_list_op = (FStarC_Parser_Const.immutable_array_of_list_lid, (Prims.of_int (2)), Prims.int_one, (mixed_binary_op (fun tmp -> (match tmp with
@@ -101,24 +105,30 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
         let tmp10 = (FStarC_Syntax_Syntax.Tm_lazy (tmp9)) in
         (FStarC_Syntax_Syntax.mk tmp10 r))
     )) (fun r universes elt_t tmp -> (match tmp with
-      | (l, lst) -> (let blob = (FStar_ImmutableArray_Base.of_list lst) in
+      | (l, lst) -> (let blob = (Array.of_list lst) in
         (Some ((universes, elt_t, (l, (FStar_Dyn.mkdyn blob))))))
     ))), nbe_of_list) in
-  let arg1_as_elt_t = (fun x -> (Some ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x)))) in
-  let arg2_as_blob = (fun x -> (let tmp = (FStarC_Syntax_Subst.compress (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x)) in
+  let arg1_as_elt_t = (fun x -> (Some ((match x with
+      | (u__1, u__2) -> u__1
+    )))) in
+  let arg2_as_blob = (fun x -> (let tmp = (FStarC_Syntax_Subst.compress (match x with
+        | (u__1, u__2) -> u__1
+      )) in
     let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
     (match tmp1 with
       | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = blob; lkind = (FStarC_Syntax_Syntax.Lazy_embedding ((FStarC_Syntax_Syntax.ET_app (head, tmp2)), tmp3)); ltyp = tmp4; rng = tmp5; _ })) when ((=) head (FStarC_Ident.string_of_lid FStarC_Parser_Const.immutable_array_t_lid)) -> (Some (blob))
       | tmp2 -> None
     ))) in
-  let arg2_as_blob_nbe = (fun x -> (match (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x) in
+  let arg2_as_blob_nbe = (fun x -> (match (let scrut = (match x with
+        | (u__1, u__2) -> u__1
+      ) in
     (scrut).FStarC_TypeChecker_NBETerm.nbe_t) with
       | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inr ((blob, (FStarC_Syntax_Syntax.ET_app (head, tmp))))), tmp1)) when ((=) head (FStarC_Ident.string_of_lid FStarC_Parser_Const.immutable_array_t_lid)) -> (Some (blob))
       | tmp -> None
     )) in
   let embed_int = (fun r i -> (FStarC_TypeChecker_Primops_Base.embed_simple FStarC_Syntax_Embeddings.e_int r i)) in
   let run_op = (fun blob -> (let tmp = (FStar_Dyn.undyn blob) in
-    let tmp1 = (FStarC_Util.array_length tmp) in
+    let tmp1 = ((fun a -> Z.of_int (Array.length a)) tmp) in
     (Some (tmp1)))) in
   let nbe_length = (fun u__cbs univs args -> (FStarC_TypeChecker_NBETerm.mixed_binary_op (fun tmp -> (match tmp with
       | (elt_t, tmp1) -> (Some (elt_t))
@@ -127,10 +137,10 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   let nbe_index = (fun u__cbs univs args -> (FStarC_TypeChecker_NBETerm.mixed_ternary_op (fun tmp -> (match tmp with
       | (elt_t, tmp1) -> (Some (elt_t))
     )) arg2_as_blob_nbe FStarC_TypeChecker_NBETerm.arg_as_int (fun tm -> tm) (fun u__universes u__t blob i -> (let tmp = (FStar_Dyn.undyn blob) in
-    let tmp1 = (FStarC_Util.array_index tmp i) in
+    let tmp1 = ((fun a i -> Array.get a (Z.to_int i)) tmp i) in
     (Some (tmp1)))) univs args)) in
   let index_op = (FStarC_Parser_Const.immutable_array_index_lid, (Prims.of_int (3)), Prims.int_one, (mixed_ternary_op arg1_as_elt_t arg2_as_blob arg_as_int (fun r tm -> tm) (fun r u__universes u__t blob i -> (let tmp = (FStar_Dyn.undyn blob) in
-    let tmp1 = (FStarC_Util.array_index tmp i) in
+    let tmp1 = ((fun a i -> Array.get a (Z.to_int i)) tmp i) in
     (Some (tmp1))))), nbe_index) in
   let s1 = (as_primitive_step true of_list_op) in
   let s2 = (as_primitive_step true length_op) in

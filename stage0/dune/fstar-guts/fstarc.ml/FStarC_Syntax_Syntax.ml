@@ -4,7 +4,7 @@
 type 'u___a syntax = {
   n : 'u___a;
   pos : FStarC_Range_Type.range;
-  hash_code : ((FStarC_Hash.hash_code) option ref);
+  hash_code : int;
 }
 
 type unresolved_constructor = {
@@ -38,7 +38,7 @@ type universe =
   | U_max of (universe) list
   | U_bvar of Prims.int
   | U_name of FStarC_Ident.ident
-  | U_unif of ((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range
+  | U_unif of int * version * FStarC_Range_Type.range
   | U_unknown
   [@@deriving yojson]
 
@@ -51,14 +51,6 @@ type 'u___a withinfo_t = {
   v : 'u___a;
   p : FStarC_Range_Type.range;
 } [@@deriving yojson]
-
-type should_check_uvar =
-  | Allow_unresolved of string
-  | Allow_untyped of string
-  | Allow_ghost of string
-  | Strict
-  | Already_checked
-  [@@deriving yojson]
 
 type maybe_set_use_range =
   | NoUseRange
@@ -191,13 +183,6 @@ and term'__Tm_let__payload = {
   body : (term') syntax;
 }
 
-and uvar_decoration = {
-  uvar_decoration_typ : (term') syntax;
-  uvar_decoration_typedness_depends_on : (ctx_uvar) list;
-  uvar_decoration_should_check : should_check_uvar;
-  uvar_decoration_should_unrefine : bool;
-}
-
 and binding =
   | Binding_var of bv
   | Binding_lid of FStarC_Ident.lident * ((FStarC_Ident.ident) list * (term') syntax)
@@ -210,7 +195,7 @@ and ctx_uvar_meta_t =
 
 
 and ctx_uvar = {
-  ctx_uvar_head : ((((term') syntax) option * uvar_decoration)) FStarC_Unionfind.p_uvar;
+  ctx_uvar_head : int;
   ctx_uvar_head1 : version;
   ctx_uvar_head2 : FStarC_Range_Type.range;
   ctx_uvar_gamma : (binding) list;
@@ -238,7 +223,7 @@ and term'__Tm_delayed__payload = {
 and metadata =
   | Meta_pattern of ((term') syntax) list * ((((term') syntax * (arg_qualifier) option)) list) list
   | Meta_named of FStarC_Ident.lident
-  | Meta_labeled of (FStar_Pprint.document) list * FStarC_Range_Type.range * bool
+  | Meta_labeled of (PPrint.document) list * FStarC_Range_Type.range * bool
   | Meta_desugared of meta_source_info
   | Meta_monadic of FStarC_Ident.lident * (term') syntax
   | Meta_monadic_lift of FStarC_Ident.lident * FStarC_Ident.lident * (term') syntax
@@ -317,6 +302,21 @@ type sconst = FStarC_Const.sconst [@@deriving yojson]
 
 type univ_name = FStarC_Ident.ident [@@deriving yojson]
 
+type should_check_uvar =
+  | Allow_unresolved of string
+  | Allow_untyped of string
+  | Allow_ghost of string
+  | Strict
+  | Already_checked
+  [@@deriving yojson]
+
+type uvar_decoration = {
+  uvar_decoration_typ : (term') syntax;
+  uvar_decoration_typedness_depends_on : (ctx_uvar) list;
+  uvar_decoration_should_check : should_check_uvar;
+  uvar_decoration_should_unrefine : bool;
+}
+
 type univ_names = (FStarC_Ident.ident) list [@@deriving yojson]
 
 type monad_name = FStarC_Ident.lident [@@deriving yojson]
@@ -327,17 +327,295 @@ type branch = ((pat') withinfo_t * ((term') syntax) option * (term') syntax)
 
 type comp = (comp_typ) syntax
 
-let mk (t : 'u___a) (r : FStarC_Range_Type.range) : ('u___a) syntax =
-  (let tmp = (ref None) in
+let hc (i : Prims.int) : int =
+  ((fun i -> if Obj.is_int (Obj.repr i) then (Obj.magic i : int) else Z.hash i) i)
+
+let hash_lid (l : FStarC_Ident.lident) : int =
+  (BatHashtbl.hash (FStarC_Ident.string_of_lid l))
+
+let hash_fv (fv : fv) : int =
+  (hash_lid (fv).fv_name)
+
+let rec hash_list (f : ('u___a -> int)) (l : ('u___a) list) : int =
+  (match l with
+    | [] -> (hc (Prims.of_int (1229)))
+    | (x :: xs) -> (let tmp = (f x) in
+      let tmp1 = (hash_list f xs) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) tmp tmp1))
+  )
+
+let hash_ident (i : FStarC_Ident.ident) : int =
+  (BatHashtbl.hash (FStarC_Ident.string_of_id i))
+
+let rec hash_universe (u : universe) : int =
+  (match u with
+    | U_zero -> (hc (Prims.of_int (179)))
+    | (U_succ (u1)) -> (let tmp = (hash_universe u1) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (181))) tmp))
+    | (U_max (us)) -> (let tmp = (hash_list hash_universe us) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (191))) tmp))
+    | (U_bvar (i)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (193))) (hc i))
+    | (U_name (i)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (197))) (hash_ident i))
+    | (U_unif (u1, tmp, tmp1)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (199))) (hc (FStarC_Unionfind.puf_unique_id u1)))
+    | U_unknown -> (hc (Prims.of_int (211)))
+  )
+
+let hash_bool (b : bool) : int =
+  (if b then (hc (Prims.of_int (307))) else (hc (Prims.of_int (311))))
+
+let hash_sw (s : FStarC_Const.signedness) (w : FStarC_Const.width) : int =
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (match s with
+    | FStarC_Const.Unsigned -> (hc (Prims.of_int (547)))
+    | FStarC_Const.Signed -> (hc (Prims.of_int (557)))
+  ) (match w with
+    | FStarC_Const.Int8 -> (hc (Prims.of_int (563)))
+    | FStarC_Const.Int16 -> (hc (Prims.of_int (569)))
+    | FStarC_Const.Int32 -> (hc (Prims.of_int (571)))
+    | FStarC_Const.Int64 -> (hc (Prims.of_int (577)))
+    | FStarC_Const.Sizet -> (hc (Prims.of_int (583)))
+  ))
+
+let hash_constant (c : FStarC_Const.sconst) : int =
+  (match c with
+    | FStarC_Const.Const_effect -> (hc (Prims.of_int (283)))
+    | FStarC_Const.Const_unit -> (hc (Prims.of_int (293)))
+    | (FStarC_Const.Const_bool (b)) -> (hash_bool b)
+    | (FStarC_Const.Const_int (v, tmp)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (313))) (hc v))
+    | (FStarC_Const.Const_machine_int (v, tmp, s, w)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (383))) ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc v) (hash_sw s w)))
+    | (FStarC_Const.Const_char (c1)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (317))) (hc (FStar_Char.int_of_char c1)))
+    | (FStarC_Const.Const_real (r)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (337))) (BatHashtbl.hash (FStarC_Real.to_string r)))
+    | (FStarC_Const.Const_string (s, tmp)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (349))) (BatHashtbl.hash s))
+    | FStarC_Const.Const_range_of -> (hc (Prims.of_int (353)))
+    | FStarC_Const.Const_set_range_of -> (hc (Prims.of_int (359)))
+    | (FStarC_Const.Const_range (r)) -> (let tmp = (FStarC_Range_Ops.string_of_range r) in
+      let tmp1 = (BatHashtbl.hash tmp) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (367))) tmp1))
+    | (FStarC_Const.Const_reify (tmp)) -> (hc (Prims.of_int (367)))
+    | (FStarC_Const.Const_reflect (l)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (373))) (hash_lid l))
+  )
+
+let hash_option (f : ('u___a -> int)) (o : ('u___a) option) : int =
+  (match o with
+    | None -> (hc (Prims.of_int (1237)))
+    | (Some (x)) -> (let tmp = (f x) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (1249))) tmp))
+  )
+
+let hash_bqual (bq : binder_qualifier) : int =
+  (match bq with
+    | (Implicit (true)) -> (hc (Prims.of_int (419)))
+    | (Implicit (false)) -> (hc (Prims.of_int (421)))
+    | (Meta (t)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (431))) (t).hash_code)
+    | Equality -> (hc (Prims.of_int (433)))
+  )
+
+let hash_of (t : ('u___a) syntax) : int =
+  (t).hash_code
+
+let mix3 (a : int) (b : int) (c : int) : int =
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) a ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) b c))
+
+let hash_bv (b : bv) : int =
+  ((b).sort).hash_code
+
+let hash_binder (b : binder) : int =
+  (let tmp = (hash_option hash_bqual (b).binder_qual) in
+  let tmp1 = (hash_list hash_of (b).binder_attrs) in
+  (mix3 (hash_bv (b).binder_bv) tmp tmp1))
+
+let hash_flag (f : cflag) : int =
+  (match f with
+    | (SMTPAT (p)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (971))) (p).hash_code)
+    | (DECREASES ((Decreases_lex (ts)))) -> (let tmp = (hash_list hash_of ts) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (1013))) tmp))
+    | (DECREASES ((Decreases_wf (t0, t1)))) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (2341))) ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (t0).hash_code (t1).hash_code))
+  )
+
+let hash_rc (rc : residual_comp) : int =
+  (let tmp = (hash_option hash_of (rc).residual_typ) in
+  let tmp1 = (hash_list hash_flag (rc).residual_flags) in
+  (mix3 (hash_lid (rc).residual_effect) tmp tmp1))
+
+let mix4 (a : int) (b : int) (c : int) (d : int) : int =
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) a ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) b ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) c d)))
+
+type arg = ((term') syntax * (arg_qualifier) option)
+
+let hash_arg_qualifier (aq : arg_qualifier) : int =
+  (let tmp = (hash_list hash_of (aq).aqual_attributes) in
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hash_bool (aq).aqual_implicit) tmp))
+
+let hash_arg (a : ((term') syntax * (arg_qualifier) option)) : int =
+  (match a with
+    | (t, aq) -> (let tmp = (hash_option hash_arg_qualifier aq) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (t).hash_code tmp))
+  )
+
+type match_returns_ascription = (binder * (((term') syntax, (comp_typ) syntax) FStar_Pervasives.either * ((term') syntax) option * bool))
+
+type ascription = (((term') syntax, (comp_typ) syntax) FStar_Pervasives.either * ((term') syntax) option * bool)
+
+let hash_ascription (a : (((term') syntax, (comp_typ) syntax) FStar_Pervasives.either * ((term') syntax) option * bool)) : int =
+  (match a with
+    | (tc, tacopt, tmp) -> (let tmp1 = (hash_option hash_of tacopt) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (match tc with
+        | (FStar_Pervasives.Inl (t)) -> (t).hash_code
+        | (FStar_Pervasives.Inr (c)) -> (c).hash_code
+      ) tmp1))
+  )
+
+let hash_match_returns (x : (binder * (((term') syntax, (comp_typ) syntax) FStar_Pervasives.either * ((term') syntax) option * bool))) : int =
+  (match x with
+    | (b, asc) -> (let tmp = (hash_binder b) in
+      let tmp1 = (hash_ascription asc) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) tmp tmp1))
+  )
+
+type pat = (pat') withinfo_t
+
+let rec hash_pat (p : (pat') withinfo_t) : int =
+  (match (p).v with
+    | (Pat_constant (c)) -> (let tmp = (hash_constant c) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (89))) tmp))
+    | (Pat_cons (fv, us, args)) -> (let tmp = (hash_option (hash_list hash_universe) us) in
+      let tmp1 = (hash_list (fun pb -> (let tmp1 = (hash_pat (match pb with
+            | (u__1, u__2) -> u__1
+          )) in
+        ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) tmp1 (hash_bool (match pb with
+          | (u__1, u__2) -> u__2
+        ))))) args) in
+      (mix4 (hc (Prims.of_int (97))) (hash_fv fv) tmp tmp1))
+    | (Pat_var (bv)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (101))) (hash_bv bv))
+    | (Pat_dot_term (t)) -> (let tmp = (hash_option hash_of t) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (107))) tmp))
+  )
+
+let hash_branch (br : ((pat') withinfo_t * ((term') syntax) option * (term') syntax)) : int =
+  (match br with
+    | (p, w, t) -> (let tmp = (hash_pat p) in
+      let tmp1 = (hash_option hash_of w) in
+      (mix4 (hc (Prims.of_int (83))) tmp tmp1 (t).hash_code))
+  )
+
+let mix5 (a : int) (b : int) (c : int) (d : int) (e : int) : int =
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) a ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) b ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) c ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) d e))))
+
+type lbname = (bv, fv) FStar_Pervasives.either
+
+let hash_lbname (l : (bv, fv) FStar_Pervasives.either) : int =
+  (match l with
+    | (FStar_Pervasives.Inl (bv)) -> (hash_ident (bv).ppname)
+    | (FStar_Pervasives.Inr (fv)) -> (hash_fv fv)
+  )
+
+let rec mix_all (l : (int) list) : int =
+  (match l with
+    | [] -> (hc (Prims.of_int (1229)))
+    | (h :: hs) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) h (mix_all hs))
+  )
+
+let hash_lb (lb : letbinding) : int =
+  (let tmp = (hash_list hash_ident (lb).lbunivs) in
+  let tmp1 = (hash_list hash_of (lb).lbattrs) in
+  let tmp2 = (tmp1 :: []) in
+  let tmp3 = (((lb).lbdef).hash_code :: tmp2) in
+  let tmp4 = ((hash_lid (lb).lbeff) :: tmp3) in
+  let tmp5 = (((lb).lbtyp).hash_code :: tmp4) in
+  let tmp6 = (tmp :: tmp5) in
+  let tmp7 = ((hash_lbname (lb).lbname) :: tmp6) in
+  let tmp8 = ((hc (Prims.of_int (79))) :: tmp7) in
+  (mix_all tmp8))
+
+let hash_meta_source_info (m : meta_source_info) : int =
+  (match m with
+    | Sequence -> (hc (Prims.of_int (1049)))
+    | Primop -> (hc (Prims.of_int (1051)))
+    | Masked_effect -> (hc (Prims.of_int (1061)))
+    | Meta_smt_pat -> (hc (Prims.of_int (1063)))
+    | (Machine_integer (s, w)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (1069))) (hash_sw s w))
+  )
+
+let hash_meta (m : metadata) : int =
+  (match m with
+    | (Meta_pattern (ts, args)) -> (let tmp = (hash_list hash_of ts) in
+      let tmp1 = (hash_list (hash_list hash_arg) args) in
+      (mix3 (hc (Prims.of_int (1019))) tmp tmp1))
+    | (Meta_named (l)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (1021))) (hash_lid l))
+    | (Meta_labeled (tmp, r, tmp1)) -> (let p = (FStarC_Range_Ops.start_of_range r) in
+      (mix4 (hc (Prims.of_int (1031))) (BatHashtbl.hash (FStarC_Range_Ops.file_of_range r)) (hc (FStarC_Range_Ops.line_of_pos p)) (hc (FStarC_Range_Ops.col_of_pos p))))
+    | (Meta_desugared (msi)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (1033))) (hash_meta_source_info msi))
+    | (Meta_monadic (m1, t)) -> (mix3 (hc (Prims.of_int (1039))) (hash_lid m1) (t).hash_code)
+    | (Meta_monadic_lift (m0, m1, t)) -> (mix4 (hc (Prims.of_int (1069))) (hash_lid m0) (hash_lid m1) (t).hash_code)
+  )
+
+let hash_quoteinfo (qi : quoteinfo) : int =
+  (let tmp = (hash_list hash_of (match ((qi).antiquotations, (qi).antiquotations1) with
+      | (u__1, u__2) -> u__2
+    )) in
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hash_bool (match (qi).qkind with
+    | Quote_static -> true
+    | tmp1 -> false
+  )) tmp))
+
+let hash_term' (t : term') : int =
+  (match t with
+    | (Tm_bvar (bv)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (3))) (hc (bv).index))
+    | (Tm_name (bv)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (5))) (hc (bv).index))
+    | (Tm_fvar (fv)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (7))) (hash_fv fv))
+    | (Tm_uinst (t1, us)) -> (let tmp = (hash_list hash_universe us) in
+      let tmp1 = ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (t1).hash_code tmp) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (11))) tmp1))
+    | (Tm_constant (sc)) -> (let tmp = (hash_constant sc) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (13))) tmp))
+    | (Tm_type (u)) -> (let tmp = (hash_universe u) in
+      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (17))) tmp))
+    | (Tm_abs ({ b = b; body = body; rc_opt = rc_opt; _ })) -> (let tmp = (hash_binder b) in
+      let tmp1 = (hash_option hash_rc rc_opt) in
+      (mix4 (hc (Prims.of_int (19))) tmp (body).hash_code tmp1))
+    | (Tm_arrow ({ b = b; comp = comp; _ })) -> (let tmp = (hash_binder b) in
+      (mix3 (hc (Prims.of_int (23))) tmp (comp).hash_code))
+    | (Tm_refine ({ b = b; phi = phi; _ })) -> (mix3 (hc (Prims.of_int (29))) (hash_bv b) (phi).hash_code)
+    | (Tm_app ({ hd = hd; arg = u__1; arg1 = u__2; _ })) -> (let tmp = (hash_arg (u__1, u__2)) in
+      (mix3 (hc (Prims.of_int (31))) (hd).hash_code tmp))
+    | (Tm_match ({ scrutinee = scrutinee; ret_opt = ret_opt; brs = brs; rc_opt = rc_opt; _ })) -> (let tmp = (hash_option hash_match_returns ret_opt) in
+      let tmp1 = (hash_list hash_branch brs) in
+      let tmp2 = (hash_option hash_rc rc_opt) in
+      (mix5 (hc (Prims.of_int (37))) tmp (scrutinee).hash_code tmp1 tmp2))
+    | (Tm_ascribed ({ tm = tm; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = eff_opt; _ })) -> (let tmp = (hash_ascription (u__1, u__2, u__3)) in
+      let tmp1 = (hash_option hash_lid eff_opt) in
+      (mix4 (hc (Prims.of_int (43))) (tm).hash_code tmp tmp1))
+    | (Tm_let ({ lbs = false; lbs1 = (lb :: []); body = body; _ })) -> (let tmp = (hash_lb lb) in
+      (mix3 (hc (Prims.of_int (47))) tmp (body).hash_code))
+    | (Tm_let ({ lbs = tmp; lbs1 = lbs; body = body; _ })) -> (let tmp1 = (hash_list hash_lb lbs) in
+      (mix3 (hc (Prims.of_int (51))) tmp1 (body).hash_code))
+    | (Tm_uvar (ctx_u, tmp)) -> (let tmp1 = ((ctx_u).ctx_uvar_head, (ctx_u).ctx_uvar_head1, (ctx_u).ctx_uvar_head2) in
+      (match tmp1 with
+        | (u, tmp2, tmp3) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (53))) (hc (FStarC_Unionfind.puf_unique_id u)))
+      ))
+    | (Tm_delayed ({ tm = tm; substs = u__1; substs1 = u__2; _ })) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (59))) (tm).hash_code)
+    | (Tm_meta ({ tm = tm; meta = meta; _ })) -> (let tmp = (hash_meta meta) in
+      (mix3 (hc (Prims.of_int (61))) (tm).hash_code tmp))
+    | (Tm_lazy (tmp)) -> (hc (Prims.of_int (67)))
+    | (Tm_quoted (t1, qi)) -> (let tmp = (hash_quoteinfo qi) in
+      (mix3 (hc (Prims.of_int (71))) (t1).hash_code tmp))
+    | Tm_unknown -> (hc (Prims.of_int (73)))
+  )
+
+let mk (t : term') (r : FStarC_Range_Type.range) : (term') syntax =
+  (let tmp = (hash_term' t) in
   { n = t; pos = r; hash_code = tmp })
 
-type uvar = (((((term') syntax) option * uvar_decoration)) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)
+type uvar = (int * version * FStarC_Range_Type.range)
 
 type subst_ts = (((subst_elt) list) list * maybe_set_use_range)
 
 let mk_Tm_delayed (lr : ((term') syntax * (((subst_elt) list) list * maybe_set_use_range))) : (FStarC_Range_Type.range -> (term') syntax) =
-  (mk (Tm_delayed ((let fld = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd lr) in
-  ({ tm = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst lr);
+  (mk (Tm_delayed ((let fld = (match lr with
+      | (u__1, u__2) -> u__2
+    ) in
+  ({ tm = (match lr with
+      | (u__1, u__2) -> u__1
+    );
     substs = (match fld with (custard_tup, _) -> custard_tup);
     substs1 = (match fld with (_, custard_tup) -> custard_tup) } : term'__Tm_delayed__payload)))))
 
@@ -374,12 +652,18 @@ let bv_to_tm (bv : bv) : (term') syntax =
 let bv_to_name (bv : bv) : (term') syntax =
   (mk (Tm_name (bv)) (range_of_bv bv))
 
-type universe_uvar = (((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range) [@@deriving yojson]
+type universe_uvar = (int * version * FStarC_Range_Type.range) [@@deriving yojson]
 
-type ascription = (((term') syntax, (comp_typ) syntax) FStar_Pervasives.either * ((term') syntax) option * bool)
+let hash_comp' (c : comp_typ) : int =
+  (let tmp = (hash_list hash_flag (c).flags) in
+  (mix4 (hc (Prims.of_int (823))) (hash_lid (c).effect_name) ((c).result_typ).hash_code tmp))
+
+let mk_comp_ (c : comp_typ) (r : FStarC_Range_Type.range) : (comp_typ) syntax =
+  (let tmp = (hash_comp' c) in
+  { n = c; pos = r; hash_code = tmp })
 
 let mk_Comp (ct : comp_typ) : (comp_typ) syntax =
-  (mk ct ((ct).result_typ).pos)
+  (mk_comp_ ct ((ct).result_typ).pos)
 
 type subst_t = (subst_elt) list
 
@@ -393,16 +677,15 @@ let mk_binder_with_attrs (bv : bv) (aqual : (binder_qualifier) option) (pqual : 
     binder_positivity = pqual;
     binder_attrs = attrs }
 
-type pat = (pat') withinfo_t
-
 let on_antiquoted (f : ((term') syntax -> (term') syntax)) (qi : quoteinfo) : quoteinfo =
   (let tmp = ((qi).antiquotations, (qi).antiquotations1) in
   (match tmp with
-    | (s, aqs) -> (let aqs' = (FStarC_List.map f aqs) in
+    | (s, aqs) -> (let aqs' = (BatList.map f aqs) in
       { qkind = (qi).qkind; antiquotations = s; antiquotations1 = aqs' })
   ))
 
-type arg = ((term') syntax * (arg_qualifier) option)
+let mk_comp' (c : comp_typ) (r : FStarC_Range_Type.range) : (comp_typ) syntax =
+  (mk_comp_ c r)
 
 type binders = (binder) list
 
@@ -648,8 +931,6 @@ type args = (((term') syntax * (arg_qualifier) option)) list
 
 type aqual = (arg_qualifier) option
 
-type lbname = (bv, fv) FStar_Pervasives.either
-
 let fStarC_Class_HasRange_pos__syntax_term' (tmp : (term') syntax) : FStarC_Range_Type.range =
   (tmp).pos
 
@@ -659,10 +940,8 @@ type delta_depth =
   | Delta_abstract of delta_depth
   [@@deriving yojson]
 
-type match_returns_ascription = (binder * (((term') syntax, (comp_typ) syntax) FStar_Pervasives.either * ((term') syntax) option * bool))
-
 let order_fv (x : FStarC_Ident.lident) (y : FStarC_Ident.lident) : Prims.int =
-  (FStarC_String.compare (FStarC_Ident.string_of_lid x) (FStarC_Ident.string_of_lid y))
+  ((fun x y -> Z.of_int (BatString.compare x y)) (FStarC_Ident.string_of_lid x) (FStarC_Ident.string_of_lid y))
 
 let fStarC_Class_Deq_op_Equals_Question__lident (tmp : FStarC_Ident.lident) (tmp1 : FStarC_Ident.lident) : bool =
   (FStarC_Order.eq (FStarC_Order.order_from_int (order_fv tmp tmp1)))
@@ -739,12 +1018,12 @@ let fStarC_Class_Ord_op_Greater_Question__lident (x : FStarC_Ident.lident) (y : 
 let rec eq_pat (p1 : (pat') withinfo_t) (p2 : (pat') withinfo_t) : bool =
   (match ((p1).v, (p2).v) with
     | ((Pat_constant (c1)), (Pat_constant (c2))) -> (FStarC_Const.eq_const c1 c2)
-    | ((Pat_cons (fv1, us1, as1)), (Pat_cons (fv2, us2, as2))) -> (if ((fv_eq fv1 fv2) && ((=) (FStarC_List.length as1) (FStarC_List.length as2))) then (let tmp = (FStarC_List.forall2 (fun tmp tmp1 -> (match (tmp, tmp1) with
+    | ((Pat_cons (fv1, us1, as1)), (Pat_cons (fv2, us2, as2))) -> (if ((fv_eq fv1 fv2) && ((=) ((fun l -> Z.of_int (BatList.length l)) as1) ((fun l -> Z.of_int (BatList.length l)) as2))) then (let tmp = (BatList.for_all2 (fun tmp tmp1 -> (match (tmp, tmp1) with
           | ((p11, b1), (p21, b2)) -> (if ((=) b1 b2) then (eq_pat p11 p21) else false)
         )) as1 as2) in
       (if tmp then (match (us1, us2) with
         | (None, None) -> true
-        | ((Some (us11)), (Some (us21))) -> ((=) (FStarC_List.length us11) (FStarC_List.length us21))
+        | ((Some (us11)), (Some (us21))) -> ((=) ((fun l -> Z.of_int (BatList.length l)) us11) ((fun l -> Z.of_int (BatList.length l)) us21))
         | tmp1 -> false
       ) else false)) else false)
     | ((Pat_var (tmp)), (Pat_var (tmp1))) -> true
@@ -857,8 +1136,8 @@ let rec emb_typ_to_string (e : emb_typ) : string =
   (match e with
     | ET_abstract -> "abstract"
     | (ET_app (h, [])) -> h
-    | (ET_app (h, args)) -> (let tmp = (FStarC_List.map emb_typ_to_string args) in
-      let tmp1 = (FStarC_String.concat " " tmp) in
+    | (ET_app (h, args)) -> (let tmp = (BatList.map emb_typ_to_string args) in
+      let tmp1 = (BatString.concat " " tmp) in
       let tmp2 = (Prims.strcat tmp1 ")") in
       let tmp3 = (Prims.strcat " " tmp2) in
       let tmp4 = (Prims.strcat h tmp3) in
@@ -960,7 +1239,7 @@ let fStarC_Class_Show_show__option_delta_depth (tmp : (delta_depth) option) : st
 type free_vars = {
   free_names : (bv) list;
   free_uvars : (ctx_uvar) list;
-  free_univs : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list;
+  free_univs : ((int * version * FStarC_Range_Type.range)) list;
   free_univ_names : (FStarC_Ident.ident) list;
 }
 
@@ -976,13 +1255,13 @@ let rec fStarC_FlatSet_add__bv (x : bv) (s : (bv) list) : (bv) list =
   )
 
 let fStarC_FlatSet_union__bv (s1 : (bv) list) (eta : (bv) list) : (bv) list =
-  (FStarC_List.fold_left (fun s x -> (fStarC_FlatSet_add__bv x s)) s1 eta)
+  (BatList.fold_left (fun s x -> (fStarC_FlatSet_add__bv x s)) s1 eta)
 
 let fStarC_Class_Setlike_union__bv_list_bv (tmp : (bv) list) (eta : (bv) list) : (bv) list =
   (fStarC_FlatSet_union__bv tmp eta)
 
 let order_ident (x : FStarC_Ident.ident) (y : FStarC_Ident.ident) : Prims.int =
-  (FStarC_String.compare (FStarC_Ident.string_of_id x) (FStarC_Ident.string_of_id y))
+  ((fun x y -> Z.of_int (BatString.compare x y)) (FStarC_Ident.string_of_id x) (FStarC_Ident.string_of_id y))
 
 let fStarC_Class_Deq_op_Equals_Question__ident (tmp : FStarC_Ident.ident) (tmp1 : FStarC_Ident.ident) : bool =
   (FStarC_Order.eq (FStarC_Order.order_from_int (order_ident tmp tmp1)))
@@ -996,7 +1275,7 @@ let rec fStarC_FlatSet_add__ident (x : FStarC_Ident.ident) (s : (FStarC_Ident.id
   )
 
 let fStarC_FlatSet_union__ident (s1 : (FStarC_Ident.ident) list) (eta : (FStarC_Ident.ident) list) : (FStarC_Ident.ident) list =
-  (FStarC_List.fold_left (fun s x -> (fStarC_FlatSet_add__ident x s)) s1 eta)
+  (BatList.fold_left (fun s x -> (fStarC_FlatSet_add__ident x s)) s1 eta)
 
 let fStarC_Class_Setlike_union__ident_list_ident (tmp : (FStarC_Ident.ident) list) (eta : (FStarC_Ident.ident) list) : (FStarC_Ident.ident) list =
   (fStarC_FlatSet_union__ident tmp eta)
@@ -1007,7 +1286,7 @@ let fStarC_Class_Setlike_empty__bv_list_bv (tmp : unit) : (bv) list =
 let fStarC_Class_Setlike_empty__ctx_uvar_list_ctx_uvar (tmp : unit) : (ctx_uvar) list =
   (FStarC_FlatSet.empty ())
 
-let fStarC_Class_Setlike_empty__tuple3_p_uvar_option_version_range (tmp : unit) : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list =
+let fStarC_Class_Setlike_empty__tuple3_p_uvar_rec_option_version_range (tmp : unit) : ((int * version * FStarC_Range_Type.range)) list =
   (FStarC_FlatSet.empty ())
 
 let fStarC_FlatSet_singleton__bv (x : bv) : (bv) list =
@@ -1022,11 +1301,11 @@ let fStarC_FlatSet_singleton__ctx_uvar (x : ctx_uvar) : (ctx_uvar) list =
 let fStarC_Class_Setlike_singleton__ctx_uvar_list_ctx_uvar (tmp : ctx_uvar) : (ctx_uvar) list =
   (fStarC_FlatSet_singleton__ctx_uvar tmp)
 
-let fStarC_FlatSet_singleton__tuple3_p_uvar_option_version_range (x : (((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list =
+let fStarC_FlatSet_singleton__tuple3_p_uvar_rec_option_version_range (x : (int * version * FStarC_Range_Type.range)) : ((int * version * FStarC_Range_Type.range)) list =
   (x :: [])
 
-let fStarC_Class_Setlike_singleton__tuple3_p_uvar_option_version_range (tmp : (((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list =
-  (fStarC_FlatSet_singleton__tuple3_p_uvar_option_version_range tmp)
+let fStarC_Class_Setlike_singleton__tuple3_p_uvar_rec_option_version_range (tmp : (int * version * FStarC_Range_Type.range)) : ((int * version * FStarC_Range_Type.range)) list =
+  (fStarC_FlatSet_singleton__tuple3_p_uvar_rec_option_version_range tmp)
 
 let mk_binder (a : bv) : binder =
   (mk_binder_with_attrs a None None [])
@@ -1036,19 +1315,19 @@ let rec pat_bvs__aux (b : (bv) list) (p : (pat') withinfo_t) : (bv) list =
     | (Pat_dot_term (tmp)) -> b
     | (Pat_constant (tmp)) -> b
     | (Pat_var (x)) -> (x :: b)
-    | (Pat_cons (tmp, tmp1, pats)) -> (FStarC_List.fold_left (fun b1 tmp2 -> (match tmp2 with
+    | (Pat_cons (tmp, tmp1, pats)) -> (BatList.fold_left (fun b1 tmp2 -> (match tmp2 with
         | (p1, tmp3) -> (pat_bvs__aux b1 p1)
       )) b pats)
   )
 
 let pat_bvs (p : (pat') withinfo_t) : (bv) list =
   (let tmp = (pat_bvs__aux [] p) in
-  (FStarC_List.rev tmp))
+  (BatList.rev tmp))
 
 let fStarC_Class_Ord_dedup__bv (xs : (bv) list) : (bv) list =
-  (let out = (FStarC_List.fold_left (fun out x -> (let tmp = (FStarC_List.existsb (fun y -> (fStarC_Class_Deq_op_Equals_Question__bv x y)) out) in
+  (let out = (BatList.fold_left (fun out x -> (let tmp = (BatList.exists (fun y -> (fStarC_Class_Deq_op_Equals_Question__bv x y)) out) in
     (if tmp then out else (x :: out)))) [] xs) in
-  (FStarC_List.rev out))
+  (BatList.rev out))
 
 let fStarC_FlatSet_from_list__bv (xs : (bv) list) : (bv) list =
   (fStarC_Class_Ord_dedup__bv xs)
@@ -1057,7 +1336,7 @@ let fStarC_Class_Setlike_from_list__bv_list_bv (tmp : (bv) list) : (bv) list =
   (fStarC_FlatSet_from_list__bv tmp)
 
 let fStarC_FlatSet_mem__bv (x : bv) (eta : (bv) list) : bool =
-  (FStarC_List.existsb (fun y -> (fStarC_Class_Deq_op_Equals_Question__bv x y)) eta)
+  (BatList.exists (fun y -> (fStarC_Class_Deq_op_Equals_Question__bv x y)) eta)
 
 let fStarC_FlatSet_subset__bv (s1 : (bv) list) (s2 : (bv) list) : bool =
   (FStarC_FlatSet.for_all (fun y -> (fStarC_FlatSet_mem__bv y s2)) s1)
@@ -1066,7 +1345,7 @@ let fStarC_Class_Setlike_subset__bv_list_bv (tmp : (bv) list) (s2 : (bv) list) :
   (fStarC_FlatSet_subset__bv tmp s2)
 
 let fStarC_FlatSet_diff__bv (s1 : (bv) list) (s2 : (bv) list) : (bv) list =
-  (FStarC_List.filter (fun y -> (let r = (fStarC_FlatSet_mem__bv y s2) in
+  (BatList.filter (fun y -> (let r = (fStarC_FlatSet_mem__bv y s2) in
   (not r))) s1)
 
 let fStarC_Class_Setlike_diff__bv_list_bv (tmp : (bv) list) (s2 : (bv) list) : (bv) list =
@@ -1092,19 +1371,38 @@ let new_univ_name (ropt : (FStarC_Range_Type.range) option) : FStarC_Ident.ident
   let tmp2 = (tmp1, (range_of_ropt ropt)) in
   (FStarC_Ident.mk_ident tmp2))
 
-let order_univ_name (x : FStarC_Ident.ident) (y : FStarC_Ident.ident) : Prims.int =
-  (FStarC_String.compare (FStarC_Ident.string_of_id x) (FStarC_Ident.string_of_id y))
+let fStarC_Class_Deq_op_Equals_Question__delta_depth (tmp : delta_depth) (tmp1 : delta_depth) : bool =
+  ((=) tmp tmp1)
 
-let fStarC_Class_Deq_op_Equals_Question__ident_11 (tmp : FStarC_Ident.ident) (tmp1 : FStarC_Ident.ident) : bool =
+let fStarC_Class_Deq_op_Equals_Question__option_delta_depth (tmp : (delta_depth) option) (tmp1 : (delta_depth) option) : bool =
+  (match (tmp, tmp1) with
+    | (None, None) -> true
+    | ((Some (x)), (Some (y))) -> (fStarC_Class_Deq_op_Equals_Question__delta_depth x y)
+    | (tmp2, tmp3) -> false
+  )
+
+let fStarC_Class_Deq_op_Equals_Question__option_list_lident (tmp : ((FStarC_Ident.lident) list) option) (tmp1 : ((FStarC_Ident.lident) list) option) : bool =
+  (match (tmp, tmp1) with
+    | (None, None) -> true
+    | ((Some (x)), (Some (y))) -> (fStarC_Class_Deq_op_Equals_Question__list_lident x y)
+    | (tmp2, tmp3) -> false
+  )
+
+let order_univ_name (x : FStarC_Ident.ident) (y : FStarC_Ident.ident) : Prims.int =
+  ((fun x y -> Z.of_int (BatString.compare x y)) (FStarC_Ident.string_of_id x) (FStarC_Ident.string_of_id y))
+
+let fStarC_Class_Deq_op_Equals_Question__ident_23 (tmp : FStarC_Ident.ident) (tmp1 : FStarC_Ident.ident) : bool =
   (FStarC_Order.eq (FStarC_Order.order_from_int (order_univ_name tmp tmp1)))
 
 let is_ident_allowed_by_restriction' (id : FStarC_Ident.ident) (tmp : restriction) : (FStarC_Ident.ident) option =
   (match tmp with
     | Unrestricted -> (Some (id))
-    | (AllowList (allow_list)) -> (let tmp1 = (FStarC_List.find (fun tmp1 -> (match tmp1 with
-          | (dest_id, renamed_id) -> (fStarC_Class_Deq_op_Equals_Question__ident_11 (FStarC_Option.dflt dest_id renamed_id) id)
+    | (AllowList (allow_list)) -> (let tmp1 = (List.find_opt (fun tmp1 -> (match tmp1 with
+          | (dest_id, renamed_id) -> (fStarC_Class_Deq_op_Equals_Question__ident_23 (FStarC_Option.dflt dest_id renamed_id) id)
         )) allow_list) in
-      (FStarC_Option.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1))
+      (FStarC_Option.map (fun x -> (match x with
+        | (u__1, u__2) -> u__1
+      )) tmp1))
   )
 
 let fStarC_Class_Show_show__restriction (tmp : restriction) : string =
@@ -1144,23 +1442,6 @@ let rec mk_Tm_abs (bs : (binder) list) (body : (term') syntax) (rc : (residual_c
       (mk tmp2 p))
   )
 
-let fStarC_Class_Deq_op_Equals_Question__delta_depth (tmp : delta_depth) (tmp1 : delta_depth) : bool =
-  ((=) tmp tmp1)
-
-let fStarC_Class_Deq_op_Equals_Question__option_delta_depth (tmp : (delta_depth) option) (tmp1 : (delta_depth) option) : bool =
-  (match (tmp, tmp1) with
-    | (None, None) -> true
-    | ((Some (x)), (Some (y))) -> (fStarC_Class_Deq_op_Equals_Question__delta_depth x y)
-    | (tmp2, tmp3) -> false
-  )
-
-let fStarC_Class_Deq_op_Equals_Question__option_list_lident (tmp : ((FStarC_Ident.lident) list) option) (tmp1 : ((FStarC_Ident.lident) list) option) : bool =
-  (match (tmp, tmp1) with
-    | (None, None) -> true
-    | ((Some (x)), (Some (y))) -> (fStarC_Class_Deq_op_Equals_Question__list_lident x y)
-    | (tmp2, tmp3) -> false
-  )
-
 let extend_app_n (t : (term') syntax) (args : (((term') syntax * (arg_qualifier) option)) list) (p : FStarC_Range_Type.range) : (term') syntax =
   (mk_Tm_app t args p)
 
@@ -1182,7 +1463,7 @@ let rec mk_Tm_arrow (bs : (binder) list) (c : (comp_typ) syntax) (p : FStarC_Ran
       )
     | (b :: []) -> (mk (Tm_arrow (({ b = b; comp = c } : term'__Tm_arrow__payload))) p)
     | (b :: bs1) -> (let tail = (mk_Tm_arrow bs1 c p) in
-      let tmp = (mk { effect_name = FStarC_Parser_Const.primitive_pure_lid;
+      let tmp = (mk_comp_ { effect_name = FStarC_Parser_Const.primitive_pure_lid;
           result_typ = tail;
           flags = [];
           source_effect_name = FStarC_Parser_Const.primitive_pure_lid } (tail).pos) in
@@ -1256,8 +1537,8 @@ type tycon = (FStarC_Ident.lident * (binder) list * (term') syntax)
 
 type uvars = (ctx_uvar) list
 
-let fStarC_Class_HasRange_pos__ctx_uvar (tmp : ctx_uvar) : FStarC_Range_Type.range =
-  (tmp).ctx_uvar_range
+let fStarC_Class_HasRange_pos__bv (tmp : bv) : FStarC_Range_Type.range =
+  (range_of_bv tmp)
 
 let rec fStarC_FlatSet_remove__bv (x : bv) (s : (bv) list) : (bv) list =
   (match s with
@@ -1273,8 +1554,8 @@ let fStarC_Class_Setlike_remove__bv_list_bv (tmp : bv) (s : (bv) list) : (bv) li
 let fStarC_Class_Setlike_is_empty__bv_list_bv (tmp : (bv) list) : bool =
   (FStarC_FlatSet.is_empty tmp)
 
-let fStarC_Class_HasRange_pos__bv (tmp : bv) : FStarC_Range_Type.range =
-  (range_of_bv tmp)
+let fStarC_Class_HasRange_pos__ctx_uvar (tmp : ctx_uvar) : FStarC_Range_Type.range =
+  (tmp).ctx_uvar_range
 
 let fStarC_Class_Show_show__should_check_uvar (tmp : should_check_uvar) : string =
   (match tmp with
@@ -1312,7 +1593,7 @@ let is_bqual_implicit (tmp : (binder_qualifier) option) : bool =
   )
 
 let fStarC_FlatSet_inter__bv (s1 : (bv) list) (s2 : (bv) list) : (bv) list =
-  (FStarC_List.filter (fun y -> (fStarC_FlatSet_mem__bv y s2)) s1)
+  (BatList.filter (fun y -> (fStarC_FlatSet_mem__bv y s2)) s1)
 
 let fStarC_Class_Setlike_inter__bv_list_bv (tmp : (bv) list) (s2 : (bv) list) : (bv) list =
   (fStarC_FlatSet_inter__bv tmp s2)
@@ -1327,16 +1608,18 @@ let mk_Tac (t : (term') syntax) : (comp_typ) syntax =
     source_effect_name = FStarC_Parser_Const.effect_Tac_lid })
 
 let argpos (x : ((term') syntax * (arg_qualifier) option)) : FStarC_Range_Type.range =
-  (let scrut = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x) in
+  (let scrut = (match x with
+      | (u__1, u__2) -> u__1
+    ) in
   (scrut).pos)
 
 let fStarC_Class_HasRange_pos__withinfo_t_pat' (tmp : (pat') withinfo_t) : FStarC_Range_Type.range =
   (tmp).p
 
 let fStarC_Class_Ord_dedup__ident (xs : (FStarC_Ident.ident) list) : (FStarC_Ident.ident) list =
-  (let out = (FStarC_List.fold_left (fun out x -> (let tmp = (FStarC_List.existsb (fun y -> (fStarC_Class_Deq_op_Equals_Question__ident x y)) out) in
+  (let out = (BatList.fold_left (fun out x -> (let tmp = (BatList.exists (fun y -> (fStarC_Class_Deq_op_Equals_Question__ident x y)) out) in
     (if tmp then out else (x :: out)))) [] xs) in
-  (FStarC_List.rev out))
+  (BatList.rev out))
 
 let fStarC_FlatSet_from_list__ident (xs : (FStarC_Ident.ident) list) : (FStarC_Ident.ident) list =
   (fStarC_Class_Ord_dedup__ident xs)
@@ -1348,10 +1631,10 @@ let fStarC_Class_Setlike_add__ident_list_ident (tmp : FStarC_Ident.ident) (s : (
   (fStarC_FlatSet_add__ident tmp s)
 
 let fStarC_FlatSet_mem__ident (x : FStarC_Ident.ident) (eta : (FStarC_Ident.ident) list) : bool =
-  (FStarC_List.existsb (fun y -> (fStarC_Class_Deq_op_Equals_Question__ident x y)) eta)
+  (BatList.exists (fun y -> (fStarC_Class_Deq_op_Equals_Question__ident x y)) eta)
 
 let fStarC_FlatSet_diff__ident (s1 : (FStarC_Ident.ident) list) (s2 : (FStarC_Ident.ident) list) : (FStarC_Ident.ident) list =
-  (FStarC_List.filter (fun y -> (let r = (fStarC_FlatSet_mem__ident y s2) in
+  (BatList.filter (fun y -> (let r = (fStarC_FlatSet_mem__ident y s2) in
   (not r))) s1)
 
 let fStarC_Class_Setlike_diff__ident_list_ident (tmp : (FStarC_Ident.ident) list) (s2 : (FStarC_Ident.ident) list) : (FStarC_Ident.ident) list =
@@ -1363,11 +1646,11 @@ let imp_tag : binder_qualifier =
 let as_bqual_implicit (tmp : bool) : (binder_qualifier) option =
   (if tmp then (Some (imp_tag)) else None)
 
-let fStarC_Class_Setlike_is_empty__tuple3_p_uvar_option_version_range (tmp : ((((universe) option) FStarC_Unionfind.p_uvar * version * FStarC_Range_Type.range)) list) : bool =
+let fStarC_Class_Setlike_is_empty__tuple3_p_uvar_rec_option_version_range (tmp : ((int * version * FStarC_Range_Type.range)) list) : bool =
   (FStarC_FlatSet.is_empty tmp)
 
 let binders_to_names (bs : (binder) list) : ((term') syntax) list =
-  (FStarC_List.map (fun b -> (bv_to_name (b).binder_bv)) bs)
+  (BatList.map (fun b -> (bv_to_name (b).binder_bv)) bs)
 
 let fStarC_Class_Deq_op_Equals_Question__ident_27 (tmp : FStarC_Ident.ident) (tmp1 : FStarC_Ident.ident) : bool =
   (FStarC_Order.eq (FStarC_Order.order_from_int (order_ident tmp tmp1)))
@@ -1415,7 +1698,7 @@ let fStarC_Class_Setlike_add__ident_list_ident_2 (tmp : FStarC_Ident.ident) (s :
   (fStarC_FlatSet_add__ident tmp s)
 
 let fStarC_FlatSet_inter__ident (s1 : (FStarC_Ident.ident) list) (s2 : (FStarC_Ident.ident) list) : (FStarC_Ident.ident) list =
-  (FStarC_List.filter (fun y -> (fStarC_FlatSet_mem__ident y s2)) s1)
+  (BatList.filter (fun y -> (fStarC_FlatSet_mem__ident y s2)) s1)
 
 let fStarC_Class_Setlike_inter__ident_list_ident (tmp : (FStarC_Ident.ident) list) (s2 : (FStarC_Ident.ident) list) : (FStarC_Ident.ident) list =
   (fStarC_FlatSet_inter__ident tmp s2)
@@ -1537,6 +1820,9 @@ let is_type (t : (term') syntax) : bool =
 let fStarC_Class_HasRange_pos__sigelt (tmp : sigelt) : FStarC_Range_Type.range =
   (tmp).sigrng
 
+let fStarC_Class_Hashable_hash__fv (tmp : fv) : int =
+  (FStarC_Ident.fStarC_Class_Hashable_hash__lident (tmp).fv_name)
+
 let t_decls : (term') syntax =
   (tabbrev FStarC_Parser_Const.decls_lid)
 
@@ -1593,14 +1879,6 @@ let fStarC_Class_Show_show__option_list_tuple2 (tmp : (((FStarC_Ident.lident * r
     | None -> "None"
     | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__list_tuple2_lident_restriction x) in
       (Prims.strcat "Some " tmp1))
-  )
-
-let binders_of_list (fvs : (bv) list) : (binder) list =
-  (FStarC_List.map (fun t -> (mk_binder t)) fvs)
-
-let lookup_aq (bv : bv) (aq : (Prims.int * ((term') syntax) list)) : (term') syntax =
-  (try (FStarC_List.nth (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd aq) (Prims.op_Plus (Prims.op_Minus (Prims.op_Minus (FStarC_List.length (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd aq)) Prims.int_one) (bv).index) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst aq))) with
-    | u__cexn -> (FStarC_Effect.failwith "antiquotation out of bounds")
   )
 
 let default_sigmeta : sig_metadata =
@@ -1748,7 +2026,7 @@ let rec fStarC_Class_Ord_ord_list_diff__go__qualifier (acc : ((qualifier) list *
             | FStarC_Order.Eq -> (fStarC_Class_Ord_ord_list_diff__go__qualifier (xd, yd) xs1 ys1)
             | FStarC_Order.Gt -> (fStarC_Class_Ord_ord_list_diff__go__qualifier (xd, (y :: yd)) (x :: xs1) ys1)
           ))
-        | (xs1, ys1) -> ((FStarC_List.rev_append xd xs1), (FStarC_List.rev_append yd ys1))
+        | (xs1, ys1) -> ((BatList.rev_append xd xs1), (BatList.rev_append yd ys1))
       )
   )
 
@@ -1770,6 +2048,17 @@ let mk_lb (tmp : ((bv, fv) FStar_Pervasives.either * (FStarC_Ident.ident) list *
 
 let mod_name (m : modul) : FStarC_Ident.lident =
   (m).name
+
+let lookup_aq (bv : bv) (aq : (Prims.int * ((term') syntax) list)) : (term') syntax =
+  (try ((fun l i -> BatList.nth l (Z.to_int i)) (match aq with
+    | (u__1, u__2) -> u__2
+  ) (Prims.op_Plus (Prims.op_Minus (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) (match aq with
+    | (u__1, u__2) -> u__2
+  )) Prims.int_one) (bv).index) (match aq with
+    | (u__1, u__2) -> u__1
+  ))) with
+    | u__cexn -> (FStarC_Effect.failwith "antiquotation out of bounds")
+  )
 
 let t_exn : (term') syntax =
   (tconst FStarC_Parser_Const.exn_lid)

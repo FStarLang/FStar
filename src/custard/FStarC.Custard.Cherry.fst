@@ -894,6 +894,7 @@ let runtime_externals : list (string & string & list bool) = [
   "Prims.string_of_int",     "cherry_string_of_int", [];
   "Prims.string_of_bool",    "cherry_string_of_bool", [];
   "FStar.String.strlen",     "cherry_str_length", [];
+  "FStar.String.length",     "cherry_str_length", [];
   "FStar.String.index",      "cherry_str_index", [];
   "FStar.String.sub",        "cherry_str_sub", [];
   "FStar.String.compare",    "cherry_str_compare", [];

@@ -5,20 +5,20 @@ let on (tmp : unit) : bool =
   (let tmp1 = (FStarC_Options.query_cache ()) in
   (if tmp1 then (FStarC_Options.ide ()) else false))
 
-let query_cache_ref : ((FStarC_Hash.hash_code) FStarC_RBSet.rbset ref) =
-  (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_empty__hash_code_rbset_hash_code ()) in
+let query_cache_ref : ((int) FStarC_RBSet.rbset ref) =
+  (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_empty__ocaml_int_rbset_ocaml_int ()) in
   (ref tmp))
 
 let try_find_query_cache (g : FStarC_TypeChecker_Env.env) (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (let tmp = (on ()) in
   (if tmp then (let h = (FStarC_TypeChecker_Env.fStarC_Class_Hashable_hash__tuple2_env_syntax_term' (g, q)) in
   let tmp1 = (!(query_cache_ref)) in
-  (FStarC_RBSet.fStarC_Class_Setlike_mem__hash_code_rbset_hash_code h tmp1)) else false))
+  (FStarC_RBSet.fStarC_Class_Setlike_mem__ocaml_int_rbset_ocaml_int h tmp1)) else false))
 
 let query_cache_add (g : FStarC_TypeChecker_Env.env) (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
   (let tmp = (on ()) in
   (if tmp then (let h = (FStarC_TypeChecker_Env.fStarC_Class_Hashable_hash__tuple2_env_syntax_term' (g, q)) in
   let tmp1 = (!(query_cache_ref)) in
-  let tmp2 = (FStarC_RBSet.fStarC_Class_Setlike_add__hash_code_rbset_hash_code h tmp1) in
+  let tmp2 = (FStarC_RBSet.fStarC_Class_Setlike_add__ocaml_int_rbset_ocaml_int h tmp1) in
   ((query_cache_ref) := tmp2)) else ()))
 

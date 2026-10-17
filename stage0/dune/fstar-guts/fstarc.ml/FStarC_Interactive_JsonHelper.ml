@@ -2,14 +2,16 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let write_json (js : FStarC_Json.json) : unit =
-  ((FStarC_Format.print_raw (FStarC_Json.string_of_json js));
-  (FStarC_Format.print_raw "\n"))
+  (((fun s -> Stdlib.set_binary_mode_out Stdlib.stdout true; Stdlib.print_string s; Stdlib.flush Stdlib.stdout) (FStarC_Json.string_of_json js));
+  ((fun s -> Stdlib.set_binary_mode_out Stdlib.stdout true; Stdlib.print_string s; Stdlib.flush Stdlib.stdout) "\n"))
 
 let try_assoc (key : string) (d : ((string * FStarC_Json.json)) list) : (FStarC_Json.json) option =
   (let tmp = (FStarC_Util.try_find (fun tmp -> (match tmp with
       | (k, tmp1) -> ((=) k key)
     )) d) in
-  (FStarC_Option.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp))
+  (FStarC_Option.map (fun x -> (match x with
+    | (u__1, u__2) -> u__2
+  )) tmp))
 
 exception InvalidQuery of string
 
@@ -44,7 +46,7 @@ let js_bool (tmp : FStarC_Json.json) : bool =
 
 let js_list (k : (FStarC_Json.json -> 'u___a)) (tmp : FStarC_Json.json) : ('u___a) list =
   (match tmp with
-    | (FStarC_Json.JsonList (l)) -> (FStarC_List.map k l)
+    | (FStarC_Json.JsonList (l)) -> (BatList.map k l)
     | other -> (js_fail "list" other)
   )
 

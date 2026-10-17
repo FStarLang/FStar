@@ -557,6 +557,11 @@ let scan_deps_and_check_cache_validity fn : ML (option (list string & Dep.deps))
 let load_module_from_cache env fn : ML (option tc_result) =
   load_module_from_cache_internal false (TcEnv.dep_graph env) fn
 
+let is_validated_in_cache fn : ML bool =
+  match try_find_in_cache (Dep.cache_file_name fn) with
+  | Some (Valid _, _) -> true
+  | _ -> false
+
 let last_load_failure () : ML (option string) = !last_failure
 
 (*

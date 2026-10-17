@@ -16,7 +16,7 @@ let rec unmeta_monadic (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.sy
   ))
 
 let lookup_arity_lid (table : ((Prims.int * ((FStarC_Ident.lident * FStarC_Ident.lident)) list)) list) (target_lid : FStarC_Ident.lident) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (connective) option =
-  (let arg_len = (FStarC_List.length args) in
+  (let arg_len = ((fun l -> Z.of_int (BatList.length l)) args) in
   let aux = (fun tmp -> (match tmp with
       | (arity, lids) -> (if ((=) arg_len arity) then (FStarC_Util.find_map lids (fun tmp1 -> (match tmp1 with
           | (lid, out_lid) -> (if (FStarC_Ident.lid_equals target_lid lid) then (Some ((BaseConn (out_lid, args)))) else None)
@@ -47,8 +47,18 @@ let patterns (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((
     | tmp -> ([], t1)
   ))
 
-let rec destruct_q_conn__aux (is_q : (bool -> (FStarC_Syntax_Syntax.fv -> bool))) (flat : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list))) (qopt : (bool) option) (out : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (connective) option =
-  (let tmp = (flat t) in
+let rec q_conn_aux (qopt : (bool) option) (out : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (connective) option =
+  (let is_q = (fun fa fv -> (if fa then (FStarC_Syntax_Util.is_forall (fv).FStarC_Syntax_Syntax.fv_name) else (FStarC_Syntax_Util.is_exists (fv).FStarC_Syntax_Syntax.fv_name))) in
+  let flat = (fun t1 -> (let tmp = (FStarC_Syntax_Util.head_and_args_full t1) in
+    (match tmp with
+      | (t2, args) -> (let tmp1 = (FStarC_Syntax_Util.un_uinst t2) in
+        let tmp2 = (BatList.map (fun tmp2 -> (match tmp2 with
+            | (t3, imp) -> (let tmp3 = (FStarC_Syntax_Util.unascribe t3) in
+              (tmp3, imp))
+          )) args) in
+        (tmp1, tmp2))
+    ))) in
+  let tmp = (flat t) in
   (match tmp with
     | (hd, args) -> (let body_of_last_abs = (match args with
           | ((a, tmp1) :: []) -> (FStarC_Syntax_Util.abs_one_ln a)
@@ -56,9 +66,9 @@ let rec destruct_q_conn__aux (is_q : (bool -> (FStarC_Syntax_Syntax.fv -> bool))
           | tmp1 -> None
         ) in
       (match (qopt, (hd).FStarC_Syntax_Syntax.n, body_of_last_abs) with
-        | ((Some (fa)), (FStarC_Syntax_Syntax.Tm_fvar (tc)), (Some ((b, t2)))) when (is_q fa tc) -> ((destruct_q_conn__aux is_q flat) qopt (b :: out) t2)
-        | (None, (FStarC_Syntax_Syntax.Tm_fvar (tc)), (Some ((b, t2)))) when (FStarC_Syntax_Util.is_qlid (tc).FStarC_Syntax_Syntax.fv_name) -> ((destruct_q_conn__aux is_q flat) (Some ((FStarC_Syntax_Util.is_forall (tc).FStarC_Syntax_Syntax.fv_name))) (b :: out) t2)
-        | ((Some (b)), tmp1, tmp2) -> (let bs = (FStarC_List.rev out) in
+        | ((Some (fa)), (FStarC_Syntax_Syntax.Tm_fvar (tc)), (Some ((b, t2)))) when (is_q fa tc) -> (q_conn_aux qopt (b :: out) t2)
+        | (None, (FStarC_Syntax_Syntax.Tm_fvar (tc)), (Some ((b, t2)))) when (FStarC_Syntax_Util.is_qlid (tc).FStarC_Syntax_Syntax.fv_name) -> (q_conn_aux (Some ((FStarC_Syntax_Util.is_forall (tc).FStarC_Syntax_Syntax.fv_name))) (b :: out) t2)
+        | ((Some (b)), tmp1, tmp2) -> (let bs = (BatList.rev out) in
           let tmp3 = (FStarC_Syntax_Subst.open_term bs t) in
           (match tmp3 with
             | (bs1, t1) -> (let tmp4 = (patterns t1) in
@@ -71,17 +81,7 @@ let rec destruct_q_conn__aux (is_q : (bool -> (FStarC_Syntax_Syntax.fv -> bool))
   ))
 
 let destruct_q_conn (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (connective) option =
-  (let is_q = (fun fa fv -> (if fa then (FStarC_Syntax_Util.is_forall (fv).FStarC_Syntax_Syntax.fv_name) else (FStarC_Syntax_Util.is_exists (fv).FStarC_Syntax_Syntax.fv_name))) in
-  let flat = (fun t1 -> (let tmp = (FStarC_Syntax_Util.head_and_args_full t1) in
-    (match tmp with
-      | (t2, args) -> (let tmp1 = (FStarC_Syntax_Util.un_uinst t2) in
-        let tmp2 = (FStarC_List.map (fun tmp2 -> (match tmp2 with
-            | (t3, imp) -> (let tmp3 = (FStarC_Syntax_Util.unascribe t3) in
-              (tmp3, imp))
-          )) args) in
-        (tmp1, tmp2))
-    ))) in
-  ((destruct_q_conn__aux is_q flat) None [] t))
+  (q_conn_aux None [] t)
 
 let destruct_sq_base_table : ((Prims.int * ((FStarC_Ident.lident * FStarC_Ident.lident)) list)) list =
   ((Prims.int_zero, ((FStarC_Parser_Const.c_true_lid, FStarC_Parser_Const.true_lid) :: ((FStarC_Parser_Const.empty_type_lid, FStarC_Parser_Const.false_lid) :: []))) :: (((Prims.of_int (2)), ((FStarC_Parser_Const.c_and_lid, FStarC_Parser_Const.and_lid) :: ((FStarC_Parser_Const.c_or_lid, FStarC_Parser_Const.or_lid) :: ((FStarC_Parser_Const.c_eq2_lid, FStarC_Parser_Const.eq2_lid) :: [])))) :: (((Prims.of_int (3)), ((FStarC_Parser_Const.c_eq2_lid, FStarC_Parser_Const.eq2_lid) :: [])) :: [])))
@@ -131,12 +131,12 @@ and maybe_collect (f : (connective) option) : (connective) option =
   (match f with
     | (Some ((QAll (bs, pats, phi)))) -> (let tmp = (destruct_sq_forall phi) in
       (match tmp with
-        | (Some ((QAll (bs', pats', psi)))) -> (Some ((QAll ((FStarC_List.op_At bs bs'), (FStarC_List.op_At pats pats'), psi))))
+        | (Some ((QAll (bs', pats', psi)))) -> (Some ((QAll ((BatList.append bs bs'), (BatList.append pats pats'), psi))))
         | tmp1 -> f
       ))
     | (Some ((QEx (bs, pats, phi)))) -> (let tmp = (destruct_sq_exists phi) in
       (match tmp with
-        | (Some ((QEx (bs', pats', psi)))) -> (Some ((QEx ((FStarC_List.op_At bs bs'), (FStarC_List.op_At pats pats'), psi))))
+        | (Some ((QEx (bs', pats', psi)))) -> (Some ((QEx ((BatList.append bs bs'), (BatList.append pats pats'), psi))))
         | tmp1 -> f
       ))
     | tmp -> f
@@ -166,4 +166,11 @@ let destruct_typ_as_formula (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Synt
   (FStarC_Option.catch tmp4 (fun tmp5 -> (let tmp6 = (destruct_sq_forall phi) in
   (FStarC_Option.catch tmp6 (fun tmp7 -> (let tmp8 = (destruct_sq_exists phi) in
   (FStarC_Option.catch tmp8 (fun tmp9 -> None)))))))))))))))
+
+let destruct_forall_continuation (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (q_conn_aux (Some (true)) [] t) in
+  (match tmp with
+    | (Some ((QAll (bs, pats, body)))) -> (bs, pats, body)
+    | tmp1 -> (FStarC_Effect.failwith "impossible: destruct_forall_continuation")
+  ))
 

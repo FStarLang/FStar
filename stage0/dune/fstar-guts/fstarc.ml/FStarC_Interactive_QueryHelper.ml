@@ -14,7 +14,7 @@ let ck_completion (st : FStarC_Interactive_Ide_Types.repl_state) (search_term : 
   (let needle = (FStarC_Util.split search_term ".") in
   let mods_and_nss = (FStarC_Interactive_CompletionTable.autocomplete_mod_or_ns (st).FStarC_Interactive_Ide_Types.repl_names needle mod_filter) in
   let lids = (FStarC_Interactive_CompletionTable.autocomplete_lid (st).FStarC_Interactive_Ide_Types.repl_names needle) in
-  (FStarC_List.op_At lids mods_and_nss))
+  (BatList.append lids mods_and_nss))
 
 type sl_reponse = {
   slr_name : string;
@@ -35,7 +35,7 @@ let term_to_string (tcenv : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Synt
   (with_printed_effect_args (fun tmp -> (FStarC_Syntax_Print.term_to_string' (FStarC_Syntax_DsEnv.set_current_module (tcenv).FStarC_TypeChecker_Env.dsenv (tcenv).FStarC_TypeChecker_Env.curmodule) t)))
 
 let symlookup (tcenv : FStarC_TypeChecker_Env.env) (symbol : string) (pos_opt : ((string * Prims.int * Prims.int)) option) (requested_info : (string) list) : (sl_reponse) option =
-  (let lid_of_str = (fun lid_str -> (let tmp = (FStarC_List.map FStarC_Ident.id_of_text (FStarC_Util.split lid_str ".")) in
+  (let lid_of_str = (fun lid_str -> (let tmp = (BatList.map FStarC_Ident.id_of_text (FStarC_Util.split lid_str ".")) in
     (FStarC_Ident.lid_of_ids tmp))) in
   let info_of_lid_str = (fun lid_str -> (let lid = (lid_of_str lid_str) in
     let tmp = (FStarC_Syntax_DsEnv.resolve_to_fully_qualified_name (tcenv).FStarC_TypeChecker_Env.dsenv lid) in
@@ -74,26 +74,26 @@ let symlookup (tcenv : FStarC_TypeChecker_Env.env) (symbol : string) (pos_opt : 
               | (FStar_Pervasives.Inl (name)) -> name
               | (FStar_Pervasives.Inr (lid)) -> (FStarC_Ident.string_of_lid lid)
             ) in
-          let typ_str = (if (FStarC_List.mem "type" requested_info) then (let tmp1 = (term_to_string tcenv typ) in
+          let typ_str = (if (BatList.mem "type" requested_info) then (let tmp1 = (term_to_string tcenv typ) in
             (Some (tmp1))) else None) in
           let doc_str = (match ovl_candidates with
               | [] -> (match name_or_lid with
-                  | (FStar_Pervasives.Inr (lid)) when (FStarC_List.mem "documentation" requested_info) -> (docs_of_lid lid)
+                  | (FStar_Pervasives.Inr (lid)) when (BatList.mem "documentation" requested_info) -> (docs_of_lid lid)
                   | tmp1 -> None
                 )
               | (tmp1 :: []) -> (match name_or_lid with
-                  | (FStar_Pervasives.Inr (lid)) when (FStarC_List.mem "documentation" requested_info) -> (docs_of_lid lid)
+                  | (FStar_Pervasives.Inr (lid)) when (BatList.mem "documentation" requested_info) -> (docs_of_lid lid)
                   | tmp2 -> None
                 )
               | tmp1 -> (let tmp2 = (FStarC_TypeChecker_Overload.candidates_doc tcenv ovl_candidates) in
-                let cands = (FStarC_List.map FStarC_Errors_Msg.renderdoc tmp2) in
-                (Some ((FStarC_String.concat "\n" ("This name is overloaded, and the answer above is only what scope order gives. Which candidate an occurrence denotes is decided by typechecking it, so ask again at the exact position of the occurrence once its definition has been checked. Candidates:" :: cands)))))
+                let cands = (BatList.map FStarC_Errors_Msg.renderdoc tmp2) in
+                (Some ((BatString.concat "\n" ("This name is overloaded, and the answer above is only what scope order gives. Which candidate an occurrence denotes is decided by typechecking it, so ask again at the exact position of the occurrence once its definition has been checked. Candidates:" :: cands)))))
             ) in
           let def_str = (match name_or_lid with
-              | (FStar_Pervasives.Inr (lid)) when (FStarC_List.mem "definition" requested_info) -> (def_of_lid lid)
+              | (FStar_Pervasives.Inr (lid)) when (BatList.mem "definition" requested_info) -> (def_of_lid lid)
               | tmp1 -> None
             ) in
-          let def_range = (if (FStarC_List.mem "defined-at" requested_info) then (Some (rng)) else None) in
+          let def_range = (if (BatList.mem "defined-at" requested_info) then (Some (rng)) else None) in
           (Some ({ slr_name = name;
             slr_def_range = def_range;
             slr_typ = typ_str;

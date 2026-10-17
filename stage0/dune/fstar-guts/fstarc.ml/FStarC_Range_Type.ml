@@ -14,6 +14,15 @@ type range = {
 
 type t = range
 
+let col_limit : Prims.int =
+  (Prims.of_int (65536))
+
+let pos_line (p : Prims.int) : Prims.int =
+  (Prims.op_Slash p col_limit)
+
+let pos_col (p : Prims.int) : Prims.int =
+  (Prims.op_Percent p col_limit)
+
 let use_range (r : range) : rng =
   (r).use_range
 
@@ -38,19 +47,10 @@ let dummyRange : range =
 let max (i : Prims.int) (j : Prims.int) : Prims.int =
   (if (Prims.op_Less i j) then j else i)
 
-let col_limit : Prims.int =
-  (Prims.of_int (65536))
-
 let mk_pos (l : Prims.int) (c : Prims.int) : Prims.int =
   (let l1 = (max Prims.int_zero l) in
   let c1 = (max Prims.int_zero c) in
   (Prims.op_Plus (Prims.op_Star l1 col_limit) (if (Prims.op_Greater_Equals c1 col_limit) then (Prims.op_Minus col_limit Prims.int_one) else c1)))
-
-let pos_line (p : Prims.int) : Prims.int =
-  (Prims.op_Slash p col_limit)
-
-let pos_col (p : Prims.int) : Prims.int =
-  (Prims.op_Percent p col_limit)
 
 let def_range (r : range) : rng =
   (r).def_range
