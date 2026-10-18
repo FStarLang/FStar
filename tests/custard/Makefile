@@ -21,6 +21,8 @@ CUSTARD_TESTS += MachineInts
 # one at both.
 CUSTARD_TESTS += Rotate
 CUSTARD_TESTS += Externs
+# FStar.Pprint: PPrint on OCaml, FStar.Pprint-c.cherry.fst on Cherry.
+CUSTARD_TESTS += PprintRender
 CUSTARD_TESTS += Combinators
 CUSTARD_TESTS += Mutual
 CUSTARD_TESTS += Anf

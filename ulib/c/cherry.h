@@ -296,7 +296,12 @@ cherry_string cherry_str_append(cherry_string a, cherry_string b);
 cherry_int cherry_str_length(cherry_string s);
 uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
+/* [FStar.String.make l c]: [l] copies of the code point [c], UTF-8 encoded. */
+cherry_string cherry_str_make(cherry_int l, uint32_t c);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
+/* [FStar.Char.char] is already its code point. */
+static inline uint32_t cherry_char_code(uint32_t c) { return c; }
+static inline uint32_t cherry_char_of_code(uint32_t c) { return c; }
 cherry_string cherry_string_of_int(cherry_int a);
 cherry_string cherry_string_of_bool(bool b);
 void cherry_print_string(cherry_string s);

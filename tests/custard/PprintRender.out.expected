@@ -1,0 +1,69 @@
+== call @80
+function_name(argument1, argument2)|
+== call @20
+function_name(argument1,
+  argument2)|
+== words @14
+the quick
+brown fox
+jumps over the
+lazy dog|
+== block @80
+{ field1 = f(x, y); field2 = f(x, y); field3 = f(x, y) }|
+== block @30
+{
+  field1 = f(x, y);
+  field2 = f(x, y);
+  field3 = f(x, y)
+}|
+== block @12
+{
+  field1 =
+    f(x, y);
+  field2 =
+    f(x, y);
+  field3 =
+    f(x, y)
+}|
+== soft @18
+[ alpha;
+  beta;
+  gamma;
+  delta ]|
+== url @16
+https://github.
+com/FStarLang/
+FStar/pulls|
+== mixed @80
+let x =
+    1
+trailing
+a, b and c|
+== chars @80
+'a' '\'' '\\' '\n' '\t' '\r' '\b' '\000' '\127' '\233' '~'|
+== split @80
+a|,||,|bc|,||
+== prefix @10
+header:
+    one two
+    three|
+== jump @6
+  bodyB|
+== align @30
+xs = p
+     q
+     r|
+== repeat @80
+truetruetruetruetruetrue*-_|
+== opt @80
+somexy[](u,v)|
+== fancy @6
+<b>bold</b>
+bcd
+cde
+z|
+abcd
+    123456
+    7890|
+render uses width eighty and a full ribbon so this sentence has to wrap
+somewhere near the end of the line|

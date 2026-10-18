@@ -897,7 +897,10 @@ let runtime_externals : list (string & string & list bool) = [
   "FStar.String.length",     "cherry_str_length", [];
   "FStar.String.index",      "cherry_str_index", [];
   "FStar.String.sub",        "cherry_str_sub", [];
+  "FStar.String.make",       "cherry_str_make", [];
   "FStar.String.compare",    "cherry_str_compare", [];
+  "FStar.Char.u32_of_char",  "cherry_char_code", [];
+  "FStar.Char.char_of_u32",  "cherry_char_of_code", [];
   "FStar.IO.print_string",   "cherry_print_string", [];
 ]
 

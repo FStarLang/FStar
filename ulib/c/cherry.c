@@ -477,6 +477,27 @@ cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l) {
   return cherry_str_of_bytes(c->data + start, end - start);
 }
 
+cherry_string cherry_str_make(cherry_int l, uint32_t c) {
+  size_t n = int_index(l);
+  char enc[4];
+  size_t k;
+  if (c > 0x10FFFF || (c >= 0xD800 && c <= 0xDFFF)) c = 0xFFFD;
+  if (c < 0x80) { enc[0] = (char)c; k = 1; }
+  else if (c < 0x800) {
+    enc[0] = (char)(0xC0 | (c >> 6)); enc[1] = (char)(0x80 | (c & 0x3F)); k = 2;
+  } else if (c < 0x10000) {
+    enc[0] = (char)(0xE0 | (c >> 12)); enc[1] = (char)(0x80 | ((c >> 6) & 0x3F));
+    enc[2] = (char)(0x80 | (c & 0x3F)); k = 3;
+  } else {
+    enc[0] = (char)(0xF0 | (c >> 18)); enc[1] = (char)(0x80 | ((c >> 12) & 0x3F));
+    enc[2] = (char)(0x80 | ((c >> 6) & 0x3F)); enc[3] = (char)(0x80 | (c & 0x3F)); k = 4;
+  }
+  if (n > (SIZE_MAX - 1) / k) abort();
+  cherry_string_cell *r = str_alloc(n * k, n * k + 1);
+  for (size_t i = 0; i < n; i++) memcpy(r->data + i * k, enc, k);
+  return (cherry_string)r;
+}
+
 cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
   size_t la = cherry_str_size(a), lb = cherry_str_size(b);
   int r = memcmp(cherry_str_data(a), cherry_str_data(b), la < lb ? la : lb);

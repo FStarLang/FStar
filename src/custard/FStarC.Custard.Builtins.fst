@@ -1552,6 +1552,7 @@ let cherry_source_modules : list (list string) = [
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
+  ["FStar"; "Pprint"];
 ]
 
 let is_cherry_source_module (ns : list string) : ML bool =
