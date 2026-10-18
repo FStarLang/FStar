@@ -2698,9 +2698,24 @@ and do_check (g:env) (e:term)
          [join w1 w3] in [introduce p ==> exists w3. q w3 with (let w3 =
          ... in lemma (join w1 w3))]) then scopes over the goal it is
          proven for. *)
+      (* Likewise a match with neither a return annotation nor a residual
+         type, as built by tactics (e.g. Pulse's join of the postconditions
+         of a conditional, [pts_to r (match b with true -> 0ul | false ->
+         f x)]): synthesized, its type would be its first branch's, e.g.
+         [x:U32.t{v x = 0}], which the other branches need not have. *)
+      let unannotated_match =
+        match (Subst.compress arg).n with
+        | Tm_match {ret_opt=None; brs; rc_opt} ->
+          List.for_all (fun (_, w, _) -> None? w) brs
+          && (match rc_opt with
+              | Some ({ residual_typ = Some _ }) -> false
+              | _ -> true)
+        | _ -> false
+      in
       let abs_checked =
-        Tm_abs? (Subst.compress arg).n
-        && Some? (abs_against_arrow g arg x.binder_bv.sort)
+        unannotated_match
+        || (Tm_abs? (Subst.compress arg).n
+            && Some? (abs_against_arrow g arg x.binder_bv.sort))
       in
       let! eff_arg, t_arg =
         if abs_checked
