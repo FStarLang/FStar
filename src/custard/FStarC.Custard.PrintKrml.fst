@@ -1077,14 +1077,17 @@ and repeat_unit (n:int) : ML (list unit) =
   if n <= 0 then [] else () :: repeat_unit (n - 1)
 
 (* A reference holds one value, not a run, so its read, write and address are
-   all at index 0.  karamel prints [b[_zero_for_deref]] as [*b] (and
-   [&b[_zero_for_deref]] as [b]), which is how C spells an access through a
+   all at index 0.  karamel prints [b[EZeroForDeref]] as [*b] (and
+   [&b[EZeroForDeref]] as [b]), which is how C spells an access through a
    pointer to one value; a literal 0 would print as [b[0U]], which is how it
    spells the first element of an array. *)
 and krml_index (env:kenv) (b:expr) (i:expr) : ML K.expr =
   match b.ty, i.e with
-  | TRef (_, _), EConst (CInt (0, _, _)) ->
-    K.EQualified (["Pulse"; "Lib"; "Pervasives"], "_zero_for_deref")
+  | TRef (_, _), EConst (CInt (0, _, w)) ->
+    (* karamel only accepts [UInt32] and [SizeT] indices. *)
+    K.EZeroForDeref (match w with
+                     | Some (Unsigned, WSizet) -> K.SizeT
+                     | _ -> K.UInt32)
   | _ -> krml_expr env i
 
 (* -------------------------------------------------------------------- *)
