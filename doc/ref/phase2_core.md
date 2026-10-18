@@ -659,6 +659,14 @@ phi`. Several cases are simplified:
   False` (`examples/tactics/HandleSmtGoal`), and the context of a failed
   goal is the same. For this, the null `unit` binder of `let f () = ...`
   is kept (`at_top` in Core's environment).
+  For a `let rec`, the names of the nest are bound before the binders,
+  not after them. The SMT encoding closes a query only over the
+  variables at the end of the environment (`encode_query`) and encodes
+  the others as constants. A refinement over constants, e.g. the
+  `x:a{p x}` of `list_refb #a #p tl : list (x:a{p x})`, is encoded as a
+  different term from the one in the typing axiom of the recursive
+  function. The solver could then not use the type of the recursive call
+  (`FStar.List.Tot.Base.list_refb`).
 * When `x` is not quantified and the `let` is annotated, what the
   annotation says about `e1` is added as a fact, before `e1`'s own facts.
   The two may be `term_eq` and still differ: `term_eq` ignores the residual

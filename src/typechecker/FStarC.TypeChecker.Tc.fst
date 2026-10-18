@@ -436,7 +436,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
     (* TcTerm discharges the guard of a function body when checking the
        abstraction; that of any other definition later, in
        [TcUtil.check_top_level]: errors are reported in the same context. *)
-    let discharge (drop:bv -> typ -> ML bool) (finish:Env.env -> ML Env.env)
+    let discharge (drop:bv -> typ -> ML bool)
                   (abs_body:option term) (env:Env.env) (g:option Core.guard_and_tok_t) : ML unit =
       match g with
       | None -> ()
@@ -448,7 +448,6 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
                     | Some body -> Env.set_range env body.pos
                     | None -> env in
           let env, g = open_foralls drop env g in
-          let env = finish env in
           if !dbg_TwoPhases then Format.print2 "phase2 core: discharging %s (at %s)\n" (show g) (Range.string_of_range g.pos);
           Rel.force_trivial_guard env
             (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial g)))
@@ -539,7 +538,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
           | Tm_abs {body} -> Some body
           | _ -> None
         in
-        discharge (fun _ _ -> false) (fun env -> env) abs_body env_u g;
+        discharge (fun _ _ -> false) abs_body env_u g;
         CoreCheck.check_smt_patterns env_u lbdef;
         let e = finish_top_level_let env lb lbdef univ_names c Env.trivial_guard user_topt (Some? user_topt) e2 e.pos in
         Inl e
@@ -554,10 +553,16 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
       begin match Core.check_top_level_letrec env_u lbs' with
       | Inl g ->
         (* The guard mentions the names of the nest (see
-           [Core.check_top_level_letrec]), bound here, after the binders of
-           the function, as by TcTerm: so these are not shown as the context
-           of a failed goal. The quantifiers over the local names of the
-           nest, which the guard no longer mentions, are dropped. *)
+           [Core.check_top_level_letrec]), bound here, before the binders of
+           the function: the SMT encoding closes a query over the variables
+           at the end of the environment only ([Encode.encode_query]), and
+           encodes the others as constants. Were the binders followed by the
+           names of the nest, a refinement mentioning them, e.g. the [x:a{p
+           x}] in [list_refb #a #p tl : list (x:a{p x})], would be encoded as
+           a constant unrelated to its encoding in the typing axiom of the
+           function, from which the SMT solver gets the type of the recursive
+           call. The quantifiers over the local names of the nest, which the
+           guard no longer mentions, are dropped. *)
         let is_nest_name (x:bv) (body:typ) : ML bool =
           not (FStarC.Syntax.Free.names body |> mem x)
           && lbs' |> List.existsb (fun (lb:letbinding) ->
@@ -569,8 +574,8 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
           List.fold_left (fun env (lb:letbinding) ->
             Env.push_let_binding env lb.lbname (lb.lbunivs, lb.lbtyp)) env lbs' in
         let _, body, _ = U.abs_formals (List.hd lbs').lbdef in
-        discharge is_nest_name push_nest (Some body) env_u g;
         let env_nest = push_nest env_u in
+        discharge is_nest_name (Some body) env_nest g;
         List.iter (fun (lb:letbinding) -> CoreCheck.check_smt_patterns env_nest lb.lbdef) lbs';
         Inl e
       | Inr err -> Inr err
