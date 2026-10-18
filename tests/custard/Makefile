@@ -3033,7 +3033,7 @@ RSNOGREP_RustTup += "pub struct __uint32_t_uint32_t"
 # spells theirs: an api module on the left of the [=], a pattern on the right.
 RUSTSPLIT_TESTS += RustSplit
 # The [*] goes on the *lower* bundle, which is EverParse's own arrangement
-# read the other way up: the shared declarations -- [Custard.Prims], the
+# read the other way up: the shared declarations -- [prims], the
 # specializations Custard makes of library functions -- have to end up in a
 # file both halves may refer to, and putting them above the module that uses
 # them is what makes the two files circular.  karamel says so, in as many
