@@ -2675,6 +2675,9 @@ CUSTARD_TESTS += FloatsML
 GREP_FloatsML += "( +\. )"
 NOGREP_FloatsML += "FStar_Float64"
 
+# FStar.Pprint: PPrint on OCaml, ulib/FStar.Pprint-c.cherry.fst on Cherry.
+CUSTARD_TESTS += PrettyDoc
+
 # Section 38.  OCaml's float is binary64 and there is no binary32 to round to,
 # so a single-precision program is refused rather than computed at the wrong
 # precision.

@@ -477,6 +477,45 @@ cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l) {
   return cherry_str_of_bytes(c->data + start, end - start);
 }
 
+cherry_string cherry_str_make(cherry_int l, uint32_t c) {
+  unsigned char enc[4];
+  size_t w;
+  if (c < 0x80) { enc[0] = (unsigned char)c; w = 1; }
+  else if (c < 0x800) {
+    enc[0] = (unsigned char)(0xC0 | (c >> 6));
+    enc[1] = (unsigned char)(0x80 | (c & 0x3F)); w = 2;
+  } else if (c < 0x10000) {
+    enc[0] = (unsigned char)(0xE0 | (c >> 12));
+    enc[1] = (unsigned char)(0x80 | ((c >> 6) & 0x3F));
+    enc[2] = (unsigned char)(0x80 | (c & 0x3F)); w = 3;
+  } else {
+    enc[0] = (unsigned char)(0xF0 | (c >> 18));
+    enc[1] = (unsigned char)(0x80 | ((c >> 12) & 0x3F));
+    enc[2] = (unsigned char)(0x80 | ((c >> 6) & 0x3F));
+    enc[3] = (unsigned char)(0x80 | (c & 0x3F)); w = 4;
+  }
+  size_t n = int_index(l);
+  cherry_string_cell *r = str_alloc(n * w, n * w + 1);
+  for (size_t i = 0; i < n; i++) memcpy(r->data + i * w, enc, w);
+  return (cherry_string)r;
+}
+
+cherry_int cherry_str_byte_size(cherry_string s) {
+  return CHERRY_INT_SMALL((intptr_t)cherry_str_size(s));
+}
+
+uint32_t cherry_str_byte_at(cherry_string s, cherry_int off) {
+  size_t i = int_index(off);
+  return i < cherry_str_size(s) ? (unsigned char)cherry_str_data(s)[i] : 0;
+}
+
+cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int len) {
+  size_t size = cherry_str_size(s), i = int_index(off), n = int_index(len);
+  if (i > size) i = size;
+  if (n > size - i) n = size - i;
+  return cherry_str_of_bytes(cherry_str_data(s) + i, n);
+}
+
 cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
   size_t la = cherry_str_size(a), lb = cherry_str_size(b);
   int r = memcmp(cherry_str_data(a), cherry_str_data(b), la < lb ? la : lb);
