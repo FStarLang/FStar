@@ -3577,6 +3577,37 @@ $(CHERRY_DIR)/%.chdiff: $(CHERRY_DIR)/%.chexe %.out.expected
 all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chdiff, \
        $(filter-out $(CHERRY_OCAML_SKIP), $(CUSTARD_TESTS))))
 
+# FStarC.Hash-c.cherry.fst.  The test uses a compiler module, so it lives in
+# hash/ (out of this directory's dependency scan) and is checked into a cache
+# of its own.
+HASH_SRC = $(abspath $(FSTAR_ROOT)/src/basic)
+HASH_DIR = $(CHERRY_DIR)/hash
+HASH_ABS = $(abspath $(HASH_DIR))
+$(HASH_DIR)/CherryHash.chran: hash/CherryHash.fst \
+    $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryHash)
+	$(Q)rm -rf $(HASH_ABS) && mkdir -p $(HASH_ABS)
+	$(Q)cd hash && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst \
+	    CherryHash.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd hash && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
+	  --already_cached '*' --odir $(HASH_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryHash.main \
+	  CherryHash.fst -o $(HASH_ABS)/CherryHash.c > /dev/null
+	$(call msg, "CC-ASAN", CherryHash)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(HASH_ABS) -I$(CHERRY_INC) \
+	  -x c $(HASH_ABS)/CherryHash.c $(CHERRY_INC)/cherry.c \
+	  -o $(HASH_ABS)/CherryHash.chexe
+	$(call msg, "RUN-ASAN", CherryHash)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(HASH_ABS)/CherryHash.chexe
+	$(Q)touch $@
+
+all: $(HASH_DIR)/CherryHash.chran
+
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this
 # skip rather than fail.  The probe is for the *major version* and not for the

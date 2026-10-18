@@ -297,6 +297,7 @@ cherry_int cherry_str_length(cherry_string s);
 uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
+uint64_t cherry_str_fnv1a(cherry_string s);
 cherry_string cherry_string_of_int(cherry_int a);
 cherry_string cherry_string_of_bool(bool b);
 void cherry_print_string(cherry_string s);
