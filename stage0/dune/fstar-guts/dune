@@ -10,20 +10,13 @@
     yojson
     ppxlib
     dynlink
-    menhirLib
     pprint
     process
-    sedlex
     mtime.clock
  )
  (modes native)
- (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson))
 )
-
-(menhir
- (modules FStarC_Parser_Parse))
-(menhir
- (modules FStarC_Parser_WarnError))
 
 (rule
   (target FStarC_Version.ml)

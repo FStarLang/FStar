@@ -3,21 +3,21 @@
 
 let new_ocamlpath (tmp : unit) : string =
   (let ocamldir = (FStarC_Find.locate_ocaml ()) in
-  let tmp1 = (FStarC_Util.expand_environment_variable "OCAMLPATH") in
+  let tmp1 = ((fun x -> try Some (Sys.getenv x) with Not_found -> None) "OCAMLPATH") in
   let old_ocamlpath = (FStarC_Option.dflt "" tmp1) in
   (Prims.strcat ocamldir (Prims.strcat FStarC_Platform.ocamlpath_sep old_ocamlpath)))
 
 let shellescape (s : string) : string =
-  (FStarC_String.concat "" (FStar_List_Tot_Base.map (fun tmp -> (match tmp with
+  (BatString.concat "" (FStar_List_Tot_Base.map (fun tmp -> (match tmp with
     | 39 -> "'\"'\"'"
-    | c -> (FStar_String.make Prims.int_one c)
-  )) (FStarC_String.list_of_string s)))
+    | c -> ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) Prims.int_one c)
+  )) ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)))
 
 let exec_in_ocamlenv (cmd : string) (args : (string) list) : 'a =
   (let new_ocamlpath_ = (new_ocamlpath ()) in
-  (FStarC_Util.putenv "OCAMLPATH" new_ocamlpath_);
-  let pid = (FStarC_Util.create_process cmd (cmd :: args)) in
-  let rc = (FStarC_Util.waitpid pid) in
+  (Unix.putenv "OCAMLPATH" new_ocamlpath_);
+  let pid = ((fun prog args -> Z.of_int (Unix.create_process prog (Array.of_list args) Unix.stdin Unix.stdout Unix.stderr)) cmd (cmd :: args)) in
+  let rc = ((fun pid -> match snd (Unix.waitpid [] (Z.to_int pid)) with Unix.WEXITED rc -> FStar_Pervasives.Inl (Z.of_int rc) | Unix.WSIGNALED rc -> FStar_Pervasives.Inr (Z.of_int rc) | Unix.WSTOPPED _ -> Stdlib.failwith "waitpid: unexpected WSTOPPED, should not happen with empty flags") pid) in
   (match rc with
     | (FStar_Pervasives.Inl (rc1)) -> (FStarC_Effect.exit rc1)
     | (FStar_Pervasives.Inr (tmp)) -> (FStarC_Effect.exit Prims.int_one)

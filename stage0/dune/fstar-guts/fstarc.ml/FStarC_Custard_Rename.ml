@@ -8,13 +8,13 @@ type scope = {
 
 let preferred (x : string) : string =
   (let b = (FStarC_Custard_Syntax.base_name x) in
-  let tmp = (if (Prims.op_Greater_Equals (FStarC_String.length b) (Prims.of_int (4))) then (let tmp = (FStarC_String.substring b Prims.int_zero (Prims.of_int (4))) in
+  let tmp = (if (Prims.op_Greater_Equals ((fun s -> Z.of_int (BatUTF8.length s)) b) (Prims.of_int (4))) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) b Prims.int_zero (Prims.of_int (4))) in
     ((=) tmp "uu__")) else false) in
   let b1 = (if tmp then "tmp" else b) in
   (if ((=) b1 "") then "x" else b1))
 
 let taken (s : scope) (x : string) : bool =
-  (FStarC_List.existsb (fun u -> ((=) u x)) (s).used)
+  (BatList.exists (fun u -> ((=) u x)) (s).used)
 
 let rec pick (s : scope) (b : string) (i : Prims.int) : string =
   (let cand = (if ((=) i Prims.int_zero) then b else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
@@ -43,7 +43,7 @@ let empty_scope : scope =
   { sub = []; used = [] }
 
 let lookup (s : scope) (x : string) : string =
-  (let tmp = (FStarC_List.tryFind (fun tmp -> (match tmp with
+  (let tmp = (List.find_opt (fun tmp -> (match tmp with
       | (a, tmp1) -> ((=) a x)
     )) (s).sub) in
   (match tmp with
@@ -59,16 +59,17 @@ let rec rn_cty (ts : scope) (c : FStarC_Custard_Syntax.cty) : FStarC_Custard_Syn
       let tmp1 = (rn_cty ts b) in
       let tmp2 = (tmp, e, tmp1) in
       (FStarC_Custard_Syntax.TArrow ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))))
-    | (FStarC_Custard_Syntax.TApp (n, args)) -> (let tmp = (FStarC_List.map (rn_cty ts) args) in
+    | (FStarC_Custard_Syntax.TApp (n, args)) -> (let tmp = (BatList.map (rn_cty ts) args) in
       let tmp1 = (n, tmp) in
       (FStarC_Custard_Syntax.TApp ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.TBuf (t)) -> (let tmp = (rn_cty ts t) in
       (FStarC_Custard_Syntax.TBuf (tmp)))
-    | (FStarC_Custard_Syntax.TRef (t)) -> (let tmp = (rn_cty ts t) in
-      (FStarC_Custard_Syntax.TRef (tmp)))
+    | (FStarC_Custard_Syntax.TRef (k, t)) -> (let tmp = (rn_cty ts t) in
+      let tmp1 = (k, tmp) in
+      (FStarC_Custard_Syntax.TRef ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.TInline (t)) -> (let tmp = (rn_cty ts t) in
       (FStarC_Custard_Syntax.TInline (tmp)))
-    | (FStarC_Custard_Syntax.TTuple (cs)) -> (let tmp = (FStarC_List.map (rn_cty ts) cs) in
+    | (FStarC_Custard_Syntax.TTuple (cs)) -> (let tmp = (BatList.map (rn_cty ts) cs) in
       (FStarC_Custard_Syntax.TTuple (tmp)))
     | c1 -> c1
   )
@@ -77,13 +78,13 @@ let field_key (n : FStarC_Custard_Syntax.name) (f : string) : string =
   (let tmp = (FStarC_Custard_Syntax.string_of_name n) in
   (Prims.strcat tmp (Prims.strcat "." f)))
 
-let rec rn_fields__go (fields : (string) FStarC_SMap.t) (n : FStarC_Custard_Syntax.name) (ts : scope) (s : scope) (fs : ((string * FStarC_Custard_Syntax.cty)) list) : ((string * FStarC_Custard_Syntax.cty)) list =
+let rec rn_fields__go (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (n : FStarC_Custard_Syntax.name) (ts : scope) (s : scope) (fs : ((string * FStarC_Custard_Syntax.cty)) list) : ((string * FStarC_Custard_Syntax.cty)) list =
   (match fs with
     | [] -> []
     | ((f, c) :: fs1) -> (let tmp = (bind s f) in
       (match tmp with
         | (f', s1) -> (let tmp1 = (field_key n f) in
-          (FStarC_SMap.add fields tmp1 f');
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fields tmp1 f');
           let tmp2 = (rn_cty ts c) in
           let tmp3 = (f', tmp2) in
           let tmp4 = ((rn_fields__go fields n ts) s1 fs1) in
@@ -91,16 +92,16 @@ let rec rn_fields__go (fields : (string) FStarC_SMap.t) (n : FStarC_Custard_Synt
       ))
   )
 
-let rn_fields (fields : (string) FStarC_SMap.t) (n : FStarC_Custard_Syntax.name) (ts : scope) (eta : ((string * FStarC_Custard_Syntax.cty)) list) : ((string * FStarC_Custard_Syntax.cty)) list =
+let rn_fields (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (n : FStarC_Custard_Syntax.name) (ts : scope) (eta : ((string * FStarC_Custard_Syntax.cty)) list) : ((string * FStarC_Custard_Syntax.cty)) list =
   ((rn_fields__go fields n ts) empty_scope eta)
 
-let rn_tydef (fields : (string) FStarC_SMap.t) (self : FStarC_Custard_Syntax.name) (ts : scope) (b : FStarC_Custard_Syntax.tydef) : FStarC_Custard_Syntax.tydef =
+let rn_tydef (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (self : FStarC_Custard_Syntax.name) (ts : scope) (b : FStarC_Custard_Syntax.tydef) : FStarC_Custard_Syntax.tydef =
   (match b with
     | (FStarC_Custard_Syntax.TAbbrev (c)) -> (let tmp = (rn_cty ts c) in
       (FStarC_Custard_Syntax.TAbbrev (tmp)))
     | (FStarC_Custard_Syntax.TRecord (fs)) -> (let tmp = (rn_fields fields self ts fs) in
       (FStarC_Custard_Syntax.TRecord (tmp)))
-    | (FStarC_Custard_Syntax.TVariant (cs)) -> (let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+    | (FStarC_Custard_Syntax.TVariant (cs)) -> (let tmp = (BatList.map (fun tmp -> (match tmp with
           | (cn, fs) -> (let tmp1 = (rn_fields fields cn ts fs) in
             (cn, tmp1))
         )) cs) in
@@ -108,7 +109,7 @@ let rn_tydef (fields : (string) FStarC_SMap.t) (self : FStarC_Custard_Syntax.nam
     | FStarC_Custard_Syntax.TAbstract -> FStarC_Custard_Syntax.TAbstract
   )
 
-let rn_types (fields : (string) FStarC_SMap.t) (d : FStarC_Custard_Syntax.decl) : FStarC_Custard_Syntax.decl =
+let rn_types (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (d : FStarC_Custard_Syntax.decl) : FStarC_Custard_Syntax.decl =
   (match d with
     | (FStarC_Custard_Syntax.DType (t)) -> (let tmp = (bind_all empty_scope (t).FStarC_Custard_Syntax.dt_params) in
       (match tmp with
@@ -135,15 +136,15 @@ let rec rn_binders (ts : scope) (s : scope) (bs : (FStarC_Custard_Syntax.binder)
       ))
   )
 
-let rn_field (fields : (string) FStarC_SMap.t) (n : FStarC_Custard_Syntax.name) (f : string) : string =
+let rn_field (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (n : FStarC_Custard_Syntax.name) (f : string) : string =
   (let tmp = (field_key n f) in
-  let tmp1 = (FStarC_SMap.try_find fields tmp) in
+  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt fields tmp) in
   (match tmp1 with
     | (Some (f')) -> f'
     | None -> (preferred f)
   ))
 
-let rec rn_pats (fields : (string) FStarC_SMap.t) (s : scope) (ps : (FStarC_Custard_Syntax.pat) list) : ((FStarC_Custard_Syntax.pat) list * scope) =
+let rec rn_pats (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (s : scope) (ps : (FStarC_Custard_Syntax.pat) list) : ((FStarC_Custard_Syntax.pat) list * scope) =
   (match ps with
     | [] -> ([], s)
     | (p :: ps1) -> (let tmp = (rn_pat fields s p) in
@@ -155,7 +156,7 @@ let rec rn_pats (fields : (string) FStarC_SMap.t) (s : scope) (ps : (FStarC_Cust
       ))
   )
 
-and rn_pat (fields : (string) FStarC_SMap.t) (s : scope) (p : FStarC_Custard_Syntax.pat) : (FStarC_Custard_Syntax.pat * scope) =
+and rn_pat (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (s : scope) (p : FStarC_Custard_Syntax.pat) : (FStarC_Custard_Syntax.pat * scope) =
   (match p with
     | FStarC_Custard_Syntax.PWild -> (p, s)
     | (FStarC_Custard_Syntax.PConst (tmp)) -> (p, s)
@@ -167,13 +168,13 @@ and rn_pat (fields : (string) FStarC_SMap.t) (s : scope) (p : FStarC_Custard_Syn
       (match tmp with
         | (ps1, s1) -> ((FStarC_Custard_Syntax.PCtor (n, ps1)), s1)
       ))
-    | (FStarC_Custard_Syntax.PRecord (n, fs)) -> (let tmp = (FStarC_List.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
+    | (FStarC_Custard_Syntax.PRecord (n, fs)) -> (let tmp = (BatList.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
           | ((acc, s1), (f, q)) -> (let tmp2 = (rn_pat fields s1 q) in
             (match tmp2 with
               | (q1, s2) -> (let tmp3 = (rn_field fields n f) in
                 let tmp4 = (tmp3, q1) in
                 let tmp5 = (tmp4 :: []) in
-                let tmp6 = (FStarC_List.op_At acc tmp5) in
+                let tmp6 = (BatList.append acc tmp5) in
                 (tmp6, s2))
             ))
         )) ([], s) fs) in
@@ -190,7 +191,7 @@ and rn_pat (fields : (string) FStarC_SMap.t) (s : scope) (p : FStarC_Custard_Syn
       ))
   )
 
-let rec rn_branch (fields : (string) FStarC_SMap.t) (ts : scope) (s : scope) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr) =
+let rec rn_branch (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (ts : scope) (s : scope) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr) =
   (match br with
     | (p, g, b) -> (let tmp = (rn_pat fields s p) in
       (match tmp with
@@ -204,16 +205,17 @@ let rec rn_branch (fields : (string) FStarC_SMap.t) (ts : scope) (s : scope) (br
       ))
   )
 
-and rn_expr (fields : (string) FStarC_SMap.t) (ts : scope) (s : scope) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+and rn_expr (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (ts : scope) (s : scope) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
   (let go = (rn_expr fields ts s) in
   let ty = (rn_cty ts (x).FStarC_Custard_Syntax.ty) in
   let e = (match (x).FStarC_Custard_Syntax.e with
       | (FStarC_Custard_Syntax.EConst (tmp)) -> (x).FStarC_Custard_Syntax.e
       | FStarC_Custard_Syntax.EAny -> (x).FStarC_Custard_Syntax.e
       | (FStarC_Custard_Syntax.EAbort (tmp)) -> (x).FStarC_Custard_Syntax.e
+      | (FStarC_Custard_Syntax.EUnreachable (tmp)) -> (x).FStarC_Custard_Syntax.e
       | (FStarC_Custard_Syntax.EVar (v)) -> (let tmp = (lookup s v) in
         (FStarC_Custard_Syntax.EVar (tmp)))
-      | (FStarC_Custard_Syntax.EQual (n, args)) -> (let tmp = (FStarC_List.map (rn_cty ts) args) in
+      | (FStarC_Custard_Syntax.EQual (n, args)) -> (let tmp = (BatList.map (rn_cty ts) args) in
         let tmp1 = (n, tmp) in
         (FStarC_Custard_Syntax.EQual ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
       | (FStarC_Custard_Syntax.ELet (v, t, e1, e2)) -> (let t1 = (rn_cty ts t) in
@@ -231,11 +233,11 @@ and rn_expr (fields : (string) FStarC_SMap.t) (ts : scope) (s : scope) (x : FSta
             (FStarC_Custard_Syntax.EFun ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
         ))
       | (FStarC_Custard_Syntax.EApp (h, args)) -> (let tmp = (go h) in
-        let tmp1 = (FStarC_List.map go args) in
+        let tmp1 = (BatList.map go args) in
         let tmp2 = (tmp, tmp1) in
         (FStarC_Custard_Syntax.EApp ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
       | (FStarC_Custard_Syntax.EMatch (scrut, brs)) -> (let tmp = (go scrut) in
-        let tmp1 = (FStarC_List.map (rn_branch fields ts s) brs) in
+        let tmp1 = (BatList.map (rn_branch fields ts s) brs) in
         let tmp2 = (tmp, tmp1) in
         (FStarC_Custard_Syntax.EMatch ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
       | (FStarC_Custard_Syntax.EIf (c, t1, t2)) -> (let tmp = (go c) in
@@ -247,12 +249,12 @@ and rn_expr (fields : (string) FStarC_SMap.t) (ts : scope) (s : scope) (x : FSta
         let tmp1 = (go e2) in
         let tmp2 = (tmp, tmp1) in
         (FStarC_Custard_Syntax.ESeq ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
-      | (FStarC_Custard_Syntax.ECtor (n, es)) -> (let tmp = (FStarC_List.map go es) in
+      | (FStarC_Custard_Syntax.ECtor (n, es)) -> (let tmp = (BatList.map go es) in
         let tmp1 = (n, tmp) in
         (FStarC_Custard_Syntax.ECtor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
-      | (FStarC_Custard_Syntax.ETuple (es)) -> (let tmp = (FStarC_List.map go es) in
+      | (FStarC_Custard_Syntax.ETuple (es)) -> (let tmp = (BatList.map go es) in
         (FStarC_Custard_Syntax.ETuple (tmp)))
-      | (FStarC_Custard_Syntax.ERecord (n, fs)) -> (let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+      | (FStarC_Custard_Syntax.ERecord (n, fs)) -> (let tmp = (BatList.map (fun tmp -> (match tmp with
             | (f, e) -> (let tmp1 = (rn_field fields n f) in
               let tmp2 = (go e) in
               (tmp1, tmp2))
@@ -274,7 +276,7 @@ and rn_expr (fields : (string) FStarC_SMap.t) (ts : scope) (s : scope) (x : FSta
         let tmp1 = (rn_cty ts t) in
         let tmp2 = (tmp, tmp1) in
         (FStarC_Custard_Syntax.ECoerce ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
-      | (FStarC_Custard_Syntax.EOp (o, es)) -> (let tmp = (FStarC_List.map go es) in
+      | (FStarC_Custard_Syntax.EOp (o, es)) -> (let tmp = (BatList.map go es) in
         let tmp1 = (o, tmp) in
         (FStarC_Custard_Syntax.EOp ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
       | (FStarC_Custard_Syntax.EWhile (c, b)) -> (let tmp = (go c) in
@@ -284,13 +286,13 @@ and rn_expr (fields : (string) FStarC_SMap.t) (ts : scope) (s : scope) (x : FSta
       | (FStarC_Custard_Syntax.ERaise (e1)) -> (let tmp = (go e1) in
         (FStarC_Custard_Syntax.ERaise (tmp)))
       | (FStarC_Custard_Syntax.ETry (e1, brs)) -> (let tmp = (go e1) in
-        let tmp1 = (FStarC_List.map (rn_branch fields ts s) brs) in
+        let tmp1 = (BatList.map (rn_branch fields ts s) brs) in
         let tmp2 = (tmp, tmp1) in
         (FStarC_Custard_Syntax.ETry ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     ) in
   { FStarC_Custard_Syntax.e = e; ty = ty; eff = (x).FStarC_Custard_Syntax.eff })
 
-let rn_terms (fields : (string) FStarC_SMap.t) (d : FStarC_Custard_Syntax.decl) : FStarC_Custard_Syntax.decl =
+let rn_terms (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (d : FStarC_Custard_Syntax.decl) : FStarC_Custard_Syntax.decl =
   (match d with
     | (FStarC_Custard_Syntax.DType (tmp)) -> d
     | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp = (bind_all empty_scope (l).FStarC_Custard_Syntax.dl_typars) in
@@ -320,12 +322,12 @@ let rn_terms (fields : (string) FStarC_SMap.t) (d : FStarC_Custard_Syntax.decl) 
               dx_flags = (x).FStarC_Custard_Syntax.dx_flags } in
           (FStarC_Custard_Syntax.DExternal (tmp2)))
       ))
-    | (FStarC_Custard_Syntax.DExn (e)) -> (let tmp = (FStarC_List.map (rn_cty empty_scope) (e).FStarC_Custard_Syntax.de_args) in
+    | (FStarC_Custard_Syntax.DExn (e)) -> (let tmp = (BatList.map (rn_cty empty_scope) (e).FStarC_Custard_Syntax.de_args) in
       let tmp1 = { FStarC_Custard_Syntax.de_name = (e).FStarC_Custard_Syntax.de_name;
           de_args = tmp;
           de_flags = (e).FStarC_Custard_Syntax.de_flags } in
       (FStarC_Custard_Syntax.DExn (tmp1)))
-    | (FStarC_Custard_Syntax.DModule (m)) -> (let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+    | (FStarC_Custard_Syntax.DModule (m)) -> (let tmp = (BatList.map (fun tmp -> (match tmp with
           | (f, c) -> (let tmp1 = (rn_cty empty_scope c) in
             (f, tmp1))
         )) (m).FStarC_Custard_Syntax.dm_types) in
@@ -337,8 +339,8 @@ let rn_terms (fields : (string) FStarC_SMap.t) (d : FStarC_Custard_Syntax.decl) 
       (FStarC_Custard_Syntax.DModule (tmp1)))
   )
 
-let rn_type_info (fields : (string) FStarC_SMap.t) (ti : FStarC_Custard_Syntax.type_info) : FStarC_Custard_Syntax.type_info =
-  (let rn_cl = (fun cl -> (let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+let rn_type_info (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (ti : FStarC_Custard_Syntax.type_info) : FStarC_Custard_Syntax.type_info =
+  (let rn_cl = (fun cl -> (let tmp = (BatList.map (fun tmp -> (match tmp with
         | (f, c) -> (let tmp1 = (rn_field fields (cl).FStarC_Custard_Syntax.cl_name f) in
           (tmp1, c))
       )) (cl).FStarC_Custard_Syntax.cl_fields) in
@@ -354,11 +356,11 @@ let rn_type_info (fields : (string) FStarC_SMap.t) (ti : FStarC_Custard_Syntax.t
             nt_index = (nt).FStarC_Custard_Syntax.nt_index;
             nt_ty = (nt).FStarC_Custard_Syntax.nt_ty } in
         (FStarC_Custard_Syntax.L_newtype (tmp1)))
-      | (FStarC_Custard_Syntax.L_struct (cls)) -> (let tmp = (FStarC_List.map rn_cl cls) in
+      | (FStarC_Custard_Syntax.L_struct (cls)) -> (let tmp = (BatList.map rn_cl cls) in
         (FStarC_Custard_Syntax.L_struct (tmp)))
       | l -> l
     ) in
-  let tmp1 = (FStarC_List.map rn_cl (ti).FStarC_Custard_Syntax.ti_ctors) in
+  let tmp1 = (BatList.map rn_cl (ti).FStarC_Custard_Syntax.ti_ctors) in
   { FStarC_Custard_Syntax.ti_erased = (ti).FStarC_Custard_Syntax.ti_erased;
     ti_layout = tmp;
     ti_ctors = tmp1;
@@ -366,10 +368,10 @@ let rn_type_info (fields : (string) FStarC_SMap.t) (ti : FStarC_Custard_Syntax.t
     ti_plans = (ti).FStarC_Custard_Syntax.ti_plans })
 
 let run (infos : ((FStarC_Custard_Syntax.name * FStarC_Custard_Syntax.type_info)) list) (prog : (FStarC_Custard_Syntax.decl) list) : ((FStarC_Custard_Syntax.decl) list * ((FStarC_Custard_Syntax.name * FStarC_Custard_Syntax.type_info)) list) =
-  (let fields = (FStarC_SMap.create (Prims.of_int (50))) in
-  let prog1 = (FStarC_List.map (rn_types fields) prog) in
-  let prog2 = (FStarC_List.map (rn_terms fields) prog1) in
-  let tmp = (FStarC_List.map (fun tmp -> (match tmp with
+  (let fields = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
+  let prog1 = (BatList.map (rn_types fields) prog) in
+  let prog2 = (BatList.map (rn_terms fields) prog1) in
+  let tmp = (BatList.map (fun tmp -> (match tmp with
       | (n, ti) -> (let tmp1 = (rn_type_info fields ti) in
         (n, tmp1))
     )) infos) in

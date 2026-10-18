@@ -1,1 +1,0 @@
-../pulse/build/checker.ml

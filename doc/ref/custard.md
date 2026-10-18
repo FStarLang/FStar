@@ -2715,7 +2715,7 @@ Emission:
   than a puzzle at some use site much later.
 
   A `DExternal` produces no declaration at all: it is a reference to a
-  hand-written realization (`FStar_IO.print_string`), so it is printed at each
+  hand-written realization (`FStar_List.map`), so it is printed at each
   of its uses.  Binding it to a local alias first would only add a layer of
   names to see through.
 
@@ -3473,6 +3473,21 @@ new one needs no change to the compiler.  `Builtins.realized_modules` lists
 only the realized modules that also have an F\* implementation (`Prims`,
 `FStar.Pervasives`, the machine integers, ...) and the `FStar.Stubs.*`
 modules reached under an `FStarC` name that has no interface of its own.
+
+Most foreign functions are not realized modules any more.  A module that wraps
+an OCaml library (`FStar.String`, `FStar.IO`, `FStar.Pprint`, `FStarC.Util`,
+...) has an implementation file tagged for the target, `FStar.String-ocaml.fst`
+(see targets.md), which the OCaml backend compiles like any other module.  Its
+foreign definitions carry `[@@custard_extern "..."]` with the OCaml text, which
+is printed at each use, and everything else in it is ordinary F\*.  The
+`@@custard_extern` attribute belongs only in such `-ocaml.fst` files, so that
+the other backends see the module's interface and nothing OCaml-specific.
+The hand-written files left in `ulib/ml/app` and `src/ml` are the ones that
+pin a type or an effect (`Prims`, `FStar.Pervasives`, `FStar.All`,
+`FStarC.Effect`, the machine integers), or whose OCaml implementation is
+faster than the F\* definition that specifications rely on (`FStar.List`,
+`FStar.List.Tot.Base`).  `FStar.Dyn` has no file at all: `Builtins.dyn_rule`
+turns `mkdyn` and `undyn` into coercions to and from `TAny`.
 
 The record recovery of §5.5 still applies, but not unconditionally: for a
 realized type the question is not what Custard would choose but what the
@@ -5169,6 +5184,10 @@ So no entry point was needed for `union` after all, and this is the general
 shape of the answer for any monomorphized compiler function a realization
 wants: name it from F\*, at the type you mean, and call the wrapper.
 
+(Later, `Pulse_RuntimeUtils.ml` itself was replaced by an F\* implementation,
+`pulse/src/syntax_extension/Pulse.RuntimeUtils.fst`, which calls
+`FlatSet.union` directly and needs no wrapper; see "What is left" below.)
+
 With that, `PulseSyntaxExtension_Env.ml` and `Pulse_RuntimeUtils.ml` both
 compile against the built compiler with no unresolved symbol.
 
@@ -5220,7 +5239,8 @@ what identifies it.
 in the other unit, does, and a call across a unit boundary is not a request
 Custard can see.  So they go in
 `pulse/src/syntax_extension/custard-entrypoints.txt` alongside the grammar's
-constructors, for exactly the reason §12.11 gives.
+constructors, for exactly the reason §12.11 gives.  (The plugin has since
+become a single unit, see §12.15, and that file is gone.)
 
 #### Loading it
 
@@ -5283,8 +5303,23 @@ build does not make.
 
 #### What is left
 
-1. **Nothing, for the plugin itself.**  The one realization whose names
-   differ, `pulse/src/ml/Pulse_Extract_CompilerLib.ml`, is now written
+1. **Nothing, for the plugin itself.**  There are no hand-written
+   realizations left: `Pulse.RuntimeUtils` and `Pulse.Extract.CompilerLib`
+   are implemented in F\* under `pulse/src/syntax_extension`, extracted with
+   the plugin, and `pulse/src/ml` is gone.  The only OCaml is two
+   `@@custard_extern` declarations in `*-ocaml.fst` files (an `Ephemeron`
+   memo table, and `Cfg.translate_norm_steps`, named externally to avoid
+   reaching the compiler's `FStarC.NormSteps.norm_step` type from a unit that
+   also sees ulib's copy of it).  Two lessons from the port: a checker
+   *interface* whose implementation lives in another unit must not declare
+   type abbreviations (Custard treats them as realized and expects the
+   implementation to define them by name), so `Pulse.RuntimeUtils.range` and
+   `context` moved to an ordinary module, `Pulse.RuntimeUtils.Types`; and the
+   implementing `.fst` must not be a `CUSTARD_ROOT` (error 117), the
+   entry-point list suffices.
+
+   Historically, the one realization whose names
+   differ, `pulse/src/ml/Pulse_Extract_CompilerLib.ml`, was written
    against Custard's names; it had a Custard-flavoured copy beside it for as
    long as an ML-extracted compiler was still built, and §12.15 retired that.
    The two differences are both about the record a constructor's payload
@@ -5445,12 +5480,16 @@ whole of it, included by `mk/generic-0.mk` and `mk/generic-1.mk` and used by
   pick up.  (While the legacy extractor existed, the staged build extracted
   that one module with it instead, under the name `CUSTARD_REALIZED`.)
 
-The Pulse plugin is two units --- `checker` and `syntax_extension` ---
-chained in that order, each linked against the compiler's `.cui` and its
-predecessors'.  Chained rather than parallel because linking a unit against
-two that export the same specialization key is error 369 (§12.3), and the two
-share plenty.  (There used to be a third, `extraction`, holding Pulse's
-plugin for the legacy extractor.)
+The Pulse plugin is one unit, `Pulse` (`pulse/mk/plugin.mk`), linked
+against the compiler's `.cui`.  Like the compiler, it is lax-checked and
+extracted in a single invocation: `src/checker` (verified on its own by
+`pulse/mk/checker.mk`) together with `src/syntax_extension`, which holds the
+implementations of some of the checker's interfaces --- `Pulse.RuntimeUtils`,
+`Pulse.Extract.CompilerLib`, `PulseSyntaxExtension.ASTBuilder` --- just as
+`src/` implements interfaces of `ulib/`.  So no call crosses a unit boundary
+and the plugin needs no entry-point list of its own.  (It used to be two
+chained units, `checker` and `syntax_extension`, and before that three, with
+`extraction` holding Pulse's plugin for the legacy extractor.)
 
 #### The stage0 bump
 
@@ -7939,8 +7978,8 @@ for it would be a call where an access belongs.  That is right for everything
 inside the extracted program, and wrong for one that is named as a root.
 
 A root exists precisely because something *outside* the program calls it --
-`--custard_entrypoints` is how the hand-written OCaml under `pulse/src/ml`
-reaches the compiler, by OCaml name, through no request Custard can see
+`--custard_entrypoints` is how the Pulse plugin (once hand-written OCaml
+under `pulse/src/ml`, now extracted separately) reaches the compiler, by OCaml name, through no request Custard can see
 (section 12.13).  That caller has nothing to inline into.  Adding the name to
 `pulse/src/custard-entrypoints.txt` was therefore not enough on its own: the
 declaration was extracted, marked `Root`, and then dropped anyway.
@@ -21024,6 +21063,16 @@ error 374. Two *externals* reaching one target are not its business: that is
 legitimate when they agree, and §53.3's check --- which has both prototypes
 and better advice --- owns the case where they do not.
 
+What *can* be minted is a `static` definition's name: it is the file's own
+business, so `rename_clashes` gives it the first free `_1`, `_2`, … suffix
+instead of rejecting.  The clash is real in practice --- `sanitize` turns `'`
+into `_`, so the compiler's `Syntax.mk_comp_` and `mk_comp'` coincide, and
+mapping `'` to `_q` would only move the clash onto `mk_comp_q`.  Public
+definitions, macros, externals and the initializer keep their spellings and
+are claimed first, so 374 is left for clashes among names a consumer can see.
+`tests/custard/NameClash.fst` pins the renaming; `ExtOwn` makes its definition
+public so that it still exercises the rejection.
+
 The shape of all three is the same. A backend that mints C names in several
 places has to have one table, holding every name the file will really contain,
 that every minting site consults; and where nothing can be minted, the
@@ -21908,18 +21957,20 @@ away from the change.
 ones a user should expect to be realized.  The rule is this one, and it
 is a rule about *specifications*, not about `ulib/ml`:
 
-> A module under `ulib/ml/app` is mirrored when its F\* interface
-> describes a value that .NET has, and is not mirrored when the
-> interface describes OCaml.
+> A module F\* implements in OCaml (under `ulib/ml/app`, or in a
+> `-ocaml.fst` file) is mirrored when its F\* interface describes a
+> value that .NET has, and is not mirrored when the interface describes
+> OCaml.
 
 The distinction is the whole of §122.1.  `FStar.String`, `FStar.Char`,
 `FStar.IO`, `FStar.Exn`, `FStar.All`, `FStar.List.Tot.Base`,
 `FStar.Option`, `Prims` and the integer modules all describe something
 .NET has under a different name, so the backend supplies the name and
-the program is unchanged.  `FStar.Dyn`, `FStar.Parse`, `FStar.Pprint`
-and `FStar.ImmutableArray` describe an OCaml library --- `Obj.magic`
-plus OCaml's own representation, an OCaml lexer, an OCaml pretty
-printer, `Stdlib.Array` --- and a .NET program that wanted them would
+the program is unchanged.  `FStar.Dyn` is not a library at all but a
+builtin rule, and on .NET it is `box` and `unbox`.  `FStar.Parse`,
+`FStar.Pprint` and `FStar.ImmutableArray` describe an OCaml library ---
+an OCaml lexer, an OCaml pretty printer, `Stdlib.Array` --- and a .NET
+program that wanted them would
 want a different interface, so they are refused with error 395 and the
 message points at `--codegen OCaml`.
 

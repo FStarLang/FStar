@@ -79,6 +79,9 @@ val teq_nosmt        : env -> typ -> typ -> ML (option guard_t)
 val subtype_nosmt       : env -> typ -> typ -> ML (option guard_t)
 val get_subtyping_predicate: env -> typ -> typ -> ML (option guard_t)
 val get_subtyping_prop: env -> typ -> typ -> ML (option guard_t)
+(* Solve the implicits whose type has a single inhabitant (e.g. unit,
+   squash); returns the implicits and whether any was solved. *)
+val try_solve_single_valued_implicits : env -> is_tac:bool -> Env.implicits -> ML (Env.implicits & bool)
 val resolve_implicits         : env -> guard_t -> ML guard_t
 val resolve_generalization_implicits : env -> guard_t -> ML guard_t
 val resolve_implicits_tac     : env -> guard_t -> ML tagged_implicits

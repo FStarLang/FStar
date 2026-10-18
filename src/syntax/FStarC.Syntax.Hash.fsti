@@ -56,9 +56,9 @@ instance val hashable_sigelt     : hashable sigelt
 (* uses equal_term *)
 instance val deq_term : FStarC.Class.Deq.deq term
 
-val term_map (a:Type) : Type0
-val term_map_empty  : #a:Type -> ML (term_map a)
-val term_map_add    : #a:Type -> t:term -> v:a -> term_map a -> ML (term_map a)
-val term_map_lookup : #a:Type -> t:term -> m:term_map a -> ML (option a)
-val term_map_mem    : #a:Type -> t:term -> m:term_map a -> ML bool
-val term_map_fold   : #a:Type -> #b:Type -> (term -> a -> b -> ML b) -> term_map a -> b -> ML b
+val term_map (a:Type0) : Type0
+val term_map_empty  : #a:Type0 -> ML (term_map a)
+val term_map_add    : #a:Type0 -> t:term -> v:a -> term_map a -> ML (term_map a)
+val term_map_lookup : #a:Type0 -> t:term -> m:term_map a -> ML (option a)
+val term_map_mem    : #a:Type0 -> t:term -> m:term_map a -> ML bool
+val term_map_fold   : #a:Type0 -> #b:Type -> (term -> a -> b -> ML b) -> term_map a -> b -> ML b

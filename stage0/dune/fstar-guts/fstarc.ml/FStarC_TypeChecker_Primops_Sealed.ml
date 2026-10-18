@@ -6,7 +6,7 @@ let bogus_cbs : FStarC_TypeChecker_NBETerm.nbe_cbs =
     translate = (fun tmp -> (FStarC_Effect.failwith "bogus_cbs translate")) }
 
 let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
-  (FStarC_List.map (fun p -> (let tmp = (FStarC_TypeChecker_Primops_Base.as_primitive_step_nbecbs true p) in
+  (BatList.map (fun p -> (let tmp = (FStarC_TypeChecker_Primops_Base.as_primitive_step_nbecbs true p) in
   { FStarC_TypeChecker_Primops_Base.name = (tmp).FStarC_TypeChecker_Primops_Base.name;
     arity = (tmp).FStarC_TypeChecker_Primops_Base.arity;
     univ_arity = (tmp).FStarC_TypeChecker_Primops_Base.univ_arity;

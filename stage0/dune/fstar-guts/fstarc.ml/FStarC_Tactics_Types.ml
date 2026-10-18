@@ -4,7 +4,7 @@
 type goal = {
   goal_main_env : FStarC_TypeChecker_Env.env;
   goal_ctx_uvar : FStarC_Syntax_Syntax.ctx_uvar;
-  opts : (FStarC_Options.option_val) FStarC_PSMap.t;
+  opts : (string, FStarC_Options.option_val) FStarC_AVLMap.tree;
   is_guard : bool;
   label : string;
 }
@@ -32,45 +32,24 @@ type proofstate = {
   guard_policy : guard_policy;
   freshness : Prims.int;
   tac_verb_dbg : bool;
-  local_state : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_PSMap.t;
+  local_state : (string, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_AVLMap.tree;
   urgency : Prims.int;
   dump_on_failure : bool;
 }
 
 type ref_proofstate = (proofstate ref)
 
-type direction =
-  | TopDown
-  | BottomUp
-
-
-type ctrl_flag =
-  | Continue
-  | Skip
-  | Abort
-
-
-let goal_type (g : goal) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Syntax_Util.ctx_uvar_typ (g).goal_ctx_uvar)
-
-let mk_goal (env : FStarC_TypeChecker_Env.env) (u : FStarC_Syntax_Syntax.ctx_uvar) (o : (FStarC_Options.option_val) FStarC_PSMap.t) (b : bool) (l : string) : goal =
-  { goal_main_env = env; goal_ctx_uvar = u; opts = o; is_guard = b; label = l }
+let goal_witness (g : goal) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_uvar ((g).goal_ctx_uvar, ([], FStarC_Syntax_Syntax.NoUseRange))) FStarC_Range_Type.dummyRange)
 
 let goal_env (g : goal) : FStarC_TypeChecker_Env.env =
   (g).goal_main_env
 
-let goal_witness (g : goal) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_uvar ((g).goal_ctx_uvar, ([], FStarC_Syntax_Syntax.NoUseRange))) FStarC_Range_Type.dummyRange)
-
 let check_goal_solved' (goal : goal) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (FStarC_Syntax_Unionfind.find (((goal).goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head, ((goal).goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head1, ((goal).goal_ctx_uvar).FStarC_Syntax_Syntax.ctx_uvar_head2))
 
-let check_goal_solved (goal : goal) : bool =
-  (let tmp = (check_goal_solved' goal) in
-  (match tmp with
-    | (Some (v)) -> true
-    | tmp1 -> false
-  ))
+let goal_type (g : goal) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Util.ctx_uvar_typ (g).goal_ctx_uvar)
 
 let goal_with_env (g : goal) (env : FStarC_TypeChecker_Env.env) : goal =
   (let c = (g).goal_ctx_uvar in
@@ -89,6 +68,9 @@ let goal_with_env (g : goal) (env : FStarC_TypeChecker_Env.env) : goal =
     is_guard = (g).is_guard;
     label = (g).label })
 
+let mk_goal (env : FStarC_TypeChecker_Env.env) (u : FStarC_Syntax_Syntax.ctx_uvar) (o : (string, FStarC_Options.option_val) FStarC_AVLMap.tree) (b : bool) (l : string) : goal =
+  { goal_main_env = env; goal_ctx_uvar = u; opts = o; is_guard = b; label = l }
+
 let goal_of_goal_ty (env : FStarC_TypeChecker_Env.env) (typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (goal * FStarC_TypeChecker_Common.guard_t) =
   (let tmp = (FStarC_TypeChecker_Env.new_implicit_var_aux "proofstate_of_goal_ty" (typ).FStarC_Syntax_Syntax.pos env typ FStarC_Syntax_Syntax.Strict None false) in
   (match tmp with
@@ -106,6 +88,28 @@ let fStarC_Class_Show_show__guard_policy (tmp : guard_policy) : string =
     | ForceSMT -> "ForceSMT"
     | Drop -> "Drop"
   )
+
+let fStarC_Class_PP_pp__guard_policy (tmp : guard_policy) : PPrint.document =
+  (let tmp1 = (fStarC_Class_Show_show__guard_policy tmp) in
+  (PPrint.arbitrary_string tmp1))
+
+type direction =
+  | TopDown
+  | BottomUp
+
+
+type ctrl_flag =
+  | Continue
+  | Skip
+  | Abort
+
+
+let check_goal_solved (goal : goal) : bool =
+  (let tmp = (check_goal_solved' goal) in
+  (match tmp with
+    | (Some (v)) -> true
+    | tmp1 -> false
+  ))
 
 let goal_of_implicit (env : FStarC_TypeChecker_Env.env) (i : FStarC_TypeChecker_Common.implicit) : goal =
   (let tmp = (FStarC_Options.peek ()) in
@@ -174,10 +178,6 @@ let goal_of_ctx_uvar (g : goal) (ctx_u : FStarC_Syntax_Syntax.ctx_uvar) : goal =
     is_guard = (g).is_guard;
     label = (g).label }
 
-let fStarC_Class_PP_pp__guard_policy (tmp : guard_policy) : FStar_Pprint.document =
-  (let tmp1 = (fStarC_Class_Show_show__guard_policy tmp) in
-  (FStar_Pprint.arbitrary_string tmp1))
-
 let set_ps_psc (psc : FStarC_TypeChecker_Primops_Base.psc) (ps : proofstate) : proofstate =
   { main_context = (ps).main_context;
     all_implicits = (ps).all_implicits;
@@ -209,7 +209,7 @@ let get_label (g : goal) : string =
 let goal_range (g : goal) : FStarC_Range_Type.range =
   ((g).goal_main_env).FStarC_TypeChecker_Env.range
 
-let goal_opts (g : goal) : (FStarC_Options.option_val) FStarC_PSMap.t =
+let goal_opts (g : goal) : (string, FStarC_Options.option_val) FStarC_AVLMap.tree =
   (g).opts
 
 let tracepoint_with_psc (psc : FStarC_TypeChecker_Primops_Base.psc) (ps : proofstate) : bool =

@@ -20,8 +20,8 @@ module FStarC.SmallInt
    code such as the lexer, where [int] (arbitrary-precision Zarith
    integers) is a lot slower. *)
 
-[@@custard_extern "FStarC_SmallInt.t"]
-type t : eqtype
+new
+val t : eqtype
 
 (* Fails if the argument does not fit *)
 val of_int : int -> t
@@ -50,3 +50,7 @@ val array_length (#a:Type) (arr:FStar.ImmutableArray.Base.t a) : t
 
 (* No bounds check: the index must be in range *)
 val array_index (#a:Type) (arr:FStar.ImmutableArray.Base.t a) (i:t) : a
+
+(* Three-way comparisons: negative, zero or positive. *)
+val int_compare : int -> int -> t
+val string_compare : string -> string -> t

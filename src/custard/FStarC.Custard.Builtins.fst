@@ -1296,11 +1296,10 @@ let extern_type_of_lid (l:Ident.lident) : ML (option extern) =
    too, so that {!is_interface_only_module} cannot tell.  A module with only an
    interface needs no entry here. *)
 let realized_modules : list (list string) = [
+  (* No hand-written file: {!dyn_rule} implements every name. *)
   ["FStar"; "Dyn"];
-  ["FStar"; "Exn"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
-  ["FStar"; "Parse"];
   ["FStar"; "Pervasives"];
   ["FStar"; "Pervasives"; "Native"];
   (* The machine integers.  [machine_int_rule] above already turns every
@@ -1323,7 +1322,6 @@ let realized_modules : list (list string) = [
      [FStarC] name has no interface of its own on the include path. *)
   ["FStarC"; "Reflection"; "Types"];
   ["FStarC"; "Tactics"; "Unseal"];
-  ["FStarC"; "Tactics"; "V2"; "Builtins"];
   ["Prims"];
   (* Section 128.  Pulse's lock, which must never be compiled from its F*
      source: [Pulse.Lib.Primitives.cas] is a *specification* -- a read
@@ -1481,6 +1479,7 @@ let cherry_realized_modules : list (list string) = [
   ["FStar"; "ImmutableArray"];
   ["FStar"; "ImmutableArray"; "Base"];
   ["FStar"; "Issue"];
+  ["FStar"; "Parse"];
   ["FStar"; "Pprint"];
   ["FStar"; "Sealed"];
   ["FStar"; "String"];
@@ -1521,8 +1520,8 @@ let is_realized_module (ns : list string) : ML bool =
    hand-written [.ml] the F* definitions are a model, and a model that
    disagrees with the realization is exactly the sort of thing extraction
    must not silently pick between.  [FStar.Dyn] is the case that makes it
-   concrete -- [dyn] is [unit -> Dv value_type_bundle] in F* and [Obj.t] in
-   [FStar_Dyn.ml], so [undyn]'s body forces a thunk that is not one -- but the
+   concrete -- [dyn] is [unit -> Dv value_type_bundle] in F* and [TAny] under
+   {!dyn_rule}, so [undyn]'s body forces a thunk that is not one -- but the
    rule is not about that one module: if a realization does not implement the
    whole interface, that is a bug in the realization, and the OCaml linker
    says so.
@@ -1548,11 +1547,18 @@ let is_type_only_realized_module (ns : list string) : ML bool =
 
 (* Realized modules whose OCaml realization is only an optimization of the F*
    source, which is complete.  Cherry has no OCaml to link, so it compiles them
-   from source rather than leaving the C runtime to reimplement them. *)
+   from source rather than leaving the C runtime to reimplement them.
+   [FStar.Pprint]'s source for Cherry is its own implementation,
+   [FStar.Pprint-c.cherry.fst], which target selection picks. *)
 let cherry_source_modules : list (list string) = [
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
+  ["FStar"; "Pprint"];
+  ["FStarC"; "BaseTypes"];
+  ["FStarC"; "Hash"];
+  ["FStarC"; "Pprint"];
+  ["FStarC"; "StringBuffer"];
 ]
 
 let is_cherry_source_module (ns : list string) : ML bool =
@@ -1659,15 +1665,23 @@ let iarray_rule (id:string) : ML (option rule) =
   | "index" -> prim 2 (fun tys _ -> elt_of tys)
   | _ -> None
 
-(* Under Cherry (cherry.md, "The any type") [FStar.Dyn.dyn] is [TAny], as it
-   is [Obj.t] on OCaml: a value with the type information that releases it.
-   [mkdyn] and [undyn] are [Dyn] nodes at the value's type. *)
+(* [FStar.Dyn.dyn] is [TAny] on every backend: [Obj.t] on OCaml, [obj] on
+   F#.  There [mkdyn] and [undyn] are coercions ([Obj.magic], [box]/[unbox]).
+   [FStar.Dyn] stays in {!realized_modules} so that its F* model is never
+   compiled.  Under Cherry
+   (cherry.md, "The any type") a [TAny] is a value with the type information
+   that releases it, so [mkdyn] and [undyn] are [Dyn] nodes at the value's
+   type. *)
 
 let dyn_rule (id:string) : ML (option rule) =
   let prim (f:string) (ret : cty -> cty) : option rule =
     Some (Rule_prim (1, fun tys args ->
-      let t = elt_of tys in
-      mk (EOp ({ po_op = Dyn f; po_ty = None }, args)) (ret t) E_Pure)) in
+      let t = ret (elt_of tys) in
+      if Options.custard_cherry ()
+      then mk (EOp ({ po_op = Dyn f; po_ty = None }, args)) t E_Pure
+      else match args with
+           | [a] -> mk (ECoerce (a, t)) t a.eff
+           | _ -> failwith "FStar.Dyn applied to the wrong number of arguments")) in
   match id with
   | "dyn" -> Some (Rule_type (fun _ -> TAny))
   | "mkdyn" -> prim "mk" (fun _ -> TAny)
@@ -1719,8 +1733,7 @@ let builtin_rule (l:Ident.lident) : ML rule =
                     ns = ["FStar"; "ImmutableArray"]) &&
                    Some? (iarray_rule id)
            then iarray_rule id
-           else if Options.custard_cherry () && ns = ["FStar"; "Dyn"] &&
-                   Some? (dyn_rule id)
+           else if ns = ["FStar"; "Dyn"] && Some? (dyn_rule id)
            then dyn_rule id
            (* A rule for one name beats the module-wide [Rule_realized], as
               for every family above. *)

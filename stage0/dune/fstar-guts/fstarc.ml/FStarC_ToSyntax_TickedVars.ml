@@ -3,7 +3,7 @@
 
 let ident_is_ticked (id : FStarC_Ident.ident) : bool =
   (let nm = (FStarC_Ident.string_of_id id) in
-  (if (Prims.op_Greater (FStarC_String.length nm) Prims.int_zero) then (let tmp = (FStarC_String.get nm Prims.int_zero) in
+  (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) nm) Prims.int_zero) then (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) nm Prims.int_zero) in
   ((=) tmp 39)) else false))
 
 let lident_is_ticked (id : FStarC_Ident.lident) : bool =
@@ -210,7 +210,7 @@ let close_fun (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) : FSt
   (if (match ftv with
     | [] -> true
     | tmp -> false
-  ) then t else (let binders = (FStarC_List.map (fun x -> (let tmp = (FStarC_Ident.fStarC_Class_HasRange_pos__ident x) in
+  ) then t else (let binders = (BatList.map (fun x -> (let tmp = (FStarC_Ident.fStarC_Class_HasRange_pos__ident x) in
     let tmp1 = (tm_type tmp) in
     let tmp2 = (x, tmp1) in
     let tmp3 = (FStarC_Parser_AST.Annotated ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
@@ -229,7 +229,7 @@ let close (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) : FStarC_
   (if (match ftv with
     | [] -> true
     | tmp -> false
-  ) then t else (let binders = (FStarC_List.map (fun x -> (let tmp = (FStarC_Ident.fStarC_Class_HasRange_pos__ident x) in
+  ) then t else (let binders = (BatList.map (fun x -> (let tmp = (FStarC_Ident.fStarC_Class_HasRange_pos__ident x) in
     let tmp1 = (tm_type tmp) in
     let tmp2 = (x, tmp1) in
     let tmp3 = (FStarC_Parser_AST.Annotated ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in

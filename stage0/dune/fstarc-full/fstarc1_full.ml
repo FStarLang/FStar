@@ -1,0 +1,52 @@
+let x =
+      (* On Unix, if we write to a pipe that tries to send something
+         to a process that died, we receive a SIGPIPE signal which
+         by default will terminate F*, and we won't get an exception
+         or anything. So, block them, and instead rely on OCaml exceptions
+         to detect this. *)
+      if FStarC_Platform.unix then
+        ignore (Unix.sigprocmask Unix.SIG_BLOCK [Sys.sigpipe]);
+
+      (* Kill all lingering Z3 subprocesses if we are being killed with
+         a SIGTERM. This is what VS Code sends when a file is closed. *)
+      if FStarC_Platform.unix then (
+        let hdlr (s:int) =
+          FStarC_Util.kill_all ();
+          exit 130
+        in
+        let _ = Sys.signal Sys.sigterm (Sys.Signal_handle hdlr) in
+        ()
+      );
+
+      (* Enable memtrace, only if the environment variable MEMTRACE is set. *)
+      Memtrace.trace_if_requested ();
+
+      (* Record a backtrace on exceptions, for --trace_error. *)
+      Printexc.record_backtrace true;
+
+      (* Tweak garbage collector parameters, except those that the user set
+         in OCAMLRUNPARAM (or CAMLRUNPARAM), e.g. OCAMLRUNPARAM=s=256k for a
+         smaller minor heap when running many F* processes in parallel. *)
+      (let user_keys =
+         let param =
+           match Sys.getenv_opt "OCAMLRUNPARAM" with
+           | Some p -> p
+           | None -> Option.value (Sys.getenv_opt "CAMLRUNPARAM") ~default:""
+         in
+         List.filter_map
+           (fun kv -> match String.index_opt kv '=' with
+              | Some i -> Some (String.trim (String.sub kv 0 i))
+              | None -> None)
+           (String.split_on_char ',' param)
+       in
+       let unset k = not (List.mem k user_keys) in
+       let c = Gc.get () in
+       let c = if unset "s" then { c with Gc.minor_heap_size = 1048576 } else c in
+       let c = if unset "i" then { c with Gc.major_heap_increment = 4194304 } else c in
+       let c = if unset "o" then { c with Gc.space_overhead = 150 } else c in
+       Gc.set c);
+
+      (* Set up peak heap memory reporting (for benchmarking). *)
+      FStarC_MemReport.setup ();
+
+      FStarC_Main.main ()

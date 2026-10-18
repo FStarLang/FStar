@@ -41,8 +41,8 @@ FStar/
 ├── stage3/                 # Stage2 + Pulse plugin linked in
 ├── pulse/                  # Pulse language implementation
 │   ├── src/checker/        # Pulse typechecker (F* source, extracted to OCaml plugin)
-│   ├── src/syntax_extension/ # Pulse syntax desugaring
-│   ├── src/ml/             # Hand-written OCaml for Pulse (runtime utils)
+│   ├── src/syntax_extension/ # Pulse syntax desugaring; F* implementations of
+│   │                       #   Pulse.RuntimeUtils / Pulse.Extract.CompilerLib
 │   ├── lib/                # Pulse standard library (common/, pulse/)
 │   ├── mk/                 # Build infrastructure (test.mk, common.mk, locate.mk)
 │   ├── test/               # Pulse tests
@@ -266,8 +266,9 @@ native OCaml plugin. The build flow:
 
 1. **Stage 2** is installed with ulib checked files.
 2. **Pulse plugin source** is checked+extracted by the stage 2 compiler:
-   - `pulse/src/checker/` → `stage3/checker.ml/`
-   - `pulse/src/syntax_extension/` → `stage3/syntax_extension.ml/`
+   `pulse/src/checker/` is verified (`pulse/mk/checker.mk`), and together
+   with `pulse/src/syntax_extension/` lax-checked and extracted in a single
+   Custard unit (`pulse/mk/plugin.mk`) → `stage3/plugin.ml/`
 3. **Dune links** the extracted plugin OCaml with the stage 2
    compiler to produce `fstarc3_full.exe` (see
    `stage3/dune/fstarc-full/dune` and `stage3/dune/pulse-plugin/dune`).

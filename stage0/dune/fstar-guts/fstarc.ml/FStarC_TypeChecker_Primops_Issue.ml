@@ -4,22 +4,22 @@
 let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (let mk_lid = (fun l -> (FStarC_Parser_Const.p2l ("FStar" :: ("Issue" :: (l :: []))))) in
   let tmp = (mk_lid "message_of_issue") in
-  let tmp1 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_document) (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_document) FStarC_Errors.u___proj__Mkissue__item__issue_msg) in
+  let tmp1 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_document) (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_document) FStarC_Errors_Issue.u___proj__Mkissue__item__issue_msg) in
   let tmp2 = (mk_lid "level_of_issue") in
-  let tmp3 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp2 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string (fun i -> (FStarC_Errors.string_of_issue_level (i).FStarC_Errors.issue_level))) in
+  let tmp3 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp2 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string (fun i -> (FStarC_Errors_Issue.string_of_issue_level (i).FStarC_Errors_Issue.issue_level))) in
   let tmp4 = (mk_lid "number_of_issue") in
-  let tmp5 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp4 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_int) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_int) (fun i -> (i).FStarC_Errors.issue_number)) in
+  let tmp5 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp4 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_int) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_int) (fun i -> (i).FStarC_Errors_Issue.issue_number)) in
   let tmp6 = (mk_lid "range_of_issue") in
-  let tmp7 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp6 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_range) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_range) FStarC_Errors.u___proj__Mkissue__item__issue_range) in
+  let tmp7 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp6 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_range) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_range) FStarC_Errors_Issue.u___proj__Mkissue__item__issue_range) in
   let tmp8 = (mk_lid "context_of_issue") in
-  let tmp9 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp8 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue FStarC_Syntax_Embeddings.e_string_list FStarC_TypeChecker_NBETerm.e_string_list FStarC_Errors.u___proj__Mkissue__item__issue_ctx) in
+  let tmp9 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp8 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue FStarC_Syntax_Embeddings.e_string_list FStarC_TypeChecker_NBETerm.e_string_list FStarC_Errors_Issue.u___proj__Mkissue__item__issue_ctx) in
   let tmp10 = (mk_lid "render_issue") in
   let tmp11 = (FStarC_TypeChecker_Primops_Base.mk1' Prims.int_zero tmp10 FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string (fun i -> (let tmp11 = (FStarC_Errors.format_issue i) in
     (Some (tmp11)))) (fun i -> (let tmp11 = (FStarC_Errors.format_issue i) in
     (Some (tmp11))))) in
   let tmp12 = (mk_lid "mk_issue_doc") in
-  let tmp13 = (FStarC_TypeChecker_Primops_Base.mk5 Prims.int_zero tmp12 FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_document) (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_document) (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_range) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_range) (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_int) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_int) FStarC_Syntax_Embeddings.e_string_list FStarC_TypeChecker_NBETerm.e_string_list FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue (fun level msg range number context -> { FStarC_Errors.issue_msg = msg;
-      issue_level = (FStarC_Errors.issue_level_of_string level);
+  let tmp13 = (FStarC_TypeChecker_Primops_Base.mk5 Prims.int_zero tmp12 FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_document) (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_document) (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_range) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_range) (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_int) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_int) FStarC_Syntax_Embeddings.e_string_list FStarC_TypeChecker_NBETerm.e_string_list FStarC_Syntax_Embeddings.e_issue FStarC_TypeChecker_NBETerm.e_issue (fun level msg range number context -> { FStarC_Errors_Issue.issue_msg = msg;
+      issue_level = (FStarC_Errors_Issue.issue_level_of_string level);
       issue_range = range;
       issue_number = number;
       issue_ctx = context })) in

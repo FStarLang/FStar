@@ -49,7 +49,7 @@ let generate_down (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit)
   (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.intro () ps) in
   let x1 = (FStarC_Tactics_V2_Builtins.t_destruct (FStar_Tactics_V2_SyntaxCoercions.binding_to_term x) ps) in
   (FStar_Tactics_Util.iteri (fun i tmp1 -> (match tmp1 with
-    | (c, n) -> (fun ps1 -> (let x2 = (FStar_Tactics_Util.repeatn n (fun tmp2 -> (FStarC_Tactics_V2_Builtins.intro ())) ps1) in
+    | (c, n) -> (fun ps1 -> (let x2 = (FStar_Tactics_Util.repeatn n (Obj.magic ((fun tmp2 -> (FStarC_Tactics_V2_Builtins.intro ())))) ps1) in
       (ignore (FStarC_Tactics_V2_Builtins.intro () ps1));
       let x3 = (FStar_Tactics_Util.fold_right (fun b acc -> (fun tmp2 -> (mktuple2_ (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) acc))) x2 unitv_ ps1) in
       (ignore (FStar_Tactics_Util.repeatn i (fun tmp2 -> (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Pervasives" :: ("Inr" :: [])))) in
@@ -86,8 +86,12 @@ let rec get_apply_tuple (b : FStarC_Reflection_V2_Data.binding) (ps : (FStarC_Ta
       (match x2 with
         | ((FStar_Tactics_NamedView.Tv_UInst (fv, tmp1)), (b1 :: (b2 :: []))) -> (if (let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
           ((=) tmp2 ("FStar" :: ("Pervasives" :: ("Native" :: ("tuple2" :: [])))))) then (let x3 = (FStarC_Tactics_V2_Builtins.t_destruct (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps) in
-          (FStar_Tactics_V2_Derived.guard ((((=) (FStar_List_Tot_Base.length x3) Prims.int_one) && (let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_fv (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStar_List_Tot_Base.hd x3))) in
-          ((=) tmp2 ("FStar" :: ("Pervasives" :: ("Native" :: ("Mktuple2" :: []))))))) && ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (FStar_List_Tot_Base.hd x3)) (Prims.of_int (2)))) ps);
+          (FStar_Tactics_V2_Derived.guard ((((=) (FStar_List_Tot_Base.length x3) Prims.int_one) && (let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_fv (match (FStar_List_Tot_Base.hd x3) with
+              | (u__1, u__2) -> u__1
+            )) in
+          ((=) tmp2 ("FStar" :: ("Pervasives" :: ("Native" :: ("Mktuple2" :: []))))))) && ((=) (match (FStar_List_Tot_Base.hd x3) with
+            | (u__1, u__2) -> u__2
+          ) (Prims.of_int (2)))) ps);
           let x4 = (FStarC_Tactics_V2_Builtins.intro () ps) in
           let x5 = (FStarC_Tactics_V2_Builtins.intro () ps) in
           (ignore (FStarC_Tactics_V2_Builtins.intro () ps));
@@ -98,8 +102,12 @@ let rec get_apply_tuple (b : FStarC_Reflection_V2_Data.binding) (ps : (FStarC_Ta
           (FStar_Tactics_V2_Derived.fail x4 ps)))
         | ((FStar_Tactics_NamedView.Tv_FVar (fv)), (b1 :: (b2 :: []))) -> (if (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
           ((=) tmp1 ("FStar" :: ("Pervasives" :: ("Native" :: ("tuple2" :: [])))))) then (let x3 = (FStarC_Tactics_V2_Builtins.t_destruct (FStar_Tactics_V2_SyntaxCoercions.binding_to_term b) ps) in
-          (FStar_Tactics_V2_Derived.guard ((((=) (FStar_List_Tot_Base.length x3) Prims.int_one) && (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_fv (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStar_List_Tot_Base.hd x3))) in
-          ((=) tmp1 ("FStar" :: ("Pervasives" :: ("Native" :: ("Mktuple2" :: []))))))) && ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (FStar_List_Tot_Base.hd x3)) (Prims.of_int (2)))) ps);
+          (FStar_Tactics_V2_Derived.guard ((((=) (FStar_List_Tot_Base.length x3) Prims.int_one) && (let tmp1 = (FStarC_Reflection_V2_Builtins.inspect_fv (match (FStar_List_Tot_Base.hd x3) with
+              | (u__1, u__2) -> u__1
+            )) in
+          ((=) tmp1 ("FStar" :: ("Pervasives" :: ("Native" :: ("Mktuple2" :: []))))))) && ((=) (match (FStar_List_Tot_Base.hd x3) with
+            | (u__1, u__2) -> u__2
+          ) (Prims.of_int (2)))) ps);
           let x4 = (FStarC_Tactics_V2_Builtins.intro () ps) in
           let x5 = (FStarC_Tactics_V2_Builtins.intro () ps) in
           (ignore (FStarC_Tactics_V2_Builtins.intro () ps));
@@ -130,7 +138,9 @@ let rec generate_up_aux (ctors : (((string) list * (FStarC_Syntax_Syntax.term') 
       (ignore (if ((<>) (FStar_List_Tot_Base.length x) (Prims.of_int (2))) then ((FStar_Tactics_V2_Derived.fail "generate_up_aux: expected Inl/Inr???") ps) else ()));
       (FStar_Tactics_V2_Derived.focus (fun tmp -> (fun ps1 -> (let x1 = (FStarC_Tactics_V2_Builtins.intro () ps1) in
       (ignore (FStarC_Tactics_V2_Builtins.intro () ps1));
-      let x2 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst c) in
+      let x2 = (match c with
+          | (u__1, u__2) -> u__1
+        ) in
       let x3 = (get_apply_tuple x1 ps1) in
       (FStar_Tactics_V2_Derived.apply (FStar_Tactics_NamedView.pack (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv x2) in
       (FStar_Tactics_NamedView.Tv_FVar (tmp1)))) ps1);

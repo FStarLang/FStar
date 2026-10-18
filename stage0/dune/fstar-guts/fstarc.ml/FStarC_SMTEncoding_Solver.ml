@@ -177,7 +177,7 @@ let make_solver_configs (env : FStarC_SMTEncoding_Env.env_t) (goals : FStarC_SMT
             query_goals = (default_settings).query_goals;
             query_term = (default_settings).query_term } in
         (tmp18 :: [])) else []) in
-      (FStarC_List.op_At (default_settings :: []) (FStarC_List.op_At initial_fuel_max_ifuel (FStarC_List.op_At half_max_fuel_max_ifuel max_fuel_max_ifuel))))
+      (BatList.append (default_settings :: []) (BatList.append initial_fuel_max_ifuel (BatList.append half_max_fuel_max_ifuel max_fuel_max_ifuel))))
   ))
 
 let full_query_id (settings : query_settings) : string =
@@ -240,8 +240,8 @@ let goal_block (settings : query_settings) (g : FStarC_SMTEncoding_ErrorReportin
   let tmp28 = (FStarC_Options.print_z3_statistics ()) in
   let tmp29 = (if tmp28 then true else (FStarC_Options.query_stats ())) in
   let tmp30 = (if tmp29 then (FStarC_SMTEncoding_Term.GetStatistics :: []) else []) in
-  let tmp31 = (FStarC_List.op_At tmp30 ((FStarC_SMTEncoding_Term.Echo ("</goal>")) :: ((FStarC_SMTEncoding_Term.Pop (Prims.int_zero)) :: []))) in
-  (FStarC_List.op_At tmp27 tmp31))
+  let tmp31 = (BatList.append tmp30 ((FStarC_SMTEncoding_Term.Echo ("</goal>")) :: ((FStarC_SMTEncoding_Term.Pop (Prims.int_zero)) :: []))) in
+  (BatList.append tmp27 tmp31))
 
 let rec emit_goals (pending : (Prims.int -> bool)) (settings : query_settings) (t : FStarC_SMTEncoding_ErrorReporting.goal_tree) : ((FStarC_SMTEncoding_Term.decl) list * (FStarC_SMTEncoding_ErrorReporting.goal) list) =
   (match t with
@@ -253,20 +253,20 @@ let rec emit_goals (pending : (Prims.int -> bool)) (settings : query_settings) (
       (match tmp1 with
         | (ds', gs) -> (match gs with
             | [] -> ([], [])
-            | tmp2 -> ((FStarC_List.op_At (FStarC_List.op_At ((FStarC_SMTEncoding_Term.Push (Prims.int_zero)) :: ds) ds') ((FStarC_SMTEncoding_Term.Pop (Prims.int_zero)) :: [])), gs)
+            | tmp2 -> ((BatList.append (BatList.append ((FStarC_SMTEncoding_Term.Push (Prims.int_zero)) :: ds) ds') ((FStarC_SMTEncoding_Term.Pop (Prims.int_zero)) :: [])), gs)
           )
       ))
-    | (FStarC_SMTEncoding_ErrorReporting.GBranch (ts)) -> (FStarC_List.fold_left (fun tmp t1 -> (match tmp with
+    | (FStarC_SMTEncoding_ErrorReporting.GBranch (ts)) -> (BatList.fold_left (fun tmp t1 -> (match tmp with
         | (ds, gs) -> (let tmp1 = (emit_goals pending settings t1) in
           (match tmp1 with
-            | (ds', gs') -> ((FStarC_List.op_At ds ds'), (FStarC_List.op_At gs gs'))
+            | (ds', gs') -> ((BatList.append ds ds'), (BatList.append gs gs'))
           ))
       )) ([], []) ts)
   )
 
 let killed_result (tmp : unit) : FStarC_SMTEncoding_Z3.z3result =
-  (let tmp1 = (FStarC_SMap.create Prims.int_zero) in
-  let tmp2 = (FStarC_SMap.create Prims.int_zero) in
+  (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   { FStarC_SMTEncoding_Z3.z3result_status = FStarC_SMTEncoding_Z3.KILLED;
     z3result_time = Prims.int_zero;
     z3result_initial_statistics = tmp1;
@@ -294,9 +294,9 @@ let div_with_decimals (ndec : Prims.int) (x : Prims.int) (y : Prims.int) : strin
   let intg = (Prims.op_Slash x y) in
   let frac = (Prims.op_Percent (Prims.op_Slash (Prims.op_Star mul x) y) mul) in
   let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int frac) in
-  let len = (FStarC_String.length tmp) in
+  let len = ((fun s -> Z.of_int (BatUTF8.length s)) tmp) in
   let pad = (Prims.op_Minus ndec len) in
-  let tmp1 = (FStarC_String.make pad 48) in
+  let tmp1 = ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) pad 48) in
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int frac) in
   let frac1 = (Prims.strcat tmp1 tmp2) in
   let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int intg) in
@@ -316,22 +316,22 @@ let query_info (settings : query_settings) (g : FStarC_SMTEncoding_ErrorReportin
   let tmp1 = (FStarC_Range_Ops.fStarC_Class_Show_show__range (g).FStarC_SMTEncoding_ErrorReporting.goal_range) in
   let tmp2 = (Prims.strcat tmp1 (Prims.strcat at_log_file ")")) in
   let range = (Prims.strcat "(" tmp2) in
-  let used_rlimit_str = (try (let tmp3 = (FStarC_SMap.try_find (z3result).FStarC_SMTEncoding_Z3.z3result_initial_statistics "rlimit-count") in
+  let used_rlimit_str = (try (let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (z3result).FStarC_SMTEncoding_Z3.z3result_initial_statistics "rlimit-count") in
     let tmp4 = (match tmp3 with
         | (Some (v)) -> v
       ) in
-    let r0 = (FStarC_Util.int_of_string tmp4) in
-    let tmp5 = (FStarC_SMap.try_find (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "rlimit-count") in
+    let r0 = (Z.of_string tmp4) in
+    let tmp5 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "rlimit-count") in
     let tmp6 = (match tmp5 with
         | (Some (v)) -> v
       ) in
-    let r1 = (FStarC_Util.int_of_string tmp6) in
+    let r1 = (Z.of_string tmp6) in
     let used = (Prims.op_Minus r1 r0) in
     let tmp7 = (convert_rlimit Prims.int_one) in
     (div_with_decimals (Prims.of_int (3)) used tmp7)) with
       | u__cexn -> "unknown"
     ) in
-  let tmp3 = (FStarC_SMap.try_find (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "time") in
+  let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (z3result).FStarC_SMTEncoding_Z3.z3result_statistics "time") in
   let time_str = (match tmp3 with
       | (Some (t)) -> t
       | None -> "0.00"
@@ -373,14 +373,14 @@ let run_round (settings : query_settings) (active : (goal_state) list) : (goal_s
     | [] -> []
     | tmp -> (let tmp1 = (FStarC_Options.z3_refresh ()) in
       (if tmp1 then (FStarC_SMTEncoding_Z3.refresh (Some ((((settings).query_env).FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.proof_ns))) else ());
-      let ids = (FStarC_List.map (fun gst -> ((gst).gs_goal).FStarC_SMTEncoding_ErrorReporting.goal_id) active) in
-      let tmp2 = (emit_goals (fun id -> (FStarC_List.contains id ids)) settings (settings).query_goals) in
+      let ids = (BatList.map (fun gst -> ((gst).gs_goal).FStarC_SMTEncoding_ErrorReporting.goal_id) active) in
+      let tmp2 = (emit_goals (fun id -> (BatList.mem id ids)) settings (settings).query_goals) in
       (match tmp2 with
         | (decls, emitted) -> (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int (settings).query_index) in
           let tmp4 = (FStarC_Format.fmt2 "(%s, %s)" (settings).query_name tmp3) in
           let results = (FStarC_SMTEncoding_Z3.ask (settings).query_range decls tmp4 false) in
           let results1 = (zip_results emitted results) in
-          (FStarC_List.map (fun gst -> (let tmp5 = (FStarC_List.tryFind (fun tmp5 -> (match tmp5 with
+          (BatList.map (fun gst -> (let tmp5 = (List.find_opt (fun tmp5 -> (match tmp5 with
               | (g, tmp6) -> ((=) (g).FStarC_SMTEncoding_ErrorReporting.goal_id ((gst).gs_goal).FStarC_SMTEncoding_ErrorReporting.goal_id)
             )) results1) in
           (match tmp5 with
@@ -402,10 +402,10 @@ let run_round (settings : query_settings) (active : (goal_state) list) : (goal_s
   )
 
 let rec ask_config__rounds (settings : query_settings) (decided : (goal_state -> bool)) (n : Prims.int) (active : (goal_state) list) (acc : (goal_state) list) : (goal_state) list =
-  (if (Prims.op_Less_Equals n Prims.int_zero) then (FStarC_List.op_At active acc) else (let active1 = (run_round settings active) in
-  let tmp = (FStarC_List.partition decided active1) in
+  (if (Prims.op_Less_Equals n Prims.int_zero) then (BatList.append active acc) else (let active1 = (run_round settings active) in
+  let tmp = (BatList.partition decided active1) in
   (match tmp with
-    | (done__, active2) -> ((ask_config__rounds settings decided) (Prims.op_Minus n Prims.int_one) active2 (FStarC_List.op_At done__ acc))
+    | (done__, active2) -> ((ask_config__rounds settings decided) (Prims.op_Minus n Prims.int_one) active2 (BatList.append done__ acc))
   )))
 
 let ask_config (settings : query_settings) (goals : (goal_state) list) : (goal_state) list =
@@ -423,11 +423,11 @@ let rec ask_configs (configs : (query_settings) list) (goals : (goal_state) list
     | (lo, tmp1) -> (match configs with
         | [] -> goals
         | (cfg :: configs1) -> (let goals1 = (ask_config cfg goals) in
-          let failed = (FStarC_List.filter (fun gst -> (Prims.op_Less (gst).gs_nsuccess lo)) goals1) in
+          let failed = (BatList.filter (fun gst -> (Prims.op_Less (gst).gs_nsuccess lo)) goals1) in
           (match (failed, configs1) with
             | ([], tmp2) -> []
             | (tmp2, []) -> failed
-            | tmp2 -> (let tmp3 = (FStarC_List.map (fun gst -> { gs_goal = (gst).gs_goal;
+            | tmp2 -> (let tmp3 = (BatList.map (fun gst -> { gs_goal = (gst).gs_goal;
                   gs_nsuccess = Prims.int_zero;
                   gs_nfailure = Prims.int_zero;
                   gs_errors = (gst).gs_errors }) failed) in
@@ -455,14 +455,14 @@ let mk_answer (failed : (goal_state) list) : answer =
   ))
 
 let ask_solver_quake (configs : (query_settings) list) : answer =
-  (let default_settings = (FStarC_List.hd configs) in
+  (let default_settings = (BatList.hd configs) in
   let tmp = (FStarC_SMTEncoding_ErrorReporting.goals_of (default_settings).query_goals) in
-  let goals = (FStarC_List.map initial_goal_state tmp) in
+  let goals = (BatList.map initial_goal_state tmp) in
   let tmp1 = (ask_configs configs goals) in
   let ans = (mk_answer tmp1) in
   (if (ans).quaking then (let name = (full_query_id default_settings) in
-  let ngoals = (FStarC_List.length goals) in
-  let nfail = (FStarC_List.length (ans).failed) in
+  let ngoals = ((fun l -> Z.of_int (BatList.length l)) goals) in
+  let nfail = ((fun l -> Z.of_int (BatList.length l)) (ans).failed) in
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int (Prims.op_Minus ngoals nfail)) in
   let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ngoals) in
   let ratio = (FStarC_Format.fmt2 "%s/%s" tmp2 tmp3) in
@@ -478,18 +478,18 @@ type recovery_hammer =
 let rec ask_solver_recover__try_hammer (cfg : query_settings) (try_factor : (Prims.int -> answer)) (h : recovery_hammer) : answer =
   (match h with
     | (IncreaseRLimit (factor)) -> (try_factor factor)
-    | (RestartAnd (h1)) -> ((FStarC_Errors.fStarC_Errors_diag__range_list_document (cfg).query_range ((FStarC_Errors_Msg.text "Trying a solver restart") :: []));
+    | (RestartAnd (h1)) -> ((FStarC_Errors.fStarC_Errors_diag__range_list_ocaml_document (cfg).query_range ((FStarC_Errors_Msg.text "Trying a solver restart") :: []));
       (((((cfg).query_env).FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh (Some ((((cfg).query_env).FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.proof_ns)));
       ((ask_solver_recover__try_hammer cfg try_factor) h1))
   )
 
-let rec pp_hammer (h : recovery_hammer) : FStar_Pprint.document =
+let rec pp_hammer (h : recovery_hammer) : PPrint.document =
   (match h with
     | (IncreaseRLimit (factor)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__int factor) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.doc_of_string "x")) in
-      (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "increasing its rlimit by") tmp1))
+      let tmp1 = (PPrint.(^^) tmp (PPrint.string "x")) in
+      (PPrint.(^/^) (FStarC_Errors_Msg.text "increasing its rlimit by") tmp1))
     | (RestartAnd (h1)) -> (let tmp = (pp_hammer h1) in
-      (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "restarting the solver and") tmp))
+      (PPrint.(^/^) (FStarC_Errors_Msg.text "restarting the solver and") tmp))
   )
 
 let rec ask_solver_recover__aux (r : answer) (cfg : query_settings) (try_factor : (Prims.int -> answer)) (hammers : (recovery_hammer) list) : answer =
@@ -504,21 +504,21 @@ let rec ask_solver_recover__aux (r : answer) (cfg : query_settings) (try_factor 
         failed = (r).failed }
     | (h :: hs) -> (let r1 = ((ask_solver_recover__try_hammer cfg try_factor) h) in
       (if (r1).ok then (let tmp = (pp_hammer h) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "This query succeeded after ") tmp) in
+      let tmp1 = (PPrint.(^/^) (FStarC_Errors_Msg.text "This query succeeded after ") tmp) in
       let tmp2 = (tmp1 :: ((FStarC_Errors_Msg.text "Increase the rlimit in the file or simplify the proof. This is only succeeding due to --proof_recovery being given.") :: [])) in
-      (FStarC_Errors.fStarC_Errors_log_issue__range_list_document (cfg).query_range FStarC_Errors_Codes.Warning_ProofRecovery tmp2);
+      (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document (cfg).query_range FStarC_Errors_Codes.Warning_ProofRecovery tmp2);
       r1) else ((ask_solver_recover__aux r cfg try_factor) hs)))
   )
 
 let ask_solver_recover (configs : (query_settings) list) : answer =
   (let tmp = (FStarC_Options.proof_recovery ()) in
   (if tmp then (let r = (ask_solver_quake configs) in
-  (if (r).ok then r else (let cfg = (FStarC_List.last configs) in
-  (FStarC_Errors.fStarC_Errors_diag__range_list_document (cfg).query_range ((FStarC_Errors_Msg.text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.") :: []));
+  (if (r).ok then r else (let cfg = (BatList.last configs) in
+  (FStarC_Errors.fStarC_Errors_diag__range_list_ocaml_document (cfg).query_range ((FStarC_Errors_Msg.text "This query failed to be solved. Will now retry with higher rlimits due to --proof_recovery.") :: []));
   let try_factor = (fun n -> (let tmp1 = (FStarC_Class_PP.fStarC_Class_PP_pp__int n) in
-    let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Retrying query with rlimit factor") tmp1) in
+    let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Retrying query with rlimit factor") tmp1) in
     let tmp3 = (tmp2 :: []) in
-    (FStarC_Errors.fStarC_Errors_diag__range_list_document (cfg).query_range tmp3);
+    (FStarC_Errors.fStarC_Errors_diag__range_list_ocaml_document (cfg).query_range tmp3);
     let cfg1 = { query_env = (cfg).query_env;
         query_name = (cfg).query_name;
         query_index = (cfg).query_index;
@@ -558,22 +558,22 @@ let maybe_save_failing_query (env : FStarC_SMTEncoding_Env.env_t) (qs : query_se
   (if tmp1 then (let tmp2 = (FStarC_TypeChecker_Env.all_binders ((qs).query_env).FStarC_SMTEncoding_Env.tcenv) in
   let tmp3 = (FStarC_Pprint.flow_map (FStar_Pprint.break_ Prims.int_one) (fun b -> (let tmp3 = (FStarC_Ident.fStarC_Class_PP_pp__ident ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname) in
     let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
-    let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp4) in
-    let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp3 tmp5) in
+    let tmp5 = (PPrint.(^/^) PPrint.colon tmp4) in
+    let tmp6 = (PPrint.(^/^) tmp3 tmp5) in
     let tmp7 = (FStar_Pprint.nest (Prims.of_int (2)) tmp6) in
-    let tmp8 = (FStar_Pprint.parens tmp7) in
-    (FStar_Pprint.group tmp8))) tmp2) in
+    let tmp8 = (PPrint.parens tmp7) in
+    (PPrint.group tmp8))) tmp2) in
   let tmp4 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Env =") tmp3) in
   let tmp5 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' (qs).query_term) in
   let tmp6 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "VC =") tmp5) in
   let tmp7 = (tmp6 :: []) in
   let tmp8 = (tmp4 :: tmp7) in
   let tmp9 = ((FStarC_Errors_Msg.text "A query failed.") :: tmp8) in
-  (FStarC_Errors.fStarC_Errors_diag__range_list_document (qs).query_range tmp9)) else ());
+  (FStarC_Errors.fStarC_Errors_diag__range_list_ocaml_document (qs).query_range tmp9)) else ());
   ())
 
 let ask_solver (env : FStarC_SMTEncoding_Env.env_t) (configs : (query_settings) list) : ((query_settings) list * answer) =
-  (let default_settings = (FStarC_List.hd configs) in
+  (let default_settings = (BatList.hd configs) in
   let skip = (if ((env).FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.admit then true else (let tmp = (FStarC_Options.admit_except ()) in
     (match tmp with
       | (Some (id)) -> (if (FStarC_Util.starts_with id "(") then (let tmp1 = (full_query_id default_settings) in
@@ -581,7 +581,7 @@ let ask_solver (env : FStarC_SMTEncoding_Env.env_t) (configs : (query_settings) 
       | None -> false
     ))) in
   let ans = (if skip then ans_ok else (let ans = (ask_solver_recover configs) in
-    let cfg = (FStarC_List.last configs) in
+    let cfg = (BatList.last configs) in
     (if (not (ans).ok) then (maybe_save_failing_query env cfg) else ());
     ans)) in
   (configs, ans))
@@ -606,7 +606,7 @@ let encode_and_ask (use_env_msg : ((unit -> string)) option) (tcenv : FStarC_Typ
           | tmp5 -> (let tmp6 = (!(dbg_SMTQuery)) in
             (if tmp6 then (let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' q) in
             let tmp8 = (FStarC_SMTEncoding_ErrorReporting.goals_of goals) in
-            let tmp9 = (FStarC_List.length tmp8) in
+            let tmp9 = ((fun l -> Z.of_int (BatList.length l)) tmp8) in
             let tmp10 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 tmp9) in
             let tmp11 = (FStarC_Format.fmt2 "Encoded query %s\nwith %s goals" tmp7 tmp10) in
             (FStarC_Errors.fStarC_Errors_diag__range_string (FStarC_TypeChecker_Env.get_range tcenv1) tmp11)) else ());
@@ -636,20 +636,20 @@ let error_to_short_string (err : errors) : string =
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int (err).error_ifuel) in
   (FStarC_Format.fmt4 "%s (rlimit=%s; fuel=%s; ifuel=%s)" (err).error_reason tmp tmp1 tmp2))
 
-let errors_to_report (tried_recovery : bool) (settings : query_settings) (gst : goal_state) : ((FStarC_Errors_Codes.error_code * (FStar_Pprint.document) list * FStarC_Range_Type.range * (string) list)) list =
-  (let format_smt_error = (fun msg -> (let tmp = (FStarC_Errors_Msg.sublist FStar_Pprint.empty msg) in
+let errors_to_report (tried_recovery : bool) (settings : query_settings) (gst : goal_state) : ((FStarC_Errors_Codes.error_code * (PPrint.document) list * FStarC_Range_Type.range * (string) list)) list =
+  (let format_smt_error = (fun msg -> (let tmp = (FStarC_Errors_Msg.sublist PPrint.empty msg) in
     let tmp1 = (FStarC_Errors_Msg.bulleted ((FStarC_Errors_Msg.text "'canceled' or 'resource limits reached' means the SMT query timed out, so you might want to increase the rlimit") :: ((FStarC_Errors_Msg.text "'incomplete quantifiers' means Z3 could not prove the query, so try to spell out your proof out in greater detail, increase fuel or ifuel") :: ((FStarC_Errors_Msg.text "'unknown' means Z3 provided no further reason for the proof failing") :: [])))) in
-    let tmp2 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "Note:") tmp1) in
-    let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp2) in
-    let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
-    let d = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "SMT solver says:") tmp4) in
+    let tmp2 = (PPrint.(^^) (PPrint.string "Note:") tmp1) in
+    let tmp3 = (PPrint.(^^) PPrint.hardline tmp2) in
+    let tmp4 = (PPrint.(^^) tmp tmp3) in
+    let d = (PPrint.(^^) (PPrint.string "SMT solver says:") tmp4) in
     (d :: []))) in
   let recovery_failed_msg = (if tried_recovery then ((FStarC_Errors_Msg.text "This query was retried due to the --proof_recovery option, yet it\n               still failed on all attempts.") :: []) else []) in
   let tmp = (FStarC_Options.query_stats ()) in
-  let smt_error = (if tmp then (let tmp1 = (FStarC_List.map error_to_short_string (gst).gs_errors) in
-    let tmp2 = (FStarC_List.map FStar_Pprint.doc_of_string tmp1) in
-    (format_smt_error tmp2)) else (let tmp1 = (FStarC_List.fold_left (fun tmp1 err -> (match tmp1 with
-        | (ic, cc, uc, bc) -> (let err1 = (if (FStarC_Util.starts_with (err).error_reason "unknown because ") then (FStarC_Util.substring_from (err).error_reason (FStarC_String.length "unknown because ")) else (err).error_reason) in
+  let smt_error = (if tmp then (let tmp1 = (BatList.map error_to_short_string (gst).gs_errors) in
+    let tmp2 = (BatList.map PPrint.string tmp1) in
+    (format_smt_error tmp2)) else (let tmp1 = (BatList.fold_left (fun tmp1 err -> (match tmp1 with
+        | (ic, cc, uc, bc) -> (let err1 = (if (FStarC_Util.starts_with (err).error_reason "unknown because ") then ((fun s i -> BatString.tail s (Z.to_int i)) (err).error_reason ((fun s -> Z.of_int (BatUTF8.length s)) "unknown because ")) else (err).error_reason) in
           (match () with
             | tmp2 when (FStarC_Util.starts_with err1 "(incomplete") -> ((Prims.op_Plus ic Prims.int_one), cc, uc, bc)
             | tmp2 when (((FStarC_Util.starts_with err1 "canceled") || (FStarC_Util.starts_with err1 "(resource")) || (FStarC_Util.starts_with err1 "timeout")) -> (ic, (Prims.op_Plus cc Prims.int_one), uc, bc)
@@ -658,45 +658,45 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) (gst : 
           ))
       )) (Prims.int_zero, Prims.int_zero, Prims.int_zero, Prims.int_zero) (gst).gs_errors) in
     (match tmp1 with
-      | (incomplete_count, canceled_count, unknown_count, z3_overflow_bug_count) -> ((if (Prims.op_Greater z3_overflow_bug_count Prims.int_zero) then (FStarC_Errors.fStarC_Errors_log_issue__range_list_document ((gst).gs_goal).FStarC_SMTEncoding_ErrorReporting.goal_range FStarC_Errors_Codes.Warning_UnexpectedZ3Stderr ((FStarC_Errors_Msg.text "Z3 ran into an internal overflow while trying to prove this query.") :: ((FStarC_Errors_Msg.text "Try breaking it down into smaller pieces.") :: []))) else ());
+      | (incomplete_count, canceled_count, unknown_count, z3_overflow_bug_count) -> ((if (Prims.op_Greater z3_overflow_bug_count Prims.int_zero) then (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document ((gst).gs_goal).FStarC_SMTEncoding_ErrorReporting.goal_range FStarC_Errors_Codes.Warning_UnexpectedZ3Stderr ((FStarC_Errors_Msg.text "Z3 ran into an internal overflow while trying to prove this query.") :: ((FStarC_Errors_Msg.text "Try breaking it down into smaller pieces.") :: []))) else ());
         let base = (match (incomplete_count, canceled_count, unknown_count) with
             | (tmp2, u__iconst0, u__iconst1) when u__iconst0 = Prims.int_zero && u__iconst1 = Prims.int_zero && (Prims.op_Greater incomplete_count Prims.int_zero) -> ((FStarC_Errors_Msg.text "The SMT solver could not prove the query.") :: [])
             | (u__iconst0, tmp2, u__iconst1) when u__iconst0 = Prims.int_zero && u__iconst1 = Prims.int_zero && (Prims.op_Greater canceled_count Prims.int_zero) -> ((FStarC_Errors_Msg.text "The SMT query timed out, you might want to increase the rlimit") :: [])
             | (tmp2, tmp3, tmp4) -> ((FStarC_Errors_Msg.text "Try with --query_stats to get more details") :: [])
           ) in
-        (FStarC_List.op_At base recovery_failed_msg))
+        (BatList.append base recovery_failed_msg))
     ))) in
   let ctx_doc = (fun c -> (match c with
       | (FStarC_SMTEncoding_ErrorReporting.CVar (x)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident (x).FStarC_Syntax_Syntax.ppname) in
         let tmp2 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' (x).FStarC_Syntax_Syntax.sort) in
         let tmp3 = (FStar_Pprint.nest (Prims.of_int (2)) tmp2) in
-        let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text " :") tmp3) in
-        let tmp5 = (FStar_Pprint.op_Hat_Hat tmp1 tmp4) in
-        (FStar_Pprint.group tmp5))
+        let tmp4 = (PPrint.(^/^) (FStarC_Errors_Msg.text " :") tmp3) in
+        let tmp5 = (PPrint.(^^) tmp1 tmp4) in
+        (PPrint.group tmp5))
       | (FStarC_SMTEncoding_ErrorReporting.CDef (x, e)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident (x).FStarC_Syntax_Syntax.ppname) in
         let tmp2 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' e) in
         let tmp3 = (FStar_Pprint.nest (Prims.of_int (2)) tmp2) in
-        let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text " =") tmp3) in
-        let tmp5 = (FStar_Pprint.op_Hat_Hat tmp1 tmp4) in
-        (FStar_Pprint.group tmp5))
+        let tmp4 = (PPrint.(^/^) (FStarC_Errors_Msg.text " =") tmp3) in
+        let tmp5 = (PPrint.(^^) tmp1 tmp4) in
+        (PPrint.group tmp5))
       | (FStarC_SMTEncoding_ErrorReporting.CHyp (p)) -> (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' p)
       | (FStarC_SMTEncoding_ErrorReporting.CMatch (e, p)) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' e) in
         let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__withinfo_t_pat' p) in
-        let tmp3 = (FStar_Pprint.doc_of_string tmp2) in
+        let tmp3 = (PPrint.string tmp2) in
         let tmp4 = (FStar_Pprint.nest (Prims.of_int (2)) tmp3) in
-        let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "matches") tmp4) in
-        let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp5) in
-        (FStar_Pprint.group tmp6))
+        let tmp5 = (PPrint.(^/^) (FStarC_Errors_Msg.text "matches") tmp4) in
+        let tmp6 = (PPrint.(^/^) tmp1 tmp5) in
+        (PPrint.group tmp6))
     )) in
   let tmp1 = (FStarC_SMTEncoding_ErrorReporting.goal_context (settings).query_goals (gst).gs_goal) in
-  let ctx = (FStarC_List.map ctx_doc tmp1) in
+  let ctx = (BatList.map ctx_doc tmp1) in
   let tmp2 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' ((gst).gs_goal).FStarC_SMTEncoding_ErrorReporting.goal_source) in
   let tmp3 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Failed to prove:") tmp2) in
   let tmp4 = (tmp3 :: []) in
-  let goal_detail = (FStarC_List.op_At tmp4 (if (match ctx with
+  let goal_detail = (BatList.append tmp4 (if (match ctx with
       | [] -> true
       | tmp5 -> false
-    ) then [] else ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "In context:") (FStar_Pprint.separate FStar_Pprint.hardline ctx)) :: []))) in
+    ) then [] else ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "In context:") (PPrint.separate PPrint.hardline ctx)) :: []))) in
   let tmp5 = (FStarC_Options.query_stats ()) in
   let vc_detail = (if tmp5 then (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' (settings).query_term) in
     let tmp7 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "VC =") tmp6) in
@@ -704,11 +704,11 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) (gst : 
   let tmp6 = (FStarC_Errors.get_ctx ()) in
   let tmp7 = (FStarC_Errors_Codes.Error_Z3SolverError, ((gst).gs_goal).FStarC_SMTEncoding_ErrorReporting.goal_msg, ((gst).gs_goal).FStarC_SMTEncoding_ErrorReporting.goal_range, tmp6) in
   let tmp8 = (tmp7 :: []) in
-  (FStarC_TypeChecker_Err.errors_smt_detail ((settings).query_env).FStarC_SMTEncoding_Env.tcenv tmp8 (FStarC_List.op_At smt_error (FStarC_List.op_At goal_detail vc_detail))))
+  (FStarC_TypeChecker_Err.errors_smt_detail ((settings).query_env).FStarC_SMTEncoding_Env.tcenv tmp8 (BatList.append smt_error (BatList.append goal_detail vc_detail))))
 
 let report (env : FStarC_TypeChecker_Env.env) (default_settings : query_settings) (a : answer) : unit =
   (let name = (full_query_id default_settings) in
-  (FStarC_List.iter (fun gst -> (let tmp = (errors_to_report (a).tried_recovery default_settings gst) in
+  (BatList.iter (fun gst -> (let tmp = (errors_to_report (a).tried_recovery default_settings gst) in
   (FStarC_Errors.add_errors tmp);
   (if (a).quaking then (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (gst).gs_nsuccess) in
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int (Prims.op_Plus (gst).gs_nsuccess (gst).gs_nfailure)) in
@@ -725,18 +725,18 @@ let do_solve (use_env_msg : ((unit -> string)) option) (tcenv : FStarC_TypeCheck
   (if tmp then (let tmp1 = (FStarC_TypeChecker_Env.all_binders tcenv) in
   let tmp2 = (FStarC_Pprint.flow_map (FStar_Pprint.break_ Prims.int_one) (fun b -> (let tmp2 = (FStarC_Ident.fStarC_Class_PP_pp__ident ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname) in
     let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
-    let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp3) in
-    let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp2 tmp4) in
+    let tmp4 = (PPrint.(^/^) PPrint.colon tmp3) in
+    let tmp5 = (PPrint.(^/^) tmp2 tmp4) in
     let tmp6 = (FStar_Pprint.nest (Prims.of_int (2)) tmp5) in
-    let tmp7 = (FStar_Pprint.parens tmp6) in
-    (FStar_Pprint.group tmp7))) tmp1) in
+    let tmp7 = (PPrint.parens tmp6) in
+    (PPrint.group tmp7))) tmp1) in
   let tmp3 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Env =") tmp2) in
   let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' q) in
   let tmp5 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "VC =") tmp4) in
   let tmp6 = (tmp5 :: []) in
   let tmp7 = (tmp3 :: tmp6) in
   let tmp8 = ((FStarC_Errors_Msg.text "Before calling solver.") :: tmp7) in
-  (FStarC_TypeChecker_Env.fStarC_Errors_diag__env_list_document tcenv tmp8)) else ());
+  (FStarC_TypeChecker_Env.fStarC_Errors_diag__env_list_ocaml_document tcenv tmp8)) else ());
   let ans_opt = (encode_and_ask use_env_msg tcenv q) in
   (match ans_opt with
     | ((default_settings :: tmp1), ans) when (not (ans).ok) -> (report tcenv default_settings ans)
@@ -747,7 +747,7 @@ let do_solve (use_env_msg : ((unit -> string)) option) (tcenv : FStarC_TypeCheck
 let solve (use_env_msg : ((unit -> string)) option) (tcenv : FStarC_TypeChecker_Env.env) (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
   (let tmp = (FStarC_Options.no_smt ()) in
   (if tmp then (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' q) in
-  let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (FStarC_Errors_Msg.text "Query = ") tmp1) in
+  let tmp2 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Query = ") tmp1) in
   let tmp3 = (tmp2 :: []) in
   let tmp4 = ((FStarC_Errors_Msg.text "A query could not be solved internally, and --no_smt was given.") :: tmp3) in
   let tmp5 = (FStarC_Errors_Codes.Error_NoSMTButNeeded, tmp4) in
@@ -775,7 +775,7 @@ let solve_sync (use_env_msg : ((unit -> string)) option) (tcenv : FStarC_TypeChe
     (if tmp2 then (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' q) in
     let tmp4 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Running synchronous SMT query. Q =") tmp3) in
     let tmp5 = (tmp4 :: []) in
-    (FStarC_Errors.fStarC_Errors_diag__range_list_document (q).FStarC_Syntax_Syntax.pos tmp5)) else ());
+    (FStarC_Errors.fStarC_Errors_diag__range_list_ocaml_document (q).FStarC_Syntax_Syntax.pos tmp5)) else ());
     let tmp3 = (disable_quake_for (fun tmp3 -> (encode_and_ask use_env_msg tcenv q))) in
     (match tmp3 with
       | (u__cfgs, ans) -> ans

@@ -11,9 +11,12 @@ In all cases (user or developer), please first read `README.md`
   its other subdirectories. It does not require loading the Pulse
   plugin (which makes sense, since the checker itself is part of the
   plugin.)
-* In `src/syntax-extension`: A top-level parser hook for the custom
-  syntax of pulse. This F* code typechecks against the F* sources.
-* In `src/ml`: Base OCaml files for the checker.
+* In `src/syntax_extension`: A top-level parser hook for the custom
+  syntax of pulse, and the implementations of the checker interfaces
+  `Pulse.RuntimeUtils` and `Pulse.Extract.CompilerLib`, which call
+  into the compiler. This F* code typechecks against the F* sources.
+  The few genuinely foreign functions are `@@custard_extern`
+  declarations in `*-ocaml.fst` files there.
 
 ## Modifying the user-facing Pulse libraries
 

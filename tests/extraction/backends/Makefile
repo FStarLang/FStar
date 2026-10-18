@@ -99,10 +99,6 @@ XFAIL_CUSTARD_KRML_RUST += ExtDatatypesRec ExtDatatypesMutual
 XFAIL_CUSTARD_KRML_C    += ExtInt128 ExtUInt128
 XFAIL_CUSTARD_KRML_RUST += ExtInt128
 
-# FINDINGS.md #4: karamel's C backend drops a narrowing cast inside a
-# comparison. Custard emits the cast, and karamel then removes it.
-XFAIL_CUSTARD_KRML_C    += ExtIntCast
-
 CUSTARD_OCAML_TESTS     := $(filter-out $(NO_CUSTARD_OCAML)     $(XFAIL_CUSTARD_OCAML),$(TESTS))
 CUSTARD_C_TESTS         := $(filter-out $(NO_CUSTARD_C)         $(XFAIL_CUSTARD_C),$(TESTS))
 CUSTARD_KRML_C_TESTS    := $(filter-out $(NO_CUSTARD_KRML_C)    $(XFAIL_CUSTARD_KRML_C),$(TESTS))

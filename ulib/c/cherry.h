@@ -297,6 +297,19 @@ cherry_int cherry_str_length(cherry_string s);
 uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
+uint64_t cherry_str_fnv1a(cherry_string s);
+/* [FStar.String.make l c]: [l] copies of the code point [c]. */
+cherry_string cherry_str_make(cherry_int l, uint32_t c);
+/* Byte-level access, for FStar.Pprint (whose lengths and offsets are in
+   bytes, as in OCaml): the size in bytes, the byte at an offset (0 past the
+   end), and the bytes [off, off + len), clamped to the string. */
+cherry_int cherry_str_byte_size(cherry_string s);
+uint32_t cherry_str_byte_at(cherry_string s, cherry_int off);
+cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int len);
+
+/* FStar.Char: a char is its code point. */
+static inline uint32_t cherry_u32_of_char(uint32_t c) { return c; }
+static inline uint32_t cherry_char_of_u32(uint32_t c) { return c; }
 cherry_string cherry_string_of_int(cherry_int a);
 cherry_string cherry_string_of_bool(bool b);
 void cherry_print_string(cherry_string s);
