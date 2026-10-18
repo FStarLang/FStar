@@ -1371,6 +1371,64 @@ let teq_nosmt_force (env:Env.env) (t0 t1:typ) : ML bool =
 or   G |- t0 <: t1 | p
 
  *)
+
+(* Failures of [check_relation] without a guard, remembered for the rest of
+   the current top-level check. A failed relation is retried in several ways
+   (argument-wise, then by unfolding either side, then by a fallback), and the
+   retries meet the same subproblems again: relating two long chains of
+   definitions that differ, e.g. EverCDDL's environments [env5] and [env4],
+   each defined by extending the previous one, revisits each level of the
+   chain from every level above it, which is exponential in its length. A
+   failure is only reused under the same environment (physically), relation,
+   flags and terms; returning a failure is always sound. *)
+type relation_failure = {
+  rf_tcenv : Env.env;
+  rf_unfolding_ok : bool;
+  rf_allow_univ : bool;
+  rf_at_top : bool;
+  rf_error : error;
+}
+
+let relation_failures : HashTable.t term (list relation_failure) = HashTable.create 1024
+
+let clear_relation_failures () : ML unit = HashTable.clear relation_failures
+
+let relation_failure_key (rel:relation) (t0 t1:typ) : ML (option term) =
+  match rel with
+  | EQUALITY -> Some (S.mk_Tm_app U.tand [S.as_arg t0; S.as_arg t1] R.dummyRange)
+  | SUBTYPING None -> Some (S.mk_Tm_app U.timp [S.as_arg t0; S.as_arg t1] R.dummyRange)
+  | SUBTYPING (Some _) -> None
+
+let with_relation_failure_memo (g:env) (rel:relation) (t0 t1:typ) (f:result unit)
+  : result unit
+  = fun ctx cache ->
+      if not ctx.no_guard then f ctx cache else
+      match relation_failure_key rel t0 t1 with
+      | None -> f ctx cache
+      | Some key ->
+        let same (e:relation_failure) : ML bool =
+          BU.physical_equality e.rf_tcenv g.tcenv
+          && e.rf_unfolding_ok = ctx.unfolding_ok
+          && e.rf_allow_univ = g.allow_universe_instantiation
+          && e.rf_at_top = g.at_top
+        in
+        let entries =
+          match HashTable.try_find relation_failures key with
+          | None -> []
+          | Some l -> l
+        in
+        match List.tryFind same entries with
+        | Some e -> Error e.rf_error
+        | None ->
+          match f ctx cache with
+          | Error err ->
+            let e = { rf_tcenv = g.tcenv; rf_unfolding_ok = ctx.unfolding_ok;
+                      rf_allow_univ = g.allow_universe_instantiation; rf_at_top = g.at_top;
+                      rf_error = err } in
+            HashTable.add relation_failures key (e :: entries);
+            Error err
+          | r -> r
+
 let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
   : ML (result unit)
   = let err (lbl:string) =
@@ -2144,7 +2202,7 @@ and check_relation (g:env) (rel:relation) (t0 t1:typ)
                     (show t0)
                     (show rel)
                     (show t1);
-        let res = check_relation' g rel t0 t1 ctx cache in
+        let res = with_relation_failure_memo g rel t0 t1 (check_relation' g rel t0 t1) ctx cache in
         match res with
         | Error err ->
           Format.print4 "} check_relation (%s, %s, %s) failed with %s\n"
@@ -2156,7 +2214,7 @@ and check_relation (g:env) (rel:relation) (t0 t1:typ)
           res
     )
     else (
-      check_relation' g rel t0 t1
+      with_relation_failure_memo g rel t0 t1 (check_relation' g rel t0 t1)
     )
 
 and check_relation_args (g:env) rel (a0 a1:args)
@@ -4297,6 +4355,7 @@ let check_term_top_gen (g:Env.env) (e:term) (topt:option typ) (simplify:bool) (f
                    (show e) 
                    (show topt));
     reset_cache_stats();
+    clear_relation_failures ();
     let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in
     let res =
       Profiling.profile
@@ -4440,6 +4499,7 @@ let check_term_equality guard_ok unfolding_ok g t0 t1
     if !dbg_Top then
        Format.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
          (show t0) (show t1) (show guard_ok) (show unfolding_ok);
+    clear_relation_failures ();
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Eq", None)] } in
     let r = check_relation g EQUALITY t0 t1 ctx initial_cache in
     if !dbg_Top then
@@ -4453,6 +4513,7 @@ let check_term_equality guard_ok unfolding_ok g t0 t1
 
 let check_term_subtyping guard_ok unfolding_ok g t0 t1
   = let g = initial_env g in
+    clear_relation_failures ();
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Subtyping", None)] } in
     match check_relation g (SUBTYPING None) t0 t1 ctx initial_cache with
     | Success ((_, g), cache) -> Inl (return_my_guard_and_tok_t g cache)
