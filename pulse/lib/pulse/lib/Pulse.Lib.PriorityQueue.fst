@@ -256,7 +256,8 @@ let parent_idx_lt (i:nat{i > 0}) : Lemma (parent_idx i < i) = ()
 //
 // Swap (defined here because mem_swap uses it)
 //
-let swap_seq #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s}) : Seq.seq t =
+let swap_seq #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
+  : s':Seq.seq t{Seq.length s' == Seq.length s} =
   Seq.upd (Seq.upd s i (Seq.index s j)) j (Seq.index s i)
 
 let swap_length #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
