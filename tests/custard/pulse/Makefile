@@ -106,6 +106,13 @@ KRML_TESTS += UglyAlias
 RUST_FLAGS_UglyAlias += --custard_entry_module UglyAlias
 KRML_FLAGS_UglyAlias += --custard_entry_module UglyAlias
 KRML_FLAGS_UglyAlias += --custard_monomorphize_types true
+# A binder whose sort is a [match] reducing to [unit] (EverParse's
+# [err:(if use_error_handler then .. else unit)]): the arrow type of [f] and
+# the call [f s () x] must agree on whether it is kept.  krml only warns when
+# it cannot re-check a function, and drops it, so the check is that [test]
+# survives into the C (see UnitErrArg.kept below).
+KRML_TESTS += UnitErrArg
+KRML_FLAGS_UnitErrArg += --custard_entry_module UnitErrArg
 # A reduced CBOR well-formedness checker over a slice, run against a curated
 # corpus of 48 boundary vectors.  Unlike the tests above it does not merely
 # build: it writes each vector through the slice and checks its own answer,
@@ -796,6 +803,11 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	         cat $(OUTPUT_DIR)/$*.err; exit 1; }; done; true
 	$(Q)touch $@
 
+$(OUTPUT_DIR)/UnitErrArg.kept: $(OUTPUT_DIR)/UnitErrArg.cexe
+	$(Q)grep -q 'UnitErrArg_test' $(OUTPUT_DIR)/UnitErrArg_c/Custard.c \
+	  || { echo "ERROR: krml dropped UnitErrArg.test"; exit 1; }
+	$(Q)touch $@
+
 ALL_TEST_NAMES := $(GREP_TESTS) $(OCAML_TESTS) $(C_TESTS) \
                   $(KRML_TESTS) $(RUST_TESTS) $(REJECT_TESTS) $(CHERRY_TESTS)
 
@@ -827,6 +839,7 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 
 ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))
+all: $(OUTPUT_DIR)/UnitErrArg.kept
 ifneq ($(shell command -v rustc 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 
