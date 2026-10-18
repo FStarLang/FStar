@@ -4202,6 +4202,50 @@ definitions with external linkage.  Name the module with \
 they are part of this unit's interface."; ])
   end
 
+(* Two program names that C spells the same way.  [sanitize] is not
+   injective -- [mk_comp'] and [mk_comp_] are both [mk_comp_] -- and no choice
+   of escape makes it so, since whatever ['] becomes is also an identifier
+   someone can write.  A definition with internal linkage has a name nothing
+   outside this file can see, so when its spelling is already claimed it is
+   renamed through {!renames} to the first free [name_1], [name_2], ....
+
+   Every other declaration keeps its name: an external's target and a public
+   definition are spelled by the user or a consumer, an imported declaration
+   by the unit that compiled it, and a type, constructor or macro is in the
+   header.  Those are claimed first, so that a static definition never takes
+   one of their names, and a clash between two of them is still error 374 in
+   {!check_emitted_names}.  Runs after {!build_renames} and before the names
+   are seeded into {!taken_names}. *)
+let rename_clashes (init_name:string) (p:program) : ML unit =
+  let movable (d:decl) : ML bool =
+    local d && None? (extern_target d) &&
+    (match d with
+     | DLet l -> not (is_public l) && not (is_macro l)
+     | _ -> false) in
+  let wanted : HashTable.t string bool = HashTable.create 50 in
+  p |> List.iter (fun d -> HashTable.add wanted (emitted_name d) true);
+  HashTable.add wanted init_name true;
+  let claimed : HashTable.t string bool = HashTable.create 50 in
+  HashTable.add claimed init_name true;
+  p |> List.iter (fun d ->
+    if not (movable d) then HashTable.add claimed (emitted_name d) true);
+  p |> List.iter (fun d ->
+    if movable d then begin
+      let nm = emitted_name d in
+      if None? (HashTable.try_find claimed nm)
+      then HashTable.add claimed nm true
+      else begin
+        let rec fresh (i:int) : ML string =
+          let cand = nm ^ "_" ^ string_of_int i in
+          if Some? (HashTable.try_find wanted cand) ||
+             Some? (HashTable.try_find claimed cand)
+          then fresh (i + 1) else cand in
+        let nm' = fresh 1 in
+        HashTable.add !renames (string_of_name (name_of_decl d)) nm';
+        HashTable.add claimed nm' true
+      end
+    end)
+
 (* Section 35.1.  A public definition whose signature mentions a
    specialization.
 
@@ -4379,8 +4423,9 @@ let check_interface_names (p:program) : ML unit =
    decided on its own whether the name it wanted was free.  {!alloc_name} and
    {!build_renames} now consult one table, which is what keeps the *generated*
    names out of each other's way; this is the other half, and it is about the
-   names the program itself supplies.  Nothing renames those, so the only
-   thing to do with a collision is to say so.
+   names the program itself supplies.  {!rename_clashes} renames the static
+   definitions among those; the rest cannot be renamed, so the only thing to
+   do with a collision is to say so.
 
    Worth an error rather than leaving it to the C compiler because C does not
    always catch it.  A definition with external linkage that lands on an
@@ -5106,6 +5151,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
      renaming afterwards left the table holding the name the option had just
      replaced.  Nothing in here reads a table, so the move costs nothing. *)
   build_renames cu.cu_no_prefix p;
+  rename_clashes init_name p;
   (* Section 116.  After the renames and before anything is printed, because
      the first generated name may be allocated as early as the first body.
      [reset_program_state] emptied the table; this seeds it, under the

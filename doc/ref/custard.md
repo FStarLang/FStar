@@ -21063,6 +21063,16 @@ error 374. Two *externals* reaching one target are not its business: that is
 legitimate when they agree, and §53.3's check --- which has both prototypes
 and better advice --- owns the case where they do not.
 
+What *can* be minted is a `static` definition's name: it is the file's own
+business, so `rename_clashes` gives it the first free `_1`, `_2`, … suffix
+instead of rejecting.  The clash is real in practice --- `sanitize` turns `'`
+into `_`, so the compiler's `Syntax.mk_comp_` and `mk_comp'` coincide, and
+mapping `'` to `_q` would only move the clash onto `mk_comp_q`.  Public
+definitions, macros, externals and the initializer keep their spellings and
+are claimed first, so 374 is left for clashes among names a consumer can see.
+`tests/custard/NameClash.fst` pins the renaming; `ExtOwn` makes its definition
+public so that it still exercises the rejection.
+
 The shape of all three is the same. A backend that mints C names in several
 places has to have one table, holding every name the file will really contain,
 that every minting site consults; and where nothing can be minted, the
