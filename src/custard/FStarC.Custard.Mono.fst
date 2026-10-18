@@ -311,6 +311,26 @@ let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
 let is_unit_binder (env:TcEnv.env) (b:binder) : ML bool =
   U.is_unit b.binder_bv.sort || is_unit_sort env b.binder_bv.sort
 
+(* Whether rule 1 keeps a unit-shaped binder of a definition as a parameter,
+   rather than deleting it.
+
+   A definition's unit binder is the one place that deleted it: an arrow type
+   keeps it ([erased_binders] does not flag it) and so does a call through a
+   variable of that type ([unit_binders] passes [()] for it).  A direct call
+   to the definition reads the classification and agrees with it either way,
+   but a definition passed as a *function value* is typed by its parameters
+   and received at the arrow, and the two disagree by exactly that binder:
+   karamel rejects [h g] for [g (x:u32) (u:unit) (y:u32)] passed where [u32 ->
+   unit -> u32 -> u32] is expected, and EverParse's probes under
+   [--use_error_handler_macro], whose [err] is such a binder, are the same.
+
+   On the karamel backends keeping it costs nothing: karamel deletes [unit]
+   parameters itself, from definitions, calls and arrow types alike, and only
+   keeps them where a function is used as a value -- which is where they are
+   needed.  Elsewhere the binder is still deleted. *)
+let krml_keeps_unit_params () : ML bool =
+  List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"]
+
 let fvar_arity_cache : HashTable.t string bool = HashTable.create 100
 
 (* The term-level counterpart of [is_type_binder]: a spine whose head no
@@ -825,7 +845,8 @@ let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
   let init (i:int) (b:binder) : ML bclass =
-    if is_dropped_binder env b || is_unit_binder env b            (* rule 1 *)
+    if is_dropped_binder env b ||                                 (* rule 1 *)
+       (is_unit_binder env b && not (krml_keeps_unit_params ()))
     then Dropped
     else if U.has_attribute b.binder_attrs PC.monomorphize_attr   (* rule 3 *)
     then Mono

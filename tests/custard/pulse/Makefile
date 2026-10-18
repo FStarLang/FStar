@@ -113,6 +113,11 @@ KRML_FLAGS_UglyAlias += --custard_monomorphize_types true
 # survives into the C (see UnitErrArg.kept below).
 KRML_TESTS += UnitErrArg
 KRML_FLAGS_UnitErrArg += --custard_entry_module UnitErrArg
+
+# A top-level function with a unit parameter, passed as a function value: its
+# definition must keep the parameter its arrow type has (see UnitFnValue.kept).
+KRML_TESTS += UnitFnValue
+KRML_FLAGS_UnitFnValue += --custard_entry_module UnitFnValue
 # A reduced CBOR well-formedness checker over a slice, run against a curated
 # corpus of 48 boundary vectors.  Unlike the tests above it does not merely
 # build: it writes each vector through the slice and checks its own answer,
@@ -806,6 +811,10 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/UnitErrArg.kept: $(OUTPUT_DIR)/UnitErrArg.cexe
 	$(Q)grep -q 'UnitErrArg_test' $(OUTPUT_DIR)/UnitErrArg_c/Custard.c \
 	  || { echo "ERROR: krml dropped UnitErrArg.test"; exit 1; }
+
+$(OUTPUT_DIR)/UnitFnValue.kept: $(OUTPUT_DIR)/UnitFnValue.cexe
+	$(Q)grep -q 'UnitFnValue_test' $(OUTPUT_DIR)/UnitFnValue_c/Custard.c \
+	  || { echo "ERROR: krml dropped UnitFnValue.test"; exit 1; }
 	$(Q)touch $@
 
 ALL_TEST_NAMES := $(GREP_TESTS) $(OCAML_TESTS) $(C_TESTS) \
@@ -840,6 +849,7 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 ifneq ($(KRML_FOUND),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .cexe, $(KRML_TESTS)))
 all: $(OUTPUT_DIR)/UnitErrArg.kept
+all: $(OUTPUT_DIR)/UnitFnValue.kept
 ifneq ($(shell command -v rustc 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 
