@@ -29,3 +29,6 @@ type int32 = FStar.Int32.t
 type uint32 = FStar.UInt32.t
 type int64 = FStar.Int64.t
 type uint64 = FStar.UInt64.t
+
+[@@custard_extern "(fun (x:float) -> x)"]
+let float64_of_float _ = admit ()

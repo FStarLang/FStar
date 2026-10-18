@@ -31,3 +31,7 @@ type int32
 type uint32
 type int64
 type uint64
+
+(* A [float] is an IEEE double, as is [FStar.Float64.t]; FStar.Pprint's
+   renderer takes the latter. *)
+val float64_of_float : float -> FStar.Float64.t
