@@ -128,6 +128,7 @@ and expr =
   | EBufNull of typ
   | EBufDiff of expr & expr
   | ESizeof of typ
+  | EZeroForDeref of width
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -382,6 +383,7 @@ and expr_to_doc (e:expr) : ML document =
   | EBufNull x -> ctor "EBufNull" [pp x]
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
   | ESizeof t -> ctor "ESizeof" [pp t]
+  | EZeroForDeref w -> ctor "EZeroForDeref" [pp w]
 
 and pp_branch (b:branch) : ML document =
   let (p, e) = b in
@@ -397,7 +399,7 @@ instance showable_branch : showable branch = showable_from_pretty
 
 type version = int
 (* Version of the AST type, for binary compatibility with karamel. *)
-let current_version: version = 32
+let current_version: version = 33
 
 type program = list decl
 type file = string & program

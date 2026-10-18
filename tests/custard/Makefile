@@ -505,6 +505,12 @@ CNOGREP_KindStar = "void *"
 # checks its own answers, so .dcran is the real assertion; before the fix
 # this program returned 1 with no compiler diagnostic at all.
 C_TESTS += ShiftLit
+
+# Two static definitions that C spells the same way: the second is renamed to
+# the first free suffix, which skips a name the program already uses.
+C_TESTS += NameClash
+CGREP_NameClash = "NameClash_step_(uint32_t x)" "NameClash_step__1(uint32_t x)" \
+                  "NameClash_step__2(uint32_t x)"
 CGREP_ShiftLit = "((uint64_t)40ULL) << n" "return (40 + n);"
 CNOGREP_ShiftLit = "return (40 << n);"
 
@@ -2934,7 +2940,8 @@ NOEGREP_DevGShare += "please report"
 # declared foreign -- which no C compiler and no linker objects to.
 REJECT_TESTS += ExtOwn
 CODE_ExtOwn := 374
-FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run
+# [helper] is public: a static one would just be renamed (NameClash).
+FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run --custard_entry ExtOwn.helper
 EGREP_ExtOwn += "both named \`ExtOwn_helper'"
 EGREP_ExtOwn += "custard_extern"
 
@@ -3029,7 +3036,7 @@ RSNOGREP_RustTup += "pub struct __uint32_t_uint32_t"
 # spells theirs: an api module on the left of the [=], a pattern on the right.
 RUSTSPLIT_TESTS += RustSplit
 # The [*] goes on the *lower* bundle, which is EverParse's own arrangement
-# read the other way up: the shared declarations -- [Custard.Prims], the
+# read the other way up: the shared declarations -- [prims], the
 # specializations Custard makes of library functions -- have to end up in a
 # file both halves may refer to, and putting them above the module that uses
 # them is what makes the two files circular.  karamel says so, in as many
@@ -3572,6 +3579,37 @@ $(CHERRY_DIR)/%.chdiff: $(CHERRY_DIR)/%.chexe %.out.expected
 
 all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chdiff, \
        $(filter-out $(CHERRY_OCAML_SKIP), $(CUSTARD_TESTS))))
+
+# FStarC.Hash-c.cherry.fst.  The test uses a compiler module, so it lives in
+# hash/ (out of this directory's dependency scan) and is checked into a cache
+# of its own.
+HASH_SRC = $(abspath $(FSTAR_ROOT)/src/basic)
+HASH_DIR = $(CHERRY_DIR)/hash
+HASH_ABS = $(abspath $(HASH_DIR))
+$(HASH_DIR)/CherryHash.chran: hash/CherryHash.fst \
+    $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryHash)
+	$(Q)rm -rf $(HASH_ABS) && mkdir -p $(HASH_ABS)
+	$(Q)cd hash && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst \
+	    CherryHash.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd hash && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
+	  --already_cached '*' --odir $(HASH_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryHash.main \
+	  CherryHash.fst -o $(HASH_ABS)/CherryHash.c > /dev/null
+	$(call msg, "CC-ASAN", CherryHash)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(HASH_ABS) -I$(CHERRY_INC) \
+	  -x c $(HASH_ABS)/CherryHash.c $(CHERRY_INC)/cherry.c \
+	  -o $(HASH_ABS)/CherryHash.chexe
+	$(call msg, "RUN-ASAN", CherryHash)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(HASH_ABS)/CherryHash.chexe
+	$(Q)touch $@
+
+all: $(HASH_DIR)/CherryHash.chran
 
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this

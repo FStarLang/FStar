@@ -523,6 +523,18 @@ cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
   return CHERRY_INT_SMALL(r < 0 ? -1 : r > 0 ? 1 : 0);
 }
 
+/* 64-bit FNV-1a over the UTF-8 bytes (FStarC.Hash.of_string). */
+uint64_t cherry_str_fnv1a(cherry_string s) {
+  const unsigned char *p = (const unsigned char *)cherry_str_data(s);
+  size_t n = cherry_str_size(s);
+  uint64_t h = 0xcbf29ce484222325u;
+  for (size_t i = 0; i < n; i++) {
+    h ^= p[i];
+    h *= 0x100000001b3u;
+  }
+  return h;
+}
+
 cherry_string cherry_string_of_int(cherry_int x) {
   if (cherry_is_scalar(x)) {
     char buf[32];
