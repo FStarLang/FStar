@@ -67,18 +67,31 @@ The driver is `Tc.tc_sig_let`, together with `Tc.tc_sig_let_phase2_core`.
     remembers it.
 
   Core does no inference, even at the top level. The phase-1 type is the one
-  TcTerm's phase 2 would record, which matters to clients (§5). This type is
-  not checked for well-formedness (`check_t = false`). It may only be
-  well-formed in the context the definition sets up. For example, for
-  `let n = f b in lem b; U32.uint_to_t n` the type is `x:U32.t{v x = f b}`,
-  where `=` is taken at `uint_t 32`; TcTerm does not check it either. The
-  old behaviour, in which Core infers the type, is still available with
+  TcTerm's phase 2 would record, which matters to clients (§5). The old
+  behaviour, in which Core infers the type, is still available with
   `--ext phase2_core_infer`.
 
   In that mode, the inferred computation type is normalized as TcTerm's
   `check_expected_effect` would normalize it (`Beta; Eager_unfolding;
   NoFullNorm; Exclude Zeta`). Only the result of the arrow is normalized; its
   binders are left as written.
+
+  A declared type is checked for well-formedness on its own first
+  (`check_declared_types`), and its guard discharged as a separate query, as
+  TcTerm does. Core caches what it proves, so checking the definition does
+  not emit that guard again. In one guard, the type's conjunct, quantified
+  over the binders of the type, would be a hypothesis of every goal of the
+  definition (see §4 on `split_goals`), which derails the SMT solver, e.g.
+  with nonlinear terms like `pow2 (hi - lo)` in the precondition. This
+  applies to the user's annotation, to the declared types of a nest of
+  recursive definitions, and to the phase-1 type of a definition whose
+  result is annotated, as in `let f x : Lemma (requires p x) (ensures q x) =
+  e`: phase 1 drops the annotation, and its precondition would otherwise
+  only be checked as the type of a binder of the definition. A type phase 1
+  inferred is not checked (`check_t = false`). It may only be well-formed
+  in the context the definition sets up. For example, for `let n = f b in
+  lem b; U32.uint_to_t n` the type is `x:U32.t{v x = f b}`, where `=` is
+  taken at `uint_t 32`; TcTerm does not check it either.
 
   The definition is then finished by `TcTerm.finish_top_level_let`, which is
   factored out of `check_top_level_let`. It masks top-level effects, checks
@@ -368,6 +381,12 @@ Core previously served tactics (`core_check`) and only knew `Tot` and
     that order, as tactics that address hypotheses by position expect.
   * `when` clauses are rejected (a structural failure), as TcTerm rejects
     them in verify mode; strict mode then reports TcTerm's error.
+  * A `match` with no return annotation and no residual type, as built by
+    tactics (e.g. Pulse's join of the postconditions of a conditional, `pts_to
+    r (match b with true -> 0ul | false -> f x)`), passed as an argument, is
+    checked against the type of the formal, like a `fun`. Synthesized, its
+    type would be that of its first branch, e.g. `x:U32.t{v x = 0}`, which
+    the other branches need not have.
   * `match ... returns C` is checked like `returns t`, where `t` is `C`'s
     result type, plus a check of the effect. That covers effectful
     annotations such as `returns St t`, since computation types carry no

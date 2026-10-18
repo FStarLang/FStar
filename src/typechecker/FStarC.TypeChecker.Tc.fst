@@ -400,8 +400,11 @@ let strip_tactic_synthesized (e:term) : ML term =
 (* Phase 2 of checking a top-level let-binding with FStarC.TypeChecker.Core
    (see [TcUtil.phase2_core_enabled]), rather than by re-running TcTerm on its
    phase-1 elaboration [e]. Core does no inference: it only checks [e], and its
-   guard is discharged here. Returns the checked term, or Core's error. *)
-let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (e:term)
+   guard is discharged here. [p1typ] is the type phase 1 computed for a
+   definition whose [lbtyp] it dropped; [p1typ_annotated] says whether the
+   user annotated the result of the definition, from which that type then
+   comes. Returns the checked term, or Core's error. *)
+let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:bool) (e:term)
   : ML (either term Core.error)
   = (* TcTerm discharges the guard of the body of a top-level function with
        the function's binders in the environment (see [TcTerm.tc_abs]). Core's
@@ -454,6 +457,22 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (e:term)
         else Errors.with_ctx "While checking for top-level effects" go;
         Core.commit_guard tok
     in
+    (* The declared types of a definition are checked on their own, and
+       their guard discharged as a separate query, as TcTerm does. Core
+       caches what it proves, so checking the definition against them does
+       not re-emit their guards. Were the two guards conjoined, that of the
+       types, quantified over their binders, would be a hypothesis of every
+       goal of the definition (the SMT encoding assumes each conjunct of a
+       guard while proving the next), which can derail the SMT solver, e.g.
+       with nonlinear terms like [pow2 (hi - lo)]. *)
+    let check_declared_types (env:Env.env) (ts:list typ) : ML unit =
+      ts |> List.iter (fun t ->
+        if not (Tm_unknown? (SS.compress t).n)
+        then (
+          if !dbg_TwoPhases then Format.print1 "phase2 core: checking the declared type %s\n" (show t);
+          ignore (CoreCheck.universe_of env "the type of this definition" t)
+        ))
+    in
     match (SS.compress e).n with
     | Tm_let {lbs=(false, [lb]); body=e2} ->
       let usubst, univ_names = SS.univ_var_opening lb.lbunivs in
@@ -472,7 +491,23 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (e:term)
         | None, Some t when not (Options.Ext.enabled "phase2_core_infer") -> false, Some (SS.subst usubst t)
         | _ -> true, topt
       in
-      if !dbg_TwoPhases then Format.print1 "phase2 core: expected type %s\n" (show topt);
+      if !dbg_TwoPhases then Format.print2 "phase2 core: expected type %s (result annotated: %s)\n" (show topt) (show p1typ_annotated);
+      (* The annotation is checked, and its guard discharged, before the
+         definition, as by TcTerm: in one guard, its conjunct would be a
+         hypothesis of every goal of the definition's (see
+         [check_declared_types]). So is the type phase 1 computed for a
+         definition with an annotated result, from which phase 1 drops the
+         annotation: Core would otherwise check it only as part of the
+         definition, e.g. the precondition of a lemma as the type of one of
+         its binders. A type phase 1 inferred is not checked: it may only be
+         well-formed in the context the definition sets up, e.g. [x:U32.t{v x
+         = f b}] for [let n = f b in lem b; U32.uint_to_t n], where [=] is
+         taken at [uint_t 32]; TcTerm does not check it either. *)
+      let check_t =
+        match topt with
+        | Some t when check_t || p1typ_annotated -> check_declared_types env_u [t]; false
+        | _ -> check_t
+      in
       begin match Core.compute_term_comp env_u lbdef topt check_t with
       | Inl (c, g) ->
         (* An inferred type is recorded as TcTerm would record it: TcTerm
@@ -515,6 +550,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (e:term)
       let lbs', _ = SS.open_let_rec lbs e2 in
       let univ_names = (List.hd lbs').lbunivs in
       let env_u = Env.push_univ_vars env univ_names in
+      check_declared_types env_u (List.map (fun (lb:letbinding) -> lb.lbtyp) lbs');
       begin match Core.check_top_level_letrec env_u lbs' with
       | Inl g ->
         (* The guard mentions the names of the nest (see
@@ -662,6 +698,20 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     let env' = { env with top_level = true; generalize = should_generalize } in
     let e_src = e in
     let phase1_lbtyp : ref (option typ) = mk_ref None in
+    (* Whether the result of an (unannotated) definition is annotated, as in
+       [let f x : t = e], where the annotation is an ascription of [e]. *)
+    let result_annotated =
+      let rec ascribed (t:term) : ML bool =
+        match (SS.compress t).n with
+        | Tm_abs {body} -> ascribed body
+        | Tm_meta {tm} -> ascribed tm
+        | Tm_ascribed _ -> true
+        | _ -> false
+      in
+      match (SS.compress e_src).n with
+      | Tm_let {lbs=(false, [lb])} -> ascribed lb.lbdef
+      | _ -> false
+    in
     let phase1 () : ML term =
       let e = e_src in
       if do_two_phases env' then run_phase1 (fun _ ->
@@ -775,7 +825,7 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
       then (
         let run_core () =
           let r =
-            Profiling.profile (fun () -> tc_sig_let_phase2_core env' !phase1_lbtyp e)
+            Profiling.profile (fun () -> tc_sig_let_phase2_core env' !phase1_lbtyp result_annotated e)
                               (Some (Ident.string_of_lid (Env.current_module env)))
                               "FStarC.TypeChecker.Tc.tc_sig_let-core-phase2"
           in
