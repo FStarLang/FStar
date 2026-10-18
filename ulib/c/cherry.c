@@ -484,6 +484,34 @@ cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
   return CHERRY_INT_SMALL(r < 0 ? -1 : r > 0 ? 1 : 0);
 }
 
+/* OCaml's caml_hash_mix_string (runtime/hash.c), over the UTF-8 bytes, so
+   that FStarC.Hash.of_string agrees with the OCaml build's [Hashtbl.hash]. */
+#define CHERRY_ROTL32(x, n) ((x) << (n) | (x) >> (32 - (n)))
+#define CHERRY_CAML_MIX(h, d) \
+  d *= 0xcc9e2d51u; d = CHERRY_ROTL32(d, 15); d *= 0x1b873593u; \
+  h ^= d; h = CHERRY_ROTL32(h, 13); h = h * 5 + 0xe6546b64u;
+
+uint32_t cherry_str_caml_hash_mix(uint32_t h, cherry_string s) {
+  const unsigned char *p = (const unsigned char *)cherry_str_data(s);
+  size_t len = cherry_str_size(s), i;
+  uint32_t w;
+  for (i = 0; i + 4 <= len; i += 4) {
+    w = (uint32_t)p[i] | (uint32_t)p[i+1] << 8 | (uint32_t)p[i+2] << 16
+        | (uint32_t)p[i+3] << 24;
+    CHERRY_CAML_MIX(h, w);
+  }
+  w = 0;
+  switch (len & 3) {
+  case 3: w  = (uint32_t)p[i+2] << 16; /* fallthrough */
+  case 2: w |= (uint32_t)p[i+1] << 8;  /* fallthrough */
+  case 1: w |= p[i];
+          CHERRY_CAML_MIX(h, w);
+  default: break;
+  }
+  h ^= (uint32_t)len;
+  return h;
+}
+
 cherry_string cherry_string_of_int(cherry_int x) {
   if (cherry_is_scalar(x)) {
     char buf[32];
