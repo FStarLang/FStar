@@ -3374,6 +3374,9 @@ CHERRY_CFLAGS_CherryExn = -O2
 CHERRY_RUN_CherryExn = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryDyn = -O2
 
+# Locals of different initializers share one C function.
+CHERRY_TESTS += CherryInitScope
+
 # Separate compilation under Cherry: a library unit and an application linked
 # against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
 # helpers for the library's types, and its own copy of each exception's and
