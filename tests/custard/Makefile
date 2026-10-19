@@ -3638,6 +3638,33 @@ $(TIMING_DIR)/CherryTiming.chran: timing/CherryTiming.fst \
 
 all: $(TIMING_DIR)/CherryTiming.chran
 
+SMALLINT_DIR = $(CHERRY_DIR)/smallint
+SMALLINT_ABS = $(abspath $(SMALLINT_DIR))
+$(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
+    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherrySmallInt)
+	$(Q)rm -rf $(SMALLINT_ABS) && mkdir -p $(SMALLINT_ABS)
+	$(Q)cd smallint && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+	    CherrySmallInt.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(SMALLINT_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd smallint && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(SMALLINT_ABS) \
+	  --already_cached '*' --odir $(SMALLINT_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherrySmallInt.main \
+	  CherrySmallInt.fst -o $(SMALLINT_ABS)/CherrySmallInt.c > /dev/null
+	$(call msg, "CC-ASAN", CherrySmallInt)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(SMALLINT_ABS) -I$(CHERRY_INC) \
+	  -x c $(SMALLINT_ABS)/CherrySmallInt.c $(CHERRY_INC)/cherry.c \
+	  -o $(SMALLINT_ABS)/CherrySmallInt.chexe
+	$(call msg, "RUN-ASAN", CherrySmallInt)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(SMALLINT_ABS)/CherrySmallInt.chexe
+	$(Q)touch $@
+
+all: $(SMALLINT_DIR)/CherrySmallInt.chran
+
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this
 # skip rather than fail.  The probe is for the *major version* and not for the
