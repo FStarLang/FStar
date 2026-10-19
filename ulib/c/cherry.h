@@ -298,6 +298,8 @@ uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
 uint64_t cherry_str_fnv1a(cherry_string s);
+/* Nanoseconds of the monotonic clock (FStarC.Timing). */
+uint64_t cherry_now_ns(void);
 /* [FStar.String.make l c]: [l] copies of the code point [c]. */
 cherry_string cherry_str_make(cherry_int l, uint32_t c);
 /* Byte-level access, for FStar.Pprint (whose lengths and offsets are in
