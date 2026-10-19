@@ -45,7 +45,7 @@
       y: Prims.int
       exists (w: Prims.int). x == w /\ w == y
 
-* Info at Calc.fst(50,3-50,5):
+* Info at Calc.fst(50,6-50,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -56,8 +56,9 @@
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
+  - See also Calc.fst(50,3-50,5)
 
-* Info at Calc.fst(64,3-64,5):
+* Info at Calc.fst(64,6-64,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -67,8 +68,9 @@
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
+  - See also Calc.fst(64,3-64,5)
 
-* Info at Calc.fst(78,3-78,5):
+* Info at Calc.fst(78,6-78,8):
   - Expected failure:
   - Assertion failed
   - The SMT solver could not prove the query.
@@ -77,6 +79,7 @@
       uu___: Prims.unit
       uu___: Prims.unit
       uu___: Prims.unit
+  - See also Calc.fst(78,3-78,5)
 
 * Info at Calc.fst(92,42-92,44):
   - Expected failure:

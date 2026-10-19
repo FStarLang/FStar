@@ -2109,8 +2109,8 @@ let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : ML term =
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
-(* This function is also called by tactics during phase1, and should not drop
-the guards if so (like simplify_guard does). *)
+(* This function is also called by tactics, and should not drop the guards
+under [admit] (like simplify_guard does). *)
 let simplify_vc full_norm_allowed env t : ML _
   =
   Stats.record "simplify_vc" fun () ->
@@ -2129,7 +2129,7 @@ let simplify_vc full_norm_allowed env t : ML _
 
 let __simplify_guard full_norm_allowed env g  = match g.guard_f with
   | Trivial -> g
-  | _ when env.phase1 ->
+  | _ when env.admit ->
     { g with guard_f = Trivial }
   | NonTrivial f ->
     let f = simplify_vc full_norm_allowed env f in
@@ -5723,7 +5723,7 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : ML (opti
   let ret_g = {g with guard_f = Trivial} in
   if env.admit then (
     let open FStarC.Class.PP in
-    if debug && not (Trivial? g.guard_f) && not env.phase1 then
+    if debug && not (Trivial? g.guard_f) then
       diag [
         text "Skipping VC because verification is disabled.";
         text "VC =" ^/^ pp g;
@@ -5946,13 +5946,11 @@ let check_implicit_solution_and_discharge_guard env
       "While checking implicit solution"
       (fun () ->
        let skip_core =
-         env.phase1 ||
          env.admit ||
          Allow_untyped? uvar_should_check ||
          Already_checked? uvar_should_check in
 
-       let must_tot = not (env.phase1 ||
-                           env.admit ||
+       let must_tot = not (env.admit ||
                            Allow_ghost? uvar_should_check) in
 
        if skip_core

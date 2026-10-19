@@ -2409,7 +2409,7 @@ and norm_comp : cfg -> env -> comp -> ML comp =
                 (* Patterns are otherwise left alone, but the solutions of
                    their unification variables must be compressed (or
                    removed, by [remove_uvar_solutions]) as everywhere else:
-                   with --ext phase2_core, phase 1's elaboration is kept. *)
+                   the elaborated term is what is kept. *)
                 | SMTPAT p when cfg.steps.compress_uvars ->
                   SMTPAT (norm cfg env [] p)
                 | f -> f) in

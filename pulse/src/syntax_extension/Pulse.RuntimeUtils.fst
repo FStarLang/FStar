@@ -250,7 +250,7 @@ let lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term
           | _ ->
             let g = TcEnv.set_range g e.pos in
             let must_tot = false in
-            let g = { g with TcEnv.instantiate_imp = false; phase1 = true; admit = true } in
+            let g = { g with TcEnv.instantiate_imp = false; admit = true } in
             let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
             let _ = Rel.resolve_implicits g guard in
             let uvs = FlatSet.union (Free.uvars e) (Free.uvars t) in
@@ -271,7 +271,7 @@ let lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term
     | _ -> None)
 
 let phase1 (g:env) : TcEnv.env =
-  { (co g <: TcEnv.env) with TcEnv.phase1 = true; admit = true }
+  { (co g <: TcEnv.env) with TcEnv.admit = true }
 
 let new_implicit_var (reason:string) (r:range) (g:env) (e:typ) (unrefine:bool) : Dv term =
   ml_dv (fun () ->
@@ -298,7 +298,7 @@ let tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool)
     let e : S.term = co t in
     let issues, res = E.catch_errors (fun _ ->
       let g = TcEnv.set_range (co g) e.pos in
-      let g = { g with TcEnv.phase1 = true; admit = true; instantiate_imp = instantiate_imps } in
+      let g = { g with TcEnv.admit = true; instantiate_imp = instantiate_imps } in
       let e, c, guard = FStarC.TypeChecker.TcTerm.tc_tot_or_gtot_term g e in
       let t = U.comp_result c in
       let c = FStarC.TypeChecker.Normalize.maybe_ghost_to_pure g c in

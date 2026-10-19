@@ -77,12 +77,12 @@ let repr_app (repr_ts:S.tscheme) (u:univ_name) (a:term) (r:Range.t) : ML term =
   let _, repr = Env.inst_tscheme_with repr_ts [U_name u] in
   S.mk_Tm_app repr [S.as_arg a] r
 
-(* In phase 2, with Core (see [CoreCheck]), [t] is phase 1's elaboration, and
-   is recorded as is. *)
+(* When Core checks it (see [CoreCheck]), [t] is already elaborated, and is
+   recorded as is. *)
 let check_comb env (us:list univ_name) (expected:term) (t:term) : ML S.tscheme =
   let env = Env.push_univ_vars env us in
   let t =
-    CoreCheck.phase2 env "this effect combinator"
+    CoreCheck.check_or_elaborate env
       (fun () -> CoreCheck.check_term env "this effect combinator" t expected true; t)
       (fun () -> tc_check_trivial_guard env t expected)
   in
@@ -124,7 +124,7 @@ let repr_universe env (repr_ts:S.tscheme) (r:Range.t) : ML S.tscheme =
   let env = Env.push_bv env bv_a in
   let t = repr_app repr_ts u_a (S.bv_to_name bv_a) r in
   let u =
-    CoreCheck.phase2 env "the representation of this effect"
+    CoreCheck.check_or_elaborate env
       (fun () -> CoreCheck.universe_of env "the representation of this effect" t)
       (fun () -> universe_of env t)
   in

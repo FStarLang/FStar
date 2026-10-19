@@ -3,12 +3,14 @@
   - Subtyping check failed
   - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: FStar.FunctionalExtensionality.is_restricted Prims.nat f
+  - Failed to prove:
+      (FStar.FunctionalExtensionality.is_restricted Prims.int f ==>
+        FStar.FunctionalExtensionality.is_restricted Prims.nat f) \/
+      (forall (i: Prims.int). i >= 0) \/ (forall (i: Prims.int). i >= 0)
   - In context:
       f:
       FStar.FunctionalExtensionality.restricted_t Prims.int (fun _ -> Prims.int)
-      FStar.FunctionalExtensionality.is_restricted Prims.int f
-  - See also FStar.FunctionalExtensionality.fsti(106,60-106,77)
+  - See also Test.FunctionalExtensionality.fst(36,15-36,16)
 
 * Info at Test.FunctionalExtensionality.fst(80,2-80,8):
   - Expected failure:
@@ -52,11 +54,6 @@
         Test.FunctionalExtensionality.f1 ==
       FStar.FunctionalExtensionality.on_domain Prims.nat
         Test.FunctionalExtensionality.g1
-      uu___:
-      FStar.FunctionalExtensionality.restricted_t Prims.nat (fun _ -> Prims.int)
-      FStar.FunctionalExtensionality.on_domain Prims.nat
-        Test.FunctionalExtensionality.f1 ==
-      _
       uu___: Prims.int
   - See also Prims.fst(477,18-477,24)
 
@@ -65,10 +62,13 @@
   - Subtyping check failed
   - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
   - The SMT solver could not prove the query.
-  - Failed to prove: FStar.FunctionalExtensionality.is_restricted Prims.int f
+  - Failed to prove:
+      (FStar.FunctionalExtensionality.is_restricted Prims.int f ==>
+        FStar.FunctionalExtensionality.is_restricted Prims.int f) \/
+      (forall (_: Prims.int) (i: Prims.int). i >= 0) \/
+      (forall (i: Prims.int). i >= 0)
   - In context:
       f:
       FStar.FunctionalExtensionality.restricted_t Prims.int (fun _ -> Prims.nat)
-      FStar.FunctionalExtensionality.is_restricted Prims.int f
-  - See also FStar.FunctionalExtensionality.fsti(106,60-106,77)
+  - See also Test.FunctionalExtensionality.fst(142,23-142,24)
 

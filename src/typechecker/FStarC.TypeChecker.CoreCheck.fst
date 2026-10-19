@@ -33,29 +33,14 @@ module TcTerm = FStarC.TypeChecker.TcTerm
 module S = FStarC.Syntax.Syntax
 
 let enabled (env:Env.env) : ML bool =
-  TcUtil.phase2_core_enabled () && not env.phase1 && not env.admit
+  not env.admit
 
-let phase2 (env:Env.env) (what:string) (core:unit -> ML 'a) (tcterm:unit -> ML 'a) : ML 'a =
-  if not (enabled env) then tcterm ()
-  else
-    let mode = TcUtil.phase2_core_mode () in
-    if mode = "warn" || mode = "compare"
-    then (
-      let issues, res = Errors.catch_errors (fun () -> TcUtil.as_phase2_core_attempt core) in
-      let errs, others = List.partition (fun (i:Errors.issue) -> Errors.EError? i.issue_level) issues in
-      match errs, res with
-      | [], Some r -> Errors.add_issues others; r
-      | _ ->
-        Errors.log_issue env Errors.Warning_Defensive
-          (Errors.Msg.text ("Core failed to check " ^ what ^ ":")
-           :: List.map (fun i -> Errors.Msg.text (Errors.format_issue i)) errs);
-        tcterm ()
-    )
-    else core ()
+let check_or_elaborate (env:Env.env) (core:unit -> ML 'a) (elab:unit -> ML 'a) : ML 'a =
+  if enabled env then core () else elab ()
 
 let elaborate (env:Env.env) (tc:Env.env -> term -> ML (term & 'a & FStarC.TypeChecker.Common.guard_t)) (e:term)
   : ML (term & 'a) =
-  let env1 = { env with phase1 = true; admit = true } in
+  let env1 = { env with admit = true } in
   Core.clear_memo_table ();
   let e, x, g = tc env1 e in
   Rel.force_trivial_guard env1 g;

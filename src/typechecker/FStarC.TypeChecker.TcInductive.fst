@@ -52,19 +52,19 @@ let dbg_Injectivity   = Debug.get_toggle "Injectivity"
 
 let unfold_whnf = N.unfold_whnf' [Env.AllowUnboundUniverses]
 
-(* Phase 2 with Core (see [CoreCheck]): the binders, kinds and constructor
-   types of an inductive are phase 1's elaboration; Core checks them, and they
-   are recorded as they are. Otherwise, TcTerm checks and elaborates them
-   again. These are the two versions of the checks used below. *)
+(* An inductive is checked twice (see [Tc.tc_decl]): first, with [admit] set,
+   TcTerm elaborates its binders, kinds and constructor types; then Core
+   checks that elaboration (see [CoreCheck]), and it is recorded as it is.
+   These are the two versions of the checks used below. *)
 let tc_binders_p2 (env:env_t) (bs:binders) : ML (binders & env_t & guard_t & universes) =
-  CoreCheck.phase2 env "the binders of this inductive type"
+  CoreCheck.check_or_elaborate env
     (fun () ->
       let env, us = CoreCheck.check_binders env "the binders of this inductive type" bs in
       bs, env, Env.trivial_guard, us)
     (fun () -> TcTerm.tc_binders env bs)
 
 let tc_tparams_p2 (env:env_t) (bs:binders) : ML (binders & env_t & universes) =
-  CoreCheck.phase2 env "the arguments of this constructor"
+  CoreCheck.check_or_elaborate env
     (fun () ->
       let env', us = CoreCheck.check_binders env "the arguments of this constructor" bs in
       ignore (List.fold_left (fun env (b:binder) ->
@@ -75,7 +75,7 @@ let tc_tparams_p2 (env:env_t) (bs:binders) : ML (binders & env_t & universes) =
 
 (* A type, with the type of the type. *)
 let tc_type_p2 (env:env_t) (what:string) (t:term) : ML (term & comp & guard_t) =
-  CoreCheck.phase2 env what
+  CoreCheck.check_or_elaborate env
     (fun () ->
       let eff, k = CoreCheck.compute_term_type env what t in
       let c = match eff with
@@ -86,8 +86,7 @@ let tc_type_p2 (env:env_t) (what:string) (t:term) : ML (term & comp & guard_t) =
 
 let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
   : ML sigelt
-  = if tcenv.phase1 then se else 
-    let Sig_inductive_typ dd = se.sigel in
+  = let Sig_inductive_typ dd = se.sigel in
     let { lid=t; us=universe_names; params=tps; t=k } = dd in
     let t_lid = t in
     let usubst, uvs = SS.univ_var_opening universe_names in
@@ -117,13 +116,11 @@ let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
         | U_name _,  U_succ v0 -> universe_leq u v0
         | U_max us,  _         -> us |> BU.for_all (fun u -> universe_leq u v)
         | _,         U_max vs  -> vs |> BU.for_some (universe_leq u)
-        | U_unknown, _
-        | _, U_unknown
-        | U_unif _, _
-        | _, U_unif _ -> failwith (Format.fmt3 "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
-                                            (show t)
-                                            (show u)
-                                            (show v))
+        (* Universe variables may still be unresolved when the inductive is
+           only elaborated (e.g., in lax mode); answer conservatively. An
+           unresolved variable in the universe of the type is eventually
+           defaulted to zero, or solved to something larger. *)
+        | _, U_unif _ -> universe_leq u U_zero
         | _ -> false
     in
     let u_leq_u_k u =
@@ -637,11 +634,11 @@ let optimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list sige
     let _, t = U.arrow_formals t in
     if U.is_eqtype_no_unrefine t then cond  //AR: if the type is marked as eqtype, you don't get to assume equality of type parameters
     else U.mk_imp guard cond in
-  (* With Core, the formula is elaborated as in phase 1 and checked by Core. *)
+  (* The formula is elaborated, and checked by Core. *)
   let phi =
-    CoreCheck.phase2 env "the hasEq condition of this inductive type"
+    CoreCheck.check_or_elaborate env
       (fun () ->
-        let env1 = { env with phase1 = true; admit = true } in
+        let env1 = { env with admit = true } in
         let phi, _ = tc_trivial_guard env1 phi in
         let phi = N.remove_uvar_solutions env phi in
         CoreCheck.check_term env "the hasEq condition of this inductive type" phi S.t_prop false;
@@ -1004,7 +1001,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
                    //  AR: Shouldn't we push opened universes to env0?
                    //
                    let types_agree =
-                     CoreCheck.phase2 env0 "the type of this inductive against its declaration"
+                     CoreCheck.check_or_elaborate env0
                        (fun () ->
                          match Core.check_term_equality false true (Env.push_univ_vars env0 univs) inferred expected with
                          | Inl None -> true

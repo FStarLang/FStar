@@ -505,12 +505,12 @@ let splice
       then TcTerm.tc_check_tot_or_gtot_term env tau U.t_dsl_tac_typ None
       else TcTerm.tc_tactic t_unit S.t_decls env tau
     in
-    (* The tactic is part of the declaration: with Core (see [CoreCheck]), it
-       is elaborated as in phase 1 and checked by Core. This matters for a
+    (* The tactic is part of the declaration: it is elaborated and checked
+       by Core (see [CoreCheck]). This matters for a
        typed splice, whose type ([dsl_tac_t]) is what justifies accepting the
        declarations it returns without checking them again. *)
     let tau =
-      CoreCheck.phase2 env "the tactic of this splice"
+      CoreCheck.check_or_elaborate env
         (fun () ->
           let tau, _ = CoreCheck.elaborate env tc tau in
           let t = if is_typed then U.t_dsl_tac_typ else S.t_tac_of t_unit S.t_decls in

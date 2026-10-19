@@ -53,7 +53,7 @@ module Print = FStarC.Syntax.Print
 module Core = FStarC.TypeChecker.Core
 
 
-let dbg_TwoPhases = Debug.get_toggle "TwoPhases"
+let dbg_Elab = Debug.get_toggle "Elab"
 let dbg_IdInfoOn  = Debug.get_toggle "IdInfoOn"
 let dbg_Normalize = Debug.get_toggle "Normalize"
 let dbg_UF        = Debug.get_toggle "UF"
@@ -107,8 +107,8 @@ let tc_type_common (env:env) (ts:tscheme) (expected_typ:typ) (r:Range.t) : ML ts
     uvs, t
   else uvs, t |> N.remove_uvar_solutions env |> SS.close_univ_vars uvs
 
-(* Phase 2 of [tc_type_common] with Core: [ts] is phase 1's elaboration, whose
-   universes are generalized, and is recorded as is. It must be a type, or have
+(* Checking [tc_type_common]'s elaboration [ts] with Core: its universes are
+   generalized, and it is recorded as is. It must be a type, or have
    type [expected], if given. *)
 let check_type_scheme_with_core (env:env) (what:string) (ts:tscheme) (expected:option typ) : ML tscheme =
   let uvs, t = SS.open_univ_vars (fst ts) (snd ts) in
@@ -117,6 +117,12 @@ let check_type_scheme_with_core (env:env) (what:string) (ts:tscheme) (expected:o
    | None -> ignore (CoreCheck.universe_of env what t)
    | Some k -> CoreCheck.check_term env what t k false);
   CoreCheck.check_smt_patterns env t;
+  ts
+
+(* In lax mode, only the SMT patterns of an elaborated type scheme are checked. *)
+let check_smt_patterns_of_scheme (env:env) (ts:tscheme) : ML tscheme =
+  let uvs, t = SS.open_univ_vars (fst ts) (snd ts) in
+  CoreCheck.check_smt_patterns (Env.push_univ_vars env uvs) t;
   ts
 
 let tc_declare_typ (env:env) (ts:tscheme) (r:Range.t) : ML tscheme =
@@ -141,10 +147,10 @@ let tc_decl_attributes env se =
     Rel.force_trivial_guard env g;
     other_attrs
   in
-  (* With Core: the attributes are elaborated by TcTerm without checking
-     their guards, as in phase 1, and then checked by Core. *)
+  (* The attributes are elaborated by TcTerm without checking their guards,
+     and then checked by Core. *)
   let core () =
-    let env1 = { env with phase1 = true; admit = true } in
+    let env1 = { env with admit = true } in
     let other_attrs =
       FStarC.TypeChecker.Core.clear_memo_table ();
       let g, other_attrs = tc_attributes env1 other_attrs in
@@ -157,7 +163,7 @@ let tc_decl_attributes env se =
   in
   let other_attrs =
     if Nil? other_attrs then other_attrs
-    else CoreCheck.phase2 env "the attributes of this declaration" core tcterm
+    else CoreCheck.check_or_elaborate env core tcterm
   in
   {se with sigattrs = blacklisted_attrs @ other_attrs }
 
@@ -285,8 +291,9 @@ let store_sigopts (se:sigelt) : ML sigelt =
 let tc_decls_knot : ref (option (Env.env -> list sigelt -> ML (list sigelt & Env.env))) =
   mk_ref None
 
-let do_two_phases env : ML bool = true
-let run_phase1 (f:unit -> ML 'a) : ML 'a =
+(* Elaborate with TcTerm. Its guards are not proven, so Core's memo table
+   must not remember what it checks meanwhile. *)
+let elaborating (f:unit -> ML 'a) : ML 'a =
   FStarC.TypeChecker.Core.clear_memo_table();
   let r = f () in
   FStarC.TypeChecker.Core.clear_memo_table();
@@ -397,14 +404,13 @@ let strip_tactic_synthesized (e:term) : ML term =
     | _ -> t)
 
 (* The type checking rule for Sig_let (lbs, lids) *)
-(* Phase 2 of checking a top-level let-binding with FStarC.TypeChecker.Core
-   (see [TcUtil.phase2_core_enabled]), rather than by re-running TcTerm on its
-   phase-1 elaboration [e]. Core does no inference: it only checks [e], and its
-   guard is discharged here. [p1typ] is the type phase 1 computed for a
-   definition whose [lbtyp] it dropped; [p1typ_annotated] says whether the
+(* Checking the elaboration [e] of a top-level let-binding with
+   FStarC.TypeChecker.Core. Core does no inference: it only checks [e], and its
+   guard is discharged here. [elab_typ] is the type elaboration computed for a
+   definition whose [lbtyp] it dropped; [elab_typ_annotated] says whether the
    user annotated the result of the definition, from which that type then
    comes. Returns the checked term, or Core's error. *)
-let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:bool) (e:term)
+let tc_sig_let_core (env:Env.env) (elab_typ:option typ) (elab_typ_annotated:bool) (e:term)
   : ML (either term Core.error)
   = (* TcTerm discharges the guard of the body of a top-level function with
        the function's binders in the environment (see [TcTerm.tc_abs]). Core's
@@ -448,7 +454,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
                     | Some body -> Env.set_range env body.pos
                     | None -> env in
           let env, g = open_foralls drop env g in
-          if !dbg_TwoPhases then Format.print2 "phase2 core: discharging %s (at %s)\n" (show g) (Range.string_of_range g.pos);
+          if !dbg_Elab then Format.print2 "core: discharging %s (at %s)\n" (show g) (Range.string_of_range g.pos);
           Rel.force_trivial_guard env
             (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial g)))
         in
@@ -468,7 +474,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
       ts |> List.iter (fun t ->
         if not (Tm_unknown? (SS.compress t).n)
         then (
-          if !dbg_TwoPhases then Format.print1 "phase2 core: checking the declared type %s\n" (show t);
+          if !dbg_Elab then Format.print1 "core: checking the declared type %s\n" (show t);
           ignore (CoreCheck.universe_of env "the type of this definition" t)
         ))
     in
@@ -481,30 +487,28 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
       let topt = if Tm_unknown? (SS.compress lbtyp).n then None else Some lbtyp in
       let user_topt = topt in
       (* Core does no inference: an unannotated definition is checked against
-         the type phase 1 inferred for it, which is the type TcTerm's phase 2
-         would infer again, and record, and so the one clients of the module
-         expect (up to the unfolding of abbreviations, the refinements that
-         carry postconditions of lemma calls, etc.). *)
+         the type elaboration inferred for it, which is then recorded, as
+         clients of the module see it. *)
       let check_t, topt =
-        match topt, p1typ with
-        | None, Some t when not (Options.Ext.enabled "phase2_core_infer") -> false, Some (SS.subst usubst t)
+        match topt, elab_typ with
+        | None, Some t when not (Options.Ext.enabled "core_infer") -> false, Some (SS.subst usubst t)
         | _ -> true, topt
       in
-      if !dbg_TwoPhases then Format.print2 "phase2 core: expected type %s (result annotated: %s)\n" (show topt) (show p1typ_annotated);
+      if !dbg_Elab then Format.print2 "core: expected type %s (result annotated: %s)\n" (show topt) (show elab_typ_annotated);
       (* The annotation is checked, and its guard discharged, before the
          definition, as by TcTerm: in one guard, its conjunct would be a
          hypothesis of every goal of the definition's (see
-         [check_declared_types]). So is the type phase 1 computed for a
-         definition with an annotated result, from which phase 1 drops the
-         annotation: Core would otherwise check it only as part of the
+         [check_declared_types]). So is the type elaboration computed for a
+         definition with an annotated result, from which the annotation is
+         dropped: Core would otherwise check it only as part of the
          definition, e.g. the precondition of a lemma as the type of one of
-         its binders. A type phase 1 inferred is not checked: it may only be
+         its binders. A type elaboration inferred is not checked: it may only be
          well-formed in the context the definition sets up, e.g. [x:U32.t{v x
          = f b}] for [let n = f b in lem b; U32.uint_to_t n], where [=] is
          taken at [uint_t 32]; TcTerm does not check it either. *)
       let check_t =
         match topt with
-        | Some t when check_t || p1typ_annotated -> check_declared_types env_u [t]; false
+        | Some t when check_t || elab_typ_annotated -> check_declared_types env_u [t]; false
         | _ -> check_t
       in
       begin match Core.compute_term_comp env_u lbdef topt check_t with
@@ -515,7 +519,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
            abbreviations like [U32.( + )]. Clients rely on it: unification
            compares the heads of indices, e.g. [raw a (U32.add l1 l2)]. *)
         let c =
-          if Some? topt then c (* phase 1's type is already normalized *)
+          if Some? topt then c (* the elaborated type is already normalized *)
           else
             let norm_c env = N.normalize_comp [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm; Env.Exclude Env.Zeta] env in
             (* Only the result of a function is normalized; its binders are
@@ -540,7 +544,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
         in
         discharge (fun _ _ -> false) abs_body env_u g;
         CoreCheck.check_smt_patterns env_u lbdef;
-        let e = finish_top_level_let env lb lbdef univ_names c Env.trivial_guard user_topt (Some? user_topt) e2 e.pos in
+        let e = finish_top_level_let true env lb lbdef univ_names c Env.trivial_guard user_topt (Some? user_topt) e2 e.pos in
         Inl e
       | Inr err -> Inr err
       end
@@ -581,7 +585,7 @@ let tc_sig_let_phase2_core (env:Env.env) (p1typ:option typ) (p1typ_annotated:boo
       | Inr err -> Inr err
       end
 
-    | _ -> failwith "tc_sig_let_phase2_core: not a let"
+    | _ -> failwith "tc_sig_let_core: not a let"
 
 let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     let env0 = env in
@@ -685,7 +689,7 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
 
     let preprocess_lb (tau:term) (lb:letbinding) : ML letbinding =
         let lbdef = Env.preprocess env tau lb.lbdef in
-        if Debug.medium () || !dbg_TwoPhases then
+        if Debug.medium () || !dbg_Elab then
           Format.print1 "lb preprocessed into: %s\n" (show lbdef);
         { lb with lbdef = lbdef }
     in
@@ -702,7 +706,7 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     (* 3. Type-check the Tm_let and convert it back to Sig_let *)
     let env' = { env with top_level = true; generalize = should_generalize } in
     let e_src = e in
-    let phase1_lbtyp : ref (option typ) = mk_ref None in
+    let elab_lbtyp : ref (option typ) = mk_ref None in
     (* Whether the result of an (unannotated) definition is annotated, as in
        [let f x : t = e], where the annotation is an ascription of [e]. *)
     let result_annotated =
@@ -717,21 +721,25 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
       | Tm_let {lbs=(false, [lb])} -> ascribed lb.lbdef
       | _ -> false
     in
-    let phase1 () : ML term =
+    (* Elaboration by TcTerm, without checking guards. When the definition is
+       checked by Core, the type elaboration inferred for an unannotated
+       definition is dropped from it, and recorded in [elab_lbtyp]. *)
+    let elaborate () : ML term =
       let e = e_src in
-      if do_two_phases env' then run_phase1 (fun _ ->
+      elaborating (fun _ ->
         let drop_lbtyp (e_lax:term) : ML term =
+          if env'.admit then e_lax else
           match (SS.compress e_lax).n with
           | Tm_let {lbs=(false, [ lb ]); body=e2} ->
             let lb_unannotated =
-              match (SS.compress e).n with  //checking type annotation on e, the lb before phase 1, capturing e from above
+              match (SS.compress e).n with  //checking type annotation on e, the lb before elaboration
               | Tm_let {lbs=(_, [ lb ])} ->
                 (match (SS.compress lb.lbtyp).n with
                  | Tm_unknown -> true
                  | _ -> false)
-              | _                       -> failwith "Impossible: first phase lb and second phase lb differ in structure!"
+              | _ -> failwith "Impossible: the lb before and after elaboration differ in structure!"
             in
-            if lb_unannotated then phase1_lbtyp := Some lb.lbtyp;
+            if lb_unannotated then elab_lbtyp := Some lb.lbtyp;
             if lb_unannotated then { e_lax with n = Tm_let {lbs=(false, [ { lb with lbtyp = S.tun } ]);
                                                             body=e2}}  //erase the type annotation
             else e_lax
@@ -744,42 +752,36 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
         in
         let e =
           Profiling.profile (fun () ->
-              let tc (e:term) () = tc_maybe_toplevel_term ({ env' with phase1 = true; admit = true }) e in
+              let tc (e:term) () = tc_maybe_toplevel_term ({ env' with admit = true }) e in
+              (* A goal of a [synth_by_tactic] may mention unification
+                 variables that are only solved after the tactic would have
+                 run (e.g. the implicits of [f h (_ by tac)] when [h]'s
+                 subtyping is deferred). So we first elaborate without
+                 synthesis, and then synthesize over that elaboration, where
+                 the goals are fully resolved. *)
               let (e, _, _) =
-                if TcUtil.phase2_core_enabled () && not env'.admit
-                then (
-                  (* Under [phase2_core], phase 1 runs the synthesis. A goal
-                     may mention unification variables that are only solved
-                     after the tactic would have run (e.g. the implicits of
-                     [f h (_ by tac)] when [h]'s subtyping is deferred). So we
-                     first elaborate without synthesis, and then synthesize
-                     over that elaboration, where the goals are fully
-                     resolved, as they are in TcTerm's phase 2. *)
-                  if mem PC.synth_lid (Free.fvars e)
-                  then
-                    let (e1, _, _) = tc e () in
-                    let e1 = N.remove_uvar_solutions env' e1 |> drop_lbtyp in
-                    TcUtil.with_synth_in_phase1 (tc e1)
-                  else TcUtil.with_synth_in_phase1 (tc e)
-                )
+                if mem PC.synth_lid (Free.fvars e)
+                then
+                  let (e1, _, _) = tc e () in
+                  let e1 = N.remove_uvar_solutions env' e1 |> drop_lbtyp in
+                  TcUtil.with_synth env'.admit (tc e1)
                 else tc e ()
               in
               e)
               (Some (Ident.string_of_lid (Env.current_module env)))
-              "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase1"
+              "FStarC.TypeChecker.Tc.tc_sig_let-elaborate"
         in
 
-        if Debug.medium () || !dbg_TwoPhases then
-          Format.print1 "Let binding after phase 1, before removing uvars: %s\n" (show e);
+        if Debug.medium () || !dbg_Elab then
+          Format.print1 "Let binding after elaboration, before removing uvars: %s\n" (show e);
 
         let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
 
-        if Debug.medium () || !dbg_TwoPhases then
-          Format.print1 "Let binding after phase 1, uvars removed: %s\n" (show e);
+        if Debug.medium () || !dbg_Elab then
+          Format.print1 "Let binding after elaboration, uvars removed: %s\n" (show e);
         e)
-      else e
     in
-    let e = phase1 () in
+    let e = elaborate () in
 
     let env' =
         match (SS.compress e).n with
@@ -791,116 +793,55 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     in
     Errors.stop_if_err ();
     let r =
-        //We already generalized phase1; don't need to generalize again
-      let should_generalize = not (do_two_phases env') in
-      let phase2_tcterm_on e =
-        Profiling.profile (fun () -> tc_maybe_toplevel_term { env' with generalize = should_generalize } e)
-                          (Some (Ident.string_of_lid (Env.current_module env)))
-                          "FStarC.TypeChecker.Tc.tc_sig_let-tc-phase2"
+      (* The [Tactic_synthesized] markers only tell Core what to trust. The
+         definition is recorded with the tactics' results in place, e.g. for
+         [def_of]. *)
+      let strip (e:term) : ML term =
+        if mem PC.synth_lid (Free.fvars e_src) then strip_tactic_synthesized e else e
       in
-      let phase2_tcterm () = phase2_tcterm_on e in
-      (* TcTerm's phase 2, when Core's has failed: on the elaboration phase 1
-         produces for it, which differs from Core's (see the inner let case of
-         [TcTerm.tc_maybe_toplevel_term]). *)
-      let fallback_tcterm () =
-        TcUtil.without_phase2_core (fun () -> phase2_tcterm_on (phase1 ()))
-      in
-      (* Phase 1's elaboration of a closed definition must be closed: Core
-         checks it as is. A free name in it is a bug in elaboration (see
-         doc/ref/phase2_core.md, "Ill-scoped phase-1 terms"); it is reported
-         as such, except in the diagnostic modes, where TcTerm's phase 2,
-         which re-elaborates the definition, is used instead. *)
-      let phase1_free_names () = FStarC.Syntax.Free.names e in
-      if do_two_phases env' && TcUtil.phase2_core_enabled () && not env'.admit
-         && Cons? (elems (phase1_free_names ()))
+      if env'.admit
       then (
-        let msg = [
-          Errors.Msg.text "Internal error: phase 1's elaboration of this definition has free names:";
-          Errors.Msg.text (show (phase1_free_names ()))
-        ] in
-        let mode = TcUtil.phase2_core_mode () in
-        if mode = "warn" || mode = "compare"
-        then (
-          Errors.log_issue env' Errors.Warning_Defensive msg;
-          fallback_tcterm ()
-        )
-        else raise_error (Env.get_range env') Errors.Error_IllScopedTerm msg
+        (match (SS.compress e).n with
+         | Tm_let {lbs=(_, lbs)} ->
+           lbs |> List.iter (fun (lb:letbinding) ->
+             let usubst, univ_names = SS.univ_var_opening lb.lbunivs in
+             let env_u = Env.push_univ_vars env' univ_names in
+             CoreCheck.check_smt_patterns env_u (SS.subst usubst lb.lbtyp);
+             CoreCheck.check_smt_patterns env_u (SS.subst usubst lb.lbdef))
+         | _ -> ());
+        strip e, S.mk_Total S.t_unit, Env.trivial_guard
       )
-      else if do_two_phases env' && TcUtil.phase2_core_enabled () && not env'.admit
-      then (
-        let run_core () =
-          let r =
-            Profiling.profile (fun () -> tc_sig_let_phase2_core env' !phase1_lbtyp result_annotated e)
-                              (Some (Ident.string_of_lid (Env.current_module env)))
-                              "FStarC.TypeChecker.Tc.tc_sig_let-core-phase2"
-          in
-          (* The [Tactic_synthesized] markers only tell Core what to trust.
-             The definition is recorded as TcTerm records it, with the
-             tactics' results in place, e.g. for [def_of]. *)
-          match r with
-          | Inl e when mem PC.synth_lid (Free.fvars e_src) -> Inl (strip_tactic_synthesized e)
-          | _ -> r
+      (* The elaboration of a closed definition must be closed: Core checks it
+         as is. A free name in it is a bug in elaboration (see
+         doc/ref/phase2_core.md, "Ill-scoped elaborations"). *)
+      else if Cons? (elems (FStarC.Syntax.Free.names e))
+      then
+        raise_error (Env.get_range env') Errors.Error_IllScopedTerm [
+          Errors.Msg.text "Internal error: the elaboration of this definition has free names:";
+          Errors.Msg.text (show (FStarC.Syntax.Free.names e))
+        ]
+      else (
+        let r =
+          Profiling.profile (fun () -> tc_sig_let_core env' !elab_lbtyp result_annotated e)
+                            (Some (Ident.string_of_lid (Env.current_module env)))
+                            "FStarC.TypeChecker.Tc.tc_sig_let-core"
         in
-        let core_failed (err:Core.error) : ML Errors.error_message = [
-          Errors.Msg.text "Core failed to check this definition.";
-          Errors.Msg.text (Core.print_error err)
-        ] in
-        let mode = TcUtil.phase2_core_mode () in
-        if mode = "warn" || mode = "compare"
-        then (
-          (* Diagnostic modes: any failure of the Core path, including its
-             guard being unprovable, is reported as a warning, and TcTerm's
-             phase 2 is used instead. In "compare" mode, TcTerm's phase 2 is
-             always run, and the types the two record for the definition
-             (which is what clients of the module see) are compared. *)
-          let issues, res = Errors.catch_errors (fun () -> TcUtil.as_phase2_core_attempt run_core) in
-          let errs = List.filter (fun (i:Errors.issue) -> Errors.EError? i.issue_level) issues in
-          match errs, res with
-          | [], Some (Inl e) when mode = "warn" -> e, S.mk_Total S.t_unit, Env.trivial_guard
-          | [], Some (Inl e_core) ->
-            let r = fallback_tcterm () in
-            let e_tc, _, _ = r in
-            (match (SS.compress e_core).n, (SS.compress e_tc).n with
-             | Tm_let {lbs=(_, lbs_core)}, Tm_let {lbs=(_, lbs_tc)}
-                 when List.length lbs_core = List.length lbs_tc ->
-               List.iter2 (fun (l1:letbinding) (l2:letbinding) ->
-                 let usubst, _ = SS.univ_var_opening l1.lbunivs in
-                 let t1 = SS.subst usubst l1.lbtyp in
-                 let t2 = SS.subst usubst l2.lbtyp in
-                 if List.length l1.lbunivs <> List.length l2.lbunivs
-                    || not (U.term_eq t1 t2) then
-                   Errors.log_issue env' Errors.Warning_Defensive [
-                     Errors.Msg.text "Core and TcTerm record different types for this definition:";
-                     Errors.Msg.text ("Core:   " ^ show t1);
-                     Errors.Msg.text ("TcTerm: " ^ show t2)
-                   ]) lbs_core lbs_tc
-             | _ -> ());
-            r
-          | _ ->
-            let msg =
-              match res with
-              | Some (Inr err) -> core_failed err
-              | _ ->
-                Errors.Msg.text "Core's guard for this definition could not be discharged:"
-                :: List.map (fun i -> Errors.Msg.text (Errors.format_issue i)) errs
-            in
-            Errors.log_issue env' Errors.Warning_Defensive msg;
-            fallback_tcterm ()
-        )
-        else
         (* Core decides whether the definition is accepted, and reports why
            when it is not: an unprovable guard is reported by the SMT solver,
            with the labels Core put on it, and a structural failure with
-           Core's error. TcTerm's phase 2 is not run. *)
-        match run_core () with
-        | Inl e -> e, S.mk_Total S.t_unit, Env.trivial_guard
+           Core's error. *)
+        match r with
+        | Inl e -> strip e, S.mk_Total S.t_unit, Env.trivial_guard
         | Inr err ->
           let r = match Core.error_range err with Some r -> r | None -> Env.get_range env' in
           match Core.error_code err with
           | Some code -> raise_error r code (Core.error_message err)
-          | None -> raise_error r Errors.Error_TypeError (core_failed err)
+          | None ->
+            raise_error r Errors.Error_TypeError [
+              Errors.Msg.text "Core failed to check this definition.";
+              Errors.Msg.text (Core.print_error err)
+            ]
       )
-      else phase2_tcterm ()
     in
     let se, lbs = match r with
       | {n=Tm_let {lbs; body=e}}, _, g when Env.is_trivial g ->
@@ -978,20 +919,13 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
              else let t, _ = U.type_u () in
                   let uvs, lbtyp = SS.open_univ_vars lb.lbunivs lb.lbtyp in
                   let env_u = Env.push_univ_vars env' uvs in
-                  CoreCheck.phase2 env_u "the no_subtyping annotation"
-                    (fun () ->
-                      (* Core's memo table must not answer with the result of
-                         checking the definition, where subtyping was allowed. *)
-                      Core.clear_memo_table ();
-                      ignore (CoreCheck.universe_of env_u "the no_subtyping annotation" lbtyp);
-                      Core.clear_memo_table ())
-                    (fun () ->
-                      let _, _, g = TcTerm.tc_check_tot_or_gtot_term
-                        env_u
-                        lbtyp
-                        t
-                        (Some "checking no_subtype annotation") in
-                        Rel.force_trivial_guard env' g))
+                  if CoreCheck.enabled env_u then (
+                    (* Core's memo table must not answer with the result of
+                       checking the definition, where subtyping was allowed. *)
+                    Core.clear_memo_table ();
+                    ignore (CoreCheck.universe_of env_u "the no_subtyping annotation" lbtyp);
+                    Core.clear_memo_table ()
+                  ))
     end;
 
     (* 4. Record the type of top-level lets, and log if requested *)
@@ -1039,14 +973,14 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
     let tx = UF.new_transaction () in
     BU.finally (fun () -> ignore (pop_context env' "#check"); UF.rollback tx) (fun () ->
       let env = { env with instantiate_imp = false } in
-      (* With Core (see [CoreCheck]), the term is elaborated as in phase 1,
-         and Core checks it at the computation type phase 1 inferred. As
-         with TcTerm, the guard is shown, not discharged. *)
+      (* The term is elaborated, and Core checks it at the computation type
+         elaboration inferred (see [CoreCheck]). The guard is shown, not
+         discharged. *)
       let t, c, g =
-        CoreCheck.phase2 env "this term"
+        CoreCheck.check_or_elaborate env
           (fun () ->
             let t, c = CoreCheck.elaborate env tc_term t0 in
-            (* [c] is shown as phase 1 inferred it, e.g. with its universe
+            (* [c] is shown as elaboration inferred it, e.g. with its universe
                unification variables; Core needs them removed. *)
             let c_core =
               N.normalize_comp [Env.DefaultUnivsToZero; Env.CheckNoUvars; Env.Beta;
@@ -1074,21 +1008,18 @@ let process_pragma (env:Env.env) (p:pragma) (r:Range.range) : ML unit =
     let env' = push_context env "#eval" in
     let tx = UF.new_transaction () in
     BU.finally (fun () -> ignore (pop_context env' "#eval"); UF.rollback tx) (fun () ->
-      let t_elab, _, g1 = tc_term { env' with instantiate_imp = false; phase1 = true; admit=true } t0 in
+      let t_elab, _, g1 = tc_term { env' with instantiate_imp = false; admit=true } t0 in
       Format.print1 "Guard = %s\n" (Rel.guard_to_string env' g1);
       Rel.force_trivial_guard env' g1;
       let env' = { env' with instantiate_imp = false } in
-      (* With Core (see [CoreCheck]), Core checks phase 1's elaboration.
-         As with TcTerm, the guard is not discharged. *)
-      let t =
-        CoreCheck.phase2 env' "this term"
-          (fun () ->
-            let t = N.remove_uvar_solutions env' t_elab in
-            match Core.compute_term_comp env' t None false with
-            | Inl _ -> t
-            | Inr err -> CoreCheck.raise_core_error env' "this term" err)
-          (fun () -> let t, _, _ = tc_term env' t_elab in t)
-      in
+      (* Core checks the elaboration (see [CoreCheck]). The guard is not
+         discharged. *)
+      let t = N.remove_uvar_solutions env' t_elab in
+      if CoreCheck.enabled env' then (
+        match Core.compute_term_comp env' t None false with
+        | Inl _ -> ()
+        | Inr err -> CoreCheck.raise_core_error env' "this term" err
+      );
       let t = N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.Primops;
                             Env.UnfoldUntil S.delta_constant;
                             Env.Eager_unfolding; Env.Inlining;
@@ -1234,16 +1165,18 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
   | Sig_bundle {ses; lids} ->
     let env = Env.set_range env r in
     let ses =
-      if do_two_phases env then run_phase1 (fun _ ->
-        //we generate extra sigelts even in the first phase and then throw them away
+      (* The inductive is elaborated, and its elaboration checked with Core
+         (see [TcInductive]). In lax mode, it is only elaborated, once. *)
+      if CoreCheck.enabled env then elaborating (fun _ ->
+        //we generate extra sigelts when elaborating and then throw them away
         //would be nice to not generate them at all
         let ses =
-          tc_inductive ({ env with phase1 = true; admit = true }) ses se.sigquals se.sigattrs lids
+          tc_inductive ({ env with admit = true }) ses se.sigquals se.sigattrs lids
           |> fst
           |> N.elim_uvars env
           |> U.ses_of_sigbundle in
-        if Debug.medium () || !dbg_TwoPhases
-        then Format.print1 "Inductive after phase 1: %s\n" (show ({ se with sigel = Sig_bundle {ses; lids} }));
+        if Debug.medium () || !dbg_Elab
+        then Format.print1 "Inductive after elaboration: %s\n" (show ({ se with sigel = Sig_bundle {ses; lids} }));
         ses)
       else ses
     in
@@ -1251,7 +1184,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     let sigbndle = { sigbndle with sigattrs = se.sigattrs } in (* keep the attributes *)
     [ sigbndle ], projectors_ses, env0
 
-  | Sig_pragma p ->  //no need for two-phase here
+  | Sig_pragma p ->
     process_pragma env p r;
     (* Some pragmas are immediately dropped and do not
     make it into the checked file. *)
@@ -1267,13 +1200,13 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
 
   | Sig_new_effect ne ->
       let ne =
-        if do_two_phases env then run_phase1 (fun _ ->
+        if CoreCheck.enabled env then elaborating (fun _ ->
           let ne =
-            TcEff.tc_eff_decl ({ env with phase1 = true; admit = true }) ne se.sigquals se.sigattrs
+            TcEff.tc_eff_decl ({ env with admit = true }) ne se.sigquals se.sigattrs
             |> (fun ne -> { se with sigel = Sig_new_effect ne })
             |> N.elim_uvars env |> U.eff_decl_of_new_effect in
-          if Debug.medium () || !dbg_TwoPhases
-          then Format.print1 "Effect decl after phase 1: %s\n"
+          if Debug.medium () || !dbg_Elab
+          then Format.print1 "Effect decl after elaboration: %s\n"
                  (show ({ se with sigel = Sig_new_effect ne }));
           ne)
         else ne in
@@ -1282,11 +1215,11 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
       [se], [], env0
 
   | Sig_sub_effect(sub) ->
-    (* With Core, the lift is elaborated in phase 1 and checked by Core
-       (see [TcEff.check_comb]); otherwise it is checked once, by TcTerm. *)
+    (* The lift is elaborated, and checked by Core (see [TcEff.check_comb]);
+       in lax mode, it is only elaborated, once. *)
     let sub =
-      if CoreCheck.enabled env && Some? sub.lift then run_phase1 (fun _ ->
-        let sub = TcEff.tc_lift ({ env with phase1 = true; admit = true }) sub r in
+      if CoreCheck.enabled env && Some? sub.lift then elaborating (fun _ ->
+        let sub = TcEff.tc_lift ({ env with admit = true }) sub r in
         match (N.elim_uvars env { se with sigel = Sig_sub_effect sub }).sigel with
         | Sig_sub_effect sub -> sub
         | _ -> failwith "Impossible: elim_uvars changed a Sig_sub_effect")
@@ -1320,17 +1253,16 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
 
     let env = Env.set_range env r in
     let uvs, t =
-      if do_two_phases env then run_phase1 (fun _ ->
-        let uvs, t = tc_declare_typ ({ env with phase1 = true; admit = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
-        if Debug.medium () || !dbg_TwoPhases then Format.print2 "Val declaration after phase 1: %s and uvs: %s\n" (show t) (show uvs);
+      elaborating (fun _ ->
+        let uvs, t = tc_declare_typ ({ env with admit = true }) (uvs, t) se.sigrng in
+        if Debug.medium () || !dbg_Elab then Format.print2 "Val declaration after elaboration: %s and uvs: %s\n" (show t) (show uvs);
         uvs, t)
-      else uvs, t
     in
 
     let uvs, t =
-      CoreCheck.phase2 env "this declaration"
+      CoreCheck.check_or_elaborate env
         (fun () -> check_type_scheme_with_core env "this declaration" (uvs, t) None)
-        (fun () -> tc_declare_typ env (uvs, t) se.sigrng)
+        (fun () -> check_smt_patterns_of_scheme env (uvs, t))
     in
     let se = { se with sigel = Sig_declare_typ {lid; us=uvs; t} } in
     [ set_type_constructor_meta env se uvs t ], [], env0
@@ -1342,17 +1274,16 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     let env = Env.set_range env r in
 
     let uvs, t =
-      if do_two_phases env then run_phase1 (fun _ ->
-        let uvs, t = tc_assume ({ env with phase1 = true; admit = true }) (uvs, t) se.sigrng in
-        if Debug.medium () || !dbg_TwoPhases then Format.print2 "Assume after phase 1: %s and uvs: %s\n" (show t) (show uvs);
+      elaborating (fun _ ->
+        let uvs, t = tc_assume ({ env with admit = true }) (uvs, t) se.sigrng in
+        if Debug.medium () || !dbg_Elab then Format.print2 "Assume after elaboration: %s and uvs: %s\n" (show t) (show uvs);
         uvs, t)
-      else uvs, t
     in
 
     let uvs, t =
-      CoreCheck.phase2 env "this assumption"
+      CoreCheck.check_or_elaborate env
         (fun () -> check_type_scheme_with_core env "this assumption" (uvs, t) (Some t_prop))
-        (fun () -> tc_assume env (uvs, t) se.sigrng)
+        (fun () -> check_smt_patterns_of_scheme env (uvs, t))
     in
     [ { se with sigel = Sig_assume {lid; us=uvs; phi=t} }], [], env0
 
@@ -1626,12 +1557,7 @@ let check_subsumes_iface_val (env:Env.env) (iface_se:sigelt) (impl:sigelt) : ML 
           prefix 2 1 (text "Implementation type:") (pp impl_t)
         ]
       in
-      CoreCheck.phase2 env "the implementation against its interface"
-        (fun () -> if not (CoreCheck.check_subtyping env impl_t iface_t) then mismatch ())
-        (fun () ->
-          match Rel.get_subtyping_predicate env impl_t iface_t with
-          | None -> mismatch ()
-          | Some g -> Rel.force_trivial_guard env (Env.apply_guard g (S.fvar l None)))
+      if not (CoreCheck.check_subtyping env impl_t iface_t) then mismatch ()
   )
   | _ -> ()
 

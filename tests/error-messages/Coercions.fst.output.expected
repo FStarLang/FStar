@@ -21,6 +21,7 @@
   - In context:
       uu___: Prims.unit
       f: n: FStar.Ghost.erased Prims.nat -> FStar.Ghost.erased Prims.nat
+      (fun n -> n) == f
   - See also Prims.fst(477,18-477,24)
 
 * Info at Coercions.fst(74,49-74,57):
@@ -28,11 +29,8 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: _ >= 0
-  - In context:
-      x: FStar.Ghost.erased Prims.int
-      uu___: Prims.int
-      x == _
+  - Failed to prove: x >= 0
+  - In context: x: FStar.Ghost.erased Prims.int
   - See also Prims.fst(477,18-477,24)
 
 * Info at Coercions.fst(76,55-76,56):
@@ -49,11 +47,8 @@
   - Subtyping check failed
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query.
-  - Failed to prove: _ >= 0
-  - In context:
-      x: FStar.Ghost.erased Prims.int
-      uu___: Prims.int
-      x == _
+  - Failed to prove: x >= 0
+  - In context: x: FStar.Ghost.erased Prims.int
   - See also Prims.fst(477,18-477,24)
 
 * Info at Coercions.fst(80,51-80,52):

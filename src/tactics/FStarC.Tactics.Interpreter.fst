@@ -367,7 +367,7 @@ let run_unembedded_tactic_on_ps
 
     (* Any other error, including exceptions being raised by the metaprograms. *)
     | Inl e ->
-        if ps.dump_on_failure && not (FStarC.TypeChecker.Util.in_phase2_core_attempt ()) then
+        if ps.dump_on_failure then
           do_dump_proofstate ps "at the time of failure";
         let open FStarC.Pprint in
         let texn_to_doc e =
@@ -422,12 +422,12 @@ let run_tactic_on_ps'
      * will mess up the monadic lifts. We're just making sure it's well-typed
      * so it won't get stuck. c.f #1307
      *
-     * With Core (see [CoreCheck]), the tactic is elaborated as in phase 1 and
-     * its elaboration is checked by Core. *)
+     * The tactic is elaborated, and its elaboration is checked by Core (see
+     * [CoreCheck]). *)
     let a = type_of e_arg in
     let b = type_of e_res in
     if not tactic_already_typed then
-      CoreCheck.phase2 env "this tactic"
+      CoreCheck.check_or_elaborate env
         (fun () ->
           let tau, _ = CoreCheck.elaborate env (TcTerm.tc_tactic a b) tactic in
           CoreCheck.check_term env "this tactic" tau (S.t_tac_of a b) true)

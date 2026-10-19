@@ -74,11 +74,6 @@ type escape_cause =
 val check_no_escape : escape_cause -> env -> list bv -> term -> ML (term & guard_t)
 
 val bind: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
-(* [bind_no_capture] is [bind] for a term whose result type must not be
-   restated in the composite's result type: an implicit argument of [squash]
-   type, above all, which is the image of a precondition and carries an
-   obligation discharged at the call rather than a fact about a result. *)
-val bind_no_capture: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
 
 val weaken_guard: guard_formula -> guard_formula -> ML guard_formula
 
@@ -154,7 +149,6 @@ val maybe_coerce_lc : env -> term -> comp -> typ -> ML (term & comp & guard_t)
  *               (c) env.use_eq_strict is true, then checking that lc.result_typ = t
  *
  *)
-val keep_res_typ : env -> typ -> typ -> ML bool
 val weaken_result_typ: env -> term -> (comp & guard_t) -> typ -> bool -> ML (term & comp & guard_t)
 
 val pure_or_ghost_pre_and_post: env -> comp -> ML (option typ & typ)
@@ -258,26 +252,10 @@ val make_record_fields_in_order
        (rng : Range.t)
   : ML (list ('a & bool))
 
-(* The mode of the [phase2_core] extension: phase 2 of checking a top-level
-   [let] uses FStarC.TypeChecker.Core instead of re-running TcTerm on the
-   phase-1 elaboration. Set by [--ext phase2_core[=mode]] or, failing that, by
-   the environment variable FSTAR_PHASE2_CORE; if neither is set, "strict".
-   Modes: "0", "false" or "off" (off, returned as ""), "warn" (report
-   Core failures as warnings and fall back to TcTerm), "compare" (as "warn",
-   but also always run TcTerm's phase 2 and report when the types the two
-   record for a definition differ), anything else (on, e.g. "strict"). *)
-val phase2_core_mode : unit -> ML string
-val phase2_core_enabled : unit -> ML bool
-(* Runs [f] as if [phase2_core] were disabled. *)
-val without_phase2_core : (unit -> ML 'a) -> ML 'a
-(* Whether phase 1 is to run [synth_by_tactic]: under [phase2_core], set by
-   [Tc.tc_sig_let] around a phase 1 whose phase 2 is Core's, since nothing
-   else would run the synthesis. *)
-val synth_in_phase1 : unit -> ML bool
-val with_synth_in_phase1 : (unit -> ML 'a) -> ML 'a
-(* Whether Core's phase 2 is running for a definition whose failure is
-   followed by TcTerm's phase 2 (see [Tc.tc_sig_let]). The tactic engine
-   then does not dump the proof state of a failing tactic: TcTerm runs the
-   tactic again, and that run dumps it. *)
-val in_phase2_core_attempt : unit -> ML bool
-val as_phase2_core_attempt : (unit -> ML 'a) -> ML 'a
+(* Whether elaboration is to run [synth_by_tactic], and if so, whether the
+   tactics are to run with [admit] set (in a lax module). Set by
+   [Tc.tc_sig_let] around the elaboration of a top-level definition: other
+   callers of TcTerm leave the synthesis to their caller, as the goals may
+   still mention unification variables that are only solved later. *)
+val synth_mode : unit -> ML (option bool)
+val with_synth : admit:bool -> (unit -> ML 'a) -> ML 'a

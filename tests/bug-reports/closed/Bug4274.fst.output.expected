@@ -3,11 +3,11 @@
   - Current context:
       foo_pred x (Mkfoo_spec 10 10 vx.z' vx.z'')
   - In typing environment:
-      __#444 : squash (rewrites_to_p __anf0 10)
-      __anf0#418 : int
-      vx#245 : erased foo_spec
-      x#241 : foo
+      __#446 : squash (rewrites_to_p __anf0 10)
+      __anf0#420 : int
+      vx#247 : erased foo_spec
+      x#243 : foo
 
-      goto _return#301 requires
+      goto _return#303 requires
         exists* (vx: foo_spec). foo_pred x vx ** pure (vx.x' == 10)
 

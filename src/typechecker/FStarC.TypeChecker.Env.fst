@@ -303,7 +303,6 @@ let initial_env deps
     use_eq_strict=false;
     is_iface=false;
     admit=false;
-    phase1=false;
     nocoerce=false;
     failhard=false;
     flychecking=false;
@@ -864,16 +863,6 @@ let datacons_of_typ env lid : ML _ =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_inductive_typ {ds=dcs} }, _), _) -> true, dcs
     | _ -> false, []
-
-(* No specification composed by the type-checker will ever be looked at: phase 1
-   of two-phase type-checking only elaborates the term and throws its types
-   away, and under [--admit_smt_queries] no verification condition is ever
-   discharged.
-
-   Deliberately *not* conditioned on [--lax]: the type we infer for a
-   definition must not depend on whether we are verifying it. *)
-let discard_specs env : ML bool =
-  env.phase1 || Options.admit_smt_queries ()
 
 (* The logical content of a binder's type, to be restated wherever the binder
    is eliminated by substitution.  On top of the refinement formula we also

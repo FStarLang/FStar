@@ -156,8 +156,7 @@ and env = {
   use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
                                                 (* i.e. using type equality instead of subtyping *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
-  admit          :bool;                         (* admit VCs in the current module *)
-  phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
+  admit          :bool;                         (* admit VCs: the module is not verified, or TcTerm is elaborating a term that Core checks next *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   flychecking    :bool;                         (* currently flychecking in IDE, used to for example not run synth tactics *)
   uvar_subtyping :bool;
@@ -430,7 +429,6 @@ val lookup_and_inst_datacon: env -> universes -> lident -> ML (typ)
 (* the boolean tells if the lident was actually a inductive *)
 
 val datacons_of_typ        : env -> lident -> ML ((bool & list lident))
-val discard_specs          : env -> ML bool
 val type_hypothesis        : env -> typ -> term -> ML term
 
 val typ_of_datacon         : env -> lident -> ML (lident)

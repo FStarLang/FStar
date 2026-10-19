@@ -13,16 +13,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-(* Phase 2 of top-level checking with FStarC.TypeChecker.Core.
+(* Checking top-level declarations with FStarC.TypeChecker.Core.
 
-   With --ext phase2_core (the default), every term of a top-level
-   declaration is elaborated by TcTerm in phase 1 and then checked by Core,
-   which is the source of truth for whether it is well-typed: TcTerm's phase 2
-   is not run. See doc/ref/phase2_core.md. The functions here are the common
-   part of that for the declarations other than [let] (whose driver is
-   [Tc.tc_sig_let]): they check a fully elaborated term (no unification
-   variables) with Core, discharge Core's guard, and report Core's errors as
-   TcTerm would. *)
+   Every term of a top-level declaration is first elaborated by TcTerm, in an
+   environment with [admit] set: TcTerm infers implicits, inserts coercions,
+   runs tactics, etc., but proves nothing. Core then checks the elaborated
+   term and computes its verification condition: Core is the only source of
+   verification conditions, and TcTerm is run once. See
+   doc/ref/phase2_core.md. The functions here are the common part of that for
+   the declarations other than [let] (whose driver is [Tc.tc_sig_let]): they
+   check a fully elaborated term (no unification variables) with Core,
+   discharge Core's guard, and report Core's errors. *)
 module FStarC.TypeChecker.CoreCheck
 
 open FStarC
@@ -31,21 +32,20 @@ open FStarC.Syntax.Syntax
 module Env = FStarC.TypeChecker.Env
 module Core = FStarC.TypeChecker.Core
 
-(* Whether phase 2 of checking a declaration in [env] is done by Core: the
-   extension is on, and [env] is neither phase 1 nor lax. *)
+(* Whether terms checked in [env] are checked by Core: [env] does not admit
+   its verification conditions (as it does in a lax module, or while
+   elaborating). *)
 val enabled (env:Env.env) : ML bool
 
-(* Run phase 2 of checking (part of) a declaration, [what], with Core if it is
-   [enabled], and with TcTerm otherwise. In the diagnostic modes of the
-   extension ("warn", "compare"), a failure of [core] is reported as a warning
-   and [tcterm] is used instead. *)
-val phase2 (env:Env.env) (what:string) (core:unit -> ML 'a) (tcterm:unit -> ML 'a) : ML 'a
+(* [core ()] if Core is [enabled] in [env]; otherwise [elab ()], which only
+   elaborates, as there is nothing to prove. *)
+val check_or_elaborate (env:Env.env) (core:unit -> ML 'a) (elab:unit -> ML 'a) : ML 'a
 
-(* Elaborate [e] with [tc] as in phase 1 (in [env] with [phase1] and [admit]
-   set), solving its implicits, and return the elaborated term, without
-   unification variables, ready to be checked by Core, along with what else
-   [tc] returned. Core's memo table is cleared before and after, since the
-   guards of the elaboration are not proven. *)
+(* Elaborate [e] with [tc] (in [env] with [admit] set), solving its
+   implicits, and return the elaborated term, without unification variables,
+   ready to be checked by Core, along with what else [tc] returned. Core's
+   memo table is cleared before and after, since the guards of the
+   elaboration are not proven. *)
 val elaborate (env:Env.env) (tc:Env.env -> term -> ML (term & 'a & FStarC.TypeChecker.Common.guard_t)) (e:term)
   : ML (term & 'a)
 
@@ -73,7 +73,6 @@ val check_subtyping (env:Env.env) (t0 t1:typ) : ML bool
    them, and the universes of their sorts. The binders must be opened. *)
 val check_binders (env:Env.env) (what:string) (bs:binders) : ML (Env.env & universes)
 
-(* Warn about the SMT patterns of the lemma types in [t], as TcTerm does
-   when checking them in phase 2 (see [TcTerm.check_smt_pat]): Core does not
-   report these. *)
+(* Warn about the SMT patterns of the lemma types in [t] (see
+   [TcTerm.check_smt_pat]): Core does not report these. *)
 val check_smt_patterns (env:Env.env) (t:term) : ML unit
