@@ -9,6 +9,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/stat.h>
 
 /* ------------------------------------------------------------------------
    Deferred work (cherry.h): one work list per thread, kept between walks. */
@@ -743,4 +744,16 @@ uint64_t cherry_now_ns(void) {
   timespec_get(&ts, TIME_UTC);
 #endif
   return (uint64_t)ts.tv_sec * 1000000000u + (uint64_t)ts.tv_nsec;
+}
+
+uint64_t cherry_wall_ns(void) {
+  struct timespec ts;
+  timespec_get(&ts, TIME_UTC);
+  return (uint64_t)ts.tv_sec * 1000000000u + (uint64_t)ts.tv_nsec;
+}
+
+uint64_t cherry_file_mtime_ns(cherry_string path) {
+  struct stat st;
+  if (stat(cherry_str_data(path), &st) != 0) return UINT64_MAX;
+  return (uint64_t)st.st_mtime * 1000000000u;
 }

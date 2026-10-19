@@ -3638,6 +3638,39 @@ $(TIMING_DIR)/CherryTiming.chran: timing/CherryTiming.fst \
 
 all: $(TIMING_DIR)/CherryTiming.chran
 
+TIME_DIR = $(CHERRY_DIR)/time
+TIME_ABS = $(abspath $(TIME_DIR))
+# Only the modules the test needs, linked into a directory of their own:
+# including all of src/basic would put its FStar.Errors.Msg.fst, which the
+# typeclass tactics depend on, in place of ulib's.
+TIME_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(abspath $(FSTAR_ROOT)/src/class)/FStarC.Class.Show.fsti \
+  $(abspath $(FSTAR_ROOT)/src/class)/FStarC.Class.Show.fst \
+  $(HASH_SRC)/FStarC.Time.fsti $(HASH_SRC)/FStarC.Time-c.cherry.fst
+$(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryTime)
+	$(Q)rm -rf $(TIME_ABS) && mkdir -p $(TIME_ABS)/src
+	$(Q)ln -s $(TIME_SRCS) $(TIME_ABS)/src/
+	$(Q)cd time && for f in $(addprefix $(TIME_ABS)/src/,$(notdir $(TIME_SRCS))) \
+	    CherryTime.fst; do \
+	  $(FSTAR_EXE) --include $(TIME_ABS)/src --cache_dir $(TIME_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd time && $(FSTAR_EXE) --include $(TIME_ABS)/src --cache_dir $(TIME_ABS) \
+	  --already_cached '*' --odir $(TIME_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryTime.main \
+	  CherryTime.fst -o $(TIME_ABS)/CherryTime.c > /dev/null
+	$(call msg, "CC-ASAN", CherryTime)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(TIME_ABS) -I$(CHERRY_INC) \
+	  -x c $(TIME_ABS)/CherryTime.c $(CHERRY_INC)/cherry.c \
+	  -o $(TIME_ABS)/CherryTime.chexe
+	$(call msg, "RUN-ASAN", CherryTime)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(TIME_ABS)/CherryTime.chexe
+	$(Q)touch $@
+
+all: $(TIME_DIR)/CherryTime.chran
+
 SMALLINT_DIR = $(CHERRY_DIR)/smallint
 SMALLINT_ABS = $(abspath $(SMALLINT_DIR))
 $(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \

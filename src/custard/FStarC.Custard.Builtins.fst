@@ -1560,6 +1560,7 @@ let cherry_source_modules : list (list string) = [
   ["FStarC"; "Pprint"];
   ["FStarC"; "SmallInt"];
   ["FStarC"; "StringBuffer"];
+  ["FStarC"; "Time"];
   ["FStarC"; "Timing"];
 ]
 
