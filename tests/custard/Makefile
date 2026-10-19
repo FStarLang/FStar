@@ -3611,6 +3611,33 @@ $(HASH_DIR)/CherryHash.chran: hash/CherryHash.fst \
 
 all: $(HASH_DIR)/CherryHash.chran
 
+TIMING_DIR = $(CHERRY_DIR)/timing
+TIMING_ABS = $(abspath $(TIMING_DIR))
+$(TIMING_DIR)/CherryTiming.chran: timing/CherryTiming.fst \
+    $(HASH_SRC)/FStarC.Timing.fsti $(HASH_SRC)/FStarC.Timing-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryTiming)
+	$(Q)rm -rf $(TIMING_ABS) && mkdir -p $(TIMING_ABS)
+	$(Q)cd timing && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.Timing.fsti $(HASH_SRC)/FStarC.Timing-c.cherry.fst \
+	    CherryTiming.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(TIMING_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd timing && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(TIMING_ABS) \
+	  --already_cached '*' --odir $(TIMING_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryTiming.main \
+	  CherryTiming.fst -o $(TIMING_ABS)/CherryTiming.c > /dev/null
+	$(call msg, "CC-ASAN", CherryTiming)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(TIMING_ABS) -I$(CHERRY_INC) \
+	  -x c $(TIMING_ABS)/CherryTiming.c $(CHERRY_INC)/cherry.c \
+	  -o $(TIMING_ABS)/CherryTiming.chexe
+	$(call msg, "RUN-ASAN", CherryTiming)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(TIMING_ABS)/CherryTiming.chexe
+	$(Q)touch $@
+
+all: $(TIMING_DIR)/CherryTiming.chran
+
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this
 # skip rather than fail.  The probe is for the *major version* and not for the

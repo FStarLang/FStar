@@ -3,10 +3,12 @@
    Big integers are sign and magnitude, the magnitude in 32-bit limbs, least
    significant first, with no leading zero limbs.  A result that fits in a
    small integer is always returned as one. */
+#define _POSIX_C_SOURCE 200809L /* clock_gettime */
 #include "cherry.h"
 
 #include <inttypes.h>
 #include <stdio.h>
+#include <time.h>
 
 /* ------------------------------------------------------------------------
    Deferred work (cherry.h): one work list per thread, kept between walks. */
@@ -728,4 +730,17 @@ CHERRY_WEAK cherry_option_int FStar_Parse_int_of_string(cherry_string s) {
   r.tag = 1;
   r.val.v = acc;
   return r;
+}
+
+/* ------------------------------------------------------------------------
+   Clock (FStarC.Timing). */
+
+uint64_t cherry_now_ns(void) {
+  struct timespec ts;
+#ifdef CLOCK_MONOTONIC
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+#else
+  timespec_get(&ts, TIME_UTC);
+#endif
+  return (uint64_t)ts.tv_sec * 1000000000u + (uint64_t)ts.tv_nsec;
 }
