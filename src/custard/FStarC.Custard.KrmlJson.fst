@@ -238,6 +238,7 @@ let rec expr_ (b:w) (e:expr) : ML unit =
   | EBufNull t -> c1 b "EBufNull"; typ_ b t; e1 b
   | EBufDiff (x, y) -> cn b "EBufDiff"; ex x; comma b; ex y; en b
   | ESizeof t -> c1 b "ESizeof"; typ_ b t; e1 b
+  | EZeroForDeref wd -> c1 b "EZeroForDeref"; width_ b wd; e1 b
 
 let fields_ (b:w) (fs:fields_t) : ML unit =
   list_ b (fun (n, (t, m)) ->
@@ -458,6 +459,7 @@ let rec expr_of (j:json) : ML expr =
   | "EAddrOf", [x] -> EAddrOf (expr_of x)
   | "EBufNull", [x] -> EBufNull (typ_of x)
   | "ESizeof", [x] -> ESizeof (typ_of x)
+  | "EZeroForDeref", [x] -> EZeroForDeref (width_of x)
   | n, a ->
     match n, targs a with
     | "EApp", [f; es] -> EApp (expr_of f, exs es)
