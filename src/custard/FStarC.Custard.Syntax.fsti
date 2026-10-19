@@ -821,6 +821,10 @@ type flag =
       calls them the way they were compiled.  A definition imported without
       it is taken to own every parameter. *)
 
+  | DeclareInCHeader
+  (** Emit this external function's prototype in the direct-C header,
+      after the types it uses, instead of in the source. *)
+
 type tydef =
   | TAbbrev  of cty
   | TRecord  of list (string & cty)

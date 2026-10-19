@@ -432,6 +432,14 @@ val custard_extern (target: string) : unit
     the macro is an overload set, error 384 is what reports it. *)
 val custard_c_header (header: string) : unit
 
+(** Custard direct C and Cherry: emit an external function declaration in
+    the generated header instead of the source. Goes on an [assume val]
+    function (or an interface-only [val]), not a definition, type or value.
+    Does not root the declaration or change its name, type or linkage.
+    Cannot be combined with [custard_c_header], which supplies the
+    declaration from a different header. Other backends ignore it. *)
+val custard_declare_in_c_header : unit
+
 (** Custard: this [assume val] is an OCaml functor, and the argument is its
     OCaml path, e.g. ["Hashtbl.Make"] (see doc/ref/custard.md, section 133).
 

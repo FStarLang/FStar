@@ -961,6 +961,7 @@ let compile_time_demanded (st:state) (t:term) : ML (list int) =
 let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_extern_attr,          "custard_extern";
   PC.custard_c_header_attr,        "custard_c_header";
+  PC.custard_declare_in_c_header_attr, "custard_declare_in_c_header";
   PC.custard_opaque_attr,          "custard_opaque";
   PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
   PC.custard_compile_time_attr,    "custard_compile_time";
@@ -1131,6 +1132,9 @@ let attr_home (nm:string) : string =
   | "custard_c_header" ->
     "It names the C header that declares an external symbol, so it goes \
      beside the [@@custard_extern] it configures."
+  | "custard_declare_in_c_header" ->
+    "It exports an external function's prototype to the generated C header, \
+     so it goes on an [assume val] function or an interface-only [val]."
   | "custard_opaque" ->
     "It fixes a *type's* representation elsewhere, so it goes on the type."
   | "custard_no_monomorphize" ->
@@ -1159,6 +1163,26 @@ let report_attr (nm:string) (site:string) (why:string) : ML unit =
     text ("[@@" ^ nm ^ "] on " ^ site ^ " has no effect.");
     text why;
     text (attr_home nm) ]
+
+let with_c_header_declaration (l:Ident.lident) (se:sigelt) (d:decl) : ML decl =
+  let backend = Options.codegen_name () in
+  if (backend <> "C" && backend <> "Cherry") ||
+     not (has_attr PC.custard_declare_in_c_header_attr (source_attrs se l))
+  then d
+  else
+    let complain (why:string) : ML decl =
+      report_attr "custard_declare_in_c_header"
+        ("the declaration " ^ Ident.string_of_lid l) why;
+      d in
+    match se.sigel, d with
+    | Sig_declare_typ _, DExternal x when TArrow? x.dx_ty ->
+      if Some? x.dx_header then
+        complain "The prototype is supplied by an external header, so \
+                  Custard emits no declaration of its own to move."
+      else DExternal { x with dx_flags = DeclareInCHeader :: x.dx_flags }
+    | _ ->
+      complain "This is not an external function declaration: Custard \
+                cannot move its prototype to the header."
 
 (* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
    "Calling convention") on a list of value binders, by position. *)
@@ -5199,7 +5223,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
              [m.create], and pass the application itself only to binders \
              that are specialized away (section 133)." ]
    | _ -> ());
-  match rule with
+  let d = match rule with
   | Some (Builtins.Rule_extern x) when (match se with
                                         | Some { sigel = Sig_declare_typ {t} } ->
                                           is_type_sig st t
@@ -5296,7 +5320,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
     let d = if is_krml_backend () && is_private_sigelt se then with_private d else d in
     if is_inlinable se && not (is_root st l)
-    then with_inline d else d
+    then with_inline d else d in
+  match se with
+  | Some se -> with_c_header_declaration l se d
+  | None -> d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
    for extraction.  This is how Pulse hands us its programs: the F* definition
