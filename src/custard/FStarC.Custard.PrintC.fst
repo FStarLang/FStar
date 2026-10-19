@@ -3859,12 +3859,14 @@ let macro_decl (l:dlet) : ML string =
       text "Drop the attribute to get an ordinary variable, initialized at \
             startup like any other global." ]
 
-let global_init (l:dlet) : ML string =
+(* Every global's initializer goes into the one C function [init_name], so
+   only the [first] starts a new C scope: the others keep the names already
+   declared, and their locals take subscripts instead of clashing. *)
+let global_init (first:bool) (l:dlet) : ML string =
   current := string_of_name l.dl_name;
-  ctr := 0;
   void_ret := false;
   cur_ret := None;
-  reset_scope ();
+  if first then (ctr := 0; reset_scope ()) else scope := [];
   emit "  " (D_Assign (c_name l.dl_name)) l.dl_body ^
   (* Under Cherry a global's value is made persistent once it is computed:
      nothing counts references to it again, so reading it is free. *)
@@ -5425,7 +5427,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
 
   (* In declaration order, which the SCC pass has already made a topological
      one: a global whose initializer reads another global sees it set. *)
-  let inits = global_inits_of p |> List.map global_init in
+  let inits = global_inits_of p |> List.mapi (fun i l -> global_init (i = 0) l) in
   (* A program with no globals has nothing to initialize, and an empty
      function that [main] calls anyway is two lines of noise plus a block
      that says nothing.  It is also part of this file's interface, so it is
