@@ -9948,6 +9948,32 @@ does the work.  A local is named `uniq (ppname b) b.index`, the `'#'` in
 `tests/custard/RenameLet.fst` pins all three: the requested names appear, the
 source spellings do not, and the duplicate is numbered.
 
+On a global declaration, Custard's direct-C backends (`C` and `Cherry`)
+also accept `[@@FStar.Attributes.rename_let "PublicName"]`. This requests
+the **exact C identifier** for a surviving function, global variable, type
+declaration, or assumed external value. Definitions, prototypes, references,
+and compiled-unit consumers use the same name. The F* identity, rooting,
+linkage, inlining and type-abbreviation unfolding rules do not change:
+use `--custard_entry` to export a function, for example. Other backends'
+global naming rules are unchanged.
+
+The argument follows the same literal-string rule as for local bindings;
+an empty or malformed argument produces warning 278. A global C name must
+use ASCII letters, digits and underscores, must not start with a digit, and
+must not be a C11/C++17 keyword or a reserved runtime name such as `main`
+or `NULL`. Invalid identifiers and collisions are error
+374, rather than sanitized names or silently numbered alternatives. This
+also applies to private functions and to multiple surviving specializations
+of a generic declaration: one exact name cannot identify two definitions.
+Give concrete wrappers different names when exporting multiple instances.
+
+An explicit name takes precedence over `--custard_c_no_prefix` and over
+`CMacro`'s usual uppercasing. It must agree with an explicit `custard_extern`
+target; contradictory attributes are error 374. Source attributes on an
+interface and names stored in `.cui` files are honored too.
+`tests/custard/GlobalRename.fst` and `GlobalRenameApp.fst` exercise the C
+boundary and separate compilation.
+
 ## 32 After the attribute
 
 Rounds 36 and 37, and between them they close the question §12.3 opened.

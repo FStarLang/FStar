@@ -1346,20 +1346,35 @@ let name_of_bv (b:bv) : ML string =
    runs.  Anything else is ill-formed, and warning about it rather than
    silently keeping the source spelling is the point -- a [rename_let] whose
    argument did not reduce is a mistake the author wants to hear about. *)
-let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
+let rename_let_name (rng:Range.range) (lbattrs:list term) : ML (option string) =
   match U.get_attribute PC.rename_let_attr lbattrs with
   | None -> None
   | Some [(str, _)] ->
     (match (SS.compress str).n with
      | Tm_constant (Const_string (s, _)) when s <> "" -> Some s
      | _ ->
-       E.log_issue top E.Warning_UnrecognizedAttribute
+       E.log_issue rng E.Warning_UnrecognizedAttribute
          "Ignoring ill-formed application of `rename_let`";
        None)
   | Some _ ->
-    E.log_issue top E.Warning_UnrecognizedAttribute
+    E.log_issue rng E.Warning_UnrecognizedAttribute
       "Ignoring ill-formed application of `rename_let`";
     None
+
+let with_global_rename (l:Ident.lident) (se:sigelt) (d:decl) : ML decl =
+  if Options.codegen_name () <> "C" && Options.codegen_name () <> "Cherry"
+  then d else
+  match rename_let_name se.sigrng (source_attrs se l) with
+  | None -> d
+  | Some s ->
+    match d with
+    | DLet v -> DLet { v with dl_flags = CName s :: v.dl_flags }
+    | DType t -> DType { t with dt_flags = CName s :: t.dt_flags }
+    | DExternal x -> DExternal { x with dx_flags = CName s :: x.dx_flags }
+    | _ ->
+      E.log_issue se E.Warning_UnrecognizedAttribute
+        "Ignoring `rename_let` on a declaration without a direct-C name";
+      d
 
 (* The name a local [let] binder is given: its source spelling, unless
    [rename_let] asked for another one.  Renaming the [bv] itself, rather than
@@ -1377,7 +1392,7 @@ let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
 let rename_let_bv (top:term) (b:bv) (body:term) (lbattrs:list term)
   : ML (bv & term) =
   let s =
-    let renamed = rename_let_name top lbattrs in
+    let renamed = rename_let_name top.pos lbattrs in
     let base = match renamed with
                | Some s -> s
                | None -> Ident.string_of_id b.ppname in
@@ -5199,7 +5214,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
              [m.create], and pass the application itself only to binders \
              that are specialized away (section 133)." ]
    | _ -> ());
-  match rule with
+  let d = (match rule with
   | Some (Builtins.Rule_extern x) when (match se with
                                         | Some { sigel = Sig_declare_typ {t} } ->
                                           is_type_sig st t
@@ -5296,7 +5311,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
     let d = if is_krml_backend () && is_private_sigelt se then with_private d else d in
     if is_inlinable se && not (is_root st l)
-    then with_inline d else d
+    then with_inline d else d) in
+  match se with
+  | Some se -> with_global_rename l se d
+  | None -> d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
    for extraction.  This is how Pulse hands us its programs: the F* definition
