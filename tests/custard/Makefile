@@ -3358,6 +3358,10 @@ REJECT_TESTS += ArrowUnfoldLimit
 CODE_ArrowUnfoldLimit := 365
 EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 
+# Cherry: branches whose types agree only up to an abbreviation are not
+# joined to any.
+CHERRY_TESTS += CherryAnyIf
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.

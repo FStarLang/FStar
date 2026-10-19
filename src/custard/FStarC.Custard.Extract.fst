@@ -1585,6 +1585,23 @@ let rec head_ty (st:state) (ty:cty) (fuel:int) : ML cty =
        | Some ty' -> head_ty st ty' (fuel - 1)
        | None -> ty
 
+(* Every abbreviation unfolded, at every depth: two types the target would
+   agree on, [fname] and [string] for [type fname = string], come out equal. *)
+let rec unfold_abbrevs (st:state) (fuel:int) (ty:cty) : ML cty =
+  if fuel <= 0 then ty else
+  let go = unfold_abbrevs st (fuel - 1) in
+  match unfold_abbrev st ty with
+  | Some ty' -> go ty'
+  | None ->
+    match ty with
+    | TArrow (a, e, b) -> TArrow (go a, e, go b)
+    | TTuple cs -> TTuple (List.map go cs)
+    | TBuf c -> TBuf (go c)
+    | TRef (k, c) -> TRef (k, go c)
+    | TInline c -> TInline (go c)
+    | TApp (n, args) -> TApp (n, List.map go args)
+    | _ -> ty
+
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
    parameter, or a local closure -- gets its effect: there is no declaration to
@@ -3533,12 +3550,19 @@ and expr_of_term (st:state) (t:term) : ML expr =
        value of no common representation, and saying otherwise is a claim the
        rest of the pipeline believes: [narrow_rets] reads a body's type
        straight off this node, so a [d:dir -> arg_type d] whose first branch
-       is a [bool] came out declared [bool]. *)
+       is a [bool] came out declared [bool].  Agreement is up to
+       abbreviations: [if c then r.file_name else refind r.file_name] has a
+       branch of type [file_name] and one of type [string], and calling that
+       [any] made Cherry box both arms into a [string] variable. *)
     let ty =
       match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
                 |> List.filter (fun t -> not (TAny? t)) with
       | [] -> TAny
-      | t :: ts -> if ts |> List.for_all (fun u -> u = t) then t else TAny in
+      | t :: ts ->
+        if ts |> List.for_all (fun u -> u = t) then t else
+        let t' = unfold_abbrevs st 100 t in
+        if ts |> List.for_all (fun u -> unfold_abbrevs st 100 u = t') then t
+        else TAny in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
