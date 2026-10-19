@@ -40,7 +40,7 @@ let rec encode_universe (u : FStarC_Syntax_Syntax.universe) : FStarC_SMTEncoding
     | (FStarC_Syntax_Syntax.U_succ (u1)) -> (let tmp = (encode_universe u1) in
       (FStarC_SMTEncoding_Term.mk_U_succ tmp))
     | (FStarC_Syntax_Syntax.U_max ((u1 :: us))) -> (let tmp = (encode_universe u1) in
-      (FStarC_List.fold_right (fun u2 out -> (let tmp1 = (encode_universe u2) in
+      (BatList.fold_right (fun u2 out -> (let tmp1 = (encode_universe u2) in
       (FStarC_SMTEncoding_Term.mk_U_max out tmp1))) us tmp))
     | (FStarC_Syntax_Syntax.U_name (univ_name)) -> (FStarC_SMTEncoding_Term.mk_U_name (FStarC_Ident.string_of_id univ_name))
     | (FStarC_Syntax_Syntax.U_unif (u__1, u__2, u__3)) -> (let tmp = (FStarC_Syntax_Unionfind.univ_uvar_id (u__1, u__2, u__3)) in
@@ -77,7 +77,9 @@ let head_normal (env : FStarC_SMTEncoding_Env.env_t) (t : (FStarC_Syntax_Syntax.
     | (FStarC_Syntax_Syntax.Tm_abs (tmp)) -> true
     | (FStarC_Syntax_Syntax.Tm_constant (tmp)) -> true
     | (FStarC_Syntax_Syntax.Tm_fvar (tmp)) -> (let tmp1 = (FStarC_Syntax_Util.head_and_args_full t1) in
-      let tmp2 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1) in
+      let tmp2 = (match tmp1 with
+          | (u__1, u__2) -> u__1
+        ) in
       let tmp3 = (tmp2).FStarC_Syntax_Syntax.n in
       (match tmp3 with
         | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp4 = (FStarC_TypeChecker_Env.lookup_definition (FStarC_TypeChecker_Env.Eager_unfolding_only :: []) (env).FStarC_SMTEncoding_Env.tcenv (fv).FStarC_Syntax_Syntax.fv_name) in
@@ -88,7 +90,9 @@ let head_normal (env : FStarC_SMTEncoding_Env.env_t) (t : (FStarC_Syntax_Syntax.
         | tmp4 -> false
       ))
     | (FStarC_Syntax_Syntax.Tm_app (tmp)) -> (let tmp1 = (FStarC_Syntax_Util.head_and_args_full t1) in
-      let tmp2 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1) in
+      let tmp2 = (match tmp1 with
+          | (u__1, u__2) -> u__1
+        ) in
       let tmp3 = (tmp2).FStarC_Syntax_Syntax.n in
       (match tmp3 with
         | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp4 = (FStarC_TypeChecker_Env.lookup_definition (FStarC_TypeChecker_Env.Eager_unfolding_only :: []) (env).FStarC_SMTEncoding_Env.tcenv (fv).FStarC_Syntax_Syntax.fv_name) in
@@ -114,7 +118,7 @@ let maybe_whnf (env : FStarC_SMTEncoding_Env.env_t) (t : (FStarC_Syntax_Syntax.t
   ))
 
 let mk_Apply (e : FStarC_SMTEncoding_Term.term) (eta : (FStarC_SMTEncoding_Term.fv) list) : FStarC_SMTEncoding_Term.term =
-  (FStarC_List.fold_left (fun out var -> (match (FStarC_SMTEncoding_Term.fv_sort var) with
+  (BatList.fold_left (fun out var -> (match (FStarC_SMTEncoding_Term.fv_sort var) with
     | FStarC_SMTEncoding_Term.Fuel_sort -> (let tmp = (FStarC_SMTEncoding_Util.mkFreeV var) in
       (FStarC_SMTEncoding_Term.mk_ApplyTF out tmp))
     | s -> (let tmp = (FStarC_SMTEncoding_Util.mkFreeV var) in
@@ -133,32 +137,32 @@ let rec encode_pat__mk_projections (env : FStarC_SMTEncoding_Env.env_t) (pat : (
     | (FStarC_Syntax_Syntax.Pat_dot_term (tmp)) -> []
     | (FStarC_Syntax_Syntax.Pat_var (x)) -> ((x, scrutinee) :: [])
     | (FStarC_Syntax_Syntax.Pat_constant (tmp)) -> []
-    | (FStarC_Syntax_Syntax.Pat_cons (f, tmp, args)) -> (let tmp1 = (FStarC_List.mapi (fun i tmp1 -> (match tmp1 with
+    | (FStarC_Syntax_Syntax.Pat_cons (f, tmp, args)) -> (let tmp1 = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp1 -> (match tmp1 with
           | (arg, tmp2) -> (let proj = (FStarC_SMTEncoding_Env.primitive_projector_by_pos (env).FStarC_SMTEncoding_Env.tcenv (f).FStarC_Syntax_Syntax.fv_name i) in
             let tmp3 = (FStarC_SMTEncoding_Util.mkApp (proj, (scrutinee :: []))) in
             ((encode_pat__mk_projections env) arg tmp3))
         )) args) in
-      (FStarC_List.flatten tmp1))
+      (BatList.flatten tmp1))
   )
 
 let check_pattern_vars (env : FStarC_SMTEncoding_Env.env_t) (vars : (FStarC_Syntax_Syntax.binder) list) (body : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (pats : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'tmp)) list) : unit =
-  (let pats1 = (FStarC_List.map (fun tmp -> (match tmp with
+  (let pats1 = (BatList.map (fun tmp -> (match tmp with
       | (x, tmp1) -> (norm_with_steps (FStarC_TypeChecker_Env.Beta :: []) (env).FStarC_SMTEncoding_Env.tcenv x)
     )) pats) in
   (match pats1 with
     | [] -> ()
     | (hd :: tl) -> (let tmp = (FStarC_Syntax_Free.names hd) in
-      let pat_vars = (FStarC_List.fold_left (fun out x -> (let tmp1 = (FStarC_Syntax_Free.names x) in
+      let pat_vars = (BatList.fold_left (fun out x -> (let tmp1 = (FStarC_Syntax_Free.names x) in
         (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__bv_list_bv out tmp1))) tmp tl) in
       let tmp1 = (FStarC_Syntax_Free.names body) in
-      let relevant = (FStarC_List.fold_left (fun out tmp2 -> (let tmp3 = (FStarC_Syntax_Free.names ((tmp2).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+      let relevant = (BatList.fold_left (fun out tmp2 -> (let tmp3 = (FStarC_Syntax_Free.names ((tmp2).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
         (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__bv_list_bv out tmp3))) tmp1 vars) in
       let tmp2 = (FStarC_Option.find (fun tmp2 -> (let tmp3 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv (tmp2).FStarC_Syntax_Syntax.binder_bv pat_vars) in
         let tmp4 = (not tmp3) in
         (if tmp4 then (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv (tmp2).FStarC_Syntax_Syntax.binder_bv relevant) else false))) vars) in
       (match tmp2 with
         | None -> ()
-        | (Some ({ FStarC_Syntax_Syntax.binder_bv = x; binder_qual = tmp3; binder_positivity = tmp4; binder_attrs = tmp5; _ })) -> (let pos = (FStarC_List.fold_left (fun out t -> (FStarC_Range_Ops.union_ranges out (t).FStarC_Syntax_Syntax.pos)) (hd).FStarC_Syntax_Syntax.pos tl) in
+        | (Some ({ FStarC_Syntax_Syntax.binder_bv = x; binder_qual = tmp3; binder_positivity = tmp4; binder_attrs = tmp5; _ })) -> (let pos = (BatList.fold_left (fun out t -> (FStarC_Range_Ops.union_ranges out (t).FStarC_Syntax_Syntax.pos)) (hd).FStarC_Syntax_Syntax.pos tl) in
           let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__bv x) in
           let tmp7 = (FStarC_Format.fmt1 "SMT pattern misses at least one bound variable: %s" tmp6) in
           (FStarC_Errors.fStarC_Errors_log_issue__range_string pos FStarC_Errors_Codes.Warning_SMTPatternIllFormed tmp7))
@@ -177,7 +181,7 @@ let rec isTotFun_axioms__is_tot_fun_axioms (is_pure : bool) (maybe_mkForall : ((
       let tmp2 = (FStarC_SMTEncoding_Util.mkImp tmp1) in
       let is_tot_fun_head = (maybe_mkForall ((head :: []) :: []) ctx tmp2) in
       let app = (mk_Apply head (x :: [])) in
-      let ctx1 = (FStarC_List.op_At ctx (x :: [])) in
+      let ctx1 = (BatList.append ctx (x :: [])) in
       let ctx_guard1 = (FStarC_SMTEncoding_Util.mkAnd (ctx_guard, g_x)) in
       let rest = ((isTotFun_axioms__is_tot_fun_axioms is_pure maybe_mkForall) ctx1 ctx_guard1 app vars1 guards1) in
       (FStarC_SMTEncoding_Util.mkAnd (is_tot_fun_head, rest)))
@@ -185,7 +189,7 @@ let rec isTotFun_axioms__is_tot_fun_axioms (is_pure : bool) (maybe_mkForall : ((
   )
 
 let isTotFun_axioms (pos : FStarC_Range_Type.range) (head : FStarC_SMTEncoding_Term.term) (extra_vars : (FStarC_SMTEncoding_Term.fv) list) (vars : (FStarC_SMTEncoding_Term.fv) list) (guards : (FStarC_SMTEncoding_Term.term) list) (is_pure : bool) : FStarC_SMTEncoding_Term.term =
-  (let maybe_mkForall = (fun pat vars1 body -> (match (FStarC_List.op_At extra_vars vars1) with
+  (let maybe_mkForall = (fun pat vars1 body -> (match (BatList.append extra_vars vars1) with
       | [] -> body
       | vs -> (FStarC_SMTEncoding_Term.mkForall pos (pat, vs, body))
     )) in
@@ -208,17 +212,17 @@ let mkForall_fuel' (mname : string) (r : FStarC_Range_Type.range) (n : 'tmp) (tm
       let tmp1 = (FStarC_Options.unthrottle_inductives ()) in
       (if tmp1 then (fallback ()) else (let tmp2 = (FStarC_SMTEncoding_Env.fresh_fvar mname "f" FStarC_SMTEncoding_Term.Fuel_sort) in
       (match tmp2 with
-        | (fsym, fterm) -> (let add_fuel = (fun tms -> (FStarC_List.map (fun p -> (match p with
+        | (fsym, fterm) -> (let add_fuel = (fun tms -> (BatList.map (fun p -> (match p with
               | (FStarC_SMTEncoding_Term.App ((FStarC_SMTEncoding_Term.Var ("HasType")), args, tmp3)) -> (FStarC_SMTEncoding_Util.mkApp ("HasTypeFuel", (fterm :: args)))
               | tmp3 -> p
             )) tms)) in
-          let pats1 = (FStarC_List.map add_fuel pats) in
+          let pats1 = (BatList.map add_fuel pats) in
           let body1 = (match body with
               | (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.Imp, (guard :: (body' :: [])), tmp3)) -> (let guard1 = (match guard with
                     | (FStarC_SMTEncoding_Term.App (FStarC_SMTEncoding_Term.And, guards, tmp4)) -> (let tmp5 = (add_fuel guards) in
                       (FStarC_SMTEncoding_Util.mk_and_l tmp5))
                     | tmp4 -> (let tmp5 = (add_fuel (guard :: [])) in
-                      (FStarC_List.hd tmp5))
+                      (BatList.hd tmp5))
                   ) in
                 (FStarC_SMTEncoding_Util.mkImp (guard1, body')))
               | tmp3 -> body
@@ -242,7 +246,7 @@ let is_arithmetic_primitive (head : (FStarC_Syntax_Syntax.term') FStarC_Syntax_S
   )
 
 let mk_Apply_args (e : FStarC_SMTEncoding_Term.term) (eta : (FStarC_SMTEncoding_Term.term) list) : FStarC_SMTEncoding_Term.term =
-  (FStarC_List.fold_left FStarC_SMTEncoding_Util.mk_ApplyTT e eta)
+  (BatList.fold_left FStarC_SMTEncoding_Util.mk_ApplyTT e eta)
 
 let raise_arity_mismatch (head : string) (arity : Prims.int) (n_args : Prims.int) (rng : FStarC_Range_Type.range) : 'u___a =
   (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int arity) in
@@ -251,7 +255,7 @@ let raise_arity_mismatch (head : string) (arity : Prims.int) (n_args : Prims.int
   (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_SMTEncodingArityMismatch tmp2))
 
 let maybe_curry_app (rng : FStarC_Range_Type.range) (head : (FStarC_SMTEncoding_Term.op, FStarC_SMTEncoding_Term.term) FStar_Pervasives.either) (arity : Prims.int) (args : (FStarC_SMTEncoding_Term.term) list) : FStarC_SMTEncoding_Term.term =
-  (let n_args = (FStarC_List.length args) in
+  (let n_args = ((fun l -> Z.of_int (BatList.length l)) args) in
   (match head with
     | (FStar_Pervasives.Inr (head1)) -> (mk_Apply_args head1 args)
     | (FStar_Pervasives.Inl (head1)) -> (if ((=) n_args arity) then (FStarC_SMTEncoding_Util.mkApp' (head1, args)) else (if (Prims.op_Greater n_args arity) then (let tmp = (FStarC_Util.first_N arity args) in
@@ -262,24 +266,50 @@ let maybe_curry_app (rng : FStarC_Range_Type.range) (head : (FStarC_SMTEncoding_
       (raise_arity_mismatch tmp arity n_args rng))))
   ))
 
-let isInteger (tm : FStarC_Syntax_Syntax.term') : bool =
-  (match tm with
+let isInteger (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (let tmp = (FStarC_Syntax_Subst.compress tm) in
+  let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+  (match tmp1 with
     | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_int (u__1, u__2)))) -> true
-    | tmp -> false
-  )
+    | tmp2 -> false
+  ))
+
+let is_lid_in (fv : FStarC_Syntax_Syntax.fv) (eta : (FStarC_Ident.lident) list) : bool =
+  (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) eta)
+
+let binary_bv_primitives : (FStarC_Ident.lident) list =
+  (FStarC_Parser_Const.bv_and_lid :: (FStarC_Parser_Const.bv_xor_lid :: (FStarC_Parser_Const.bv_or_lid :: (FStarC_Parser_Const.bv_add_lid :: (FStarC_Parser_Const.bv_sub_lid :: (FStarC_Parser_Const.bv_shift_left_lid :: (FStarC_Parser_Const.bv_shift_right_lid :: (FStarC_Parser_Const.bv_udiv_lid :: (FStarC_Parser_Const.bv_mod_lid :: (FStarC_Parser_Const.bv_mul_lid :: (FStarC_Parser_Const.bv_shift_left'_lid :: (FStarC_Parser_Const.bv_shift_right'_lid :: (FStarC_Parser_Const.bv_rotate_left_lid :: (FStarC_Parser_Const.bv_rotate_right_lid :: (FStarC_Parser_Const.bv_rotate_left'_lid :: (FStarC_Parser_Const.bv_rotate_right'_lid :: (FStarC_Parser_Const.bv_udiv_unsafe_lid :: (FStarC_Parser_Const.bv_mod_unsafe_lid :: (FStarC_Parser_Const.bv_mul'_lid :: (FStarC_Parser_Const.bv_ult_lid :: (FStarC_Parser_Const.bv_ule_lid :: (FStarC_Parser_Const.bv_ugt_lid :: (FStarC_Parser_Const.bv_uge_lid :: (FStarC_Parser_Const.bv_slt_lid :: (FStarC_Parser_Const.bv_sle_lid :: (FStarC_Parser_Const.bv_sgt_lid :: (FStarC_Parser_Const.bv_sge_lid :: (FStarC_Parser_Const.bv_nand_lid :: (FStarC_Parser_Const.bv_nor_lid :: (FStarC_Parser_Const.bv_xnor_lid :: (FStarC_Parser_Const.bv_comp_lid :: (FStarC_Parser_Const.bv_sdiv_lid :: (FStarC_Parser_Const.bv_srem_lid :: (FStarC_Parser_Const.bv_smod_lid :: (FStarC_Parser_Const.bv_ashr_lid :: (FStarC_Parser_Const.bv_uaddo_lid :: (FStarC_Parser_Const.bv_saddo_lid :: (FStarC_Parser_Const.bv_umulo_lid :: (FStarC_Parser_Const.bv_smulo_lid :: (FStarC_Parser_Const.bv_usubo_lid :: (FStarC_Parser_Const.bv_ssubo_lid :: (FStarC_Parser_Const.bv_sdivo_lid :: []))))))))))))))))))))))))))))))))))))))))))
+
+let indexed_bv_primitives : (FStarC_Ident.lident) list =
+  (FStarC_Parser_Const.bv_uext_lid :: (FStarC_Parser_Const.bv_sext_lid :: (FStarC_Parser_Const.bv_repeat_lid :: [])))
+
+let unary_bv_primitives : (FStarC_Ident.lident) list =
+  (FStarC_Parser_Const.nat_to_bv_lid :: (FStarC_Parser_Const.bv_not_lid :: (FStarC_Parser_Const.bv_neg_lid :: (FStarC_Parser_Const.bv_nego_lid :: (FStarC_Parser_Const.bv_to_nat_lid :: (FStarC_Parser_Const.sbv_to_int_lid :: []))))))
 
 let is_BitVector_primitive (head : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'tmp)) list) : bool =
   (match ((head).FStarC_Syntax_Syntax.n, args) with
-    | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((sz_arg, tmp) :: (tmp1 :: (tmp2 :: [])))) -> ((((((((((((((((((((((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_and_lid) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_xor_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_or_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_add_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_sub_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_shift_left_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_shift_right_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_udiv_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_mod_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_mul_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_shift_left'_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_shift_right'_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_rotate_left_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_rotate_right_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_rotate_left'_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_rotate_right'_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_udiv_unsafe_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_mod_unsafe_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_mul'_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_ult_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_uext_lid)) && (isInteger (sz_arg).FStarC_Syntax_Syntax.n))
-    | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((sz_arg, tmp) :: (tmp1 :: []))) -> ((((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.nat_to_bv_lid) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_not_lid)) || (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_to_nat_lid)) && (isInteger (sz_arg).FStarC_Syntax_Syntax.n))
+    | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((sz_arg, tmp) :: ((second_arg, tmp1) :: ((i_arg, tmp2) :: ((j_arg, tmp3) :: []))))) -> (let tmp4 = (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_extract_lid) then (isInteger sz_arg) else false) in
+      let tmp5 = (if tmp4 then (isInteger i_arg) else false) in
+      let tmp6 = (if tmp5 then (isInteger j_arg) else false) in
+      (if tmp6 then true else (let tmp7 = (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_concat_lid) then (isInteger sz_arg) else false) in
+      (if tmp7 then (isInteger second_arg) else false))))
+    | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((sz_arg, tmp) :: ((index_arg, tmp1) :: (tmp2 :: [])))) -> (let tmp3 = (is_lid_in fv binary_bv_primitives) in
+      let tmp4 = (if tmp3 then (isInteger sz_arg) else false) in
+      (if tmp4 then true else (let tmp5 = (is_lid_in fv indexed_bv_primitives) in
+      let tmp6 = (if tmp5 then (isInteger sz_arg) else false) in
+      (if tmp6 then (isInteger index_arg) else false))))
+    | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((sz_arg, tmp) :: (tmp1 :: []))) -> (let tmp2 = (is_lid_in fv unary_bv_primitives) in
+      (if tmp2 then (isInteger sz_arg) else false))
     | tmp -> false
   )
 
-let getInteger (tm : FStarC_Syntax_Syntax.term') : Prims.int =
-  (match tm with
-    | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_int (n, tmp)))) -> n
-    | tmp -> (FStarC_Effect.failwith "Expected an Integer term")
-  )
+let getInteger (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
+  (let tmp = (FStarC_Syntax_Subst.compress tm) in
+  let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+  (match tmp1 with
+    | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_int (n, tmp2)))) -> n
+    | tmp2 -> (FStarC_Effect.failwith "Expected an Integer term")
+  ))
 
 let dbg_PartialApp : (bool ref) =
   (FStarC_Debug.get_toggle "PartialApp")
@@ -291,7 +321,7 @@ let rec encode_const (c : FStarC_Const.sconst) (env : FStarC_SMTEncoding_Env.env
       (tmp1, []))
     | (FStarC_Const.Const_bool (false)) -> (let tmp1 = (FStarC_SMTEncoding_Term.boxBool FStarC_SMTEncoding_Util.mkFalse) in
       (tmp1, []))
-    | (FStarC_Const.Const_char (c1)) -> (let tmp1 = (FStarC_SMTEncoding_Util.mkInteger' (FStarC_Util.int_of_char c1)) in
+    | (FStarC_Const.Const_char (c1)) -> (let tmp1 = (FStarC_SMTEncoding_Util.mkInteger' (Z.of_int c1)) in
       let tmp2 = (FStarC_SMTEncoding_Term.boxInt tmp1) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = ("FStar.Char.__char_of_int", tmp3) in
@@ -335,7 +365,7 @@ and encode_pat__mk_guard (env : FStarC_SMTEncoding_Env.env_t) (pat : (FStarC_Syn
           | (tmp2, (tmp3 :: [])) -> FStarC_SMTEncoding_Util.mkTrue
           | tmp2 -> (FStarC_SMTEncoding_Env.mk_data_tester env (f).FStarC_Syntax_Syntax.fv_name scrutinee)
         ) in
-      let sub_term_guards = (FStarC_List.mapi (fun i tmp2 -> (match tmp2 with
+      let sub_term_guards = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp2 -> (match tmp2 with
           | (arg, tmp3) -> (let proj = (FStarC_SMTEncoding_Env.primitive_projector_by_pos (env).FStarC_SMTEncoding_Env.tcenv (f).FStarC_Syntax_Syntax.fv_name i) in
             let tmp4 = (FStarC_SMTEncoding_Util.mkApp (proj, (scrutinee :: []))) in
             ((encode_pat__mk_guard env) arg tmp4))
@@ -349,7 +379,7 @@ and encode_pat (env : FStarC_SMTEncoding_Env.env_t) (pat : (FStarC_Syntax_Syntax
   (FStarC_Format.print1 "Encoding pattern %s\n" tmp1)) else ());
   let tmp1 = (FStarC_TypeChecker_Util.decorated_pattern_as_term pat) in
   (match tmp1 with
-    | (vars, pat_term) -> (let tmp2 = (FStarC_List.fold_left (fun tmp2 v -> (match tmp2 with
+    | (vars, pat_term) -> (let tmp2 = (BatList.fold_left (fun tmp2 v -> (match tmp2 with
           | (env1, vars1) -> (let tmp3 = (FStarC_SMTEncoding_Env.gen_term_var env1 v) in
             (match tmp3 with
               | (xx, tmp4, env2) -> (env2, ((v, (FStarC_SMTEncoding_Term.mk_fv (xx, FStarC_SMTEncoding_Term.Term_sort))) :: vars1))
@@ -372,7 +402,7 @@ and encode_branch_pattern (env : FStarC_SMTEncoding_Env.env_t) (scr : FStarC_SMT
       (match tmp1 with
         | (tmp2, pattern) -> (let guard = ((pattern).guard scr) in
           let projections = ((pattern).projections scr) in
-          let env1 = (FStarC_List.fold_left (fun env1 tmp3 -> (match tmp3 with
+          let env1 = (BatList.fold_left (fun env1 tmp3 -> (match tmp3 with
               | (x, t) -> (FStarC_SMTEncoding_Env.push_term_var env1 x t)
             )) env projections) in
           let tmp3 = (match w with
@@ -406,11 +436,11 @@ and encode_match (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) 
                   | (guard, tmp6, br, env2, decls2) -> (let tmp7 = (encode_br br env2) in
                     (match tmp7 with
                       | (br1, decls3) -> (let tmp8 = (FStarC_SMTEncoding_Util.mkITE (guard, br1, else_case)) in
-                        (tmp8, (FStarC_List.op_At decls1 (FStarC_List.op_At decls2 decls3))))
+                        (tmp8, (BatList.append decls1 (BatList.append decls2 decls3))))
                     ))
                 ))
             )) in
-          let tmp4 = (FStarC_List.fold_right encode_branch pats (default_case, decls)) in
+          let tmp4 = (BatList.fold_right encode_branch pats (default_case, decls)) in
           (match tmp4 with
             | (match_tm, decls1) -> (let tmp5 = (FStarC_SMTEncoding_Term.mkLet' ((((FStarC_SMTEncoding_Term.mk_fv (scrsym, FStarC_SMTEncoding_Term.Term_sort)), scr) :: []), match_tm)) in
               (tmp5, decls1))
@@ -424,12 +454,12 @@ and encode_let (x : FStarC_Syntax_Syntax.bv) (t1 : (FStarC_Syntax_Syntax.term') 
   (match tmp1 with
     | (ee1, decls1) -> (let tmp2 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) e2) in
       (match tmp2 with
-        | (xs, e21) -> (let scrut = (FStarC_List.hd xs) in
+        | (xs, e21) -> (let scrut = (BatList.hd xs) in
           let x1 = (scrut).FStarC_Syntax_Syntax.binder_bv in
           let env' = (FStarC_SMTEncoding_Env.push_term_var env x1 ee1) in
           let tmp3 = (encode_body e21 env') in
           (match tmp3 with
-            | (ee2, decls2) -> (ee2, (FStarC_List.op_At decls1 decls2))
+            | (ee2, decls2) -> (ee2, (BatList.append decls1 decls2))
           ))
       ))
   ))
@@ -455,7 +485,7 @@ and encode_formula__fallback (env : FStarC_SMTEncoding_Env.env_t) (debug : ((FSt
                 | (x1, decls) -> (let tmp9 = (encode_term t env) in
                   (match tmp9 with
                     | (t1, decls') -> (let tmp10 = (FStarC_SMTEncoding_Term.mk_HasType x1 t1) in
-                      (tmp10, (FStarC_List.op_At decls decls')))
+                      (tmp10, (BatList.append decls decls')))
                   ))
               ))
             | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), (tmp5 :: ((phi1, tmp6) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.by_tactic_lid) -> (encode_formula phi1 env)
@@ -518,23 +548,23 @@ and encode_smt_patterns (pats_l : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_
               | (x1, decls) -> (let tmp5 = (encode_term t1 env1) in
                 (match tmp5 with
                   | (t2, decls') -> (let tmp6 = (FStarC_SMTEncoding_Term.mk_HasType x1 t2) in
-                    (tmp6, (FStarC_List.op_At decls decls')))
+                    (tmp6, (BatList.append decls decls')))
                 ))
             ))
           | tmp1 -> (encode_term t env1)
         ))
     ))) in
-  (FStarC_List.fold_right (fun pats tmp -> (match tmp with
-    | (pats_l1, decls) -> (let tmp1 = (FStarC_List.fold_right (fun tmp1 tmp2 -> (match (tmp1, tmp2) with
+  (BatList.fold_right (fun pats tmp -> (match tmp with
+    | (pats_l1, decls) -> (let tmp1 = (BatList.fold_right (fun tmp1 tmp2 -> (match (tmp1, tmp2) with
           | ((p, tmp3), (pats1, decls1)) -> (let tmp4 = (encode_smt_pattern p) in
             (match tmp4 with
               | (t, d) -> (match (FStarC_SMTEncoding_Term.check_pattern_ok t) with
-                  | None -> ((t :: pats1), (FStarC_List.op_At d decls1))
+                  | None -> ((t :: pats1), (BatList.append d decls1))
                   | (Some (illegal_subterm)) -> (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' p) in
                     let tmp6 = (FStarC_SMTEncoding_Term.fStarC_Class_Show_show__term_136 illegal_subterm) in
                     let tmp7 = (FStarC_Format.fmt2 "Pattern %s contains illegal sub-term (%s); dropping it" tmp5 tmp6) in
                     (FStarC_Errors.fStarC_Errors_log_issue__syntax_term'_string p FStarC_Errors_Codes.Warning_SMTPatternIllFormed tmp7);
-                    (pats1, (FStarC_List.op_At d decls1)))
+                    (pats1, (BatList.append d decls1)))
                 )
             ))
         )) pats ([], decls)) in
@@ -548,9 +578,11 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
     (if tmp then (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Tagged_tag_of__syntax_term' phi1) in
     let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' phi1) in
     (FStarC_Format.print2 "Formula (%s)  %s\n" tmp1 tmp2)) else ()))) in
-  let enc = (fun f r l -> (let tmp = (FStarC_Util.fold_map (fun decls x -> (let tmp = (encode_term (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x) env) in
+  let enc = (fun f r l -> (let tmp = (FStarC_Util.fold_map (fun decls x -> (let tmp = (encode_term (match x with
+          | (u__1, u__2) -> u__1
+        ) env) in
       (match tmp with
-        | (t, decls') -> ((FStarC_List.op_At decls decls'), t)
+        | (t, decls') -> ((BatList.append decls decls'), t)
       ))) [] l) in
     (match tmp with
       | (decls, args) -> (let tmp1 = (f args) in
@@ -558,7 +590,7 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
         (tmp2, decls))
     ))) in
   let const_op = (fun f r tmp -> ((FStarC_SMTEncoding_Term.set_range f r), [])) in
-  let un_op = (fun f l -> (f (FStarC_List.hd l))) in
+  let un_op = (fun f l -> (f (BatList.hd l))) in
   let bin_op = (fun f tmp -> (match tmp with
       | (t1 :: (t2 :: [])) -> (f (t1, t2))
       | tmp1 -> (FStarC_Effect.failwith "Impossible")
@@ -566,7 +598,7 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
   let enc_prop_c = (fun f r l -> (let tmp = (FStarC_Util.fold_map (fun decls tmp -> (match tmp with
         | (t, tmp1) -> (let tmp2 = (encode_formula t env) in
           (match tmp2 with
-            | (phi1, decls') -> ((FStarC_List.op_At decls decls'), phi1)
+            | (phi1, decls') -> ((BatList.append decls decls'), phi1)
           ))
       )) [] l) in
     (match tmp with
@@ -574,13 +606,13 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
         let tmp2 = (FStarC_SMTEncoding_Term.set_range tmp1 r) in
         (tmp2, decls))
     ))) in
-  let eq_op = (fun r args -> (let rf = (FStarC_List.filter (fun tmp -> (match tmp with
+  let eq_op = (fun r args -> (let rf = (BatList.filter (fun tmp -> (match tmp with
         | (a, q) -> (match q with
             | (Some ({ FStarC_Syntax_Syntax.aqual_implicit = true; aqual_attributes = tmp1; _ })) -> false
             | tmp1 -> true
           )
       )) args) in
-    (if ((<>) (FStarC_List.length rf) (Prims.of_int (2))) then (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length rf)) in
+    (if ((<>) ((fun l -> Z.of_int (BatList.length l)) rf) (Prims.of_int (2))) then (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) rf)) in
     let tmp1 = (FStarC_Format.fmt1 "eq_op: got %s non-implicit arguments instead of 2?" tmp) in
     (FStarC_Effect.failwith tmp1)) else (enc (bin_op FStarC_SMTEncoding_Util.mkEq) r rf)))) in
   let mk_imp = (fun r tmp -> (match tmp with
@@ -592,7 +624,7 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
                 (match tmp5 with
                   | (l2, decls2) -> (let tmp6 = (FStarC_SMTEncoding_Term.mkImp (l2, l1)) in
                     let tmp7 = (FStarC_SMTEncoding_Term.set_range tmp6 r) in
-                    (tmp7, (FStarC_List.op_At decls1 decls2)))
+                    (tmp7, (BatList.append decls1 decls2)))
                 ))
             )
         ))
@@ -607,7 +639,7 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
                 (match tmp6 with
                   | (e, decls3) -> (let tmp7 = (FStarC_SMTEncoding_Term.mkITE (g, t, e)) in
                     let res = (FStarC_SMTEncoding_Term.set_range tmp7 r) in
-                    (res, (FStarC_List.op_At decls1 (FStarC_List.op_At decls2 decls3))))
+                    (res, (BatList.append decls1 (BatList.append decls2 decls3))))
                 ))
             ))
         ))
@@ -625,7 +657,7 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
                     | tmp4 -> guards
                   ) in
                 let tmp4 = (FStarC_SMTEncoding_Util.mk_and_l guards1) in
-                (vars, pats, tmp4, body1, (FStarC_List.op_At decls (FStarC_List.op_At decls' decls''))))
+                (vars, pats, tmp4, body1, (BatList.append decls (BatList.append decls' decls''))))
             ))
         ))
     ))) in
@@ -634,14 +666,14 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
   let tmp = (FStarC_Syntax_Formula.destruct_typ_as_formula phi1) in
   (match tmp with
     | None -> ((encode_formula__fallback env debug) phi1)
-    | (Some ((FStarC_Syntax_Formula.BaseConn (op, arms)))) -> (let tmp1 = (FStarC_List.tryFind (fun tmp1 -> (match tmp1 with
+    | (Some ((FStarC_Syntax_Formula.BaseConn (op, arms)))) -> (let tmp1 = (List.find_opt (fun tmp1 -> (match tmp1 with
           | (l, tmp2) -> (FStarC_Ident.lid_equals op l)
         )) connectives) in
       (match tmp1 with
         | None -> ((encode_formula__fallback env debug) phi1)
         | (Some ((tmp2, f))) -> (f (phi1).FStarC_Syntax_Syntax.pos arms)
       ))
-    | (Some ((FStarC_Syntax_Formula.QAll (vars, pats, body)))) -> ((FStarC_List.iter (check_pattern_vars env vars body) pats);
+    | (Some ((FStarC_Syntax_Formula.QAll (vars, pats, body)))) -> ((BatList.iter (check_pattern_vars env vars body) pats);
       let tmp1 = (encode_q_body env vars pats body) in
       (match tmp1 with
         | (vars1, pats1, guard, body1, decls) -> (let tmp2 = (FStarC_SMTEncoding_Util.mkImp (guard, body1)) in
@@ -649,7 +681,7 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
           let tm = (FStarC_SMTEncoding_Term.mkForall (phi1).FStarC_Syntax_Syntax.pos tmp3) in
           (tm, decls))
       ))
-    | (Some ((FStarC_Syntax_Formula.QEx (vars, pats, body)))) -> ((FStarC_List.iter (check_pattern_vars env vars body) pats);
+    | (Some ((FStarC_Syntax_Formula.QEx (vars, pats, body)))) -> ((BatList.iter (check_pattern_vars env vars body) pats);
       let tmp1 = (encode_q_body env vars pats body) in
       (match tmp1 with
         | (vars1, pats1, guard, body1, decls) -> (let tmp2 = (FStarC_SMTEncoding_Util.mkAnd (guard, body1)) in
@@ -660,14 +692,14 @@ and encode_formula (phi : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
   ))
 
 and encode_args (l : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (env : FStarC_SMTEncoding_Env.env_t) : ((FStarC_SMTEncoding_Term.term) list * (FStarC_SMTEncoding_Term.decls_elt) list) =
-  (let tmp = (FStarC_List.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
+  (let tmp = (BatList.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
       | ((tms, decls), (t, tmp2)) -> (let tmp3 = (encode_term t env) in
         (match tmp3 with
-          | (t1, decls') -> ((t1 :: tms), (FStarC_List.op_At decls decls'))
+          | (t1, decls') -> ((t1 :: tms), (BatList.append decls decls'))
         ))
     )) ([], []) l) in
   (match tmp with
-    | (l1, decls) -> ((FStarC_List.rev l1), decls)
+    | (l1, decls) -> ((BatList.rev l1), decls)
   ))
 
 and encode_arith_term (env : FStarC_SMTEncoding_Env.env_t) (head : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (args_e : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (FStarC_SMTEncoding_Term.term * (FStarC_SMTEncoding_Term.decls_elt) list) =
@@ -677,13 +709,13 @@ and encode_arith_term (env : FStarC_SMTEncoding_Env.env_t) (head : (FStarC_Synta
           | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> fv
           | tmp1 -> (FStarC_Effect.failwith "Impossible")
         ) in
-      let unary = (fun unbox arg_tms1 -> (unbox (FStarC_List.hd arg_tms1))) in
-      let binary = (fun unbox arg_tms1 -> (let tmp1 = (unbox (FStarC_List.hd arg_tms1)) in
-        let tmp2 = (unbox (FStarC_List.hd (FStarC_List.tl arg_tms1))) in
+      let unary = (fun unbox arg_tms1 -> (unbox (BatList.hd arg_tms1))) in
+      let binary = (fun unbox arg_tms1 -> (let tmp1 = (unbox (BatList.hd arg_tms1)) in
+        let tmp2 = (unbox (BatList.hd (BatList.tl arg_tms1))) in
         (tmp1, tmp2))) in
       let mk_default = (fun tmp1 -> (let tmp2 = (FStarC_SMTEncoding_Env.lookup_free_var_sym env (head_fv).FStarC_Syntax_Syntax.fv_name) in
         (match tmp2 with
-          | (fname, fuel_args, arity) -> (let args = (FStarC_List.op_At fuel_args arg_tms) in
+          | (fname, fuel_args, arity) -> (let args = (BatList.append fuel_args arg_tms) in
             (maybe_curry_app (head).FStarC_Syntax_Syntax.pos fname arity args))
         ))) in
       let mk_nl = (fun box unbox nm op ts -> (let tmp1 = (FStarC_Options.smtencoding_nl_arith_wrapped ()) in
@@ -723,7 +755,7 @@ and encode_arith_term (env : FStarC_SMTEncoding_Env.env_t) (head : (FStarC_Synta
         (if tmp1 then (let tmp2 = (binary FStarC_SMTEncoding_Term.unboxReal ts) in
         let tmp3 = (FStarC_SMTEncoding_Util.mkGTE tmp2) in
         (FStarC_SMTEncoding_Term.boxBool tmp3)) else (mk_default ()))))) :: [])))))))))))))) in
-      let tmp1 = (FStarC_List.tryFind (fun tmp1 -> (match tmp1 with
+      let tmp1 = (List.find_opt (fun tmp1 -> (match tmp1 with
           | (l, tmp2) -> (FStarC_Syntax_Syntax.fv_eq_lid head_fv l)
         )) ops) in
       let tmp2 = (match tmp1 with
@@ -736,9 +768,9 @@ and encode_arith_term (env : FStarC_SMTEncoding_Env.env_t) (head : (FStarC_Synta
   ))
 
 and encode_BitVector_term (env : FStarC_SMTEncoding_Env.env_t) (head : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (args_e : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (FStarC_SMTEncoding_Term.term * (FStarC_SMTEncoding_Term.decls_elt) list) =
-  (let tmp = (FStarC_List.hd args_e) in
+  (let tmp = (BatList.hd args_e) in
   (match tmp with
-    | (tm_sz, tmp1) -> (let sz = (getInteger (tm_sz).FStarC_Syntax_Syntax.n) in
+    | (tm_sz, tmp1) -> (let sz = (getInteger tm_sz) in
       let bv_size_decls = (fun n -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
         let sz_key = (FStarC_Format.fmt1 "BitVector_%s" tmp2) in
         let tmp3 = (FStarC_SMTEncoding_Term.mkBvConstructor n) in
@@ -764,133 +796,231 @@ and encode_BitVector_term (env : FStarC_SMTEncoding_Env.env_t) (head : (FStarC_S
                   (decls, tmp12))
               ) in
             (match tmp6 with
-              | (decls, typing_inversion) -> (let tmp7 = (FStarC_SMTEncoding_Term.mk_decls "" sz_key (FStarC_List.op_At t_decls (typing_inversion :: [])) []) in
-                (FStarC_List.op_At decls tmp7))
+              | (decls, typing_inversion) -> (let tmp7 = (FStarC_SMTEncoding_Term.mk_decls "" sz_key (BatList.append t_decls (typing_inversion :: [])) []) in
+                (BatList.append decls tmp7))
             ))
         ))) in
       let tmp2 = (match ((head).FStarC_Syntax_Syntax.n, args_e) with
-          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), (tmp2 :: ((sz_arg, tmp3) :: (tmp4 :: [])))) when ((FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_uext_lid) && (isInteger (sz_arg).FStarC_Syntax_Syntax.n)) -> (let tmp5 = (getInteger (sz_arg).FStarC_Syntax_Syntax.n) in
-            let tmp6 = (Some (tmp5)) in
-            ((FStarC_List.tail (FStarC_List.tail args_e)), tmp6))
-          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), (tmp2 :: ((sz_arg, tmp3) :: (tmp4 :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_uext_lid) -> (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' sz_arg) in
-            let tmp6 = (FStarC_Format.fmt1 "Not a constant bitvector extend size: %s" tmp5) in
-            (FStarC_Effect.failwith tmp6))
-          | tmp2 -> ((FStarC_List.tail args_e), None)
+          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), (tmp2 :: ((sz_arg, tmp3) :: (tmp4 :: [])))) when (let tmp5 = (is_lid_in fv indexed_bv_primitives) in
+          (if tmp5 then (isInteger sz_arg) else false)) -> (let index = (getInteger sz_arg) in
+            let result_sz = (if (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_repeat_lid) then (Prims.op_Star sz index) else (Prims.op_Plus sz index)) in
+            ((BatList.tl (BatList.tl args_e)), result_sz, None, (Some (index)), None))
+          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), (tmp2 :: (arg :: ((i_arg, tmp3) :: ((j_arg, tmp4) :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_extract_lid) -> (let tmp5 = (getInteger i_arg) in
+            let tmp6 = (getInteger j_arg) in
+            let tmp7 = (tmp5, tmp6) in
+            (match tmp7 with
+              | (i, j) -> ((arg :: []), (Prims.op_Plus (Prims.op_Minus i j) Prims.int_one), None, None, (Some ((i, j))))
+            ))
+          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), (tmp2 :: ((other_sz, tmp3) :: (a :: (b :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_concat_lid) -> (let other_sz1 = (getInteger other_sz) in
+            ((a :: (b :: [])), (Prims.op_Plus sz other_sz1), (Some (other_sz1)), None, None))
+          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), tmp2) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.bv_comp_lid) -> ((BatList.tl args_e), Prims.int_one, None, None, None)
+          | tmp2 -> ((BatList.tl args_e), sz, None, None, None)
         ) in
       (match tmp2 with
-        | (arg_tms, ext_sz) -> (let tmp3 = (bv_size_decls sz) in
-          let tmp4 = (match ext_sz with
-              | (Some (ext)) -> (bv_size_decls (Prims.op_Plus sz ext))
+        | (arg_tms, result_sz, other_input_sz, indexed_arg, extract_bounds) -> (let tmp3 = (bv_size_decls sz) in
+          let tmp4 = (match other_input_sz with
+              | (Some (n)) -> (bv_size_decls n)
               | None -> []
             ) in
-          let sz_decls = (FStarC_List.op_At tmp3 tmp4) in
-          let tmp5 = (encode_args arg_tms env) in
-          (match tmp5 with
+          let tmp5 = (if ((=) result_sz sz) then [] else (bv_size_decls result_sz)) in
+          let tmp6 = (BatList.append tmp4 tmp5) in
+          let sz_decls = (BatList.append tmp3 tmp6) in
+          let tmp7 = (encode_args arg_tms env) in
+          (match tmp7 with
             | (arg_tms1, decls) -> (let head_fv = (match (head).FStarC_Syntax_Syntax.n with
                   | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> fv
-                  | tmp6 -> (FStarC_Effect.failwith "Impossible")
+                  | tmp8 -> (FStarC_Effect.failwith "Impossible")
                 ) in
-              let unary = (fun arg_tms2 -> (FStarC_SMTEncoding_Term.unboxBitVec sz (FStarC_List.hd arg_tms2))) in
-              let unary_arith = (fun arg_tms2 -> (FStarC_SMTEncoding_Term.unboxInt (FStarC_List.hd arg_tms2))) in
-              let binary = (fun arg_tms2 -> (let tmp6 = (FStarC_SMTEncoding_Term.unboxBitVec sz (FStarC_List.hd arg_tms2)) in
-                let tmp7 = (FStarC_SMTEncoding_Term.unboxBitVec sz (FStarC_List.hd (FStarC_List.tl arg_tms2))) in
-                (tmp6, tmp7))) in
-              let binary_arith = (fun arg_tms2 -> (let tmp6 = (FStarC_SMTEncoding_Term.unboxBitVec sz (FStarC_List.hd arg_tms2)) in
-                let tmp7 = (FStarC_SMTEncoding_Term.unboxInt (FStarC_List.hd (FStarC_List.tl arg_tms2))) in
-                (tmp6, tmp7))) in
-              let bv_and = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvAnd tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_xor = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvXor tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_or = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvOr tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_add = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvAdd tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_sub = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvSub tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_shl = (fun ts -> (let tmp6 = (binary_arith ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvShl sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_shr = (fun ts -> (let tmp6 = (binary_arith ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvShr sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_rol = (fun ts -> (let tmp6 = (binary_arith ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvRol sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_ror = (fun ts -> (let tmp6 = (binary_arith ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvRor sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_udiv = (fun ts -> (let tmp6 = (binary_arith ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvUdiv sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_mod = (fun ts -> (let tmp6 = (binary_arith ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvMod sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_mul = (fun ts -> (let tmp6 = (binary_arith ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvMul sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_shl' = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvShl' sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_shr' = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvShr' sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_rol' = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvRol' sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_ror' = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvRor' sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_udiv_unsafe = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvUdivUnsafe sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_mod_unsafe = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvModUnsafe sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_mul' = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvMul' sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let bv_ult = (fun ts -> (let tmp6 = (binary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvUlt tmp6) in
-                (FStarC_SMTEncoding_Term.boxBool tmp7))) in
-              let bv_uext = (fun arg_tms2 -> (let tmp6 = (match ext_sz with
+              let unary = (fun arg_tms2 -> (FStarC_SMTEncoding_Term.unboxBitVec sz (BatList.hd arg_tms2))) in
+              let unary_arith = (fun arg_tms2 -> (FStarC_SMTEncoding_Term.unboxInt (BatList.hd arg_tms2))) in
+              let binary = (fun arg_tms2 -> (let tmp8 = (FStarC_SMTEncoding_Term.unboxBitVec sz (BatList.hd arg_tms2)) in
+                let tmp9 = (FStarC_SMTEncoding_Term.unboxBitVec sz (BatList.hd (BatList.tl arg_tms2))) in
+                (tmp8, tmp9))) in
+              let binary_mixed = (fun arg_tms2 -> (let tmp8 = (FStarC_SMTEncoding_Term.unboxBitVec sz (BatList.hd arg_tms2)) in
+                let tmp9 = (match other_input_sz with
+                    | (Some (n)) -> n
+                    | None -> (FStarC_Effect.failwith "impossible")
+                  ) in
+                let tmp10 = (FStarC_SMTEncoding_Term.unboxBitVec tmp9 (BatList.hd (BatList.tl arg_tms2))) in
+                (tmp8, tmp10))) in
+              let binary_arith = (fun arg_tms2 -> (let tmp8 = (FStarC_SMTEncoding_Term.unboxBitVec sz (BatList.hd arg_tms2)) in
+                let tmp9 = (FStarC_SMTEncoding_Term.unboxInt (BatList.hd (BatList.tl arg_tms2))) in
+                (tmp8, tmp9))) in
+              let bv_and = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvAnd tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_xor = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvXor tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_or = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvOr tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_nand = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvNand tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_nor = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvNor tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_xnor = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvXnor tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_comp = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvComp tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec Prims.int_one tmp9))) in
+              let bv_add = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvAdd tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_sub = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSub tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_shl = (fun ts -> (let tmp8 = (binary_arith ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvShl sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_shr = (fun ts -> (let tmp8 = (binary_arith ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvShr sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_rol = (fun ts -> (let tmp8 = (binary_arith ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvRol sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_ror = (fun ts -> (let tmp8 = (binary_arith ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvRor sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_udiv = (fun ts -> (let tmp8 = (binary_arith ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUdiv sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_mod = (fun ts -> (let tmp8 = (binary_arith ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvMod sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_mul = (fun ts -> (let tmp8 = (binary_arith ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvMul sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_shl' = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvShl' sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_shr' = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvShr' sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_rol' = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvRol' sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_ror' = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvRor' sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_udiv_unsafe = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUdivUnsafe sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_mod_unsafe = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvModUnsafe sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_mul' = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvMul' sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_ult = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUlt tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_ule = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUle tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_ugt = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUgt tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_uge = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUge tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_slt = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSlt tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_sle = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSle tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_sgt = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSgt tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_sge = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSge tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_sdiv = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSdiv tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_srem = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSrem tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_smod = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSmod tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_ashr = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvAshr tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_nego = (fun ts -> (let tmp8 = (unary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvNego tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_uaddo = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUaddo tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_saddo = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSaddo tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_umulo = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUmulo tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_smulo = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSmulo tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_usubo = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvUsubo tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_ssubo = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSsubo tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_sdivo = (fun ts -> (let tmp8 = (binary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvSdivo tmp8) in
+                (FStarC_SMTEncoding_Term.boxBool tmp9))) in
+              let bv_concat = (fun ts -> (let tmp8 = (binary_mixed ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvConcat tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec result_sz tmp9))) in
+              let indexed_unary = (fun op arg_tms2 -> (let index = (match indexed_arg with
                     | (Some (x)) -> x
                     | None -> (FStarC_Effect.failwith "impossible")
                   ) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvUext tmp6) in
-                let tmp8 = (match ext_sz with
-                    | (Some (x)) -> x
-                    | None -> (FStarC_Effect.failwith "impossible")
+                let tmp8 = (unary arg_tms2) in
+                let tmp9 = (op index tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec result_sz tmp9))) in
+              let bv_repeat = (indexed_unary FStarC_SMTEncoding_Util.mkBvRepeat) in
+              let bv_uext = (indexed_unary FStarC_SMTEncoding_Util.mkBvUext) in
+              let bv_sext = (indexed_unary FStarC_SMTEncoding_Util.mkBvSext) in
+              let bv_extract = (fun arg_tms2 -> (let tmp8 = (match extract_bounds with
+                    | (Some (v)) -> v
                   ) in
-                let tmp9 = (Prims.op_Plus sz tmp8) in
-                let tmp10 = (FStarC_SMTEncoding_Term.boxBitVec tmp9) in
-                let tmp11 = (unary arg_tms2) in
-                let tmp12 = (tmp7 tmp11) in
-                (tmp10 tmp12))) in
-              let bv_not = (fun ts -> (let tmp6 = (unary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvNot tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let to_int = (fun ts -> (let tmp6 = (unary ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkBvToNat tmp6) in
-                (FStarC_SMTEncoding_Term.boxInt tmp7))) in
-              let bv_to = (fun ts -> (let tmp6 = (unary_arith ts) in
-                let tmp7 = (FStarC_SMTEncoding_Util.mkNatToBv sz tmp6) in
-                (FStarC_SMTEncoding_Term.boxBitVec sz tmp7))) in
-              let ops = ((FStarC_Parser_Const.bv_and_lid, bv_and) :: ((FStarC_Parser_Const.bv_xor_lid, bv_xor) :: ((FStarC_Parser_Const.bv_or_lid, bv_or) :: ((FStarC_Parser_Const.bv_add_lid, bv_add) :: ((FStarC_Parser_Const.bv_sub_lid, bv_sub) :: ((FStarC_Parser_Const.bv_shift_left_lid, bv_shl) :: ((FStarC_Parser_Const.bv_shift_right_lid, bv_shr) :: ((FStarC_Parser_Const.bv_rotate_left_lid, bv_rol) :: ((FStarC_Parser_Const.bv_rotate_right_lid, bv_ror) :: ((FStarC_Parser_Const.bv_udiv_lid, bv_udiv) :: ((FStarC_Parser_Const.bv_mod_lid, bv_mod) :: ((FStarC_Parser_Const.bv_mul_lid, bv_mul) :: ((FStarC_Parser_Const.bv_shift_left'_lid, bv_shl') :: ((FStarC_Parser_Const.bv_shift_right'_lid, bv_shr') :: ((FStarC_Parser_Const.bv_rotate_left'_lid, bv_rol') :: ((FStarC_Parser_Const.bv_rotate_right'_lid, bv_ror') :: ((FStarC_Parser_Const.bv_udiv_unsafe_lid, bv_udiv_unsafe) :: ((FStarC_Parser_Const.bv_mod_unsafe_lid, bv_mod_unsafe) :: ((FStarC_Parser_Const.bv_mul'_lid, bv_mul') :: ((FStarC_Parser_Const.bv_ult_lid, bv_ult) :: ((FStarC_Parser_Const.bv_not_lid, bv_not) :: ((FStarC_Parser_Const.bv_uext_lid, bv_uext) :: ((FStarC_Parser_Const.bv_to_nat_lid, to_int) :: ((FStarC_Parser_Const.nat_to_bv_lid, bv_to) :: [])))))))))))))))))))))))) in
-              let tmp6 = (FStarC_List.tryFind (fun tmp6 -> (match tmp6 with
-                  | (l, tmp7) -> (FStarC_Syntax_Syntax.fv_eq_lid head_fv l)
+                (match tmp8 with
+                  | (i, j) -> (let tmp9 = (unary arg_tms2) in
+                    let tmp10 = (FStarC_SMTEncoding_Util.mkBvExtract i j tmp9) in
+                    (FStarC_SMTEncoding_Term.boxBitVec result_sz tmp10))
+                ))) in
+              let bv_not = (fun ts -> (let tmp8 = (unary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvNot tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let bv_neg = (fun ts -> (let tmp8 = (unary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvNeg tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let to_int = (fun ts -> (let tmp8 = (unary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkBvToNat tmp8) in
+                (FStarC_SMTEncoding_Term.boxInt tmp9))) in
+              let sbv_to_int = (fun ts -> (let tmp8 = (unary ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkSBvToInt tmp8) in
+                (FStarC_SMTEncoding_Term.boxInt tmp9))) in
+              let bv_to = (fun ts -> (let tmp8 = (unary_arith ts) in
+                let tmp9 = (FStarC_SMTEncoding_Util.mkNatToBv sz tmp8) in
+                (FStarC_SMTEncoding_Term.boxBitVec sz tmp9))) in
+              let ops = ((FStarC_Parser_Const.bv_and_lid, bv_and) :: ((FStarC_Parser_Const.bv_xor_lid, bv_xor) :: ((FStarC_Parser_Const.bv_or_lid, bv_or) :: ((FStarC_Parser_Const.bv_nand_lid, bv_nand) :: ((FStarC_Parser_Const.bv_nor_lid, bv_nor) :: ((FStarC_Parser_Const.bv_xnor_lid, bv_xnor) :: ((FStarC_Parser_Const.bv_comp_lid, bv_comp) :: ((FStarC_Parser_Const.bv_add_lid, bv_add) :: ((FStarC_Parser_Const.bv_sub_lid, bv_sub) :: ((FStarC_Parser_Const.bv_shift_left_lid, bv_shl) :: ((FStarC_Parser_Const.bv_shift_right_lid, bv_shr) :: ((FStarC_Parser_Const.bv_rotate_left_lid, bv_rol) :: ((FStarC_Parser_Const.bv_rotate_right_lid, bv_ror) :: ((FStarC_Parser_Const.bv_udiv_lid, bv_udiv) :: ((FStarC_Parser_Const.bv_mod_lid, bv_mod) :: ((FStarC_Parser_Const.bv_mul_lid, bv_mul) :: ((FStarC_Parser_Const.bv_shift_left'_lid, bv_shl') :: ((FStarC_Parser_Const.bv_shift_right'_lid, bv_shr') :: ((FStarC_Parser_Const.bv_rotate_left'_lid, bv_rol') :: ((FStarC_Parser_Const.bv_rotate_right'_lid, bv_ror') :: ((FStarC_Parser_Const.bv_udiv_unsafe_lid, bv_udiv_unsafe) :: ((FStarC_Parser_Const.bv_mod_unsafe_lid, bv_mod_unsafe) :: ((FStarC_Parser_Const.bv_mul'_lid, bv_mul') :: ((FStarC_Parser_Const.bv_ult_lid, bv_ult) :: ((FStarC_Parser_Const.bv_ule_lid, bv_ule) :: ((FStarC_Parser_Const.bv_ugt_lid, bv_ugt) :: ((FStarC_Parser_Const.bv_uge_lid, bv_uge) :: ((FStarC_Parser_Const.bv_slt_lid, bv_slt) :: ((FStarC_Parser_Const.bv_sle_lid, bv_sle) :: ((FStarC_Parser_Const.bv_sgt_lid, bv_sgt) :: ((FStarC_Parser_Const.bv_sge_lid, bv_sge) :: ((FStarC_Parser_Const.bv_sdiv_lid, bv_sdiv) :: ((FStarC_Parser_Const.bv_srem_lid, bv_srem) :: ((FStarC_Parser_Const.bv_smod_lid, bv_smod) :: ((FStarC_Parser_Const.bv_ashr_lid, bv_ashr) :: ((FStarC_Parser_Const.bv_nego_lid, bv_nego) :: ((FStarC_Parser_Const.bv_uaddo_lid, bv_uaddo) :: ((FStarC_Parser_Const.bv_saddo_lid, bv_saddo) :: ((FStarC_Parser_Const.bv_umulo_lid, bv_umulo) :: ((FStarC_Parser_Const.bv_smulo_lid, bv_smulo) :: ((FStarC_Parser_Const.bv_usubo_lid, bv_usubo) :: ((FStarC_Parser_Const.bv_ssubo_lid, bv_ssubo) :: ((FStarC_Parser_Const.bv_sdivo_lid, bv_sdivo) :: ((FStarC_Parser_Const.bv_concat_lid, bv_concat) :: ((FStarC_Parser_Const.bv_repeat_lid, bv_repeat) :: ((FStarC_Parser_Const.bv_not_lid, bv_not) :: ((FStarC_Parser_Const.bv_neg_lid, bv_neg) :: ((FStarC_Parser_Const.bv_uext_lid, bv_uext) :: ((FStarC_Parser_Const.bv_sext_lid, bv_sext) :: ((FStarC_Parser_Const.bv_extract_lid, bv_extract) :: ((FStarC_Parser_Const.bv_to_nat_lid, to_int) :: ((FStarC_Parser_Const.sbv_to_int_lid, sbv_to_int) :: ((FStarC_Parser_Const.nat_to_bv_lid, bv_to) :: []))))))))))))))))))))))))))))))))))))))))))))))))))))) in
+              let tmp8 = (List.find_opt (fun tmp8 -> (match tmp8 with
+                  | (l, tmp9) -> (FStarC_Syntax_Syntax.fv_eq_lid head_fv l)
                 )) ops) in
-              let tmp7 = (match tmp6 with
+              let tmp9 = (match tmp8 with
                   | (Some (v)) -> v
                 ) in
-              (match tmp7 with
-                | (tmp8, op) -> (let tmp9 = (op arg_tms1) in
-                  (tmp9, (FStarC_List.op_At sz_decls decls)))
+              (match tmp9 with
+                | (tmp10, op) -> (let tmp11 = (op arg_tms1) in
+                  (tmp11, (BatList.append sz_decls decls)))
               ))
           ))
       ))
@@ -934,9 +1064,9 @@ and encode_deeply_embedded_quantifier (t : (FStarC_Syntax_Syntax.term') FStarC_S
               let tmp4 = (Prims.strcat "l_quant_interp_" tmp3) in
               let tmp5 = (interp, (Some ("Interpretation of deeply embedded quantifier")), tmp4) in
               let ax = (FStarC_SMTEncoding_Util.mkAssume tmp5) in
-              let tmp6 = (FStarC_SMTEncoding_Term.mk_decls "" tkey_hash (ax :: []) (FStarC_List.op_At decls decls')) in
-              let tmp7 = (FStarC_List.op_At decls' tmp6) in
-              let tmp8 = (FStarC_List.op_At decls tmp7) in
+              let tmp6 = (FStarC_SMTEncoding_Term.mk_decls "" tkey_hash (ax :: []) (BatList.append decls decls')) in
+              let tmp7 = (BatList.append decls' tmp6) in
+              let tmp8 = (BatList.append decls tmp7) in
               (tm, tmp8))
           ))
       ))
@@ -1007,7 +1137,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
           | (FStarC_Syntax_Syntax.Tm_fvar (tmp1)) -> []
           | (FStarC_Syntax_Syntax.Tm_uinst (tmp1, us)) -> us
         ) in
-      let encode_freev = (fun tmp1 -> (let us1 = (FStarC_List.map encode_universe us) in
+      let encode_freev = (fun tmp1 -> (let us1 = (BatList.map encode_universe us) in
         let fvb = (FStarC_SMTEncoding_Env.lookup_free_var_name env (v).FStarC_Syntax_Syntax.fv_name) in
         let tok = (FStarC_SMTEncoding_Env.lookup_free_var env (v).FStarC_Syntax_Syntax.fv_name) in
         let tmp2 = (match (tok, us1) with
@@ -1055,7 +1185,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
           | (FStarC_Syntax_Syntax.Tm_fvar (tmp4)) -> []
           | (FStarC_Syntax_Syntax.Tm_uinst (tmp4, us)) -> us
         ) in
-      let encode_freev = (fun tmp4 -> (let us1 = (FStarC_List.map encode_universe us) in
+      let encode_freev = (fun tmp4 -> (let us1 = (BatList.map encode_universe us) in
         let fvb = (FStarC_SMTEncoding_Env.lookup_free_var_name env (v).FStarC_Syntax_Syntax.fv_name) in
         let tok = (FStarC_SMTEncoding_Env.lookup_free_var env (v).FStarC_Syntax_Syntax.fv_name) in
         let tmp5 = (match (tok, us1) with
@@ -1198,7 +1328,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let tmp17 = (tkey_body, tmp16) in
                           let tkey_body1 = (FStarC_SMTEncoding_Util.mkAnd tmp17) in
                           let tmp18 = (FStarC_SMTEncoding_Term.free_variables tkey_body1) in
-                          let cvars = (FStarC_List.filter (fun x -> ((<>) (FStarC_SMTEncoding_Term.fv_name x) (FStarC_SMTEncoding_Term.fv_name fsym))) tmp18) in
+                          let cvars = (BatList.filter (fun x -> ((<>) (FStarC_SMTEncoding_Term.fv_name x) (FStarC_SMTEncoding_Term.fv_name fsym))) tmp18) in
                           let cvars1 = (FStarC_Util.remove_dups FStarC_SMTEncoding_Term.fv_eq cvars) in
                           let tkey = (FStarC_SMTEncoding_Term.mkForall (t1).FStarC_Syntax_Syntax.pos ([], (fsym :: cvars1), t_interp1)) in
                           let prefix = (if is_pure then "Tm_arrow_" else "Tm_ghost_arrow_") in
@@ -1206,13 +1336,13 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let tkey_hash = (Prims.strcat prefix tmp19) in
                           let tmp20 = (FStarC_Util.digest_of_string tkey_hash) in
                           let tsym = (Prims.strcat prefix tmp20) in
-                          let cvar_sorts = (FStarC_List.map FStarC_SMTEncoding_Term.fv_sort cvars1) in
+                          let cvar_sorts = (BatList.map FStarC_SMTEncoding_Term.fv_sort cvars1) in
                           let tmp21 = (FStarC_Options.log_queries ()) in
                           let caption = (if tmp21 then (let tmp22 = (FStarC_TypeChecker_Normalize.term_to_string (env).FStarC_SMTEncoding_Env.tcenv t1) in
-                            let tmp23 = (FStarC_Util.replace_char tmp22 10 32) in
+                            let tmp23 = ((fun s c1 c2 -> let c1 = BatUChar.chr c1 and c2 = BatUChar.chr c2 in BatUTF8.map (fun x -> if BatUChar.eq x c1 then c2 else x) s) tmp22 10 32) in
                             (Some (tmp23))) else None) in
                           let tdecl = (FStarC_SMTEncoding_Term.DeclFun (tsym, cvar_sorts, FStarC_SMTEncoding_Term.Term_sort, caption)) in
-                          let tmp22 = (FStarC_List.map FStarC_SMTEncoding_Util.mkFreeV cvars1) in
+                          let tmp22 = (BatList.map FStarC_SMTEncoding_Util.mkFreeV cvars1) in
                           let tmp23 = (tsym, tmp22) in
                           let t2 = (FStarC_SMTEncoding_Util.mkApp tmp23) in
                           let u = (encode_universe t0_univ) in
@@ -1240,10 +1370,10 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let tmp37 = (tmp36, (Some (a_name2)), (Prims.strcat module_name (Prims.strcat "_" a_name2))) in
                           let t_interp2 = (FStarC_SMTEncoding_Util.mkAssume tmp37) in
                           let t_decls = (tdecl :: (k_assumption :: (pre_typing :: (t_interp2 :: [])))) in
-                          let tmp38 = (FStarC_SMTEncoding_Term.mk_decls tsym tkey_hash t_decls (FStarC_List.op_At decls (FStarC_List.op_At decls' guard_decls))) in
-                          let tmp39 = (FStarC_List.op_At guard_decls tmp38) in
-                          let tmp40 = (FStarC_List.op_At decls' tmp39) in
-                          let tmp41 = (FStarC_List.op_At decls tmp40) in
+                          let tmp38 = (FStarC_SMTEncoding_Term.mk_decls tsym tkey_hash t_decls (BatList.append decls (BatList.append decls' guard_decls))) in
+                          let tmp39 = (BatList.append guard_decls tmp38) in
+                          let tmp40 = (BatList.append decls' tmp39) in
+                          let tmp41 = (BatList.append decls tmp40) in
                           (t2, tmp41))
                       ))
                   ))
@@ -1252,7 +1382,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
           let tkey_hash = (match tmp5 with
               | (vars, guards_l, env_bs, tmp6, tmp7) -> (let tmp8 = (encode_term (FStarC_Syntax_Util.comp_result res) env_bs) in
                 (match tmp8 with
-                  | (ct, tmp9) -> (let tmp10 = (FStarC_SMTEncoding_Util.mk_and_l (FStarC_List.op_At guards_l (ct :: []))) in
+                  | (ct, tmp9) -> (let tmp10 = (FStarC_SMTEncoding_Util.mk_and_l (BatList.append guards_l (ct :: []))) in
                     let tmp11 = ([], vars, tmp10) in
                     let tkey = (FStarC_SMTEncoding_Term.mkForall (t1).FStarC_Syntax_Syntax.pos tmp11) in
                     let tmp12 = (FStarC_SMTEncoding_Term.hash_of_term tkey) in
@@ -1267,7 +1397,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
               | (FStarC_SMTEncoding_Term.FreeV (fv)) -> fv
               | tmp7 -> (FStarC_Effect.failwith "Impossible: getfreeV: gen_term_var should always returns a FreeV")
             )) in
-          let tmp7 = (FStarC_List.fold_left (fun tmp7 bv -> (match tmp7 with
+          let tmp7 = (BatList.fold_left (fun tmp7 bv -> (match tmp7 with
               | (env1, decls, vars, tms, guards) -> (let tmp8 = (FStarC_TypeChecker_Env.lookup_bv (env1).FStarC_SMTEncoding_Env.tcenv bv) in
                 (match tmp8 with
                   | (sort, tmp9) -> (let tmp10 = (FStarC_SMTEncoding_Env.gen_term_var env1 bv) in
@@ -1276,18 +1406,18 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                         let tmp11 = (norm env2 sort) in
                         let tmp12 = (encode_term_pred None tmp11 env2 smt_tm) in
                         (match tmp12 with
-                          | (guard, decls') -> (env2, (FStarC_List.op_At decls' decls), (fv :: vars), (smt_tm :: tms), (guard :: guards))
+                          | (guard, decls') -> (env2, (BatList.append decls' decls), (fv :: vars), (smt_tm :: tms), (guard :: guards))
                         ))
                     ))
                 ))
             )) (env, [], [], [], []) tmp6) in
           let tmp8 = (tmp6, tmp7) in
           (match tmp8 with
-            | (fstar_fvs, (env1, fv_decls, fv_vars, fv_tms, fv_guards)) -> (let fv_decls1 = (FStarC_List.rev fv_decls) in
-              let fv_vars1 = (FStarC_List.rev fv_vars) in
-              let fv_tms1 = (FStarC_List.rev fv_tms) in
-              let fv_guards1 = (FStarC_List.rev fv_guards) in
-              let arg_sorts = (FStarC_List.map (fun tmp9 -> FStarC_SMTEncoding_Term.Term_sort) fv_tms1) in
+            | (fstar_fvs, (env1, fv_decls, fv_vars, fv_tms, fv_guards)) -> (let fv_decls1 = (BatList.rev fv_decls) in
+              let fv_vars1 = (BatList.rev fv_vars) in
+              let fv_tms1 = (BatList.rev fv_tms) in
+              let fv_guards1 = (BatList.rev fv_guards) in
+              let arg_sorts = (BatList.map (fun tmp9 -> FStarC_SMTEncoding_Term.Term_sort) fv_tms1) in
               let tdecl = (FStarC_SMTEncoding_Term.DeclFun (tsym, arg_sorts, FStarC_SMTEncoding_Term.Term_sort, None)) in
               let tapp = (FStarC_SMTEncoding_Util.mkApp (tsym, fv_tms1)) in
               let a_name = (Prims.strcat "non_total_function_typing_" tsym) in
@@ -1302,13 +1432,13 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                   | (hd :: tl) -> true
                   | tmp13 -> false
                 ) then (concl :: fv_guards1) else (concl :: [])) in
-              let axiom = (FStarC_SMTEncoding_Term.mkForall (t1).FStarC_Syntax_Syntax.pos ((pat :: []), (FStarC_List.op_At fv_vars1 svars), body)) in
+              let axiom = (FStarC_SMTEncoding_Term.mkForall (t1).FStarC_Syntax_Syntax.pos ((pat :: []), (BatList.append fv_vars1 svars), body)) in
               let t_kinding = (FStarC_SMTEncoding_Util.mkAssume (axiom, (Some ("Typing for non-total arrows")), a_name)) in
-              let tmp13 = (FStarC_List.map (FStarC_SMTEncoding_Env.lookup_term_var env) fstar_fvs) in
+              let tmp13 = (BatList.map (FStarC_SMTEncoding_Env.lookup_term_var env) fstar_fvs) in
               let tmp14 = (tsym, tmp13) in
               let tapp_concrete = (FStarC_SMTEncoding_Util.mkApp tmp14) in
               let tmp15 = (FStarC_SMTEncoding_Term.mk_decls tsym tkey_hash (tdecl :: (t_kinding :: [])) []) in
-              let tmp16 = (FStarC_List.op_At fv_decls1 tmp15) in
+              let tmp16 = (BatList.append fv_decls1 tmp15) in
               (tapp_concrete, tmp16))
           ))))
       ))
@@ -1318,7 +1448,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
           | { FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })); pos = tmp3; hash_code = tmp4; _ } -> (let tmp5 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
             (match tmp5 with
               | (b, f1) -> (let tmp6 = (((env).FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.universe_of (env).FStarC_SMTEncoding_Env.tcenv t1) in
-                ((let scrut = (FStarC_List.hd b) in
+                ((let scrut = (BatList.hd b) in
                 (scrut).FStarC_Syntax_Syntax.binder_bv), f1, tmp6))
             ))
           | tmp3 -> (FStarC_Effect.failwith "impossible")
@@ -1337,16 +1467,18 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let encoding = (FStarC_SMTEncoding_Util.mkAnd (tm_has_type_with_fuel, refinement)) in
                           let tmp8 = (FStarC_SMTEncoding_Term.free_variables refinement) in
                           let tmp9 = (FStarC_SMTEncoding_Term.free_variables tm_has_type_with_fuel) in
-                          let tmp10 = (FStarC_List.op_At tmp8 tmp9) in
+                          let tmp10 = (BatList.append tmp8 tmp9) in
                           let cvars = (FStarC_Util.remove_dups FStarC_SMTEncoding_Term.fv_eq tmp10) in
-                          let cvars1 = (FStarC_List.filter (fun y -> (((<>) (FStarC_SMTEncoding_Term.fv_name y) x1) && ((<>) (FStarC_SMTEncoding_Term.fv_name y) fsym))) cvars) in
+                          let cvars1 = (BatList.filter (fun y -> (((<>) (FStarC_SMTEncoding_Term.fv_name y) x1) && ((<>) (FStarC_SMTEncoding_Term.fv_name y) fsym))) cvars) in
                           let tmp11 = (FStarC_Syntax_Free.univnames t1) in
                           let tmp12 = (FStarC_Syntax_Util.type_with_u t0_univ) in
                           let tmp13 = (FStarC_Syntax_Free.univnames tmp12) in
                           let tmp14 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__ident_list_ident tmp11 tmp13) in
-                          let univ_vars = (FStarC_List.map encode_univ_name tmp14) in
-                          let tmp15 = (FStarC_List.map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst univ_vars) in
-                          let cvars2 = (FStarC_List.op_At tmp15 cvars1) in
+                          let univ_vars = (BatList.map encode_univ_name tmp14) in
+                          let tmp15 = (BatList.map (fun x2 -> (match x2 with
+                              | (u__1, u__2) -> u__1
+                            )) univ_vars) in
+                          let cvars2 = (BatList.append tmp15 cvars1) in
                           let cvars3 = (FStarC_Util.remove_dups FStarC_SMTEncoding_Term.fv_eq cvars2) in
                           let xfv = (FStarC_SMTEncoding_Term.mk_fv (x1, FStarC_SMTEncoding_Term.Term_sort)) in
                           let ffv = (FStarC_SMTEncoding_Term.mk_fv (fsym, FStarC_SMTEncoding_Term.Fuel_sort)) in
@@ -1358,9 +1490,9 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           (FStarC_Format.print3 "Encoding Tm_refine %s with tkey_hash %s and digest %s\n" tmp17 tkey_hash tmp18)) else ());
                           let tmp17 = (FStarC_Util.digest_of_string tkey_hash) in
                           let tsym = (Prims.strcat "Tm_refine_" tmp17) in
-                          let cvar_sorts = (FStarC_List.map FStarC_SMTEncoding_Term.fv_sort cvars3) in
+                          let cvar_sorts = (BatList.map FStarC_SMTEncoding_Term.fv_sort cvars3) in
                           let tdecl = (FStarC_SMTEncoding_Term.DeclFun (tsym, cvar_sorts, FStarC_SMTEncoding_Term.Term_sort, None)) in
-                          let tmp18 = (FStarC_List.map FStarC_SMTEncoding_Util.mkFreeV cvars3) in
+                          let tmp18 = (BatList.map FStarC_SMTEncoding_Util.mkFreeV cvars3) in
                           let tmp19 = (tsym, tmp18) in
                           let t2 = (FStarC_SMTEncoding_Util.mkApp tmp19) in
                           (ignore (FStarC_SMTEncoding_Term.mk_HasType xtm base_t));
@@ -1383,9 +1515,9 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let tmp30 = (tmp29, (Some ("refinement_interpretation")), (Prims.strcat "refinement_interpretation_" tsym)) in
                           let t_interp = (FStarC_SMTEncoding_Util.mkAssume tmp30) in
                           let t_decls = (tdecl :: (t_kinding :: (t_interp :: (t_haseq :: [])))) in
-                          let tmp31 = (FStarC_SMTEncoding_Term.mk_decls tsym tkey_hash t_decls (FStarC_List.op_At decls decls')) in
-                          let tmp32 = (FStarC_List.op_At decls' tmp31) in
-                          let tmp33 = (FStarC_List.op_At decls tmp32) in
+                          let tmp31 = (FStarC_SMTEncoding_Term.mk_decls tsym tkey_hash t_decls (BatList.append decls decls')) in
+                          let tmp32 = (BatList.append decls' tmp31) in
+                          let tmp33 = (BatList.append decls tmp32) in
                           (t2, tmp33))
                       ))
                   ))
@@ -1404,7 +1536,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
           let tmp9 = (t_has_k, (Some ("Uvar typing")), tmp8) in
           let d = (FStarC_SMTEncoding_Util.mkAssume tmp9) in
           let tmp10 = (FStarC_SMTEncoding_Term.mk_decls_trivial (d :: [])) in
-          let tmp11 = (FStarC_List.op_At decls tmp10) in
+          let tmp11 = (BatList.append decls tmp10) in
           (ttm, tmp11))
       ))
     | (FStarC_Syntax_Syntax.Tm_app (tmp1)) -> (let tmp2 = (FStarC_Syntax_Util.head_and_args_full t1) in
@@ -1440,7 +1572,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                         | (v11, decls1) -> (let tmp16 = (encode_term v2 env) in
                           (match tmp16 with
                             | (v21, decls2) -> (let tmp17 = (FStarC_SMTEncoding_Util.mk_LexCons v01 v11 v21) in
-                              (tmp17, (FStarC_List.op_At decls0 (FStarC_List.op_At decls1 decls2))))
+                              (tmp17, (BatList.append decls0 (BatList.append decls1 decls2))))
                           ))
                       ))
                   ))
@@ -1451,7 +1583,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                         | (v11, decls1) -> (let tmp13 = (encode_term v2 env) in
                           (match tmp13 with
                             | (v21, decls2) -> (let tmp14 = (FStarC_SMTEncoding_Util.mk_LexCons v01 v11 v21) in
-                              (tmp14, (FStarC_List.op_At decls0 (FStarC_List.op_At decls1 decls2))))
+                              (tmp14, (BatList.append decls0 (BatList.append decls1 decls2))))
                           ))
                       ))
                   ))
@@ -1473,13 +1605,13 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                     | (args, decls) -> (let encode_partial_app = (fun ht_opt -> (let tmp10 = (encode_term head1 env) in
                         (match tmp10 with
                           | (smt_head, decls') -> (let app_tm = (mk_Apply_args smt_head args) in
-                            (app_tm, (FStarC_List.op_At decls decls')))
+                            (app_tm, (BatList.append decls decls')))
                         ))) in
                       let encode_full_app = (fun fv univs -> (let tmp10 = (FStarC_SMTEncoding_Env.lookup_free_var_sym env fv) in
                         (match tmp10 with
-                          | (fname, fuel_args, arity) -> (let arity1 = (Prims.op_Plus arity (FStarC_List.length univs)) in
-                            let all_args = (FStarC_List.op_At fuel_args (FStarC_List.op_At univs args)) in
-                            (if (Prims.op_Less (FStarC_List.length all_args) arity1) then (encode_partial_app None) else (let tm = (maybe_curry_app (t1).FStarC_Syntax_Syntax.pos fname arity1 all_args) in
+                          | (fname, fuel_args, arity) -> (let arity1 = (Prims.op_Plus arity ((fun l -> Z.of_int (BatList.length l)) univs)) in
+                            let all_args = (BatList.append fuel_args (BatList.append univs args)) in
+                            (if (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) all_args) arity1) then (encode_partial_app None) else (let tm = (maybe_curry_app (t1).FStarC_Syntax_Syntax.pos fname arity1 all_args) in
                             (tm, decls))))
                         ))) in
                       let head2 = (FStarC_Syntax_Subst.compress head1) in
@@ -1487,12 +1619,20 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           | (FStarC_Syntax_Syntax.Tm_uinst ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_name (x)); pos = tmp10; hash_code = tmp11; _ }, tmp12)) -> (Some ((x).FStarC_Syntax_Syntax.sort))
                           | (FStarC_Syntax_Syntax.Tm_name (x)) -> (Some ((x).FStarC_Syntax_Syntax.sort))
                           | (FStarC_Syntax_Syntax.Tm_uinst ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_fvar (fv)); pos = tmp10; hash_code = tmp11; _ }, tmp12)) -> (let tmp13 = (FStarC_TypeChecker_Env.lookup_lid (env).FStarC_SMTEncoding_Env.tcenv (fv).FStarC_Syntax_Syntax.fv_name) in
-                            let tmp14 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp13) in
-                            let tmp15 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp14) in
+                            let tmp14 = (match tmp13 with
+                                | (u__1, u__2) -> u__1
+                              ) in
+                            let tmp15 = (match tmp14 with
+                                | (u__1, u__2) -> u__2
+                              ) in
                             (Some (tmp15)))
                           | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp10 = (FStarC_TypeChecker_Env.lookup_lid (env).FStarC_SMTEncoding_Env.tcenv (fv).FStarC_Syntax_Syntax.fv_name) in
-                            let tmp11 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp10) in
-                            let tmp12 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp11) in
+                            let tmp11 = (match tmp10 with
+                                | (u__1, u__2) -> u__1
+                              ) in
+                            let tmp12 = (match tmp11 with
+                                | (u__1, u__2) -> u__2
+                              ) in
                             (Some (tmp12)))
                           | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = tmp10; asc = (FStar_Pervasives.Inl (t2)); asc1 = tmp11; asc2 = tmp12; eff_opt = tmp13; _ })) -> (Some (t2))
                           | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = tmp10; asc = (FStar_Pervasives.Inr (c)); asc1 = tmp11; asc2 = tmp12; eff_opt = tmp13; _ })) -> (Some ((FStarC_Syntax_Util.comp_result c)))
@@ -1504,7 +1644,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let head_type2 = (FStarC_Syntax_Util.unrefine tmp10) in
                           let tmp11 = (curried_arrow_formals_comp head_type2) in
                           let tmp12 = (match tmp11 with
-                              | (formals, c) -> (if (Prims.op_Less (FStarC_List.length formals) (FStarC_List.length args)) then (let tmp12 = (normalize_refinement (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.HNF :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))) (env).FStarC_SMTEncoding_Env.tcenv head_type2) in
+                              | (formals, c) -> (if (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) formals) ((fun l -> Z.of_int (BatList.length l)) args)) then (let tmp12 = (normalize_refinement (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.HNF :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))) (env).FStarC_SMTEncoding_Env.tcenv head_type2) in
                                 let head_type3 = (FStarC_Syntax_Util.unrefine tmp12) in
                                 let tmp13 = (curried_arrow_formals_comp head_type3) in
                                 (match tmp13 with
@@ -1518,14 +1658,14 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                               let tmp16 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_tuple2_syntax_option args_e1) in
                               (FStarC_Format.print3 "Encoding partial application, head_type = %s, formals = %s, args = %s\n" tmp14 tmp15 tmp16)) else ());
                               let declared_arity_matches = (fun l -> (match (FStarC_SMTEncoding_Env.lookup_fvar_binding env l) with
-                                  | (Some (fvb)) -> ((=) (fvb).FStarC_SMTEncoding_Env.smt_arity (FStarC_List.length args))
+                                  | (Some (fvb)) -> ((=) (fvb).FStarC_SMTEncoding_Env.smt_arity ((fun l -> Z.of_int (BatList.length l)) args))
                                   | None -> false
                                 )) in
                               (match (head2).FStarC_Syntax_Syntax.n with
-                                | (FStarC_Syntax_Syntax.Tm_uinst ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_fvar (fv)); pos = tmp14; hash_code = tmp15; _ }, us)) when (((=) (FStarC_List.length formals) (FStarC_List.length args)) || (declared_arity_matches (fv).FStarC_Syntax_Syntax.fv_name)) -> (let tmp16 = (FStarC_List.map encode_universe us) in
+                                | (FStarC_Syntax_Syntax.Tm_uinst ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_fvar (fv)); pos = tmp14; hash_code = tmp15; _ }, us)) when (((=) ((fun l -> Z.of_int (BatList.length l)) formals) ((fun l -> Z.of_int (BatList.length l)) args)) || (declared_arity_matches (fv).FStarC_Syntax_Syntax.fv_name)) -> (let tmp16 = (BatList.map encode_universe us) in
                                   (encode_full_app (fv).FStarC_Syntax_Syntax.fv_name tmp16))
-                                | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (((=) (FStarC_List.length formals) (FStarC_List.length args)) || (declared_arity_matches (fv).FStarC_Syntax_Syntax.fv_name)) -> (encode_full_app (fv).FStarC_Syntax_Syntax.fv_name [])
-                                | tmp14 -> (if (Prims.op_Greater (FStarC_List.length formals) (FStarC_List.length args)) then (encode_partial_app (Some ((head_type3, formals, c)))) else (encode_partial_app None))
+                                | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (((=) ((fun l -> Z.of_int (BatList.length l)) formals) ((fun l -> Z.of_int (BatList.length l)) args)) || (declared_arity_matches (fv).FStarC_Syntax_Syntax.fv_name)) -> (encode_full_app (fv).FStarC_Syntax_Syntax.fv_name [])
+                                | tmp14 -> (if (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) formals) ((fun l -> Z.of_int (BatList.length l)) args)) then (encode_partial_app (Some ((head_type3, formals, c)))) else (encode_partial_app None))
                               ))
                           ))
                       ))
@@ -1536,8 +1676,8 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
     | (FStarC_Syntax_Syntax.Tm_abs (tmp1)) -> (let tmp2 = (FStarC_Syntax_Util.abs_formals_maybe_unascribe_body false t1) in
       (match tmp2 with
         | (bs, body, lopt) -> (let fallback = (fun tmp3 -> (let tmp4 = (FStarC_Syntax_Free.names t1) in
-            let tms = (FStarC_List.map (FStarC_SMTEncoding_Env.lookup_term_var env) tmp4) in
-            let tmp5 = (FStarC_List.map (fun tmp5 -> FStarC_SMTEncoding_Term.Term_sort) tmp4) in
+            let tms = (BatList.map (FStarC_SMTEncoding_Env.lookup_term_var env) tmp4) in
+            let tmp5 = (BatList.map (fun tmp5 -> FStarC_SMTEncoding_Term.Term_sort) tmp4) in
             let tmp6 = (tmp5, tms) in
             (match tmp6 with
               | (arg_sorts, arg_terms) -> (let f = ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.fresh (env).FStarC_SMTEncoding_Env.current_module_name "Tm_abs") in
@@ -1562,7 +1702,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
             | None -> (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t1) in
               let tmp4 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Losing precision when encoding a function literal:") tmp3) in
               let tmp5 = (tmp4 :: ((FStarC_Errors_Msg.text "Unannotated abstraction in the compiler?") :: [])) in
-              (FStarC_Errors.fStarC_Errors_log_issue__syntax_term'_list_document t1 FStarC_Errors_Codes.Warning_FunctionLiteralPrecisionLoss tmp5);
+              (FStarC_Errors.fStarC_Errors_log_issue__syntax_term'_list_ocaml_document t1 FStarC_Errors_Codes.Warning_FunctionLiteralPrecisionLoss tmp5);
               (fallback ()))
             | (Some (rc)) -> (let tmp3 = (if (is_impure rc) then (let tmp3 = (FStarC_SMTEncoding_Util.is_smt_reifiable_rc (env).FStarC_SMTEncoding_Env.tcenv rc) in
                 (not tmp3)) else false) in
@@ -1593,7 +1733,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let tmp14 = (match arrow_t_opt with
                               | None -> (cvars, key_body)
                               | (Some (t2)) -> (let tmp14 = (FStarC_SMTEncoding_Term.free_variables t2) in
-                                let tmp15 = (FStarC_List.op_At tmp14 cvars) in
+                                let tmp15 = (BatList.append tmp14 cvars) in
                                 let tmp16 = (FStarC_Util.remove_dups FStarC_SMTEncoding_Term.fv_eq tmp15) in
                                 let tmp17 = (FStarC_SMTEncoding_Util.mkAnd (key_body, t2)) in
                                 (tmp16, tmp17))
@@ -1602,20 +1742,20 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                             | (cvars1, key_body1) -> (let tkey = (FStarC_SMTEncoding_Term.mkForall (t1).FStarC_Syntax_Syntax.pos ([], cvars1, key_body1)) in
                               let tkey_hash = (FStarC_SMTEncoding_Term.hash_of_term tkey) in
                               let tmp15 = (!(dbg_PartialApp)) in
-                              (if tmp15 then (let tmp16 = (FStarC_List.map FStarC_SMTEncoding_Term.fv_name vars) in
-                              let tmp17 = (FStarC_String.concat ", " tmp16) in
+                              (if tmp15 then (let tmp16 = (BatList.map FStarC_SMTEncoding_Term.fv_name vars) in
+                              let tmp17 = (BatString.concat ", " tmp16) in
                               let tmp18 = (FStarC_SMTEncoding_Term.print_smt_term body2) in
                               (FStarC_Format.print2 "Checking eta expansion of\n\tvars={%s}\n\tbody=%s\n" tmp17 tmp18)) else ());
-                              let cvar_sorts = (FStarC_List.map FStarC_SMTEncoding_Term.fv_sort cvars1) in
+                              let cvar_sorts = (BatList.map FStarC_SMTEncoding_Term.fv_sort cvars1) in
                               let tmp16 = (FStarC_Util.digest_of_string tkey_hash) in
                               let fsym = (Prims.strcat "Tm_abs_" tmp16) in
                               let fdecl = (FStarC_SMTEncoding_Term.DeclFun (fsym, cvar_sorts, FStarC_SMTEncoding_Term.Term_sort, None)) in
-                              let tmp17 = (FStarC_List.map FStarC_SMTEncoding_Util.mkFreeV cvars1) in
+                              let tmp17 = (BatList.map FStarC_SMTEncoding_Util.mkFreeV cvars1) in
                               let tmp18 = (fsym, tmp17) in
                               let f = (FStarC_SMTEncoding_Util.mkApp tmp18) in
                               let app = (mk_Apply f vars) in
                               let typing_f = (match arrow_t_opt with
-                                  | None -> (let tmp19 = (FStarC_List.map (fun tmp19 -> FStarC_SMTEncoding_Util.mkTrue) vars) in
+                                  | None -> (let tmp19 = (BatList.map (fun tmp19 -> FStarC_SMTEncoding_Util.mkTrue) vars) in
                                     let ax = (isTotFun_axioms (t1).FStarC_Syntax_Syntax.pos f [] vars tmp19 is_pure) in
                                     let tot_fun_ax = (match cvars1 with
                                         | [] -> ax
@@ -1633,15 +1773,15 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                                 ) in
                               let a_name = (Prims.strcat "interpretation_" fsym) in
                               let tmp19 = (FStarC_SMTEncoding_Util.mkEq (app, body2)) in
-                              let tmp20 = (((app :: []) :: []), (FStarC_List.op_At vars cvars1), tmp19) in
+                              let tmp20 = (((app :: []) :: []), (BatList.append vars cvars1), tmp19) in
                               let tmp21 = (FStarC_SMTEncoding_Term.mkForall (t1).FStarC_Syntax_Syntax.pos tmp20) in
                               let tmp22 = (tmp21, (Some (a_name)), a_name) in
                               let interp_f = (FStarC_SMTEncoding_Util.mkAssume tmp22) in
-                              let f_decls = (FStarC_List.op_At (fdecl :: typing_f) (interp_f :: [])) in
-                              let tmp23 = (FStarC_SMTEncoding_Term.mk_decls fsym tkey_hash f_decls (FStarC_List.op_At decls (FStarC_List.op_At decls' decls''))) in
-                              let tmp24 = (FStarC_List.op_At decls'' tmp23) in
-                              let tmp25 = (FStarC_List.op_At decls' tmp24) in
-                              let tmp26 = (FStarC_List.op_At decls tmp25) in
+                              let f_decls = (BatList.append (fdecl :: typing_f) (interp_f :: [])) in
+                              let tmp23 = (FStarC_SMTEncoding_Term.mk_decls fsym tkey_hash f_decls (BatList.append decls (BatList.append decls' decls''))) in
+                              let tmp24 = (BatList.append decls'' tmp23) in
+                              let tmp25 = (BatList.append decls' tmp24) in
+                              let tmp26 = (BatList.append decls tmp25) in
                               (f, tmp26))
                           ))
                       ))
@@ -1653,16 +1793,17 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
     | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = false; lbs1 = ({ FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inl (x)); lbunivs = tmp1; lbtyp = t11; lbeff = tmp2; lbdef = e1; lbattrs = tmp3; lbpos = tmp4; _ } :: []); body = e2; _ })) -> (encode_let x t11 e1 e2 env encode_term)
     | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = false; lbs1 = (tmp1 :: tmp2); body = tmp3; _ })) -> (FStarC_Effect.failwith "Impossible: non-recursive let with multiple bindings")
     | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = true; lbs1 = tmp1; body = tmp2; _ })) -> (let tmp3 = (FStarC_Syntax_Free.names t1) in
-      let arg_sorts = (FStarC_List.map (fun tmp4 -> FStarC_SMTEncoding_Term.Term_sort) tmp3) in
-      let arg_terms = (FStarC_List.map (FStarC_SMTEncoding_Env.lookup_term_var env) tmp3) in
-      let tmp4 = (FStarC_Syntax_Hash.ext_hash_term t1) in
-      let tkey_hash = (FStarC_Hash.string_of_hash_code tmp4) in
-      let tmp5 = (FStarC_Util.digest_of_string tkey_hash) in
-      let f = (Prims.strcat "Tm_inner_let_rec_" tmp5) in
+      let arg_sorts = (BatList.map (fun tmp4 -> FStarC_SMTEncoding_Term.Term_sort) tmp3) in
+      let arg_terms = (BatList.map (FStarC_SMTEncoding_Env.lookup_term_var env) tmp3) in
+      let tmp4 = (FStarC_Syntax_Compress.deep_compress true true t1) in
+      let tmp5 = (FStarC_Syntax_Hash.ext_hash_term tmp4) in
+      let tkey_hash = (string_of_int tmp5) in
+      let tmp6 = (FStarC_Util.digest_of_string tkey_hash) in
+      let f = (Prims.strcat "Tm_inner_let_rec_" tmp6) in
       let decl = (FStarC_SMTEncoding_Term.DeclFun (f, arg_sorts, FStarC_SMTEncoding_Term.Term_sort, (Some ("Inner let rec")))) in
-      let tmp6 = (FStarC_SMTEncoding_Util.mkApp (f, arg_terms)) in
-      let tmp7 = (FStarC_SMTEncoding_Term.mk_decls f tkey_hash (decl :: []) []) in
-      (tmp6, tmp7))
+      let tmp7 = (FStarC_SMTEncoding_Util.mkApp (f, arg_terms)) in
+      let tmp8 = (FStarC_SMTEncoding_Term.mk_decls f tkey_hash (decl :: []) []) in
+      (tmp7, tmp8))
     | (FStarC_Syntax_Syntax.Tm_let (tmp1)) -> (FStarC_Effect.failwith "Impossible: all cases handled above (encode_term).")
     | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = e; ret_opt = tmp1; brs = pats; rc_opt = tmp2; _ })) -> (encode_match e pats FStarC_SMTEncoding_Term.mk_Term_unit env encode_term)
   ))
@@ -1678,7 +1819,7 @@ and encode_binders (fuel_opt : (FStarC_SMTEncoding_Term.term) option) (bs : (FSt
   (let tmp = (FStarC_Debug.medium ()) in
   (if tmp then (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_binder bs) in
   (FStarC_Format.print1 "Encoding binders %s\n" tmp1)) else ());
-  let tmp1 = (FStarC_List.fold_left (fun tmp1 b -> (match tmp1 with
+  let tmp1 = (BatList.fold_left (fun tmp1 b -> (match tmp1 with
       | (vars, guards, env1, decls, names) -> (let x = (b).FStarC_Syntax_Syntax.binder_bv in
         let tmp2 = (FStarC_SMTEncoding_Env.gen_term_var env1 x) in
         let tmp3 = (match tmp2 with
@@ -1689,15 +1830,15 @@ and encode_binders (fuel_opt : (FStarC_SMTEncoding_Term.term) option) (bs : (FSt
               ))
           ) in
         (match tmp3 with
-          | (v, g, env2, decls', n) -> ((v :: vars), (g :: guards), env2, (FStarC_List.op_At decls decls'), (n :: names))
+          | (v, g, env2, decls', n) -> ((v :: vars), (g :: guards), env2, (BatList.append decls decls'), (n :: names))
         ))
     )) ([], [], env, [], []) bs) in
   (match tmp1 with
-    | (vars, guards, env1, decls, names) -> ((FStarC_List.rev vars), (FStarC_List.rev guards), env1, decls, (FStarC_List.rev names))
+    | (vars, guards, env1, decls, names) -> ((BatList.rev vars), (BatList.rev guards), env1, decls, (BatList.rev names))
   ))
 
 let encode_function_type_as_formula (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (env : FStarC_SMTEncoding_Env.env_t) : (FStarC_SMTEncoding_Term.term * (FStarC_SMTEncoding_Term.decls_elt) list) =
-  (let universe_of_binders = (fun binders -> (FStarC_List.map (fun tmp -> FStarC_Syntax_Syntax.U_zero) binders)) in
+  (let universe_of_binders = (fun binders -> (BatList.map (fun tmp -> FStarC_Syntax_Syntax.U_zero) binders)) in
   let quant = (FStarC_Syntax_Util.smt_lemma_as_forall t universe_of_binders) in
   let env1 = { FStarC_SMTEncoding_Env.bvar_bindings = (env).FStarC_SMTEncoding_Env.bvar_bindings;
       fvar_bindings = (env).FStarC_SMTEncoding_Env.fvar_bindings;

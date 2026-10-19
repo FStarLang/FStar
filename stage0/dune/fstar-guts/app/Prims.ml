@@ -13,7 +13,6 @@ let int_of_yojson x =
   | Error x -> Error x
 
 type attribute = unit
-let (cps : attribute) = ()
 type 'Auu____5 hasEq = unit
 type eqtype = unit
 type bool' = bool
@@ -28,7 +27,6 @@ type trivial =
 let (uu___is_T : trivial -> bool) = fun projectee  -> true
 type nonrec unit = unit
 type 'Ap squash = unit
-type 'Ap auto_squash = unit
 type l_True = unit
 type l_False = unit
 type ('Aa,'Ax,'dummyV0) equals =
@@ -71,7 +69,6 @@ type ('Aa,'Ab,'Auu____484,'Auu____485) precedes = unit
 type ('Aa,'Auu____490,'Auu____491) has_type = unit
 type ('Aa,'Ap) l_Forall = unit
 type prop = unit
-let id x = x
 type ('Aa,'Ab) dtuple2 =
   | Mkdtuple2 of 'Aa * 'Ab
 let uu___is_Mkdtuple2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> bool =
@@ -83,24 +80,6 @@ let __proj__Mkdtuple2__item___2 : 'Aa 'Ab . ('Aa,'Ab) dtuple2 -> 'Ab =
 type ('Aa,'Ap) l_Exists = unit
 type string' = string[@@deriving yojson,show]
 type string = string'[@@deriving yojson,show]
-type pure_pre = unit
-type ('Aa,'Apre) pure_post' = unit
-type 'Aa pure_post = unit
-type 'Aa pure_wp = unit
-type 'Auu____655 guard_free = unit
-type ('Aa,'Ax,'Ap) pure_return = unit
-type ('Ar1,'Aa,'Ab,'Awp1,'Awp2,'Ap) pure_bind_wp = 'Awp1
-type ('Aa,'Ap,'Awp_then,'Awp_else,'Apost) pure_if_then_else = unit[@@deriving yojson,show]
-type ('Aa,'Awp,'Apost) pure_ite_wp = unit
-type ('Aa,'Awp1,'Awp2) pure_stronger = unit
-type ('Aa,'Ab,'Awp,'Ap) pure_close_wp = unit
-type ('Aa,'Aq,'Awp,'Ap) pure_assert_p = unit
-type ('Aa,'Aq,'Awp,'Ap) pure_assume_p = unit
-type ('Aa,'Ap) pure_null_wp = unit
-type ('Aa,'Awp) pure_trivial = 'Awp
-type ('Ap, 'Apost) pure_assert_wp = unit
-type ('Aa,'Awp,'Auu____878) purewp_id = 'Awp
-
 
 let op_Amp_Amp x y = x && y
 let op_Bar_Bar x y  = x || y
@@ -130,10 +109,7 @@ let op_Equals x y = x = y
 let op_Less_Greater x y = x<>y
 
 type nonrec exn = exn
-type 'a array' = 'a array[@@deriving yojson,show]
-type 'a array = 'a array'[@@deriving yojson,show]
 let strcat x y = x ^ y
-let op_Hat x y = x ^ y
 
 type 'a list' = 'a list[@@deriving yojson,show]
 type 'a list = 'a list'[@@deriving yojson,show]
@@ -147,21 +123,11 @@ let __proj__Cons__item__hd : 'Aa . 'Aa list -> 'Aa =
   fun projectee  -> match projectee with | hd::tl -> hd
 let __proj__Cons__item__tl : 'Aa . 'Aa list -> 'Aa list =
   fun projectee  -> match projectee with | hd::tl -> tl
-type pattern = unit
 
-
-type ('Aa,'Auu____1278) decreases = unit
-let returnM : 'Aa . 'Aa -> 'Aa = fun x  -> x
-
-type ('Aa,'Awp) as_requires = 'Awp
-type ('Aa,'Awp,'Ax) as_ensures = unit
 let admit () = failwith "Prims.admit: cannot be executed"
 let magic () = failwith "Prims.magic: cannot be executed"
 let unsafe_coerce : 'Aa 'Ab . 'Aa -> 'Ab =
   fun x -> Obj.magic x
-
-type 'Ap spinoff = 'Ap
-
 
 type nat = int
 type pos = int

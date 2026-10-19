@@ -18,6 +18,12 @@ let next_id (tmp : unit) : Prims.int =
   ((gensym_st) := (Prims.op_Plus r Prims.int_one));
   r)
 
+let get_gensym_state (tmp : unit) : Prims.int =
+  (!(gensym_st))
+
+let set_gensym_state (v : Prims.int) : unit =
+  ((gensym_st) := v)
+
 let reset_gensym (tmp : unit) : unit =
   ((gensym_st) := Prims.int_zero)
 

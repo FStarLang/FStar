@@ -187,6 +187,16 @@ type constant =
   | CChar   of char
   | CString of string
 
+(** Who frees what a [TRef] points at. *)
+type ref_kind =
+  | RManual
+  (** The program, explicitly: a Pulse reference, whose permissions say when
+      it is freed and by whom. *)
+  | RGc
+  (** The runtime: an ML reference, garbage-collected on OCaml and F#,
+      reference-counted under Cherry, and rejected by the C and karamel
+      backends. *)
+
 type cty =
   | TVar   of string
   | TInt   of signedness & iwidth
@@ -220,11 +230,13 @@ type cty =
       record type's fields take the place of it (section 5.7).  [Extract] puts
       it there, [Simplify.inline_fields] takes every one of them away again;
       no later pass and no backend ever sees one. *)
-  | TRef   of cty
-  (** A pointer to a single mutable value: Pulse's [ref] and [box].  C makes no
-      distinction -- both are [t*], and the buffer operations apply to either
-      -- but OCaml does, and a [t ref] is both the honest translation and a
-      far better one than a one-element array (section 8.4). *)
+  | TRef   of ref_kind & cty
+  (** A pointer to a single mutable value: Pulse's [ref] and [box]
+      ([RManual]), or an ML reference from [FStar.All] or [FStarC.Effect]
+      ([RGc]).  C makes no distinction between a [TRef (RManual, _)] and a
+      [TBuf] -- both are [t*], and the buffer operations apply to either --
+      but OCaml does, and a [t ref] is both the honest translation and a far
+      better one than a one-element array (section 8.4). *)
   | TExn
   (** [Prims.exn], the one extensible variant.  It has no parameters and no
       layout to derive: its constructors arrive one at a time, as [DExn]
@@ -390,6 +402,61 @@ type op =
       checked for a [*/], because that is where they are still known to have
       come from a literal the author wrote. *)
   | Commented of string & string
+  (** Cherry (cherry.md).  [RcInc x] and [RcDec x] take one more or drop one
+      reference to the value of the variable [x], at [x]'s own type.  Only
+      the Cherry pass inserts them, after every other pass has run, and only
+      the C printer in Cherry mode accepts them. *)
+  | RcInc
+  | RcDec
+  (** Cherry.  The operations on an ML reference ([TRef (RGc, t)]), which the
+      Cherry pass rewrites the buffer operations on one into: [RefNew v]
+      allocates a cell holding [v], [RefGet r] returns a counted copy of its
+      value, and [RefSet r v] replaces it. *)
+  | RefNew
+  | RefGet
+  | RefSet
+  (** Cherry: heap cell reuse (cherry.md).  [Reset (c, kept) x] takes the
+      owned cell [x], built with constructor [c], whose fields the branch
+      has read; [kept] says which of them the branch goes on to use.  If
+      [x] is unique, the fields not kept are released and [x]'s memory is
+      returned as a token; otherwise the kept fields are counted, [x] is
+      released, and the token is null.  [Reuse (c, c') (w :: args)] builds
+      constructor [c'] in the memory of token [w] (from a cell of
+      constructor [c]) if there is one and it fits, and allocates otherwise.
+      [ResetFree w] frees a token that no constructor reuses. *)
+  | Reset of name & list bool
+  | Reuse of name & name
+  | ResetFree
+  (** Cherry: an operation on an immutable array ([FStar.ImmutableArray.Base.t],
+      which Cherry represents as a counted cell), named as in that module:
+      [of_list], [to_list], [length], [index], [upd] or [push]. *)
+  | IArr of string
+  (** Cherry: [FStar.Dyn] (cherry.md, "The any type").  [Dyn "mk"] makes a
+      [TAny] of its operand, taking it; [Dyn "get"] reads the
+      value back out of one at the node's type, borrowing it. *)
+  | Dyn of string
+  (** Cherry: a Pulse reference or array ([TRef (RManual, t)] or [TBuf t]) holding
+      counted values (cherry.md, "References").  Everything stored in one is
+      marked shared first.  [PBuf "alloc" [v; n]] allocates on the heap,
+      taking [v]: the length goes in a header, so that [PBuf "free" [b]] can
+      release the elements.  [PBuf "read" [b; i]] returns a counted copy;
+      [PBuf "write" [b; i; v]] takes [v] and releases the value it replaces;
+      [PBuf "blit"] is a counting [BufBlit].  A stack allocation stays a
+      [BufCreate], with no initializer: [PBuf "init" [b; v; n]] fills it,
+      taking [v], and [PBuf "drop" [b; n]] releases it at the end of its
+      scope. *)
+  | PBuf of string
+  (** Cherry: exceptions, as error returns (cherry.md, "Exceptions").  A
+      thread-local slot holds the exception being propagated.  [ExnRaise e]
+      stores [e] there (taking it); [ExnPending] tests whether the slot is
+      full; [ExnTake] empties it, returning the exception; [ExnExit] leaves
+      the function with the exception still pending, returning a dummy value
+      of the function's type (or, in a global's initializer, reports it as
+      uncaught).  Only the Cherry pass inserts them. *)
+  | ExnRaise
+  | ExnPending
+  | ExnTake
+  | ExnExit
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =
@@ -458,8 +525,16 @@ and expr' =
   (** An arbitrary value of the node's type: what an uninitialized stack
       allocation is filled with.  Only a rule may introduce it. *)
   | EAbort   of string
-  (** Control never reaches here; the string says why.  Only a rule may
-      introduce it (Pulse's [unreachable], section 8.3). *)
+  (** Abort at run time; the string says why.  This is what a placeholder
+      compiles to -- [Prims.admit], [Prims.magic], a body Custard could not
+      extract -- so nothing has been proved about whether control reaches
+      it, and no pass may assume that it does not. *)
+  | EUnreachable of string
+  (** Control provably never reaches here; the string says why.  Only a rule
+      may introduce it, and only for a primitive whose precondition F* has
+      proved false (Pulse's [unreachable], section 8.3, and
+      [FStar.Pervasives.false_elim]).  It aborts like [EAbort] if reached, but
+      unlike [EAbort] the passes may delete the branches that lead to it. *)
   | EOp      of prim_op & list expr
   | EWhile   of expr & expr
   | ERaise   of expr
@@ -619,7 +694,7 @@ type flag =
   | Modelled
   (** karamel supplies this declaration itself on the backend being emitted
       for, and recognizes it by its F* name (section 20).
-      [Pulse.Lib.Slice.slice] under [--custard_backend KrmlRust] is the case
+      [Pulse.Lib.Slice.slice] under [--codegen KrmlRust] is the case
       and today the only one: karamel matches
       [TApp ((["Pulse"; "Lib"; "Slice"], "slice"), [t])] and rewrites it to
       Rust's own borrowed slice, and matches each operation as an [ETApp] of
@@ -712,6 +787,17 @@ type flag =
       functor instance named first, a [DModule].  It is emitted as nothing;
       a use is spelled as the module's member, and the declaration depends on
       the module so that the module is emitted first and kept alive. *)
+  | CherryConv of list bool
+  (** Cherry: the [[@@@cherry_owned]] ([Some true]) and
+      [[@@@cherry_borrowed]] ([Some false]) attributes on the definition's
+      leading parameters, which borrow inference does not change. *)
+  | CherryMode of list (option bool)
+  (** Cherry (cherry.md, "Calling convention").  For each parameter, whether
+      the definition takes it owned; a plain parameter is listed as owned.
+      Set on the exported definitions of a unit built with the Cherry
+      backend, from its borrow inference, so that a unit linked against it
+      calls them the way they were compiled.  A definition imported without
+      it is taken to own every parameter. *)
 
 type tydef =
   | TAbbrev  of cty

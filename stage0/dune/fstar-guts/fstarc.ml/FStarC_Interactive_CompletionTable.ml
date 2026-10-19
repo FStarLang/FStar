@@ -44,10 +44,10 @@ let empty : table =
   { tbl_lids = (trie_empty ()); tbl_mods = (trie_empty ()) }
 
 let query_to_string (q : (string) list) : string =
-  (FStarC_String.concat "." q)
+  (BatString.concat "." q)
 
 let string_compare (s1 : string) (eta : string) : Prims.int =
-  (FStarC_String.compare s1 eta)
+  ((fun x y -> Z.of_int (BatString.compare x y)) s1 eta)
 
 let rec btree_find_exact (bt : ('u___a) btree) (k : string) : ('u___a) option =
   (match bt with
@@ -150,7 +150,7 @@ let register_module_path (tbl : table) (loaded : bool) (mod_path : string) (mod_
       | ((Some (tmp)), tmp1) -> bindings
     )) in
   let ins_mod = (fun id bindings full_name loaded1 -> (names_insert bindings id (Module ({ mod_name = full_name; mod_path = mod_path; mod_loaded = loaded1 })))) in
-  let name_of_revq = (fun query -> (FStarC_String.concat "." (FStarC_List.rev query))) in
+  let name_of_revq = (fun query -> (BatString.concat "." (BatList.rev query))) in
   let ins = (fun id q revq bindings loaded1 -> (let name = (name_of_revq (id :: revq)) in
     (match q with
       | [] -> (ins_mod id bindings name loaded1)
@@ -182,7 +182,7 @@ type name_search_term =
 
 
 let rec names_revmap__aux (fn : (('u___a) btree -> 'u___b)) (acc : (((string) list * 'u___b)) list) (imports : (string) list) : ((('u___a) name_collection) list -> (((string) list * 'u___b)) list) =
-  (FStarC_List.fold_left (fun acc1 tmp -> (match tmp with
+  (BatList.fold_left (fun acc1 tmp -> (match tmp with
     | (Names (bt)) -> ((imports, (fn bt)) :: acc1)
     | (ImportedNames (nm, name_collections)) -> ((names_revmap__aux fn) acc1 (nm :: imports) name_collections)
   )) acc)
@@ -274,7 +274,7 @@ let rec add_priorities (n : Prims.int) (acc : ((Prims.int * 'tmp)) list) (tmp : 
   )
 
 let heap_from_list (cmp : ('u___a -> ('u___a -> Prims.int))) (eta : ('u___a) list) : ('u___a) heap =
-  (FStarC_List.fold_left (heap_insert cmp) EmptyHeap eta)
+  (BatList.fold_left (heap_insert cmp) EmptyHeap eta)
 
 let merge_increasing_lists_rev (key_fn : ('u___a -> string)) (lists : (('u___a) list) list) : ('u___a) list =
   (let cmp = (fun v1 v2 -> (match (v1, v2) with
@@ -283,10 +283,10 @@ let merge_increasing_lists_rev (key_fn : ('u___a -> string)) (lists : (('u___a) 
       | ((pr1, (h1 :: tmp)), (pr2, (h2 :: tmp1))) -> (let cmp_h = (string_compare (key_fn h1) (key_fn h2)) in
         (if ((<>) cmp_h Prims.int_zero) then cmp_h else (Prims.op_Minus pr1 pr2)))
     )) in
-  let lists1 = (FStarC_List.filter (fun x -> ((<>) x [])) lists) in
+  let lists1 = (BatList.filter (fun x -> ((<>) x [])) lists) in
   (match lists1 with
     | [] -> []
-    | (l :: []) -> (FStarC_List.rev l)
+    | (l :: []) -> (BatList.rev l)
     | tmp -> (let lists2 = (add_priorities Prims.int_zero [] lists1) in
       let tmp1 = (heap_from_list cmp lists2) in
       ((merge_increasing_lists_rev__aux key_fn cmp) tmp1 []))
@@ -299,8 +299,8 @@ let names_find_rev (names : (('u___a) name_collection) list) (id : name_search_t
       | (NSTPrefix ("")) -> (names_revmap (btree_find_all (Some (""))) names)
       | (NSTPrefix (id1)) -> (names_revmap (fun bt -> (btree_find_prefix bt id1)) names)
     ) in
-  let matching_values_per_collection = (FStarC_List.map (fun tmp -> (match tmp with
-      | (imports, matches) -> (FStarC_List.map (fun tmp1 -> (match tmp1 with
+  let matching_values_per_collection = (BatList.map (fun tmp -> (match tmp with
+      | (imports, matches) -> (BatList.map (fun tmp1 -> (match tmp1 with
           | (segment, v) -> ((mk_path_el imports segment), v)
         )) matches)
     )) matching_values_per_collection_with_imports) in
@@ -316,12 +316,12 @@ let rec trie_find_prefix' (tr : ('u___a) trie) (path_acc : (path_elem) list) (qu
     ) in
   (match tmp with
     | (ns_search_term, bindings_search_term, query1) -> (let matching_namespaces_rev = (names_find_rev (tr).namespaces ns_search_term) in
-      let acc_with_recursive_bindings = (FStarC_List.fold_left (fun acc1 tmp1 -> (match tmp1 with
+      let acc_with_recursive_bindings = (BatList.fold_left (fun acc1 tmp1 -> (match tmp1 with
           | (path_el, trie) -> (trie_find_prefix' trie (path_el :: path_acc) query1 acc1)
         )) acc matching_namespaces_rev) in
       let matching_bindings_rev = (names_find_rev (tr).bindings bindings_search_term) in
       (FStarC_List.rev_map_onto (fun tmp1 -> (match tmp1 with
-        | (path_el, v) -> ((FStarC_List.rev (path_el :: path_acc)), v)
+        | (path_el, v) -> ((BatList.rev (path_el :: path_acc)), v)
       )) matching_bindings_rev acc_with_recursive_bindings))
   ))
 
@@ -329,20 +329,20 @@ let trie_find_prefix (tr : ('u___a) trie) (query : (string) list) : (((path_elem
   (trie_find_prefix' tr [] query [])
 
 let match_length_of_path (path : (path_elem) list) : Prims.int =
-  (let tmp = (FStarC_List.fold_left (fun acc elem -> (match acc with
+  (let tmp = (BatList.fold_left (fun acc elem -> (match acc with
       | (acc_len, tmp) -> (match ((elem).segment).prefix with
-          | (Some (prefix)) -> (let completion_len = (FStarC_String.length ((elem).segment).completion) in
+          | (Some (prefix)) -> (let completion_len = ((fun s -> Z.of_int (BatUTF8.length s)) ((elem).segment).completion) in
             ((Prims.op_Plus (Prims.op_Plus acc_len Prims.int_one) completion_len), (prefix, completion_len)))
           | None -> acc
         )
     )) (Prims.int_zero, ("", Prims.int_zero)) path) in
   (match tmp with
-    | (length, (last_prefix, last_completion_length)) -> (Prims.op_Plus (Prims.op_Minus (Prims.op_Minus length Prims.int_one) last_completion_length) (FStarC_String.length last_prefix))
+    | (length, (last_prefix, last_completion_length)) -> (Prims.op_Plus (Prims.op_Minus (Prims.op_Minus length Prims.int_one) last_completion_length) ((fun s -> Z.of_int (BatUTF8.length s)) last_prefix))
   ))
 
 let string_of_path (path : (path_elem) list) : string =
-  (let tmp = (FStarC_List.map (fun el -> ((el).segment).completion) path) in
-  (FStarC_String.concat "." tmp))
+  (let tmp = (BatList.map (fun el -> ((el).segment).completion) path) in
+  (BatString.concat "." tmp))
 
 let completion_result_of_mod (annot : string) (loaded : bool) (path : (path_elem) list) : completion_result =
   (let tmp = (match_length_of_path path) in
@@ -361,8 +361,8 @@ let completion_result_of_ns_or_mod (x : ((path_elem) list * mod_symbol)) : compl
 
 let autocomplete_mod_or_ns (tbl : table) (query : (string) list) (filter : (((path_elem) list * mod_symbol) -> (((path_elem) list * mod_symbol)) option)) : (completion_result) list =
   (let tmp = (trie_find_prefix (tbl).tbl_mods query) in
-  let tmp1 = (FStarC_List.filter_map filter tmp) in
-  (FStarC_List.map completion_result_of_ns_or_mod tmp1))
+  let tmp1 = (BatList.filter_map filter tmp) in
+  (BatList.map completion_result_of_ns_or_mod tmp1))
 
 let mod_name (md : mod_info) : string =
   (md).mod_name
@@ -384,7 +384,7 @@ let completion_result_of_lid (x : ((path_elem) list * FStarC_Ident.lident)) : co
 
 let autocomplete_lid (tbl : table) (query : (string) list) : (completion_result) list =
   (let tmp = (trie_find_prefix (tbl).tbl_lids query) in
-  (FStarC_List.map completion_result_of_lid tmp))
+  (BatList.map completion_result_of_lid tmp))
 
 let json_of_completion_result (result : completion_result) : FStarC_Json.json =
   (FStarC_Json.JsonList (((FStarC_Json.JsonInt ((result).completion_match_length)) :: ((FStarC_Json.JsonStr ((result).completion_annotation)) :: ((FStarC_Json.JsonStr ((result).completion_candidate)) :: [])))))

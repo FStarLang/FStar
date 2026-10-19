@@ -31,10 +31,11 @@ dune exec multifile/Main.exe
 
 # How it works
 
-Each project uses `--dep dune` to generate dependency rules in two phases:
+Each project uses `--dep dune --output_ext fst.checked` to generate the rules
+that verify its `.fst` files into `.fst.checked` files. The generated rules
+are dynamically included into each project's `dune` file.
 
-1. **Build phase** (`--output_ext fst.checked`): verifies `.fst` files → `.fst.checked`
-2. **Extract phase** (`--output_ext ml --codegen OCaml`): extracts checked files → `.ml`
-
-The generated rules are dynamically included into each project's `dune` file.
-The `(executable ...)` stanza then compiles the extracted OCaml into a native binary.
+Extraction is a single rule in each project's `dune` file: F\* compiles the
+whole program, starting from its entry module, into one OCaml file
+(`--codegen OCaml --custard_entry_module Main -o Main.ml`). The
+`(executable ...)` stanza then compiles it into a native binary.

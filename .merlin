@@ -10,7 +10,6 @@ PKG sedlex.ppx
 PKG ppxlib
 
 S src/basic/ml
-S src/extraction/ml
 S src/fstar/ml
 S src/ocaml-output
 S src/parser/ml
@@ -19,7 +18,6 @@ S ulib/ml
 
 B +threads
 B src/ocaml-output/_build/src/basic/ml
-B src/ocaml-output/_build/src/extraction/ml
 B src/ocaml-output/_build/src/fstar/ml
 B src/ocaml-output/_build/src/ocaml-output
 B src/ocaml-output/_build/src/parser/ml

@@ -465,6 +465,7 @@ let float_probe_of_env (env : ref TcEnv.env) (ns : list string) : ML (option fwi
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   let envr = mk_ref env in
   Builtins.set_float_probe (float_probe_of_env envr);
+  Builtins.set_deps deps;
   {
   deps    = deps;
   env     = envr;
@@ -1132,6 +1133,21 @@ let report_attr (nm:string) (site:string) (why:string) : ML unit =
     text why;
     text (attr_home nm) ]
 
+(* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
+   "Calling convention") on a list of value binders, by position. *)
+let cherry_mode_flags (bs:binders) : ML (list flag) =
+  let modes = bs |> List.map (fun (b:S.binder) ->
+    let o = U.has_attribute b.binder_attrs PC.cherry_owned_attr in
+    let br = U.has_attribute b.binder_attrs PC.cherry_borrowed_attr in
+    if o && br then begin
+      report_attr "cherry_owned" ("the parameter " ^ Ident.string_of_id b.binder_bv.ppname)
+        "It also has [@@@cherry_borrowed], and a parameter cannot be both: \
+         both are ignored.";
+      None
+    end
+    else if o then Some true else if br then Some false else None) in
+  if List.existsb Some? modes then [CherryMode modes] else []
+
 (* The binders of a declaration, from both routes: section 19.4's argument
    that the lambda and the arrow each know something the other does not
    applies here too, and an attribute written on either should be seen.  The
@@ -1237,6 +1253,15 @@ let lookup_lid_typ (st:state) (l:Ident.lident) : ML (option ((universes & typ) &
    comes up in one program. *)
 let unstub_lid (st:state) (l:Ident.lident) : ML Ident.lident =
   let ns = List.map Ident.string_of_id (Ident.ns_of_lid l) in
+  match Builtins.fstarc_mirror_of ns with
+  | Some ns' ->
+    (* The two spellings already share a name (see {!name_of_lid}); this makes
+       them share a key, so a linked compiler unit answers both. *)
+    let l' = Ident.lid_of_path (ns' @ [Ident.string_of_id (Ident.ident_of_lid l)])
+                               (Ident.range_of_lid l) in
+    ensure_lid_available st l';
+    if Some? (TcEnv.lookup_qname (tcenv st) l') then l' else l
+  | None ->
   if not (Builtins.is_stub_module ns) then l
   else
     (* A stub whose counterpart moved module is resolved from the table
@@ -1315,10 +1340,25 @@ let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
    same way: every reference goes through [name_of_bv] on this very [bv], so
    there is nothing else to rewrite.  The index is deliberately preserved --
    it is the disambiguator [uniq] appends and the key of [st.letdefs],
-   [st.effletdefs] and [st.lettys]. *)
+   [st.effletdefs] and [st.lettys].
+
+   A local [let] marked [CInline] -- in hand-written code, or the reads of
+   [_break]-style flags that Pulse's goto elimination introduces -- asks to be
+   inlined into its use.  The way to say that is a [uu__] name, which is what
+   karamel inlines ([Helpers.is_uu]) and what {!Rename} spells without the
+   prefix everywhere else. *)
 let rename_let_bv (top:term) (b:bv) (body:term) (lbattrs:list term)
   : ML (bv & term) =
-  match rename_let_name top lbattrs with
+  let s =
+    let renamed = rename_let_name top lbattrs in
+    let base = match renamed with
+               | Some s -> s
+               | None -> Ident.string_of_id b.ppname in
+    if U.has_attribute lbattrs PC.c_inline_attr &&
+       not (String.length base >= 4 && String.substring base 0 4 = "uu__")
+    then Some ("uu__" ^ base)
+    else renamed in
+  match s with
   | None -> b, body
   | Some s ->
     let b' = { b with ppname = Ident.mk_ident (s, Ident.range_of_id b.ppname) } in
@@ -1612,8 +1652,8 @@ let compile_time_steps : list TcEnv.step = [
    one is included because it reaches the same declarations by the same
    route, and a module realized outside F* is realized there too. *)
 let is_c_backend () : ML bool =
-  let b = Options.custard_backend () in
-  b = "C" || b = "KrmlC" || b = "KrmlRust"
+  let b = Options.codegen_name () in
+  b = "C" || b = "Cherry" || b = "KrmlC" || b = "KrmlRust"
 
 (* Section 135.  Whether a function value on the heap keeps every binder its
    type has, erased ones as [unit].  OCaml and F\* closures are polymorphic: a
@@ -1622,8 +1662,8 @@ let is_c_backend () : ML bool =
    type spells.  Only a call to a top-level name may drop arguments, and then
    only the ones that definition's own parameters consume (see [CallArity]).
    The C backends have no polymorphic closures and keep dropping erased
-   binders everywhere. *)
-let heap_closures () : ML bool = not (is_c_backend ())
+   binders everywhere -- except Cherry, whose closures are OCaml's. *)
+let heap_closures () : ML bool = not (is_c_backend ()) || Options.custard_cherry ()
 
 let c_realized_header (l:Ident.lident) : ML (option string) =
   Builtins.c_realization_header
@@ -1854,7 +1894,7 @@ and functor_instance (st:state) (scrut:term) : ML (option name) =
     match HashTable.try_find st.names key with
     | Some nm -> Some nm
     | None ->
-      if Options.custard_backend () <> "OCaml" then
+      if Options.codegen () <> Some Options.OCaml then
         custard_error st E.Error_CustardBadFunctor [
           text ("Custard: " ^ Ident.string_of_lid fl ^ " is an OCaml functor \
                  (" ^ path ^ "), and functors exist only on the OCaml \
@@ -2627,12 +2667,16 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
      term and is scanned again, while the same application reached twice is
      scanned once.  Nothing is lost -- a second scan of an identical term
      contributes exactly what the first one did -- and it is the entire
-     difference between exponential and linear. *)
-  let scanned : HashTable.t string bool = HashTable.create 100 in
+     difference between exponential and linear.
+
+     The key is deeply compressed: term equality is syntactic, and the
+     normalizer leaves delayed substitutions behind that differ between two
+     results of the same reduction. *)
+  let scanned : ref (Hash.term_map unit) = mk_ref (Hash.term_map_empty #unit) in
   let already (t:term) : ML bool =
-    let k = show (Hash.ext_hash_term t) in
-    if Some? (HashTable.try_find scanned k) then true
-    else (HashTable.add scanned k true; false) in
+    let t = Visit.visit_term false (fun t -> t) t in
+    if Hash.term_map_mem t !scanned then true
+    else (scanned := Hash.term_map_add t () !scanned; false) in
   (* Section 88.  The scan is syntactic, and a type abbreviation is exactly
      what makes the syntax it is looking for absent.  [fragment] is an
      [inline_for_extraction] alias for an application of the template, so the
@@ -3950,6 +3994,7 @@ and erasable_result (st:state) (ty:typ) (args:args) : ML bool =
    under-applied use has to be eta-expanded rather than passed along. *)
 and prim_app (st:state) (l:Ident.lident) (n:int)
              (f : list cty -> list expr -> ML expr) (args:args) : ML expr =
+  let args0 = List.map fst args in
   let decl_ty = match lookup_lid_typ st l with
                 | Some ((_, ty), _) -> Some ty
                 | None -> None in
@@ -4077,7 +4122,7 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
     (* The eta binders stand for the arguments the source did not supply, so
        their types are the primitive's own remaining binder sorts. *)
     let sorts = match decl_ty with
-                | Some ty -> Mono.retained_sorts (tcenv st) ty
+                | Some ty -> Mono.retained_sorts_inst (tcenv st) ty args0
                 | None -> [] in
     (* Section 96.  And their names, for the same reason and from the same
        place: a binder the rule invents is one the reader has to carry, and
@@ -4975,10 +5020,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     (* Section 8.1, kind 4: the F* "definition" is a specification (often
        literally [admit ()]); the real one lives in a hand-written .ml or .c
        file, and all we owe the backend is the type. *)
-    let typars, ty = external_ty st l margs in
+    let typars, ty, cf = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                 dx_target = x.Builtins.x_name; dx_header = x.Builtins.x_header;
-                dx_flags = [] }
+                dx_flags = cf }
   | _ ->
   let is_opaque = (match rule with Some Builtins.Rule_opaque -> true | _ -> false) in
   let is_realized = (match rule with Some Builtins.Rule_realized -> true | _ -> false) in
@@ -5011,10 +5056,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
          a type declaration, and there is no such thing as an external one.
          A realized module's genuine types are handled by [with_realized]
          below. *)
-    let typars, ty = external_ty st l margs in
+    let typars, ty, cf = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty; dx_target = None;
                 dx_header = (if is_c_backend () then c_realized_header l else None);
-                dx_flags = if is_modelled_lid l then [Modelled] else [] }
+                dx_flags = (if is_modelled_lid l then [Modelled] else []) @ cf }
   | Some se ->
     let d = Prof.timed "extract_sigelt"
               (fun () -> extract_sigelt st l nm margs n_holes se) in
@@ -5307,9 +5352,9 @@ and is_modelled_lid (l:Ident.lident) : ML bool =
    exactly as [specialize] does for a definition; the [Poly] binders stay, and
    erasure handles them as usual. *)
 and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
-  : ML (list string & cty) =
+  : ML (list string & cty & list flag) =
   match lookup_lid_typ st l with
-  | None -> ([], TAny)
+  | None -> ([], TAny, [])
   | Some ((_, ty), _) ->
     let cs = binder_classes st l in
     (* The *unfolded* spine, because that is the one [cs] is indexed against
@@ -5552,7 +5597,8 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
       | [] -> res
       | [b] -> TArrow (bty b, e, res)
       | b :: bs -> TArrow (bty b, E_Pure, build bs) in
-    (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs))
+    (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs),
+     cherry_mode_flags vs)
 
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                    (n_holes:int) (se:sigelt)
@@ -5648,12 +5694,12 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
             is external because a rule said so, because its module is
             realized, or because F* only ever saw a [val], the same code
             decides what its signature is. *)
-         let typars, ty = external_ty st l margs in
+         let typars, ty, cf = external_ty st l margs in
          (* An [assume val] in a module this run is *compiling* has nowhere to
             be external to.  An external is a reference to [M.f] in the target
             language, and for OCaml that names the file Custard is writing:
             [Bug1485.err_exn] emitted into [Bug1485.ml] is a reference to
-            itself, which does not compile.  The ML backend has always emitted
+            itself, which does not compile.  The former ML backend always emitted
             a stub for this case -- [failwith "Not yet implemented: M.f"] --
             and a stub is the honest translation: the program says the
             definition does not exist, so a call to it is a failure, and the
@@ -5690,7 +5736,7 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
             defines. *)
          DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                      dx_target = None; dx_header = None;
-                     dx_flags = c_decoration_flags (source_attrs se l) })
+                     dx_flags = c_decoration_flags (source_attrs se l) @ cf })
 
   | Sig_inductive_typ {params} ->
     let d = Prof.timed "inductive" (fun () -> extract_inductive st l nm params) in
@@ -5876,7 +5922,7 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
      binder survived into the emitted signature, so the definition took one
      more parameter than every call supplied, and the argument the
      specialization was keyed on was still a variable in its body. *)
-  let bs, c = Mono.arrow_formals_unfold (tcenv st) ty in
+  let bs, c, n_folded, folded_c = Mono.arrow_formals_unfold_folded (tcenv st) ty in
   (* How far the spine may run.  A value may be duplicated freely, so it takes
      the whole arrow; anything else only takes the binders its own lambdas
      absorb.  A [Mono] argument past that point has to be substituted all the
@@ -5925,9 +5971,19 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
     | _ :: _ when i >= cut ->
       (* The residual arrow becomes the result type: the declaration is emitted
          as a value of function type and its callers apply it, which is what
-         the source said. *)
-      (List.rev spine, List.rev poly, List.rev polycs,
-       S.mk_Total (U.arrow (SS.subst_binders subst bs) (SS.subst_comp subst c)))
+         the source said.  Within the folded prefix, it is rebuilt from the
+         folded codomain: an abbreviation that unfolds to an arrow -- realized
+         [FStar.Dyn.dyn] is [unit -> value_type_bundle] in its model -- has
+         to stay the name the target gives a representation of its own. *)
+      let res =
+        if i <= n_folded then
+          let rest, _ = List.splitAt (n_folded - i) bs in
+          (match rest with
+           | [] -> SS.subst_comp subst folded_c
+           | _ -> S.mk_Total (U.arrow (SS.subst_binders subst rest)
+                                       (SS.subst_comp subst folded_c)))
+        else S.mk_Total (U.arrow (SS.subst_binders subst bs) (SS.subst_comp subst c)) in
+      (List.rev spine, List.rev poly, List.rev polycs, res)
     | b :: bs' ->
       let cls, cs' = match cs with
                      | [] -> Poly, []
@@ -6139,6 +6195,10 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
                     | None -> [] in
   let dropped_binders = keep_flagged flags bs in
   let bs = drop_flagged flags bs in
+  (* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
+     "Calling convention"), by position: later passes only ever add
+     parameters after these. *)
+  let cherry_mode_flags = cherry_mode_flags bs in
   (* An *erased* binder that survived [drop_flagged] is the one
      {!Mono.keep_thunk} put back so that the definition does not become a
      value.  It carries nothing at runtime and its callers pass [()]
@@ -6310,7 +6370,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
        kernel -- and is the only answer available anyway, since the attribute
        is on the source and the source is what was specialized. *)
     dl_flags   = (if is_rec then [Rec [nm]] else []) @ c_decoration_flags src_attrs
-                 @ arity_flags;
+                 @ arity_flags @ cherry_mode_flags;
   }
 
 (* A field whose contents belong in the constructor rather than behind a
@@ -6550,7 +6610,7 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
 
 (* Section 126.3.  [@@noextract_to "krml"] is the backend-specific half of
    [noextract], and the string it carries is a codegen name.  Custard's own
-   names are its [--custard_backend] values; "krml" is accepted for every
+   names are its [--codegen] values; "krml" is accepted for every
    backend that produces C or Rust, because that is what the attribute has
    always meant in the wild -- FStar.UInt128, FStar.SizeT and FStar.Endianness
    use it to say "this one has a hand-written C implementation", and Custard's
@@ -6561,9 +6621,9 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
    there is no second pipeline downstream to drop the body later, so the
    definition is simply not a root here. *)
 let noextract_to_this_backend (se:S.sigelt) : ML bool =
-  let b = Options.custard_backend () in
+  let b = Options.codegen_name () in
   let names = "Custard" :: b ::
-              (if b = "KrmlC" || b = "KrmlRust" || b = "C"
+              (if b = "KrmlC" || b = "KrmlRust" || b = "C" || b = "Cherry"
                then ["krml"; "Krml"] else []) in
   se.sigattrs |> List.existsb (fun attr ->
     let hd, args = U.head_and_args_full attr in
@@ -6605,7 +6665,7 @@ let noextract_to_this_backend (se:S.sigelt) : ML bool =
    is meant to be consumed by other C code; there it means the same thing
    here, and the whole module is the surface again. *)
 let is_krml_private (st:state) (m:Ident.lident) (se:S.sigelt) : ML bool =
-  Dep.module_has_interface st.deps m &&
+  Dep.module_has_interface st.deps (Options.codegen_target ()) m &&
   se.sigattrs |> List.existsb (fun attr ->
     match (SS.compress attr).n with
     | Tm_constant (Const_string ("KrmlPrivate", _)) -> true
@@ -6772,7 +6832,12 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
     Builtins.registered_roots () |> List.iter (fun l ->
       if not (root_is_erased st l) then mark Root l));
   Prof.timed "run.main" (fun () ->
-    match main with Some l -> mark Entrypoint l | None -> ());
+    (* [--custard_main M] may name a module, whose top-level effects are then
+       the program: it is already a root, and there is no definition to mark. *)
+    match main with
+    | Some l when Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l)) -> ()
+    | Some l -> mark Entrypoint l
+    | None -> ());
   (* A top-level [let] whose definiens is *effectful* is a module initializer:
      [let _ = clear ()] in [FStarC.Options], [let _ = register_pass ...] in
      [FStarC.Syntax.Resugar].  Nothing in the program refers to it, so the

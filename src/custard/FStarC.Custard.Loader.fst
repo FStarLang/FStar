@@ -75,8 +75,8 @@ let loaded (env:TcEnv.env) (m:string) (want_impl:bool) : ML bool =
    the definitions are supplied by the realization (section 8.2), and it is the
    [val]s that describe them. *)
 let candidate_files (deps:Dep.deps) (m:string) : ML (list string) =
-  (* [Parser.Dep]'s file system map is keyed by *lowercase* module names. *)
-  let m = String.lowercase m in
+  (* The implementation for the target of the current backend, if any. *)
+  let m = Dep.module_key_for_target deps (Options.codegen_target ()) m in
   match Dep.implementation_of deps m, Dep.interface_of deps m with
   | Some i, Some j -> [i; j]
   | Some i, None   -> [i]
@@ -96,11 +96,17 @@ let candidate_files (deps:Dep.deps) (m:string) : ML (list string) =
    laziness: it reads checked files, it does not push their declarations. *)
 let cache_primed : HashTable.t string unit = HashTable.create 100
 
-let rec prime_cache (deps:Dep.deps) (env:TcEnv.env) (fn:string) : ML unit =
+(* [load_module_from_cache] reads the whole checked file every time, even one
+   that is already [Valid], and an unmarshalled module goes straight to the
+   major heap; so skip what is already validated -- its dependences are then
+   [Valid] too -- and leave [fn] itself to the caller when it is about to load
+   it anyway ([load_self = false]). *)
+let rec prime_cache' (load_self:bool) (deps:Dep.deps) (env:TcEnv.env) (fn:string) : ML unit =
   match HashTable.try_find cache_primed fn with
   | Some _ -> ()
+  | None when Ch.is_validated_in_cache fn -> HashTable.add cache_primed fn ()
   | None ->
-    HashTable.add cache_primed fn ();
+    if load_self then HashTable.add cache_primed fn ();
     (* An implementation's checked file is validated against its interface's
        dependences as well as its own -- [hash_dependences] takes them to be a
        subset of the implementation's, which is true of a dependence *graph*.
@@ -113,11 +119,14 @@ let rec prime_cache (deps:Dep.deps) (env:TcEnv.env) (fn:string) : ML unit =
        plugin reaches it only through a generated registration.  Priming the
        interface first is also the order [load_module_from_cache] uses. *)
     (if Dep.is_implementation fn then
-       match Dep.interface_of deps (Dep.lowercase_module_name fn) with
+       match Dep.interface_of deps (Dep.module_key_of_file fn) with
        | Some i -> prime_cache deps env i
        | None -> ());
     Dep.deps_of deps fn |> List.iter (prime_cache deps env);
-    Prof.timed "cachefile" (fun () -> ignore (Ch.load_module_from_cache env fn))
+    if load_self then
+      Prof.timed "cachefile" (fun () -> ignore (Ch.load_module_from_cache env fn))
+
+and prime_cache deps env fn : ML unit = prime_cache' true deps env fn
 
 (* Modules whose implementation is in the dependency graph but has no usable
    checked file, so the interface is the best we will ever get.  Without this,
@@ -130,7 +139,9 @@ let loaded_files : HashTable.t string unit = HashTable.create 100
 
 let module_is_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML bool =
   let m' = String.lowercase m in
-  let want_impl = Some? (Dep.implementation_of deps m') && None? (HashTable.try_find iface_only m') in
+  let want_impl =
+    Some? (Dep.implementation_of deps (Dep.module_key_for_target deps (Options.codegen_target ()) m))
+    && None? (HashTable.try_find iface_only m') in
   loaded env m want_impl
 
 (* Modules whose loading is in progress, to break the recursion below. *)
@@ -149,7 +160,7 @@ let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env 
           text "Verify the module first, or pass --already_cached appropriately."
         ]
       | fn :: fns ->
-        prime_cache deps env fn;
+        prime_cache' false deps env fn;
         match Prof.timed "cachefile" (fun () -> Ch.load_module_from_cache env fn) with
         | None -> first_usable fns
         | Some tcr -> (fn, tcr)

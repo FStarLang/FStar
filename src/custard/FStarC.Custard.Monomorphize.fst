@@ -98,7 +98,7 @@ let rec hint_of_cty (fuel:int) (c:cty) : ML string =
   | TApp (n, []) -> (match n.spec with Some s -> n.id ^ "_" ^ s | None -> n.id)
   | TApp (n, args) -> n.id ^ "_" ^ String.concat "_" (args |> List.map sub)
   | TBuf c -> sub c ^ "_ptr"
-  | TRef c -> sub c ^ "_ref"
+  | TRef (_, c) -> sub c ^ "_ref"
   | TInline c -> hint_of_cty fuel c
   | TTuple cs -> "tup" ^ String.concat "_" (cs |> List.map sub)
   | TUnit -> "unit"
@@ -178,7 +178,7 @@ type state = {
    its keep here -- a struct with a slice field must not be cloned
    per-instantiation either, or karamel's lifetime fixpoint would not find the
    [TApp] inside it. *)
-let freeze_realized () : ML bool = Options.custard_backend () = "OCaml"
+let freeze_realized () : ML bool = Options.codegen () = Some Options.OCaml
 
 (* Section 47.2.  An external type's C spelling is a fixed string -- the
    [custard_extern] target, taken verbatim since §45.1 -- and it does not
@@ -334,7 +334,7 @@ let rec mono_cty (st:state) (c:cty) : ML cty =
     if is_poly st n then TApp (request st n args, []) else TApp (n, args)
   | TArrow (a, e, b) -> TArrow (mono_cty st a, e, mono_cty st b)
   | TBuf c -> TBuf (mono_cty st c)
-  | TRef c -> TRef (mono_cty st c)
+  | TRef (k, c) -> TRef (k, mono_cty st c)
   | TInline c -> TInline (mono_cty st c)
   | TTuple cs -> TTuple (cs |> List.map (mono_cty st))
   | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny | TConst _ -> c
@@ -400,6 +400,9 @@ let request_extern (st:state) (n:name) (args:list cty) : ML name =
          :: !st.ext_clones);
     nm
 
+(* Exception constructors' field types, which are monomorphic. *)
+let exn_fields : ref (HashTable.t string (list cty)) = mk_ref (HashTable.create 0)
+
 let ctor_fields (st:state) (owner:name) (args:list cty) (cn:name) : ML (list cty) =
   match HashTable.try_find st.types (string_of_name owner) with
   | Some ({ dt_body = TVariant cs; dt_params = ps }) ->
@@ -458,7 +461,10 @@ let rec mono_pat (st:state) (t:cty) (p:pat) : ML (pat & env) =
     let fields =
       match shape_of st t with
       | Some (n, args) -> ctor_fields st n args cn
-      | None -> [] in
+      | None ->
+        (match HashTable.try_find !exn_fields (string_of_name cn) with
+         | Some fs -> fs
+         | None -> []) in
     let cn' =
       match resolve_owner st t with
       | Some (owner, args) -> with_spec (request_inst st owner args) cn
@@ -520,7 +526,7 @@ let rec mono_expr (st:state) (env:env) (x:expr) : ML expr =
   let go = mono_expr st env in
   let e' =
     match x.e with
-    | EConst _ | EVar _ | EAny | EAbort _ -> x.e
+    | EConst _ | EVar _ | EAny | EAbort _ | EUnreachable _ -> x.e
     | EQual (n, args) ->
       let args = args |> List.map (mono_cty st) in
       (* Section 64.  The type arguments are on the node either way; what
@@ -614,8 +620,10 @@ let run (prog:program) : ML program =
              ext_names  = HashTable.create 20;
              ext_bare   = HashTable.create 20;
              ext_clones = mk_ref [] } in
+  exn_fields := HashTable.create 20;
   prog |> List.iter (fun d ->
     match d with
+    | DExn x -> HashTable.add !exn_fields (string_of_name x.de_name) x.de_args
     | DType t ->
       HashTable.add st.types (string_of_name t.dt_name) t;
       HashTable.add st.taken (string_of_name t.dt_name) true
@@ -645,13 +653,15 @@ let run (prog:program) : ML program =
         | None -> ()
       end
     | TArrow (a, _, b) -> freeze (fuel - 1) a; freeze (fuel - 1) b
-    | TBuf c | TRef c | TInline c -> freeze (fuel - 1) c
+    | TBuf c | TRef (_, c) | TInline c -> freeze (fuel - 1) c
     | TTuple cs -> cs |> List.iter (freeze (fuel - 1))
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TAny | TConst _ -> () in
   prog |> List.iter (fun d ->
     match d with
     | DExternal x when freeze_realized () -> freeze 100 x.dx_ty
-    | DExn e -> e.de_args |> List.iter (freeze 100)
+    (* Cherry clones an exception's field types like any other: its
+       constructors are local, and their layout is the clones'. *)
+    | DExn e when not (Options.custard_cherry ()) -> e.de_args |> List.iter (freeze 100)
     | DType t when t.dt_flags |> List.existsb (function
                      | Modelled -> true | _ -> false) ->
       freeze 100 (TApp (t.dt_name, []))

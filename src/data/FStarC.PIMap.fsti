@@ -4,7 +4,7 @@ open FStarC.Effect
 
 (* persistent (pure) map with integer keys *)
 
-type t 'value
+val t (value:Type0) : Type0
 val empty: unit -> t 'value // GH-1161
 val add: t 'value -> int -> 'value -> t 'value
 val find_default: t 'value -> int -> 'value -> 'value

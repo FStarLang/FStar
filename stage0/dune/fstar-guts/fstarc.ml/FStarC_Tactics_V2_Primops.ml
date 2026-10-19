@@ -4,10 +4,10 @@
 let uu___0 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_Syntax_Embeddings_Base.embedding =
   FStarC_Reflection_V2_Embeddings.e_term
 
-let e_ret_t (d : ('a) FStarC_Syntax_Embeddings_Base.embedding) : ((('a) option * (FStarC_Errors.issue) list)) FStarC_Syntax_Embeddings_Base.embedding =
+let e_ret_t (d : ('a) FStarC_Syntax_Embeddings_Base.embedding) : ((('a) option * (FStarC_Errors_Issue.issue) list)) FStarC_Syntax_Embeddings_Base.embedding =
   (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_option d) (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_issue))
 
-let nbe_e_ret_t (d : ('a) FStarC_TypeChecker_NBETerm.embedding) : ((('a) option * (FStarC_Errors.issue) list)) FStarC_TypeChecker_NBETerm.embedding =
+let nbe_e_ret_t (d : ('a) FStarC_TypeChecker_NBETerm.embedding) : ((('a) option * (FStarC_Errors_Issue.issue) list)) FStarC_TypeChecker_NBETerm.embedding =
   (FStarC_TypeChecker_NBETerm.e_tuple2 (FStarC_TypeChecker_NBETerm.e_option d) (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_issue))
 
 let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =

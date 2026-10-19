@@ -25,12 +25,12 @@ double FloatExtract_f64_div(double x, double y)
 
 double FloatExtract_f64_neg(double x)
 {
-  return (double)0LL - x;
+  return (double)0.0 - x;
 }
 
 double FloatExtract_f64_rcp(double x)
 {
-  return (double)1LL / x;
+  return (double)1.0 / x;
 }
 
 bool FloatExtract_f64_lt(double x, double y)
@@ -85,12 +85,12 @@ float FloatExtract_f32_div(float x, float y)
 
 float FloatExtract_f32_neg(float x)
 {
-  return (float)0LL - x;
+  return (float)0.0f - x;
 }
 
 float FloatExtract_f32_rcp(float x)
 {
-  return (float)1LL / x;
+  return (float)1.0f / x;
 }
 
 bool FloatExtract_f32_lt(float x, float y)
@@ -115,6 +115,6 @@ float FloatExtract_f32_of_int(int64_t n)
 
 float FloatExtract_f32_pi(void)
 {
-  return (float)3.141592653589793;
+  return (float)3.141592653589793f;
 }
 

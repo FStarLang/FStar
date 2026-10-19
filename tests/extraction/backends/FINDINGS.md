@@ -19,6 +19,13 @@ the same as generating code the backend compiler rejects: no usable output.
 
 Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 
+The **ml**, **c** and **rs** columns belonged to the legacy extraction
+pipeline (`FStarC.Extraction`, `--codegen krml`), which has since been
+removed; the Makefile now runs only the Custard columns below. The legacy
+table and the analysis of its bugs are kept as a record of what the suite
+found, and because several of the bugs are in karamel and krmllib, which the
+Custard krml columns still go through.
+
 ---
 
 ## Summary
@@ -28,7 +35,7 @@ Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 | 1 | `IntN.ne` / `UIntN.ne` has no Krml opcode | 4 | ✗ | ✗ | ✗ | `ExtIntNe` |
 | 2 | `shift_arithmetic_right` unsupported by the Rust backend | 4 | ✓ | ✓ | ✗ | `ExtIntShiftArith` |
 | 3 | `UInt8.lognot` is not truncated in OCaml | **2** | ✗ | ✓ | ✓ | `ExtUInt8Lognot` |
-| 4 | narrowing casts dropped inside comparisons | **2** | ✓ | ✗ | ✓ | `ExtIntCast` |
+| 4 | narrowing casts dropped inside comparisons — **fixed** | **2** | ✓ | ✓ | ✓ | `ExtIntCast` |
 | 5 | `Prims.int` `/` and `%` truncate instead of Euclidean in C | **2** | ✓ | ✗ | – | `ExtPrimsIntDiv` |
 | 6 | `Prims_op_Star` is never defined in krmllib — **fixed** | 4 | – | – | – | `ExtPrimsIntMul` |
 | 7 | `Prims_int` is `int32_t`; literals silently truncate | **2** | ✓ | ✗ | – | `ExtPrimsIntBignum` |
@@ -58,7 +65,7 @@ direct C, **ckc** = Custard + karamel C, **ckr** = Custard + karamel Rust.
 | 1 | `IntN.ne` has no Krml opcode | ✗ | ✓ | ✓ | ✓ | `ExtIntNe` |
 | 2 | `shift_arithmetic_right` | ✓ | ✓ | ✓ | ✓ | `ExtIntShiftArith` |
 | 3 | `UInt8.lognot` untruncated in OCaml | ✗ | ✓ | ✓ | ✓ | `ExtUInt8Lognot` |
-| 4 | narrowing casts dropped in comparisons | ✓ | ✓ | ✗ | ✓ | `ExtIntCast` |
+| 4 | narrowing casts dropped in comparisons (**fixed**) | ✓ | ✓ | ✓ | ✓ | `ExtIntCast` |
 | 5–7 | `Prims.int` in krmllib | ✓ | – | ✗ | – | `ExtPrimsInt*` |
 | 8, 9 | recursive inductives | ✓ | – | ✗ | ✗ | `ExtDatatypes{Rec,Mutual}` |
 | 10 | Rust backend's missing `lowstar` module | ✓ | ✓ | ✓ | ✓ | `ExtDatatypes{Record,Variant}` |
@@ -149,9 +156,12 @@ While diffing that file against the generated `FStar_UInt16.ml`, the following
 are also missing from `FStar_UInt8.ml`: `ne`, `of_int`, `of_native_int`,
 `to_native_int`, `shift_arithmetic_right`, `len`, `zeroes`.
 
-## 4. Narrowing casts are dropped inside comparisons (C)
+## 4. Narrowing casts are dropped inside comparisons (C) -- fixed
 
 *Severity 2 — silent wrong value. Test: `ExtIntCast`.*
+
+**Fixed** in karamel commit `4a0f2280` ("AstToCStar: preserve narrowing casts
+in comparisons").
 
 `mk_arith` in `karamel/lib/AstToCStar.ml` has an optimization that removes the
 `(uint32_t)` upcasts it inserts around `UInt8`/`UInt16` operands before a

@@ -19,13 +19,16 @@ open FStar.Tactics.V2
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
 
-(* Ranges are unsealed: range-observing reflection functions are now unsealed in ulib. *)
-let range = FStar.Range.range
+include Pulse.RuntimeUtils.Types
 
-type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
 val extend_context (tag:string) (r:option range) (ctx:context) : context
 val with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a
 val with_error_bound (r:range) (f:unit -> T.Tac 'a) : T.Tac 'a
+(* Run [f], returning [None] -- with the proof state and unifier rolled back
+   and every issue it raised or logged discarded -- if it fails or reports an
+   error. On success, the warnings it logged are kept. For trying one of
+   several candidates whose failure is expected. *)
+val try_quietly (f:unit -> T.Tac 'a) : T.Tac (option 'a)
 val get_error_bound (_:unit) : T.Tac (option range)
 val with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a
 val print_context (c:context) : T.Tac string
@@ -33,8 +36,6 @@ val debug_at_level_no_module (s:string) : bool
 val debug_at_level (g:env) (s:string) : bool
 val print_exn (e:exn) : string
 val next_id () : Dv nat
-val bv_set_range (x:bv) (r:range) : b:bv{b==x}
-val bv_range (x:bv) : range
 val binder_set_range (x:R.binder) (r:range) : b:R.binder{b==x}
 val binder_range (x:R.binder) : range
 val range_of_term (t:T.term) : range
@@ -48,8 +49,8 @@ val env_get_range (g:env) : range
 val env_set_range (g:env) (r:range) : g':env{g==g'}
 val env_set_context (g:env) (ctx:context) : g':env{g==g'}
 val embed_st_term_for_extraction (d:'a) (r:option range): T.term
-val unembed_st_term_for_extraction (d:T.term) : 'a
-val unembed_pulse_decl (d:'a) : 'b
+val unembed_st_term_for_extraction (#a:Type0) (d:T.term) : a
+val unembed_pulse_decl (#a:Type) (#b:Type0) (d:a) : b
 module R = FStar.Reflection.V2
 val push_univ_vars (g: env) (us: list R.univ_name) : g':env { g' == g }
 val debug_subst (s:list R.subst_elt) (t:T.term) (r1 r2:T.term): y:T.term{ y == r1 }

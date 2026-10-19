@@ -17,6 +17,12 @@ type ipath = (ident) list [@@deriving yojson]
 
 type lid = lident [@@deriving yojson]
 
+let string_of_lid (lid : lident) : string =
+  (lid).str
+
+let string_of_id (id : ident) : string =
+  (id).idText
+
 let set_id_range (r : FStarC_Range_Type.range) (i : ident) : ident =
   { idText = (i).idText; idRange = r }
 
@@ -46,14 +52,11 @@ let mk_ident (tmp : (string * FStarC_Range_Type.range)) : ident =
     | (text, range) -> { idText = text; idRange = range }
   )
 
-let string_of_id (id : ident) : string =
-  (id).idText
-
 let text_of_path (path : (string) list) : string =
   (FStarC_Util.concat_l "." path)
 
 let lid_of_ns_and_id (ns : (ident) list) (id : ident) : lident =
-  (let tmp = (FStarC_List.map string_of_id ns) in
+  (let tmp = (BatList.map string_of_id ns) in
   let nsstr_ = (text_of_path tmp) in
   { ns = ns;
     ident = id;
@@ -67,14 +70,11 @@ let lid_of_ids (ids : (ident) list) : lident =
   ))
 
 let lid_of_path (path : (string) list) (pos : FStarC_Range_Type.range) : lident =
-  (let ids = (FStarC_List.map (fun s -> (mk_ident (s, pos))) path) in
+  (let ids = (BatList.map (fun s -> (mk_ident (s, pos))) path) in
   (lid_of_ids ids))
 
 let reserved_prefix : string =
   "uu___"
-
-let string_of_lid (lid : lident) : string =
-  (lid).str
 
 let ident_of_lid (l : lident) : ident =
   (l).ident
@@ -83,10 +83,10 @@ let fStarC_Class_Show_show__ident (tmp : ident) : string =
   (string_of_id tmp)
 
 let path_of_lid (lid : lident) : (string) list =
-  (FStarC_List.map string_of_id (FStarC_List.op_At (lid).ns ((lid).ident :: [])))
+  (BatList.map string_of_id (BatList.append (lid).ns ((lid).ident :: [])))
 
 let path_of_ns (ns : (ident) list) : (string) list =
-  (FStarC_List.map string_of_id ns)
+  (BatList.map string_of_id ns)
 
 let path_of_text (text : string) : (string) list =
   (FStarC_String.split (46 :: []) text)
@@ -101,7 +101,7 @@ let id_of_text (str : string) : ident =
   (mk_ident (str, FStarC_Range_Type.dummyRange))
 
 let lid_of_str (str : string) : lident =
-  (let tmp = (FStarC_List.map id_of_text (FStarC_Util.split str ".")) in
+  (let tmp = (BatList.map id_of_text (FStarC_Util.split str ".")) in
   (lid_of_ids tmp))
 
 let fStarC_Class_Show_show__lident (tmp : lident) : string =
@@ -129,8 +129,17 @@ let fStarC_Class_Show_show__option_list_lident (tmp : ((lident) list) option) : 
       (Prims.strcat "Some " tmp1))
   )
 
+let fStarC_Class_Setlike_empty__ident_list_ident (tmp : unit) : (ident) list =
+  (FStarC_FlatSet.empty ())
+
+let fStarC_FlatSet_singleton__ident (x : ident) : (ident) list =
+  (x :: [])
+
+let fStarC_Class_Setlike_singleton__ident_list_ident (tmp : ident) : (ident) list =
+  (fStarC_FlatSet_singleton__ident tmp)
+
 let qual_id (lid : lident) (id : ident) : lident =
-  (let tmp = (lid_of_ids (FStarC_List.op_At (lid).ns ((lid).ident :: (id :: [])))) in
+  (let tmp = (lid_of_ids (BatList.append (lid).ns ((lid).ident :: (id :: [])))) in
   (set_lid_range tmp (range_of_id id)))
 
 let fStarC_Class_Show_show__option_ident (tmp : (ident) option) : string =
@@ -166,11 +175,11 @@ let fStarC_Class_Show_show__list_tuple2_ident_option (tmp : ((ident * (ident) op
   (Prims.strcat "[" tmp2))
 
 let ids_of_lid (lid : lident) : (ident) list =
-  (FStarC_List.op_At (lid).ns ((lid).ident :: []))
+  (BatList.append (lid).ns ((lid).ident :: []))
 
-let fStarC_Class_PP_pp__lident (tmp : lident) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__lident (tmp : lident) : PPrint.document =
   (let tmp1 = (fStarC_Class_Show_show__lident tmp) in
-  (FStar_Pprint.arbitrary_string tmp1))
+  (PPrint.arbitrary_string tmp1))
 
 let fStarC_Class_HasRange_pos__ident (tmp : ident) : FStarC_Range_Type.range =
   (range_of_id tmp)
@@ -203,13 +212,13 @@ let fStarC_Class_Show_show__list_ident (tmp : (ident) list) : string =
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
-let fStarC_Class_PP_pp__list_lident (tmp : (lident) list) : FStar_Pprint.document =
-  (let tmp1 = (FStarC_Pprint.flow_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__lident tmp) in
+let fStarC_Class_PP_pp__list_lident (tmp : (lident) list) : PPrint.document =
+  (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__lident tmp) in
   (FStarC_Class_PP.gbrackets tmp1))
 
-let fStarC_Class_PP_pp__ident (tmp : ident) : FStar_Pprint.document =
+let fStarC_Class_PP_pp__ident (tmp : ident) : PPrint.document =
   (let tmp1 = (fStarC_Class_Show_show__ident tmp) in
-  (FStar_Pprint.arbitrary_string tmp1))
+  (PPrint.arbitrary_string tmp1))
 
 let fStarC_Class_Show_show__option_lident (tmp : (lident) option) : string =
   (match tmp with
@@ -218,49 +227,69 @@ let fStarC_Class_Show_show__option_lident (tmp : (lident) option) : string =
       (Prims.strcat "Some " tmp1))
   )
 
-let rec fStarC_Class_Show_show__show_list_aux__list_lident_87 (l : (lident) list) : string =
+let rec fStarC_Class_Show_show__show_list_aux__list_lident_86 (l : (lident) list) : string =
   (match l with
     | [] -> ""
     | (x :: []) -> (fStarC_Class_Show_show__lident x)
     | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__lident x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_87 xs) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_86 xs) in
       let tmp2 = (Prims.strcat ", " tmp1) in
       (Prims.strcat tmp tmp2))
   )
 
-let fStarC_Class_Show_show__list_lident_87 (tmp : (lident) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_87 tmp) in
+let fStarC_Class_Show_show__list_lident_86 (tmp : (lident) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_86 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
-let rec fStarC_Class_Show_show__show_list_aux__list_ident_109 (l : (ident) list) : string =
+let rec fStarC_Class_Show_show__show_list_aux__list_ident_112 (l : (ident) list) : string =
   (match l with
     | [] -> ""
     | (x :: []) -> (fStarC_Class_Show_show__ident x)
     | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__ident x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident_109 xs) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident_112 xs) in
       let tmp2 = (Prims.strcat ", " tmp1) in
       (Prims.strcat tmp tmp2))
   )
 
-let fStarC_Class_Show_show__list_ident_109 (tmp : (ident) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident_109 tmp) in
+let fStarC_Class_Show_show__list_ident_112 (tmp : (ident) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident_112 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
 let fStarC_Class_Show_show__option_list_ident (tmp : ((ident) list) option) : string =
   (match tmp with
     | None -> "None"
-    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__list_ident_109 x) in
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__list_ident_112 x) in
       (Prims.strcat "Some " tmp1))
   )
+
+let fStarC_Class_Setlike_empty__ident_list_ident_7 (tmp : unit) : (ident) list =
+  (FStarC_FlatSet.empty ())
+
+let fStarC_Class_Setlike_is_empty__ident_list_ident (tmp : (ident) list) : bool =
+  (FStarC_FlatSet.is_empty tmp)
 
 let id_as_lid (id : ident) : lident =
   (lid_of_ns_and_id [] id)
 
 let lid_add_suffix (l : lident) (s : string) : lident =
   (let path = (path_of_lid l) in
-  (lid_of_path (FStarC_List.op_At path (s :: [])) (range_of_lid l)))
+  (lid_of_path (BatList.append path (s :: [])) (range_of_lid l)))
+
+let fStarC_Class_Hashable_hash__lident (tmp : lident) : int =
+  (FStarC_Class_Hashable.fStarC_Class_Hashable_hash__string (string_of_lid tmp))
+
+let fStarC_Class_Hashable_hash__ident (tmp : ident) : int =
+  (FStarC_Class_Hashable.fStarC_Class_Hashable_hash__string (string_of_id tmp))
+
+let fStarC_Class_Hashable_hash__list_ident (tmp : (ident) list) : int =
+  (BatList.fold_left (fun h x -> (let tmp1 = (fStarC_Class_Hashable_hash__ident x) in
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) h tmp1))) ((fun i -> if Obj.is_int (Obj.repr i) then (Obj.magic i : int) else Z.hash i) Prims.int_zero) tmp)
+
+let fStarC_Class_Hashable_hash__list_lident (tmp : (lident) list) : int =
+  (BatList.fold_left (fun h x -> (let tmp1 = (fStarC_Class_Hashable_hash__lident x) in
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) h tmp1))) ((fun i -> if Obj.is_int (Obj.repr i) then (Obj.magic i : int) else Z.hash i) Prims.int_zero) tmp)
 
 let fStarC_Class_HasRange_setPos__ident (tmp : FStarC_Range_Type.range) (tmp1 : ident) : ident =
   { idText = (tmp1).idText; idRange = tmp }
@@ -300,8 +329,8 @@ let fStarC_Class_Show_show__tuple2_list_string_lident (tmp : ((string) list * li
       (Prims.strcat "(" tmp5))
   )
 
-let fStarC_Class_Show_show__t_tuple2_list_lident (tmp : (((string) list * lident)) FStarC_SMap.t) : string =
-  (FStarC_SMap.fold tmp (fun k v acc -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__string k) in
+let fStarC_Class_Show_show____proj__Mkhashtbl_s__item__t_string_hashtbl_make (tmp : (((string) list * lident)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) : string =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun k v acc -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__string k) in
   let tmp2 = (fStarC_Class_Show_show__tuple2_list_string_lident v) in
-  (FStarC_Format.fmt3 "%s -> %s\n%s" tmp1 tmp2 acc))) "")
+  (FStarC_Format.fmt3 "%s -> %s\n%s" tmp1 tmp2 acc))) tmp "")
 

@@ -3,9 +3,9 @@ module U32 = FStar.UInt32
 open FStar.Attributes
 
 (* Section 117.3.  The external names a symbol this program does not own, and
-   it is exactly what [c_name] spells [ExtOwn.helper] as.  Nothing renames
-   either, so the collision is an error rather than a silently shadowed
-   foreign implementation. *)
+   it is exactly what [c_name] spells [ExtOwn.helper] as.  The test makes
+   [helper] public, so neither may be renamed, and the collision is an error
+   rather than a silently shadowed foreign implementation. *)
 [@@custard_extern "ExtOwn_helper"]
 assume val ext_helper (n:U32.t) : U32.t
 

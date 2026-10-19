@@ -2,8 +2,8 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 type monad = {
-  return : (Obj.t -> Obj.t);
-  bind : (Obj.t -> ((Obj.t -> Obj.t) -> Obj.t));
+  return : (unit -> (Obj.t -> Obj.t));
+  bind : (unit -> (unit -> (Obj.t -> ((Obj.t -> Obj.t) -> Obj.t))));
 }
 
 let fStarC_Class_Monad_return__id (tmp : 'a) : 'a =
@@ -31,7 +31,7 @@ let fStarC_Class_Monad_op_Less_Dollar_Greater__option (f : ('a -> 'b)) (x : ('a)
   (fStarC_Class_Monad_op_let_Bang__option x (fun v -> (fStarC_Class_Monad_return__option (f v))))
 
 let fStarC_Class_Monad_bind__list (tmp : ('a) list) (tmp1 : ('a -> ('b) list)) : ('b) list =
-  (FStarC_List.concatMap tmp1 tmp)
+  ((fun f l -> BatList.flatten (BatList.map f l)) tmp1 tmp)
 
 let fStarC_Class_Monad_op_let_Bang__list (tmp : ('a) list) (tmp1 : ('a -> ('b) list)) : ('b) list =
   (fStarC_Class_Monad_bind__list tmp tmp1)

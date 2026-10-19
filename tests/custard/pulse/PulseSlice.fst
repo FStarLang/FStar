@@ -24,7 +24,7 @@
    was then dropped, so every byte read back as zero while the C output gave
    the right answer.
 
-   The same source has to compile two ways.  Under [--custard_backend KrmlC]
+   The same source has to compile two ways.  Under [--codegen KrmlC]
    the F* definition of [Pulse.Lib.Slice] is the implementation and the result
    is a struct of a pointer and a length.  Under [KrmlRust] karamel supplies
    the type itself, as Rust's own borrowed slice, and Custard's job is to

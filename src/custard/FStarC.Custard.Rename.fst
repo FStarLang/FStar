@@ -38,10 +38,31 @@ let empty_scope : scope = { sub = []; used = [] }
    uniquifying suffix that extraction added; what is left is the [ppname] the
    programmer wrote, except for the [uu____NNN] that F* invents for a binder
    the programmer wrote as [_], whose digits are just as volatile as the
-   suffix we are removing and are collapsed too. *)
+   suffix we are removing and are collapsed too.
+
+   The [uu__] prefix also marks a temporary the compiler introduced and would
+   rather not see in the output (Custard's own ANF temporaries, and a local
+   [let] marked [CInline]): [uu__tmp] is spelled [tmp] and [uu___break] is
+   spelled [_break].  For karamel the prefix is not noise but the contract:
+   karamel attempts to inline every binder whose name starts with [uu__]
+   ([Helpers.is_uu]), and renumbers them itself, so there it is kept. *)
+let keeps_uu_prefix () : ML bool =
+  match Options.codegen_name () with
+  | "KrmlC" | "KrmlRust" -> true
+  | _ -> false
+
 let preferred (x:string) : ML string =
   let b = base_name x in
-  let b = if String.length b >= 4 && String.substring b 0 4 = "uu__" then "tmp" else b in
+  let b =
+    if String.length b >= 4 && String.substring b 0 4 = "uu__" then
+      if keeps_uu_prefix () then b
+      else
+        let rest = String.substring b 4 (String.length b - 4) in
+        let digits = String.list_of_string "_0123456789" in
+        let anonymous = String.list_of_string rest
+                        |> List.for_all (fun c -> List.mem c digits) in
+        if anonymous then "tmp" else rest
+    else b in
   if b = "" then "x" else b
 
 let taken (s:scope) (x:string) : ML bool =
@@ -82,7 +103,7 @@ let rec rn_cty (ts:scope) (c:cty) : ML cty =
   | TArrow (a, e, b) -> TArrow (rn_cty ts a, e, rn_cty ts b)
   | TApp (n, args) -> TApp (n, args |> List.map (rn_cty ts))
   | TBuf t -> TBuf (rn_cty ts t)
-  | TRef t -> TRef (rn_cty ts t)
+  | TRef (k, t) -> TRef (k, rn_cty ts t)
   | TInline t -> TInline (rn_cty ts t)
   | TTuple cs -> TTuple (cs |> List.map (rn_cty ts))
   | c -> c
@@ -142,7 +163,7 @@ let rec rn_expr (fields:HashTable.t string string) (ts:scope) (s:scope) (x:expr)
     match x.e with
     | EConst _
     | EAny
-    | EAbort _ -> x.e
+    | EAbort _ | EUnreachable _ -> x.e
 
     | EVar v -> EVar (lookup s v)
     | EQual (n, args) -> EQual (n, args |> List.map (rn_cty ts))

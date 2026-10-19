@@ -4,7 +4,7 @@
 let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (let nm = (fun l -> (FStarC_Parser_Const.p2l ("FStar" :: ("Pprint" :: (l :: []))))) in
   let tmp = (nm "arbitrary_string") in
-  let tmp1 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string FStarC_Syntax_Embeddings.e_document FStarC_TypeChecker_NBETerm.e_document FStar_Pprint.arbitrary_string) in
+  let tmp1 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string FStarC_Syntax_Embeddings.e_document FStarC_TypeChecker_NBETerm.e_document PPrint.arbitrary_string) in
   let tmp2 = (nm "render") in
   let tmp3 = (FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero tmp2 FStarC_Syntax_Embeddings.e_document FStarC_TypeChecker_NBETerm.e_document FStarC_Syntax_Embeddings.e_string FStarC_TypeChecker_NBETerm.e_string FStar_Pprint.render) in
   let tmp4 = (tmp3 :: []) in

@@ -1228,7 +1228,7 @@ and resugar_comp_with_pre (env: DsEnv.env) (pre: option S.term) (c:S.comp) : ML 
       aux [] fl
     in
     let smt_pats =
-      match U.comp_smt_pats (S.mk (S.Comp c) Range.dummyRange) with
+      match U.comp_smt_pats (S.mk_comp' (S.Comp c) Range.dummyRange) with
       | Some pats when not (U.is_fvar C.nil_lid (U.head_of pats)) -> [pats]
       | _ -> []
     in

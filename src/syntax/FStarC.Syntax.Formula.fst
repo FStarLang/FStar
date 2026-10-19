@@ -103,7 +103,7 @@ let patterns t : ML (list (list arg) & term) =
         | Tm_meta {tm=t; meta=Meta_pattern (_, pats)} -> pats, SS.compress t
         | _ -> [], t
 
-let destruct_q_conn t : ML (option connective) =
+let rec q_conn_aux (qopt:option bool) (out:binders) (t:term) : ML (option connective) =
     let is_q (fa:bool) (fv:fv) : ML bool =
         if fa
         then U.is_forall fv.fv_name
@@ -113,34 +113,34 @@ let destruct_q_conn t : ML (option connective) =
         let t, args = U.head_and_args_full t in
         U.un_uinst t, args |> List.map (fun (t, imp) -> U.unascribe t, imp)
     in
-    let rec aux qopt out t : ML (option connective) =
-      let hd, args = flat t in
-      (* The quantifier body is the last argument, which must be a lambda. *)
-      let body_of_last_abs =
-        match args with
-        | [(a, _)]
-        | [_; (a, _)] -> U.abs_one_ln a
-        | _ -> None
-      in
-      match qopt, hd.n, body_of_last_abs with
-        | Some fa, Tm_fvar tc, Some (b, t2)
-            when (is_q fa tc) ->
-          aux qopt (b::out) t2
+    let hd, args = flat t in
+    (* The quantifier body is the last argument, which must be a lambda. *)
+    let body_of_last_abs =
+      match args with
+      | [(a, _)]
+      | [_; (a, _)] -> U.abs_one_ln a
+      | _ -> None
+    in
+    match qopt, hd.n, body_of_last_abs with
+      | Some fa, Tm_fvar tc, Some (b, t2)
+          when (is_q fa tc) ->
+        q_conn_aux qopt (b::out) t2
 
-        | None, Tm_fvar tc, Some (b, t2)
-            when (U.is_qlid tc.fv_name) ->
-          aux (Some (U.is_forall tc.fv_name)) (b::out) t2
+      | None, Tm_fvar tc, Some (b, t2)
+          when (U.is_qlid tc.fv_name) ->
+        q_conn_aux (Some (U.is_forall tc.fv_name)) (b::out) t2
 
-        | Some b, _, _ ->
-          let bs = List.rev out in
-          let bs, t = Subst.open_term bs t in
-          let pats, body = patterns t in
-          if b
-          then Some (QAll(bs, pats, body))
-          else Some  (QEx(bs, pats, body))
+      | Some b, _, _ ->
+        let bs = List.rev out in
+        let bs, t = Subst.open_term bs t in
+        let pats, body = patterns t in
+        if b
+        then Some (QAll(bs, pats, body))
+        else Some  (QEx(bs, pats, body))
 
-        | _ -> None in
-    aux None [] t
+      | _ -> None
+
+let destruct_q_conn t : ML (option connective) = q_conn_aux None [] t
 
 let rec destruct_sq_forall t : ML (option connective) =
     let! t = U.un_squash t in
@@ -205,3 +205,8 @@ let destruct_typ_as_formula f : ML (option connective) =
               None)))))
   in
   r
+
+let destruct_forall_continuation (t:term) : ML (binders & list (list arg) & term) =
+    match q_conn_aux (Some true) [] t with
+    | Some (QAll (bs, pats, body)) -> bs, pats, body
+    | _ -> failwith "impossible: destruct_forall_continuation"

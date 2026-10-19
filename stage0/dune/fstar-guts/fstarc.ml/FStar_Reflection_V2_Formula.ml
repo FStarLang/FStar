@@ -85,25 +85,37 @@ let term_as_formula' (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types
               ((=) tmp FStar_Reflection_Const.lt_qn)) then (Comp (Lt, a2, a3)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.lte_qn)) then (Comp (Le, a2, a3)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.gt_qn)) then (Comp (Gt, a2, a3)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
-              ((=) tmp FStar_Reflection_Const.gte_qn)) then (Comp (Ge, a2, a3)) else (App (h0, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst t1)))))))))
+              ((=) tmp FStar_Reflection_Const.gte_qn)) then (Comp (Ge, a2, a3)) else (App (h0, (match t1 with
+                | (u__1, u__2) -> u__1
+              )))))))))
             | ((FStar_Tactics_NamedView.Tv_FVar (fv)), ((a1, FStarC_Reflection_V2_Data.Q_Explicit) :: ((a2, FStarC_Reflection_V2_Data.Q_Explicit) :: []))) -> (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.imp_qn)) then (Implies (a1, a2)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.and_qn)) then (And (a1, a2)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.iff_qn)) then (Iff (a1, a2)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.or_qn)) then (Or (a1, a2)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.eq2_qn)) then (Comp ((Eq (None)), a1, a2)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
-              ((=) tmp FStar_Reflection_Const.eq1_qn)) then (Comp ((BoolEq (None)), a1, a2)) else (App (h0, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst t1)))))))))
+              ((=) tmp FStar_Reflection_Const.eq1_qn)) then (Comp ((BoolEq (None)), a1, a2)) else (App (h0, (match t1 with
+                | (u__1, u__2) -> u__1
+              )))))))))
             | ((FStar_Tactics_NamedView.Tv_FVar (fv)), ((a1, FStarC_Reflection_V2_Data.Q_Implicit) :: ((a2, FStarC_Reflection_V2_Data.Q_Explicit) :: []))) -> (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.forall_qn)) then (mk_Forall a1 a2) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
-              ((=) tmp FStar_Reflection_Const.exists_qn)) then (mk_Exists a1 a2) else (App (h0, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst t1)))))
+              ((=) tmp FStar_Reflection_Const.exists_qn)) then (mk_Exists a1 a2) else (App (h0, (match t1 with
+                | (u__1, u__2) -> u__1
+              )))))
             | ((FStar_Tactics_NamedView.Tv_FVar (fv)), ((a, FStarC_Reflection_V2_Data.Q_Explicit) :: [])) -> (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.not_qn)) then (Not (a)) else (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
               ((=) tmp FStar_Reflection_Const.b2t_qn)) then (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_False))) in
               let tmp1 = (term_eq a tmp) in
               (if tmp1 then False_ else (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (FStarC_Reflection_V2_Data.Tv_Const (FStarC_Reflection_V2_Data.C_True))) in
               let tmp3 = (term_eq a tmp2) in
-              (if tmp3 then True_ else (App (h0, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst t1))))))) else (App (h0, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst t1)))))
-            | tmp -> (App (h0, (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst t1)))
+              (if tmp3 then True_ else (App (h0, (match t1 with
+                | (u__1, u__2) -> u__1
+              ))))))) else (App (h0, (match t1 with
+                | (u__1, u__2) -> u__1
+              )))))
+            | tmp -> (App (h0, (match t1 with
+                | (u__1, u__2) -> u__1
+              )))
           ))
       ))
     | (FStar_Tactics_NamedView.Tv_Const ((FStarC_Reflection_V2_Data.C_Int (i, tmp)))) -> (IntLit (i))

@@ -18,6 +18,7 @@ SUBDIRS += vale
 SUBDIRS += hacl
 SUBDIRS += calc
 SUBDIRS += friends
+SUBDIRS += targets
 SUBDIRS += extraction
 SUBDIRS += custard
 SUBDIRS += overloading

@@ -337,7 +337,9 @@ let mk_right (cfg : cfg_t) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC
   let x1 = (FStar_Tactics_V2_SyntaxHelpers.mk_tot_arr (x :: []) (FStar_Tactics_NamedView.pack (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv (cfg).pretty_tynm) in
     (FStar_Tactics_NamedView.Tv_FVar (tmp)))) ps) in
   let x2 = (mk_right_body cfg (cfg).at Prims.int_zero (FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_Var ((FStar_Tactics_V2_SyntaxCoercions.binder_to_namedv x)))) ps) in
-  let x3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x2) in
+  let x3 = (match x2 with
+      | (u__1, u__2) -> u__2
+    ) in
   let x4 = (FStar_Tactics_V2_Derived.mk_abs (x :: []) x3 ps) in
   let tmp = (FStarC_Reflection_V2_Builtins.pack_fv (add_suffix "_right" (cfg).pretty_tynm)) in
   let x5 = { FStar_Tactics_NamedView.lb_fv = tmp;

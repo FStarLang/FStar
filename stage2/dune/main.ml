@@ -24,8 +24,27 @@ let x =
       (* Record a backtrace on exceptions, for --trace_error. *)
       Printexc.record_backtrace true;
 
-      (* Tweak garbage collector parameters. *)
-      Gc.set { (Gc.get()) with Gc.minor_heap_size = 1048576; Gc.major_heap_increment = 4194304; Gc.space_overhead = 150; };
+      (* Tweak garbage collector parameters, except those that the user set
+         in OCAMLRUNPARAM (or CAMLRUNPARAM), e.g. OCAMLRUNPARAM=s=256k for a
+         smaller minor heap when running many F* processes in parallel. *)
+      (let user_keys =
+         let param =
+           match Sys.getenv_opt "OCAMLRUNPARAM" with
+           | Some p -> p
+           | None -> Option.value (Sys.getenv_opt "CAMLRUNPARAM") ~default:""
+         in
+         List.filter_map
+           (fun kv -> match String.index_opt kv '=' with
+              | Some i -> Some (String.trim (String.sub kv 0 i))
+              | None -> None)
+           (String.split_on_char ',' param)
+       in
+       let unset k = not (List.mem k user_keys) in
+       let c = Gc.get () in
+       let c = if unset "s" then { c with Gc.minor_heap_size = 1048576 } else c in
+       let c = if unset "i" then { c with Gc.major_heap_increment = 4194304 } else c in
+       let c = if unset "o" then { c with Gc.space_overhead = 150 } else c in
+       Gc.set c);
 
       (* Set up peak heap memory reporting (for benchmarking). *)
       FStarC_MemReport.setup ();

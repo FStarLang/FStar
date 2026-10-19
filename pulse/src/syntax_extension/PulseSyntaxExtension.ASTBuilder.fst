@@ -213,7 +213,7 @@ module L = FStarC.List
 module R = FStarC.Range
 module DsEnv = FStarC.Syntax.DsEnv
 let sugar_decl = PulseSyntaxExtension.Sugar.decl
-let desugar_pulse (env:TcEnv.env) 
+let desugar_pulse_ml (env:TcEnv.env) 
                   (namespaces:list string)
                   (module_abbrevs:list (string & string))
                   (sugar:sugar_decl)
@@ -252,7 +252,7 @@ let desugar_pulse_decl_callback
 let _ = FStarC.ToSyntax.ToSyntax.register_extension_tosyntax "pulse" desugar_pulse_decl_callback
 #pop-options
 
-let parse_pulse (env:TcEnv.env) 
+let parse_pulse_ml (env:TcEnv.env) 
                 (namespaces:list string)
                 (module_abbrevs:list (string & string))
                 (content:string)
@@ -264,5 +264,19 @@ let parse_pulse (env:TcEnv.env)
       R.mk_range file_name p p
     in
     match Grammar.parse_decl content range with
-    | Inl d -> desugar_pulse env namespaces module_abbrevs d
+    | Inl d -> desugar_pulse_ml env namespaces module_abbrevs d
     | Inr e -> Inr e
+
+(* The interface (in src/checker, as Pulse.Main calls it) is written against
+   the user-facing reflection API, whose types are the compiler's at runtime
+   (see Pulse.RuntimeUtils).  This unit is checked with --lax, so the
+   equality proof of the coercion is trivial. *)
+module Refl = FStar.Reflection
+let co (#a #b : Type) (x:a) : b = FStar.Pervasives.coerce_eq #a #b () x
+let ml_dv (#a:Type) (f:unit -> ML a) : Dv a = (co f <: unit -> Dv a) ()
+
+let desugar_pulse env namespaces module_abbrevs sugar =
+  ml_dv (fun () -> co (desugar_pulse_ml (co env) namespaces module_abbrevs sugar))
+
+let parse_pulse env namespaces module_abbrevs content file_name line col =
+  ml_dv (fun () -> co (parse_pulse_ml (co env) namespaces module_abbrevs content file_name line col))

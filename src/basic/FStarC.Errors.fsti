@@ -63,21 +63,10 @@ exception Error   of error
 exception Stop
 exception Empty_frag
 
-type issue_level =
-  | ENotImplemented
-  | EInfo
-  | EWarning
-  | EError
+include FStarC.Errors.Issue
 
 val json_of_issue_level: issue_level -> json
 
-type issue = {
-    issue_msg: error_message;
-    issue_level: issue_level;
-    issue_range: option Range.t;
-    issue_number: option int;
-    issue_ctx: list string;
-}
 
 val json_of_issue: issue -> ML json
 
@@ -90,8 +79,6 @@ type error_handler = {
 }
 
 val issue_message : issue -> ML error_message
-val string_of_issue_level : issue_level -> string
-val issue_level_of_string : string -> issue_level
 val format_issue' : bool -> issue -> ML string
 val format_issue : issue -> ML string
 val print_issue : issue -> ML unit
@@ -170,6 +157,15 @@ val with_ctx : ctx:string -> (f : unit -> ML 'a) -> ML 'a
 
 (* As above, but only add the context conditionally. *)
 val with_ctx_if : cond:bool -> ctx:string -> (f : unit -> ML 'a) -> ML 'a
+
+(* [with_ctxs [c1; ...; cn] f] behaves like
+   [with_ctx cn (fun _ -> ... with_ctx c1 f)], i.e. the head of the list is
+   the innermost context, but pushes all contexts in one frame. *)
+val with_ctxs : ctxs:list string -> (f : unit -> ML 'a) -> ML 'a
+
+(* Run a given function, returning the errors and the other issues it
+logged/raised separately, without adding any of them to the old handler. *)
+val catch_errors_aux (f : unit -> ML 'a) : ML (list issue & list issue & option 'a)
 
 (* Delete all error contexts for this comp. *)
 val no_ctx : (f : unit -> ML 'a) -> ML 'a
