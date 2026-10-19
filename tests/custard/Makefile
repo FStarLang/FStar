@@ -3672,6 +3672,36 @@ $(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
 
 all: $(SMALLINT_DIR)/CherrySmallInt.chran
 
+FSTARCLIST_DIR = $(CHERRY_DIR)/fstarclist
+FSTARCLIST_ABS = $(abspath $(FSTARCLIST_DIR))
+FSTARCLIST_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.List.fsti $(HASH_SRC)/FStarC.List-c.cherry.fst
+# The small stack checks that every function runs in constant stack.
+$(FSTARCLIST_DIR)/CherryFStarCList.chran: fstarclist/CherryFStarCList.fst \
+    $(FSTARCLIST_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCList)
+	$(Q)rm -rf $(FSTARCLIST_ABS) && mkdir -p $(FSTARCLIST_ABS)/src
+	$(Q)ln -s $(FSTARCLIST_SRCS) $(FSTARCLIST_ABS)/src/
+	$(Q)cd fstarclist && for f in $(addprefix $(FSTARCLIST_ABS)/src/,$(notdir $(FSTARCLIST_SRCS))) \
+	    CherryFStarCList.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCLIST_ABS)/src --cache_dir $(FSTARCLIST_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarclist && $(FSTAR_EXE) --include $(FSTARCLIST_ABS)/src --cache_dir $(FSTARCLIST_ABS) \
+	  --already_cached '*' --odir $(FSTARCLIST_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCList.main \
+	  CherryFStarCList.fst -o $(FSTARCLIST_ABS)/CherryFStarCList.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCList)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCLIST_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCLIST_ABS)/CherryFStarCList.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCLIST_ABS)/CherryFStarCList.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCList)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCLIST_ABS)/CherryFStarCList.chexe
+	$(Q)touch $@
+
+all: $(FSTARCLIST_DIR)/CherryFStarCList.chran
+
 ARRAY_DIR = $(CHERRY_DIR)/array
 ARRAY_ABS = $(abspath $(ARRAY_DIR))
 $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
