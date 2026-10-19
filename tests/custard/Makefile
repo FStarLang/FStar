@@ -3363,6 +3363,9 @@ EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 # is the assertion that every cell allocated is freed exactly once.
 CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards
 
+# Section 4.4 under Cherry: only anonymous initializers are roots.
+CHERRY_TESTS += CherryInits
+
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
 CHERRY_RUN_CherryDeep = ulimit -s 1024 &&

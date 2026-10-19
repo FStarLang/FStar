@@ -6838,6 +6838,9 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
     | Some l when Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l)) -> ()
     | Some l -> mark Entrypoint l
     | None -> ());
+  (* [let _ = e] binds a name F* invents. *)
+  let anonymous_lid (l:Ident.lident) : bool =
+    FStarC.Util.starts_with (Ident.string_of_id (Ident.ident_of_lid l)) Ident.reserved_prefix in
   (* A top-level [let] whose definiens is *effectful* is a module initializer:
      [let _ = clear ()] in [FStarC.Options], [let _ = register_pass ...] in
      [FStarC.Syntax.Resugar].  Nothing in the program refers to it, so the
@@ -6850,7 +6853,12 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      lands at the end of [st.order], and OCaml runs the emitted [let]s in the
      order they appear.  Across a split, the linker runs each unit's in
      dependency order.  What is *not* guaranteed is the order of two
-     initializers in unrelated modules; F* gives no meaning to that either. *)
+     initializers in unrelated modules; F* gives no meaning to that either.
+
+     Under Cherry only the anonymous ones, [let _ = e], are roots: a named
+     effectful value, such as the memo table behind [FStarC.Parser.Dep.deps_of],
+     is extracted when something refers to it, and dropped otherwise.  The
+     OCaml backend keeps every initializer, as OCaml itself would run it. *)
   let seen_inits : HashTable.t string unit = HashTable.create 100 in
   let rec inits (fuel:int) : ML unit =
     if fuel <= 0 then () else
@@ -6867,7 +6875,8 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
           | Sig_let {lbs=(_, lbs)} ->
             lbs |> List.iter (fun lb ->
               match lb.lbname with
-              | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) ->
+              | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff)
+                         && (not (Options.custard_cherry ()) || anonymous_lid (S.lid_of_fv fv)) ->
                 (* An initializer may erase to nothing at all, which is fine
                    and is not the user naming a missing entry point. *)
                 mark' true Root (S.lid_of_fv fv)

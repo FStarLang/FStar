@@ -1366,6 +1366,15 @@ runs each file's in dependency order.  What is *not* defined is the relative
 order of two initializers in unrelated modules --- F\* gives that no meaning
 either.
 
+Under Cherry, only *anonymous* initializers, `let _ = e`, are roots.  A named
+effectful value such as `let deps_of = let cache = HashTable.create 40 in fun
+...` in `FStarC.Parser.Dep` is extracted like any other definition, when
+something refers to it, and dropped otherwise.  Rooting it would pull in
+everything it can call even when the program never looks at it: extracting a
+function that merely mentions the type `FStarC.Parser.Dep.deps` would bring the
+whole parser along.  The OCaml backend keeps every initializer, since OCaml runs
+them all.
+
 This is why the note in §7.3's legality table used to say that dead-code
 elimination of a top-level `DLet` is always legal.  It is legal only for a
 *pure* one.
