@@ -2026,6 +2026,40 @@ let gamma_has_free_uvars (g:list binding) : ML bool =
   List.existsb (function Binding_var bv -> has_free_uvars bv.sort
                        | _ -> false) g
 
+(* The argument positions of a typeclass that are functional dependencies,
+   from its [@@Tactics.Typeclasses.fundeps [...]] attribute. *)
+let class_fundeps (env:env) (cls:lident) : ML (list int) =
+  match Env.lookup_attrs_of_lid env cls with
+  | None -> []
+  | Some attrs ->
+    attrs |> List.collect (fun a ->
+      let hd, args = U.head_and_args_full a in
+      match args with
+      | [(l, _)] when U.is_fvar PC.tcfundeps_lid hd ->
+        (match U.list_elements l with
+         | Some es ->
+           es |> List.collect (fun e ->
+             match (SS.compress e).n with
+             | Tm_constant (FC.Const_int (i, _)) -> [i]
+             | _ -> [])
+         | None -> [])
+      | _ -> [])
+
+(* Whether a typeclass goal [C a0 ... an] has free uvars other than in the
+   functional-dependency positions of [C]. Typeclass resolution can solve
+   such a goal, and so determine the uvars at those positions. *)
+let typeclass_goal_is_open (env:env) (typ:typ) : ML bool =
+  has_free_uvars typ &&
+  (let hd, args = U.head_and_args_full typ in
+   match (U.un_uinst hd).n with
+   | Tm_fvar fv ->
+     (match class_fundeps env fv.fv_name with
+      | [] -> true
+      | fds ->
+        args |> List.mapi (fun i (a, _) -> not (List.mem i fds) && has_free_uvars a)
+             |> List.existsb (fun b -> b))
+   | _ -> true)
+
 type reveal_hide_t =
   | Hide of (universe & typ & term)
   | Reveal of (universe & typ & term)
@@ -5971,7 +6005,17 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
           )
         in
         let typ = U.ctx_uvar_typ ctx_u in
-        let is_open = has_free_uvars typ || gamma_has_free_uvars ctx_u.ctx_uvar_gamma in
+        (* A typeclass goal whose only uvars are at functional dependencies
+           of the class is not open: resolving it is what determines them.
+           Running it first matters when another goal depends on those
+           uvars, e.g. [showable (list ?e)] and [listlike ?e (t a)] from
+           [show (to_list l)]. *)
+        let typ_is_open =
+          if cacheable tac
+          then typeclass_goal_is_open env typ
+          else has_free_uvars typ
+        in
+        let is_open = typ_is_open || gamma_has_free_uvars ctx_u.ctx_uvar_gamma in
         if defer_open_metas && is_open then (
           (* If the result type or env for this meta arg has a free uvar, delay it.
           Some other meta arg being solved may instantiate the uvar. See #3130. *)
