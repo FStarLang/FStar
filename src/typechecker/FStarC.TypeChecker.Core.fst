@@ -728,6 +728,21 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
        U.mk_forall u x.binder_bv t'
       )
 
+(* [exists (x:t). body], with the refinement of [t], if any, stated as a
+   conjunct of the body instead of in the sort of the binder. [l_Exists]
+   repeats the sort (as its type argument and in the abstraction's binder),
+   and the type of an effectful [let] is closed existentially over its
+   definition's own type, which is itself such an existential for a chain
+   of [let]s (e.g., [hide b && c1 && ... && cn]): keeping the refinement in
+   the sort would double the type at every [let]. *)
+let mk_exists_unrefined (u:universe) (x:bv) (body:term) : ML term =
+  match (Subst.compress (U.flatten_refinement x.sort)).n with
+  | Tm_refine {b=y; phi} ->
+    let bs, phi = Subst.open_term [S.mk_binder y] phi in
+    let phi = Subst.subst [NT((List.hd bs).binder_bv, S.bv_to_name x)] phi in
+    U.mk_exists u { x with sort = y.sort } (U.mk_conj phi body)
+  | _ -> U.mk_exists u x body
+
 let abs (g:env) (a:typ) (f: binder -> term) : ML term =
   let g, xb = new_binder g a a.pos in
   U.abs [xb] (f xb) None
@@ -880,10 +895,125 @@ let insert_guard (g:env) (guard:typ)
   = let! cache = get_cache () in
     put_cache {cache with guard_map = FStarC.Syntax.Hash.term_map_add guard { ge_gamma = g.tcenv.gamma } cache.guard_map }
 
+(* [compress_shared t] is [t] with its delayed substitutions pushed and its
+   solved uvars replaced by their solutions throughout. Unlike
+   [Compress.deep_compress], it returns [t] itself if [t] is already
+   compressed, and otherwise shares every subterm of [t] that is; and it
+   leaves lazy terms and quotations as they are, so the result means the
+   same as [t] to Core and can be checked in its place. *)
+let rec compress_shared (t:term) : ML term =
+  let same (#a:Type) (x y:a) = BU.physical_equality x y in
+  let t0 = Subst.compress t in
+  let rebuild n = S.mk n t0.pos in
+  match t0.n with
+  | Tm_uinst (f, us) ->
+    let f' = compress_shared f in
+    let us' = map_shared compress_univ_shared us in
+    if same f f' && same us us' then t0 else rebuild (Tm_uinst (f', us'))
+  | Tm_type u ->
+    let u' = compress_univ_shared u in
+    if same u u' then t0 else rebuild (Tm_type u')
+  | Tm_app {hd; arg=(a, q)} ->
+    let hd' = compress_shared hd in
+    let a' = compress_shared a in
+    if same hd hd' && same a a' then t0 else rebuild (Tm_app {hd=hd'; arg=(a', q)})
+  | Tm_abs {b; body; rc_opt} ->
+    let b' = compress_binder_shared b in
+    let body' = compress_shared body in
+    if same b b' && same body body' then t0 else rebuild (Tm_abs {b=b'; body=body'; rc_opt})
+  | Tm_arrow {b; comp} ->
+    let b' = compress_binder_shared b in
+    let comp' = compress_comp_shared comp in
+    if same b b' && same comp comp' then t0 else rebuild (Tm_arrow {b=b'; comp=comp'})
+  | Tm_refine {b; phi} ->
+    let b' = compress_bv_shared b in
+    let phi' = compress_shared phi in
+    if same b b' && same phi phi' then t0 else rebuild (Tm_refine {b=b'; phi=phi'})
+  | Tm_match {scrutinee; ret_opt; brs; rc_opt} ->
+    let scrutinee' = compress_shared scrutinee in
+    let brs' = map_shared compress_branch_shared brs in
+    if same scrutinee scrutinee' && same brs brs' then t0
+    else rebuild (Tm_match {scrutinee=scrutinee'; ret_opt; brs=brs'; rc_opt})
+  | Tm_ascribed {tm; asc=(tc, tac, eq); eff_opt} ->
+    let tm' = compress_shared tm in
+    let tc' =
+      match tc with
+      | Inl t -> let t' = compress_shared t in if same t t' then tc else Inl t'
+      | Inr c -> let c' = compress_comp_shared c in if same c c' then tc else Inr c'
+    in
+    if same tm tm' && same tc tc' then t0
+    else rebuild (Tm_ascribed {tm=tm'; asc=(tc', tac, eq); eff_opt})
+  | Tm_let {lbs=(is_rec, lbs); body} ->
+    let lbs' = map_shared compress_letbinding_shared lbs in
+    let body' = compress_shared body in
+    if same lbs lbs' && same body body' then t0
+    else rebuild (Tm_let {lbs=(is_rec, lbs'); body=body'})
+  | Tm_meta {tm; meta} ->
+    let tm' = compress_shared tm in
+    let meta' =
+      match meta with
+      | Meta_monadic (m, ty) ->
+        let ty' = compress_shared ty in if same ty ty' then meta else Meta_monadic (m, ty')
+      | Meta_monadic_lift (m1, m2, ty) ->
+        let ty' = compress_shared ty in if same ty ty' then meta else Meta_monadic_lift (m1, m2, ty')
+      | _ -> meta
+    in
+    if same tm tm' && same meta meta' then t0 else rebuild (Tm_meta {tm=tm'; meta=meta'})
+  | _ -> t0
+
+and map_shared (#a:Type) (f:a -> ML a) (l:list a) : ML (list a) =
+  match l with
+  | [] -> l
+  | x::xs ->
+    let x' = f x in
+    let xs' = map_shared f xs in
+    if BU.physical_equality x x' && BU.physical_equality xs xs' then l else x'::xs'
+
+and compress_univ_shared (u:universe) : ML universe =
+  let u0 = Subst.compress_univ u in
+  match u0 with
+  | U_succ v ->
+    let v' = compress_univ_shared v in
+    if BU.physical_equality v v' then u0 else U_succ v'
+  | U_max us ->
+    let us' = map_shared compress_univ_shared us in
+    if BU.physical_equality us us' then u0 else U_max us'
+  | _ -> u0
+
+and compress_bv_shared (x:bv) : ML bv =
+  let sort' = compress_shared x.sort in
+  if BU.physical_equality x.sort sort' then x else { x with sort = sort' }
+
+and compress_binder_shared (b:binder) : ML binder =
+  let bv' = compress_bv_shared b.binder_bv in
+  if BU.physical_equality b.binder_bv bv' then b else { b with binder_bv = bv' }
+
+and compress_comp_shared (c:comp) : ML comp =
+  match c.n with
+  | Comp ct ->
+    let t' = compress_shared ct.result_typ in
+    if BU.physical_equality ct.result_typ t' then c
+    else S.mk_comp' (Comp { ct with result_typ = t' }) c.pos
+
+and compress_branch_shared (br:branch) : ML branch =
+  let (p, w, body) = br in
+  let body' = compress_shared body in
+  if BU.physical_equality body body' then br else (p, w, body')
+
+and compress_letbinding_shared (lb:letbinding) : ML letbinding =
+  let typ' = compress_shared lb.lbtyp in
+  let def' = compress_shared lb.lbdef in
+  if BU.physical_equality lb.lbtyp typ' && BU.physical_equality lb.lbdef def' then lb
+  else { lb with lbtyp = typ'; lbdef = def' }
+
 (* The cache is keyed by syntactic equality (FStarC.Syntax.Hash.equal_term),
    which does not look through delayed substitutions or solved uvars, so the
-   keys are deeply compressed. *)
-let cache_key (t:term) : ML term = FStarC.Syntax.Compress.deep_compress true true t
+   keys are compressed. A key shares with the term it is the key of, and
+   [memo_check] checks the key, whose subterms are then their own keys: a
+   copy per cache entry would be quadratic in the depth of the term. Parts of
+   a term that [compress_shared] does not compress (e.g., attributes) can
+   only cause cache misses. *)
+let cache_key (t:term) : ML term = compress_shared t
 
 let guard (g:env) (guard:typ)
   : result unit
@@ -2493,6 +2623,7 @@ and is_prop (g:env) (t:term) : ML (result unit) =
 and memo_check (g:env) (e:term)
   : ML (result (eff & typ))
   = let key = cache_key e in
+    let e = key in
     let check_then_memo g e =
       with_guard (do_check_and_promote g e)
       (function
@@ -3265,7 +3396,7 @@ and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
                     return [U.mk_eq2 u_b base (S.bv_to_name r) body]
                   else return []
                 in
-                return (U.refine r (U.mk_exists u x.binder_bv (U.mk_conj_l (phi_t @ eq))))
+                return (U.refine r (mk_exists_unrefined u x.binder_bv (U.mk_conj_l (phi_t @ eq))))
         in
         let! eff = join_eff g eff_def eff_body in
         return (eff, t)
