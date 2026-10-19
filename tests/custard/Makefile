@@ -3668,6 +3668,35 @@ $(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
 
 all: $(SMALLINT_DIR)/CherrySmallInt.chran
 
+ARRAY_DIR = $(CHERRY_DIR)/array
+ARRAY_ABS = $(abspath $(ARRAY_DIR))
+$(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
+    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+    $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryArray)
+	$(Q)rm -rf $(ARRAY_ABS) && mkdir -p $(ARRAY_ABS)
+	$(Q)cd array && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+	    $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst \
+	    CherryArray.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(ARRAY_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd array && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(ARRAY_ABS) \
+	  --already_cached '*' --odir $(ARRAY_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryArray.main \
+	  CherryArray.fst -o $(ARRAY_ABS)/CherryArray.c > /dev/null
+	$(call msg, "CC-ASAN", CherryArray)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(ARRAY_ABS) -I$(CHERRY_INC) \
+	  -x c $(ARRAY_ABS)/CherryArray.c $(CHERRY_INC)/cherry.c \
+	  -o $(ARRAY_ABS)/CherryArray.chexe
+	$(call msg, "RUN-ASAN", CherryArray)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(ARRAY_ABS)/CherryArray.chexe
+	$(Q)touch $@
+
+all: $(ARRAY_DIR)/CherryArray.chran
+
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this
 # skip rather than fail.  The probe is for the *major version* and not for the
