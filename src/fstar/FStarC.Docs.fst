@@ -91,8 +91,14 @@ let doc_of_attrs (attrs : list S.attribute) : ML doc_status =
   | Some args ->
     Doc_unsupported (Format.fmt1 "doc applied to %s arguments" (show (List.length args)))
 
+(* Declarations produced by a splice are generated, not written, and are
+   not exported -- except those of a language extension (e.g. a Pulse
+   `fn`), which are the declaration the user wrote. *)
+let is_generated_by_splice (se : S.sigelt) : bool =
+  se.sigmeta.sigmeta_spliced && not se.sigmeta.sigmeta_extension_decl
+
 let doc_of_sigelt (se : S.sigelt) : ML doc_status =
-  if se.sigmeta.sigmeta_spliced
+  if is_generated_by_splice se
   || (se.sigquals |> List.existsb (function
       | Discriminator _
       | Projector _
@@ -127,7 +133,7 @@ type decl_info = {
 
 (* The exported view of a top-level declaration, when it is one we
    export. Returns None for everything else: pragmas, effect
-   declarations, splices, bundles (which are recursed into by the
+   declarations, bundles (which are recursed into by the
    caller), and mutually recursive lets, whose single attribute list
    cannot be attributed to one of the names. *)
 let decl_info_of (se : S.sigelt) : ML (option decl_info) =
@@ -358,7 +364,7 @@ let definition_of (se : S.sigelt) : ML (option S.term) =
    [doc_of_sigelt]. Documenting constructors, projectors and fields is
    out of scope. *)
 let is_exported (se : S.sigelt) : ML bool =
-  if se.sigmeta.sigmeta_spliced then false
+  if is_generated_by_splice se then false
   else
     se.sigquals |> for_all (fun q ->
       match q with

@@ -321,6 +321,9 @@ Guidelines for the changelog:
     that turns that JSON, and nothing else, into a static HTML page. See
     `tests/docs` for the end-to-end fixture.
 
+    Declarations of a language extension, such as a Pulse `fn`, are exported
+    like a `let`, with their documentation and source.
+
     Known limitations: documentation is read only off top-level `val`, `let`,
     `type` and `assume` declarations. Data constructors are listed, but
     without documentation of their own. Projectors,
