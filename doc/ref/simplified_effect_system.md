@@ -387,10 +387,11 @@ If you are writing code that constructs a `comp`, use `PC.primitive_*_lid`.
 
 ## 6. The typechecker
 
-The simplified effect system also makes it possible to run
-`FStarC.TypeChecker.Core`, rather than TcTerm, as phase 2 of checking a
-top-level `let`. This is the default (`--ext phase2_core=off` disables it),
-and is described in [phase2_core.md](phase2_core.md).
+The simplified effect system also makes it possible for
+`FStarC.TypeChecker.Core` to be the only generator of verification
+conditions: TcTerm elaborates every declaration once, without proving
+anything, and Core checks the elaboration. This is described in
+[core_typechecking.md](core_typechecking.md).
 
 ### 6.1 Getting a variable out of a type
 
@@ -599,11 +600,9 @@ refactor.
   Core now falls back to the definition's inferred type when the annotation is
   absent, which is sound: an unannotated `let`'s type *is* its definition's
   type, and the subtyping check it would otherwise perform is reflexive. The
-  hole is intentional and confined to `lb.lbtyp`: `TcTerm.check_inner_let` keeps
-  `lbtyp = tun` when the source had no annotation, because phase 1 discards
-  specifications and phase 2 reads `lbtyp` back as if it were a source
-  annotation — recording phase 1's coarser type would throw away the
-  postcondition. Reached in practice only through Pulse.
+  hole is confined to `lb.lbtyp`. `TcTerm.check_inner_let` now records the
+  inferred type of every unannotated `let`, so this is reached in practice
+  only through Pulse.
 * **A `let rec` whose result is a function kept its `ensures`.** An `ensures` is
   a refinement on the result type, so a definition returning a function is
   annotated with a *refinement of an arrow*. `Syntax.Util.arrow_formals_comp`
@@ -1458,8 +1457,8 @@ master this branch merged, so the whole delta belonged to this work.
 #### Diagnosis
 
 `--profile TestBV --profile_component '*' --profile_group_by_decl` attributed
-all of it to two declarations, and within each to phase 1 rather than to the
-solver:
+all of it to two declarations, and within each to elaboration rather than to
+the solver:
 
 ```
 TestBV.test6  Tc.tc_sig_let-tc-phase1                6243 ms

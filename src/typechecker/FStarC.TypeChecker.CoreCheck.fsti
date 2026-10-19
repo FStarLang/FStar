@@ -20,7 +20,7 @@
    runs tactics, etc., but proves nothing. Core then checks the elaborated
    term and computes its verification condition: Core is the only source of
    verification conditions, and TcTerm is run once. See
-   doc/ref/phase2_core.md. The functions here are the common part of that for
+   doc/ref/core_typechecking.md. The functions here are the common part of that for
    the declarations other than [let] (whose driver is [Tc.tc_sig_let]): they
    check a fully elaborated term (no unification variables) with Core,
    discharge Core's guard, and report Core's errors. *)

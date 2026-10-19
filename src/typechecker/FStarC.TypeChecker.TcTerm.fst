@@ -309,7 +309,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
                   its precondition becomes a proof obligation here.  Otherwise
                   the pre- and postconditions of everything the body calls are
                   accumulated into the inferred signature, which quickly grows
-                  unreadable (and does not match what phase 1 inferred). *)
+                  unreadable. *)
                let ct, _, g = TcUtil.check_trivial_precondition_wp env c in
                None,
                S.mk_Comp ct,
@@ -345,12 +345,6 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
                          (guard_to_string env g);
        let e = TcUtil.maybe_lift env e (U.comp_effect_name c) (U.comp_effect_name expected_c) (U.comp_result c) in
        e, expected_c, g ++ g_c
-
-let no_logical_guard env (x : _ & _ & _) : ML _ =
-  let (te, kt, f) = x in
-  match guard_form f with
-    | Trivial -> te, kt, f
-    | NonTrivial f -> Err.unexpected_non_trivial_precondition_on_term env f
 
 let print_expected_ty_str env : ML _ =
   match Env.expected_typ env with
@@ -891,7 +885,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
   | Tm_meta {tm=e; meta=Meta_desugared Meta_smt_pat} ->
     let e, c, g = tc_tot_or_gtot_term env e in
     let g = {g with guard_f=Trivial} in //VC's in SMT patterns are irrelevant
-    mk (Tm_meta {tm=e; meta=Meta_desugared Meta_smt_pat}) top.pos, c, g  //AR: keeping the pats as meta for the second phase. smtencoding does an unmeta.
+    mk (Tm_meta {tm=e; meta=Meta_desugared Meta_smt_pat}) top.pos, c, g  //AR: keeping the pats as meta in the elaborated term. smtencoding does an unmeta.
 
   | Tm_meta {tm=e; meta=Meta_pattern(names, pats)} ->
     let e, c, g = tc_check_tot_or_gtot_term env e t_prop None in
@@ -1057,7 +1051,7 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
       e, expected_c, g_c' ++ g'' in
     let e = mk (Tm_ascribed {tm=e;
                              asc=(Inr expected_c, None, use_eq);
-                             eff_opt=Some (U.comp_effect_name expected_c)}) top.pos in  //AR: this used to be Inr t_res, which meant it lost annotation for the second phase
+                             eff_opt=Some (U.comp_effect_name expected_c)}) top.pos in  //AR: this used to be Inr t_res, which meant the elaborated term lost the annotation
     let lc = expected_c in
     let f = g ++ g'++ g'' in
     let e, c, f2 = comp_check_expected_typ env e lc in
@@ -1768,12 +1762,12 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
         let e = TcUtil.maybe_monadic env e (U.comp_effect_name cres) (U.comp_result cres) in
         //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
         //AR: revisit, for now doing only if return annotation is not provided
-        (* Not in phase 1: phase 1 discards specifications, so the result type it
-           computes here is strictly coarser than phase 2's, and phase 2 re-checks
-           this very term -- where the ascription is *explicit* and therefore
-           authoritative.  Recording it would make phase 2 coarsen a match's type
-           down to whatever phase 1 could see.  Phase 2 adds the ascription
-           itself, so nothing downstream loses it. *)
+        (* Not in general: elaboration runs with [admit] set, so the result type
+           computed here lacks the per-branch refinements (see
+           [TcUtil.combine_branch_res_typs]) and may be coarser than the match's
+           actual type.  An ascription is *explicit* and therefore authoritative:
+           Core, which checks this very term, would coarsen the match's type down
+           to it.  Without one, Core computes the match's type itself. *)
         match ret_opt with
         (* An empty match constrains nothing, so [(U.comp_result cres)] is an unsolved
            metavariable.  Ascribe it: generalization turns it into a
@@ -1794,8 +1788,8 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
         let e_match = mk_match (S.bv_to_name guard_x) in
         (* Annotated as [check_inner_let] annotates a [let]: with [e1] lifted
            to the effect of the whole [let], which is that of the binding.
-           Re-checking this [let] (phase 2) produces the same annotations; not
-           re-checking it (phase 2 with Core, lax extraction) must not leave
+           This [let] is not re-elaborated (Core checks it as is, and it is what
+           is extracted), so it must not leave
            [e1] looking like a computation in [cres]'s effect, e.g. a [Dv]
            scrutinee in [Tac] code, which reification would then apply to
            the proof state. *)
@@ -2579,7 +2573,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
               | None ->
                 if use_eq
                 then Rel.teq env t expected_t |> label_guard
-                else match Rel.get_subtyping_prop env expected_t t with
+                else match Rel.try_subtype env expected_t t with
                 | None ->
                   // GM: Make sense of this, is basic_type_error fatal or not?
                   Err.raise_basic_type_error env (Env.get_range env) None expected_t t
@@ -3065,9 +3059,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             | Some (x, _, t, e1) ->
               (* [e1] has been lifted to [comp]'s effect, and so has [e]: the
                  [let] is a computation in [comp]'s effect, and is annotated
-                 as [check_inner_let] would annotate it. Re-checking it
-                 (phase 2) produces the same annotations; not re-checking it
-                 (phase 2 with Core) must not leave it annotated with the
+                 as [check_inner_let] would annotate it. It is not
+                 re-elaborated (Core checks it as is), so it must not be
+                 left annotated with the
                  effect of the argument, e.g. a [Dv] argument in [Tac] code,
                  which reification cannot handle. *)
               let m = U.comp_effect_name comp in
@@ -3545,13 +3539,14 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
                   //
                   // AR: 09/29:
                   //
-                  // Before we carried on dot patterns solutions from phase1 to phase2,
+                  // Before we kept the dot pattern solutions of an earlier
+                  //   elaboration when re-checking an elaborated term,
                   //   the arguments args here could just be names (from Pat_var)
                   //   or uvars (from Pat_dot_term)
                   //
                   // But now they can be arbitrary terms for Pat_dot_term,
-                  //   since in phase1, Pat_dot_term could be solved with
-                  //   arbitrary term
+                  //   since the earlier elaboration could have solved a
+                  //   Pat_dot_term with an arbitrary term
                   //
                   // If not a name or uvar, we typecheck the term,
                   //   and add it to args_out
@@ -3754,7 +3749,8 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
               //
               // A note about simple_bvs:
               //
-              // Before we started to reuse Pat_dot_term solutions from phase1 to phase2,
+              // Before we started to reuse the Pat_dot_term solutions of an earlier
+              //   elaboration when re-checking an elaborated term,
               //   the simple_bvs returned by typechecking of simple pat would be
               //   same as the simple_bvs_pat that we got from pat_as_exp,
               //   since Pat_dot_term were always elaborated to uvars, so the only names were
@@ -3777,7 +3773,7 @@ and tc_pat env (pat_t:typ) (p0:pat) : ML (
               //
               // Now solve guard
               // guard may have logical payload coming from typechecking of the
-              //   Pat_dot_term solutions computed in phase 1
+              //   Pat_dot_term solutions computed by an earlier elaboration
               // Here we only want to solve the implicits,
               //   folding in the logical payload in the rest of the VC
               //
@@ -4822,7 +4818,7 @@ and build_let_rec_env _top_level env lbs : ML (list letbinding & env_t & guard_t
         in
         // AR: This code (below) also used to have && Env.should_verify env
         // i.e. when lax checking it was adding lbname in the second branch
-        // this was a problem for 2-phase, if an implicit type was the type of a let rec (see bug056)
+        // this was a problem when re-checking an elaborated term, if an implicit type was the type of a let rec (see bug056)
         // Removed that check. Rest of the code relies on env.letrecs = []
         let lb, env =
             match termination_check_enabled lb.lbattrs lb.lbname lbdef lbtyp with
@@ -4958,7 +4954,7 @@ and check_lbtyp top_level env lb : ML (option typ  (* checked version of lb.lbty
     let t = SS.compress lb.lbtyp in
     match t.n with
         | Tm_unknown ->
-          //if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";  //AR: do we need this check? this situation arises in phase 2
+          //if lb.lbunivs <> [] then failwith "Impossible: non-empty universe variables but the type is unknown";  //AR: do we need this check? this situation arises when re-checking an elaborated term
           let univ_opening, univ_vars = univ_var_opening lb.lbunivs in
           None, mzero, univ_vars, univ_opening, Env.push_univ_vars env univ_vars
 
@@ -5135,13 +5131,7 @@ let level_of_type env e t : ML _ =
                 *     But for that this function needs to return a guard, and
                 *       the guard needs to be accounted for in the callers
                 *)
-               let g = FStarC.TypeChecker.Rel.teq env t t_u in
-               begin match g.guard_f with
-                     | NonTrivial f ->
-                       level_of_type_fail env e (show t)
-                     | _ ->
-                       Rel.force_trivial_guard env g
-               end;
+               Rel.force_trivial_guard env (Rel.teq env t t_u);
                u
     in aux true t
 

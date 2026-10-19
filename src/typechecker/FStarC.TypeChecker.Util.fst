@@ -1502,10 +1502,11 @@ let combine_branch_res_typs env (guard_x:bv) (res_t:typ) (lcases:list (formula &
   match lcases with
   | [] -> res_t
   (* The branch conditions are only built when verifying (see
-     [build_and_check_branch_guard]); in a lax phase they are all [true], and a
-     refinement built from them would be nonsense.  Worse, it would not stay
-     local: phase 1's type is recorded as the annotation of the enclosing
-     let-binding and becomes phase 2's *expected* type for the branches. *)
+     [build_and_check_branch_guard]); when elaborating (with [admit] set) they
+     are all [true], and a refinement built from them would be nonsense.
+     Worse, it would not stay local: the elaborated type is recorded as the
+     annotation of the enclosing let-binding, and Core checks the branches
+     against it. *)
   | _ when not (Env.should_verify env) -> res_t
   | _ ->
     let unref t = U.unrefine (N.normalize_refinement N.whnf_steps env t) in
@@ -2042,11 +2043,10 @@ let maybe_coerce_lc env (e:term) (lc:comp) (exp_t:term) : ML (term & comp & guar
       | No, Yes ty ->
           begin
           let u = env.universe_of env ty in
-          match Rel.get_subtyping_predicate env (U.comp_result lc) ty with
+          match Rel.try_subtype env (U.comp_result lc) ty with
           | None ->
             e, lc, Env.trivial_guard
           | Some g ->
-            let g = Env.apply_guard g e in
             let e_hide, lc, g_c = coerce_with env e lc C.hide [u] [S.iarg ty] (S.mk_Total exp_t) in
             //
             // AR: an optimization to see if input e is a reveal e',
@@ -2218,12 +2218,14 @@ let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool)
          else None) with
   | Some (e, lc, g) -> e, lc, Env.conj_guard g_lc g
   | None ->
+  (* Rel computes no logical guard: whether the result type is a subtype of
+     [t] is for Core to prove, so [g] carries no logical payload. *)
   let gopt = if use_eq
-             then Rel.try_teq true env (U.comp_result lc) t, false
-             else Rel.get_subtyping_predicate env (U.comp_result lc) t, true
+             then Rel.try_teq true env (U.comp_result lc) t
+             else Rel.try_subtype env (U.comp_result lc) t
   in
   match gopt with
-  | None, _ ->
+  | None ->
     (match (if U.is_pure_or_ghost_comp lc
             then try_eta_expand_to_expected_typ env false e (U.comp_result lc) t use_eq
             else None) with
@@ -2239,86 +2241,16 @@ let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool)
         e, U.set_result_typ lc t, g_lc //and keep going to type-check the result of the program
     ))
   
-  | Some g, apply_guard ->
-    let keep () : ML bool = keep_effectful_res_typ env lc t in
-    match guard_form g with
-    (* [t] is a bare unification variable and the "subtyping predicate" is
-        only the placeholder guard of a problem [Rel] deferred -- its body is
-        still an unsolved uvar, and becomes [True] once the problem is solved.
-        There is nothing to weaken *to* here, so coarsening would discard the
-        result type in exchange for nothing; keep it, and discharge the
-        placeholder at [e]. *)
-    | NonTrivial f when is_bare_flex t
-                      && (let _, body, _ = U.abs_formals_ln f in is_bare_flex body)
-                      && keep () ->
-      let f = if apply_guard then mk_Tm_app f [S.as_arg e] f.pos else f in
-      e, lc, Env.conj_guard g_lc { g with guard_f = TcComm.check_trivial f }
-
-    | Trivial ->
-      if keep ()
-      then begin
-        if Debug.extreme ()
-        then Format.print2 "weaken_result_type: keeping the more precise res_typ %s rather than %s\n"
-                        (show (U.comp_result lc)) (show t);
-        e, lc, Env.conj_guard g_lc g
-      end
-      else
-        e, U.set_result_typ lc t, Env.conj_guard g_lc g
-
-    | NonTrivial f ->
-      let g = {g with guard_f=Trivial} in
-      let strengthen () : ML (comp & guard_t) =
-          begin
-              //try to normalize one more time, since more unification variables may be resolved now
-              let f = N.normalize [Env.Beta; Env.Eager_unfolding; Env.Simplify; Env.Primops] env f in
-              match (SS.compress f).n with
-                  | Tm_abs _ when
-                      (match U.abs_formals_ln f with
-                        | _, {n=Tm_fvar fv}, _ -> S.fv_eq_lid fv C.true_lid
-                        | _ -> false) ->
-                    //it's trivial
-                    U.set_result_typ lc t, Env.trivial_guard
-
-                  | _ ->
-                      let c, g_c = lc, Env.trivial_guard in
-                      if Debug.extreme ()
-                      then Format.print4 "Weakened from %s to %s\nStrengthening %s with guard %s\n"
-                              (N.term_to_string env (U.comp_result lc))
-                              (N.term_to_string env t)
-                              (N.comp_to_string env c)
-                              (N.term_to_string env f);
-
-                      let x = S.new_bv (Some t.pos) t in
-                      let xexp = S.bv_to_name x in
-                      //AR: M.return
-                      let eq_ret, gret = return_value env
-                        (c |> U.comp_effect_name)
-                        t xexp in
-                      let guard = if apply_guard
-                                  then mk_Tm_app f [S.as_arg xexp] f.pos
-                                  else f
-                      in
-                      let g_eq =
-                          simplify_and_label_guard
-                            (Some <| Err.subtyping_failed env (U.comp_result lc) t)
-                            (Env.set_range (Env.push_bvs env [x]) e.pos)
-                            (guard_of_guard_formula <| NonTrivial guard)
-                      in
-                      (* [g_eq] is the subtyping obligation and mentions [x];
-                          hand it to [bind] alongside the continuation's comp,
-                          so that [bind] closes it over [x] and weakens it
-                          with [x == e]. *)
-                      let x = {x with sort=(U.comp_result lc)} in
-                      //AR: M_M bind
-                      let c, g_lc = bind e.pos false env (Some e) (c, Env.trivial_guard) (Some x, eq_ret, g_eq) in
-                      if Debug.extreme ()
-                      then Format.print1 "Strengthened to %s\n" (Normalize.comp_to_string env c);
-                      c, Env.conj_guards [g_c; gret; g_lc]
-            end
-      in
-      let c, g_strengthen = strengthen () in
-      let g = {g with guard_f=Trivial} in
-      (e, U.set_result_typ c t, Env.conj_guards [g_lc; g_strengthen; g])
+  | Some g ->
+    if keep_effectful_res_typ env lc t
+    then begin
+      if Debug.extreme ()
+      then Format.print2 "weaken_result_type: keeping the more precise res_typ %s rather than %s\n"
+                      (show (U.comp_result lc)) (show t);
+      e, lc, Env.conj_guard g_lc g
+    end
+    else
+      e, U.set_result_typ lc t, Env.conj_guard g_lc g
 
 (* A computation carries no specification any more: its precondition is an
    implicit binder on the arrow it came from, and its postcondition is part of
@@ -2512,9 +2444,7 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : ML guard_t =
        | true -> Env.trivial_guard |> Some
     else if use_eq
     then Rel.try_teq true env t1 t2
-    else match Rel.get_subtyping_predicate env t1 t2 with
-             | None -> None
-             | Some f -> apply_guard f e |> Some in
+    else Rel.try_subtype env t1 t2 in
 
   match g_opt with
   | None -> Err.expected_expression_of_type env (Env.get_range env) t2 e t1

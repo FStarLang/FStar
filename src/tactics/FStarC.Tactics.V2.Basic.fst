@@ -455,10 +455,28 @@ let __do_unify_wflags
       catch (//restore UF graph in case anything fails
         let! gopt = trytac cur_goal in
         try
+          let tx = UF.new_transaction () in
           let res =
             if allow_guards
             then Rel.try_teq true env t1 t2
             else Rel.teq_nosmt env t1 t2
+          in
+          (* Rel computes no logical guard: when it is allowed to leave a
+             proof obligation, it only solves the unification variables, and
+             Core computes the obligation for the terms so instantiated. *)
+          let res =
+            match res with
+            | Some g when allow_guards && not env.admit ->
+              (match Core.check_term_equality true true env t1 t2 with
+               | Inl None -> UF.commit tx; Some g
+               | Inl (Some (f, _)) -> UF.commit tx; Some {g with guard_f = NonTrivial f}
+               | Inr err ->
+                 if dbg then
+                   Format.print1 "%%%%%%%%do_unify: Core rejected the unifier's solution: %s\n"
+                     (Core.print_error err);
+                 UF.rollback tx;
+                 None)
+            | _ -> UF.commit tx; res
           in
           if dbg then
             Format.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"

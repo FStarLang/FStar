@@ -764,7 +764,7 @@ let no_guard (g:result 'a)
       | Success ((x, Some g), cache) -> fail_str (Format.fmt1 "Unexpected guard: %s" (show g)) ctx cache
       | err -> err
 
-let equatable g t = t |> U.leftmost_head |> Rel.may_relate_with_logical_guard g.tcenv true
+let equatable g t = t |> U.leftmost_head |> Rel.may_relate_by_smt g.tcenv true
 
 (* Whether an argument of an application, or of an application in an argument
    and so on, binds a variable, e.g. [p ** (exists* x. q x)], or [reveal #(a ->
@@ -1561,7 +1561,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
     let emit_guard t0 t1 =
        match rel with
        | SUBTYPING wit ->
-         (* As [Rel.guard_of_prob]: [t0] and [t1] are types, and it suffices
+         (* [t0] and [t1] are types, and it suffices
             that the term at hand (or any term of type [t0]) has type [t1]. *)
          let! u0 = universe_of_well_typed_term g t0 in
          let! u1 = universe_of_well_typed_term g t1 in
@@ -1950,8 +1950,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                  witness_guard g0 tm f1
 
             | SUBTYPING None ->
-                 (* Over a fresh (unnamed) variable, as TcTerm's
-                    [Rel.get_subtyping_prop]. *)
+                 (* Over a fresh (unnamed) variable. *)
                  let x = S.new_bv (Some (S.range_of_bv b1.binder_bv)) b1.binder_bv.sort in
                  let f1 = Subst.subst [NT(b1.binder_bv, S.bv_to_name x)] f1 in
                  guard g0 (U.mk_forall u1 x f1)
@@ -2564,7 +2563,7 @@ and do_check (g:env) (e:term)
       when (match (fst (U.head_and_args_full t)).n with
             | Tm_constant (FStarC.Const.Const_reflect _) -> true
             | _ -> false) ->
-    (* [reflect e], as elaborated by phase 1: [e] is the representation of
+    (* [reflect e], as elaborated by TcTerm: [e] is the representation of
        a computation in [m] returning an [a]. *)
     let _, args = U.head_and_args_full t in
     (match args with
@@ -2584,7 +2583,7 @@ and do_check (g:env) (e:term)
     (match asc with
     | Inr _ -> fail_str "Unexpected computation type on a synthesized term"
     | Inl t ->
-    (* The result of a tactic, elaborated by phase 1 ([TcTerm.tc_synth]). As
+    (* The result of a tactic, as elaborated by [TcTerm.tc_synth]. As
        TcTerm, Core trusts the tactic engine to have checked that it has type
        [t]; e.g. the witness of [_ by canon ()] is [()], at a type [squash p]
        that [canon] proved by rewriting, not the SMT solver. *)
@@ -2611,7 +2610,7 @@ and do_check (g:env) (e:term)
        aux (snd qi.antiquotations) ;!
        return (ETot, S.t_term)
      | Quote_dynamic ->
-       (* Only elaborated, not checked, by phase 1 *)
+       (* The quoted term is only elaborated (laxly), not checked, by TcTerm *)
        return (EEff PC.effect_TAC_lid, S.t_term))
 
   | Tm_uvar (uv, s) ->
@@ -3071,7 +3070,7 @@ and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
     (* The body is checked with [x] at its annotation, as the user wrote it
        (it may well be the only form of it that exposes, say, an arrow),
        further refined by what the definition's own type says about it: the
-       annotation may be one that phase 1 inferred, which lacks the
+       annotation may be one that elaboration inferred, which lacks the
        refinements that carry the definition's postcondition (a lemma's, say).
        [lb.lbdef] has both types, so [x] may be assumed to have both. *)
     let x_sort =
@@ -3280,8 +3279,8 @@ and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option 
   = let! eff_sc, t_sc = check "scrutinee" g sc in
     let branches0 = branches in
     let! u_sc = universe_of_well_typed_term g t_sc in
-    (* With no expected type, the match's type is the residual type phase 1
-       recorded, which is typically unrefined. As in [TcUtil.bind_cases], it is
+    (* With no expected type, the match's type is the residual type the
+       elaborator recorded, which is typically unrefined. As in [TcUtil.bind_cases], it is
        refined with what each branch's own type says under the condition that
        the branch is taken (otherwise, e.g., [if b then fail "" else (); e]
        forgets [not b] when checking [e]). [res_x] names the match's result. *)
@@ -3578,7 +3577,7 @@ and check_against_comp (g:env) (e:term) (c:comp)
     in
     match reflected with
     | Some e' ->
-      (* [M?.reflect e <: C], as elaborated by phase 1 for a reflection with
+      (* [M?.reflect e <: C], as elaborated by TcTerm for a reflection with
          an expected computation type [C] in [M]: [e] is a representation of
          [C]. *)
       let! u = universe_of_well_typed_term g (U.comp_result c) in
@@ -4296,15 +4295,15 @@ let check_top_level_letrec' g (lbs:list letbinding)
         return (ETot, S.t_unit))
 
 (* The SMT encoding names a function literal after its body and its type,
-   including the residual type of its body (see Bug1595). Phase 1 gives a
+   including the residual type of its body (see Bug1595). TcTerm gives a
    literal checked against an expected arrow the residual type of that arrow,
    e.g. [_:bool{_ == true <==> o x y}] for [fun x y -> f x y] passed as a
    [x:_ -> y:_ -> Pure bool True (fun z -> z == true <==> o x y)], and its
    unifier copies the literal as is into implicit arguments, e.g. the [p] of
    [Classical.forall_intro], where the same literal elsewhere has residual
-   type [bool]: the two copies would be distinct terms to the SMT solver. (By
-   re-checking the implicit arguments, phase 2 of TcTerm recomputed their
-   residual types from their position.) In a guard, the residual types of
+   type [bool]: the two copies would be distinct terms to the SMT solver.
+   (Core checks the elaboration as is, so nothing recomputes their residual
+   types from their position.) In a guard, the residual types of
    function literals are only used for the typing axioms of their encodings,
    so they are weakened to their unrefined types: copies of a literal are
    then encoded alike. When the body, or the tail of its [let]s, is ascribed

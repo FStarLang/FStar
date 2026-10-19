@@ -813,7 +813,7 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
       )
       (* The elaboration of a closed definition must be closed: Core checks it
          as is. A free name in it is a bug in elaboration (see
-         doc/ref/phase2_core.md, "Ill-scoped elaborations"). *)
+         doc/ref/core_typechecking.md, "Ill-scoped elaborations"). *)
       else if Cons? (elems (FStarC.Syntax.Free.names e))
       then
         raise_error (Env.get_range env') Errors.Error_IllScopedTerm [

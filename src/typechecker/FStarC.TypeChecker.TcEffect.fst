@@ -58,7 +58,8 @@ open FStarC.Syntax.Print
 (* Open the universe variables of a combinator scheme, or, if it has not been
    generalized yet (the common case: the surface syntax just mentions a name),
    invent [n] fresh ones.  Note that [tc_eff_decl] may run twice on the same
-   declaration (two-phase checking), so we must be able to handle both. *)
+   declaration (once to elaborate it, with [admit] set, and again on the
+   elaboration, whose terms Core checks), so we must be able to handle both. *)
 let open_comb (r:Range.t) (n:int) (mname:lident) (name:string) (ts:S.tscheme) : ML (list univ_name & term) =
   let us, t = ts in
   if Nil? us

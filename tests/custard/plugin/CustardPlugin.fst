@@ -58,10 +58,10 @@ let pcount (#a:Type) (x:a) (n:int) : int = n + 7
 irreducible
 let pswap (#a:Type) (#b:Type) (x:a) (y:b) : b & a = (y, x)
 
-(* Tactic plugins whose bodies use [&&]/[||] with a Tac operand.  Phase 1
+(* Tactic plugins whose bodies use [&&]/[||] with a Tac operand.  TcTerm
    elaborates such a connective into an [if] (and, for an impure left operand,
-   a [let]); that elaboration must carry the same effect annotations phase 2
-   would have given it, since with --ext phase2_core it is the term that is
+   a [let]); that elaboration must carry the effect annotations of a checked
+   [if]/[let], since it is checked by Core, not re-elaborated, and is the term
    extracted.  Without them the ML code applied a pure [if] to the proof state
    and called [is_unit] without one, and the plugin did not compile -- which
    is how this first showed up, in Pulse.Checker.Return.check_core. *)

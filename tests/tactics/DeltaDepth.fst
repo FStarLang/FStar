@@ -33,8 +33,8 @@ let m = match v with | B _ -> 0 | A x -> x
 let _ = assert True by (let t = `m in
                         let t' = norm_term [delta;iota] t in
                         (* The reduction of the match leaves the ascription that
-                           TcTerm's phase 2 puts on a match, if any (there is none
-                           when phase 2 is Core's, under --ext phase2_core) *)
+                           elaboration puts on a match, if any (it ascribes only
+                           an empty match, so there is none here; accept both) *)
                         let r = (`(1 <: int)) in
                         if term_eq t' r || term_eq t' (`1)
                         then ()

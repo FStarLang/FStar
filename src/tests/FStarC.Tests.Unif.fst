@@ -48,11 +48,13 @@ let fail msg : ML unit =
     Format.print_string msg;
     success := false
 
+(* Rel computes no logical guards: it only solves unification variables, and
+   Core computes the proof obligation, if any, for the instantiated terms. So we
+   only compare whether the obligation is trivial. *)
 let guard_eq (i : int) g g' : ML unit =
     let b = match g, g' with
-        | Trivial, Trivial -> true
-        | NonTrivial f, NonTrivial f' ->
-          Rel.teq_nosmt_force (tcenv ()) f f'
+        | Trivial, Trivial
+        | NonTrivial _, NonTrivial _ -> true
         | _ -> false in
     if not b
     then fail <| Format.fmt3 "Test %s failed:\n\t\
@@ -67,7 +69,18 @@ let unify i bvs x y g' (check: unit -> ML unit) : ML unit =
     let tcenv = tcenv() in
     let tcenv = Env.push_bvs tcenv bvs in
     let g = Rel.teq tcenv x y |> Rel.solve_deferred_constraints tcenv |> Rel.simplify_guard tcenv in
-    guard_eq i g.guard_f g';
+    if not (Env.is_trivial_guard_formula g)
+    then fail (Format.fmt1 "Test %s failed: Rel computed a logical guard\n" (show i));
+    let g =
+      match FStarC.TypeChecker.Core.check_term_equality true true tcenv x y with
+      | Inl None -> Trivial
+      | Inl (Some (f, _)) -> NonTrivial f
+      | Inr err ->
+        fail (Format.fmt2 "Test %s failed: Core rejected the unifier's solution\n%s\n"
+                 (show i) (FStarC.TypeChecker.Core.print_error err));
+        Trivial
+    in
+    guard_eq i g g';
     check();
     Options.init()    //reset them; exceptions are fatal, so don't worry about resetting them in case guard_eq fails
 

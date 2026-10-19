@@ -1,7 +1,7 @@
 module Phase2CoreJoinBases
 
 (* The type of [en] must not be inferred by joining the branch types [group] and [elem ...],
-   which have different bases: that equates them with a (false) SMT guard that phase 1 drops. *)
+   which have different bases: that equates them, which is false, and the unifier leaves that to Core. *)
 type nk = | NType | NGroup
 type group = | GA | GElem : bool -> typ -> typ -> group | GConcat : group -> group -> group
 and typ = | TA | TElem : int -> typ

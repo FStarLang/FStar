@@ -237,7 +237,7 @@ let f (a:Type) (x:a) : option a = Some x
    [(t -> bool) == (Some?.v (f ...) -> bool)] from [f ... == Some t], by
    transporting along [t == Some?.v (f ...)], which the SMT encoding of arrows
    (one constant each, with no congruence) does not allow. Core, which checks
-   constructor types with --ext phase2_core, proves it. *)
+   constructor types, proves it. *)
 [@@expect_failure [3]]
 noeq
 type neg_match =

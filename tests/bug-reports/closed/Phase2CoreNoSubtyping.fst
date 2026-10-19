@@ -1,7 +1,7 @@
 module Phase2CoreNoSubtyping
 
 (* A [no_subtyping] lemma's type is checked with Core, with every subtyping
-   check turned into an equality check (see doc/ref/phase2_core.md). TcTerm's
+   check turned into an equality check (see doc/ref/core_typechecking.md). TcTerm's
    [use_eq_strict] rejected even these, e.g. because [int : eqtype] where
    [Type] is expected. *)
 [@@ FStar.Attributes.no_subtyping]

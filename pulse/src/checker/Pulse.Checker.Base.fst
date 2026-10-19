@@ -608,7 +608,7 @@ let is_stateful_application (g:env) (e:term)
   let head, args = T.collect_app_ln e in
   match args with
   | _ :: _ -> (
-    match RU.tc_term_phase1 (elab_env g) head false with
+    match RU.tc_term_elab (elab_env g) head false with
     | None, _ -> None
     | Some (_, ht, _), _ -> 
       let head_t = wr ht (T.range_of_term ht) in
@@ -859,7 +859,7 @@ let hoist_st_lambda
 : T.Tac (option st_term)
 = match tt with
   | Inr { term = Tm_ST { t = e; args = arg::args }; range } -> (
-    let _, e_ty, _ = CP.tc_term_phase1 g e in
+    let _, e_ty, _ = CP.tc_term_elab g e in
     match R.inspect_ln e_ty with
     | R.Tv_Arrow bv _ ->
       let bv = R.inspect_binder bv in

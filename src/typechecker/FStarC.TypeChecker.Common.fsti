@@ -41,14 +41,16 @@ type rank_t =
     | Rigid_flex
     | Flex_flex
 
-type problem 'a = {                  //Try to prove: lhs rel rhs ~ guard
+(* A unification problem: lhs rel rhs.  Rel computes no logical guard for a
+   problem: it is only an elaborator, and Core, which re-checks everything Rel
+   elaborates, computes the verification conditions. *)
+type problem 'a = {
     pid:int;
     lhs:'a;
     relation:rel;
     rhs:'a;
-    element:option bv;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
-    logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
-    logical_guard_uvar:ctx_uvar;
+    ctx_gamma:gamma;                 //the context in which the problem is posed
+    ctx_binders:binders;             //the variables of ctx_gamma, as binders, outermost first
     reason: list string;             //why we generated this problem, for error reporting
     loc: range;                 //and the source location where this arose
     rank: option rank_t;

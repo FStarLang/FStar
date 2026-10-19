@@ -55,15 +55,17 @@ let unfold_whnf = N.unfold_whnf' [Env.AllowUnboundUniverses]
 (* An inductive is checked twice (see [Tc.tc_decl]): first, with [admit] set,
    TcTerm elaborates its binders, kinds and constructor types; then Core
    checks that elaboration (see [CoreCheck]), and it is recorded as it is.
-   These are the two versions of the checks used below. *)
-let tc_binders_p2 (env:env_t) (bs:binders) : ML (binders & env_t & guard_t & universes) =
+   The checks below elaborate with TcTerm on the first run, and check with
+   Core on the second ([CoreCheck.check_or_elaborate]). In lax mode there is
+   only the first. *)
+let check_or_elab_binders (env:env_t) (bs:binders) : ML (binders & env_t & guard_t & universes) =
   CoreCheck.check_or_elaborate env
     (fun () ->
       let env, us = CoreCheck.check_binders env "the binders of this inductive type" bs in
       bs, env, Env.trivial_guard, us)
     (fun () -> TcTerm.tc_binders env bs)
 
-let tc_tparams_p2 (env:env_t) (bs:binders) : ML (binders & env_t & universes) =
+let check_or_elab_tparams (env:env_t) (bs:binders) : ML (binders & env_t & universes) =
   CoreCheck.check_or_elaborate env
     (fun () ->
       let env', us = CoreCheck.check_binders env "the arguments of this constructor" bs in
@@ -74,7 +76,7 @@ let tc_tparams_p2 (env:env_t) (bs:binders) : ML (binders & env_t & universes) =
     (fun () -> TcTerm.tc_tparams env bs)
 
 (* A type, with the type of the type. *)
-let tc_type_p2 (env:env_t) (what:string) (t:term) : ML (term & comp & guard_t) =
+let check_or_elab_type (env:env_t) (what:string) (t:term) : ML (term & comp & guard_t) =
   CoreCheck.check_or_elaborate env
     (fun () ->
       let eff, k = CoreCheck.compute_term_type env what t in
@@ -97,7 +99,7 @@ let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
     in
     let tps, k = SS.open_term tps k in
     let _, k = U.arrow_formals k in //don't care about indices here
-    let tps, env_tps, _, us = tc_binders_p2 tcenv tps in
+    let tps, env_tps, _, us = check_or_elab_binders tcenv tps in
     let u_k =
       TcTerm.level_of_type
         env_tps
@@ -139,7 +141,7 @@ let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
                 env_tps t_tp
           in
           let formals, t = U.arrow_formals t_tp in
-          let _, _, _, u_formals = tc_binders_p2 env_tps formals in
+          let _, _, _, u_formals = check_or_elab_binders env_tps formals in
           let inj = BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals in                  
           if inj
           then (
@@ -175,12 +177,12 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
  = match s.sigel with
    | Sig_inductive_typ {lid=tc; us=uvs; params=tps; num_uniform_params=n_uniform;
                         t=k; mutuals; ds=data} -> //the only valid qual is Private
-         //assert (uvs = []); AR: not necessarily true in two phase
+         //assert (uvs = []); AR: not necessarily true when checking an elaborated inductive
          let env0 = env in
  (*open*)let usubst, uvs = SS.univ_var_opening uvs in
          let env, tps, k = Env.push_univ_vars env uvs, SS.subst_binders usubst tps, SS.subst (SS.shift_subst (List.length tps) usubst) k in
          let tps, k = SS.open_term tps k in
-         let tps, env_tps, guard_params, us = tc_binders_p2 env tps in
+         let tps, env_tps, guard_params, us = check_or_elab_binders env tps in
 
          (*
           * AR: typecheck k and get the indices and t out
@@ -188,7 +190,7 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
           *     note that t is opened with indices (by U.arrow_formals)
           *)
          let (indices, t), guard =
-           let k, _, g = tc_type_p2 env_tps "the type of this inductive type" k in
+           let k, _, g = check_or_elab_type env_tps "the type of this inductive type" k in
            let k = N.normalize [Exclude Iota; Exclude Zeta; Eager_unfolding; NoFullNorm; Exclude Beta] env_tps k in
            U.arrow_formals k, Rel.discharge_guard env_tps (Env.conj_guard guard_params g)
          in
@@ -290,11 +292,11 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
                 (show arguments)
                 (show result);
 
-         let arguments, env', us = tc_tparams_p2 env arguments in
+         let arguments, env', us = check_or_elab_tparams env arguments in
          let type_u_tc = S.mk (Tm_type u_tc) result.pos in
          let result, res_comp =
            if CoreCheck.enabled env'
-           then let result, c, _ = tc_type_p2 env' "the result type of this constructor" result in
+           then let result, c, _ = check_or_elab_type env' "the result type of this constructor" result in
                 result, c
            else tc_trivial_guard (Env.set_expected_typ env' type_u_tc) result
          in
@@ -306,7 +308,7 @@ let tc_data (env:env_t) (tcs : list (sigelt & universe))
           *     the following code unifies them with the annotated universes
           *)
          let g_uvs = match (SS.compress head).n with
-            | Tm_uinst ( { n = Tm_fvar fv }, tuvs)  when S.fv_eq_lid fv tc_lid ->  //AR: in the second phase of 2-phases, this can be a Tm_uninst too
+            | Tm_uinst ( { n = Tm_fvar fv }, tuvs)  when S.fv_eq_lid fv tc_lid ->  //AR: when checking an elaborated inductive, this can be a Tm_uinst too
               if List.length _uvs = List.length tuvs then
                 List.fold_left2 (fun g u1 u2 ->
                   //unify the two
@@ -887,7 +889,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
   if datas |> BU.for_some (function { sigel = Sig_datacon _ } -> false | _ -> true)
   then raise_error env Errors.Fatal_NonInductiveInMutuallyDefinedType "Mutually defined type contains a non-inductive element";
 
-  //AR: adding this code for the second phase
+  //AR: adding this code for checking an elaborated inductive
   //    univs need not be empty
   //    we record whether the universes were already annotated
   //    and later use it to decide if we should generalize

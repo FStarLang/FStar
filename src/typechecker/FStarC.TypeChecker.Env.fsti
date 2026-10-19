@@ -670,11 +670,6 @@ val trivial_guard             : guard_t
 
 val abstract_guard_n          : list binder -> guard_t -> ML (guard_t)
 
-val abstract_guard            : binder -> guard_t -> ML (guard_t)
-
-
-val apply_guard               : guard_t -> term -> ML (guard_t)
-
 val map_guard                 : guard_t -> (term -> ML term) -> ML guard_t
 
 val always_map_guard          : guard_t -> (term -> ML term) -> ML guard_t

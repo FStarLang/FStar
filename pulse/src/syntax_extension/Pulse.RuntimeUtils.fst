@@ -270,12 +270,12 @@ let lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term
     | Some (Some x) -> Some (co x)
     | _ -> None)
 
-let phase1 (g:env) : TcEnv.env =
+let elaboration_env (g:env) : TcEnv.env =
   { (co g <: TcEnv.env) with TcEnv.admit = true }
 
 let new_implicit_var (reason:string) (r:range) (g:env) (e:typ) (unrefine:bool) : Dv term =
   ml_dv (fun () ->
-    let uvar, _, _ = FStarC.TypeChecker.Util.new_implicit_var reason (rr r) (phase1 g) (co e) unrefine in
+    let uvar, _, _ = FStarC.TypeChecker.Util.new_implicit_var reason (rr r) (elaboration_env g) (co e) unrefine in
     co uvar)
 
 let try_solve_single_valued_implicits (g:env) (ts:list term) : Dv unit =
@@ -290,9 +290,9 @@ let try_solve_single_valued_implicits (g:env) (ts:list term) : Dv unit =
                imp_range = t.pos }
       | _ -> None) ts
     in
-    ignore (Rel.try_solve_single_valued_implicits (phase1 g) false imps))
+    ignore (Rel.try_solve_single_valued_implicits (elaboration_env g) false imps))
 
-let tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool)
+let tc_term_elab (g:env) (t:T.term) (instantiate_imps:bool)
   : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues) =
   ml_dv (fun () ->
     let e : S.term = co t in
@@ -321,14 +321,14 @@ let teq_nosmt_force (g:env) (ty1 ty2:T.term) : Dv bool =
     | Some true -> true
     | _ -> false)
 
-let teq_nosmt_force_phase1 (g:env) (ty1 ty2:T.term) : Dv bool =
-  teq_nosmt_force (co (phase1 g)) ty1 ty2
+let teq_nosmt_force_elab (g:env) (ty1 ty2:T.term) : Dv bool =
+  teq_nosmt_force (co (elaboration_env g)) ty1 ty2
 
-let teq_nosmt_phase1 (g:env) (ty1 ty2:T.term) : Dv bool =
+let teq_nosmt_elab (g:env) (ty1 ty2:T.term) : Dv bool =
   ml_dv (fun () ->
     let ty1 : S.term = co ty1 in
     let _, res = E.catch_errors (fun _ ->
-      Rel.teq_nosmt (TcEnv.set_range (phase1 g) ty1.pos) ty1 (co ty2)) in
+      Rel.teq_nosmt (TcEnv.set_range (elaboration_env g) ty1.pos) ty1 (co ty2)) in
     match res with
     | Some (Some _) -> true
     | _ -> false)

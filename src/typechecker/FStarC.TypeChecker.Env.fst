@@ -1940,13 +1940,6 @@ let abstract_guard_n bs g : ML _ =
         let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
         ({ g with guard_f = NonTrivial f' })
 
-let abstract_guard b g : ML _ =
-    abstract_guard_n [b] g
-
-let apply_guard g e : ML guard_t = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| S.mk_Tm_app f [as_arg e] f.pos}
-
 let map_guard g map = match g.guard_f with
   | Trivial -> g
   | NonTrivial f -> {g with guard_f=NonTrivial (map f)}
