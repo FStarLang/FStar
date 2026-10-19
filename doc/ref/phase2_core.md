@@ -773,8 +773,15 @@ they cannot catch this class of problem. Use `compare` mode, or build real
   flip, because the VCs are shaped differently. In particular, the SMT
   encoding proves each conjunct of a guard assuming the quantifier-free
   conjuncts before it (`ErrorReporting.split_goals`), so the quantifiers
-  Core keeps or drops change the context of each goal (§4). The proofs
-  changed were:
+  Core keeps or drops change the context of each goal (§4). A proven
+  conjunct that is not quantifier-free contributes its quantifier-free
+  parts, e.g. the `length s1 = length s2` of `Seq.lemma_eq_intro`'s
+  precondition. A conjunct mentioning a definition whose body is
+  quantified, e.g. `bnd s c` for `let bnd s c : prop = forall i. ...`, is
+  not assumed: its encoding is an atom, but it hands the solver the
+  quantifier all the same, which made a local lemma in
+  [#4615](https://github.com/FStarLang/FStar/issues/4615) never return. The
+  proofs changed were:
   * `FStar.Math.Lemmas.modulo_sub_lemma` got a hint. In `lemma_mod_plus`
     and `lemma_div_plus`, a linear `calc` step (`== {}`) is now proved by a
     private lemma, in an empty context. With the facts about `/` and `%`
@@ -805,6 +812,15 @@ they cannot catch this class of problem. Use `compare` mode, or build real
   * `tests/custard/CborBoundary.item` got `--z3rlimit 10`: its
     machine-integer bounds are proved under a dozen branch conditions, and
     used 4.7 of the default rlimit of 5 under TcTerm and ~5.6 under Core.
+  * `Pulse.Lib.PriorityQueue`: `sift_up` restates `swap_length` before its
+    recursive call, and `sift_down` asserts the values of `left` and
+    `right` as soon as they are computed. Without them the module failed
+    with some z3 seeds once proven conjuncts contributed their
+    quantifier-free parts; with them it verifies with 4 of seeds 0-4,
+    where master's version verifies with 2.
+  * Four lemmas of `Pulse.Lib.HashTable.Spec` annotate a binder
+    (`idx:nat{idx < sz}`), which was otherwise inferred at `int` through
+    `i <> idx` once `op_disEquality` drops refinements by default (#4586).
 * **Tests changed.** Pulse checks its terms with Core in every mode, so the
   labels of §6 "Error reporting" show in the expected output of Pulse's
   failures (`pulse/test/Test.Recursion`, `nolib/Bug416`,

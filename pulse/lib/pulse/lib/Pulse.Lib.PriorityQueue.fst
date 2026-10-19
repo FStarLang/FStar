@@ -809,6 +809,7 @@ fn rec sift_up (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t)
       grandparent_up_after_swap s (SZ.v idx);
       // Swap preserves counts
       swap_preserves_counts s (SZ.v idx) (SZ.v parent);
+      swap_length s (SZ.v idx) (SZ.v parent);
       sift_up pq parent #(swap_seq s (SZ.v idx) (SZ.v parent)) #cap
     } else {
       // Current >= parent, so heap_up_at holds at idx
@@ -1110,6 +1111,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
 {
   // We know: fits(2*len + 2), so fits(2*idx + 1) since idx < len
   let left : SZ.t = SZ.add (SZ.mul 2sz idx) 1sz;
+  assert (pure (SZ.v left == left_idx (SZ.v idx)));
   
   if (SZ.gte left len) {
     // Leaf node - heap_down_at is trivially satisfied
@@ -1118,6 +1120,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
   } else {
     // Compute right directly from idx for SMT clarity
     let right : SZ.t = SZ.add (SZ.mul 2sz idx) 2sz;
+    assert (pure (SZ.v right == right_idx (SZ.v idx)));
     let current_val = RV.get pq idx;
     let left_val = RV.get pq left;
     

@@ -32,6 +32,7 @@ open FStarC.Syntax.Formula
 
 module BU    = FStarC.Util
 module Const = FStarC.Parser.Const
+module TcEnv = FStarC.TypeChecker.Env
 module S     = FStarC.Syntax.Syntax
 module SE    = FStarC.Syntax.Embeddings
 module SS    = FStarC.Syntax.Subst
@@ -134,6 +135,59 @@ let rec collect_conjuncts (q:S.term) : ML (list S.term) =
       collect_conjuncts p1 @ collect_conjuncts p2
     | _ -> [q]
 
+(* Like [collect_conjuncts], but also through labels and [squash]: used to
+   split a proven conjunct into hypotheses, where labels do not matter. *)
+let rec collect_hyp_conjuncts (q:S.term) : ML (list S.term) =
+  let q = U.unascribe q in
+  match destruct_label q with
+  | Some (phi, _, _) -> collect_hyp_conjuncts phi
+  | None ->
+  match destruct_transparent q with
+  | Some phi -> collect_hyp_conjuncts phi
+  | None ->
+    match destruct_typ_as_formula q with
+    | Some (BaseConn (lid, [(p1, _); (p2, _)])) when lid_equals lid Const.and_lid ->
+      collect_hyp_conjuncts p1 @ collect_hyp_conjuncts p2
+    | _ -> [q]
+
+(* Does [q] mention, under its propositional connectives, an application of a
+   definition whose body is a quantified formula, e.g. [p s] for
+   [let p s : prop = forall i. ...]?  Its encoding is a quantifier-free atom,
+   but assuming it gives the solver the quantifier all the same (#4615). We
+   look through one definition only. *)
+let hides_quantifier (tcenv:TcEnv.env) (q:S.term) : ML bool =
+  let rec has_quant (t:S.term) : ML bool =
+    match destruct_typ_as_formula (U.unascribe t) with
+    | Some (QAll _) | Some (QEx _) -> true
+    | Some (BaseConn (_, args)) -> List.existsb (fun (a, _) -> has_quant a) args
+    | None -> false
+  in
+  let defn_has_quant (t:S.term) : ML bool =
+    let hd, _ = U.head_and_args_full_unmeta t in
+    match (SS.compress (U.un_uinst hd)).n with
+    | S.Tm_fvar fv ->
+      (match TcEnv.lookup_definition [TcEnv.Unfold S.delta_constant] tcenv fv.fv_name with
+       | Some (_, def) ->
+         let _, body, _ = U.abs_formals def in
+         has_quant body
+       | None -> false)
+    | _ -> false
+  in
+  let rec aux (t:S.term) : ML bool =
+    let t = U.unascribe t in
+    match destruct_label t with
+    | Some (phi, _, _) -> aux phi
+    | None ->
+    match destruct_transparent t with
+    | Some phi -> aux phi
+    | None ->
+    match destruct_typ_as_formula t with
+    | Some (QAll _) | Some (QEx _) -> true
+    | Some (BaseConn (_, args)) -> List.existsb (fun (a, _) -> aux a) args
+    | None -> defn_has_quant t
+  in
+  aux q
+
 let split_goals_under use_env_msg  //when present, provides an alternate error message,
                              //usually "could not check implicit argument",
                              //        "could not prove post-condition"
@@ -229,10 +283,26 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
               let rest, decls', ok' = seq cs in
               let rest, decls'' =
                 if ok && not (GTrivial? rest)
-                then let e, decls'' = encode_formula c env in
-                     if quantifier_free e
-                     then gctx [hyp e] [CHyp c] rest, decls''
-                     else rest, decls''
+                then
+                  let parts = collect_hyp_conjuncts c in
+                  let hides = hides_quantifier env.tcenv in
+                  let e, decls'' = encode_formula c env in
+                  if quantifier_free e && not (List.existsb hides parts)
+                  then gctx [hyp e] [CHyp c] rest, decls''
+                  else
+                    (* Still assume the quantifier-free conjuncts of [c]:
+                       e.g. of a labelled precondition
+                       [length s1 = length s2 /\ (forall i. ...)]. *)
+                    let hs, cs, decls'' =
+                      List.fold_right
+                        (fun c (hs, cs, ds) ->
+                          let e, ds' = encode_formula c env in
+                          if quantifier_free e && not (hides c)
+                          then hyp e :: hs, CHyp c :: cs, ds'@ds
+                          else hs, cs, ds'@ds)
+                        parts ([], [], decls'')
+                    in
+                    (if Nil? hs then rest else gctx hs cs rest), decls''
                 else rest, []
               in
               gbranch [t; rest], decls@decls'@decls'', ok && ok'

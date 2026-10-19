@@ -1247,7 +1247,7 @@ expects, so pass the lemma directly.
 | Symptom | Remedy |
 |---|---|
 | A precondition failure is localized to a let-bound alias rather than to the call. | — (accepted) |
-| An implicit solved from a `Pure`/`Ghost` result picks up its refinement (`SZ.v n == cap` demands `fits cap`). | Ascribe: `(SZ.v n <: nat) == cap`, or give the implicit explicitly. `Prims.eq2` already carries `[@@@unrefine]`; promoting it from `--ext __unrefine` to the default is a proposed follow-up. |
+| An implicit solved from a `Pure`/`Ghost` result picks up its refinement (`SZ.v n == cap` demands `fits cap`). | Fixed for implicits marked `[@@@unrefine]` (`Prims.eq2`, `op_Equality`, `op_disEquality`): they now drop the refinement written on the result type, so `f () = y` is at `int`, and `SZ.v n == cap` at `nat` ([#4586](https://github.com/FStarLang/FStar/issues/4586)). Abbreviations such as `nat` are kept unless `--ext __unrefine` is given; `--ext __unrefine=off` disables both. For other implicits, ascribe: `(SZ.v n <: nat) == cap`, or give the implicit explicitly. |
 | `Ghost.hide (cbor_map_sub m s)` infers `Ghost.hide`'s implicit at the *refined* result, giving `erased (m:cbor_map{...})`. | `Ghost.hide #cbor_map (...)`. |
 | A point-free definition more general than its interface fails (arity gap). | Usually fixed by eta-expansion in subtyping; when the surplus binders are not implicit, or the comp is not pure/ghost, write it out: `(fun a b -> a + b)` for `( + )`. |
 | An implicit is pinned by a *later* argument before an earlier constraint is processed (`solve_flex_rigid_meet` fires with one bound in hand). | Instantiate the implicit explicitly at the call site. |

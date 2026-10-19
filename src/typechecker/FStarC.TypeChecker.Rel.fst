@@ -5163,7 +5163,23 @@ let solve_aux (probs :worklist) : ML solution =
           | Tm_uvar (ctx_u, _) -> (UF.find_decoration ctx_u.ctx_uvar_head).uvar_decoration_should_unrefine
           | _ -> false
         in
+        (* By default, an [@@@unrefine] implicit only drops the outermost
+           refinement written on the type itself, e.g. the [r:int{r > 0}] of
+           a Pure result, keeping abbreviations such as [nat] (#4586).
+           --ext __unrefine also unfolds definitions to find refinements,
+           --ext __unrefine=off disables both. *)
         let maybe_expand (tp:tprob) : ML tprob =
+          if Options.Ext.get "__unrefine" = "" && tp.relation = SUB && is_expand_uvar tp.rhs
+          then
+            match (SS.compress tp.lhs).n with
+            | Tm_refine {b} ->
+              let lhs' = b.sort in
+              if !dbg_Rel then
+                Format.print3 "GGG widening uvar %s! RHS %s ~> %s\n"
+                  (show tp.rhs) (show tp.lhs) (show lhs');
+              { tp with lhs = lhs' }
+            | _ -> tp
+          else
           if Options.Ext.enabled "__unrefine" && tp.relation = SUB && is_expand_uvar tp.rhs
           then
             let lhs = tp.lhs in

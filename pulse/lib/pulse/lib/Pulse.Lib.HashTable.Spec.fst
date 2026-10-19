@@ -174,7 +174,7 @@ let repr_t_sz kt vt sz = r:repr_t kt vt { r.sz == sz}
 let lemma_clean_upd_lookup_walk #kt #vt #sz
       (spec1 spec2 : spec_t kt vt) 
       (repr1 repr2 : repr_t_sz kt vt sz)
-      idx k v (k':_{k =!= k'})
+      (idx:nat{idx < sz}) k v (k':_{k =!= k'})
   : Lemma (requires
       repr_related repr1 repr2 
       /\ (forall i. i < repr1.sz /\ i <> idx ==> repr1 @@ i == repr2 @@ i)
@@ -208,7 +208,7 @@ let lemma_clean_upd_lookup_walk #kt #vt #sz
 let lemma_used_upd_lookup_walk #kt #vt #sz
       (spec1 spec2 : spec_t kt vt)
       (repr1 repr2 : repr_t_sz kt vt sz)
-      idx k (k':_{k =!= k'})
+      (idx:nat{idx < sz}) k (k':_{k =!= k'})
       (v v' : vt)
   : Lemma (requires
          repr_related repr1 repr2
@@ -246,7 +246,7 @@ let lemma_used_upd_lookup_walk #kt #vt #sz
 let lemma_del_lookup_walk #kt #vt #sz 
       (spec1 spec2 : spec_t kt vt)
       (repr1 repr2 : repr_t_sz kt vt sz)
-      upos k v (k':_{k =!= k'})
+      (upos:nat{upos < sz}) k v (k':_{k =!= k'})
   : Lemma (requires
       repr_related repr1 repr2 /\
       (forall i. i < sz /\ i <> upos ==> repr1 @@ i == repr2 @@ i) /\
@@ -280,7 +280,7 @@ let lemma_del_lookup_walk #kt #vt #sz
 let lemma_zombie_upd_lookup_walk #kt #vt #sz
       (spec spec' : spec_t kt vt)
       (repr repr' : repr_t_sz kt vt sz)
-      idx k v (k':_{k =!= k'})
+      (idx:nat{idx < sz}) k v (k':_{k =!= k'})
   : Lemma (requires
       repr_related repr repr'
       /\ (forall i. i < sz /\ i <> idx ==> repr @@ i == repr' @@ i)
