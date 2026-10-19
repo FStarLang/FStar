@@ -747,7 +747,8 @@ type flag =
       also monomorphizes [slice uint8] and would otherwise emit a second,
       conflicting [typedef] for it.
 
-      Set by [--custard_no_unfold]; see section 77 of doc/ref/custard.md. *)
+      Set by [--custard_no_unfold] or [@@custard_no_unfold]; see section 77
+      of doc/ref/custard.md. *)
   | Extern of option string & option string
   (** The type is defined outside F*: an abstract [val t : Type0] carrying
       [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration

@@ -2857,6 +2857,40 @@ GREP_NoUnfold += "type noUnfold_byte_pair = (FStar_UInt8.t) noUnfold_pair"
 GREP_NoUnfold += "let noUnfold_swap (p : noUnfold_byte_pair) : noUnfold_byte_pair"
 NOGREP_NoUnfold += "noUnfold_flag_pair"
 
+C_TESTS += CNoUnfold
+FLAGS_CNoUnfold = --custard_entry CNoUnfold.swap \
+                 --custard_entry CNoUnfold.swapf \
+                 --custard_entry CNoUnfold.increment \
+                 --custard_entry CNoUnfold.apply \
+                 --custard_entry CNoUnfold.swap_named \
+                 --custard_entry CNoUnfold.cli_identity \
+                 --custard_entry CNoUnfoldIface.identity \
+                 --custard_no_unfold CNoUnfold.cli_word
+CHGREP_CNoUnfold += "typedef uint32_t CNoUnfold_word;"
+CHGREP_CNoUnfold += "typedef CNoUnfold_word (*CNoUnfold_callback)(CNoUnfold_word);"
+CHGREP_CNoUnfold += "CNoUnfold_byte_pair CNoUnfold_swap(CNoUnfold_byte_pair p);"
+CHGREP_CNoUnfold += "CNoUnfold_word CNoUnfold_apply(CNoUnfold_callback f, CNoUnfold_word eta);"
+CHGREP_CNoUnfold += "typedef uint16_t CNoUnfold_cli_word;"
+CHGREP_CNoUnfold += "CNoUnfold_cli_word CNoUnfold_cli_identity(CNoUnfold_cli_word x);"
+CHGREP_CNoUnfold += "typedef uint32_t CNoUnfoldIface_word;"
+CHGREP_CNoUnfold += "CNoUnfoldIface_word CNoUnfoldIface_identity(CNoUnfoldIface_word x);"
+CHGREP_CNoUnfold += "typedef CNoUnfold_pair__uint32 CNoUnfold_named_pair__uint32;"
+CHGREP_CNoUnfold += "CNoUnfold_named_pair__uint32 CNoUnfold_swap_named(CNoUnfold_named_pair__uint32 p);"
+CNOGREP_CNoUnfold += "CNoUnfold_flag_pair" "CNoUnfold_unused_word"
+
+$(OUTPUT_DIR)/CNoUnfold.dc: $(CACHE_DIR)/CNoUnfoldIface.fst.checked
+
+REJECT_TESTS += NoUnfoldAttrValue NoUnfoldAttrBinder NoUnfoldAttrType
+FLAGS_NoUnfoldAttrValue = --codegen C --warn_error @371
+CODE_NoUnfoldAttrValue = 371
+EGREP_NoUnfoldAttrValue = "not a type abbreviation"
+FLAGS_NoUnfoldAttrBinder = --codegen C --warn_error @371
+CODE_NoUnfoldAttrBinder = 371
+EGREP_NoUnfoldAttrBinder = "on the parameter x"
+FLAGS_NoUnfoldAttrType = --codegen C --warn_error @371
+CODE_NoUnfoldAttrType = 371
+EGREP_NoUnfoldAttrType = "not a type abbreviation"
+
 CUSTARD_TESTS += ErasableEff
 # --custard_main alone would root only what [main] reaches, and what this test
 # is about is precisely the definitions that reach nothing because they were

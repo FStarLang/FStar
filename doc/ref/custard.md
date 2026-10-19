@@ -17326,6 +17326,19 @@ Not backend specific.  Naming a monomorphic instance is as meaningful on the
 OCaml path as on the karamel one, and an abbreviation that is emitted is
 always a legal thing for a target to see.
 
+The source-level equivalent is `[@@FStar.Attributes.custard_no_unfold]`:
+
+```fstar
+[@@FStar.Attributes.custard_no_unfold]
+type byte_pair = pair FStar.UInt8.t
+```
+
+The attribute and command-line option set the same `NoUnfold` flag. The
+attribute belongs on a type abbreviation; using it on a value, a non-alias
+type, or a binder reports warning 371. It preserves extraction-time naming,
+not verification-time opacity, and does not root an otherwise unreachable
+declaration or replace `custard_opaque`'s representation controls.
+
 ## Section 78. Unfolding a spine is not eta-expanding it
 
 ### 78.1 Intake

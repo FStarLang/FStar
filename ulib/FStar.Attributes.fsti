@@ -575,6 +575,12 @@ val custard_compile_time : unit
     erases it nor collapses it as a newtype (see doc/ref/custard.md, 5.2). *)
 val custard_opaque : unit
 
+(** Custard: preserve this type abbreviation and its uses during extraction,
+    rather than replacing it by its body. Equivalent to naming the type with
+    [--custard_no_unfold]. This does not make the type abstract, prevent
+    verification-time unfolding, or keep an unreachable declaration alive. *)
+val custard_no_unfold : unit
+
 (** Custard: store this constructor field's contents directly in the
     constructor rather than behind a pointer to it.  The field's type must be a
     record (or a one-constructor inductive); its fields take the place of this

@@ -962,6 +962,7 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_extern_attr,          "custard_extern";
   PC.custard_c_header_attr,        "custard_c_header";
   PC.custard_opaque_attr,          "custard_opaque";
+  PC.custard_no_unfold_attr,       "custard_no_unfold";
   PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
   PC.custard_compile_time_attr,    "custard_compile_time";
   PC.custard_float_attr,           "custard_float";
@@ -1133,6 +1134,9 @@ let attr_home (nm:string) : string =
      beside the [@@custard_extern] it configures."
   | "custard_opaque" ->
     "It fixes a *type's* representation elsewhere, so it goes on the type."
+  | "custard_no_unfold" ->
+    "It preserves a type abbreviation during extraction, so it goes on \
+     the abbreviation's declaration."
   | "custard_no_monomorphize" ->
     "It says that a type class is not a compile-time dictionary, so it goes \
      on the class."
@@ -1244,6 +1248,23 @@ let check_decl_attrs (l:Ident.lident) (se:sigelt) : ML unit =
           [@@custard_extern] asks for, and this declaration has no \
           [@@custard_extern].";
   attributed_binders se l |> List.iter (check_binder_attrs "the parameter" owner)
+
+let no_unfold_reported : HashTable.t string bool = HashTable.create 8
+
+let with_no_unfold_attribute (l:Ident.lident) (se:sigelt) (d:decl) : ML decl =
+  if not (has_attr PC.custard_no_unfold_attr (source_attrs se l)) then d else
+  match d with
+  | DType t when TAbbrev? t.dt_body ->
+    DType { t with dt_flags = NoUnfold :: t.dt_flags }
+  | _ ->
+    let key = Ident.string_of_lid l in
+    if not (Some? (HashTable.try_find no_unfold_reported key)) then begin
+      HashTable.add no_unfold_reported key true;
+      report_attr "custard_no_unfold" ("the declaration " ^ key)
+        "This declaration is not a type abbreviation, so there is no \
+         abbreviation to preserve."
+    end;
+    d
 
 (* Every consultation of a declaration's type goes through here.  Looking a
    lid up in an environment that has not loaded its module yet does not fail
@@ -5295,6 +5316,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
     let d = if is_krml_backend () && is_private_sigelt se then with_private d else d in
+    let d = with_no_unfold_attribute l se d in
     if is_inlinable se && not (is_root st l)
     then with_inline d else d
 
