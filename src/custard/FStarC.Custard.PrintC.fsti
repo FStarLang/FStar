@@ -47,17 +47,18 @@ val no_unit : unit_info
     cannot drift apart. *)
 val init_globals_name : unit_info -> program -> ML (option string)
 
-(** Whether a declaration is part of this translation unit's interface: it has
-    external linkage and appears in the header.  Everything else is [static]
+(** Whether a declaration is part of this translation unit's public API
     (section 24), which is also why a C unit's `.cui` offers only these
-    (section 42.1). *)
+    (section 42.1). Ordinary C output gives these external linkage; static-header
+    output preserves API visibility but gives all definitions internal linkage. *)
 val is_public : dlet -> ML bool
 
 (** Resolve foreign C targets using the same naming rules as the printer. *)
 val foreign_targets : unit_info -> program -> ML (list (string & string))
 
 (** The whole program as one self-contained C11 translation unit (section 6,
-    M8): a header and a source, in that order.  The first argument is the stem
+    M8): a header and a source, in that order, or a header and an empty source
+    with [--custard_static_header]. The first argument is the stem
     of the output file, which the source includes and the include guard is
     derived from.
 
@@ -67,8 +68,9 @@ val foreign_targets : unit_info -> program -> ML (list (string & string))
     unit made -- and are skipped at every emission site, since the header they
     came from is included instead (section 42.2).
 
-    Only the [Root] declarations appear in the header; everything else is
-    [static] (section 24). *)
+    In ordinary C output, only the [Root] declarations appear in the header;
+    everything else is [static] (section 24). Static-header output also puts
+    private dependencies and all function definitions in the header. *)
 (* With Cherry and [--custard_split], also the further files to write next to
    the source: one [stem.M.c] per F* module [M]. *)
 val print_program : string -> unit_info -> program

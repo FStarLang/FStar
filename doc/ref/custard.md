@@ -8278,6 +8278,40 @@ a drop-in replacement has to come with `CBORDet.h`.
 extension-agnostic on purpose, because the test suite asks for `-o
 _output/Foo.dc` and would otherwise get `Foo.dc.h`.
 
+### 24.0 Header-only C libraries
+
+`--codegen C --custard_static_header` writes a single header instead of a
+header/source pair. All retained function definitions have internal linkage;
+`[@@FStar.Attributes.CInline]` independently requests `inline`. Roots,
+reachability, API names, types and macros are unchanged. Private dependencies,
+generated comparison helpers and required support blocks are emitted in the
+header too, with prototypes before their use and C++ linkage guards.
+
+`-o` must name a `.h` file. Without it, the output is `Custard.h`, or
+`<unit>.h` with `--custard_unit`. No `.c` file is written. A previous source
+file is not deleted; builds switching modes must stop compiling that file.
+
+Foreign functions and values retain `extern` linkage and are declared in the
+header. `custard_c_header` still includes the supplying header instead of
+generating a declaration. An assumed function is not made static: its body
+must come from elsewhere. This is not a replacement for a client-supplied
+static implementation header.
+
+The initial mode rejects non-macro globals and runtime initialization rather
+than silently creating per-translation-unit state. It also rejects
+`--custard_main`, `--custard_split`, Cherry and non-C code generators. Function
+addresses are translation-unit-local; this mode is not an externally linked
+ABI. Unused non-inline static functions may trigger compiler warnings:
+annotate suitable APIs with `CInline` or configure those warnings explicitly.
+The compiler does not silently add `inline`.
+
+Separate C units can include a header-only unit through `--custard_link`;
+the `.cui` records header-only emission without requiring consumers to select
+the same mode. Header-only units cannot depend on runtime initializers.
+Generated comparison helpers are prefixed by the output header's stem so
+that a unit comparing an imported type does not redefine its dependency's
+private helper.
+
 ### 24.1 What is public
 
 The IR has had a `Private` flag on declarations since M2, and `PrintC` read

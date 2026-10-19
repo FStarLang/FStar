@@ -29,7 +29,7 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 module HashTable = FStarC.HashTable
 
-let current_version = 21
+let current_version = 33
 
 (* The IR is plain first-order data -- no references, no closures, no
    hashconsing -- so the same mechanism that stores checked files stores a
@@ -206,7 +206,8 @@ let iface_to_string (i:iface) : ML string =
     match v with Some f -> "\n  " ^ label ^ ": " ^ f | None -> "" in
   BU.fmt4 "unit %s (format %s, backend %s)%s"
     h.uh_name (show h.uh_version) h.uh_backend
-    (opt "header" h.uh_header ^ opt "init" h.uh_init ^ "\n" ^
+    (opt "header" h.uh_header ^ opt "init" h.uh_init ^
+     (if h.uh_static_header then "\n  static-header: true" else "") ^ "\n" ^
      BU.fmt3 "  options: %s\n  %s checked files\n\n%s"
        (String.concat ", " (h.uh_options |> List.map (fun (k, v) -> k ^ "=" ^ v)))
        (show (List.length h.uh_digests))

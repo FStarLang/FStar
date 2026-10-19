@@ -1277,10 +1277,13 @@ let eq_path : ref (list string) = mk_ref []
    wrong type.  The two sides could not both be right by construction, because
    only one of them knew the whole set of names in the file. *)
 let taken_names : ref (HashTable.t string bool) = mk_ref (HashTable.create 50)
+(* A header and its includer may both generate comparisons for the same type. *)
+let helper_prefix : ref string = mk_ref ""
 
 (* [base], or the first [base_1], [base_2], ... that nothing else has taken.
    Registered on the way out, so two generated names cannot collide either. *)
 let alloc_name (base:string) : ML string =
+  let base = !helper_prefix ^ base in
   let rec go (cand:string) (n:int) : ML string =
     if None? (HashTable.try_find !taken_names cand) then cand
     else go (base ^ "_" ^ string_of_int n) (n + 1) in
@@ -4551,7 +4554,8 @@ let module_of (n:name) : string = String.concat "." n.ns
 let split_data : ref (list string) = mk_ref []
 
 let storage (l:dlet) : ML string =
-  if is_public l then ""
+  if Options.custard_static_header () then "static "
+  else if is_public l then ""
   else if !split_out && not (l.dl_flags |> List.existsb CInline?) then ""
   else "static "
 
@@ -5908,6 +5912,8 @@ let print_program (base:string) (cu:unit_info) (p:program)
   reset_program_state ();
   split_out := Options.custard_cherry () && Options.custard_split ();
   split_data := [];
+  helper_prefix := (if Options.custard_static_header ()
+                    then "custard_" ^ sanitize base ^ "__" else "");
   record_parents p;
   (* Section 102.2.  Before the tables, not after them.  The external table
      below stores a *resolved* C name -- an external is the one declaration
@@ -6193,7 +6199,10 @@ let print_program (base:string) (cu:unit_info) (p:program)
     | DLet l when is_public l && is_macro l -> [guarded l (prologue_of l ^ macro_decl l)]
     | DLet l when is_public l && Nil? l.dl_binders ->
       [guarded l (prologue_of l ^ global_extern l)]
-    | DLet l when is_public l -> [guarded l (prologue_of l ^ inline_of l ^ proto_of l)]
+    | DLet l when is_public l ->
+      [guarded l (prologue_of l ^
+       (if Options.custard_static_header () then "static " else "") ^
+       inline_of l ^ proto_of l)]
     | _ -> []) in
 
   (* A definition's text, its F* module, and how a split output treats it:
@@ -6328,13 +6337,12 @@ let print_program (base:string) (cu:unit_info) (p:program)
   let cpp_close =
     "\n#ifdef __cplusplus\n}\n#endif\n" in
 
-  let hdr_body =
+  let hdr_decls =
   cpp_open ^
   String.concat "" fwds ^ (match fwds with [] -> "" | _ -> "\n") ^
   String.concat "" tys ^ (match tys with [] -> "" | _ -> "\n") ^
   String.concat "" pub_decls ^ (match pub_decls with [] -> "" | _ -> "\n") ^
-  init_proto ^ (match inits with [] -> "" | _ -> "\n") ^
-  cpp_close in
+  init_proto ^ (match inits with [] -> "" | _ -> "\n") in
 
   let lits = !string_lit_defs in
   let fn_defs, inline_defs =
@@ -6358,6 +6366,11 @@ let print_program (base:string) (cu:unit_info) (p:program)
     (match inits with [] -> "" | _ -> init_fn) ^
     (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
   let src_body = support_body ^ String.concat "\n" fn_defs ^ "\n" ^ tail_body in
+
+  let hdr_body =
+    hdr_decls ^
+    (if Options.custard_static_header () then src_body else "") ^
+    cpp_close in
 
   (* Sections 5.1, 66 and 98.  Each of the two support blocks goes into the
      header if the header needs it, otherwise into the source if the source
@@ -6387,7 +6400,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
 
   (* The source includes its own header, so the header is *checked* against
      the definitions rather than merely shipped alongside them. *)
-  let body =
+  let body = if Options.custard_static_header () then "" else
     banner ^
     "#include \"" ^ base ^ ".h\"\n" ^
     (if not hdr_unit && mentions_unit src_body

@@ -76,6 +76,9 @@ type header = {
       globals and so there is nothing for a downstream [main] to call
       (section 42.3). *)
   uh_init:    option string;
+  (** Emission policy, not a layout option: ordinary C units may include and
+      call a static-header unit without enabling this option themselves. *)
+  uh_static_header: bool;
 }
 
 (** A non-owning binding, never an answer to an implementation lookup. *)
