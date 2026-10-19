@@ -1,2 +1,0 @@
-include FStarC_Range_Type
-include FStarC_Range_Ops

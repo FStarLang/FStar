@@ -4,16 +4,16 @@
 let u___string_of_list (delim : string) (f : ('u___a -> string)) (l : ('u___a) list) : string =
   (match l with
     | [] -> "[]"
-    | (x :: xs) -> (let strb = (FStarC_StringBuffer.create (Prims.of_int (80))) in
+    | (x :: xs) -> (let strb = ((fun i -> Buffer.create (Z.to_int i)) (Prims.of_int (80))) in
       let tmp = (f x) in
-      let tmp1 = (FStarC_StringBuffer.add "[" strb) in
-      (ignore (FStarC_StringBuffer.add tmp tmp1));
-      (FStarC_List.iter (fun x1 -> (let tmp2 = (f x1) in
-      let tmp3 = (FStarC_StringBuffer.add delim strb) in
-      (ignore (FStarC_StringBuffer.add tmp2 tmp3));
+      let tmp1 = ((fun s t -> Buffer.add_string t s; t) "[" strb) in
+      (ignore ((fun s t -> Buffer.add_string t s; t) tmp tmp1));
+      (BatList.iter (fun x1 -> (let tmp2 = (f x1) in
+      let tmp3 = ((fun s t -> Buffer.add_string t s; t) delim strb) in
+      (ignore ((fun s t -> Buffer.add_string t s; t) tmp2 tmp3));
       ())) xs);
-      (ignore (FStarC_StringBuffer.add "]" strb));
-      (FStarC_StringBuffer.contents strb))
+      (ignore ((fun s t -> Buffer.add_string t s; t) "]" strb));
+      (Buffer.contents strb))
   )
 
 let string_of_list (f : ('u___a -> string)) (l : ('u___a) list) : string =
@@ -54,7 +54,7 @@ let dbg : (bool ref) =
 
 let snapshot (msg : string) (push : ('u___a -> 'u___b)) (stackref : (('u___c) list ref)) (arg : 'u___a) : (Prims.int * 'u___b) =
   (FStarC_Util.atomically (fun tmp -> (let tmp1 = (!(stackref)) in
-  let len = (FStarC_List.length tmp1) in
+  let len = ((fun l -> Z.of_int (BatList.length l)) tmp1) in
   let arg' = (push arg) in
   let tmp2 = (!(dbg)) in
   (if tmp2 then (FStarC_Format.print2 "(%s)snapshot %s\n" msg (Prims.string_of_int len)) else ());
@@ -71,19 +71,19 @@ let rollback (msg : string) (pop : (unit -> 'u___a)) (stackref : (('u___c) list 
     | (Some (len)) -> (Prims.string_of_int len)
   )) else ());
   let tmp1 = (!(stackref)) in
-  let curdepth = (FStarC_List.length tmp1) in
+  let curdepth = ((fun l -> Z.of_int (BatList.length l)) tmp1) in
   let n = (match depth with
       | (Some (d)) -> (Prims.op_Minus curdepth d)
       | None -> Prims.int_one
     ) in
   let tmp2 = (!(dbg)) in
   (if tmp2 then (let tmp3 = (!(stackref)) in
-  let tmp4 = (FStarC_List.length tmp3) in
+  let tmp4 = ((fun l -> Z.of_int (BatList.length l)) tmp3) in
   let tmp5 = (Prims.string_of_int tmp4) in
   (FStarC_Format.print1 " depth is %s\n " tmp5)) else ());
   (FStarC_Util.atomically (fun tmp3 -> ((rollback__aux pop) n))))
 
-let psmap_values (m : ('u___a) FStarC_PSMap.t) : ('u___a) list =
+let psmap_values (m : (string, 'u___a) FStarC_AVLMap.tree) : ('u___a) list =
   (FStarC_PSMap.fold m (fun k v a -> (v :: a)) [])
 
 let raise_failed_assertion (msg : string) : 'tmp =
@@ -98,7 +98,7 @@ let list_of_option (o : ('u___a) option) : ('u___a) list =
     | (Some (x)) -> (x :: [])
   )
 
-let psmap_keys (m : ('u___a) FStarC_PSMap.t) : (string) list =
+let psmap_keys (m : (string, 'u___a) FStarC_AVLMap.tree) : (string) list =
   (FStarC_PSMap.fold m (fun k v a -> (k :: a)) [])
 
 let rec max_suffix__aux (f : ('u___a -> bool)) (acc : ('u___a) list) (xs : ('u___a) list) : (('u___a) list * ('u___a) list) =
@@ -109,8 +109,8 @@ let rec max_suffix__aux (f : ('u___a -> bool)) (acc : ('u___a) list) (xs : ('u__
   )
 
 let max_suffix (f : ('u___a -> bool)) (xs : ('u___a) list) : (('u___a) list * ('u___a) list) =
-  (let tmp = ((max_suffix__aux f) [] (FStarC_List.rev xs)) in
+  (let tmp = ((max_suffix__aux f) [] (BatList.rev xs)) in
   (match tmp with
-    | (xs1, ys) -> ((FStarC_List.rev ys), xs1)
+    | (xs1, ys) -> ((BatList.rev ys), xs1)
   ))
 

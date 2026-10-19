@@ -579,7 +579,7 @@ and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
     (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs))
     (L.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs)
 
-let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
+let extract_pulse_dv (g: env) (p:st_term) : T.Tac R.term =
   debug g (fun _ -> Printf.sprintf "input: %s" (show p));
   let p = erase_ghost_subterms g p in
   debug g (fun _ -> Printf.sprintf "post erasure: %s" (show p));
@@ -592,7 +592,7 @@ let extract_pulse_dv (g: env) (p:st_term) : T.Tac ECL.term =
   p
 
 let rec extract_dv_recursive g (p:st_term) (rec_name:R.fv)
-  : T.Tac ECL.term
+  : T.Tac R.term
   = match p.term with
     | Tm_Abs { b; q; body } -> (
       match body.term with

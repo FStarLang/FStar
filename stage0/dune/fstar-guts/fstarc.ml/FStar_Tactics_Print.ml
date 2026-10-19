@@ -37,7 +37,9 @@ let rec universe_to_ast_string (u : FStarC_Reflection_Types.universe) : ((FStarC
     | (FStar_Tactics_NamedView.Uv_Max (us)) -> (let x1 = (print_list universe_to_ast_string us ps) in
       (Prims.strcat "Uv_Max" x1))
     | (FStar_Tactics_NamedView.Uv_BVar (n)) -> (Prims.strcat "Uv_BVar" (paren (Prims.string_of_int n)))
-    | (FStar_Tactics_NamedView.Uv_Name (i)) -> (Prims.strcat "Uv_Name" (paren (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst i)))
+    | (FStar_Tactics_NamedView.Uv_Name (i)) -> (Prims.strcat "Uv_Name" (paren (match i with
+        | (u__1, u__2) -> u__1
+      )))
     | (FStar_Tactics_NamedView.Uv_Unif (tmp)) -> "Uv_Unif"
     | FStar_Tactics_NamedView.Uv_Unk -> "Uv_Unk"
   )))))
@@ -67,7 +69,7 @@ let const_to_ast_string (c : FStarC_Reflection_V2_Data.vconst) : ((FStarC_Tactic
     | (FStarC_Reflection_V2_Data.C_Reflect (name)) -> (let tmp1 = (FStarC_Reflection_V2_Builtins.implode_qn name) in
       (Prims.strcat "C_Reflect " tmp1))
     | (FStarC_Reflection_V2_Data.C_Real (r)) -> (Prims.strcat "C_Real \"" (Prims.strcat (FStar_RealLiteral.to_string r) "\""))
-    | (FStarC_Reflection_V2_Data.C_Char (c1)) -> (Prims.strcat "C_Char '" (Prims.strcat (FStar_String.make Prims.int_one c1) "'"))
+    | (FStarC_Reflection_V2_Data.C_Char (c1)) -> (Prims.strcat "C_Char '" (Prims.strcat ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) Prims.int_one c1) "'"))
   ))
 
 let rec comp_to_ast_string (c : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_Tactics_Types.proofstate ref) -> string) =

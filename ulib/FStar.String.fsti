@@ -50,9 +50,9 @@ val list_of_string_of_list (l:list char)
 /// It is not the byte length of a string
 let strlen s = List.length (list_of_string s)
 
-/// `length`, an alias for `strlen`
-unfold
-let length s = strlen s
+/// `length s` is `strlen s`, computed without building the list of
+/// characters.  Executable code should use it rather than `strlen`.
+val length (s:string) : l:nat { l = strlen s }
 
 /// `maxlen`: When applied to a literal s of less than n characters,
 /// `maxlen s n` reduces to `True` before going to the SMT solver.

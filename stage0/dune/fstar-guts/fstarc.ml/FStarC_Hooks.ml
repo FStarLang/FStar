@@ -29,11 +29,11 @@ let lazy_chooser (k : FStarC_Syntax_Syntax.lazy_kind) (i : FStarC_Syntax_Syntax.
 
 let uu___0 : unit =
   (((FStarC_Syntax_DsEnv.ugly_sigelt_to_string_hook) := FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt);
-  (FStarC_Errors.set_parse_warn_error FStarC_Parser_ParseIt.parse_warn_error);
+  (FStarC_Errors.set_parse_warn_error FStarC_Parser_Frontend.parse_warn_error);
   ((FStarC_Syntax_Syntax.lazy_chooser) := (Some (lazy_chooser)));
   ((FStarC_Syntax_Util.tts_f) := (Some (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term')));
   ((FStarC_Syntax_Util.ttd_f) := (Some (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term')));
   ((FStarC_TypeChecker_Normalize.unembed_binder_knot) := (Some (FStarC_Reflection_V2_Embeddings.e_binder)));
-  (FStarC_List.iter FStarC_Tactics_Interpreter.register_tactic_primitive_step FStarC_Tactics_V2_Primops.ops);
+  (BatList.iter FStarC_Tactics_Interpreter.register_tactic_primitive_step FStarC_Tactics_V2_Primops.ops);
   ())
 

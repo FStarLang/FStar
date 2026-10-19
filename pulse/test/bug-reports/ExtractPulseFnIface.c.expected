@@ -12,6 +12,6 @@ krml_checked_int_t ExtractPulseFnIface_pure_add(krml_checked_int_t x, krml_check
 
 krml_checked_int_t ExtractPulseFnIface_pulse_read_ref(krml_checked_int_t *r)
 {
-  return r[0U];
+  return *r;
 }
 

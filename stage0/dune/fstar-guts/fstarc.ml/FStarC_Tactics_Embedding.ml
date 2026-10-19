@@ -37,7 +37,7 @@ let e_proofstate : (FStarC_Tactics_Types.proofstate) FStarC_Syntax_Embeddings_Ba
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_proofstate (fstar_tactics_proofstate).t)
 
 let mkFV (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_NBETerm.t =
-  (FStarC_TypeChecker_NBETerm.mkFV fv (FStarC_List.rev us) (FStarC_List.rev ts))
+  (FStarC_TypeChecker_NBETerm.mkFV fv (BatList.rev us) (BatList.rev ts))
 
 let fv_as_emb_typ (fv : FStarC_Syntax_Syntax.fv) : FStarC_Syntax_Syntax.emb_typ =
   (let tmp = (FStarC_Ident.fStarC_Class_Show_show__lident (fv).FStarC_Syntax_Syntax.fv_name) in
@@ -167,9 +167,9 @@ let e_exn : (exn) FStarC_Syntax_Embeddings_Base.embedding =
           hash_code = (t).FStarC_Syntax_Syntax.hash_code }
       | e1 -> (let tmp2 = (FStarC_Errors.issue_of_exn e1) in
         let tmp3 = (match tmp2 with
-            | (Some ({ FStarC_Errors.issue_msg = issue_msg; issue_level = tmp3; issue_range = issue_range; issue_number = tmp4; issue_ctx = tmp5; _ })) -> (issue_msg, issue_range)
-            | None -> (let tmp3 = (FStarC_Util.message_of_exn e1) in
-              let tmp4 = (FStar_Pprint.arbitrary_string tmp3) in
+            | (Some ({ FStarC_Errors_Issue.issue_msg = issue_msg; issue_level = tmp3; issue_range = issue_range; issue_number = tmp4; issue_ctx = tmp5; _ })) -> (issue_msg, issue_range)
+            | None -> (let tmp3 = (Printexc.to_string e1) in
+              let tmp4 = (PPrint.arbitrary_string tmp3) in
               let tmp5 = (tmp4 :: []) in
               (tmp5, None))
           ) in
@@ -194,7 +194,7 @@ let e_exn : (exn) FStarC_Syntax_Embeddings_Base.embedding =
   (FStarC_Syntax_Syntax.ET_app ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup)))))))
 
 let mkConstruct (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_NBETerm.t =
-  (FStarC_TypeChecker_NBETerm.mkConstruct fv (FStarC_List.rev us) (FStarC_List.rev ts))
+  (FStarC_TypeChecker_NBETerm.mkConstruct fv (BatList.rev us) (BatList.rev ts))
 
 let e_exn_nbe : (exn) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_exn = (fun cb e -> (match e with
@@ -203,7 +203,7 @@ let e_exn_nbe : (exn) FStarC_TypeChecker_NBETerm.embedding =
         let tmp2 = (tmp1 :: []) in
         (mkConstruct (fstar_tactics_TacticFailure).fv [] tmp2))
       | FStarC_Tactics_Common.SKIP -> (mkConstruct (fstar_tactics_SKIP).fv [] [])
-      | tmp -> (let tmp1 = (FStarC_Util.message_of_exn e) in
+      | tmp -> (let tmp1 = (Printexc.to_string e) in
         let tmp2 = (FStarC_Format.fmt1 "cannot embed exn (NBE) : %s" tmp1) in
         (FStarC_Effect.failwith tmp2))
     )) in
@@ -412,7 +412,7 @@ let e_tref_nbe (a : unit) : (('a ref)) FStarC_TypeChecker_NBETerm.embedding =
     e_typ = (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.tref_lid), (FStarC_Syntax_Syntax.ET_abstract :: [])))) })
 
 let fstar_tc_core_lid (s : string) : FStarC_Ident.lident =
-  (FStarC_Ident.lid_of_path (FStarC_List.op_At ("FStar" :: ("Stubs" :: ("TypeChecker" :: ("Core" :: [])))) (s :: [])) FStarC_Range_Type.dummyRange)
+  (FStarC_Ident.lid_of_path (BatList.append ("FStar" :: ("Stubs" :: ("TypeChecker" :: ("Core" :: [])))) (s :: [])) FStarC_Range_Type.dummyRange)
 
 let fstar_tc_core_data (s : string) : tac_constant =
   (let lid = (fstar_tc_core_lid s) in

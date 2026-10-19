@@ -150,6 +150,7 @@ let char_u32_of_char = c2l "u32_of_char"
 /// Constants from FStar.String
 let s2l n = p2l ["FStar"; "String"; n]
 let string_list_of_string_lid = s2l "list_of_string"
+let string_length_lid = s2l "length"
 let string_string_of_list_lid = s2l "string_of_list"
 let string_make_lid = s2l "make"
 let string_split_lid = s2l "split"

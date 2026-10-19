@@ -7,30 +7,32 @@ let is_tc_binder (b : FStarC_Parser_AST.binder) : bool =
     | tmp -> false
   )
 
-let str (s : string) : FStar_Pprint.document =
-  (FStar_Pprint.doc_of_string s)
+let str (s : string) : PPrint.document =
+  (PPrint.string s)
 
 let comment_stack : (((string * FStarC_Range_Type.range)) list ref) =
   (ref [])
 
-let rec with_comment_sep__comments_before_pos (acc : FStar_Pprint.document) (print_pos : Prims.int) (lookahead_pos : Prims.int) : (FStar_Pprint.document * bool) =
+let rec with_comment_sep__comments_before_pos (acc : PPrint.document) (print_pos : Prims.int) (lookahead_pos : Prims.int) : (PPrint.document * bool) =
   (let tmp = (!(comment_stack)) in
   (match tmp with
     | [] -> (acc, false)
     | ((c, crange) :: cs) -> (let comment = (str c) in
       let tmp1 = (FStarC_Range_Ops.range_before_pos crange print_pos) in
       (if tmp1 then (((comment_stack) := cs);
-      (with_comment_sep__comments_before_pos (if ((=) acc FStar_Pprint.empty) then comment else (FStar_Pprint.op_Hat_Hat acc (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline comment))) print_pos lookahead_pos)) else (let tmp2 = (FStarC_Range_Ops.range_before_pos crange lookahead_pos) in
+      (with_comment_sep__comments_before_pos (if ((=) acc PPrint.empty) then comment else (PPrint.(^^) acc (PPrint.(^^) PPrint.hardline comment))) print_pos lookahead_pos)) else (let tmp2 = (FStarC_Range_Ops.range_before_pos crange lookahead_pos) in
       (acc, tmp2))))
   ))
 
-let with_comment_sep (printer : ('tmp -> 'tmp1)) (tm : 'tmp) (tmrange : FStarC_Range_Type.range) : (FStar_Pprint.document * 'tmp1) =
-  (let tmp = (with_comment_sep__comments_before_pos FStar_Pprint.empty (FStarC_Range_Ops.end_of_line (FStarC_Range_Ops.start_of_range tmrange)) (FStarC_Range_Ops.end_of_range tmrange)) in
+let with_comment_sep (printer : ('tmp -> 'tmp1)) (tm : 'tmp) (tmrange : FStarC_Range_Type.range) : (PPrint.document * 'tmp1) =
+  (let tmp = (with_comment_sep__comments_before_pos PPrint.empty (FStarC_Range_Ops.end_of_line (FStarC_Range_Ops.start_of_range tmrange)) (FStarC_Range_Ops.end_of_range tmrange)) in
   (match tmp with
     | (comments, has_lookahead) -> (let printed_e = (printer tm) in
       let comments1 = (if has_lookahead then (let pos = (FStarC_Range_Ops.end_of_range tmrange) in
         let tmp1 = (with_comment_sep__comments_before_pos comments pos pos) in
-        (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1)) else comments) in
+        (match tmp1 with
+          | (u__1, u__2) -> u__1
+        )) else comments) in
       (comments1, printed_e))
   ))
 
@@ -39,11 +41,11 @@ type annotation_style =
   | Arrows of Prims.int * Prims.int
 
 
-let tc_arg (contents : FStar_Pprint.document) : FStar_Pprint.document =
+let tc_arg (contents : PPrint.document) : PPrint.document =
   (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one (str "{|") contents (str "|}"))
 
-let soft_parens_with_nesting (contents : FStar_Pprint.document) : FStar_Pprint.document =
-  (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero FStar_Pprint.lparen contents FStar_Pprint.rparen)
+let soft_parens_with_nesting (contents : PPrint.document) : PPrint.document =
+  (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero PPrint.lparen contents PPrint.rparen)
 
 let is_meta_qualifier (aq : (FStarC_Parser_AST.arg_qualifier) option) : bool =
   (match aq with
@@ -65,58 +67,60 @@ let rec map_rev__aux (f : ('u___a -> 'u___b)) (l : ('u___a) list) (acc : ('u___b
 let map_rev (f : ('u___a -> 'u___b)) (l : ('u___a) list) : ('u___b) list =
   ((map_rev__aux f) l [])
 
-let break1 : FStar_Pprint.document =
+let break1 : PPrint.document =
   (FStar_Pprint.break_ Prims.int_one)
 
-let jump2 (body : FStar_Pprint.document) : FStar_Pprint.document =
+let jump2 (body : PPrint.document) : PPrint.document =
   (FStar_Pprint.jump (Prims.of_int (2)) Prims.int_one body)
 
-let format_sig (style : annotation_style) (terms : (FStar_Pprint.document) list) (ret_d : FStar_Pprint.document) (no_last_op : bool) (flat_space : bool) : FStar_Pprint.document =
+let format_sig (style : annotation_style) (terms : (PPrint.document) list) (ret_d : PPrint.document) (no_last_op : bool) (flat_space : bool) : PPrint.document =
   (let tmp = (match style with
-      | (Arrows (n, ln)) -> (n, ln, (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat FStar_Pprint.rarrow break1)), (FStar_Pprint.op_Hat_Hat FStar_Pprint.rarrow FStar_Pprint.space))
-      | (Binders (n, ln, parens)) -> (n, ln, break1, (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon FStar_Pprint.space))
+      | (Arrows (n, ln)) -> (n, ln, (PPrint.(^^) PPrint.space (PPrint.(^^) FStar_Pprint.rarrow break1)), (PPrint.(^^) FStar_Pprint.rarrow PPrint.space))
+      | (Binders (n, ln, parens)) -> (n, ln, break1, (PPrint.(^^) PPrint.colon PPrint.space))
     ) in
   (match tmp with
     | (n, last_n, sep, last_op) -> (let last_op1 = (if ((match terms with
           | (hd :: tl) -> true
           | tmp1 -> false
-        ) && (not no_last_op)) then last_op else FStar_Pprint.empty) in
-      let one_line_space = (if ((not ((=) ret_d FStar_Pprint.empty)) || (not no_last_op)) then FStar_Pprint.space else FStar_Pprint.empty) in
-      let single_line_arg_indent = (FStar_Pprint.repeat n FStar_Pprint.space) in
-      let fs = (if flat_space then FStar_Pprint.space else FStar_Pprint.empty) in
-      (match (FStarC_List.length terms) with
+        ) && (not no_last_op)) then last_op else PPrint.empty) in
+      let one_line_space = (if ((not ((=) ret_d PPrint.empty)) || (not no_last_op)) then PPrint.space else PPrint.empty) in
+      let single_line_arg_indent = (FStar_Pprint.repeat n PPrint.space) in
+      let fs = (if flat_space then PPrint.space else PPrint.empty) in
+      (match ((fun l -> Z.of_int (BatList.length l)) terms) with
         | u__iconst0 when u__iconst0 = Prims.int_zero -> ret_d
-        | tmp1 -> (let tmp2 = (FStarC_List.map (fun x -> (FStar_Pprint.align (FStar_Pprint.hang (Prims.of_int (2)) x))) terms) in
-          let tmp3 = (FStar_Pprint.separate (FStar_Pprint.op_Hat_Hat sep single_line_arg_indent) tmp2) in
-          let tmp4 = (FStar_Pprint.op_Hat_Hat single_line_arg_indent tmp3) in
+        | tmp1 -> (let tmp2 = (BatList.map (fun x -> (PPrint.align (FStar_Pprint.hang (Prims.of_int (2)) x))) terms) in
+          let tmp3 = (PPrint.separate (PPrint.(^^) sep single_line_arg_indent) tmp2) in
+          let tmp4 = (PPrint.(^^) single_line_arg_indent tmp3) in
           let tmp5 = (jump2 tmp4) in
-          let tmp6 = (FStar_Pprint.ifflat (FStar_Pprint.op_Hat_Hat fs (FStar_Pprint.separate sep terms)) tmp5) in
-          let tmp7 = (FStar_Pprint.group tmp6) in
-          let tmp8 = (FStar_Pprint.prefix n Prims.int_one tmp7 (FStar_Pprint.align (FStar_Pprint.hang last_n (FStar_Pprint.op_Hat_Hat last_op1 ret_d)))) in
-          let tmp9 = (FStar_Pprint.ifflat (FStar_Pprint.op_Hat_Hat fs (FStar_Pprint.op_Hat_Hat (FStar_Pprint.separate sep terms) (FStar_Pprint.op_Hat_Hat one_line_space (FStar_Pprint.op_Hat_Hat last_op1 ret_d)))) tmp8) in
-          (FStar_Pprint.group tmp9))
+          let tmp6 = (PPrint.ifflat (PPrint.(^^) fs (PPrint.separate sep terms)) tmp5) in
+          let tmp7 = (PPrint.group tmp6) in
+          let tmp8 = (FStar_Pprint.prefix n Prims.int_one tmp7 (PPrint.align (FStar_Pprint.hang last_n (PPrint.(^^) last_op1 ret_d)))) in
+          let tmp9 = (PPrint.ifflat (PPrint.(^^) fs (PPrint.(^^) (PPrint.separate sep terms) (PPrint.(^^) one_line_space (PPrint.(^^) last_op1 ret_d)))) tmp8) in
+          (PPrint.group tmp9))
       ))
   ))
 
-let rec with_comment__comments_before_pos (acc : FStar_Pprint.document) (print_pos : Prims.int) (lookahead_pos : Prims.int) : (FStar_Pprint.document * bool) =
+let rec with_comment__comments_before_pos (acc : PPrint.document) (print_pos : Prims.int) (lookahead_pos : Prims.int) : (PPrint.document * bool) =
   (let tmp = (!(comment_stack)) in
   (match tmp with
     | [] -> (acc, false)
-    | ((c, crange) :: cs) -> (let comment = (FStar_Pprint.op_Hat_Hat (str c) FStar_Pprint.hardline) in
+    | ((c, crange) :: cs) -> (let comment = (PPrint.(^^) (str c) PPrint.hardline) in
       let tmp1 = (FStarC_Range_Ops.range_before_pos crange print_pos) in
       (if tmp1 then (((comment_stack) := cs);
-      (with_comment__comments_before_pos (FStar_Pprint.op_Hat_Hat acc comment) print_pos lookahead_pos)) else (let tmp2 = (FStarC_Range_Ops.range_before_pos crange lookahead_pos) in
+      (with_comment__comments_before_pos (PPrint.(^^) acc comment) print_pos lookahead_pos)) else (let tmp2 = (FStarC_Range_Ops.range_before_pos crange lookahead_pos) in
       (acc, tmp2))))
   ))
 
-let with_comment (printer : ('tmp -> FStar_Pprint.document)) (tm : 'tmp) (tmrange : FStarC_Range_Type.range) : FStar_Pprint.document =
-  (let tmp = (with_comment__comments_before_pos FStar_Pprint.empty (FStarC_Range_Ops.end_of_line (FStarC_Range_Ops.start_of_range tmrange)) (FStarC_Range_Ops.end_of_range tmrange)) in
+let with_comment (printer : ('tmp -> PPrint.document)) (tm : 'tmp) (tmrange : FStarC_Range_Type.range) : PPrint.document =
+  (let tmp = (with_comment__comments_before_pos PPrint.empty (FStarC_Range_Ops.end_of_line (FStarC_Range_Ops.start_of_range tmrange)) (FStarC_Range_Ops.end_of_range tmrange)) in
   (match tmp with
     | (comments, has_lookahead) -> (let printed_e = (printer tm) in
       let comments1 = (if has_lookahead then (let pos = (FStarC_Range_Ops.end_of_range tmrange) in
         let tmp1 = (with_comment__comments_before_pos comments pos pos) in
-        (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp1)) else comments) in
-      (if ((=) comments1 FStar_Pprint.empty) then printed_e else (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat comments1 printed_e))))
+        (match tmp1 with
+          | (u__1, u__2) -> u__1
+        )) else comments) in
+      (if ((=) comments1 PPrint.empty) then printed_e else (PPrint.group (PPrint.(^^) comments1 printed_e))))
   ))
 
 let is_tuple_constructor (f : FStarC_Ident.lident) : bool =
@@ -132,7 +136,7 @@ let all1_explicit (args : ((FStarC_Parser_AST.term * FStarC_Parser_AST.imp)) lis
   )) args) else false)
 
 type token =
-  | StartsWith of FStar_Char.char
+  | StartsWith of int
   | Exact of string
   | UnicodeOperator
 
@@ -191,7 +195,7 @@ let level_table : (((Prims.int * Prims.int * Prims.int) * (token) list)) list =
       | Right -> ((Prims.op_Minus l Prims.int_one), l, l)
       | NonAssoc -> ((Prims.op_Minus l Prims.int_one), l, (Prims.op_Minus l Prims.int_one))
     )) in
-  (FStarC_List.mapi (fun i tmp -> (match tmp with
+  ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp -> (match tmp with
     | (assoc, tokens) -> ((levels_from_associativity i assoc), tokens)
   )) level_associativity_spec))
 
@@ -200,51 +204,55 @@ let max (x : Prims.int) (y : Prims.int) : Prims.int =
 
 let token_to_string (tmp : token) : string =
   (match tmp with
-    | (StartsWith (c)) -> (Prims.strcat (FStarC_Util.string_of_char c) ".*")
+    | (StartsWith (c)) -> (Prims.strcat ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c) ".*")
     | (Exact (s)) -> s
     | UnicodeOperator -> "<unicode-op>"
   )
 
 let max_level (l : (('tmp * (token) list)) list) : Prims.int =
-  (let find_level_and_max = (fun n level -> (let tmp = (FStarC_List.tryFind (fun tmp -> (match tmp with
-        | (tmp1, tokens) -> ((=) tokens (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd level))
+  (let find_level_and_max = (fun n level -> (let tmp = (List.find_opt (fun tmp -> (match tmp with
+        | (tmp1, tokens) -> ((=) tokens (match level with
+            | (u__1, u__2) -> u__2
+          ))
       )) level_table) in
     (match tmp with
       | (Some (((tmp1, l1, tmp2), tmp3))) -> (max n l1)
-      | None -> (let tmp1 = (FStarC_List.map token_to_string (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd level)) in
-        let tmp2 = (FStarC_String.concat "," tmp1) in
+      | None -> (let tmp1 = (BatList.map token_to_string (match level with
+            | (u__1, u__2) -> u__2
+          )) in
+        let tmp2 = (BatString.concat "," tmp1) in
         let tmp3 = (FStarC_Format.fmt1 "Undefined associativity level %s" tmp2) in
         (FStarC_Effect.failwith tmp3))
     ))) in
-  (FStarC_List.fold_left find_level_and_max Prims.int_zero l))
+  (BatList.fold_left find_level_and_max Prims.int_zero l))
 
 let operatorInfix0ad12 : ((associativity * (token) list)) list =
   (opinfix0a :: (opinfix0b :: (opinfix0c :: (opinfix0d :: (opinfix1 :: (opinfix2 :: []))))))
 
-let is_non_latin_char (s : FStar_Char.char) : bool =
-  (Prims.op_Greater (FStarC_Util.int_of_char s) (Prims.of_int (0x24f)))
+let is_non_latin_char (s : int) : bool =
+  (Prims.op_Greater (Z.of_int s) (Prims.of_int (0x24f)))
 
 let matches_token (s : string) (tmp : token) : bool =
   (match tmp with
-    | (StartsWith (c)) -> (let tmp1 = (FStarC_String.get s Prims.int_zero) in
+    | (StartsWith (c)) -> (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s Prims.int_zero) in
       ((=) tmp1 c))
     | (Exact (s')) -> ((=) s s')
-    | UnicodeOperator -> (let tmp1 = (FStarC_String.get s Prims.int_zero) in
+    | UnicodeOperator -> (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s Prims.int_zero) in
       (is_non_latin_char tmp1))
   )
 
 let matches_level (s : string) (tmp : ('tmp * (token) list)) : bool =
   (match tmp with
-    | (assoc_levels, tokens) -> (let tmp1 = (FStarC_List.tryFind (matches_token s) tokens) in
+    | (assoc_levels, tokens) -> (let tmp1 = (List.find_opt (matches_token s) tokens) in
       ((<>) tmp1 None))
   )
 
 let is_operatorInfix0ad12 (op : FStarC_Ident.ident) : bool =
-  (let tmp = (FStarC_List.tryFind (matches_level (FStarC_Ident.string_of_id op)) operatorInfix0ad12) in
+  (let tmp = (List.find_opt (matches_level (FStarC_Ident.string_of_id op)) operatorInfix0ad12) in
   ((<>) tmp None))
 
 let assign_levels (token_associativity_spec : ((associativity * (token) list)) list) (s : string) : (Prims.int * Prims.int * Prims.int) =
-  (let tmp = (FStarC_List.tryFind (matches_level s) level_table) in
+  (let tmp = (List.find_opt (matches_level s) level_table) in
   (match tmp with
     | (Some ((assoc_levels, tmp1))) -> assoc_levels
     | tmp1 -> (FStarC_Effect.failwith (Prims.strcat "Unrecognized operator " s))
@@ -256,21 +264,21 @@ let levels (op : string) : (Prims.int * Prims.int * Prims.int) =
     | (left, mine, right) -> (if ((=) op "&") then ((Prims.op_Minus left Prims.int_one), mine, right) else (left, mine, right))
   ))
 
-let infix0 (eta : FStar_Pprint.document) (eta1 : FStar_Pprint.document) (eta2 : FStar_Pprint.document) : FStar_Pprint.document =
+let infix0 (eta : PPrint.document) (eta1 : PPrint.document) (eta2 : PPrint.document) : PPrint.document =
   (FStar_Pprint.infix Prims.int_zero Prims.int_one eta eta1 eta2)
 
-let paren_if_gt (curr : Prims.int) (mine : Prims.int) (doc : FStar_Pprint.document) : FStar_Pprint.document =
-  (if (Prims.op_Greater mine curr) then (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen (FStar_Pprint.op_Hat_Hat doc FStar_Pprint.rparen))) else doc)
+let paren_if_gt (curr : Prims.int) (mine : Prims.int) (doc : PPrint.document) : PPrint.document =
+  (if (Prims.op_Greater mine curr) then (PPrint.group (PPrint.(^^) PPrint.lparen (PPrint.(^^) doc PPrint.rparen))) else doc)
 
-let prefix2 (prefix_ : FStar_Pprint.document) (eta : FStar_Pprint.document) : FStar_Pprint.document =
+let prefix2 (prefix_ : PPrint.document) (eta : PPrint.document) : PPrint.document =
   (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one prefix_ eta)
 
-let op_Hat_Slash_Plus_Hat (prefix_ : FStar_Pprint.document) (eta : FStar_Pprint.document) : FStar_Pprint.document =
+let op_Hat_Slash_Plus_Hat (prefix_ : PPrint.document) (eta : PPrint.document) : PPrint.document =
   (prefix2 prefix_ eta)
 
 let is_operatorInfix34 : (FStarC_Ident.ident -> bool) =
   (let opinfix34 = (opinfix3l :: (opinfix3r :: (opinfix4 :: []))) in
-  (fun op -> (let tmp = (FStarC_List.tryFind (matches_level (FStarC_Ident.string_of_id op)) opinfix34) in
+  (fun op -> (let tmp = (List.find_opt (matches_level (FStarC_Ident.string_of_id op)) opinfix34) in
   ((<>) tmp None))))
 
 let default_or_map (n : 'tmp) (f : ('tmp1 -> 'tmp)) (x : ('tmp1) option) : 'tmp =
@@ -308,7 +316,7 @@ let rec head_and_args_full__aux (e : FStarC_Parser_AST.term) (acc : ((FStarC_Par
 let head_and_args_full (e : FStarC_Parser_AST.term) : (FStarC_Parser_AST.term * ((FStarC_Parser_AST.term * FStarC_Parser_AST.imp)) list) =
   (head_and_args_full__aux e [])
 
-let p_char_literal' (quote_char : FStar_Char.char) (c : FStarC_BaseTypes.char) : FStar_Pprint.document =
+let p_char_literal' (quote_char : int) (c : int) : PPrint.document =
   (str (match c with
     | 8 -> "\\b"
     | 12 -> "\\f"
@@ -317,26 +325,26 @@ let p_char_literal' (quote_char : FStar_Char.char) (c : FStarC_BaseTypes.char) :
     | 13 -> "\\r"
     | 11 -> "\\v"
     | 0 -> "\\0"
-    | c1 -> (let s = (FStarC_Util.string_of_char c1) in
+    | c1 -> (let s = ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c1) in
       (if ((=) quote_char c1) then (Prims.strcat "\\" s) else s))
   ))
 
-let p_char_literal (c : FStarC_BaseTypes.char) : FStar_Pprint.document =
-  (FStar_Pprint.squotes (p_char_literal' 39 c))
+let p_char_literal (c : int) : PPrint.document =
+  (PPrint.squotes (p_char_literal' 39 c))
 
-let p_string_literal (s : string) : FStar_Pprint.document =
-  (let tmp = (FStarC_Pprint.concat_map (p_char_literal' 34) (FStar_String.list_of_string s)) in
-  (FStar_Pprint.dquotes tmp))
+let p_string_literal (s : string) : PPrint.document =
+  (let tmp = (FStarC_Pprint.concat_map (p_char_literal' 34) ((fun s -> BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))) s)) in
+  (PPrint.dquotes tmp))
 
-let text_of_lid_or_underscore (lid : FStarC_Ident.lident) : FStar_Pprint.document =
+let text_of_lid_or_underscore (lid : FStarC_Ident.lident) : PPrint.document =
   (let tmp = (if (FStarC_Util.starts_with (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) FStarC_Ident.reserved_prefix) then (let tmp = (FStarC_Options.print_real_names ()) in
     (not tmp)) else false) in
-  (if tmp then FStar_Pprint.underscore else (str (FStarC_Ident.string_of_lid lid))))
+  (if tmp then PPrint.underscore else (str (FStarC_Ident.string_of_lid lid))))
 
-let p_quident (lid : FStarC_Ident.lident) : FStar_Pprint.document =
+let p_quident (lid : FStarC_Ident.lident) : PPrint.document =
   (text_of_lid_or_underscore lid)
 
-let p_constant (tmp : FStarC_Const.sconst) : FStar_Pprint.document =
+let p_constant (tmp : FStarC_Const.sconst) : PPrint.document =
   (match tmp with
     | FStarC_Const.Const_effect -> (str "Effect")
     | FStarC_Const.Const_unit -> (str "()")
@@ -347,7 +355,7 @@ let p_constant (tmp : FStarC_Const.sconst) : FStar_Pprint.document =
     | (FStarC_Const.Const_int (v, b)) -> (str (FStarC_Const.string_of_int_literal v b))
     | (FStarC_Const.Const_machine_int (v, b, sw, w)) -> (let signedness = (fun tmp1 -> (match tmp1 with
           | FStarC_Const.Unsigned -> (str "u")
-          | FStarC_Const.Signed -> FStar_Pprint.empty
+          | FStarC_Const.Signed -> PPrint.empty
         )) in
       let width = (fun tmp1 -> (match tmp1 with
           | FStarC_Const.Int8 -> (str "y")
@@ -358,39 +366,39 @@ let p_constant (tmp : FStarC_Const.sconst) : FStar_Pprint.document =
       let suffix = (fun tmp1 -> (match tmp1 with
           | (s, w1) -> (match (s, w1) with
               | (tmp2, FStarC_Const.Sizet) -> (str "sz")
-              | tmp2 -> (FStar_Pprint.op_Hat_Hat (signedness s) (width w1))
+              | tmp2 -> (PPrint.(^^) (signedness s) (width w1))
             )
         )) in
       let ending = (suffix (sw, w)) in
-      (FStar_Pprint.op_Hat_Hat (str (FStarC_Const.string_of_int_literal v b)) ending))
+      (PPrint.(^^) (str (FStarC_Const.string_of_int_literal v b)) ending))
     | FStarC_Const.Const_range_of -> (str "range_of")
     | FStarC_Const.Const_set_range_of -> (str "set_range_of")
     | (FStarC_Const.Const_range (r)) -> (let tmp1 = (FStarC_Range_Ops.string_of_range r) in
       (str tmp1))
     | (FStarC_Const.Const_reify (tmp1)) -> (str "reify")
     | (FStarC_Const.Const_reflect (lid)) -> (let tmp1 = (p_quident lid) in
-      (FStar_Pprint.op_Hat_Hat tmp1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.qmark (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot (str "reflect")))))
+      (PPrint.(^^) tmp1 (PPrint.(^^) PPrint.qmark (PPrint.(^^) PPrint.dot (str "reflect")))))
   )
 
-let p_qlident (lid : FStarC_Ident.lident) : FStar_Pprint.document =
+let p_qlident (lid : FStarC_Ident.lident) : PPrint.document =
   (text_of_lid_or_underscore lid)
 
-let rec p_universeFrom (u : FStarC_Parser_AST.term) : FStar_Pprint.document =
+let rec p_universeFrom (u : FStarC_Parser_AST.term) : PPrint.document =
   (match (u).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Op (id, (u1 :: (u2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) "+") -> (let tmp = (p_universeFrom u1) in
       let tmp1 = (p_universeFrom u2) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.plus tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
-      (FStar_Pprint.group tmp3))
+      let tmp2 = (PPrint.(^/^) PPrint.plus tmp1) in
+      let tmp3 = (PPrint.(^/^) tmp tmp2) in
+      (PPrint.group tmp3))
     | (FStarC_Parser_AST.App (u__1, u__2, u__3)) -> (let tmp = (head_and_args_full u) in
       (match tmp with
         | (head, args) -> (match (head).FStarC_Parser_AST.tm with
             | (FStarC_Parser_AST.Var (maybe_max_lid)) when (FStarC_Ident.lid_equals maybe_max_lid FStarC_Parser_Const.max_lid) -> (let tmp1 = (p_qlident FStarC_Parser_Const.max_lid) in
-              let tmp2 = (FStarC_Pprint.separate_map FStar_Pprint.space (fun tmp2 -> (match tmp2 with
+              let tmp2 = (FStarC_Pprint.separate_map PPrint.space (fun tmp2 -> (match tmp2 with
                   | (u1, tmp3) -> (p_atomicUniverse u1)
                 )) args) in
               let tmp3 = (op_Hat_Slash_Plus_Hat tmp1 tmp2) in
-              (FStar_Pprint.group tmp3))
+              (PPrint.group tmp3))
             | tmp1 -> (let tmp2 = (FStarC_Parser_AST.term_to_string u) in
               let tmp3 = (FStarC_Format.fmt1 "Invalid term in universe context %s" tmp2) in
               (FStarC_Effect.failwith tmp3))
@@ -399,9 +407,9 @@ let rec p_universeFrom (u : FStarC_Parser_AST.term) : FStar_Pprint.document =
     | tmp -> (p_atomicUniverse u)
   )
 
-and p_atomicUniverse (u : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_atomicUniverse (u : FStarC_Parser_AST.term) : PPrint.document =
   (match (u).FStarC_Parser_AST.tm with
-    | FStarC_Parser_AST.Wild -> FStar_Pprint.underscore
+    | FStarC_Parser_AST.Wild -> PPrint.underscore
     | (FStarC_Parser_AST.Const ((FStarC_Const.Const_int (v, b)))) -> (p_constant (FStarC_Const.Const_int (v, b)))
     | (FStarC_Parser_AST.Uvar (id)) -> (str (FStarC_Ident.string_of_id id))
     | (FStarC_Parser_AST.Paren (u1)) -> (let tmp = (p_universeFrom u1) in
@@ -415,24 +423,24 @@ and p_atomicUniverse (u : FStarC_Parser_AST.term) : FStar_Pprint.document =
       (FStarC_Effect.failwith tmp2))
   )
 
-let p_universe (u : FStarC_Parser_AST.term) : FStar_Pprint.document =
+let p_universe (u : FStarC_Parser_AST.term) : PPrint.document =
   (let tmp = (p_atomicUniverse u) in
-  (FStar_Pprint.op_Hat_Hat (str "u#") tmp))
+  (PPrint.(^^) (str "u#") tmp))
 
 let is_general_prefix_op (op : FStarC_Ident.ident) : bool =
   (let op_s = (FStarC_Ident.string_of_id op) in
-  let op_starting_char = (FStarC_Util.char_at op_s Prims.int_zero) in
+  let op_starting_char = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) op_s Prims.int_zero) in
   ((((=) op_starting_char 33) || ((=) op_starting_char 63)) || ((((=) op_starting_char 126) && ((<>) op_s "~")) && ((<>) op_s "~-"))))
 
 let is_dtuple_constructor (f : FStarC_Ident.lident) : bool =
   (FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid f)
 
-let string_of_id_or_underscore (lid : FStarC_Ident.ident) : FStar_Pprint.document =
+let string_of_id_or_underscore (lid : FStarC_Ident.ident) : PPrint.document =
   (let tmp = (if (FStarC_Util.starts_with (FStarC_Ident.string_of_id lid) FStarC_Ident.reserved_prefix) then (let tmp = (FStarC_Options.print_real_names ()) in
     (not tmp)) else false) in
-  (if tmp then FStar_Pprint.underscore else (str (FStarC_Ident.string_of_id lid))))
+  (if tmp then PPrint.underscore else (str (FStarC_Ident.string_of_id lid))))
 
-let p_lident (lid : FStarC_Ident.ident) : FStar_Pprint.document =
+let p_lident (lid : FStarC_Ident.ident) : PPrint.document =
   (string_of_id_or_underscore lid)
 
 let rec extract_from_ref_set (e : FStarC_Parser_AST.term) : (FStarC_Parser_AST.term) list =
@@ -441,36 +449,36 @@ let rec extract_from_ref_set (e : FStarC_Parser_AST.term) : (FStarC_Parser_AST.t
     | (FStarC_Parser_AST.App ({ FStarC_Parser_AST.tm = (FStarC_Parser_AST.Var (tmp)); range = tmp1; level = tmp2; _ }, { FStarC_Parser_AST.tm = (FStarC_Parser_AST.App ({ FStarC_Parser_AST.tm = (FStarC_Parser_AST.Var (tmp3)); range = tmp4; level = tmp5; _ }, e1, FStarC_Parser_AST.Nothing)); range = tmp6; level = tmp7; _ }, FStarC_Parser_AST.Nothing)) -> (e1 :: [])
     | (FStarC_Parser_AST.App ({ FStarC_Parser_AST.tm = (FStarC_Parser_AST.App ({ FStarC_Parser_AST.tm = (FStarC_Parser_AST.Var (tmp)); range = tmp1; level = tmp2; _ }, e1, FStarC_Parser_AST.Nothing)); range = tmp3; level = tmp4; _ }, e2, FStarC_Parser_AST.Nothing)) -> (let tmp5 = (extract_from_ref_set e1) in
       let tmp6 = (extract_from_ref_set e2) in
-      (FStarC_List.op_At tmp5 tmp6))
+      (BatList.append tmp5 tmp6))
     | tmp -> (let tmp1 = (FStarC_Parser_AST.term_to_string e) in
       let tmp2 = (FStarC_Format.fmt1 "Not a ref set %s" tmp1) in
       (FStarC_Effect.failwith tmp2))
   )
 
-let separate_map_or_flow (sep : FStar_Pprint.document) (f : ('tmp -> FStar_Pprint.document)) (l : ('tmp) list) : FStar_Pprint.document =
-  (if (Prims.op_Less (FStarC_List.length l) (Prims.of_int (10))) then (let tmp = (FStarC_List.map f l) in
-  (FStar_Pprint.separate sep tmp)) else (let tmp = (FStarC_List.map f l) in
-  (FStar_Pprint.flow sep tmp)))
+let separate_map_or_flow (sep : PPrint.document) (f : ('tmp -> PPrint.document)) (l : ('tmp) list) : PPrint.document =
+  (if (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) l) (Prims.of_int (10))) then (let tmp = (BatList.map f l) in
+  (PPrint.separate sep tmp)) else (let tmp = (BatList.map f l) in
+  (PPrint.flow sep tmp)))
 
 let handleable_op (op : FStarC_Ident.ident) (args : ('tmp) list) : bool =
-  (match (FStarC_List.length args) with
+  (match ((fun l -> Z.of_int (BatList.length l)) args) with
     | u__iconst0 when u__iconst0 = Prims.int_zero -> true
     | u__iconst0 when u__iconst0 = Prims.int_one -> (let tmp = (is_general_prefix_op op) in
-      (if tmp then true else (FStarC_List.mem (FStarC_Ident.string_of_id op) ("~-" :: ("~" :: [])))))
+      (if tmp then true else (BatList.mem (FStarC_Ident.string_of_id op) ("~-" :: ("~" :: [])))))
     | u__iconst0 when u__iconst0 = (Prims.of_int (2)) -> (let tmp = (is_operatorInfix0ad12 op) in
       let tmp1 = (if tmp then true else (is_operatorInfix34 op)) in
-      (if tmp1 then true else (FStarC_List.mem (FStarC_Ident.string_of_id op) ("<==>" :: ("==>" :: ("\\/" :: ("/\\" :: ("=" :: ("|>" :: (":=" :: (".()" :: (".[]" :: (".(||)" :: (".[||]" :: []))))))))))))))
-    | u__iconst0 when u__iconst0 = (Prims.of_int (3)) -> (FStarC_List.mem (FStarC_Ident.string_of_id op) (".()<-" :: (".[]<-" :: (".(||)<-" :: (".[||]<-" :: [])))))
+      (if tmp1 then true else (BatList.mem (FStarC_Ident.string_of_id op) ("<==>" :: ("==>" :: ("\\/" :: ("/\\" :: ("=" :: ("|>" :: (":=" :: (".()" :: (".[]" :: (".(||)" :: (".[||]" :: []))))))))))))))
+    | u__iconst0 when u__iconst0 = (Prims.of_int (3)) -> (BatList.mem (FStarC_Ident.string_of_id op) (".()<-" :: (".[]<-" :: (".(||)<-" :: (".[||]<-" :: [])))))
     | tmp -> false
   )
 
-let separate_or_flow (sep : FStar_Pprint.document) (l : (FStar_Pprint.document) list) : FStar_Pprint.document =
+let separate_or_flow (sep : PPrint.document) (l : (PPrint.document) list) : PPrint.document =
   (separate_map_or_flow sep (fun x -> x) l)
 
-let p_ident (lid : FStarC_Ident.ident) : FStar_Pprint.document =
+let p_ident (lid : FStarC_Ident.ident) : PPrint.document =
   (string_of_id_or_underscore lid)
 
-let p_quantifier (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+let p_quantifier (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.QForall (u__1, u__2, u__3)) -> (str "forall")
     | (FStarC_Parser_AST.QExists (u__1, u__2, u__3)) -> (str "exists")
@@ -478,51 +486,51 @@ let p_quantifier (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
     | tmp -> (FStarC_Effect.failwith "Impossible: p_quantifier called on a non-quantifier term")
   )
 
-let separate_map_last (sep : FStar_Pprint.document) (f : (bool -> ('tmp -> FStar_Pprint.document))) (es : ('tmp) list) : FStar_Pprint.document =
-  (let l = (FStarC_List.length es) in
-  let es1 = (FStarC_List.mapi (fun i e -> (f ((<>) i (Prims.op_Minus l Prims.int_one)) e)) es) in
-  (FStar_Pprint.separate sep es1))
+let separate_map_last (sep : PPrint.document) (f : (bool -> ('tmp -> PPrint.document))) (es : ('tmp) list) : PPrint.document =
+  (let l = ((fun l -> Z.of_int (BatList.length l)) es) in
+  let es1 = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i e -> (f ((<>) i (Prims.op_Minus l Prims.int_one)) e)) es) in
+  (PPrint.separate sep es1))
 
-let soft_braces_with_nesting_tight (contents : FStar_Pprint.document) : FStar_Pprint.document =
-  (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero FStar_Pprint.lbrace contents FStar_Pprint.rbrace)
+let soft_braces_with_nesting_tight (contents : PPrint.document) : PPrint.document =
+  (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero PPrint.lbrace contents PPrint.rbrace)
 
-let soft_braces_with_nesting (contents : FStar_Pprint.document) : FStar_Pprint.document =
-  (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one FStar_Pprint.lbrace contents FStar_Pprint.rbrace)
+let soft_braces_with_nesting (contents : PPrint.document) : PPrint.document =
+  (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one PPrint.lbrace contents PPrint.rbrace)
 
-let cat_with_colon (x : FStar_Pprint.document) (y : FStar_Pprint.document) : FStar_Pprint.document =
-  (FStar_Pprint.op_Hat_Hat x (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon y))
+let cat_with_colon (x : PPrint.document) (y : PPrint.document) : PPrint.document =
+  (PPrint.(^^) x (PPrint.(^/^) PPrint.colon y))
 
-let separate_break_map (sep : FStar_Pprint.document) (f : ('tmp -> FStar_Pprint.document)) (l : ('tmp) list) : FStar_Pprint.document =
-  (let tmp = (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat sep break1)) f l) in
-  (FStar_Pprint.group tmp))
+let separate_break_map (sep : PPrint.document) (f : ('tmp -> PPrint.document)) (l : ('tmp) list) : PPrint.document =
+  (let tmp = (FStarC_Pprint.separate_map (PPrint.(^^) PPrint.space (PPrint.(^^) sep break1)) f l) in
+  (PPrint.group tmp))
 
-let infix2 (eta : FStar_Pprint.document) (eta1 : FStar_Pprint.document) (eta2 : FStar_Pprint.document) : FStar_Pprint.document =
+let infix2 (eta : PPrint.document) (eta1 : PPrint.document) (eta2 : PPrint.document) : PPrint.document =
   (FStar_Pprint.infix (Prims.of_int (2)) Prims.int_one eta eta1 eta2)
 
-let p_lidentOrOperator' (l : 'tmp) (s_l : ('tmp -> string)) (p_l : ('tmp -> FStar_Pprint.document)) : FStar_Pprint.document =
+let p_lidentOrOperator' (l : 'tmp) (s_l : ('tmp -> string)) (p_l : ('tmp -> PPrint.document)) : PPrint.document =
   (let lstr = (s_l l) in
   (if (FStarC_Util.starts_with lstr "op_") then (let tmp = (FStarC_Parser_AST.string_to_op lstr) in
   (match tmp with
     | None -> (p_l l)
-    | (Some (s)) -> (FStar_Pprint.op_Hat_Hat (str "( ") (FStar_Pprint.op_Hat_Hat (str s) (str " )")))
+    | (Some (s)) -> (PPrint.(^^) (str "( ") (PPrint.(^^) (str s) (str " )")))
   )) else (p_l l)))
 
-let p_lidentOrOperator (lid : FStarC_Ident.ident) : FStar_Pprint.document =
+let p_lidentOrOperator (lid : FStarC_Ident.ident) : PPrint.document =
   (p_lidentOrOperator' lid FStarC_Ident.string_of_id p_lident)
 
-let inline_comment_or_above (comm : FStar_Pprint.document) (doc : FStar_Pprint.document) (sep : FStar_Pprint.document) : FStar_Pprint.document =
-  (if ((=) comm FStar_Pprint.empty) then (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat doc sep)) else (FStar_Pprint.group (FStar_Pprint.ifflat (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat doc (FStar_Pprint.op_Hat_Hat sep (FStar_Pprint.op_Hat_Hat break1 comm)))) (FStar_Pprint.op_Hat_Hat comm (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat doc sep))))))
+let inline_comment_or_above (comm : PPrint.document) (doc : PPrint.document) (sep : PPrint.document) : PPrint.document =
+  (if ((=) comm PPrint.empty) then (PPrint.group (PPrint.(^^) doc sep)) else (PPrint.group (PPrint.ifflat (PPrint.group (PPrint.(^^) doc (PPrint.(^^) sep (PPrint.(^^) break1 comm)))) (PPrint.(^^) comm (PPrint.(^^) PPrint.hardline (PPrint.(^^) doc sep))))))
 
-let paren_if (b : bool) : (FStar_Pprint.document -> FStar_Pprint.document) =
+let paren_if (b : bool) : (PPrint.document -> PPrint.document) =
   (if b then soft_parens_with_nesting else (fun x -> x))
 
-let soft_brackets_with_nesting (contents : FStar_Pprint.document) : FStar_Pprint.document =
-  (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one FStar_Pprint.lbracket contents FStar_Pprint.rbracket)
+let soft_brackets_with_nesting (contents : PPrint.document) : PPrint.document =
+  (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one PPrint.lbracket contents PPrint.rbracket)
 
-let soft_lens_access_with_nesting (contents : FStar_Pprint.document) : FStar_Pprint.document =
+let soft_lens_access_with_nesting (contents : PPrint.document) : PPrint.document =
   (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one (str "(|") contents (str "|)"))
 
-let soft_brackets_lens_access_with_nesting (contents : FStar_Pprint.document) : FStar_Pprint.document =
+let soft_brackets_lens_access_with_nesting (contents : PPrint.document) : PPrint.document =
   (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_one (str "[|") contents (str "|]"))
 
 let is_general_construction (e : FStarC_Parser_AST.term) : bool =
@@ -531,23 +539,23 @@ let is_general_construction (e : FStarC_Parser_AST.term) : bool =
     | tmp -> false
   ))
 
-let flow_map_last (sep : FStar_Pprint.document) (f : (bool -> ('tmp -> FStar_Pprint.document))) (es : ('tmp) list) : FStar_Pprint.document =
-  (let l = (FStarC_List.length es) in
-  let es1 = (FStarC_List.mapi (fun i e -> (f ((<>) i (Prims.op_Minus l Prims.int_one)) e)) es) in
-  (FStar_Pprint.flow sep es1))
+let flow_map_last (sep : PPrint.document) (f : (bool -> ('tmp -> PPrint.document))) (es : ('tmp) list) : PPrint.document =
+  (let l = ((fun l -> Z.of_int (BatList.length l)) es) in
+  let es1 = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i e -> (f ((<>) i (Prims.op_Minus l Prims.int_one)) e)) es) in
+  (PPrint.flow sep es1))
 
-let separate_map_or_flow_last (sep : FStar_Pprint.document) (f : (bool -> ('tmp -> FStar_Pprint.document))) (l : ('tmp) list) : FStar_Pprint.document =
-  (if (Prims.op_Less (FStarC_List.length l) (Prims.of_int (10))) then (separate_map_last sep f l) else (flow_map_last sep f l))
+let separate_map_or_flow_last (sep : PPrint.document) (f : (bool -> ('tmp -> PPrint.document))) (l : ('tmp) list) : PPrint.document =
+  (if (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) l) (Prims.of_int (10))) then (separate_map_last sep f l) else (flow_map_last sep f l))
 
-let soft_surround_map_or_flow (n : Prims.int) (b : Prims.int) (void_ : FStar_Pprint.document) (opening : FStar_Pprint.document) (sep : FStar_Pprint.document) (closing : FStar_Pprint.document) (f : ('tmp -> FStar_Pprint.document)) (xs : ('tmp) list) : FStar_Pprint.document =
+let soft_surround_map_or_flow (n : Prims.int) (b : Prims.int) (void_ : PPrint.document) (opening : PPrint.document) (sep : PPrint.document) (closing : PPrint.document) (f : ('tmp -> PPrint.document)) (xs : ('tmp) list) : PPrint.document =
   (if ((=) xs []) then void_ else (let tmp = (separate_map_or_flow sep f xs) in
   (FStar_Pprint.soft_surround n b opening tmp closing)))
 
-let p_qlidentOrOperator (lid : FStarC_Ident.lident) : FStar_Pprint.document =
+let p_qlidentOrOperator (lid : FStarC_Ident.lident) : PPrint.document =
   (p_lidentOrOperator' lid FStarC_Ident.string_of_lid p_qlident)
 
-let braces_with_nesting (contents : FStar_Pprint.document) : FStar_Pprint.document =
-  (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one FStar_Pprint.lbrace contents FStar_Pprint.rbrace)
+let braces_with_nesting (contents : PPrint.document) : PPrint.document =
+  (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one PPrint.lbrace contents PPrint.rbrace)
 
 let maybe_unthunk (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
   (match (t).FStarC_Parser_AST.tm with
@@ -563,8 +571,8 @@ let is_unit (e : FStarC_Parser_AST.term) : bool =
 
 let rec all_binders_annot__all_binders (is_binder_annot : (FStarC_Parser_AST.binder -> bool)) (e : FStarC_Parser_AST.term) (l : Prims.int) : (bool * Prims.int) =
   (match (e).FStarC_Parser_AST.tm with
-    | (FStarC_Parser_AST.Product (bs, tgt)) -> (let tmp = (FStarC_List.for_all is_binder_annot bs) in
-      (if tmp then ((all_binders_annot__all_binders is_binder_annot) tgt (Prims.op_Plus l (FStarC_List.length bs))) else (false, Prims.int_zero)))
+    | (FStarC_Parser_AST.Product (bs, tgt)) -> (let tmp = (BatList.for_all is_binder_annot bs) in
+      (if tmp then ((all_binders_annot__all_binders is_binder_annot) tgt (Prims.op_Plus l ((fun l -> Z.of_int (BatList.length l)) bs))) else (false, Prims.int_zero)))
     | tmp -> (true, (Prims.op_Plus l Prims.int_one))
   )
 
@@ -590,26 +598,26 @@ let rec map_if_all__aux (f : ('u___a -> ('u___b) option)) (l : ('u___a) list) (a
 
 let map_if_all (f : ('u___a -> ('u___b) option)) (l : ('u___a) list) : (('u___b) list) option =
   (let r = ((map_if_all__aux f) l []) in
-  (if ((=) (FStarC_List.length l) (FStarC_List.length r)) then (Some (r)) else None))
+  (if ((=) ((fun l -> Z.of_int (BatList.length l)) l) ((fun l -> Z.of_int (BatList.length l)) r)) then (Some (r)) else None))
 
-let collapse_pats (pats : ((FStar_Pprint.document * FStar_Pprint.document * bool * bool)) list) : (FStar_Pprint.document) list =
+let collapse_pats (pats : ((PPrint.document * PPrint.document * bool * bool)) list) : (PPrint.document) list =
   (let fold_fun = (fun bs x -> (match x with
       | (b1, t1, tc1, j1) -> (match bs with
           | [] -> (((b1 :: []), t1, tc1, j1) :: [])
           | (hd :: tl) -> (match hd with
-              | (b2s, t2, tc2, j2) -> (if ((((=) t1 t2) && j1) && j2) then (((FStarC_List.op_At b2s (b1 :: [])), t1, false, true) :: tl) else (((b1 :: []), t1, tc1, j1) :: (hd :: tl)))
+              | (b2s, t2, tc2, j2) -> (if ((((=) t1 t2) && j1) && j2) then (((BatList.append b2s (b1 :: [])), t1, false, true) :: tl) else (((b1 :: []), t1, tc1, j1) :: (hd :: tl)))
             )
         )
     )) in
   let p_collapsed_binder = (fun cb -> (match cb with
       | (bs, typ, istcarg, tmp) -> (let body = (match bs with
             | [] -> (FStarC_Effect.failwith "Impossible")
-            | (hd :: tl) -> (let tmp1 = (FStarC_List.fold_left (fun x y -> (FStar_Pprint.op_Hat_Hat x (FStar_Pprint.op_Hat_Hat FStar_Pprint.space y))) hd tl) in
+            | (hd :: tl) -> (let tmp1 = (BatList.fold_left (fun x y -> (PPrint.(^^) x (PPrint.(^^) PPrint.space y))) hd tl) in
               (cat_with_colon tmp1 typ))
           ) in
         (if istcarg then (tc_arg body) else (soft_parens_with_nesting body)))
     )) in
-  let binders = (FStarC_List.fold_left fold_fun [] (FStarC_List.rev pats)) in
+  let binders = (BatList.fold_left fold_fun [] (BatList.rev pats)) in
   (map_rev p_collapsed_binder binders))
 
 let is_typ_tuple (e : FStarC_Parser_AST.term) : bool =
@@ -618,30 +626,30 @@ let is_typ_tuple (e : FStarC_Parser_AST.term) : bool =
     | tmp -> false
   )
 
-let rec p_tmArrow' (p_Tm : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (e : FStarC_Parser_AST.term) : ((FStar_Pprint.document) list * FStar_Pprint.document) =
+let rec p_tmArrow' (p_Tm : (FStarC_Parser_AST.term -> PPrint.document)) (e : FStarC_Parser_AST.term) : ((PPrint.document) list * PPrint.document) =
   (match (e).FStarC_Parser_AST.tm with
-    | (FStarC_Parser_AST.Product (bs, tgt)) -> (let bs_ds = (FStarC_List.map (fun b -> (p_binder false b)) bs) in
+    | (FStarC_Parser_AST.Product (bs, tgt)) -> (let bs_ds = (BatList.map (fun b -> (p_binder false b)) bs) in
       let tmp = (p_tmArrow' p_Tm tgt) in
       (match tmp with
-        | (bs_ds', ret) -> ((FStarC_List.op_At bs_ds bs_ds'), ret)
+        | (bs_ds', ret) -> ((BatList.append bs_ds bs_ds'), ret)
       ))
     | tmp -> (let tmp1 = (p_Tm e) in
       ([], tmp1))
   )
 
-and collapse_binders__accumulate_binders (p_Tm : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (e : FStarC_Parser_AST.term) : ((((FStar_Pprint.document * ((FStar_Pprint.document * (FStar_Pprint.document -> (FStar_Pprint.document -> FStar_Pprint.document)))) option) * bool * bool)) list * FStar_Pprint.document) =
+and collapse_binders__accumulate_binders (p_Tm : (FStarC_Parser_AST.term -> PPrint.document)) (e : FStarC_Parser_AST.term) : ((((PPrint.document * ((PPrint.document * (PPrint.document -> (PPrint.document -> PPrint.document)))) option) * bool * bool)) list * PPrint.document) =
   (match (e).FStarC_Parser_AST.tm with
-    | (FStarC_Parser_AST.Product (bs, tgt)) -> (let bs_ds = (FStarC_List.map (fun b -> (let tmp = (p_binder' true false b) in
+    | (FStarC_Parser_AST.Product (bs, tgt)) -> (let bs_ds = (BatList.map (fun b -> (let tmp = (p_binder' true false b) in
         (tmp, (is_tc_binder b), (is_joinable_binder b)))) bs) in
       let tmp = (collapse_binders__accumulate_binders p_Tm tgt) in
       (match tmp with
-        | (bs_ds', ret) -> ((FStarC_List.op_At bs_ds bs_ds'), ret)
+        | (bs_ds', ret) -> ((BatList.append bs_ds bs_ds'), ret)
       ))
     | tmp -> (let tmp1 = (p_Tm e) in
       ([], tmp1))
   )
 
-and collapse_binders (style : annotation_style) (p_Tm : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (e : FStarC_Parser_AST.term) : ((FStar_Pprint.document) list * FStar_Pprint.document) =
+and collapse_binders (style : annotation_style) (p_Tm : (FStarC_Parser_AST.term -> PPrint.document)) (e : FStarC_Parser_AST.term) : ((PPrint.document) list * PPrint.document) =
   (let atomize = (match style with
       | (Binders (tmp, tmp1, a)) -> a
       | tmp -> false
@@ -652,7 +660,7 @@ and collapse_binders (style : annotation_style) (p_Tm : (FStarC_Parser_AST.term 
           | [] -> (((b1 :: []), t1, tc1, j1) :: [])
           | (hd :: tl) -> (match hd with
               | (b2s, t2, tc2, j2) -> (match (t1, t2) with
-                  | ((Some ((typ1, catf1))), (Some ((typ2, tmp)))) when ((((=) typ1 typ2) && j1) && j2) -> (((FStarC_List.op_At b2s (b1 :: [])), t1, false, true) :: tl)
+                  | ((Some ((typ1, catf1))), (Some ((typ2, tmp)))) when ((((=) typ1 typ2) && j1) && j2) -> (((BatList.append b2s (b1 :: [])), t1, false, true) :: tl)
                   | tmp -> (((b1 :: []), t1, tc1, j1) :: bs)
                 )
             )
@@ -666,7 +674,7 @@ and collapse_binders (style : annotation_style) (p_Tm : (FStarC_Parser_AST.term 
             )
           | (Some ((typ, f))) -> (match bs with
               | [] -> (FStarC_Effect.failwith "Impossible")
-              | (hd :: tl) -> (let tmp1 = (FStarC_List.fold_left (fun x y -> (FStar_Pprint.op_Hat_Hat x (FStar_Pprint.op_Hat_Hat FStar_Pprint.space y))) hd tl) in
+              | (hd :: tl) -> (let tmp1 = (BatList.fold_left (fun x y -> (PPrint.(^^) x (PPrint.(^^) PPrint.space y))) hd tl) in
                 let tmp2 = (f tmp1 typ) in
                 (wrap is_tc tmp2))
             )
@@ -674,12 +682,12 @@ and collapse_binders (style : annotation_style) (p_Tm : (FStarC_Parser_AST.term 
     )) in
   let tmp = (collapse_binders__accumulate_binders p_Tm e) in
   (match tmp with
-    | (bs_ds, ret_d) -> (let binders = (FStarC_List.fold_left fold_fun [] bs_ds) in
+    | (bs_ds, ret_d) -> (let binders = (BatList.fold_left fold_fun [] bs_ds) in
       let tmp1 = (map_rev p_collapsed_binder binders) in
       (tmp1, ret_d))
   ))
 
-and p_tmArrow (style : annotation_style) (flat_space : bool) (p_Tm : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmArrow (style : annotation_style) (flat_space : bool) (p_Tm : (FStarC_Parser_AST.term -> PPrint.document)) (e : FStarC_Parser_AST.term) : PPrint.document =
   (let tmp = (match style with
       | (Arrows (u__1, u__2)) -> (p_tmArrow' p_Tm e)
       | (Binders (u__1, u__2, u__3)) -> (collapse_binders style p_Tm e)
@@ -688,84 +696,84 @@ and p_tmArrow (style : annotation_style) (flat_space : bool) (p_Tm : (FStarC_Par
     | (terms, ret_d) -> (format_sig style terms ret_d false flat_space)
   ))
 
-and p_noSeqTermAndComment (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_noSeqTermAndComment (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : PPrint.document =
   (with_comment (p_noSeqTerm' ps pb) e (e).FStarC_Parser_AST.range)
 
-and p_term_sep (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : (FStar_Pprint.document * FStar_Pprint.document) =
+and p_term_sep (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : (PPrint.document * PPrint.document) =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Seq (e1, e2)) -> (let tmp = (p_noSeqTerm true false e1) in
       (match tmp with
         | (comm, t1) -> (let tmp1 = (p_term ps pb e2) in
-          let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp1) in
-          let tmp3 = (FStar_Pprint.op_Hat_Hat (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat t1 FStar_Pprint.semi)) tmp2) in
+          let tmp2 = (PPrint.(^^) PPrint.hardline tmp1) in
+          let tmp3 = (PPrint.(^^) (PPrint.group (PPrint.(^^) t1 PPrint.semi)) tmp2) in
           (comm, tmp3))
       ))
     | (FStarC_Parser_AST.Bind (x, e1, e2)) -> (let tmp = (p_lident x) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.long_left_arrow)) in
+      let tmp1 = (PPrint.(^^) tmp (PPrint.(^^) PPrint.space FStar_Pprint.long_left_arrow)) in
       let tmp2 = (p_noSeqTermAndComment true false e1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.semi)) in
+      let tmp3 = (PPrint.(^^) tmp2 (PPrint.(^^) PPrint.space PPrint.semi)) in
       let tmp4 = (op_Hat_Slash_Plus_Hat tmp1 tmp3) in
-      let tmp5 = (FStar_Pprint.group tmp4) in
+      let tmp5 = (PPrint.group tmp4) in
       let tmp6 = (p_term ps pb e2) in
-      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 tmp6) in
-      (FStar_Pprint.empty, tmp7))
+      let tmp7 = (PPrint.(^/^) tmp5 tmp6) in
+      (PPrint.empty, tmp7))
     | tmp -> (p_noSeqTerm ps pb e)
   )
 
-and p_term_list__aux (ps : bool) (pb : bool) (l : (FStarC_Parser_AST.term) list) : FStar_Pprint.document =
+and p_term_list__aux (ps : bool) (pb : bool) (l : (FStarC_Parser_AST.term) list) : PPrint.document =
   (match l with
-    | [] -> FStar_Pprint.empty
+    | [] -> PPrint.empty
     | (x :: []) -> (p_term ps pb x)
     | (x :: xs) -> (let tmp = (p_term ps pb x) in
       let tmp1 = ((p_term_list__aux ps pb) xs) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat (str ";") tmp1) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp2))
+      let tmp2 = (PPrint.(^^) (str ";") tmp1) in
+      (PPrint.(^^) tmp tmp2))
   )
 
-and p_term_list (ps : bool) (pb : bool) (l : (FStarC_Parser_AST.term) list) : FStar_Pprint.document =
+and p_term_list (ps : bool) (pb : bool) (l : (FStarC_Parser_AST.term) list) : PPrint.document =
   (let tmp = ((p_term_list__aux ps pb) l) in
-  let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (str "]")) in
-  (FStar_Pprint.op_Hat_Hat (str "[") tmp1))
+  let tmp1 = (PPrint.(^^) tmp (str "]")) in
+  (PPrint.(^^) (str "[") tmp1))
 
-and p_binders_list (is_atomic : bool) (eta : (FStarC_Parser_AST.binder) list) : (FStar_Pprint.document) list =
-  (FStarC_List.map (p_binder is_atomic) eta)
+and p_binders_list (is_atomic : bool) (eta : (FStarC_Parser_AST.binder) list) : (PPrint.document) list =
+  (BatList.map (p_binder is_atomic) eta)
 
-and p_binders (is_atomic : bool) (bs : (FStarC_Parser_AST.binder) list) : FStar_Pprint.document =
+and p_binders (is_atomic : bool) (bs : (FStarC_Parser_AST.binder) list) : PPrint.document =
   (let tmp = (p_binders_list is_atomic bs) in
   (separate_or_flow break1 tmp))
 
-and p_conjunctivePats (pats : (FStarC_Parser_AST.term) list) : FStar_Pprint.document =
-  (let tmp = (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1) p_appTerm pats) in
-  (FStar_Pprint.group tmp))
+and p_conjunctivePats (pats : (FStarC_Parser_AST.term) list) : PPrint.document =
+  (let tmp = (FStarC_Pprint.separate_map (PPrint.(^^) PPrint.semi break1) p_appTerm pats) in
+  (PPrint.group tmp))
 
-and p_disjunctivePats (pats : ((FStarC_Parser_AST.term) list) list) : FStar_Pprint.document =
+and p_disjunctivePats (pats : ((FStarC_Parser_AST.term) list) list) : PPrint.document =
   (FStarC_Pprint.separate_map (str "\\/") p_conjunctivePats pats)
 
-and p_trigger (tmp : ((FStarC_Parser_AST.term) list) list) : FStar_Pprint.document =
+and p_trigger (tmp : ((FStarC_Parser_AST.term) list) list) : PPrint.document =
   (match tmp with
-    | [] -> FStar_Pprint.empty
+    | [] -> PPrint.empty
     | pats -> (let tmp1 = (p_disjunctivePats pats) in
       let tmp2 = (FStar_Pprint.jump (Prims.of_int (2)) Prims.int_zero tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 FStar_Pprint.rbrace) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (str "pattern") tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.lbrace tmp5) in
-      (FStar_Pprint.group tmp6))
+      let tmp3 = (PPrint.(^^) tmp2 PPrint.rbrace) in
+      let tmp4 = (PPrint.(^/^) (str "pattern") tmp3) in
+      let tmp5 = (PPrint.(^^) PPrint.colon tmp4) in
+      let tmp6 = (PPrint.(^^) PPrint.lbrace tmp5) in
+      (PPrint.group tmp6))
   )
 
-and p_attributes (isTopLevel : bool) (attrs : (FStarC_Parser_AST.term) list) : FStar_Pprint.document =
+and p_attributes (isTopLevel : bool) (attrs : (FStarC_Parser_AST.term) list) : PPrint.document =
   (match attrs with
-    | [] -> FStar_Pprint.empty
-    | tmp -> (let tmp1 = (FStarC_List.map (p_noSeqTermAndComment false false) attrs) in
-      let tmp2 = (FStar_Pprint.flow (str "; ") tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 FStar_Pprint.rbracket) in
-      let tmp4 = (FStar_Pprint.align tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp4 (if isTopLevel then FStar_Pprint.hardline else FStar_Pprint.empty)) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat (str (if isTopLevel then "@@ " else "@@@ ")) tmp5) in
-      (FStar_Pprint.op_Hat_Hat FStar_Pprint.lbracket tmp6))
+    | [] -> PPrint.empty
+    | tmp -> (let tmp1 = (BatList.map (p_noSeqTermAndComment false false) attrs) in
+      let tmp2 = (PPrint.flow (str "; ") tmp1) in
+      let tmp3 = (PPrint.(^^) tmp2 PPrint.rbracket) in
+      let tmp4 = (PPrint.align tmp3) in
+      let tmp5 = (PPrint.(^^) tmp4 (if isTopLevel then PPrint.hardline else PPrint.empty)) in
+      let tmp6 = (PPrint.(^^) (str (if isTopLevel then "@@ " else "@@@ ")) tmp5) in
+      (PPrint.(^^) PPrint.lbracket tmp6))
   )
 
-and p_refinement' (aqual_opt : (FStarC_Parser_AST.arg_qualifier) option) (attrs : (FStarC_Parser_AST.term) list) (binder : FStar_Pprint.document) (t : FStarC_Parser_AST.term) (phi : FStarC_Parser_AST.term) : (FStar_Pprint.document * FStar_Pprint.document) =
+and p_refinement' (aqual_opt : (FStarC_Parser_AST.arg_qualifier) option) (attrs : (FStarC_Parser_AST.term) list) (binder : PPrint.document) (t : FStarC_Parser_AST.term) (phi : FStarC_Parser_AST.term) : (PPrint.document * PPrint.document) =
   (let is_t_atomic = (match (t).FStarC_Parser_AST.tm with
       | (FStarC_Parser_AST.Construct (u__1, u__2)) -> false
       | (FStarC_Parser_AST.App (u__1, u__2, u__3)) -> false
@@ -774,78 +782,78 @@ and p_refinement' (aqual_opt : (FStarC_Parser_AST.arg_qualifier) option) (attrs 
     ) in
   let tmp = (p_noSeqTerm false false phi) in
   (match tmp with
-    | (comm, phi1) -> (let phi2 = (if ((=) comm FStar_Pprint.empty) then phi1 else (FStar_Pprint.op_Hat_Hat comm (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline phi1))) in
+    | (comm, phi1) -> (let phi2 = (if ((=) comm PPrint.empty) then phi1 else (PPrint.(^^) comm (PPrint.(^^) PPrint.hardline phi1))) in
       let jump_break = (if is_t_atomic then Prims.int_zero else Prims.int_one) in
       let tmp1 = (FStarC_Pprint.optional p_aqual aqual_opt) in
       let tmp2 = (p_attributes false attrs) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 binder) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp1 tmp3) in
+      let tmp3 = (PPrint.(^^) tmp2 binder) in
+      let tmp4 = (PPrint.(^^) tmp1 tmp3) in
       let tmp5 = (p_appTerm t) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat tmp5 (FStar_Pprint.jump (Prims.of_int (2)) jump_break (FStar_Pprint.group (FStar_Pprint.ifflat (soft_braces_with_nesting_tight phi2) (soft_braces_with_nesting phi2))))) in
+      let tmp6 = (PPrint.(^^) tmp5 (FStar_Pprint.jump (Prims.of_int (2)) jump_break (PPrint.group (PPrint.ifflat (soft_braces_with_nesting_tight phi2) (soft_braces_with_nesting phi2))))) in
       (tmp4, tmp6))
   ))
 
-and p_refinement (aqual_opt : (FStarC_Parser_AST.arg_qualifier) option) (attrs : (FStarC_Parser_AST.term) list) (binder : FStar_Pprint.document) (t : FStarC_Parser_AST.term) (phi : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_refinement (aqual_opt : (FStarC_Parser_AST.arg_qualifier) option) (attrs : (FStarC_Parser_AST.term) list) (binder : PPrint.document) (t : FStarC_Parser_AST.term) (phi : FStarC_Parser_AST.term) : PPrint.document =
   (let tmp = (p_refinement' aqual_opt attrs binder t phi) in
   (match tmp with
     | (b, typ) -> (cat_with_colon b typ)
   ))
 
-and p_tmEqNoRefinement (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmEqNoRefinement (e : FStarC_Parser_AST.term) : PPrint.document =
   (p_tmEqWith p_appTerm e)
 
-and p_atomicPattern (p : FStarC_Parser_AST.pattern) : FStar_Pprint.document =
+and p_atomicPattern (p : FStarC_Parser_AST.pattern) : PPrint.document =
   (match (p).FStarC_Parser_AST.pat with
     | FStarC_Parser_AST.PatRest -> (str "..")
     | (FStarC_Parser_AST.PatAscribed (pat, (t, None))) -> (match ((pat).FStarC_Parser_AST.pat, (t).FStarC_Parser_AST.tm) with
         | ((FStarC_Parser_AST.PatVar (lid, aqual, attrs)), (FStarC_Parser_AST.Refine ({ FStarC_Parser_AST.b = (FStarC_Parser_AST.Annotated (lid', t1)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ }, phi))) when ((=) (FStarC_Ident.string_of_id lid) (FStarC_Ident.string_of_id lid')) -> (let tmp4 = (p_ident lid) in
           let tmp5 = (p_refinement aqual attrs tmp4 t1 phi) in
           (soft_parens_with_nesting tmp5))
-        | ((FStarC_Parser_AST.PatWild (aqual, attrs)), (FStarC_Parser_AST.Refine ({ FStarC_Parser_AST.b = (FStarC_Parser_AST.NoName (t1)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ }, phi))) -> (let tmp4 = (p_refinement aqual attrs FStar_Pprint.underscore t1 phi) in
+        | ((FStarC_Parser_AST.PatWild (aqual, attrs)), (FStarC_Parser_AST.Refine ({ FStarC_Parser_AST.b = (FStarC_Parser_AST.NoName (t1)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ }, phi))) -> (let tmp4 = (p_refinement aqual attrs PPrint.underscore t1 phi) in
           (soft_parens_with_nesting tmp4))
         | ((FStarC_Parser_AST.PatVar (tmp, aqual, tmp1)), tmp2) -> (let wrap = (if ((=) aqual (Some (FStarC_Parser_AST.TypeClassArg))) then tc_arg else soft_parens_with_nesting) in
           let tmp3 = (p_tuplePattern pat) in
           let tmp4 = (p_tmEqNoRefinement t) in
-          let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp4) in
-          let tmp6 = (FStar_Pprint.op_Hat_Hat tmp3 tmp5) in
+          let tmp5 = (PPrint.(^/^) PPrint.colon tmp4) in
+          let tmp6 = (PPrint.(^^) tmp3 tmp5) in
           (wrap tmp6))
         | ((FStarC_Parser_AST.PatWild (aqual, tmp)), tmp1) -> (let wrap = (if ((=) aqual (Some (FStarC_Parser_AST.TypeClassArg))) then tc_arg else soft_parens_with_nesting) in
           let tmp2 = (p_tuplePattern pat) in
           let tmp3 = (p_tmEqNoRefinement t) in
-          let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp3) in
-          let tmp5 = (FStar_Pprint.op_Hat_Hat tmp2 tmp4) in
+          let tmp4 = (PPrint.(^/^) PPrint.colon tmp3) in
+          let tmp5 = (PPrint.(^^) tmp2 tmp4) in
           (wrap tmp5))
         | tmp -> (let tmp1 = (p_tuplePattern pat) in
           let tmp2 = (p_tmEqNoRefinement t) in
-          let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp2) in
-          let tmp4 = (FStar_Pprint.op_Hat_Hat tmp1 tmp3) in
+          let tmp3 = (PPrint.(^/^) PPrint.colon tmp2) in
+          let tmp4 = (PPrint.(^^) tmp1 tmp3) in
           (soft_parens_with_nesting tmp4))
       )
-    | (FStarC_Parser_AST.PatList (pats)) -> (let tmp = (separate_break_map FStar_Pprint.semi p_tuplePattern pats) in
-      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero FStar_Pprint.lbracket tmp FStar_Pprint.rbracket))
+    | (FStarC_Parser_AST.PatList (pats)) -> (let tmp = (separate_break_map PPrint.semi p_tuplePattern pats) in
+      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero PPrint.lbracket tmp PPrint.rbracket))
     | (FStarC_Parser_AST.PatRecord (pats)) -> (let p_recordFieldPat = (fun tmp -> (match tmp with
           | (lid, pat) -> (let tmp1 = (p_qlident lid) in
             let tmp2 = (p_tuplePattern pat) in
-            (infix2 FStar_Pprint.equals tmp1 tmp2))
+            (infix2 PPrint.equals tmp1 tmp2))
         )) in
-      let tmp = (separate_break_map FStar_Pprint.semi p_recordFieldPat pats) in
+      let tmp = (separate_break_map PPrint.semi p_recordFieldPat pats) in
       (soft_braces_with_nesting tmp))
-    | (FStarC_Parser_AST.PatTuple (pats, true)) -> (let tmp = (separate_break_map FStar_Pprint.comma p_constructorPattern pats) in
-      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen FStar_Pprint.bar) tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.rparen)))
-    | (FStarC_Parser_AST.PatOp (op)) -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str (FStarC_Ident.string_of_id op)) (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.rparen))))
+    | (FStarC_Parser_AST.PatTuple (pats, true)) -> (let tmp = (separate_break_map PPrint.comma p_constructorPattern pats) in
+      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (PPrint.(^^) PPrint.lparen PPrint.bar) tmp (PPrint.(^^) PPrint.bar PPrint.rparen)))
+    | (FStarC_Parser_AST.PatOp (op)) -> (PPrint.(^^) PPrint.lparen (PPrint.(^^) PPrint.space (PPrint.(^^) (str (FStarC_Ident.string_of_id op)) (PPrint.(^^) PPrint.space PPrint.rparen))))
     | (FStarC_Parser_AST.PatWild (aqual, attrs)) -> (let tmp = (FStarC_Pprint.optional p_aqual aqual) in
       let tmp1 = (p_attributes false attrs) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 FStar_Pprint.underscore) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp2))
+      let tmp2 = (PPrint.(^^) tmp1 PPrint.underscore) in
+      (PPrint.(^^) tmp tmp2))
     | (FStarC_Parser_AST.PatConst (c)) -> (p_constant c)
     | (FStarC_Parser_AST.PatVQuote (e)) -> (let tmp = (p_noSeqTermAndComment false false e) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat (str "`%") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^^) (str "`%") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.PatVar (lid, aqual, attrs)) -> (let tmp = (FStarC_Pprint.optional p_aqual aqual) in
       let tmp1 = (p_attributes false attrs) in
       let tmp2 = (p_lidentOrOperator lid) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp1 tmp2) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp3))
+      let tmp3 = (PPrint.(^^) tmp1 tmp2) in
+      (PPrint.(^^) tmp tmp3))
     | (FStarC_Parser_AST.PatName (uid)) -> (p_quident uid)
     | (FStarC_Parser_AST.PatOr (tmp)) -> (FStarC_Effect.failwith "Inner or pattern !")
     | (FStarC_Parser_AST.PatApp ({ FStarC_Parser_AST.pat = (FStarC_Parser_AST.PatName (tmp)); prange = tmp1; _ }, tmp2)) -> (let tmp3 = (p_tuplePattern p) in
@@ -857,170 +865,170 @@ and p_atomicPattern (p : FStarC_Parser_AST.pattern) : FStar_Pprint.document =
       (FStarC_Effect.failwith tmp2))
   )
 
-and p_constructorPattern (p : FStarC_Parser_AST.pattern) : FStar_Pprint.document =
+and p_constructorPattern (p : FStarC_Parser_AST.pattern) : PPrint.document =
   (match (p).FStarC_Parser_AST.pat with
     | (FStarC_Parser_AST.PatApp ({ FStarC_Parser_AST.pat = (FStarC_Parser_AST.PatName (maybe_cons_lid)); prange = tmp; _ }, (hd :: (tl :: [])))) when (FStarC_Ident.lid_equals maybe_cons_lid FStarC_Parser_Const.cons_lid) -> (let tmp1 = (p_constructorPattern hd) in
       let tmp2 = (p_constructorPattern tl) in
-      (infix0 (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon FStar_Pprint.colon) tmp1 tmp2))
+      (infix0 (PPrint.(^^) PPrint.colon PPrint.colon) tmp1 tmp2))
     | (FStarC_Parser_AST.PatApp ({ FStarC_Parser_AST.pat = (FStarC_Parser_AST.PatName (uid)); prange = tmp; _ }, pats)) -> (let tmp1 = (p_quident uid) in
       let tmp2 = (FStarC_Pprint.separate_map break1 p_atomicPattern pats) in
       (prefix2 tmp1 tmp2))
     | tmp -> (p_atomicPattern p)
   )
 
-and p_tuplePattern (p : FStarC_Parser_AST.pattern) : FStar_Pprint.document =
+and p_tuplePattern (p : FStarC_Parser_AST.pattern) : PPrint.document =
   (match (p).FStarC_Parser_AST.pat with
-    | (FStarC_Parser_AST.PatTuple (pats, false)) -> (let tmp = (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1) p_constructorPattern pats) in
-      (FStar_Pprint.group tmp))
+    | (FStarC_Parser_AST.PatTuple (pats, false)) -> (let tmp = (FStarC_Pprint.separate_map (PPrint.(^^) PPrint.comma break1) p_constructorPattern pats) in
+      (PPrint.group tmp))
     | tmp -> (p_constructorPattern p)
   )
 
-and p_patternBranch (pb : bool) (branch_triple : (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) option * FStarC_Parser_AST.term)) : FStar_Pprint.document =
+and p_patternBranch (pb : bool) (branch_triple : (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) option * FStarC_Parser_AST.term)) : PPrint.document =
   (match branch_triple with
     | (pat, when_opt, e) -> (let one_pattern_branch = (fun p -> (let branch = (match when_opt with
             | None -> (let tmp = (p_tuplePattern p) in
-              let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.rarrow)) in
-              let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-              let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar tmp2) in
-              (FStar_Pprint.group tmp3))
+              let tmp1 = (PPrint.(^^) tmp (PPrint.(^^) PPrint.space FStar_Pprint.rarrow)) in
+              let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+              let tmp3 = (PPrint.(^^) PPrint.bar tmp2) in
+              (PPrint.group tmp3))
             | (Some (f)) -> (let tmp = (p_tuplePattern p) in
-              let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat tmp (str "when")) in
-              let tmp2 = (FStar_Pprint.group tmp1) in
+              let tmp1 = (PPrint.(^/^) tmp (str "when")) in
+              let tmp2 = (PPrint.group tmp1) in
               let tmp3 = (p_tmFormula f) in
               let tmp4 = (tmp3 :: (FStar_Pprint.rarrow :: [])) in
-              let tmp5 = (FStar_Pprint.flow break1 tmp4) in
-              let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp2 tmp5) in
-              let tmp7 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp6) in
-              let tmp8 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar tmp7) in
+              let tmp5 = (PPrint.flow break1 tmp4) in
+              let tmp6 = (PPrint.(^/^) tmp2 tmp5) in
+              let tmp7 = (PPrint.(^^) PPrint.space tmp6) in
+              let tmp8 = (PPrint.(^^) PPrint.bar tmp7) in
               (FStar_Pprint.hang (Prims.of_int (2)) tmp8))
           ) in
         let tmp = (p_term_sep false pb e) in
         (match tmp with
-          | (comm, doc) -> (if pb then (if ((=) comm FStar_Pprint.empty) then (FStar_Pprint.group (op_Hat_Slash_Plus_Hat branch doc)) else (let tmp1 = (inline_comment_or_above comm doc FStar_Pprint.empty) in
+          | (comm, doc) -> (if pb then (if ((=) comm PPrint.empty) then (PPrint.group (op_Hat_Slash_Plus_Hat branch doc)) else (let tmp1 = (inline_comment_or_above comm doc PPrint.empty) in
             let tmp2 = (jump2 tmp1) in
-            let tmp3 = (FStar_Pprint.op_Hat_Hat branch tmp2) in
-            let tmp4 = (FStar_Pprint.ifflat (FStar_Pprint.group (op_Hat_Slash_Plus_Hat branch (FStar_Pprint.op_Hat_Hat doc (FStar_Pprint.op_Hat_Hat break1 comm)))) tmp3) in
-            (FStar_Pprint.group tmp4))) else (if ((<>) comm FStar_Pprint.empty) then (op_Hat_Slash_Plus_Hat branch (FStar_Pprint.op_Hat_Hat comm (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline doc))) else (op_Hat_Slash_Plus_Hat branch doc)))
+            let tmp3 = (PPrint.(^^) branch tmp2) in
+            let tmp4 = (PPrint.ifflat (PPrint.group (op_Hat_Slash_Plus_Hat branch (PPrint.(^^) doc (PPrint.(^^) break1 comm)))) tmp3) in
+            (PPrint.group tmp4))) else (if ((<>) comm PPrint.empty) then (op_Hat_Slash_Plus_Hat branch (PPrint.(^^) comm (PPrint.(^^) PPrint.hardline doc))) else (op_Hat_Slash_Plus_Hat branch doc)))
         ))) in
       (match (pat).FStarC_Parser_AST.pat with
-        | (FStarC_Parser_AST.PatOr (pats)) -> (match (FStarC_List.rev pats) with
+        | (FStarC_Parser_AST.PatOr (pats)) -> (match (BatList.rev pats) with
             | (hd :: tl) -> (let last_pat_branch = (one_pattern_branch hd) in
-              let tmp = (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat break1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.space)) p_tuplePattern (FStarC_List.rev tl)) in
-              let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat tmp last_pat_branch) in
-              let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-              let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar tmp2) in
-              (FStar_Pprint.group tmp3))
+              let tmp = (FStarC_Pprint.separate_map (PPrint.(^^) break1 (PPrint.(^^) PPrint.bar PPrint.space)) p_tuplePattern (BatList.rev tl)) in
+              let tmp1 = (PPrint.(^/^) tmp last_pat_branch) in
+              let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+              let tmp3 = (PPrint.(^^) PPrint.bar tmp2) in
+              (PPrint.group tmp3))
             | [] -> (FStarC_Effect.failwith "Impossible: disjunctive pattern can't be empty")
           )
         | tmp -> (one_pattern_branch pat)
       ))
   )
 
-and p_simpleTerm (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_simpleTerm (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
-    | (FStarC_Parser_AST.Function (branches, tmp)) -> (let tmp1 = (separate_map_last FStar_Pprint.hardline p_patternBranch branches) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat (str "function") tmp1) in
-      let tmp3 = (FStar_Pprint.group tmp2) in
+    | (FStarC_Parser_AST.Function (branches, tmp)) -> (let tmp1 = (separate_map_last PPrint.hardline p_patternBranch branches) in
+      let tmp2 = (PPrint.(^/^) (str "function") tmp1) in
+      let tmp3 = (PPrint.group tmp2) in
       let tmp4 = (paren_if (ps || pb)) in
       (tmp4 tmp3))
     | (FStarC_Parser_AST.Abs (pats, e1)) -> (let tmp = (p_term_sep false pb e1) in
       (match tmp with
         | (comm, doc) -> (let tmp1 = (FStarC_Pprint.separate_map break1 p_atomicPattern pats) in
-          let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 FStar_Pprint.rarrow) in
+          let tmp2 = (PPrint.(^/^) tmp1 FStar_Pprint.rarrow) in
           let prefix = (op_Hat_Slash_Plus_Hat (str "fun") tmp2) in
           let tmp3 = (paren_if ps) in
-          (tmp3 (if ((<>) comm FStar_Pprint.empty) then (FStar_Pprint.op_Hat_Hat prefix (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat comm (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline doc)))) else (FStar_Pprint.group (op_Hat_Slash_Plus_Hat prefix doc)))))
+          (tmp3 (if ((<>) comm PPrint.empty) then (PPrint.(^^) prefix (PPrint.(^^) PPrint.hardline (PPrint.(^^) comm (PPrint.(^^) PPrint.hardline doc)))) else (PPrint.group (op_Hat_Slash_Plus_Hat prefix doc)))))
       ))
     | tmp -> (p_tmIff e)
   )
 
-and p_typ' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_typ' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.QForall (bs, (tmp, trigger), e1)) -> (let binders_doc = (p_binders true bs) in
       let term_doc = (p_noSeqTermAndComment ps pb e1) in
       (match trigger with
         | [] -> (let tmp1 = (p_quantifier e) in
-          let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 FStar_Pprint.space) in
-          let tmp3 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp2 binders_doc FStar_Pprint.dot) in
+          let tmp2 = (PPrint.(^^) tmp1 PPrint.space) in
+          let tmp3 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp2 binders_doc PPrint.dot) in
           (prefix2 tmp3 term_doc))
         | pats -> (let tmp1 = (p_quantifier e) in
-          let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 FStar_Pprint.space) in
-          let tmp3 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp2 binders_doc FStar_Pprint.dot) in
+          let tmp2 = (PPrint.(^^) tmp1 PPrint.space) in
+          let tmp3 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp2 binders_doc PPrint.dot) in
           let tmp4 = (p_trigger trigger) in
           let tmp5 = (prefix2 tmp3 tmp4) in
-          let tmp6 = (FStar_Pprint.group tmp5) in
+          let tmp6 = (PPrint.group tmp5) in
           (prefix2 tmp6 term_doc))
       ))
     | (FStarC_Parser_AST.QExists (bs, (tmp, trigger), e1)) -> (let binders_doc = (p_binders true bs) in
       let term_doc = (p_noSeqTermAndComment ps pb e1) in
       (match trigger with
         | [] -> (let tmp1 = (p_quantifier e) in
-          let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 FStar_Pprint.space) in
-          let tmp3 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp2 binders_doc FStar_Pprint.dot) in
+          let tmp2 = (PPrint.(^^) tmp1 PPrint.space) in
+          let tmp3 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp2 binders_doc PPrint.dot) in
           (prefix2 tmp3 term_doc))
         | pats -> (let tmp1 = (p_quantifier e) in
-          let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 FStar_Pprint.space) in
-          let tmp3 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp2 binders_doc FStar_Pprint.dot) in
+          let tmp2 = (PPrint.(^^) tmp1 PPrint.space) in
+          let tmp3 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp2 binders_doc PPrint.dot) in
           let tmp4 = (p_trigger trigger) in
           let tmp5 = (prefix2 tmp3 tmp4) in
-          let tmp6 = (FStar_Pprint.group tmp5) in
+          let tmp6 = (PPrint.group tmp5) in
           (prefix2 tmp6 term_doc))
       ))
     | (FStarC_Parser_AST.QuantOp (tmp, bs, (tmp1, trigger), e1)) -> (let binders_doc = (p_binders true bs) in
       let term_doc = (p_noSeqTermAndComment ps pb e1) in
       (match trigger with
         | [] -> (let tmp2 = (p_quantifier e) in
-          let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 FStar_Pprint.space) in
-          let tmp4 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp3 binders_doc FStar_Pprint.dot) in
+          let tmp3 = (PPrint.(^^) tmp2 PPrint.space) in
+          let tmp4 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp3 binders_doc PPrint.dot) in
           (prefix2 tmp4 term_doc))
         | pats -> (let tmp2 = (p_quantifier e) in
-          let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 FStar_Pprint.space) in
-          let tmp4 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp3 binders_doc FStar_Pprint.dot) in
+          let tmp3 = (PPrint.(^^) tmp2 PPrint.space) in
+          let tmp4 = (FStar_Pprint.soft_surround (Prims.of_int (2)) Prims.int_zero tmp3 binders_doc PPrint.dot) in
           let tmp5 = (p_trigger trigger) in
           let tmp6 = (prefix2 tmp4 tmp5) in
-          let tmp7 = (FStar_Pprint.group tmp6) in
+          let tmp7 = (PPrint.group tmp6) in
           (prefix2 tmp7 term_doc))
       ))
     | tmp -> (p_simpleTerm ps pb e)
   )
 
-and p_typ (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_typ (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : PPrint.document =
   (with_comment (p_typ' ps pb) e (e).FStarC_Parser_AST.range)
 
-and p_dec_wf (ps : bool) (pb : bool) (rel : FStarC_Parser_AST.term) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_dec_wf (ps : bool) (pb : bool) (rel : FStarC_Parser_AST.term) (e : FStarC_Parser_AST.term) : PPrint.document =
   (let tmp = (p_typ ps pb rel) in
   let tmp1 = (p_typ ps pb e) in
-  let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 (str " }")) in
-  let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
-  let tmp4 = (FStar_Pprint.op_Hat_Hat (str "{:well-founded ") tmp3) in
-  (FStar_Pprint.group tmp4))
+  let tmp2 = (PPrint.(^^) tmp1 (str " }")) in
+  let tmp3 = (PPrint.(^/^) tmp tmp2) in
+  let tmp4 = (PPrint.(^^) (str "{:well-founded ") tmp3) in
+  (PPrint.group tmp4))
 
-and p_projectionLHS (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_projectionLHS (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Var (lid)) -> (p_qlident lid)
     | (FStarC_Parser_AST.Projector (constr_lid, field_lid)) -> (let tmp = (p_quident constr_lid) in
       let tmp1 = (p_lident field_lid) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.qmark tmp2) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp3))
+      let tmp2 = (PPrint.(^^) PPrint.dot tmp1) in
+      let tmp3 = (PPrint.(^^) PPrint.qmark tmp2) in
+      (PPrint.(^^) tmp tmp3))
     | (FStarC_Parser_AST.Discrim (constr_lid)) -> (let tmp = (p_quident constr_lid) in
-      (FStar_Pprint.op_Hat_Hat tmp FStar_Pprint.qmark))
+      (PPrint.(^^) tmp PPrint.qmark))
     | (FStarC_Parser_AST.Paren (e1)) -> (let tmp = (p_term_sep false false e1) in
       (match tmp with
         | (comm, t) -> (let doc = (soft_parens_with_nesting t) in
-          (if ((=) comm FStar_Pprint.empty) then doc else (FStar_Pprint.op_Hat_Hat comm (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline doc))))
+          (if ((=) comm PPrint.empty) then doc else (PPrint.(^^) comm (PPrint.(^^) PPrint.hardline doc))))
       ))
     | tmp when (is_ref_set e) -> (let es = (extract_from_ref_set e) in
-      let tmp1 = (separate_map_or_flow (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1) p_appTerm es) in
-      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero (FStar_Pprint.op_Hat_Hat FStar_Pprint.bang FStar_Pprint.lbrace) tmp1 FStar_Pprint.rbrace))
-    | (FStarC_Parser_AST.Labeled ({ FStarC_Parser_AST.tm = FStarC_Parser_AST.Wild; range = tmp; level = tmp1; _ }, s, tmp2)) -> (let s1 = (FStarC_Util.replace_chars (FStarC_Util.trim_string s) 10 "\\n") in
+      let tmp1 = (separate_map_or_flow (PPrint.(^^) PPrint.comma break1) p_appTerm es) in
+      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero (PPrint.(^^) PPrint.bang PPrint.lbrace) tmp1 PPrint.rbrace))
+    | (FStarC_Parser_AST.Labeled ({ FStarC_Parser_AST.tm = FStarC_Parser_AST.Wild; range = tmp; level = tmp1; _ }, s, tmp2)) -> (let s1 = ((fun s c by -> BatString.replace_chars (fun x -> if Char.equal x (Char.chr c) then by else BatString.of_char x) s) (FStarC_Util.trim_string s) 10 "\\n") in
       (str (Prims.strcat "(*" (Prims.strcat s1 "*)_"))))
-    | (FStarC_Parser_AST.Labeled (e1, s, b)) -> (let s1 = (FStarC_Util.replace_chars (FStarC_Util.trim_string s) 10 "\\n") in
+    | (FStarC_Parser_AST.Labeled (e1, s, b)) -> (let s1 = ((fun s c by -> BatString.replace_chars (fun x -> if Char.equal x (Char.chr c) then by else BatString.of_char x) s) (FStarC_Util.trim_string s) 10 "\\n") in
       let tmp = (p_term false false e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (str (Prims.strcat "(* " (Prims.strcat s1 " *)"))) tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^/^) (str (Prims.strcat "(* " (Prims.strcat s1 " *)"))) tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.Op (op, args)) when (let tmp = (handleable_op op args) in
-    (not tmp)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStarC_List.length args)) in
+    (not tmp)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) args)) in
       let tmp1 = (Prims.strcat tmp " arguments couldn't be handled by the pretty printer") in
       let tmp2 = (Prims.strcat " with " tmp1) in
       let tmp3 = (Prims.strcat (FStarC_Ident.string_of_id op) tmp2) in
@@ -1103,118 +1111,120 @@ and p_projectionLHS (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
     | (FStarC_Parser_AST.ElimExists (u__1, u__2, u__3)) -> (let tmp = (p_term false false e) in
       (soft_parens_with_nesting tmp))
     | (FStarC_Parser_AST.LexList (l)) -> (let tmp = (p_term_list false false l) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat (str "%") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^^) (str "%") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.WFOrder (rel, e1)) -> (p_dec_wf false false rel e1)
   )
 
-and p_atomicTermNotQUident (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_atomicTermNotQUident (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
-    | FStarC_Parser_AST.Wild -> FStar_Pprint.underscore
+    | FStarC_Parser_AST.Wild -> PPrint.underscore
     | (FStarC_Parser_AST.Var (lid)) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.assert_lid) -> (str "assert")
     | (FStarC_Parser_AST.Var (lid)) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.assume_lid) -> (str "assume")
     | (FStarC_Parser_AST.Const (c)) -> (p_constant c)
     | (FStarC_Parser_AST.Name (lid)) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.true_lid) -> (str "True")
     | (FStarC_Parser_AST.Name (lid)) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.false_lid) -> (str "False")
     | (FStarC_Parser_AST.Op (op, (e1 :: []))) when (is_general_prefix_op op) -> (let tmp = (p_atomicTermNotQUident e1) in
-      (FStar_Pprint.op_Hat_Hat (str (FStarC_Ident.string_of_id op)) tmp))
-    | (FStarC_Parser_AST.Op (op, [])) -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str (FStarC_Ident.string_of_id op)) (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.rparen))))
-    | (FStarC_Parser_AST.Construct (lid, args)) when (if (is_dtuple_constructor lid) then (all1_explicit args) else false) -> (let tmp = (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1) (fun tmp -> (match tmp with
+      (PPrint.(^^) (str (FStarC_Ident.string_of_id op)) tmp))
+    | (FStarC_Parser_AST.Op (op, [])) -> (PPrint.(^^) PPrint.lparen (PPrint.(^^) PPrint.space (PPrint.(^^) (str (FStarC_Ident.string_of_id op)) (PPrint.(^^) PPrint.space PPrint.rparen))))
+    | (FStarC_Parser_AST.Construct (lid, args)) when (if (is_dtuple_constructor lid) then (all1_explicit args) else false) -> (let tmp = (FStarC_Pprint.separate_map (PPrint.(^^) PPrint.comma break1) (fun tmp -> (match tmp with
           | (e1, tmp1) -> (p_tmEq e1)
         )) args) in
-      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen FStar_Pprint.bar) tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.rparen)))
+      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (PPrint.(^^) PPrint.lparen PPrint.bar) tmp (PPrint.(^^) PPrint.bar PPrint.rparen)))
     | (FStarC_Parser_AST.Construct (lid, args)) when (if (is_tuple_constructor lid) then (all1_explicit args) else false) -> (let tmp = (p_tmTuple e) in
-      (FStar_Pprint.parens tmp))
+      (PPrint.parens tmp))
     | (FStarC_Parser_AST.Project (e1, lid)) -> (let tmp = (p_atomicTermNotQUident e1) in
       let tmp1 = (p_qlident lid) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp1) in
+      let tmp2 = (PPrint.(^^) PPrint.dot tmp1) in
       let tmp3 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_zero tmp tmp2) in
-      (FStar_Pprint.group tmp3))
+      (PPrint.group tmp3))
     | tmp -> (p_projectionLHS e)
   )
 
-and p_indexingTerm_aux (exit : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_indexingTerm_aux (exit : (FStarC_Parser_AST.term -> PPrint.document)) (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) ".()") -> (let tmp = (p_indexingTerm_aux p_atomicTermNotQUident e1) in
       let tmp1 = (p_term false false e2) in
       let tmp2 = (soft_parens_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
-      (FStar_Pprint.group tmp4))
+      let tmp3 = (PPrint.(^^) PPrint.dot tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
+      (PPrint.group tmp4))
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) ".[]") -> (let tmp = (p_indexingTerm_aux p_atomicTermNotQUident e1) in
       let tmp1 = (p_term false false e2) in
       let tmp2 = (soft_brackets_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
-      (FStar_Pprint.group tmp4))
+      let tmp3 = (PPrint.(^^) PPrint.dot tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
+      (PPrint.group tmp4))
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) ".(||)") -> (let tmp = (p_indexingTerm_aux p_atomicTermNotQUident e1) in
       let tmp1 = (p_term false false e2) in
       let tmp2 = (soft_lens_access_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
-      (FStar_Pprint.group tmp4))
+      let tmp3 = (PPrint.(^^) PPrint.dot tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
+      (PPrint.group tmp4))
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) ".[||]") -> (let tmp = (p_indexingTerm_aux p_atomicTermNotQUident e1) in
       let tmp1 = (p_term false false e2) in
       let tmp2 = (soft_brackets_lens_access_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
-      (FStar_Pprint.group tmp4))
+      let tmp3 = (PPrint.(^^) PPrint.dot tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
+      (PPrint.group tmp4))
     | tmp -> (exit e)
   )
 
-and p_atomicTerm (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_atomicTerm (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.LetOpen (lid, e1)) -> (let tmp = (p_quident lid) in
       let tmp1 = (p_term false false e1) in
       let tmp2 = (soft_parens_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp2) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp3))
+      let tmp3 = (PPrint.(^^) PPrint.dot tmp2) in
+      (PPrint.(^^) tmp tmp3))
     | (FStarC_Parser_AST.Name (lid)) -> (p_quident lid)
     | (FStarC_Parser_AST.Construct (lid, [])) when (is_general_construction e) -> (p_quident lid)
     | (FStarC_Parser_AST.Op (op, (e1 :: []))) when (is_general_prefix_op op) -> (let tmp = (p_atomicTerm e1) in
-      (FStar_Pprint.op_Hat_Hat (str (FStarC_Ident.string_of_id op)) tmp))
-    | (FStarC_Parser_AST.ListLiteral (ts)) -> (let tmp = (separate_map_or_flow_last (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1) (fun ps -> (p_noSeqTermAndComment ps false)) ts) in
-      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero FStar_Pprint.lbracket tmp FStar_Pprint.rbracket))
-    | (FStarC_Parser_AST.SeqLiteral (ts)) -> (let tmp = (separate_map_or_flow_last (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1) (fun ps -> (p_noSeqTermAndComment ps false)) ts) in
-      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string "seq!") FStar_Pprint.lbracket) tmp FStar_Pprint.rbracket))
+      (PPrint.(^^) (str (FStarC_Ident.string_of_id op)) tmp))
+    | (FStarC_Parser_AST.ListLiteral (ts)) -> (let tmp = (separate_map_or_flow_last (PPrint.(^^) PPrint.semi break1) (fun ps -> (p_noSeqTermAndComment ps false)) ts) in
+      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero PPrint.lbracket tmp PPrint.rbracket))
+    | (FStarC_Parser_AST.SeqLiteral (ts)) -> (let tmp = (separate_map_or_flow_last (PPrint.(^^) PPrint.semi break1) (fun ps -> (p_noSeqTermAndComment ps false)) ts) in
+      (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero (PPrint.(^^) (PPrint.string "seq!") PPrint.lbracket) tmp PPrint.rbracket))
     | tmp -> (p_atomicTermNotQUident e)
   )
 
-and p_indexingTerm (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_indexingTerm (e : FStarC_Parser_AST.term) : PPrint.document =
   (p_indexingTerm_aux p_atomicTerm e)
 
-and p_argTerm (arg_imp : (FStarC_Parser_AST.term * FStarC_Parser_AST.imp)) : FStar_Pprint.document =
+and p_argTerm (arg_imp : (FStarC_Parser_AST.term * FStarC_Parser_AST.imp)) : PPrint.document =
   (match arg_imp with
     | (u, FStarC_Parser_AST.UnivApp) -> (p_universe u)
     | (e, FStarC_Parser_AST.Hash) -> (let tmp = (p_indexingTerm e) in
-      (FStar_Pprint.op_Hat_Hat (str "#") tmp))
+      (PPrint.(^^) (str "#") tmp))
     | (e, (FStarC_Parser_AST.HashBrace (t))) -> (let tmp = (p_indexingTerm t) in
       let tmp1 = (p_indexingTerm e) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat (str "]") tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp tmp2) in
-      (FStar_Pprint.op_Hat_Hat (str "#[") tmp3))
+      let tmp2 = (PPrint.(^^) (str "]") tmp1) in
+      let tmp3 = (PPrint.(^^) tmp tmp2) in
+      (PPrint.(^^) (str "#[") tmp3))
     | (e, FStarC_Parser_AST.Infix) -> (p_indexingTerm e)
     | (e, FStarC_Parser_AST.Nothing) -> (p_indexingTerm e)
   )
 
-and p_appTerm (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_appTerm (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.App (u__1, u__2, u__3)) when (is_general_application e) -> (let tmp = (head_and_args_full e) in
       (match tmp with
         | (head, args) -> (match args with
-            | (e1 :: (e2 :: [])) when ((=) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd e1) FStarC_Parser_AST.Infix) -> (let tmp1 = (p_argTerm e1) in
+            | (e1 :: (e2 :: [])) when ((=) (match e1 with
+              | (u__11, u__21) -> u__21
+            ) FStarC_Parser_AST.Infix) -> (let tmp1 = (p_argTerm e1) in
               let tmp2 = (p_indexingTerm head) in
-              let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (str "`")) in
-              let tmp4 = (FStar_Pprint.op_Hat_Hat (str "`") tmp3) in
-              let tmp5 = (FStar_Pprint.group tmp4) in
+              let tmp3 = (PPrint.(^^) tmp2 (str "`")) in
+              let tmp4 = (PPrint.(^^) (str "`") tmp3) in
+              let tmp5 = (PPrint.group tmp4) in
               let tmp6 = (p_argTerm e2) in
-              let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 tmp6) in
-              (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp7))
+              let tmp7 = (PPrint.(^/^) tmp5 tmp6) in
+              (PPrint.(^/^) tmp1 tmp7))
             | tmp1 -> (let tmp2 = (p_indexingTerm head) in
               let tmp3 = (tmp2, args) in
               (match tmp3 with
-                | (head_doc, args1) -> (let tmp4 = (soft_surround_map_or_flow (Prims.of_int (2)) Prims.int_zero head_doc (FStar_Pprint.op_Hat_Hat head_doc FStar_Pprint.space) break1 FStar_Pprint.empty p_argTerm args1) in
-                  (FStar_Pprint.group tmp4))
+                | (head_doc, args1) -> (let tmp4 = (soft_surround_map_or_flow (Prims.of_int (2)) Prims.int_zero head_doc (PPrint.(^^) head_doc PPrint.space) break1 PPrint.empty p_argTerm args1) in
+                  (PPrint.group tmp4))
               ))
           )
       ))
@@ -1225,34 +1235,34 @@ and p_appTerm (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
         | [] -> (p_quident lid)
         | (arg :: []) -> (let tmp = (p_quident lid) in
           let tmp1 = (p_argTerm arg) in
-          let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp1) in
-          (FStar_Pprint.group tmp2))
+          let tmp2 = (PPrint.(^/^) tmp tmp1) in
+          (PPrint.group tmp2))
         | (hd :: tl) -> (let tmp = (p_quident lid) in
           let tmp1 = (p_argTerm hd) in
           let tmp2 = (prefix2 tmp tmp1) in
-          let tmp3 = (FStar_Pprint.group tmp2) in
+          let tmp3 = (PPrint.group tmp2) in
           let tmp4 = (FStarC_Pprint.separate_map break1 p_argTerm tl) in
           let tmp5 = (jump2 tmp4) in
-          let tmp6 = (FStar_Pprint.op_Hat_Hat tmp3 tmp5) in
-          (FStar_Pprint.group tmp6))
+          let tmp6 = (PPrint.(^^) tmp3 tmp5) in
+          (PPrint.group tmp6))
       )
     | tmp -> (p_indexingTerm e)
   )
 
-and p_with_clause (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_with_clause (e : FStarC_Parser_AST.term) : PPrint.document =
   (let tmp = (p_appTerm e) in
-  (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "with") break1))))
+  (PPrint.(^^) tmp (PPrint.(^^) PPrint.space (PPrint.(^^) (str "with") break1))))
 
-and p_simpleDef (ps : bool) (lid_e : (FStarC_Ident.lident * FStarC_Parser_AST.term)) : FStar_Pprint.document =
+and p_simpleDef (ps : bool) (lid_e : (FStarC_Ident.lident * FStarC_Parser_AST.term)) : PPrint.document =
   (match lid_e with
     | (lid, e) -> (let tmp = (p_qlidentOrOperator lid) in
       let tmp1 = (p_noSeqTermAndComment ps false e) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
-      (FStar_Pprint.group tmp3))
+      let tmp2 = (PPrint.(^/^) PPrint.equals tmp1) in
+      let tmp3 = (PPrint.(^/^) tmp tmp2) in
+      (PPrint.group tmp3))
   )
 
-and p_tmNoEqWith' (inside_tuple : bool) (p_X : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (curr : Prims.int) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmNoEqWith' (inside_tuple : bool) (p_X : (FStarC_Parser_AST.term -> PPrint.document)) (curr : Prims.int) (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Construct (lid, ((e1, tmp) :: ((e2, tmp1) :: [])))) when (FStarC_Ident.lid_equals lid FStarC_Parser_Const.cons_lid) -> (let op = "::" in
       let tmp2 = (levels op) in
@@ -1267,13 +1277,13 @@ and p_tmNoEqWith' (inside_tuple : bool) (p_X : (FStarC_Parser_AST.term -> FStar_
       (match tmp with
         | (left, mine, right) -> (let p_dsumfst = (fun bt -> (match bt with
               | (FStar_Pervasives.Inl (b)) -> (let tmp1 = (p_binder false b) in
-                (FStar_Pprint.op_Hat_Hat tmp1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str op) break1))))
+                (PPrint.(^^) tmp1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str op) break1))))
               | (FStar_Pervasives.Inr (t)) -> (let tmp1 = (p_tmNoEqWith' false p_X left t) in
-                (FStar_Pprint.op_Hat_Hat tmp1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str op) break1))))
+                (PPrint.(^^) tmp1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str op) break1))))
             )) in
           let tmp1 = (FStarC_Pprint.concat_map p_dsumfst binders) in
           let tmp2 = (p_tmNoEqWith' false p_X right res) in
-          let tmp3 = (FStar_Pprint.op_Hat_Hat tmp1 tmp2) in
+          let tmp3 = (PPrint.(^^) tmp1 tmp2) in
           (paren_if_gt curr mine tmp3))
       ))
     | (FStarC_Parser_AST.Op (op, (e1 :: (e2 :: [])))) when (is_operatorInfix34 op) -> (let op1 = (FStarC_Ident.string_of_id op) in
@@ -1284,13 +1294,13 @@ and p_tmNoEqWith' (inside_tuple : bool) (p_X : (FStarC_Parser_AST.term -> FStar_
           let tmp3 = (infix0 (str op1) tmp1 tmp2) in
           (paren_if_gt curr mine tmp3))
       ))
-    | (FStarC_Parser_AST.Record (with_opt, record_fields)) -> (let tmp = (default_or_map FStar_Pprint.empty p_with_clause with_opt) in
-      let tmp1 = (separate_map_last (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1) p_simpleDef record_fields) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp tmp1) in
+    | (FStarC_Parser_AST.Record (with_opt, record_fields)) -> (let tmp = (default_or_map PPrint.empty p_with_clause with_opt) in
+      let tmp1 = (separate_map_last (PPrint.(^^) PPrint.semi break1) p_simpleDef record_fields) in
+      let tmp2 = (PPrint.(^^) tmp tmp1) in
       (braces_with_nesting tmp2))
     | (FStarC_Parser_AST.Op (id, (e1 :: []))) when ((=) (FStarC_Ident.string_of_id id) "~") -> (let tmp = (p_atomicTerm e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat (str "~") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^^) (str "~") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.Paren (p)) when inside_tuple -> (match (p).FStarC_Parser_AST.tm with
         | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) "*") -> (let op = "*" in
           let tmp = (levels op) in
@@ -1305,11 +1315,11 @@ and p_tmNoEqWith' (inside_tuple : bool) (p_X : (FStarC_Parser_AST.term -> FStar_
     | tmp -> (p_X e)
   )
 
-and p_tmNoEqWith (p_X : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmNoEqWith (p_X : (FStarC_Parser_AST.term -> PPrint.document)) (e : FStarC_Parser_AST.term) : PPrint.document =
   (let n = (max_level (colon_colon :: (amp :: (opinfix3l :: (opinfix3r :: (opinfix4 :: [])))))) in
   (p_tmNoEqWith' false p_X n e))
 
-and p_tmEqWith' (p_X : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (curr : Prims.int) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmEqWith' (p_X : (FStarC_Parser_AST.term -> PPrint.document)) (curr : Prims.int) (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Op (op, (e1 :: (e2 :: [])))) when (if (not (((=) (FStarC_Ident.string_of_id op) "==>") || ((=) (FStarC_Ident.string_of_id op) "<==>"))) then (let tmp = (is_operatorInfix0ad12 op) in
     let tmp1 = (if tmp then true else ((=) (FStarC_Ident.string_of_id op) "=")) in
@@ -1323,24 +1333,24 @@ and p_tmEqWith' (p_X : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (curr 
       ))
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) ":=") -> (let tmp = (p_tmEqWith p_X e1) in
       let tmp1 = (p_tmEqWith p_X e2) in
-      let tmp2 = (op_Hat_Slash_Plus_Hat FStar_Pprint.equals tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp tmp4) in
-      (FStar_Pprint.group tmp5))
+      let tmp2 = (op_Hat_Slash_Plus_Hat PPrint.equals tmp1) in
+      let tmp3 = (PPrint.(^^) PPrint.colon tmp2) in
+      let tmp4 = (PPrint.(^^) PPrint.space tmp3) in
+      let tmp5 = (PPrint.(^^) tmp tmp4) in
+      (PPrint.group tmp5))
     | (FStarC_Parser_AST.Op (id, (e1 :: []))) when ((=) (FStarC_Ident.string_of_id id) "~-") -> (let tmp = (levels "-") in
       (match tmp with
         | (left, mine, right) -> (let tmp1 = (p_tmEqWith' p_X mine e1) in
-          (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.minus tmp1))
+          (PPrint.(^/^) PPrint.minus tmp1))
       ))
     | tmp -> (p_tmNoEqWith p_X e)
   )
 
-and p_tmEqWith (p_X : (FStarC_Parser_AST.term -> FStar_Pprint.document)) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
-  (let n = (max_level (FStarC_List.op_At (colon_equals :: (pipe_right :: [])) operatorInfix0ad12)) in
+and p_tmEqWith (p_X : (FStarC_Parser_AST.term -> PPrint.document)) (e : FStarC_Parser_AST.term) : PPrint.document =
+  (let n = (max_level (BatList.append (colon_equals :: (pipe_right :: [])) operatorInfix0ad12)) in
   (p_tmEqWith' p_X n e))
 
-and p_refinedBinder (b : FStarC_Parser_AST.binder) (phi : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_refinedBinder (b : FStarC_Parser_AST.binder) (phi : FStarC_Parser_AST.term) : PPrint.document =
   (match (b).FStarC_Parser_AST.b with
     | (FStarC_Parser_AST.Annotated (lid, t)) -> (let tmp = (p_lident lid) in
       (p_refinement (b).FStarC_Parser_AST.aqual (b).FStarC_Parser_AST.battributes tmp t phi))
@@ -1351,58 +1361,58 @@ and p_refinedBinder (b : FStarC_Parser_AST.binder) (phi : FStarC_Parser_AST.term
       (FStarC_Effect.failwith tmp2))
   )
 
-and p_tmRefinement (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmRefinement (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.NamedTyp (lid, e1)) -> (let tmp = (p_lident lid) in
       let tmp1 = (p_appTerm e1) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp2) in
-      (FStar_Pprint.group tmp3))
+      let tmp2 = (PPrint.(^/^) PPrint.colon tmp1) in
+      let tmp3 = (PPrint.(^/^) tmp tmp2) in
+      (PPrint.group tmp3))
     | (FStarC_Parser_AST.Refine (b, phi)) -> (p_refinedBinder b phi)
     | tmp -> (p_appTerm e)
   )
 
-and p_tmEq (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmEq (e : FStarC_Parser_AST.term) : PPrint.document =
   (p_tmEqWith p_tmRefinement e)
 
-and p_tmTuple' (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmTuple' (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
-    | (FStarC_Parser_AST.Construct (lid, args)) when (if (is_tuple_constructor lid) then (all1_explicit args) else false) -> (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat FStar_Pprint.comma break1) (fun tmp -> (match tmp with
+    | (FStarC_Parser_AST.Construct (lid, args)) when (if (is_tuple_constructor lid) then (all1_explicit args) else false) -> (FStarC_Pprint.separate_map (PPrint.(^^) PPrint.comma break1) (fun tmp -> (match tmp with
         | (e1, tmp1) -> (p_tmEq e1)
       )) args)
     | tmp -> (p_tmEq e)
   )
 
-and p_tmTuple (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmTuple (e : FStarC_Parser_AST.term) : PPrint.document =
   (with_comment p_tmTuple' e (e).FStarC_Parser_AST.range)
 
-and p_tmConjunction (e : FStarC_Parser_AST.term) : (FStar_Pprint.document) list =
+and p_tmConjunction (e : FStarC_Parser_AST.term) : (PPrint.document) list =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) "/\\") -> (let tmp = (p_tmConjunction e1) in
       let tmp1 = (p_tmTuple e2) in
       let tmp2 = (tmp1 :: []) in
-      (FStarC_List.op_At tmp tmp2))
+      (BatList.append tmp tmp2))
     | tmp -> (let tmp1 = (p_tmTuple e) in
       (tmp1 :: []))
   )
 
-and p_tmDisjunction (e : FStarC_Parser_AST.term) : ((FStar_Pprint.document) list) list =
+and p_tmDisjunction (e : FStarC_Parser_AST.term) : ((PPrint.document) list) list =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) "\\/") -> (let tmp = (p_tmDisjunction e1) in
       let tmp1 = (p_tmConjunction e2) in
       let tmp2 = (tmp1 :: []) in
-      (FStarC_List.op_At tmp tmp2))
+      (BatList.append tmp tmp2))
     | tmp -> (let tmp1 = (p_tmConjunction e) in
       (tmp1 :: []))
   )
 
-and p_tmFormula (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
-  (let conj = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "/\\") break1)) in
-  let disj = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "\\/") break1)) in
+and p_tmFormula (e : FStarC_Parser_AST.term) : PPrint.document =
+  (let conj = (PPrint.(^^) PPrint.space (PPrint.(^^) (str "/\\") break1)) in
+  let disj = (PPrint.(^^) PPrint.space (PPrint.(^^) (str "\\/") break1)) in
   let formula = (p_tmDisjunction e) in
-  (FStarC_Pprint.flow_map disj (fun d -> (FStarC_Pprint.flow_map conj (fun x -> (FStar_Pprint.group x)) d)) formula))
+  (FStarC_Pprint.flow_map disj (fun d -> (FStarC_Pprint.flow_map conj (fun x -> (PPrint.group x)) d)) formula))
 
-and p_tmImplies (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmImplies (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) "==>") -> (let tmp = (p_tmArrow (Arrows ((Prims.of_int (2)), (Prims.of_int (2)))) false p_tmFormula e1) in
       let tmp1 = (p_tmImplies e2) in
@@ -1410,7 +1420,7 @@ and p_tmImplies (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
     | tmp -> (p_tmArrow (Arrows ((Prims.of_int (2)), (Prims.of_int (2)))) false p_tmFormula e)
   )
 
-and p_tmIff (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_tmIff (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: [])))) when ((=) (FStarC_Ident.string_of_id id) "<==>") -> (let tmp = (p_tmImplies e1) in
       let tmp1 = (p_tmIff e2) in
@@ -1418,22 +1428,22 @@ and p_tmIff (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
     | tmp -> (p_tmImplies e)
   )
 
-and p_typ_top' (style : annotation_style) (ps : bool) (pb : bool) : (FStarC_Parser_AST.term -> FStar_Pprint.document) =
+and p_typ_top' (style : annotation_style) (ps : bool) (pb : bool) : (FStarC_Parser_AST.term -> PPrint.document) =
   (p_tmArrow style true p_tmFormula)
 
-and p_typ_top (style : annotation_style) (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_typ_top (style : annotation_style) (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : PPrint.document =
   (with_comment (p_typ_top' style ps pb) e (e).FStarC_Parser_AST.range)
 
-and sig_as_binders_if_possible (t : FStarC_Parser_AST.term) (extra_space : bool) : FStar_Pprint.document =
-  (let s = (if extra_space then FStar_Pprint.space else FStar_Pprint.empty) in
+and sig_as_binders_if_possible (t : FStarC_Parser_AST.term) (extra_space : bool) : PPrint.document =
+  (let s = (if extra_space then PPrint.space else PPrint.empty) in
   let tmp = (all_binders_annot t) in
   (if tmp then (let tmp1 = (p_typ_top (Binders ((Prims.of_int (4)), Prims.int_zero, true)) false false t) in
-  (FStar_Pprint.op_Hat_Hat s tmp1)) else (let tmp1 = (p_typ_top (Arrows ((Prims.of_int (2)), (Prims.of_int (2)))) false false t) in
-  let tmp2 = (FStar_Pprint.op_Hat_Hat s tmp1) in
-  let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon tmp2) in
-  (FStar_Pprint.group tmp3))))
+  (PPrint.(^^) s tmp1)) else (let tmp1 = (p_typ_top (Arrows ((Prims.of_int (2)), (Prims.of_int (2)))) false false t) in
+  let tmp2 = (PPrint.(^^) s tmp1) in
+  let tmp3 = (PPrint.(^^) PPrint.colon tmp2) in
+  (PPrint.group tmp3))))
 
-and pats_as_binders_if_possible (pats : (FStarC_Parser_AST.pattern) list) : ((FStar_Pprint.document) list * annotation_style) =
+and pats_as_binders_if_possible (pats : (FStarC_Parser_AST.pattern) list) : ((PPrint.document) list * annotation_style) =
   (let all_binders = (fun p -> (match (p).FStarC_Parser_AST.pat with
       | (FStarC_Parser_AST.PatAscribed (pat, (t, None))) -> (match ((pat).FStarC_Parser_AST.pat, (t).FStarC_Parser_AST.tm) with
           | ((FStarC_Parser_AST.PatVar (lid, aqual, attrs)), (FStarC_Parser_AST.Refine ({ FStarC_Parser_AST.b = (FStarC_Parser_AST.Annotated (lid', t1)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ }, phi))) when ((=) (FStarC_Ident.string_of_id lid) (FStarC_Ident.string_of_id lid')) -> (let tmp4 = (p_ident lid) in
@@ -1449,8 +1459,8 @@ and pats_as_binders_if_possible (pats : (FStarC_Parser_AST.pattern) list) : ((FS
             let tmp1 = (FStarC_Pprint.optional p_aqual aqual) in
             let tmp2 = (p_attributes false attrs) in
             let tmp3 = (p_ident lid) in
-            let tmp4 = (FStar_Pprint.op_Hat_Hat tmp2 tmp3) in
-            let tmp5 = (FStar_Pprint.op_Hat_Hat tmp1 tmp4) in
+            let tmp4 = (PPrint.(^^) tmp2 tmp3) in
+            let tmp5 = (PPrint.(^^) tmp1 tmp4) in
             let tmp6 = (p_tmEqNoRefinement t) in
             let tmp7 = (tmp5, tmp6, is_tc, ((not is_tc) && (not is_meta))) in
             (Some (tmp7)))
@@ -1462,19 +1472,19 @@ and pats_as_binders_if_possible (pats : (FStarC_Parser_AST.pattern) list) : ((FS
   (match tmp with
     | (Some (bs)) -> (let tmp1 = (collapse_pats bs) in
       (tmp1, (Binders ((Prims.of_int (4)), Prims.int_zero, true))))
-    | None -> (let tmp1 = (FStarC_List.map p_atomicPattern pats) in
+    | None -> (let tmp1 = (BatList.map p_atomicPattern pats) in
       (tmp1, (Binders ((Prims.of_int (4)), Prims.int_zero, false))))
   ))
 
-and p_letlhs (kw : FStar_Pprint.document) (pat_pair : (FStarC_Parser_AST.pattern * FStarC_Parser_AST.term)) (inner_let : bool) : FStar_Pprint.document =
+and p_letlhs (kw : PPrint.document) (pat_pair : (FStarC_Parser_AST.pattern * FStarC_Parser_AST.term)) (inner_let : bool) : PPrint.document =
   (match pat_pair with
     | (pat, tmp) -> (let tmp1 = (match (pat).FStarC_Parser_AST.pat with
-          | (FStarC_Parser_AST.PatAscribed (pat1, (t, None))) -> (pat1, (Some ((t, FStar_Pprint.empty))))
+          | (FStarC_Parser_AST.PatAscribed (pat1, (t, None))) -> (pat1, (Some ((t, PPrint.empty))))
           | (FStarC_Parser_AST.PatAscribed (pat1, (t, (Some (tac))))) -> (let tmp1 = (p_atomicTerm (maybe_unthunk tac)) in
-            let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-            let tmp3 = (FStar_Pprint.op_Hat_Hat (str "by") tmp2) in
-            let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp3) in
-            let tmp5 = (FStar_Pprint.group tmp4) in
+            let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+            let tmp3 = (PPrint.(^^) (str "by") tmp2) in
+            let tmp4 = (PPrint.(^^) PPrint.space tmp3) in
+            let tmp5 = (PPrint.group tmp4) in
             let tmp6 = (t, tmp5) in
             let tmp7 = (Some (tmp6)) in
             (pat1, tmp7))
@@ -1484,138 +1494,138 @@ and p_letlhs (kw : FStar_Pprint.document) (pat_pair : (FStarC_Parser_AST.pattern
         | (pat1, ascr) -> (match (pat1).FStarC_Parser_AST.pat with
             | (FStarC_Parser_AST.PatApp ({ FStarC_Parser_AST.pat = (FStarC_Parser_AST.PatVar (lid, tmp2, tmp3)); prange = tmp4; _ }, pats)) -> (let ascr_doc = (match ascr with
                   | (Some ((t, tac))) -> (let tmp5 = (sig_as_binders_if_possible t true) in
-                    (FStar_Pprint.op_Hat_Hat tmp5 tac))
-                  | None -> FStar_Pprint.empty
+                    (PPrint.(^^) tmp5 tac))
+                  | None -> PPrint.empty
                 ) in
               let tmp5 = (if inner_let then (pats_as_binders_if_possible pats) else (pats_as_binders_if_possible pats)) in
               (match tmp5 with
                 | (terms, style) -> (let tmp6 = (p_lidentOrOperator lid) in
                   let tmp7 = (format_sig style terms ascr_doc true true) in
-                  let tmp8 = (FStar_Pprint.op_Hat_Hat tmp6 tmp7) in
-                  let tmp9 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp8) in
-                  let tmp10 = (FStar_Pprint.op_Hat_Hat kw tmp9) in
-                  (FStar_Pprint.group tmp10))
+                  let tmp8 = (PPrint.(^^) tmp6 tmp7) in
+                  let tmp9 = (PPrint.(^^) PPrint.space tmp8) in
+                  let tmp10 = (PPrint.(^^) kw tmp9) in
+                  (PPrint.group tmp10))
               ))
             | tmp2 -> (let ascr_doc = (match ascr with
                   | (Some ((t, tac))) -> (let tmp3 = (p_typ_top (Arrows ((Prims.of_int (2)), (Prims.of_int (2)))) false false t) in
-                    let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon tmp3) in
-                    let tmp5 = (FStar_Pprint.group tmp4) in
-                    (FStar_Pprint.op_Hat_Hat tmp5 tac))
-                  | None -> FStar_Pprint.empty
+                    let tmp4 = (PPrint.(^^) PPrint.colon tmp3) in
+                    let tmp5 = (PPrint.group tmp4) in
+                    (PPrint.(^^) tmp5 tac))
+                  | None -> PPrint.empty
                 ) in
               let tmp3 = (p_tuplePattern pat1) in
-              let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat kw tmp3) in
-              let tmp5 = (FStar_Pprint.group tmp4) in
-              let tmp6 = (FStar_Pprint.op_Hat_Hat tmp5 ascr_doc) in
-              (FStar_Pprint.group tmp6))
+              let tmp4 = (PPrint.(^/^) kw tmp3) in
+              let tmp5 = (PPrint.group tmp4) in
+              let tmp6 = (PPrint.(^^) tmp5 ascr_doc) in
+              (PPrint.group tmp6))
           )
       ))
   )
 
-and p_attrs_opt (isTopLevel : bool) (tmp : ((FStarC_Parser_AST.term) list) option) : FStar_Pprint.document =
+and p_attrs_opt (isTopLevel : bool) (tmp : ((FStarC_Parser_AST.term) list) option) : PPrint.document =
   (match tmp with
-    | None -> FStar_Pprint.empty
+    | None -> PPrint.empty
     | (Some (terms)) -> (let tmp1 = (FStarC_Pprint.separate_map (str "; ") (p_noSeqTermAndComment false false) terms) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 (str "]")) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat (str (if isTopLevel then "[@@" else "[@@@")) tmp2) in
-      (FStar_Pprint.group tmp3))
+      let tmp2 = (PPrint.(^/^) tmp1 (str "]")) in
+      let tmp3 = (PPrint.(^/^) (str (if isTopLevel then "[@@" else "[@@@")) tmp2) in
+      (PPrint.group tmp3))
   )
 
-and p_calcStep (tmp : bool) (step : (FStarC_Parser_AST.term * FStarC_Parser_AST.term * FStarC_Parser_AST.term)) : FStar_Pprint.document =
+and p_calcStep (tmp : bool) (step : (FStarC_Parser_AST.term * FStarC_Parser_AST.term * FStarC_Parser_AST.term)) : PPrint.document =
   (match step with
     | (rel, just, next) -> (let tmp1 = (p_noSeqTermAndComment false false rel) in
       let tmp2 = (p_noSeqTermAndComment false false just) in
       let tmp3 = (p_noSeqTermAndComment false false next) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp3 (str ";")) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.rbrace tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp6) in
-      let tmp8 = (FStar_Pprint.op_Hat_Hat tmp2 tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp8) in
-      let tmp10 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.lbrace tmp9) in
-      let tmp11 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp10) in
-      let tmp12 = (FStar_Pprint.op_Hat_Hat tmp1 tmp11) in
-      (FStar_Pprint.group tmp12))
+      let tmp4 = (PPrint.(^^) tmp3 (str ";")) in
+      let tmp5 = (PPrint.(^^) PPrint.hardline tmp4) in
+      let tmp6 = (PPrint.(^^) PPrint.rbrace tmp5) in
+      let tmp7 = (PPrint.(^^) PPrint.space tmp6) in
+      let tmp8 = (PPrint.(^^) tmp2 tmp7) in
+      let tmp9 = (PPrint.(^^) PPrint.space tmp8) in
+      let tmp10 = (PPrint.(^^) PPrint.lbrace tmp9) in
+      let tmp11 = (PPrint.(^^) PPrint.space tmp10) in
+      let tmp12 = (PPrint.(^^) tmp1 tmp11) in
+      (PPrint.group tmp12))
   )
 
-and p_binders_sep (bs : (FStarC_Parser_AST.binder) list) : FStar_Pprint.document =
+and p_binders_sep (bs : (FStarC_Parser_AST.binder) list) : PPrint.document =
   (let tmp = (p_binders_list true bs) in
-  (FStarC_Pprint.separate_map FStar_Pprint.space (fun x -> x) tmp))
+  (FStarC_Pprint.separate_map PPrint.space (fun x -> x) tmp))
 
-and p_noSeqTerm' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_noSeqTerm' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Ascribed (e1, t, None, use_eq)) -> (let tmp = (p_tmIff e1) in
       let tmp1 = (p_typ ps pb t) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat (if use_eq then FStar_Pprint.dollar else FStar_Pprint.langle) tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp3) in
-      (FStar_Pprint.group tmp4))
+      let tmp2 = (PPrint.(^/^) PPrint.colon tmp1) in
+      let tmp3 = (PPrint.(^^) (if use_eq then PPrint.dollar else PPrint.langle) tmp2) in
+      let tmp4 = (PPrint.(^/^) tmp tmp3) in
+      (PPrint.group tmp4))
     | (FStarC_Parser_AST.Ascribed (e1, t, (Some (tac)), use_eq)) -> (let tmp = (p_tmIff e1) in
       let tmp1 = (p_typ false false t) in
       let tmp2 = (p_typ ps pb (maybe_unthunk tac)) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat (str "by") tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.colon tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat (if use_eq then FStar_Pprint.dollar else FStar_Pprint.langle) tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp6) in
-      (FStar_Pprint.group tmp7))
+      let tmp3 = (PPrint.(^/^) (str "by") tmp2) in
+      let tmp4 = (PPrint.(^/^) tmp1 tmp3) in
+      let tmp5 = (PPrint.(^/^) PPrint.colon tmp4) in
+      let tmp6 = (PPrint.(^^) (if use_eq then PPrint.dollar else PPrint.langle) tmp5) in
+      let tmp7 = (PPrint.(^/^) tmp tmp6) in
+      (PPrint.group tmp7))
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: (e3 :: []))))) when ((=) (FStarC_Ident.string_of_id id) ".()<-") -> (let tmp = (p_atomicTermNotQUident e1) in
       let tmp1 = (p_term false false e2) in
       let tmp2 = (soft_parens_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.larrow)) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp tmp4) in
-      let tmp6 = (FStar_Pprint.group tmp5) in
+      let tmp3 = (PPrint.(^^) tmp2 (PPrint.(^^) PPrint.space FStar_Pprint.larrow)) in
+      let tmp4 = (PPrint.(^^) PPrint.dot tmp3) in
+      let tmp5 = (PPrint.(^^) tmp tmp4) in
+      let tmp6 = (PPrint.group tmp5) in
       let tmp7 = (p_noSeqTermAndComment ps pb e3) in
       let tmp8 = (jump2 tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat tmp6 tmp8) in
-      (FStar_Pprint.group tmp9))
+      let tmp9 = (PPrint.(^^) tmp6 tmp8) in
+      (PPrint.group tmp9))
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: (e3 :: []))))) when ((=) (FStarC_Ident.string_of_id id) ".[]<-") -> (let tmp = (p_atomicTermNotQUident e1) in
       let tmp1 = (p_term false false e2) in
       let tmp2 = (soft_brackets_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.larrow)) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp tmp4) in
-      let tmp6 = (FStar_Pprint.group tmp5) in
+      let tmp3 = (PPrint.(^^) tmp2 (PPrint.(^^) PPrint.space FStar_Pprint.larrow)) in
+      let tmp4 = (PPrint.(^^) PPrint.dot tmp3) in
+      let tmp5 = (PPrint.(^^) tmp tmp4) in
+      let tmp6 = (PPrint.group tmp5) in
       let tmp7 = (p_noSeqTermAndComment ps pb e3) in
       let tmp8 = (jump2 tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat tmp6 tmp8) in
-      (FStar_Pprint.group tmp9))
+      let tmp9 = (PPrint.(^^) tmp6 tmp8) in
+      (PPrint.group tmp9))
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: (e3 :: []))))) when ((=) (FStarC_Ident.string_of_id id) ".(||)<-") -> (let tmp = (p_atomicTermNotQUident e1) in
       let tmp1 = (p_term false false e2) in
       let tmp2 = (soft_lens_access_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.larrow)) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp tmp4) in
-      let tmp6 = (FStar_Pprint.group tmp5) in
+      let tmp3 = (PPrint.(^^) tmp2 (PPrint.(^^) PPrint.space FStar_Pprint.larrow)) in
+      let tmp4 = (PPrint.(^^) PPrint.dot tmp3) in
+      let tmp5 = (PPrint.(^^) tmp tmp4) in
+      let tmp6 = (PPrint.group tmp5) in
       let tmp7 = (p_noSeqTermAndComment ps pb e3) in
       let tmp8 = (jump2 tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat tmp6 tmp8) in
-      (FStar_Pprint.group tmp9))
+      let tmp9 = (PPrint.(^^) tmp6 tmp8) in
+      (PPrint.group tmp9))
     | (FStarC_Parser_AST.Op (id, (e1 :: (e2 :: (e3 :: []))))) when ((=) (FStarC_Ident.string_of_id id) ".[||]<-") -> (let tmp = (p_atomicTermNotQUident e1) in
       let tmp1 = (p_term false false e2) in
       let tmp2 = (soft_brackets_lens_access_with_nesting tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.larrow)) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.dot tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp tmp4) in
-      let tmp6 = (FStar_Pprint.group tmp5) in
+      let tmp3 = (PPrint.(^^) tmp2 (PPrint.(^^) PPrint.space FStar_Pprint.larrow)) in
+      let tmp4 = (PPrint.(^^) PPrint.dot tmp3) in
+      let tmp5 = (PPrint.(^^) tmp tmp4) in
+      let tmp6 = (PPrint.group tmp5) in
       let tmp7 = (p_noSeqTermAndComment ps pb e3) in
       let tmp8 = (jump2 tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat tmp6 tmp8) in
-      (FStar_Pprint.group tmp9))
+      let tmp9 = (PPrint.(^^) tmp6 tmp8) in
+      (PPrint.group tmp9))
     | (FStarC_Parser_AST.Requires (e1)) -> (let tmp = (p_typ ps pb e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (str "requires") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^/^) (str "requires") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.Ensures (e1)) -> (let tmp = (p_typ ps pb e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (str "ensures") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^/^) (str "ensures") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.WFOrder (rel, e1)) -> (p_dec_wf ps pb rel e1)
     | (FStarC_Parser_AST.LexList (l)) -> (let tmp = (p_term_list ps pb l) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat (str "%") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^^) (str "%") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.Decreases (e1)) -> (let tmp = (p_typ ps pb e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (str "decreases") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^/^) (str "decreases") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.If (e1, op_opt, ret_opt, e2, e3)) -> (if (is_unit e3) then (let tmp = (FStarC_Option.map FStarC_Ident.string_of_id op_opt) in
       let tmp1 = (FStarC_Option.bind tmp (FStarC_Parser_AST.strip_prefix "let")) in
       let tmp2 = (FStarC_Option.dflt "" tmp1) in
@@ -1625,8 +1635,8 @@ and p_noSeqTerm' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pp
       let tmp6 = (op_Hat_Slash_Plus_Hat tmp4 tmp5) in
       let tmp7 = (p_noSeqTermAndComment ps pb e2) in
       let tmp8 = (op_Hat_Slash_Plus_Hat (str "then") tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat tmp6 tmp8) in
-      (FStar_Pprint.group tmp9)) else (let e2_doc = (match (e2).FStarC_Parser_AST.tm with
+      let tmp9 = (PPrint.(^/^) tmp6 tmp8) in
+      (PPrint.group tmp9)) else (let e2_doc = (match (e2).FStarC_Parser_AST.tm with
           | (FStarC_Parser_AST.If (tmp, tmp1, tmp2, tmp3, e31)) when (is_unit e31) -> (let tmp4 = (p_noSeqTermAndComment false false e2) in
             (soft_parens_with_nesting tmp4))
           | tmp -> (p_noSeqTermAndComment false false e2)
@@ -1636,32 +1646,32 @@ and p_noSeqTerm' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pp
           let tmp1 = (op_Hat_Slash_Plus_Hat (str "if") tmp) in
           let tmp2 = (p_noSeqTermAndComment ps pb e3) in
           let tmp3 = (op_Hat_Slash_Plus_Hat (str "else") tmp2) in
-          let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (op_Hat_Slash_Plus_Hat (str "then") e2_doc) tmp3) in
-          let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp4) in
-          (FStar_Pprint.group tmp5))
+          let tmp4 = (PPrint.(^/^) (op_Hat_Slash_Plus_Hat (str "then") e2_doc) tmp3) in
+          let tmp5 = (PPrint.(^/^) tmp1 tmp4) in
+          (PPrint.group tmp5))
         | (Some ((as_opt, ret, use_eq))) -> (let tmp = (p_noSeqTermAndComment false false e1) in
           let tmp1 = (op_Hat_Slash_Plus_Hat (str "if") tmp) in
           let tmp2 = (match as_opt with
-              | None -> FStar_Pprint.empty
+              | None -> PPrint.empty
               | (Some (as_ident)) -> (let tmp2 = (p_ident as_ident) in
-                (FStar_Pprint.op_Hat_Slash_Hat (str "as") tmp2))
+                (PPrint.(^/^) (str "as") tmp2))
             ) in
           let tmp3 = (p_tmIff ret) in
           let tmp4 = (op_Hat_Slash_Plus_Hat (str (if use_eq then "returns$" else "returns")) tmp3) in
-          let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp2 tmp4) in
+          let tmp5 = (PPrint.(^/^) tmp2 tmp4) in
           let tmp6 = (p_noSeqTermAndComment ps pb e3) in
           let tmp7 = (op_Hat_Slash_Plus_Hat (str "else") tmp6) in
-          let tmp8 = (FStar_Pprint.op_Hat_Slash_Hat (op_Hat_Slash_Plus_Hat (str "then") e2_doc) tmp7) in
-          let tmp9 = (FStar_Pprint.op_Hat_Slash_Hat tmp5 tmp8) in
-          let tmp10 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp9) in
-          (FStar_Pprint.group tmp10))
+          let tmp8 = (PPrint.(^/^) (op_Hat_Slash_Plus_Hat (str "then") e2_doc) tmp7) in
+          let tmp9 = (PPrint.(^/^) tmp5 tmp8) in
+          let tmp10 = (PPrint.(^/^) tmp1 tmp9) in
+          (PPrint.group tmp10))
       )))
     | (FStarC_Parser_AST.TryWith (e1, branches)) -> (let tmp = (p_noSeqTermAndComment false false e1) in
       let tmp1 = (prefix2 (str "try") tmp) in
-      let tmp2 = (separate_map_last FStar_Pprint.hardline p_patternBranch branches) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat (str "with") tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp3) in
-      let tmp5 = (FStar_Pprint.group tmp4) in
+      let tmp2 = (separate_map_last PPrint.hardline p_patternBranch branches) in
+      let tmp3 = (PPrint.(^/^) (str "with") tmp2) in
+      let tmp4 = (PPrint.(^/^) tmp1 tmp3) in
+      let tmp5 = (PPrint.group tmp4) in
       let tmp6 = (paren_if (ps || pb)) in
       (tmp6 tmp5))
     | (FStarC_Parser_AST.Match (e1, op_opt, ret_opt, branches)) -> (let tmp = (FStarC_Option.map FStarC_Ident.string_of_id op_opt) in
@@ -1672,10 +1682,10 @@ and p_noSeqTerm' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pp
       let tmp4 = (match ret_opt with
           | None -> (let tmp4 = (p_noSeqTermAndComment false false e1) in
             let tmp5 = (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one match_doc tmp4 (str "with")) in
-            (FStar_Pprint.group tmp5))
+            (PPrint.group tmp5))
           | (Some ((as_opt, ret, use_eq))) -> (let tmp4 = (p_noSeqTermAndComment false false e1) in
             let tmp5 = (match as_opt with
-                | None -> FStar_Pprint.empty
+                | None -> PPrint.empty
                 | (Some (as_ident)) -> (let tmp5 = (p_ident as_ident) in
                   (op_Hat_Slash_Plus_Hat (str "as") tmp5))
               ) in
@@ -1684,27 +1694,27 @@ and p_noSeqTerm' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pp
             let tmp8 = (op_Hat_Slash_Plus_Hat tmp5 tmp7) in
             let tmp9 = (op_Hat_Slash_Plus_Hat tmp4 tmp8) in
             let tmp10 = (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one match_doc tmp9 (str "with")) in
-            (FStar_Pprint.group tmp10))
+            (PPrint.group tmp10))
         ) in
-      let tmp5 = (separate_map_last FStar_Pprint.hardline p_patternBranch branches) in
-      let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp4 tmp5) in
+      let tmp5 = (separate_map_last PPrint.hardline p_patternBranch branches) in
+      let tmp6 = (PPrint.(^/^) tmp4 tmp5) in
       let tmp7 = (paren_if (ps || pb)) in
       (tmp7 tmp6))
     | (FStarC_Parser_AST.LetOpen (uid, e1)) -> (let tmp = (p_quident uid) in
       let tmp1 = (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (str "let open") tmp (str "in")) in
       let tmp2 = (p_term false pb e1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp2) in
-      let tmp4 = (FStar_Pprint.group tmp3) in
+      let tmp3 = (PPrint.(^/^) tmp1 tmp2) in
+      let tmp4 = (PPrint.group tmp3) in
       let tmp5 = (paren_if ps) in
       (tmp5 tmp4))
     | (FStarC_Parser_AST.LetOpenRecord (r, rty, e1)) -> (let tmp = (p_term false pb r) in
       let tmp1 = (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (str "let open") tmp (str "as")) in
       let tmp2 = (p_term false pb rty) in
       let tmp3 = (p_term false pb e1) in
-      let tmp4 = (FStar_Pprint.op_Hat_Slash_Hat (str "in") tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp2 tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Slash_Hat tmp1 tmp5) in
-      let tmp7 = (FStar_Pprint.group tmp6) in
+      let tmp4 = (PPrint.(^/^) (str "in") tmp3) in
+      let tmp5 = (PPrint.(^/^) tmp2 tmp4) in
+      let tmp6 = (PPrint.(^/^) tmp1 tmp5) in
+      let tmp7 = (PPrint.group tmp6) in
       let tmp8 = (paren_if ps) in
       (tmp8 tmp7))
     | (FStarC_Parser_AST.LetOperator (lets, body)) -> (let p_let = (fun tmp is_last -> (match tmp with
@@ -1712,167 +1722,167 @@ and p_noSeqTerm' (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pp
             let doc_pat = (p_letlhs doc_let_or_and (pat, e1) true) in
             (match ((pat).FStarC_Parser_AST.pat, (e1).FStarC_Parser_AST.tm) with
               | ((FStarC_Parser_AST.PatVar (pid, tmp1, tmp2)), (FStarC_Parser_AST.Name (tid))) when (let tmp3 = (FStarC_Ident.path_of_lid tid) in
-              let tmp4 = (FStarC_List.last tmp3) in
-              ((=) (FStarC_Ident.string_of_id pid) tmp4)) -> (FStar_Pprint.op_Hat_Slash_Hat doc_pat (if is_last then (str "in") else FStar_Pprint.empty))
+              let tmp4 = (BatList.last tmp3) in
+              ((=) (FStarC_Ident.string_of_id pid) tmp4)) -> (PPrint.(^/^) doc_pat (if is_last then (str "in") else PPrint.empty))
               | ((FStarC_Parser_AST.PatVar (pid, tmp1, tmp2)), (FStarC_Parser_AST.Var (tid))) when (let tmp3 = (FStarC_Ident.path_of_lid tid) in
-              let tmp4 = (FStarC_List.last tmp3) in
-              ((=) (FStarC_Ident.string_of_id pid) tmp4)) -> (FStar_Pprint.op_Hat_Slash_Hat doc_pat (if is_last then (str "in") else FStar_Pprint.empty))
+              let tmp4 = (BatList.last tmp3) in
+              ((=) (FStarC_Ident.string_of_id pid) tmp4)) -> (PPrint.(^/^) doc_pat (if is_last then (str "in") else PPrint.empty))
               | tmp1 -> (let tmp2 = (p_term_sep false false e1) in
                 (match tmp2 with
-                  | (comm, doc_expr) -> (let doc_expr1 = (inline_comment_or_above comm doc_expr FStar_Pprint.empty) in
-                    (if is_last then (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (FStar_Pprint.flow break1 (doc_pat :: (FStar_Pprint.equals :: []))) doc_expr1 (str "in")) else (FStar_Pprint.hang (Prims.of_int (2)) (FStar_Pprint.flow break1 (doc_pat :: (FStar_Pprint.equals :: (doc_expr1 :: [])))))))
+                  | (comm, doc_expr) -> (let doc_expr1 = (inline_comment_or_above comm doc_expr PPrint.empty) in
+                    (if is_last then (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (PPrint.flow break1 (doc_pat :: (PPrint.equals :: []))) doc_expr1 (str "in")) else (FStar_Pprint.hang (Prims.of_int (2)) (PPrint.flow break1 (doc_pat :: (PPrint.equals :: (doc_expr1 :: [])))))))
                 ))
             ))
         )) in
-      let l = (FStarC_List.length lets) in
-      let lets_docs = (FStarC_List.mapi (fun i lb -> (let tmp = (p_let lb ((=) i (Prims.op_Minus l Prims.int_one))) in
-        (FStar_Pprint.group tmp))) lets) in
-      let lets_doc = (FStar_Pprint.group (FStar_Pprint.separate break1 lets_docs)) in
+      let l = ((fun l -> Z.of_int (BatList.length l)) lets) in
+      let lets_docs = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i lb -> (let tmp = (p_let lb ((=) i (Prims.op_Minus l Prims.int_one))) in
+        (PPrint.group tmp))) lets) in
+      let lets_doc = (PPrint.group (PPrint.separate break1 lets_docs)) in
       let tmp = (p_term false pb body) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat lets_doc tmp1) in
-      let tmp3 = (FStar_Pprint.group tmp2) in
+      let tmp1 = (PPrint.(^^) PPrint.hardline tmp) in
+      let tmp2 = (PPrint.(^^) lets_doc tmp1) in
+      let tmp3 = (PPrint.group tmp2) in
       let tmp4 = (paren_if ps) in
       (tmp4 tmp3))
     | (FStarC_Parser_AST.Let (q, lbs, e1)) -> (let p_lb = (fun q1 tmp is_last -> (match tmp with
           | (a, (pat, e2)) -> (let attrs = (p_attrs_opt true a) in
             let doc_let_or_and = (match q1 with
-                | (Some (FStarC_Parser_AST.LocalRec)) -> (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (str "let") (str "rec")))
+                | (Some (FStarC_Parser_AST.LocalRec)) -> (PPrint.group (PPrint.(^/^) (str "let") (str "rec")))
                 | (Some (FStarC_Parser_AST.LocalNoLetQualifier)) -> (str "let")
-                | (Some (FStarC_Parser_AST.LocalUnfold)) -> (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat (str "let") (str "unfold")))
+                | (Some (FStarC_Parser_AST.LocalUnfold)) -> (PPrint.group (PPrint.(^/^) (str "let") (str "unfold")))
                 | tmp1 -> (str "and")
               ) in
             let doc_pat = (p_letlhs doc_let_or_and (pat, e2) true) in
             let tmp1 = (p_term_sep false false e2) in
             (match tmp1 with
-              | (comm, doc_expr) -> (let doc_expr1 = (inline_comment_or_above comm doc_expr FStar_Pprint.empty) in
-                (FStar_Pprint.op_Hat_Hat attrs (if is_last then (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (FStar_Pprint.flow break1 (doc_pat :: (FStar_Pprint.equals :: []))) doc_expr1 (str "in")) else (FStar_Pprint.hang (Prims.of_int (2)) (FStar_Pprint.flow break1 (doc_pat :: (FStar_Pprint.equals :: (doc_expr1 :: []))))))))
+              | (comm, doc_expr) -> (let doc_expr1 = (inline_comment_or_above comm doc_expr PPrint.empty) in
+                (PPrint.(^^) attrs (if is_last then (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one (PPrint.flow break1 (doc_pat :: (PPrint.equals :: []))) doc_expr1 (str "in")) else (FStar_Pprint.hang (Prims.of_int (2)) (PPrint.flow break1 (doc_pat :: (PPrint.equals :: (doc_expr1 :: []))))))))
             ))
         )) in
-      let l = (FStarC_List.length lbs) in
-      let lbs_docs = (FStarC_List.mapi (fun i lb -> (if ((=) i Prims.int_zero) then (let tmp = (p_lb (Some (q)) lb ((=) i (Prims.op_Minus l Prims.int_one))) in
-        (FStar_Pprint.group tmp)) else (let tmp = (p_lb None lb ((=) i (Prims.op_Minus l Prims.int_one))) in
-        (FStar_Pprint.group tmp)))) lbs) in
-      let lbs_doc = (FStar_Pprint.group (FStar_Pprint.separate break1 lbs_docs)) in
+      let l = ((fun l -> Z.of_int (BatList.length l)) lbs) in
+      let lbs_docs = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i lb -> (if ((=) i Prims.int_zero) then (let tmp = (p_lb (Some (q)) lb ((=) i (Prims.op_Minus l Prims.int_one))) in
+        (PPrint.group tmp)) else (let tmp = (p_lb None lb ((=) i (Prims.op_Minus l Prims.int_one))) in
+        (PPrint.group tmp)))) lbs) in
+      let lbs_doc = (PPrint.group (PPrint.separate break1 lbs_docs)) in
       let tmp = (p_term false pb e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat lbs_doc tmp1) in
-      let tmp3 = (FStar_Pprint.group tmp2) in
+      let tmp1 = (PPrint.(^^) PPrint.hardline tmp) in
+      let tmp2 = (PPrint.(^^) lbs_doc tmp1) in
+      let tmp3 = (PPrint.group tmp2) in
       let tmp4 = (paren_if ps) in
       (tmp4 tmp3))
     | (FStarC_Parser_AST.Quote (e1, FStarC_Parser_AST.Dynamic)) -> (let tmp = (p_noSeqTermAndComment ps pb e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (str "quote") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^/^) (str "quote") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.Quote (e1, FStarC_Parser_AST.Static)) -> (let tmp = (p_noSeqTermAndComment ps pb e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat (str "`") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^^) (str "`") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.VQuote (e1)) -> (let tmp = (p_noSeqTermAndComment ps pb e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat (str "`%") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^^) (str "`%") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.Antiquote ({ FStarC_Parser_AST.tm = (FStarC_Parser_AST.Quote (e1, FStarC_Parser_AST.Dynamic)); range = tmp; level = tmp1; _ })) -> (let tmp2 = (p_noSeqTermAndComment ps pb e1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat (str "`@") tmp2) in
-      (FStar_Pprint.group tmp3))
+      let tmp3 = (PPrint.(^^) (str "`@") tmp2) in
+      (PPrint.group tmp3))
     | (FStarC_Parser_AST.Antiquote (e1)) -> (let tmp = (p_noSeqTermAndComment ps pb e1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat (str "`#") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^^) (str "`#") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.CalcProof (rel, init, steps)) -> (let tmp = (p_noSeqTermAndComment false false rel) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.lbrace)) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-      let head = (FStar_Pprint.op_Hat_Hat (str "calc") tmp2) in
-      let bot = FStar_Pprint.rbrace in
+      let tmp1 = (PPrint.(^^) tmp (PPrint.(^^) PPrint.space PPrint.lbrace)) in
+      let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+      let head = (PPrint.(^^) (str "calc") tmp2) in
+      let bot = PPrint.rbrace in
       let tmp3 = (p_noSeqTermAndComment false false init) in
-      let tmp4 = (separate_map_last FStar_Pprint.hardline p_calcStep steps) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat (str ";") tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat tmp3 tmp6) in
-      let tmp8 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp7) in
+      let tmp4 = (separate_map_last PPrint.hardline p_calcStep steps) in
+      let tmp5 = (PPrint.(^^) PPrint.hardline tmp4) in
+      let tmp6 = (PPrint.(^^) (str ";") tmp5) in
+      let tmp7 = (PPrint.(^^) tmp3 tmp6) in
+      let tmp8 = (PPrint.(^^) PPrint.hardline tmp7) in
       let tmp9 = (FStar_Pprint.nest (Prims.of_int (2)) tmp8) in
-      (FStar_Pprint.enclose head (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline bot) tmp9))
+      (PPrint.enclose head (PPrint.(^^) PPrint.hardline bot) tmp9))
     | (FStarC_Parser_AST.IntroForall (xs, p, e1)) -> (let p1 = (p_noSeqTermAndComment false false p) in
       let e2 = (p_noSeqTermAndComment false false e1) in
       let xs1 = (p_binders_sep xs) in
-      (FStar_Pprint.op_Hat_Hat (str "introduce forall") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat xs1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str ".") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2)))))))))))
+      (PPrint.(^^) (str "introduce forall") (PPrint.(^^) PPrint.space (PPrint.(^^) xs1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str ".") (PPrint.(^^) PPrint.space (PPrint.(^^) p1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space e2)))))))))))
     | (FStarC_Parser_AST.IntroExists (xs, p, vs, e1)) -> (let p1 = (p_noSeqTermAndComment false false p) in
       let e2 = (p_noSeqTermAndComment false false e1) in
       let xs1 = (p_binders_sep xs) in
-      let tmp = (FStarC_Pprint.separate_map FStar_Pprint.space p_atomicTerm vs) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "and") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2)))) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat (str "with") tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat p1 tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat (str ".") tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat xs1 tmp6) in
-      let tmp8 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp7) in
-      let tmp9 = (FStar_Pprint.op_Hat_Hat (str "exists") tmp8) in
-      let tmp10 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp9) in
-      (FStar_Pprint.op_Hat_Hat (str "introduce") tmp10))
+      let tmp = (FStarC_Pprint.separate_map PPrint.space p_atomicTerm vs) in
+      let tmp1 = (PPrint.(^^) tmp (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "and") (PPrint.(^^) PPrint.space e2)))) in
+      let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+      let tmp3 = (PPrint.(^^) (str "with") tmp2) in
+      let tmp4 = (PPrint.(^^) PPrint.hardline tmp3) in
+      let tmp5 = (PPrint.(^^) p1 tmp4) in
+      let tmp6 = (PPrint.(^^) (str ".") tmp5) in
+      let tmp7 = (PPrint.(^^) xs1 tmp6) in
+      let tmp8 = (PPrint.(^^) PPrint.space tmp7) in
+      let tmp9 = (PPrint.(^^) (str "exists") tmp8) in
+      let tmp10 = (PPrint.(^^) PPrint.space tmp9) in
+      (PPrint.(^^) (str "introduce") tmp10))
     | (FStarC_Parser_AST.IntroImplies (p, q, e1)) -> (let p1 = (p_tmFormula p) in
       let q1 = (p_tmFormula q) in
       let e2 = (p_noSeqTermAndComment false false e1) in
-      (FStar_Pprint.op_Hat_Hat (str "introduce") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "==>") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat q1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2)))))))))))
+      (PPrint.(^^) (str "introduce") (PPrint.(^^) PPrint.space (PPrint.(^^) p1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str "==>") (PPrint.(^^) PPrint.space (PPrint.(^^) q1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space e2)))))))))))
     | (FStarC_Parser_AST.IntroOr (b, p, q, e1)) -> (let p1 = (p_tmFormula p) in
       let q1 = (p_tmFormula q) in
       let e2 = (p_noSeqTermAndComment false false e1) in
-      (FStar_Pprint.op_Hat_Hat (str "introduce") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "\\/") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat q1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (if b then (str "Left") else (str "Right")) (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2)))))))))))))
+      (PPrint.(^^) (str "introduce") (PPrint.(^^) PPrint.space (PPrint.(^^) p1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str "\\/") (PPrint.(^^) PPrint.space (PPrint.(^^) q1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space (PPrint.(^^) (if b then (str "Left") else (str "Right")) (PPrint.(^^) PPrint.space e2)))))))))))))
     | (FStarC_Parser_AST.IntroAnd (p, q, e1, e2)) -> (let p1 = (p_tmFormula p) in
       let q1 = (p_tmTuple q) in
       let e11 = (p_noSeqTermAndComment false false e1) in
       let e21 = (p_noSeqTermAndComment false false e2) in
-      (FStar_Pprint.op_Hat_Hat (str "introduce") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "/\\") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat q1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat e11 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "and") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e21)))))))))))))))
+      (PPrint.(^^) (str "introduce") (PPrint.(^^) PPrint.space (PPrint.(^^) p1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str "/\\") (PPrint.(^^) PPrint.space (PPrint.(^^) q1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space (PPrint.(^^) e11 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "and") (PPrint.(^^) PPrint.space e21)))))))))))))))
     | (FStarC_Parser_AST.ElimForall (xs, p, vs)) -> (let xs1 = (p_binders_sep xs) in
       let p1 = (p_noSeqTermAndComment false false p) in
-      let vs1 = (FStarC_Pprint.separate_map FStar_Pprint.space p_atomicTerm vs) in
-      (FStar_Pprint.op_Hat_Hat (str "eliminate") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "forall") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat xs1 (FStar_Pprint.op_Hat_Hat (str ".") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space vs1))))))))))))
+      let vs1 = (FStarC_Pprint.separate_map PPrint.space p_atomicTerm vs) in
+      (PPrint.(^^) (str "eliminate") (PPrint.(^^) PPrint.space (PPrint.(^^) (str "forall") (PPrint.(^^) PPrint.space (PPrint.(^^) xs1 (PPrint.(^^) (str ".") (PPrint.(^^) PPrint.space (PPrint.(^^) p1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space vs1))))))))))))
     | (FStarC_Parser_AST.ElimExists (bs, p, e1)) -> (let tmp = (p_binders_sep bs) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (str ".")) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-      let head = (FStar_Pprint.op_Hat_Hat (str "eliminate exists") tmp2) in
+      let tmp1 = (PPrint.(^^) tmp (str ".")) in
+      let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+      let head = (PPrint.(^^) (str "eliminate exists") tmp2) in
       let p1 = (p_noSeqTermAndComment false false p) in
       let e2 = (p_noSeqTermAndComment false false e1) in
-      (FStar_Pprint.op_Hat_Hat head (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2)))))))
+      (PPrint.(^^) head (PPrint.(^^) PPrint.hardline (PPrint.(^^) p1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space e2)))))))
     | (FStarC_Parser_AST.ElimImplies (p, q, e1)) -> (let p1 = (p_tmFormula p) in
       let q1 = (p_tmFormula q) in
       let e2 = (p_noSeqTermAndComment false false e1) in
-      (FStar_Pprint.op_Hat_Hat (str "eliminate") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "==>") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat q1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2)))))))))))
+      (PPrint.(^^) (str "eliminate") (PPrint.(^^) PPrint.space (PPrint.(^^) p1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str "==>") (PPrint.(^^) PPrint.space (PPrint.(^^) q1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space e2)))))))))))
     | (FStarC_Parser_AST.ElimOr (p, q, e1, e2)) -> (let p1 = (p_tmFormula p) in
       let q1 = (p_tmFormula q) in
       let e11 = (p_noSeqTermAndComment false false e1) in
       let e21 = (p_noSeqTermAndComment false false e2) in
-      (FStar_Pprint.op_Hat_Hat (str "eliminate") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "\\/") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat q1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat e11 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "and") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e21)))))))))))))))
+      (PPrint.(^^) (str "eliminate") (PPrint.(^^) PPrint.space (PPrint.(^^) p1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str "\\/") (PPrint.(^^) PPrint.space (PPrint.(^^) q1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space (PPrint.(^^) e11 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "and") (PPrint.(^^) PPrint.space e21)))))))))))))))
     | (FStarC_Parser_AST.ElimAnd (p, q, e1)) -> (let p1 = (p_tmFormula p) in
       let q1 = (p_tmTuple q) in
       let e2 = (p_noSeqTermAndComment false false e1) in
-      (FStar_Pprint.op_Hat_Hat (str "eliminate") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat p1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat (str "/\\") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.op_Hat_Hat q1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat (str "with") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space e2)))))))))))
+      (PPrint.(^^) (str "eliminate") (PPrint.(^^) PPrint.space (PPrint.(^^) p1 (PPrint.(^^) PPrint.space (PPrint.(^^) (str "/\\") (PPrint.(^^) PPrint.space (PPrint.(^^) q1 (PPrint.(^^) PPrint.hardline (PPrint.(^^) (str "with") (PPrint.(^^) PPrint.space e2)))))))))))
     | (FStarC_Parser_AST.LitDoc (d)) -> d
     | tmp -> (p_typ ps pb e)
   )
 
-and p_noSeqTerm (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : (FStar_Pprint.document * FStar_Pprint.document) =
+and p_noSeqTerm (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : (PPrint.document * PPrint.document) =
   (with_comment_sep (p_noSeqTerm' ps pb) e (e).FStarC_Parser_AST.range)
 
-and p_term (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+and p_term (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : PPrint.document =
   (match (e).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Seq (e1, e2)) -> (let tmp = (p_noSeqTerm true false e1) in
       (match tmp with
-        | (comm, t1) -> (let tmp1 = (inline_comment_or_above comm t1 FStar_Pprint.semi) in
+        | (comm, t1) -> (let tmp1 = (inline_comment_or_above comm t1 PPrint.semi) in
           let tmp2 = (p_term ps pb e2) in
-          let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline tmp2) in
-          (FStar_Pprint.op_Hat_Hat tmp1 tmp3))
+          let tmp3 = (PPrint.(^^) PPrint.hardline tmp2) in
+          (PPrint.(^^) tmp1 tmp3))
       ))
     | (FStarC_Parser_AST.Bind (x, e1, e2)) -> (let tmp = (p_lident x) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.long_left_arrow)) in
+      let tmp1 = (PPrint.(^^) tmp (PPrint.(^^) PPrint.space FStar_Pprint.long_left_arrow)) in
       let tmp2 = (p_noSeqTermAndComment true false e1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp2 (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.semi)) in
+      let tmp3 = (PPrint.(^^) tmp2 (PPrint.(^^) PPrint.space PPrint.semi)) in
       let tmp4 = (op_Hat_Slash_Plus_Hat tmp1 tmp3) in
-      let tmp5 = (FStar_Pprint.group tmp4) in
+      let tmp5 = (PPrint.group tmp4) in
       let tmp6 = (p_term ps pb e2) in
-      (FStar_Pprint.op_Hat_Slash_Hat tmp5 tmp6))
+      (PPrint.(^/^) tmp5 tmp6))
     | tmp -> (let tmp1 = (p_noSeqTermAndComment ps pb e) in
-      (FStar_Pprint.group tmp1))
+      (PPrint.group tmp1))
   )
 
-and p_aqual (tmp : FStarC_Parser_AST.arg_qualifier) : FStar_Pprint.document =
+and p_aqual (tmp : FStarC_Parser_AST.arg_qualifier) : PPrint.document =
   (match tmp with
     | FStarC_Parser_AST.Implicit -> (str "#")
     | FStarC_Parser_AST.Equality -> (str "$")
@@ -1881,18 +1891,18 @@ and p_aqual (tmp : FStarC_Parser_AST.arg_qualifier) : FStar_Pprint.document =
           | tmp1 -> (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.App (t, (FStarC_Parser_AST.unit_const (t).FStarC_Parser_AST.range), FStarC_Parser_AST.Nothing)) (t).FStarC_Parser_AST.range FStarC_Parser_AST.Expr)
         ) in
       let tmp1 = (p_term false false t1) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 (FStar_Pprint.op_Hat_Hat (str "]") break1)) in
-      (FStar_Pprint.op_Hat_Hat (str "#[") tmp2))
-    | FStarC_Parser_AST.TypeClassArg -> FStar_Pprint.empty
+      let tmp2 = (PPrint.(^^) tmp1 (PPrint.(^^) (str "]") break1)) in
+      (PPrint.(^^) (str "#[") tmp2))
+    | FStarC_Parser_AST.TypeClassArg -> PPrint.empty
   )
 
-and p_binder' (no_pars : bool) (is_atomic : bool) (b : FStarC_Parser_AST.binder) : (FStar_Pprint.document * ((FStar_Pprint.document * (FStar_Pprint.document -> (FStar_Pprint.document -> FStar_Pprint.document)))) option) =
+and p_binder' (no_pars : bool) (is_atomic : bool) (b : FStarC_Parser_AST.binder) : (PPrint.document * ((PPrint.document * (PPrint.document -> (PPrint.document -> PPrint.document)))) option) =
   (match (b).FStarC_Parser_AST.b with
     | (FStarC_Parser_AST.Variable (lid)) -> (let tmp = (FStarC_Pprint.optional p_aqual (b).FStarC_Parser_AST.aqual) in
       let tmp1 = (p_attributes false (b).FStarC_Parser_AST.battributes) in
       let tmp2 = (p_lident lid) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp1 tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp tmp3) in
+      let tmp3 = (PPrint.(^^) tmp1 tmp2) in
+      let tmp4 = (PPrint.(^^) tmp tmp3) in
       (tmp4, None))
     | (FStarC_Parser_AST.Annotated (lid, t)) -> (let tmp = (match (t).FStarC_Parser_AST.tm with
           | (FStarC_Parser_AST.Refine ({ FStarC_Parser_AST.b = (FStarC_Parser_AST.Annotated (lid', t1)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ }, phi)) when ((=) (FStarC_Ident.string_of_id lid) (FStarC_Ident.string_of_id lid')) -> (let tmp4 = (p_lident lid) in
@@ -1903,28 +1913,28 @@ and p_binder' (no_pars : bool) (is_atomic : bool) (b : FStarC_Parser_AST.binder)
             let tmp2 = (FStarC_Pprint.optional p_aqual (b).FStarC_Parser_AST.aqual) in
             let tmp3 = (p_attributes false (b).FStarC_Parser_AST.battributes) in
             let tmp4 = (p_lident lid) in
-            let tmp5 = (FStar_Pprint.op_Hat_Hat tmp3 tmp4) in
-            let tmp6 = (FStar_Pprint.op_Hat_Hat tmp2 tmp5) in
+            let tmp5 = (PPrint.(^^) tmp3 tmp4) in
+            let tmp6 = (PPrint.(^^) tmp2 tmp5) in
             (tmp6, t'))
         ) in
       (match tmp with
-        | (b', t') -> (let catf = (if (is_atomic || ((is_meta_qualifier (b).FStarC_Parser_AST.aqual) && (not no_pars))) then (fun x y -> (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen (FStar_Pprint.op_Hat_Hat (cat_with_colon x y) FStar_Pprint.rparen)))) else (fun x y -> (FStar_Pprint.group (cat_with_colon x y)))) in
+        | (b', t') -> (let catf = (if (is_atomic || ((is_meta_qualifier (b).FStarC_Parser_AST.aqual) && (not no_pars))) then (fun x y -> (PPrint.group (PPrint.(^^) PPrint.lparen (PPrint.(^^) (cat_with_colon x y) PPrint.rparen)))) else (fun x y -> (PPrint.group (cat_with_colon x y)))) in
           (b', (Some ((t', catf)))))
       ))
     | (FStarC_Parser_AST.NoName (t)) -> (match (t).FStarC_Parser_AST.tm with
-        | (FStarC_Parser_AST.Refine ({ FStarC_Parser_AST.b = (FStarC_Parser_AST.NoName (t1)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ }, phi)) -> (let tmp4 = (p_refinement' (b).FStarC_Parser_AST.aqual (b).FStarC_Parser_AST.battributes FStar_Pprint.underscore t1 phi) in
+        | (FStarC_Parser_AST.Refine ({ FStarC_Parser_AST.b = (FStarC_Parser_AST.NoName (t1)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ }, phi)) -> (let tmp4 = (p_refinement' (b).FStarC_Parser_AST.aqual (b).FStarC_Parser_AST.battributes PPrint.underscore t1 phi) in
           (match tmp4 with
             | (b', t') -> (b', (Some ((t', cat_with_colon))))
           ))
         | tmp -> (let tmp1 = (FStarC_Pprint.optional p_aqual (b).FStarC_Parser_AST.aqual) in
           let tmp2 = (p_attributes false (b).FStarC_Parser_AST.battributes) in
-          let pref = (FStar_Pprint.op_Hat_Hat tmp1 tmp2) in
+          let pref = (PPrint.(^^) tmp1 tmp2) in
           let tm_doc = (if is_atomic then (p_atomicTerm t) else (p_appTerm t)) in
-          ((FStar_Pprint.op_Hat_Hat pref tm_doc), None))
+          ((PPrint.(^^) pref tm_doc), None))
       )
   )
 
-and p_binder (is_atomic : bool) (b : FStarC_Parser_AST.binder) : FStar_Pprint.document =
+and p_binder (is_atomic : bool) (b : FStarC_Parser_AST.binder) : PPrint.document =
   (let is_tc = (is_tc_binder b) in
   let tmp = (p_binder' false (is_atomic && (not is_tc)) b) in
   (match tmp with
@@ -1935,20 +1945,20 @@ and p_binder (is_atomic : bool) (b : FStarC_Parser_AST.binder) : FStar_Pprint.do
       (if is_tc then (tc_arg d) else d))
   ))
 
-let binder_to_document (b : FStarC_Parser_AST.binder) : FStar_Pprint.document =
+let binder_to_document (b : FStarC_Parser_AST.binder) : PPrint.document =
   (p_binder true b)
 
-let term_to_document (e : FStarC_Parser_AST.term) : FStar_Pprint.document =
+let term_to_document (e : FStarC_Parser_AST.term) : PPrint.document =
   (p_term false false e)
 
-let p_disjunctivePattern (p : FStarC_Parser_AST.pattern) : FStar_Pprint.document =
+let p_disjunctivePattern (p : FStarC_Parser_AST.pattern) : PPrint.document =
   (match (p).FStarC_Parser_AST.pat with
-    | (FStarC_Parser_AST.PatOr (pats)) -> (let tmp = (FStarC_Pprint.separate_map (FStar_Pprint.op_Hat_Hat break1 (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.space)) p_tuplePattern pats) in
-      (FStar_Pprint.group tmp))
+    | (FStarC_Parser_AST.PatOr (pats)) -> (let tmp = (FStarC_Pprint.separate_map (PPrint.(^^) break1 (PPrint.(^^) PPrint.bar PPrint.space)) p_tuplePattern pats) in
+      (PPrint.group tmp))
     | tmp -> (p_tuplePattern p)
   )
 
-let pat_to_document (p : FStarC_Parser_AST.pattern) : FStar_Pprint.document =
+let pat_to_document (p : FStarC_Parser_AST.pattern) : PPrint.document =
   (p_disjunctivePattern p)
 
 type decl_meta = {
@@ -1960,57 +1970,59 @@ type decl_meta = {
 let min (x : Prims.int) (y : Prims.int) : Prims.int =
   (if (Prims.op_Greater x y) then y else x)
 
-let rec place_comments_until_pos (k : Prims.int) (lbegin : Prims.int) (pos : Prims.int) (meta_decl : decl_meta) (doc : FStar_Pprint.document) (r : bool) (init : bool) : FStar_Pprint.document =
+let rec place_comments_until_pos (k : Prims.int) (lbegin : Prims.int) (pos : Prims.int) (meta_decl : decl_meta) (doc : PPrint.document) (r : bool) (init : bool) : PPrint.document =
   (let tmp = (!(comment_stack)) in
   (match tmp with
     | ((comment, crange) :: cs) when (FStarC_Range_Ops.range_before_pos crange pos) -> (((comment_stack) := cs);
       let lnum = (max k (Prims.op_Minus (FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.start_of_range crange)) lbegin)) in
       let lnum1 = (min (Prims.of_int (2)) lnum) in
-      let doc1 = (FStar_Pprint.op_Hat_Hat doc (FStar_Pprint.op_Hat_Hat (FStar_Pprint.repeat lnum1 FStar_Pprint.hardline) (str comment))) in
+      let doc1 = (PPrint.(^^) doc (PPrint.(^^) (FStar_Pprint.repeat lnum1 PPrint.hardline) (str comment))) in
       (place_comments_until_pos Prims.int_one (FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.end_of_range crange)) pos meta_decl doc1 true init))
-    | tmp1 -> (if ((=) doc FStar_Pprint.empty) then FStar_Pprint.empty else (let lnum = (Prims.op_Minus (FStarC_Range_Ops.line_of_pos pos) lbegin) in
+    | tmp1 -> (if ((=) doc PPrint.empty) then PPrint.empty else (let lnum = (Prims.op_Minus (FStarC_Range_Ops.line_of_pos pos) lbegin) in
       let lnum1 = (min (Prims.of_int (3)) lnum) in
       let lnum2 = (if ((meta_decl).has_qs || (meta_decl).has_attrs) then (Prims.op_Minus lnum1 Prims.int_one) else lnum1) in
       let lnum3 = (max k lnum2) in
       let lnum4 = (if ((meta_decl).has_qs && (meta_decl).has_attrs) then (Prims.of_int (2)) else lnum3) in
       let lnum5 = (if init then (Prims.of_int (2)) else lnum4) in
-      (FStar_Pprint.op_Hat_Hat doc (FStar_Pprint.repeat lnum5 FStar_Pprint.hardline))))
+      (PPrint.(^^) doc (FStar_Pprint.repeat lnum5 PPrint.hardline))))
   ))
 
 let dummy_meta : decl_meta =
   { r = FStarC_Range_Type.dummyRange; has_qs = false; has_attrs = false }
 
-let separate_map_with_comments (prefix : FStar_Pprint.document) (sep : FStar_Pprint.document) (f : ('tmp -> FStar_Pprint.document)) (xs : ('tmp) list) (extract_meta : ('tmp -> decl_meta)) : FStar_Pprint.document =
+let separate_map_with_comments (prefix : PPrint.document) (sep : PPrint.document) (f : ('tmp -> PPrint.document)) (xs : ('tmp) list) (extract_meta : ('tmp -> decl_meta)) : PPrint.document =
   (let fold_fun = (fun pair x -> (match pair with
       | (last_line, doc) -> (let meta_decl = (extract_meta x) in
         let r = (meta_decl).r in
         let doc1 = (place_comments_until_pos Prims.int_one last_line (FStarC_Range_Ops.start_of_range r) meta_decl doc false false) in
         let tmp = (f x) in
-        let tmp1 = (FStar_Pprint.op_Hat_Hat sep tmp) in
-        let tmp2 = (FStar_Pprint.op_Hat_Hat doc1 tmp1) in
+        let tmp1 = (PPrint.(^^) sep tmp) in
+        let tmp2 = (PPrint.(^^) doc1 tmp1) in
         ((FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.end_of_range r)), tmp2))
     )) in
-  let tmp = ((FStarC_List.hd xs), (FStarC_List.tl xs)) in
+  let tmp = ((BatList.hd xs), (BatList.tl xs)) in
   (match tmp with
     | (x, xs1) -> (let meta_decl = (extract_meta x) in
       let tmp1 = (f x) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat prefix tmp1) in
+      let tmp2 = (PPrint.(^^) prefix tmp1) in
       let init = ((FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.end_of_range (meta_decl).r)), tmp2) in
-      let tmp3 = (FStarC_List.fold_left fold_fun init xs1) in
-      (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp3))
+      let tmp3 = (BatList.fold_left fold_fun init xs1) in
+      (match tmp3 with
+        | (u__1, u__2) -> u__2
+      ))
   ))
 
-let p_qualifier (tmp : FStarC_Parser_AST.qualifier) : FStar_Pprint.document =
+let p_qualifier (tmp : FStarC_Parser_AST.qualifier) : PPrint.document =
   (match tmp with
     | FStarC_Parser_AST.Private -> (str "private")
     | FStarC_Parser_AST.Noeq -> (str "noeq")
     | FStarC_Parser_AST.Unopteq -> (str "unopteq")
     | FStarC_Parser_AST.Assumption -> (str "assume")
     | FStarC_Parser_AST.TotalEffect -> (str "total")
-    | FStarC_Parser_AST.Effect_qual -> FStar_Pprint.empty
+    | FStarC_Parser_AST.Effect_qual -> PPrint.empty
     | FStarC_Parser_AST.New -> (str "new")
     | FStarC_Parser_AST.Inline -> (str "inline")
-    | FStarC_Parser_AST.Visible -> FStar_Pprint.empty
+    | FStarC_Parser_AST.Visible -> PPrint.empty
     | FStarC_Parser_AST.Unfold_for_unification_and_vcgen -> (str "unfold")
     | FStarC_Parser_AST.Inline_for_extraction -> (str "inline_for_extraction")
     | FStarC_Parser_AST.Irreducible -> (str "irreducible")
@@ -2021,119 +2033,119 @@ let p_qualifier (tmp : FStarC_Parser_AST.qualifier) : FStar_Pprint.document =
     | FStarC_Parser_AST.Logic -> (str "logic")
   )
 
-let p_qualifiers (qs : (FStarC_Parser_AST.qualifier) list) : FStar_Pprint.document =
+let p_qualifiers (qs : (FStarC_Parser_AST.qualifier) list) : PPrint.document =
   (match qs with
-    | [] -> FStar_Pprint.empty
+    | [] -> PPrint.empty
     | (q :: []) -> (let tmp = (p_qualifier q) in
-      (FStar_Pprint.op_Hat_Hat tmp FStar_Pprint.hardline))
-    | tmp -> (let tmp1 = (FStarC_List.map p_qualifier qs) in
-      let tmp2 = (FStar_Pprint.flow break1 tmp1) in
-      (FStar_Pprint.op_Hat_Hat tmp2 FStar_Pprint.hardline))
+      (PPrint.(^^) tmp PPrint.hardline))
+    | tmp -> (let tmp1 = (BatList.map p_qualifier qs) in
+      let tmp2 = (PPrint.flow break1 tmp1) in
+      (PPrint.(^^) tmp2 PPrint.hardline))
   )
 
-let rec p_list__p_list' (f : ('t -> FStar_Pprint.document)) (sep : FStar_Pprint.document) (l : ('t) list) : FStar_Pprint.document =
+let rec p_list__p_list' (f : ('t -> PPrint.document)) (sep : PPrint.document) (l : ('t) list) : PPrint.document =
   (match l with
-    | [] -> FStar_Pprint.empty
+    | [] -> PPrint.empty
     | (x :: []) -> (f x)
     | (x :: xs) -> (let tmp = (f x) in
       let tmp1 = ((p_list__p_list' f sep) xs) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat sep tmp1) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp2))
+      let tmp2 = (PPrint.(^^) sep tmp1) in
+      (PPrint.(^^) tmp tmp2))
   )
 
-let p_list (f : ('t -> FStar_Pprint.document)) (sep : FStar_Pprint.document) (l : ('t) list) : FStar_Pprint.document =
+let p_list (f : ('t -> PPrint.document)) (sep : PPrint.document) (l : ('t) list) : PPrint.document =
   (let tmp = ((p_list__p_list' f sep) l) in
-  let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (str "]")) in
-  (FStar_Pprint.op_Hat_Hat (str "[") tmp1))
+  let tmp1 = (PPrint.(^^) tmp (str "]")) in
+  (PPrint.(^^) (str "[") tmp1))
 
-let p_restriction (tmp : FStarC_Syntax_Syntax.restriction) : FStar_Pprint.document =
+let p_restriction (tmp : FStarC_Syntax_Syntax.restriction) : PPrint.document =
   (match tmp with
-    | FStarC_Syntax_Syntax.Unrestricted -> FStar_Pprint.empty
+    | FStarC_Syntax_Syntax.Unrestricted -> PPrint.empty
     | (FStarC_Syntax_Syntax.AllowList (ids)) -> (let tmp1 = (p_list (fun tmp1 -> (match tmp1 with
           | (id, renamed) -> (let tmp2 = (p_ident id) in
             let tmp3 = (FStarC_Pprint.optional p_ident renamed) in
-            (FStar_Pprint.op_Hat_Slash_Hat tmp2 tmp3))
+            (PPrint.(^/^) tmp2 tmp3))
         )) (str ", ") ids) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp1 FStar_Pprint.rbrace) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.lbrace tmp2) in
-      (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp3))
+      let tmp2 = (PPrint.(^^) tmp1 PPrint.rbrace) in
+      let tmp3 = (PPrint.(^^) PPrint.lbrace tmp2) in
+      (PPrint.(^^) PPrint.space tmp3))
   )
 
-let p_uident (lid : FStarC_Ident.ident) : FStar_Pprint.document =
+let p_uident (lid : FStarC_Ident.ident) : PPrint.document =
   (string_of_id_or_underscore lid)
 
-let p_typars (bs : (FStarC_Parser_AST.binder) list) : FStar_Pprint.document =
+let p_typars (bs : (FStarC_Parser_AST.binder) list) : PPrint.document =
   (p_binders true bs)
 
-let p_typeDeclPrefix (kw : FStar_Pprint.document) (eq : bool) (lid : FStarC_Ident.ident) (bs : (FStarC_Parser_AST.binder) list) (typ_opt : (FStarC_Parser_AST.term) option) : FStar_Pprint.document =
+let p_typeDeclPrefix (kw : PPrint.document) (eq : bool) (lid : FStarC_Ident.ident) (bs : (FStarC_Parser_AST.binder) list) (typ_opt : (FStarC_Parser_AST.term) option) : PPrint.document =
   (let with_kw = (fun cont -> (let lid_doc = (p_ident lid) in
-    let kw_lid = (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat kw lid_doc)) in
+    let kw_lid = (PPrint.group (PPrint.(^/^) kw lid_doc)) in
     (cont kw_lid))) in
-  let maybe_eq = (if eq then FStar_Pprint.equals else FStar_Pprint.empty) in
+  let maybe_eq = (if eq then PPrint.equals else PPrint.empty) in
   let typ = (match typ_opt with
       | None -> maybe_eq
       | (Some (t)) -> (let tmp = (p_typ false false t) in
-        let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat tmp maybe_eq) in
-        let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-        (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon tmp2))
+        let tmp1 = (PPrint.(^/^) tmp maybe_eq) in
+        let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+        (PPrint.(^^) PPrint.colon tmp2))
     ) in
   (if ((=) bs []) then (with_kw (fun n -> (prefix2 n typ))) else (let binders = (p_binders_list true bs) in
-  (with_kw (fun n -> (prefix2 (prefix2 n (FStar_Pprint.flow break1 binders)) typ))))))
+  (with_kw (fun n -> (prefix2 (prefix2 n (PPrint.flow break1 binders)) typ))))))
 
-let p_typ_sep (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : (FStar_Pprint.document * FStar_Pprint.document) =
+let p_typ_sep (ps : bool) (pb : bool) (e : FStarC_Parser_AST.term) : (PPrint.document * PPrint.document) =
   (with_comment_sep (p_typ' ps pb) e (e).FStarC_Parser_AST.range)
 
-let p_recordFieldDecl (ps : bool) (x : (FStarC_Ident.ident * (FStarC_Parser_AST.arg_qualifier) option * (FStarC_Parser_AST.term) list * FStarC_Parser_AST.term)) : FStar_Pprint.document =
+let p_recordFieldDecl (ps : bool) (x : (FStarC_Ident.ident * (FStarC_Parser_AST.arg_qualifier) option * (FStarC_Parser_AST.term) list * FStarC_Parser_AST.term)) : PPrint.document =
   (match x with
     | (lid, aq, attrs, t) -> (let tmp = (FStarC_Pprint.optional p_aqual aq) in
       let tmp1 = (p_attributes false attrs) in
       let tmp2 = (p_lidentOrOperator lid) in
       let tmp3 = (p_typ ps false t) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat tmp2 tmp4) in
-      let tmp6 = (FStar_Pprint.op_Hat_Hat tmp1 tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat tmp tmp6) in
-      (FStar_Pprint.group tmp7))
+      let tmp4 = (PPrint.(^^) PPrint.colon tmp3) in
+      let tmp5 = (PPrint.(^^) tmp2 tmp4) in
+      let tmp6 = (PPrint.(^^) tmp1 tmp5) in
+      let tmp7 = (PPrint.(^^) tmp tmp6) in
+      (PPrint.group tmp7))
   )
 
-let p_typeDeclRecord (fields : ((FStarC_Ident.ident * (FStarC_Parser_AST.arg_qualifier) option * (FStarC_Parser_AST.term) list * FStarC_Parser_AST.term)) list) : FStar_Pprint.document =
+let p_typeDeclRecord (fields : ((FStarC_Ident.ident * (FStarC_Parser_AST.arg_qualifier) option * (FStarC_Parser_AST.term) list * FStarC_Parser_AST.term)) list) : PPrint.document =
   (let p_recordField = (fun ps tmp -> (match tmp with
       | (lid, aq, attrs, t) -> (let tmp1 = (with_comment_sep (p_recordFieldDecl ps) (lid, aq, attrs, t) (FStarC_Range_Ops.extend_to_end_of_line (t).FStarC_Parser_AST.range)) in
         (match tmp1 with
-          | (comm, field) -> (let sep = (if ps then FStar_Pprint.semi else FStar_Pprint.empty) in
+          | (comm, field) -> (let sep = (if ps then PPrint.semi else PPrint.empty) in
             (inline_comment_or_above comm field sep))
         ))
     )) in
-  let tmp = (separate_map_last FStar_Pprint.hardline p_recordField fields) in
+  let tmp = (separate_map_last PPrint.hardline p_recordField fields) in
   (braces_with_nesting tmp))
 
-let p_constructorBranch (x : (FStarC_Ident.ident * (FStarC_Parser_AST.constructor_payload) option * (FStarC_Parser_AST.term) list)) : FStar_Pprint.document =
+let p_constructorBranch (x : (FStarC_Ident.ident * (FStarC_Parser_AST.constructor_payload) option * (FStarC_Parser_AST.term) list)) : PPrint.document =
   (match x with
     | (uid, variant, attrs) -> (let h = (fun isOf t -> (let tmp = (p_typ false false t) in
-        let tmp1 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp) in
-        (FStar_Pprint.op_Hat_Hat (if isOf then (str "of") else FStar_Pprint.colon) tmp1))) in
+        let tmp1 = (PPrint.(^^) PPrint.space tmp) in
+        (PPrint.(^^) (if isOf then (str "of") else PPrint.colon) tmp1))) in
       let tmp = (p_attributes false attrs) in
       let tmp1 = (p_uident uid) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.bar tmp3) in
-      let tmp5 = (FStar_Pprint.group tmp4) in
-      let tmp6 = (default_or_map FStar_Pprint.empty (fun payload -> (let tmp6 = (match payload with
+      let tmp2 = (PPrint.(^^) tmp tmp1) in
+      let tmp3 = (PPrint.(^^) PPrint.space tmp2) in
+      let tmp4 = (PPrint.(^^) PPrint.bar tmp3) in
+      let tmp5 = (PPrint.group tmp4) in
+      let tmp6 = (default_or_map PPrint.empty (fun payload -> (let tmp6 = (match payload with
             | (FStarC_Parser_AST.VpOfNotation (t)) -> (h true t)
             | (FStarC_Parser_AST.VpArbitrary (t)) -> (h false t)
             | (FStarC_Parser_AST.VpRecord (r, t)) -> (let tmp6 = (p_typeDeclRecord r) in
-              let tmp7 = (default_or_map FStar_Pprint.empty (h false) t) in
-              (FStar_Pprint.op_Hat_Hat tmp6 tmp7))
+              let tmp7 = (default_or_map PPrint.empty (h false) t) in
+              (PPrint.(^^) tmp6 tmp7))
           ) in
-        let tmp7 = (FStar_Pprint.group tmp6) in
-        (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp7))) variant) in
-      (FStar_Pprint.op_Hat_Hat tmp5 tmp6))
+        let tmp7 = (PPrint.group tmp6) in
+        (PPrint.(^^) PPrint.space tmp7))) variant) in
+      (PPrint.(^^) tmp5 tmp6))
   )
 
-let p_typeDecl (pre : FStar_Pprint.document) (tmp : FStarC_Parser_AST.tycon) : (FStar_Pprint.document * FStar_Pprint.document * FStar_Pprint.document * (FStar_Pprint.document -> FStar_Pprint.document)) =
+let p_typeDecl (pre : PPrint.document) (tmp : FStarC_Parser_AST.tycon) : (PPrint.document * PPrint.document * PPrint.document * (PPrint.document -> PPrint.document)) =
   (match tmp with
     | (FStarC_Parser_AST.TyconAbstract (lid, bs, typ_opt)) -> (let tmp1 = (p_typeDeclPrefix pre false lid bs typ_opt) in
-      (FStar_Pprint.empty, tmp1, FStar_Pprint.empty, (fun x -> x)))
+      (PPrint.empty, tmp1, PPrint.empty, (fun x -> x)))
     | (FStarC_Parser_AST.TyconAbbrev (lid, bs, typ_opt, t)) -> (let tmp1 = (p_typ_sep false false t) in
       (match tmp1 with
         | (comm, doc) -> (let tmp2 = (p_typeDeclPrefix pre true lid bs typ_opt) in
@@ -2142,8 +2154,8 @@ let p_typeDecl (pre : FStar_Pprint.document) (tmp : FStarC_Parser_AST.tycon) : (
     | (FStarC_Parser_AST.TyconRecord (lid, bs, typ_opt, attrs, record_field_decls)) -> (let tmp1 = (p_typeDeclPrefix pre true lid bs typ_opt) in
       let tmp2 = (p_attributes false attrs) in
       let tmp3 = (p_typeDeclRecord record_field_decls) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat tmp2 tmp3) in
-      (FStar_Pprint.empty, tmp1, tmp4, (fun d -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.space d))))
+      let tmp4 = (PPrint.(^^) tmp2 tmp3) in
+      (PPrint.empty, tmp1, tmp4, (fun d -> (PPrint.(^^) PPrint.space d))))
     | (FStarC_Parser_AST.TyconVariant (lid, bs, typ_opt, ct_decls)) -> (let p_constructorBranchAndComments = (fun tmp1 -> (match tmp1 with
           | (uid, payload, attrs) -> (let tmp2 = (FStarC_Option.bind payload (fun tmp2 -> (match tmp2 with
                 | (FStarC_Parser_AST.VpOfNotation (t)) -> (Some ((t).FStarC_Parser_AST.range))
@@ -2154,214 +2166,216 @@ let p_typeDecl (pre : FStar_Pprint.document) (tmp : FStarC_Parser_AST.tycon) : (
             let range = (FStarC_Range_Ops.extend_to_end_of_line tmp3) in
             let tmp4 = (with_comment_sep p_constructorBranch (uid, payload, attrs) range) in
             (match tmp4 with
-              | (comm, ctor) -> (inline_comment_or_above comm ctor FStar_Pprint.empty)
+              | (comm, ctor) -> (inline_comment_or_above comm ctor PPrint.empty)
             ))
         )) in
-      let datacon_doc = (FStarC_Pprint.separate_map FStar_Pprint.hardline p_constructorBranchAndComments ct_decls) in
+      let datacon_doc = (FStarC_Pprint.separate_map PPrint.hardline p_constructorBranchAndComments ct_decls) in
       let tmp1 = (p_typeDeclPrefix pre true lid bs typ_opt) in
-      (FStar_Pprint.empty, tmp1, datacon_doc, jump2))
+      (PPrint.empty, tmp1, datacon_doc, jump2))
   )
 
-let p_typeDeclWithKw (kw : FStar_Pprint.document) (typedecl : FStarC_Parser_AST.tycon) : FStar_Pprint.document =
+let p_typeDeclWithKw (kw : PPrint.document) (typedecl : FStarC_Parser_AST.tycon) : PPrint.document =
   (let tmp = (p_typeDecl kw typedecl) in
   (match tmp with
-    | (comm, decl, body, pre) -> (if ((=) comm FStar_Pprint.empty) then (FStar_Pprint.op_Hat_Hat decl (pre body)) else (FStar_Pprint.group (FStar_Pprint.ifflat (FStar_Pprint.op_Hat_Hat decl (FStar_Pprint.op_Hat_Slash_Hat (pre body) comm)) (FStar_Pprint.op_Hat_Hat decl (FStar_Pprint.nest (Prims.of_int (2)) (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline (FStar_Pprint.op_Hat_Hat comm (FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline body))))))))
+    | (comm, decl, body, pre) -> (if ((=) comm PPrint.empty) then (PPrint.(^^) decl (pre body)) else (PPrint.group (PPrint.ifflat (PPrint.(^^) decl (PPrint.(^/^) (pre body) comm)) (PPrint.(^^) decl (FStar_Pprint.nest (Prims.of_int (2)) (PPrint.(^^) PPrint.hardline (PPrint.(^^) comm (PPrint.(^^) PPrint.hardline body))))))))
   ))
 
-let p_letqualifier (tmp : FStarC_Parser_AST.let_qualifier) : FStar_Pprint.document =
+let p_letqualifier (tmp : FStarC_Parser_AST.let_qualifier) : PPrint.document =
   (match tmp with
-    | FStarC_Parser_AST.Rec -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (str "rec"))
-    | FStarC_Parser_AST.NoLetQualifier -> FStar_Pprint.empty
+    | FStarC_Parser_AST.Rec -> (PPrint.(^^) PPrint.space (str "rec"))
+    | FStarC_Parser_AST.NoLetQualifier -> PPrint.empty
   )
 
-let separate_map_with_comments_kw (prefix : 'tmp) (sep : 'tmp) (f : ('tmp -> ('tmp1 -> FStar_Pprint.document))) (xs : ('tmp1) list) (extract_meta : ('tmp1 -> decl_meta)) : FStar_Pprint.document =
+let separate_map_with_comments_kw (prefix : 'tmp) (sep : 'tmp) (f : ('tmp -> ('tmp1 -> PPrint.document))) (xs : ('tmp1) list) (extract_meta : ('tmp1 -> decl_meta)) : PPrint.document =
   (let fold_fun = (fun pair x -> (match pair with
       | (last_line, doc) -> (let meta_decl = (extract_meta x) in
         let r = (meta_decl).r in
         let doc1 = (place_comments_until_pos Prims.int_one last_line (FStarC_Range_Ops.start_of_range r) meta_decl doc false false) in
         let tmp = (f sep x) in
-        let tmp1 = (FStar_Pprint.op_Hat_Hat doc1 tmp) in
+        let tmp1 = (PPrint.(^^) doc1 tmp) in
         ((FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.end_of_range r)), tmp1))
     )) in
-  let tmp = ((FStarC_List.hd xs), (FStarC_List.tl xs)) in
+  let tmp = ((BatList.hd xs), (BatList.tl xs)) in
   (match tmp with
     | (x, xs1) -> (let meta_decl = (extract_meta x) in
       let tmp1 = (f prefix x) in
       let init = ((FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.end_of_range (meta_decl).r)), tmp1) in
-      let tmp2 = (FStarC_List.fold_left fold_fun init xs1) in
-      (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp2))
+      let tmp2 = (BatList.fold_left fold_fun init xs1) in
+      (match tmp2 with
+        | (u__1, u__2) -> u__2
+      ))
   ))
 
-let p_letbinding (kw : FStar_Pprint.document) (pat_e : (FStarC_Parser_AST.pattern * FStarC_Parser_AST.term)) : FStar_Pprint.document =
+let p_letbinding (kw : PPrint.document) (pat_e : (FStarC_Parser_AST.pattern * FStarC_Parser_AST.term)) : PPrint.document =
   (match pat_e with
     | (pat, e) -> (let doc_pat = (p_letlhs kw (pat, e) false) in
       let tmp = (p_term_sep false false e) in
       (match tmp with
-        | (comm, doc_expr) -> (let doc_expr1 = (inline_comment_or_above comm doc_expr FStar_Pprint.empty) in
-          (FStar_Pprint.ifflat (FStar_Pprint.op_Hat_Slash_Hat doc_pat (FStar_Pprint.op_Hat_Slash_Hat FStar_Pprint.equals doc_expr1)) (FStar_Pprint.op_Hat_Hat doc_pat (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.group (FStar_Pprint.op_Hat_Hat FStar_Pprint.equals (jump2 doc_expr1)))))))
+        | (comm, doc_expr) -> (let doc_expr1 = (inline_comment_or_above comm doc_expr PPrint.empty) in
+          (PPrint.ifflat (PPrint.(^/^) doc_pat (PPrint.(^/^) PPrint.equals doc_expr1)) (PPrint.(^^) doc_pat (PPrint.(^^) PPrint.space (PPrint.group (PPrint.(^^) PPrint.equals (jump2 doc_expr1)))))))
       ))
   )
 
-let surround_maybe_empty (n : Prims.int) (b : Prims.int) (doc1 : FStar_Pprint.document) (doc2 : FStar_Pprint.document) (doc3 : FStar_Pprint.document) : FStar_Pprint.document =
-  (if ((=) doc2 FStar_Pprint.empty) then (FStar_Pprint.group (FStar_Pprint.op_Hat_Slash_Hat doc1 doc3)) else (FStar_Pprint.surround n b doc1 doc2 doc3))
+let surround_maybe_empty (n : Prims.int) (b : Prims.int) (doc1 : PPrint.document) (doc2 : PPrint.document) (doc3 : PPrint.document) : PPrint.document =
+  (if ((=) doc2 PPrint.empty) then (PPrint.group (PPrint.(^/^) doc1 doc3)) else (FStar_Pprint.surround n b doc1 doc2 doc3))
 
-let p_effectDecl (ps : bool) (d : FStarC_Parser_AST.decl) : FStar_Pprint.document =
+let p_effectDecl (ps : bool) (d : FStarC_Parser_AST.decl) : PPrint.document =
   (match (d).FStarC_Parser_AST.d with
     | (FStarC_Parser_AST.Tycon (false, false, ((FStarC_Parser_AST.TyconAbbrev (lid, [], None, e)) :: []))) -> (let tmp = (p_lident lid) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.equals)) in
+      let tmp1 = (PPrint.(^^) tmp (PPrint.(^^) PPrint.space PPrint.equals)) in
       let tmp2 = (p_simpleTerm ps false e) in
       (prefix2 tmp1 tmp2))
     | tmp -> (FStarC_Effect.failwith "Not a declaration of an effect combinator.")
   )
 
-let p_effectDefinition (uid : FStarC_Ident.ident) (bs : (FStarC_Parser_AST.binder) list) (ds : (FStarC_Parser_AST.decl) list) : FStar_Pprint.document =
+let p_effectDefinition (uid : FStarC_Ident.ident) (bs : (FStarC_Parser_AST.binder) list) (ds : (FStarC_Parser_AST.decl) list) : PPrint.document =
   (let tmp = (p_uident uid) in
   let tmp1 = (p_binders true bs) in
   let tmp2 = (surround_maybe_empty (Prims.of_int (2)) Prims.int_one tmp tmp1 (str "with")) in
-  let tmp3 = (separate_map_last (FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1) p_effectDecl ds) in
+  let tmp3 = (separate_map_last (PPrint.(^^) PPrint.semi break1) p_effectDecl ds) in
   let tmp4 = (braces_with_nesting tmp3) in
-  let tmp5 = (FStar_Pprint.op_Hat_Slash_Hat tmp2 tmp4) in
+  let tmp5 = (PPrint.(^/^) tmp2 tmp4) in
   (braces_with_nesting tmp5))
 
-let p_newEffect (tmp : FStarC_Parser_AST.effect_decl) : FStar_Pprint.document =
+let p_newEffect (tmp : FStarC_Parser_AST.effect_decl) : PPrint.document =
   (match tmp with
     | (FStarC_Parser_AST.DeclareEffect (lid, bs)) -> (let tmp1 = (p_uident lid) in
       let tmp2 = (p_binders true bs) in
-      let tmp3 = (surround_maybe_empty (Prims.of_int (2)) Prims.int_one tmp1 tmp2 FStar_Pprint.empty) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp3) in
-      (FStar_Pprint.op_Hat_Hat (str "effect") tmp4))
+      let tmp3 = (surround_maybe_empty (Prims.of_int (2)) Prims.int_one tmp1 tmp2 PPrint.empty) in
+      let tmp4 = (PPrint.(^^) PPrint.space tmp3) in
+      (PPrint.(^^) (str "effect") tmp4))
     | (FStarC_Parser_AST.DefineEffect (lid, bs, ds)) -> (let tmp1 = (p_effectDefinition lid bs ds) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-      (FStar_Pprint.op_Hat_Hat (str "effect") tmp2))
+      let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+      (PPrint.(^^) (str "effect") tmp2))
   )
 
-let p_subEffect (lift : FStarC_Parser_AST.lift) : FStar_Pprint.document =
+let p_subEffect (lift : FStarC_Parser_AST.lift) : PPrint.document =
   (let tmp = (p_quident (lift).FStarC_Parser_AST.msource) in
-  let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (str "~>"))) in
+  let tmp1 = (PPrint.(^^) tmp (PPrint.(^^) PPrint.space (str "~>"))) in
   let tmp2 = (p_quident (lift).FStarC_Parser_AST.mdest) in
   let base = (prefix2 tmp1 tmp2) in
   (match (lift).FStarC_Parser_AST.lift_op with
     | None -> base
     | (Some (t)) -> (let tmp3 = (p_simpleTerm false false t) in
-      (prefix2 (FStar_Pprint.op_Hat_Hat base (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.equals)) tmp3))
+      (prefix2 (PPrint.(^^) base (PPrint.(^^) PPrint.space PPrint.equals)) tmp3))
   ))
 
-let p_pragma (tmp : FStarC_Parser_AST.pragma) : FStar_Pprint.document =
+let p_pragma (tmp : FStarC_Parser_AST.pragma) : PPrint.document =
   (match tmp with
     | FStarC_Parser_AST.ShowOptions -> (str "#show-options")
-    | (FStarC_Parser_AST.SetOptions (s)) -> (FStar_Pprint.op_Hat_Hat (str "#set-options") (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.dquotes (str s))))
-    | (FStarC_Parser_AST.ResetOptions (s_opt)) -> (let tmp1 = (FStarC_Pprint.optional (fun s -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.dquotes (str s)))) s_opt) in
-      (FStar_Pprint.op_Hat_Hat (str "#reset-options") tmp1))
-    | (FStarC_Parser_AST.PushOptions (s_opt)) -> (let tmp1 = (FStarC_Pprint.optional (fun s -> (FStar_Pprint.op_Hat_Hat FStar_Pprint.space (FStar_Pprint.dquotes (str s)))) s_opt) in
-      (FStar_Pprint.op_Hat_Hat (str "#push-options") tmp1))
+    | (FStarC_Parser_AST.SetOptions (s)) -> (PPrint.(^^) (str "#set-options") (PPrint.(^^) PPrint.space (PPrint.dquotes (str s))))
+    | (FStarC_Parser_AST.ResetOptions (s_opt)) -> (let tmp1 = (FStarC_Pprint.optional (fun s -> (PPrint.(^^) PPrint.space (PPrint.dquotes (str s)))) s_opt) in
+      (PPrint.(^^) (str "#reset-options") tmp1))
+    | (FStarC_Parser_AST.PushOptions (s_opt)) -> (let tmp1 = (FStarC_Pprint.optional (fun s -> (PPrint.(^^) PPrint.space (PPrint.dquotes (str s)))) s_opt) in
+      (PPrint.(^^) (str "#push-options") tmp1))
     | FStarC_Parser_AST.PopOptions -> (str "#pop-options")
     | FStarC_Parser_AST.RestartSolver -> (str "#restart-solver")
     | FStarC_Parser_AST.PrintEffectsGraph -> (str "#print-effects-graph")
     | (FStarC_Parser_AST.Check (t)) -> (let tmp1 = (p_term false false t) in
-      (FStar_Pprint.op_Hat_Slash_Hat (str "#check") tmp1))
+      (PPrint.(^/^) (str "#check") tmp1))
     | (FStarC_Parser_AST.Eval (t)) -> (let tmp1 = (p_term false false t) in
-      (FStar_Pprint.op_Hat_Slash_Hat (str "#eval") tmp1))
+      (PPrint.(^/^) (str "#eval") tmp1))
   )
 
-let p_rawDecl (d : FStarC_Parser_AST.decl) : FStar_Pprint.document =
+let p_rawDecl (d : FStarC_Parser_AST.decl) : PPrint.document =
   (match (d).FStarC_Parser_AST.d with
     | (FStarC_Parser_AST.Open (uid, r)) -> (let tmp = (p_quident uid) in
       let tmp1 = (p_restriction r) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat (str "open") tmp2) in
-      (FStar_Pprint.group tmp3))
+      let tmp2 = (PPrint.(^/^) tmp tmp1) in
+      let tmp3 = (PPrint.(^/^) (str "open") tmp2) in
+      (PPrint.group tmp3))
     | (FStarC_Parser_AST.Include (uid, r)) -> (let tmp = (p_quident uid) in
       let tmp1 = (p_restriction r) in
-      let tmp2 = (FStar_Pprint.op_Hat_Slash_Hat tmp tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Slash_Hat (str "include") tmp2) in
-      (FStar_Pprint.group tmp3))
+      let tmp2 = (PPrint.(^/^) tmp tmp1) in
+      let tmp3 = (PPrint.(^/^) (str "include") tmp2) in
+      (PPrint.group tmp3))
     | (FStarC_Parser_AST.Friend (uid)) -> (let tmp = (p_quident uid) in
-      let tmp1 = (FStar_Pprint.op_Hat_Slash_Hat (str "friend") tmp) in
-      (FStar_Pprint.group tmp1))
+      let tmp1 = (PPrint.(^/^) (str "friend") tmp) in
+      (PPrint.group tmp1))
     | (FStarC_Parser_AST.ModuleAbbrev (uid1, uid2)) -> (let tmp = (p_uident uid1) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat tmp (FStar_Pprint.op_Hat_Hat FStar_Pprint.space FStar_Pprint.equals)) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat (str "module") tmp2) in
+      let tmp1 = (PPrint.(^^) tmp (PPrint.(^^) PPrint.space PPrint.equals)) in
+      let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+      let tmp3 = (PPrint.(^^) (str "module") tmp2) in
       let tmp4 = (p_quident uid2) in
       (op_Hat_Slash_Plus_Hat tmp3 tmp4))
     | (FStarC_Parser_AST.TopLevelModule (uid)) -> (let tmp = (p_quident uid) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat (str "module") tmp1) in
-      (FStar_Pprint.group tmp2))
+      let tmp1 = (PPrint.(^^) PPrint.space tmp) in
+      let tmp2 = (PPrint.(^^) (str "module") tmp1) in
+      (PPrint.group tmp2))
     | (FStarC_Parser_AST.Tycon (true, tmp, ((FStarC_Parser_AST.TyconAbbrev (uid, tpars, None, t)) :: []))) -> (let tmp1 = (p_uident uid) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-      let effect_prefix_doc = (FStar_Pprint.op_Hat_Hat (str "effect") tmp2) in
+      let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+      let effect_prefix_doc = (PPrint.(^^) (str "effect") tmp2) in
       let tmp3 = (p_typars tpars) in
-      let tmp4 = (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one effect_prefix_doc tmp3 FStar_Pprint.equals) in
+      let tmp4 = (FStar_Pprint.surround (Prims.of_int (2)) Prims.int_one effect_prefix_doc tmp3 PPrint.equals) in
       let tmp5 = (p_typ false false t) in
       (op_Hat_Slash_Plus_Hat tmp4 tmp5))
     | (FStarC_Parser_AST.Tycon (false, tc, tcdefs)) -> (let s = (if tc then (str "class") else (str "type")) in
-      let tmp = (p_typeDeclWithKw s (FStarC_List.hd tcdefs)) in
+      let tmp = (p_typeDeclWithKw s (BatList.hd tcdefs)) in
       let tmp1 = (FStarC_Pprint.concat_map (fun x -> (let tmp1 = (p_typeDeclWithKw (str "and") x) in
-        (FStar_Pprint.op_Hat_Hat break1 tmp1))) (FStarC_List.tl tcdefs)) in
-      (FStar_Pprint.op_Hat_Hat tmp tmp1))
+        (PPrint.(^^) break1 tmp1))) (BatList.tl tcdefs)) in
+      (PPrint.(^^) tmp tmp1))
     | (FStarC_Parser_AST.TopLevelLet (q, lbs)) -> (let tmp = (p_letqualifier q) in
-      let let_doc = (FStar_Pprint.op_Hat_Hat (str "let") tmp) in
+      let let_doc = (PPrint.(^^) (str "let") tmp) in
       (separate_map_with_comments_kw let_doc (str "and") p_letbinding lbs (fun tmp1 -> (match tmp1 with
         | (p, t) -> (let tmp2 = (FStarC_Range_Ops.union_ranges (p).FStarC_Parser_AST.prange (t).FStarC_Parser_AST.range) in
           { r = tmp2; has_qs = false; has_attrs = false })
       ))))
     | (FStarC_Parser_AST.Val (lid, t)) -> (let tmp = (p_lidentOrOperator lid) in
       let tmp1 = (sig_as_binders_if_possible t false) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat (str "val") tmp3) in
-      (FStar_Pprint.group tmp4))
-    | (FStarC_Parser_AST.Assume (id, t)) -> (let tmp = (FStarC_Util.char_at (FStarC_Ident.string_of_id id) Prims.int_zero) in
+      let tmp2 = (PPrint.(^^) tmp tmp1) in
+      let tmp3 = (PPrint.(^^) PPrint.space tmp2) in
+      let tmp4 = (PPrint.(^^) (str "val") tmp3) in
+      (PPrint.group tmp4))
+    | (FStarC_Parser_AST.Assume (id, t)) -> (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) (FStarC_Ident.string_of_id id) Prims.int_zero) in
       let tmp1 = (FStarC_Util.is_upper tmp) in
-      let decl_keyword = (if tmp1 then FStar_Pprint.empty else (FStar_Pprint.op_Hat_Hat (str "val") FStar_Pprint.space)) in
+      let decl_keyword = (if tmp1 then PPrint.empty else (PPrint.(^^) (str "val") PPrint.space)) in
       let tmp2 = (p_ident id) in
       let tmp3 = (p_typ false false t) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp3) in
-      let tmp5 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.colon tmp4) in
-      let tmp6 = (FStar_Pprint.group tmp5) in
-      let tmp7 = (FStar_Pprint.op_Hat_Hat tmp2 tmp6) in
-      (FStar_Pprint.op_Hat_Hat decl_keyword tmp7))
+      let tmp4 = (PPrint.(^^) PPrint.space tmp3) in
+      let tmp5 = (PPrint.(^^) PPrint.colon tmp4) in
+      let tmp6 = (PPrint.group tmp5) in
+      let tmp7 = (PPrint.(^^) tmp2 tmp6) in
+      (PPrint.(^^) decl_keyword tmp7))
     | (FStarC_Parser_AST.Exception (uid, t_opt)) -> (let tmp = (p_uident uid) in
       let tmp1 = (FStarC_Pprint.optional (fun t -> (let tmp1 = (p_typ false false t) in
         let tmp2 = (op_Hat_Slash_Plus_Hat (str "of") tmp1) in
-        (FStar_Pprint.op_Hat_Hat break1 tmp2))) t_opt) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat tmp tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp2) in
-      (FStar_Pprint.op_Hat_Hat (str "exception") tmp3))
+        (PPrint.(^^) break1 tmp2))) t_opt) in
+      let tmp2 = (PPrint.(^^) tmp tmp1) in
+      let tmp3 = (PPrint.(^^) PPrint.space tmp2) in
+      (PPrint.(^^) (str "exception") tmp3))
     | (FStarC_Parser_AST.NewEffect (ne)) -> (p_newEffect ne)
     | (FStarC_Parser_AST.SubEffect (se)) -> (let tmp = (p_subEffect se) in
-      let tmp1 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp) in
-      (FStar_Pprint.op_Hat_Hat (str "sub_effect") tmp1))
+      let tmp1 = (PPrint.(^^) PPrint.space tmp) in
+      (PPrint.(^^) (str "sub_effect") tmp1))
     | (FStarC_Parser_AST.Pragma (p)) -> (p_pragma p)
     | (FStarC_Parser_AST.Tycon (true, tmp, tmp1)) -> (FStarC_Effect.failwith "Effect abbreviation is expected to be defined by an abbreviation")
     | (FStarC_Parser_AST.Splice (is_typed, ids, t)) -> (let tmp = (p_list p_uident (str ";") ids) in
       let tmp1 = (p_term false false t) in
-      let tmp2 = (FStar_Pprint.op_Hat_Hat FStar_Pprint.space tmp1) in
-      let tmp3 = (FStar_Pprint.op_Hat_Hat tmp tmp2) in
-      let tmp4 = (FStar_Pprint.op_Hat_Hat (if is_typed then (str "_t") else FStar_Pprint.empty) tmp3) in
-      (FStar_Pprint.op_Hat_Hat (str "%splice") tmp4))
-    | (FStarC_Parser_AST.DeclSyntaxExtension (tag, blob, blob_rng, start_rng)) -> (FStar_Pprint.op_Hat_Hat (FStar_Pprint.doc_of_string (Prims.strcat "```" tag)) (FStar_Pprint.op_Hat_Hat (FStar_Pprint.arbitrary_string blob) (FStar_Pprint.doc_of_string "```")))
+      let tmp2 = (PPrint.(^^) PPrint.space tmp1) in
+      let tmp3 = (PPrint.(^^) tmp tmp2) in
+      let tmp4 = (PPrint.(^^) (if is_typed then (str "_t") else PPrint.empty) tmp3) in
+      (PPrint.(^^) (str "%splice") tmp4))
+    | (FStarC_Parser_AST.DeclSyntaxExtension (tag, blob, blob_rng, start_rng)) -> (PPrint.(^^) (PPrint.string (Prims.strcat "```" tag)) (PPrint.(^^) (PPrint.arbitrary_string blob) (PPrint.string "```")))
     | (FStarC_Parser_AST.DeclToBeDesugared (tbs)) -> (let tmp = ((tbs).FStarC_Parser_AST.to_string (tbs).FStarC_Parser_AST.blob) in
-      (FStar_Pprint.arbitrary_string tmp))
+      (PPrint.arbitrary_string tmp))
   )
 
-let p_decl (d : FStarC_Parser_AST.decl) : FStar_Pprint.document =
+let p_decl (d : FStarC_Parser_AST.decl) : PPrint.document =
   (let qualifiers = (match ((d).FStarC_Parser_AST.quals, (d).FStarC_Parser_AST.d) with
-      | ((FStarC_Parser_AST.Assumption :: []), (FStarC_Parser_AST.Assume (id, tmp))) -> (let tmp1 = (FStarC_Util.char_at (FStarC_Ident.string_of_id id) Prims.int_zero) in
+      | ((FStarC_Parser_AST.Assumption :: []), (FStarC_Parser_AST.Assume (id, tmp))) -> (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) (FStarC_Ident.string_of_id id) Prims.int_zero) in
         let tmp2 = (FStarC_Util.is_upper tmp1) in
         (if tmp2 then (let tmp3 = (p_qualifier FStarC_Parser_AST.Assumption) in
-        (FStar_Pprint.op_Hat_Hat tmp3 FStar_Pprint.space)) else (p_qualifiers (d).FStarC_Parser_AST.quals)))
+        (PPrint.(^^) tmp3 PPrint.space)) else (p_qualifiers (d).FStarC_Parser_AST.quals)))
       | ((FStarC_Parser_AST.Assumption :: []), (FStarC_Parser_AST.NewEffect ((FStarC_Parser_AST.DeclareEffect (u__1, u__2))))) -> (let tmp = (p_qualifier FStarC_Parser_AST.Assumption) in
-        (FStar_Pprint.op_Hat_Hat tmp FStar_Pprint.space))
+        (PPrint.(^^) tmp PPrint.space))
       | ((FStarC_Parser_AST.Assumption :: []), (FStarC_Parser_AST.SubEffect (tmp))) -> (let tmp1 = (p_qualifier FStarC_Parser_AST.Assumption) in
-        (FStar_Pprint.op_Hat_Hat tmp1 FStar_Pprint.space))
+        (PPrint.(^^) tmp1 PPrint.space))
       | tmp -> (p_qualifiers (d).FStarC_Parser_AST.quals)
     ) in
   let tmp = (p_attributes true (d).FStarC_Parser_AST.attrs) in
   let tmp1 = (p_rawDecl d) in
-  let tmp2 = (FStar_Pprint.op_Hat_Hat qualifiers tmp1) in
-  (FStar_Pprint.op_Hat_Hat tmp tmp2))
+  let tmp2 = (PPrint.(^^) qualifiers tmp1) in
+  (PPrint.(^^) tmp tmp2))
 
 let extract_decl_range (d : FStarC_Parser_AST.decl) : decl_meta =
   (let has_qs = (match ((d).FStarC_Parser_AST.quals, (d).FStarC_Parser_AST.d) with
@@ -2376,44 +2390,44 @@ let extract_decl_range (d : FStarC_Parser_AST.decl) : decl_meta =
       | tmp -> false
     )) })
 
-let decls_with_comments_to_document (decls : (FStarC_Parser_AST.decl) list) (comments : ((string * FStarC_Range_Type.range)) list) : (FStar_Pprint.document * ((string * FStarC_Range_Type.range)) list) =
+let decls_with_comments_to_document (decls : (FStarC_Parser_AST.decl) list) (comments : ((string * FStarC_Range_Type.range)) list) : (PPrint.document * ((string * FStarC_Range_Type.range)) list) =
   (match decls with
-    | [] -> (FStar_Pprint.empty, comments)
+    | [] -> (PPrint.empty, comments)
     | (d :: ds) -> (let tmp = ((d :: ds), (d).FStarC_Parser_AST.drange) in
       (match tmp with
         | (decls1, first_range) -> (((comment_stack) := comments);
-          let initial_comment = (place_comments_until_pos Prims.int_zero Prims.int_one (FStarC_Range_Ops.start_of_range first_range) dummy_meta FStar_Pprint.empty false true) in
-          let doc = (separate_map_with_comments FStar_Pprint.empty FStar_Pprint.empty p_decl decls1 extract_decl_range) in
+          let initial_comment = (place_comments_until_pos Prims.int_zero Prims.int_one (FStarC_Range_Ops.start_of_range first_range) dummy_meta PPrint.empty false true) in
+          let doc = (separate_map_with_comments PPrint.empty PPrint.empty p_decl decls1 extract_decl_range) in
           let comments1 = (!(comment_stack)) in
           ((comment_stack) := []);
-          ((FStar_Pprint.op_Hat_Hat initial_comment doc), comments1))
+          ((PPrint.(^^) initial_comment doc), comments1))
       ))
   )
 
-let modul_with_comments_to_document (m : FStarC_Parser_AST.modul) (comments : ((string * FStarC_Range_Type.range)) list) : (FStar_Pprint.document * ((string * FStarC_Range_Type.range)) list) =
+let modul_with_comments_to_document (m : FStarC_Parser_AST.modul) (comments : ((string * FStarC_Range_Type.range)) list) : (PPrint.document * ((string * FStarC_Range_Type.range)) list) =
   (let decls = (match m with
       | (FStarC_Parser_AST.Module ({ FStarC_Parser_AST.no_prelude = tmp; mname = tmp1; decls = decls; _ })) -> decls
       | (FStarC_Parser_AST.Interface ({ FStarC_Parser_AST.no_prelude = tmp; mname = tmp1; decls = decls; admitted = tmp2; _ })) -> decls
     ) in
   (decls_with_comments_to_document decls comments))
 
-let comments_to_document (comments : ((string * FStarC_Range_Type.range)) list) : FStar_Pprint.document =
-  (FStarC_Pprint.separate_map FStar_Pprint.hardline (fun tmp -> (match tmp with
+let comments_to_document (comments : ((string * FStarC_Range_Type.range)) list) : PPrint.document =
+  (FStarC_Pprint.separate_map PPrint.hardline (fun tmp -> (match tmp with
     | (comment, range) -> (str comment)
   )) comments)
 
-let decl_to_document (e : FStarC_Parser_AST.decl) : FStar_Pprint.document =
+let decl_to_document (e : FStarC_Parser_AST.decl) : PPrint.document =
   (p_decl e)
 
-let decl_with_comments_to_document (d : FStarC_Parser_AST.decl) (comments : ((string * FStarC_Range_Type.range)) list) : (FStar_Pprint.document * ((string * FStarC_Range_Type.range)) list) =
+let decl_with_comments_to_document (d : FStarC_Parser_AST.decl) (comments : ((string * FStarC_Range_Type.range)) list) : (PPrint.document * ((string * FStarC_Range_Type.range)) list) =
   (decls_with_comments_to_document (d :: []) comments)
 
 let handleable_args_length (op : FStarC_Ident.ident) : Prims.int =
   (let op_s = (FStarC_Ident.string_of_id op) in
   let tmp = (is_general_prefix_op op) in
-  let tmp1 = (if tmp then true else (FStarC_List.mem op_s ("~-" :: ("~" :: [])))) in
+  let tmp1 = (if tmp then true else (BatList.mem op_s ("~-" :: ("~" :: [])))) in
   (if tmp1 then Prims.int_one else (let tmp2 = (is_operatorInfix0ad12 op) in
   let tmp3 = (if tmp2 then true else (is_operatorInfix34 op)) in
-  let tmp4 = (if tmp3 then true else (FStarC_List.mem op_s ("<==>" :: ("==>" :: ("\\/" :: ("/\\" :: ("=" :: ("|>" :: (":=" :: (".()" :: (".[]" :: (".(||)" :: (".[||]" :: []))))))))))))) in
-  (if tmp4 then (Prims.of_int (2)) else (if (FStarC_List.mem op_s (".()<-" :: (".[]<-" :: (".(||)<-" :: (".[||]<-" :: []))))) then (Prims.of_int (3)) else Prims.int_zero)))))
+  let tmp4 = (if tmp3 then true else (BatList.mem op_s ("<==>" :: ("==>" :: ("\\/" :: ("/\\" :: ("=" :: ("|>" :: (":=" :: (".()" :: (".[]" :: (".(||)" :: (".[||]" :: []))))))))))))) in
+  (if tmp4 then (Prims.of_int (2)) else (if (BatList.mem op_s (".()<-" :: (".[]<-" :: (".(||)<-" :: (".[||]<-" :: []))))) then (Prims.of_int (3)) else Prims.int_zero)))))
 

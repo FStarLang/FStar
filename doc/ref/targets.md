@@ -57,8 +57,10 @@ The rule also applies to the interface of the file's own module.
 
 ## Verification and extraction
 
-`fstar.exe --dep full *.fst*` lists all the files, so verifying all of them
-checks every implementation, including the model ones.  Checked files keep
+`fstar.exe --dep full` lists every file of each module it reaches, whatever
+its tag (a tagged file is reached by no reference from a common file, so it is
+discovered through its module), so verifying all of them checks every
+implementation, including the model ones.  Checked files keep
 the tag: `Uart-s2.fst.checked`.
 
 Extraction uses the configuration given by `--target <tag>` together with

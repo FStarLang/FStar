@@ -92,7 +92,7 @@ let fStarC_Class_Monad_return__writer_list_primitive_step (tmp : 'a) : ((primiti
   (fStarC_Writer_writer_return__list_primitive_step tmp)
 
 let fStarC_Class_Monoid_mplus__list_primitive_step (tmp : (primitive_step) list) (eta : (primitive_step) list) : (primitive_step) list =
-  (FStarC_List.op_At tmp eta)
+  (BatList.append tmp eta)
 
 let fStarC_Writer_writer_bind__list_primitive_step (x : ((primitive_step) list * 'a)) (f : ('a -> ((primitive_step) list * 'b))) : ((primitive_step) list * 'b) =
   (match x with
@@ -153,8 +153,12 @@ let with_extra_args (n : Prims.int) (s : primitive_step) : primitive_step =
     requires_binder_substitution = (s).requires_binder_substitution;
     renorm_after = (s).renorm_after;
     unrepresentable_result = (s).unrepresentable_result;
-    interpretation = (fun psc cb us args -> ((s).interpretation psc cb us (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.splitAt a0 args))));
-    interpretation_nbe = (fun cb us args -> ((s).interpretation_nbe cb us (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst (FStarC_List.splitAt a0 args)))) }))
+    interpretation = (fun psc cb us args -> ((s).interpretation psc cb us (match ((fun n l -> BatList.split_at (Z.to_int n) l) a0 args) with
+      | (u__1, u__2) -> u__1
+    )));
+    interpretation_nbe = (fun cb us args -> ((s).interpretation_nbe cb us (match ((fun n l -> BatList.split_at (Z.to_int n) l) a0 args) with
+      | (u__1, u__2) -> u__1
+    ))) }))
 
 let fStarC_Writer_emit__list_primitive_step (x : (primitive_step) list) : ((primitive_step) list * unit) =
   (x, ())

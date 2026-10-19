@@ -8,8 +8,8 @@ type counter = {
   undercount : (bool ref);
 }
 
-let all_counters : (counter) FStarC_SMap.t =
-  (FStarC_SMap.create (Prims.of_int (20)))
+let all_counters : (counter) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20))))
 
 let new_counter (cid : string) : counter =
   (let tmp = (ref Prims.int_zero) in
@@ -18,11 +18,11 @@ let new_counter (cid : string) : counter =
   { cid = cid; total_time = tmp; running = tmp1; undercount = tmp2 })
 
 let create_or_lookup_counter (cid : string) : counter =
-  (let tmp = (FStarC_SMap.try_find all_counters cid) in
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt all_counters cid) in
   (match tmp with
     | (Some (c)) -> c
     | None -> (let c = (new_counter cid) in
-      (FStarC_SMap.add all_counters cid c);
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace all_counters cid c);
       c)
   ))
 
@@ -81,10 +81,10 @@ let report (tag : string) (c : counter) : unit =
   ))
 
 let report_and_clear (tag : string) : unit =
-  (let ctrs = (FStarC_SMap.fold all_counters (fun tmp v l -> (v :: l)) []) in
-  (FStarC_SMap.clear all_counters);
+  (let ctrs = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun tmp v l -> (v :: l)) all_counters []) in
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.clear all_counters);
   let ctrs1 = (FStarC_Util.sort_with (fun c1 c2 -> (let tmp = (!((c2).total_time)) in
     let tmp1 = (!((c1).total_time)) in
     (Prims.op_Minus tmp tmp1))) ctrs) in
-  (FStarC_List.iter (report tag) ctrs1))
+  (BatList.iter (report tag) ctrs1))
 

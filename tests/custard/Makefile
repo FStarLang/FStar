@@ -209,7 +209,7 @@ GREP_MonoTypes   += "| Prims_Nil__int ->"
 # only do if the key printer distinguishes them.  The run itself is the real
 # assertion (the output is "abAB", not "abab"); this checks the shape.
 GREP_KeyNames = "keyNames_apply__tweak" "keyNames_apply__tweak_1" \
-                "FStar_String.lowercase" "FStar_String.uppercase"
+                "BatString.lowercase_ascii" "BatString.uppercase_ascii"
 
 # Section 8.4: a garbage-collected reference is an OCaml 'ref', not a
 # one-element array, and it is never freed.
@@ -505,6 +505,12 @@ CNOGREP_KindStar = "void *"
 # checks its own answers, so .dcran is the real assertion; before the fix
 # this program returned 1 with no compiler diagnostic at all.
 C_TESTS += ShiftLit
+
+# Two static definitions that C spells the same way: the second is renamed to
+# the first free suffix, which skips a name the program already uses.
+C_TESTS += NameClash
+CGREP_NameClash = "NameClash_step_(uint32_t x)" "NameClash_step__1(uint32_t x)" \
+                  "NameClash_step__2(uint32_t x)"
 CGREP_ShiftLit = "((uint64_t)40ULL) << n" "return (40 + n);"
 CNOGREP_ShiftLit = "return (40 << n);"
 
@@ -2675,6 +2681,9 @@ CUSTARD_TESTS += FloatsML
 GREP_FloatsML += "( +\. )"
 NOGREP_FloatsML += "FStar_Float64"
 
+# FStar.Pprint: PPrint on OCaml, ulib/FStar.Pprint-c.cherry.fst on Cherry.
+CUSTARD_TESTS += PrettyDoc
+
 # Section 38.  OCaml's float is binary64 and there is no binary32 to round to,
 # so a single-precision program is refused rather than computed at the wrong
 # precision.
@@ -2931,7 +2940,8 @@ NOEGREP_DevGShare += "please report"
 # declared foreign -- which no C compiler and no linker objects to.
 REJECT_TESTS += ExtOwn
 CODE_ExtOwn := 374
-FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run
+# [helper] is public: a static one would just be renamed (NameClash).
+FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run --custard_entry ExtOwn.helper
 EGREP_ExtOwn += "both named \`ExtOwn_helper'"
 EGREP_ExtOwn += "custard_extern"
 
@@ -3026,7 +3036,7 @@ RSNOGREP_RustTup += "pub struct __uint32_t_uint32_t"
 # spells theirs: an api module on the left of the [=], a pattern on the right.
 RUSTSPLIT_TESTS += RustSplit
 # The [*] goes on the *lower* bundle, which is EverParse's own arrangement
-# read the other way up: the shared declarations -- [Custard.Prims], the
+# read the other way up: the shared declarations -- [prims], the
 # specializations Custard makes of library functions -- have to end up in a
 # file both halves may refer to, and putting them above the module that uses
 # them is what makes the two files circular.  karamel says so, in as many
@@ -3569,6 +3579,91 @@ $(CHERRY_DIR)/%.chdiff: $(CHERRY_DIR)/%.chexe %.out.expected
 
 all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chdiff, \
        $(filter-out $(CHERRY_OCAML_SKIP), $(CUSTARD_TESTS))))
+
+# FStarC.Hash-c.cherry.fst.  The test uses a compiler module, so it lives in
+# hash/ (out of this directory's dependency scan) and is checked into a cache
+# of its own.
+HASH_SRC = $(abspath $(FSTAR_ROOT)/src/basic)
+HASH_DIR = $(CHERRY_DIR)/hash
+HASH_ABS = $(abspath $(HASH_DIR))
+$(HASH_DIR)/CherryHash.chran: hash/CherryHash.fst \
+    $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryHash)
+	$(Q)rm -rf $(HASH_ABS) && mkdir -p $(HASH_ABS)
+	$(Q)cd hash && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst \
+	    CherryHash.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd hash && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
+	  --already_cached '*' --odir $(HASH_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryHash.main \
+	  CherryHash.fst -o $(HASH_ABS)/CherryHash.c > /dev/null
+	$(call msg, "CC-ASAN", CherryHash)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(HASH_ABS) -I$(CHERRY_INC) \
+	  -x c $(HASH_ABS)/CherryHash.c $(CHERRY_INC)/cherry.c \
+	  -o $(HASH_ABS)/CherryHash.chexe
+	$(call msg, "RUN-ASAN", CherryHash)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(HASH_ABS)/CherryHash.chexe
+	$(Q)touch $@
+
+all: $(HASH_DIR)/CherryHash.chran
+
+TIMING_DIR = $(CHERRY_DIR)/timing
+TIMING_ABS = $(abspath $(TIMING_DIR))
+$(TIMING_DIR)/CherryTiming.chran: timing/CherryTiming.fst \
+    $(HASH_SRC)/FStarC.Timing.fsti $(HASH_SRC)/FStarC.Timing-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryTiming)
+	$(Q)rm -rf $(TIMING_ABS) && mkdir -p $(TIMING_ABS)
+	$(Q)cd timing && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.Timing.fsti $(HASH_SRC)/FStarC.Timing-c.cherry.fst \
+	    CherryTiming.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(TIMING_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd timing && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(TIMING_ABS) \
+	  --already_cached '*' --odir $(TIMING_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryTiming.main \
+	  CherryTiming.fst -o $(TIMING_ABS)/CherryTiming.c > /dev/null
+	$(call msg, "CC-ASAN", CherryTiming)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(TIMING_ABS) -I$(CHERRY_INC) \
+	  -x c $(TIMING_ABS)/CherryTiming.c $(CHERRY_INC)/cherry.c \
+	  -o $(TIMING_ABS)/CherryTiming.chexe
+	$(call msg, "RUN-ASAN", CherryTiming)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(TIMING_ABS)/CherryTiming.chexe
+	$(Q)touch $@
+
+all: $(TIMING_DIR)/CherryTiming.chran
+
+SMALLINT_DIR = $(CHERRY_DIR)/smallint
+SMALLINT_ABS = $(abspath $(SMALLINT_DIR))
+$(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
+    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherrySmallInt)
+	$(Q)rm -rf $(SMALLINT_ABS) && mkdir -p $(SMALLINT_ABS)
+	$(Q)cd smallint && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+	    CherrySmallInt.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(SMALLINT_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd smallint && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(SMALLINT_ABS) \
+	  --already_cached '*' --odir $(SMALLINT_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherrySmallInt.main \
+	  CherrySmallInt.fst -o $(SMALLINT_ABS)/CherrySmallInt.c > /dev/null
+	$(call msg, "CC-ASAN", CherrySmallInt)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(SMALLINT_ABS) -I$(CHERRY_INC) \
+	  -x c $(SMALLINT_ABS)/CherrySmallInt.c $(CHERRY_INC)/cherry.c \
+	  -o $(SMALLINT_ABS)/CherrySmallInt.chexe
+	$(call msg, "RUN-ASAN", CherrySmallInt)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(SMALLINT_ABS)/CherrySmallInt.chexe
+	$(Q)touch $@
+
+all: $(SMALLINT_DIR)/CherrySmallInt.chran
 
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this

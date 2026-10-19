@@ -41,3 +41,16 @@ $(OUTPUT_DIR)/Board.grep: $(CACHE_DIR)/Board.fst.checked | $(ALL_CHECKED_FILES)
 	$(FSTAR) --codegen Cherry --target s3.silicon --custard_entry_module Board $< -o $(OUTPUT_DIR)/board_s3cherry.c
 	grep -q '"s3-c"' $(OUTPUT_DIR)/board_s3cherry.c
 	touch $@
+
+# --dep full finds the files of every target by itself: from Board and Main
+# alone, which only reach the common interfaces of Uart and Counter.
+all: $(OUTPUT_DIR)/DepFull.grep
+$(OUTPUT_DIR)/DepFull.grep: Board.fst Main.fst
+	$(call msg, "DEPEND", DepFull)
+	mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --dep full Board.fst Main.fst -o $(OUTPUT_DIR)/DepFull.depend
+	for f in Uart.fst Uart-s2.fst Uart-s2.qemu.fst Uart-s3-c.fst \
+	         Counter-ocaml.fst Counter-c.fst Counter-model.fst; do \
+	  grep -q "$$f\.checked" $(OUTPUT_DIR)/DepFull.depend || { echo "missing $$f"; exit 1; }; \
+	done
+	touch $@

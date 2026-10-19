@@ -106,5 +106,5 @@ let reflection_primops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (tmp :: tmp88))
 
 let uu___0 : unit =
-  (FStarC_List.iter FStarC_TypeChecker_Cfg.register_extra_step reflection_primops)
+  (BatList.iter FStarC_TypeChecker_Cfg.register_extra_step reflection_primops)
 

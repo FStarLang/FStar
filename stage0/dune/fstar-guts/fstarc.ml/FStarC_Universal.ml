@@ -148,54 +148,22 @@ let with_dsenv_of_tcenv (tcenv : FStarC_TypeChecker_Env.env) (f : (FStarC_Syntax
         iface_val_lids = (tcenv).FStarC_TypeChecker_Env.iface_val_lids })
   ))
 
-let env_of_tcenv (env : FStarC_TypeChecker_Env.env) : FStarC_Extraction_ML_UEnv.uenv =
-  (FStarC_Extraction_ML_UEnv.new_uenv env)
-
 let iface_solver_frames : ((((Prims.int * Prims.int * Prims.int) * ((FStarC_Syntax_Syntax.modul * FStarC_SMTEncoding_Env.module_encoding)) list)) list ref) =
   (ref [])
 
-let push_iface_solver_frame (env : FStarC_Extraction_ML_UEnv.uenv) (name : string) : unit =
-  (let tcenv = (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) in
-  let tmp = (((tcenv).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.snapshot name) in
+let push_iface_solver_frame (tcenv : FStarC_TypeChecker_Env.env) (name : string) : unit =
+  (let tmp = (((tcenv).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.snapshot name) in
   (match tmp with
     | (depth, ()) -> (let tmp1 = (!(iface_solver_frames)) in
       let tmp2 = ((depth, []) :: tmp1) in
       ((iface_solver_frames) := tmp2))
   ))
 
-let with_tcenv_of_env (e : FStarC_Extraction_ML_UEnv.uenv) (f : (FStarC_TypeChecker_Env.env -> ('u___a * FStarC_TypeChecker_Env.env))) : ('u___a * FStarC_Extraction_ML_UEnv.uenv) =
-  (let tmp = (f (FStarC_Extraction_ML_UEnv.tcenv_of_uenv e)) in
-  (match tmp with
-    | (a, t') -> (a, (FStarC_Extraction_ML_UEnv.set_tcenv e t'))
-  ))
-
-let push_env (env : FStarC_Extraction_ML_UEnv.uenv) : FStarC_Extraction_ML_UEnv.uenv =
-  (let tmp = (with_tcenv_of_env env (fun tcenv -> (let tmp = (FStarC_TypeChecker_Env.push (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) "top-level: push_env") in
-    ((), tmp)))) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp))
-
-let pop_env (env : FStarC_Extraction_ML_UEnv.uenv) : FStarC_Extraction_ML_UEnv.uenv =
-  (let tmp = (with_tcenv_of_env env (fun tcenv -> (let tmp = (FStarC_TypeChecker_Env.pop tcenv "top-level: pop_env") in
-    ((), tmp)))) in
-  (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp))
-
-let with_env (env : FStarC_Extraction_ML_UEnv.uenv) (f : (FStarC_Extraction_ML_UEnv.uenv -> 'u___a)) : 'u___a =
-  (let env1 = (push_env env) in
-  let res = (f env1) in
-  (ignore (pop_env env1));
-  res)
-
-let with_dsenv_of_env (e : FStarC_Extraction_ML_UEnv.uenv) (f : (FStarC_Syntax_DsEnv.env -> ('u___a * FStarC_Syntax_DsEnv.env))) : ('u___a * FStarC_Extraction_ML_UEnv.uenv) =
-  (let tmp = (with_dsenv_of_tcenv (FStarC_Extraction_ML_UEnv.tcenv_of_uenv e) f) in
-  (match tmp with
-    | (a, tcenv) -> (a, (FStarC_Extraction_ML_UEnv.set_tcenv e tcenv))
-  ))
-
-let parse (fly_deps : bool) (env : FStarC_Extraction_ML_UEnv.uenv) (fn : string) : (FStarC_Ident.lident * (FStarC_Parser_AST.modul, FStarC_Syntax_Syntax.modul) FStar_Pervasives.either * FStarC_Extraction_ML_UEnv.uenv) =
+let parse (fly_deps : bool) (env : FStarC_TypeChecker_Env.env) (fn : string) : (FStarC_Ident.lident * (FStarC_Parser_AST.modul, FStarC_Syntax_Syntax.modul) FStar_Pervasives.either * FStarC_TypeChecker_Env.env) =
   (let tmp = (FStarC_Parser_Driver.parse_file fn) in
   (match tmp with
     | (ast, tmp1) -> (if fly_deps then ((FStarC_Parser_AST.lid_of_modul ast), (FStar_Pervasives.Inl (ast)), env) else (let tmp2 = (FStarC_ToSyntax_ToSyntax.ast_modul_to_modul ast) in
-      let tmp3 = (with_dsenv_of_env env tmp2) in
+      let tmp3 = (with_dsenv_of_tcenv env tmp2) in
       (match tmp3 with
         | (mod_, env1) -> ((FStarC_Parser_AST.lid_of_modul ast), (FStar_Pervasives.Inr (mod_)), env1)
       )))
@@ -211,8 +179,8 @@ let is_iface_of (fn : string) (root : (string) option) : bool =
     | None -> false
   ) else false))
 
-let parse_frag (frag : FStarC_Parser_ParseIt.input_frag) (lang_decls : (FStarC_Parser_AST.decl) list) : FStarC_Parser_Driver.fragment =
-  (let use_lang_decl = (fun ds -> (FStarC_List.tryFind (fun d -> (match (d).FStarC_Parser_AST.d with
+let parse_frag (frag : FStarC_Parser_Frontend.input_frag) (lang_decls : (FStarC_Parser_AST.decl) list) : FStarC_Parser_Driver.fragment =
+  (let use_lang_decl = (fun ds -> (List.find_opt (fun d -> (match (d).FStarC_Parser_AST.d with
       | (FStarC_Parser_AST.UseLangDecls (u__0)) -> true
       | tmp -> false
     )) ds)) in
@@ -222,12 +190,12 @@ let parse_frag (frag : FStarC_Parser_ParseIt.input_frag) (lang_decls : (FStarC_P
     | (Some ({ FStarC_Parser_AST.d = (FStarC_Parser_AST.UseLangDecls (lang)); drange = tmp1; quals = tmp2; attrs = tmp3; _ })) -> (FStarC_Parser_Driver.parse_fragment (Some (lang)) frag)
   ))
 
-let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul) option) (env : FStarC_TypeChecker_Env.env) (frag : ((FStarC_Parser_ParseIt.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : ((FStarC_Syntax_Syntax.modul) option * FStarC_TypeChecker_Env.env * (FStarC_Parser_AST.decl) list) =
+let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul) option) (env : FStarC_TypeChecker_Env.env) (frag : ((FStarC_Parser_Frontend.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : ((FStarC_Syntax_Syntax.modul) option * FStarC_TypeChecker_Env.env * (FStarC_Parser_AST.decl) list) =
   (let fname = (fun env1 -> (let tmp = (FStarC_Options.file_list ()) in
-    (FStarC_List.hd tmp))) in
+    (BatList.hd tmp))) in
   let acceptable_mod_name = (fun ast_modul -> (let tmp = (fname env) in
     let tmp1 = (FStarC_Parser_Dep.lowercase_module_name tmp) in
-    ((=) tmp1 (FStarC_String.lowercase (FStarC_Ident.string_of_lid (FStarC_Parser_AST.lid_of_modul ast_modul)))))) in
+    ((=) tmp1 (BatString.lowercase_ascii (FStarC_Ident.string_of_lid (FStarC_Parser_AST.lid_of_modul ast_modul)))))) in
   let range_of_first_mod_decl = (fun modul -> (match modul with
       | (FStarC_Parser_AST.Module ({ FStarC_Parser_AST.no_prelude = tmp; mname = tmp1; decls = (d :: tmp2); _ })) -> (d).FStarC_Parser_AST.drange
       | (FStarC_Parser_AST.Interface ({ FStarC_Parser_AST.no_prelude = tmp; mname = tmp1; decls = (d :: tmp2); admitted = tmp3; _ })) -> (d).FStarC_Parser_AST.drange
@@ -254,11 +222,11 @@ let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul)
             | (FStarC_Parser_AST.Module ({ FStarC_Parser_AST.no_prelude = tmp3; mname = tmp4; decls = decls; _ })) -> decls
             | (FStarC_Parser_AST.Interface ({ FStarC_Parser_AST.no_prelude = tmp3; mname = tmp4; decls = decls; admitted = tmp5; _ })) -> decls
           ) in
-        let lang_decls = (FStarC_List.filter filter_lang_decls decls) in
+        let lang_decls = (BatList.filter filter_lang_decls decls) in
         ((Some (modul)), env1, lang_decls))
     ))) in
   let check_decls = (fun ast_decls -> (match curmod with
-      | None -> (let tmp = (FStarC_List.hd ast_decls) in
+      | None -> (let tmp = (BatList.hd ast_decls) in
         (FStarC_Errors.fStarC_Errors_raise_error__range_string (tmp).FStarC_Parser_AST.drange FStarC_Errors_Codes.Fatal_ModuleFirstStatement "First statement must be a module declaration"))
       | (Some (modul)) -> (let tmp = (if (FStarC_Syntax_DsEnv.syntax_only (env).FStarC_TypeChecker_Env.dsenv) then (let tmp = (FStarC_ToSyntax_ToSyntax.decls_to_sigelts ast_decls) in
           let tmp1 = (with_dsenv_of_tcenv env tmp) in
@@ -272,17 +240,17 @@ let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul)
             | (ses, env1) -> (FStarC_TypeChecker_Tc.tc_more_partial_modul env1 modul ses)
           ))) in
         (match tmp with
-          | (modul1, tmp1, env1) -> (let tmp2 = (FStarC_List.filter filter_lang_decls ast_decls) in
+          | (modul1, tmp1, env1) -> (let tmp2 = (BatList.filter filter_lang_decls ast_decls) in
             ((Some (modul1)), env1, tmp2))
         ))
     )) in
   (match frag with
     | (FStar_Pervasives.Inr (d)) -> (let tmp = (FStarC_Debug.low ()) in
-      (if tmp then (let tmp1 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_167 d) in
+      (if tmp then (let tmp1 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_168 d) in
       (FStarC_Format.print1 "tc_one_fragment: %s\n" tmp1)) else ());
       (match (d).FStarC_Parser_AST.d with
         | (FStarC_Parser_AST.TopLevelModule (lid)) -> (let tmp1 = (FStarC_Options.no_prelude ()) in
-          let no_prelude = (if tmp1 then true else (FStarC_List.existsb (fun tmp2 -> (match (tmp2).FStarC_Parser_AST.tm with
+          let no_prelude = (if tmp1 then true else (BatList.exists (fun tmp2 -> (match (tmp2).FStarC_Parser_AST.tm with
               | (FStarC_Parser_AST.Const ((FStarC_Const.Const_string ("no_prelude", tmp3)))) -> true
               | tmp3 -> false
             )) (d).FStarC_Parser_AST.attrs)) in
@@ -304,28 +272,27 @@ let tc_one_fragment (is_interface : bool) (curmod : (FStarC_Syntax_Syntax.modul)
 
 let record_encoded_modul (m : FStarC_Syntax_Syntax.modul) (smt_decls : FStarC_SMTEncoding_Env.module_encoding) : unit =
   (let tmp = (!(iface_solver_frames)) in
-  let tmp1 = (FStarC_List.map (fun tmp1 -> (match tmp1 with
+  let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
       | (depth, pending) -> (depth, ((m, smt_decls) :: pending))
     )) tmp) in
   ((iface_solver_frames) := tmp1))
 
-let pop_iface_solver_frame (env : FStarC_Extraction_ML_UEnv.uenv) (name : string) : unit =
+let pop_iface_solver_frame (tcenv : FStarC_TypeChecker_Env.env) (name : string) : unit =
   (let tmp = (!(iface_solver_frames)) in
   (match tmp with
     | [] -> ()
     | ((depth, pending) :: rest) -> (((iface_solver_frames) := rest);
-      let tcenv = (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) in
       (((tcenv).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.rollback name (Some (depth)));
       let tmp1 = (FStarC_Options.interactive ()) in
       let tmp2 = (not tmp1) in
       (if tmp2 then ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.reset_scope ()) else ());
-      (FStarC_List.iter (fun tmp3 -> (match tmp3 with
+      (BatList.iter (fun tmp3 -> (match tmp3 with
         | (tcmod, smt_decls) -> ((if (not (FStarC_SMTEncoding_Env.is_empty_encoding smt_decls)) then (FStarC_SMTEncoding_Encode.encode_modul_from_cache tcenv tcmod smt_decls) else ());
           (record_encoded_modul tcmod smt_decls))
-      )) (FStarC_List.rev pending)))
+      )) (BatList.rev pending)))
   ))
 
-let rec tc_one_file_from_remaining (fly_deps : bool) (root : (string) option) (remaining : (string) list) (env : FStarC_Extraction_ML_UEnv.uenv) : ((string) list * FStarC_CheckedFiles.tc_result * ((((string) list * string) * (((FStarC_Extraction_ML_Syntax.mlsig1) list * (FStarC_Extraction_ML_Syntax.mlmodule1) list)) option)) option * FStarC_Extraction_ML_UEnv.uenv) =
+let rec tc_one_file_from_remaining (fly_deps : bool) (root : (string) option) (remaining : (string) list) (env : FStarC_TypeChecker_Env.env) : ((string) list * FStarC_CheckedFiles.tc_result * FStarC_TypeChecker_Env.env) =
   (let tmp = (match remaining with
       | (intf_or_impl :: rest) -> (let mname = (FStarC_Parser_Dep.module_name_of_file intf_or_impl) in
         let tmp = (is_iface_of intf_or_impl root) in
@@ -339,49 +306,44 @@ let rec tc_one_file_from_remaining (fly_deps : bool) (root : (string) option) (r
           ) else false))) in
         let tmp1 = (tc_one_file_internal fly_deps skip_solver env intf_or_impl) in
         (match tmp1 with
-          | (m, mllib, env1) -> (rest, (m, mllib, env1))
+          | (m, env1) -> (rest, (m, env1))
         ))
       | [] -> (FStarC_Effect.failwith "Impossible: Empty remaining modules")
     ) in
   (match tmp with
-    | (remaining1, (nmods, mllib, env1)) -> (remaining1, nmods, mllib, env1)
+    | (remaining1, (nmods, env1)) -> (remaining1, nmods, env1)
   ))
 
-and tc_fold_interleave (fly_deps : bool) (root : (string) option) (acc : ((FStarC_CheckedFiles.tc_result) list * ((FStarC_Extraction_ML_UEnv.uenv * (((string) list * string) * (((FStarC_Extraction_ML_Syntax.mlsig1) list * (FStarC_Extraction_ML_Syntax.mlmodule1) list)) option))) list * FStarC_Extraction_ML_UEnv.uenv)) (remaining : (string) list) : ((FStarC_CheckedFiles.tc_result) list * ((FStarC_Extraction_ML_UEnv.uenv * (((string) list * string) * (((FStarC_Extraction_ML_Syntax.mlsig1) list * (FStarC_Extraction_ML_Syntax.mlmodule1) list)) option))) list * FStarC_Extraction_ML_UEnv.uenv) =
-  (let as_list = (fun env mllib -> (match mllib with
-      | None -> []
-      | (Some (mllib1)) -> ((env, mllib1) :: [])
-    )) in
+and tc_fold_interleave (fly_deps : bool) (root : (string) option) (acc : ((FStarC_CheckedFiles.tc_result) list * FStarC_TypeChecker_Env.env)) (remaining : (string) list) : ((FStarC_CheckedFiles.tc_result) list * FStarC_TypeChecker_Env.env) =
   (match remaining with
     | [] -> acc
     | tmp -> (match acc with
-        | (mods, mllibs, env_before) -> (let tmp1 = (tc_one_file_from_remaining fly_deps root remaining env_before) in
+        | (mods, env_before) -> (let tmp1 = (tc_one_file_from_remaining fly_deps root remaining env_before) in
           (match tmp1 with
-            | (remaining1, nmod, mllib, env) -> (let tmp2 = (FStarC_Options.profile_group_by_decl ()) in
+            | (remaining1, nmod, env) -> (let tmp2 = (FStarC_Options.profile_group_by_decl ()) in
               let tmp3 = (not tmp2) in
               (if tmp3 then (FStarC_Profiling.report_and_clear (FStarC_Ident.string_of_lid ((nmod).FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name)) else ());
-              (tc_fold_interleave fly_deps root ((FStarC_List.op_At mods (nmod :: [])), (FStarC_List.op_At mllibs (as_list env mllib)), env) remaining1))
+              (tc_fold_interleave fly_deps root ((BatList.append mods (nmod :: [])), env) remaining1))
           ))
       )
-  ))
+  )
 
-and scan_and_load_fly_deps_internal (filename : string) (env : FStarC_Extraction_ML_UEnv.uenv) (frag_or_decl : ((FStarC_Parser_ParseIt.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : (FStarC_Extraction_ML_UEnv.uenv * (string) list) =
-  (let load_fly_deps = (Obj.magic ((fun env1 filenames -> (match filenames with
+and scan_and_load_fly_deps_internal (filename : string) (env : FStarC_TypeChecker_Env.env) (frag_or_decl : ((FStarC_Parser_Frontend.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : (FStarC_TypeChecker_Env.env * (string) list) =
+  (let load_fly_deps = (fun env1 filenames -> (match filenames with
       | [] -> env1
-      | tmp -> (let run_load_tasks = (fun env2 filenames1 -> (let tmp1 = (tc_fold_interleave false (Some (filename)) ([], [], env2) filenames1) in
+      | tmp -> (let run_load_tasks = (fun env2 filenames1 -> (let tmp1 = (tc_fold_interleave false (Some (filename)) ([], env2) filenames1) in
           (match tmp1 with
-            | (tmp2, tmp3, env3) -> env3
+            | (tmp2, env3) -> env3
           ))) in
-        let tmp1 = (FStarC_Extraction_ML_UEnv.with_restored_tc_scope env1 (fun env2 -> (let tmp1 = (run_load_tasks env2 filenames) in
+        let tmp1 = (FStarC_TypeChecker_Env.with_restored_scope env1 (fun env2 -> (let tmp1 = (run_load_tasks env2 filenames) in
           ((), tmp1)))) in
         (match tmp1 with
           | (tmp2, env2) -> (let tmp3 = (FStarC_Parser_Dep.debug_fly_deps ()) in
-            (if tmp3 then (let tmp4 = (FStarC_Syntax_DsEnv.fStarC_Class_Show_show__env (let scrut = (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env2) in
-              (scrut).FStarC_TypeChecker_Env.dsenv)) in
+            (if tmp3 then (let tmp4 = (FStarC_Syntax_DsEnv.fStarC_Class_Show_show__env (env2).FStarC_TypeChecker_Env.dsenv) in
             (FStarC_Format.print1 "After fly load deps: %s\n" tmp4)) else ());
             env2)
         ))
-    )))) in
+    )) in
   let scan_fragment_deps = (fun env1 frag_or_decl1 -> (let deps = (FStarC_Syntax_DsEnv.dep_graph (env1).FStarC_TypeChecker_Env.dsenv) in
     let deps1 = (FStarC_Parser_Dep.copy_deps deps) in
     let env2 = { FStarC_TypeChecker_Env.solver = (env1).FStarC_TypeChecker_Env.solver;
@@ -457,34 +419,34 @@ and scan_and_load_fly_deps_internal (filename : string) (env : FStarC_Extraction
     (if tmp1 then (let tmp2 = (FStarC_Parser_Dep.all_files deps1) in
     let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp2) in
     (FStarC_Format.print1 "Initial files loaded: %s\n" tmp3);
-    let tmp4 = (FStarC_Parser_AST.fStarC_Class_Show_show__list_decl_178 decls) in
+    let tmp4 = (FStarC_Parser_AST.fStarC_Class_Show_show__list_decl_170 decls) in
     (FStarC_Format.print1 "Decls scanned: %s\n" tmp4);
     let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string filenames_to_load) in
     (FStarC_Format.print1 "Additional files to load: %s\n" tmp5)) else ());
-    let filenames = (FStarC_List.filter (fun fn -> ((<>) fn filename)) (FStarC_List.rev filenames_to_load)) in
+    let filenames = (BatList.filter (fun fn -> ((<>) fn filename)) (BatList.rev filenames_to_load)) in
     let already_loaded = (fun fn -> (let mname = (FStarC_Parser_Dep.module_name_of_file fn) in
-      (FStarC_List.filter (fun m -> ((=) mname (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name))) (env2).FStarC_TypeChecker_Env.modules))) in
-    let filenames1 = (FStarC_List.filter (fun fn -> (let tmp2 = (already_loaded fn) in
+      (BatList.filter (fun m -> ((=) mname (FStarC_Ident.string_of_lid (m).FStarC_Syntax_Syntax.name))) (env2).FStarC_TypeChecker_Env.modules))) in
+    let filenames1 = (BatList.filter (fun fn -> (let tmp2 = (already_loaded fn) in
       (match tmp2 with
         | [] -> true
         | ms -> (let tmp3 = (FStarC_Parser_Dep.is_implementation fn) in
-          let tmp4 = (if tmp3 then (let tmp4 = (FStarC_List.existsb (fun m -> (not (m).FStarC_Syntax_Syntax.is_interface)) ms) in
+          let tmp4 = (if tmp3 then (let tmp4 = (BatList.exists (fun m -> (not (m).FStarC_Syntax_Syntax.is_interface)) ms) in
             (not tmp4)) else false) in
           (if tmp4 then (let tmp5 = (FStarC_Parser_Dep.module_name_of_file fn) in
           let tmp6 = (FStarC_Format.fmt1 "A non-friend dependence was already found on module %s." tmp5) in
           let tmp7 = (FStarC_Errors_Msg.text tmp6) in
           let tmp8 = (tmp7 :: []) in
           let tmp9 = ((FStarC_Errors_Msg.text "Friend dependences must be declared as the first dependence on a module.") :: tmp8) in
-          (FStarC_Errors.fStarC_Errors_raise_error__range_list_document (FStarC_TypeChecker_Env.get_range env2) FStarC_Errors_Codes.Fatal_CyclicDependence tmp9)) else false))
+          (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document (FStarC_TypeChecker_Env.get_range env2) FStarC_Errors_Codes.Fatal_CyclicDependence tmp9)) else false))
       ))) filenames) in
     (filenames1, env2))) in
-  let tmp = (with_tcenv_of_env env (fun tcenv -> (scan_fragment_deps tcenv frag_or_decl))) in
+  let tmp = (scan_fragment_deps env frag_or_decl) in
   (match tmp with
     | (filenames, env1) -> (let env2 = (load_fly_deps env1 filenames) in
       (env2, filenames))
   ))
 
-and fly_deps_check (filename : string) (env : FStarC_Extraction_ML_UEnv.uenv) (ast_mod : FStarC_Parser_AST.modul) : (FStarC_Syntax_Syntax.modul * FStarC_Extraction_ML_UEnv.uenv) =
+and fly_deps_check (filename : string) (env : FStarC_TypeChecker_Env.env) (ast_mod : FStarC_Parser_AST.modul) : (FStarC_Syntax_Syntax.modul * FStarC_TypeChecker_Env.env) =
   (let decls = (FStarC_Parser_AST.decls_of_modul ast_mod) in
   (ignore (match decls with
     | ({ FStarC_Parser_AST.d = (FStarC_Parser_AST.TopLevelModule (lid)); drange = tmp; quals = tmp1; attrs = tmp2; _ } :: rest) -> lid
@@ -494,25 +456,26 @@ and fly_deps_check (filename : string) (env : FStarC_Extraction_ML_UEnv.uenv) (a
   (if tmp then (let tmp1 = (FStarC_Parser_AST.fStarC_Class_PP_pp__list_decl decls) in
   let tmp2 = (FStar_Pprint.render tmp1) in
   (FStarC_Format.print1 "Before fly load deps: %s\n" tmp2)) else ());
-  (FStarC_Parser_Dep.populate_parsing_data filename ast_mod (FStarC_Syntax_DsEnv.dep_graph (let scrut = (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) in
-  (scrut).FStarC_TypeChecker_Env.dsenv)));
+  (FStarC_Parser_Dep.populate_parsing_data filename ast_mod (FStarC_Syntax_DsEnv.dep_graph (env).FStarC_TypeChecker_Env.dsenv));
   let is_interface = (FStarC_Parser_Dep.is_interface filename) in
-  let env1 = (FStarC_List.fold_left (fun env1 d -> (match (d).FStarC_Parser_AST.d with
+  let env1 = (BatList.fold_left (fun env1 d -> (match (d).FStarC_Parser_AST.d with
       | (FStarC_Parser_AST.Friend (tmp1)) -> (let tmp2 = (scan_and_load_fly_deps_internal filename env1 (FStar_Pervasives.Inr (d))) in
-        (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp2))
+        (match tmp2 with
+          | (u__1, u__2) -> u__1
+        ))
       | tmp1 -> env1
     )) env decls) in
-  let tmp1 = (FStarC_List.fold_left (fun tmp1 decl -> (match tmp1 with
+  let tmp1 = (BatList.fold_left (fun tmp1 decl -> (match tmp1 with
       | (mod_, env2) -> (let tmp2 = (FStarC_Parser_Dep.debug_fly_deps ()) in
-        (if tmp2 then (let tmp3 = (FStarC_Parser_AST.fStarC_Class_PP_pp__decl_42 decl) in
+        (if tmp2 then (let tmp3 = (FStarC_Parser_AST.fStarC_Class_PP_pp__decl_40 decl) in
         let tmp4 = (FStar_Pprint.render tmp3) in
         (FStarC_Format.print1 "fly_deps_check next decl: %s\n" tmp4)) else ());
         let tmp3 = (scan_and_load_fly_deps_internal filename env2 (FStar_Pervasives.Inr (decl))) in
         (match tmp3 with
-          | (env3, tmp4) -> (with_tcenv_of_env env3 (fun tcenv -> (let tmp5 = (tc_one_fragment is_interface mod_ tcenv (FStar_Pervasives.Inr (decl))) in
+          | (env3, tmp4) -> (let tmp5 = (tc_one_fragment is_interface mod_ env3 (FStar_Pervasives.Inr (decl))) in
             (match tmp5 with
-              | (mod1, tcenv1, tmp6) -> (mod1, tcenv1)
-            ))))
+              | (mod1, env4, tmp6) -> (mod1, env4)
+            ))
         ))
     )) (None, env1) decls) in
   (match tmp1 with
@@ -521,93 +484,74 @@ and fly_deps_check (filename : string) (env : FStarC_Extraction_ML_UEnv.uenv) (a
         | tmp2 -> false
       ) then (FStarC_Effect.failwith "Impossible") else ());
       (match mod_ with
-        | (Some (mod1)) -> (with_tcenv_of_env env2 (fun tcenv -> (let tmp2 = (FStarC_Syntax_DsEnv.finish_module_or_interface (tcenv).FStarC_TypeChecker_Env.dsenv mod1) in
+        | (Some (mod1)) -> (let tmp2 = (FStarC_Syntax_DsEnv.finish_module_or_interface (env2).FStarC_TypeChecker_Env.dsenv mod1) in
           (match tmp2 with
-            | (dsenv, mod2) -> (let tcenv1 = { FStarC_TypeChecker_Env.solver = (tcenv).FStarC_TypeChecker_Env.solver;
-                  range = (tcenv).FStarC_TypeChecker_Env.range;
-                  curmodule = (tcenv).FStarC_TypeChecker_Env.curmodule;
-                  gamma = (tcenv).FStarC_TypeChecker_Env.gamma;
-                  gamma_sig = (tcenv).FStarC_TypeChecker_Env.gamma_sig;
-                  gamma_cache = (tcenv).FStarC_TypeChecker_Env.gamma_cache;
-                  modules = (tcenv).FStarC_TypeChecker_Env.modules;
-                  expected_typ = (tcenv).FStarC_TypeChecker_Env.expected_typ;
-                  sigtab = (tcenv).FStarC_TypeChecker_Env.sigtab;
-                  attrtab = (tcenv).FStarC_TypeChecker_Env.attrtab;
-                  instantiate_imp = (tcenv).FStarC_TypeChecker_Env.instantiate_imp;
-                  effects = (tcenv).FStarC_TypeChecker_Env.effects;
-                  generalize = (tcenv).FStarC_TypeChecker_Env.generalize;
-                  letrecs = (tcenv).FStarC_TypeChecker_Env.letrecs;
-                  rec_names = (tcenv).FStarC_TypeChecker_Env.rec_names;
-                  top_level = (tcenv).FStarC_TypeChecker_Env.top_level;
-                  check_uvars = (tcenv).FStarC_TypeChecker_Env.check_uvars;
-                  use_eq_strict = (tcenv).FStarC_TypeChecker_Env.use_eq_strict;
-                  is_iface = (tcenv).FStarC_TypeChecker_Env.is_iface;
-                  admit = (tcenv).FStarC_TypeChecker_Env.admit;
-                  phase1 = (tcenv).FStarC_TypeChecker_Env.phase1;
-                  failhard = (tcenv).FStarC_TypeChecker_Env.failhard;
-                  flychecking = (tcenv).FStarC_TypeChecker_Env.flychecking;
-                  uvar_subtyping = (tcenv).FStarC_TypeChecker_Env.uvar_subtyping;
-                  intactics = (tcenv).FStarC_TypeChecker_Env.intactics;
-                  nocoerce = (tcenv).FStarC_TypeChecker_Env.nocoerce;
-                  tc_term = (tcenv).FStarC_TypeChecker_Env.tc_term;
-                  typeof_tot_or_gtot_term = (tcenv).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
-                  universe_of = (tcenv).FStarC_TypeChecker_Env.universe_of;
-                  typeof_well_typed_tot_or_gtot_term = (tcenv).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
-                  teq_nosmt_force = (tcenv).FStarC_TypeChecker_Env.teq_nosmt_force;
-                  subtype_nosmt_force = (tcenv).FStarC_TypeChecker_Env.subtype_nosmt_force;
-                  qtbl_name_and_index = (tcenv).FStarC_TypeChecker_Env.qtbl_name_and_index;
-                  qtbl_name_and_index1 = (tcenv).FStarC_TypeChecker_Env.qtbl_name_and_index1;
-                  fv_delta_depths = (tcenv).FStarC_TypeChecker_Env.fv_delta_depths;
-                  proof_ns = (tcenv).FStarC_TypeChecker_Env.proof_ns;
-                  synth_hook = (tcenv).FStarC_TypeChecker_Env.synth_hook;
-                  try_solve_implicits_hook = (tcenv).FStarC_TypeChecker_Env.try_solve_implicits_hook;
-                  splice = (tcenv).FStarC_TypeChecker_Env.splice;
-                  mpreprocess = (tcenv).FStarC_TypeChecker_Env.mpreprocess;
-                  postprocess = (tcenv).FStarC_TypeChecker_Env.postprocess;
-                  identifier_info = (tcenv).FStarC_TypeChecker_Env.identifier_info;
-                  tc_hooks = (tcenv).FStarC_TypeChecker_Env.tc_hooks;
+            | (dsenv, mod2) -> (let env3 = { FStarC_TypeChecker_Env.solver = (env2).FStarC_TypeChecker_Env.solver;
+                  range = (env2).FStarC_TypeChecker_Env.range;
+                  curmodule = (env2).FStarC_TypeChecker_Env.curmodule;
+                  gamma = (env2).FStarC_TypeChecker_Env.gamma;
+                  gamma_sig = (env2).FStarC_TypeChecker_Env.gamma_sig;
+                  gamma_cache = (env2).FStarC_TypeChecker_Env.gamma_cache;
+                  modules = (env2).FStarC_TypeChecker_Env.modules;
+                  expected_typ = (env2).FStarC_TypeChecker_Env.expected_typ;
+                  sigtab = (env2).FStarC_TypeChecker_Env.sigtab;
+                  attrtab = (env2).FStarC_TypeChecker_Env.attrtab;
+                  instantiate_imp = (env2).FStarC_TypeChecker_Env.instantiate_imp;
+                  effects = (env2).FStarC_TypeChecker_Env.effects;
+                  generalize = (env2).FStarC_TypeChecker_Env.generalize;
+                  letrecs = (env2).FStarC_TypeChecker_Env.letrecs;
+                  rec_names = (env2).FStarC_TypeChecker_Env.rec_names;
+                  top_level = (env2).FStarC_TypeChecker_Env.top_level;
+                  check_uvars = (env2).FStarC_TypeChecker_Env.check_uvars;
+                  use_eq_strict = (env2).FStarC_TypeChecker_Env.use_eq_strict;
+                  is_iface = (env2).FStarC_TypeChecker_Env.is_iface;
+                  admit = (env2).FStarC_TypeChecker_Env.admit;
+                  phase1 = (env2).FStarC_TypeChecker_Env.phase1;
+                  failhard = (env2).FStarC_TypeChecker_Env.failhard;
+                  flychecking = (env2).FStarC_TypeChecker_Env.flychecking;
+                  uvar_subtyping = (env2).FStarC_TypeChecker_Env.uvar_subtyping;
+                  intactics = (env2).FStarC_TypeChecker_Env.intactics;
+                  nocoerce = (env2).FStarC_TypeChecker_Env.nocoerce;
+                  tc_term = (env2).FStarC_TypeChecker_Env.tc_term;
+                  typeof_tot_or_gtot_term = (env2).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+                  universe_of = (env2).FStarC_TypeChecker_Env.universe_of;
+                  typeof_well_typed_tot_or_gtot_term = (env2).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+                  teq_nosmt_force = (env2).FStarC_TypeChecker_Env.teq_nosmt_force;
+                  subtype_nosmt_force = (env2).FStarC_TypeChecker_Env.subtype_nosmt_force;
+                  qtbl_name_and_index = (env2).FStarC_TypeChecker_Env.qtbl_name_and_index;
+                  qtbl_name_and_index1 = (env2).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+                  fv_delta_depths = (env2).FStarC_TypeChecker_Env.fv_delta_depths;
+                  proof_ns = (env2).FStarC_TypeChecker_Env.proof_ns;
+                  synth_hook = (env2).FStarC_TypeChecker_Env.synth_hook;
+                  try_solve_implicits_hook = (env2).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+                  splice = (env2).FStarC_TypeChecker_Env.splice;
+                  mpreprocess = (env2).FStarC_TypeChecker_Env.mpreprocess;
+                  postprocess = (env2).FStarC_TypeChecker_Env.postprocess;
+                  identifier_info = (env2).FStarC_TypeChecker_Env.identifier_info;
+                  tc_hooks = (env2).FStarC_TypeChecker_Env.tc_hooks;
                   dsenv = dsenv;
-                  nbe = (tcenv).FStarC_TypeChecker_Env.nbe;
-                  strict_args_tab = (tcenv).FStarC_TypeChecker_Env.strict_args_tab;
-                  disc_proj_tab = (tcenv).FStarC_TypeChecker_Env.disc_proj_tab;
-                  erasable_types_tab = (tcenv).FStarC_TypeChecker_Env.erasable_types_tab;
-                  enable_defer_to_tac = (tcenv).FStarC_TypeChecker_Env.enable_defer_to_tac;
-                  unif_allow_ref_guards = (tcenv).FStarC_TypeChecker_Env.unif_allow_ref_guards;
-                  erase_erasable_args = (tcenv).FStarC_TypeChecker_Env.erase_erasable_args;
-                  core_check = (tcenv).FStarC_TypeChecker_Env.core_check;
-                  missing_decl = (tcenv).FStarC_TypeChecker_Env.missing_decl;
-                  iface_todo = (tcenv).FStarC_TypeChecker_Env.iface_todo;
-                  iface_hidden = (tcenv).FStarC_TypeChecker_Env.iface_hidden;
-                  iface_lids = (tcenv).FStarC_TypeChecker_Env.iface_lids;
-                  iface_val_lids = (tcenv).FStarC_TypeChecker_Env.iface_val_lids } in
-              (FStarC_TypeChecker_Tc.finish_partial_modul false false tcenv1 mod2))
-          ))))
+                  nbe = (env2).FStarC_TypeChecker_Env.nbe;
+                  strict_args_tab = (env2).FStarC_TypeChecker_Env.strict_args_tab;
+                  disc_proj_tab = (env2).FStarC_TypeChecker_Env.disc_proj_tab;
+                  erasable_types_tab = (env2).FStarC_TypeChecker_Env.erasable_types_tab;
+                  enable_defer_to_tac = (env2).FStarC_TypeChecker_Env.enable_defer_to_tac;
+                  unif_allow_ref_guards = (env2).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+                  erase_erasable_args = (env2).FStarC_TypeChecker_Env.erase_erasable_args;
+                  core_check = (env2).FStarC_TypeChecker_Env.core_check;
+                  missing_decl = (env2).FStarC_TypeChecker_Env.missing_decl;
+                  iface_todo = (env2).FStarC_TypeChecker_Env.iface_todo;
+                  iface_hidden = (env2).FStarC_TypeChecker_Env.iface_hidden;
+                  iface_lids = (env2).FStarC_TypeChecker_Env.iface_lids;
+                  iface_val_lids = (env2).FStarC_TypeChecker_Env.iface_val_lids } in
+              (FStarC_TypeChecker_Tc.finish_partial_modul false false env3 mod2))
+          ))
       ))
   ))
 
-and tc_one_file_no_frame (fly_deps : bool) (skip_solver : bool) (env : FStarC_Extraction_ML_UEnv.uenv) (fn : string) : (FStarC_CheckedFiles.tc_result * ((((string) list * string) * (((FStarC_Extraction_ML_Syntax.mlsig1) list * (FStarC_Extraction_ML_Syntax.mlmodule1) list)) option)) option * FStarC_Extraction_ML_UEnv.uenv) =
+and tc_one_file_no_frame (fly_deps : bool) (skip_solver : bool) (env : FStarC_TypeChecker_Env.env) (fn : string) : (FStarC_CheckedFiles.tc_result * FStarC_TypeChecker_Env.env) =
   (FStarC_Stats.record "tc_one_file" (fun tmp -> ((FStarC_GenSym.reset_gensym ());
   let restore_opts = (fun tmp1 -> ((ignore (FStarC_Options.restore_cmd_line_options true));
     ())) in
-  let maybe_extract_mldefs = (fun tcmod env1 -> (let tmp1 = (FStarC_Options.codegen ()) in
-    (match tmp1 with
-      | None -> (None, Prims.int_zero)
-      | (Some (FStarC_Options.Custard)) -> (None, Prims.int_zero)
-      | (Some (tgt)) -> (let tmp2 = (FStarC_Options.should_extract (FStarC_Ident.string_of_lid (tcmod).FStarC_Syntax_Syntax.name) tgt) in
-        let tmp3 = (not tmp2) in
-        (if tmp3 then (None, Prims.int_zero) else (FStarC_Timing.record_ms (fun tmp4 -> (with_env env1 (fun env2 -> (let tmp5 = (FStarC_Extraction_ML_Modul.extract env2 tcmod) in
-        (match tmp5 with
-          | (tmp6, defs) -> defs
-        ))))))))
-    ))) in
-  let maybe_extract_ml_iface = (fun tcmod env1 -> (let tmp1 = (FStarC_Options.codegen ()) in
-    let tmp2 = ((=) tmp1 None) in
-    let tmp3 = (if tmp2 then true else (let tmp3 = (FStarC_Options.codegen ()) in
-      ((=) tmp3 (Some (FStarC_Options.Custard))))) in
-    (if tmp3 then (env1, Prims.int_zero) else (FStarC_Timing.record_ms (fun tmp4 -> (let tmp5 = (with_env env1 (fun env2 -> (FStarC_Extraction_ML_Modul.extract_iface env2 tcmod))) in
-    (match tmp5 with
-      | (env2, tmp6) -> env2
-    ))))))) in
   let tc_source_file = (fun tmp1 -> (let tmp2 = (FStarC_Parser_Dep.module_name_of_file fn) in
     let tmp3 = (Some (tmp2)) in
     let tmp4 = (FStarC_Profiling.profile (fun tmp4 -> (parse fly_deps env fn)) tmp3 "FStarC.Universal.tc_source_file.parse") in
@@ -616,36 +560,29 @@ and tc_one_file_no_frame (fly_deps : bool) (skip_solver : bool) (env : FStarC_Ex
             let tmp6 = (if fly_deps then (match fmod with
                 | (FStar_Pervasives.Inl (ast_mod)) -> (fly_deps_check fn env2 ast_mod)
               ) else (match fmod with
-                | (FStar_Pervasives.Inr (mod_)) -> (with_tcenv_of_env env2 (fun tcenv -> (FStarC_TypeChecker_Tc.check_module tcenv mod_)))
+                | (FStar_Pervasives.Inr (mod_)) -> (FStarC_TypeChecker_Tc.check_module env2 mod_)
               )) in
             (match tmp6 with
               | (modul, env3) -> ((restore_opts ());
-                let smt_decls = (if skip_solver then (FStarC_SMTEncoding_Encode.encode_modul_no_solver (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env3) modul) else (FStarC_SMTEncoding_Encode.encode_modul (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env3) modul)) in
+                let smt_decls = (if skip_solver then (FStarC_SMTEncoding_Encode.encode_modul_no_solver env3 modul) else (FStarC_SMTEncoding_Encode.encode_modul env3 modul)) in
                 (if (not skip_solver) then (record_encoded_modul modul smt_decls) else ());
                 ((modul, smt_decls), env3))
             ))) in
           let tmp6 = (FStarC_Profiling.profile (fun tmp6 -> (check env1)) (Some ((FStarC_Ident.string_of_lid mname))) "FStarC.Universal.tc_source_file.check") in
           (match tmp6 with
-            | ((tcmod, smt_decls), env2) -> (let tmp7 = (maybe_extract_mldefs tcmod env2) in
-              (match tmp7 with
-                | (extracted_defs, extract_time) -> (let tmp8 = (maybe_extract_ml_iface tcmod env2) in
-                  (match tmp8 with
-                    | (env3, iface_extraction_time) -> (let deps = (FStarC_TypeChecker_Env.dep_graph (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env3)) in
-                      let pd = (match fmod with
-                          | (FStar_Pervasives.Inl (ast_mod)) -> (FStarC_Parser_Dep.parsing_data_of_modul deps fn (Some (ast_mod)))
-                          | (FStar_Pervasives.Inr (mod_)) -> (let pd = (FStarC_Parser_Dep.parsing_data_of deps fn) in
-                            let tmp9 = (FStarC_Parser_Dep.deps_of deps fn) in
-                            (pd, tmp9))
-                        ) in
-                      let mii = (FStarC_Syntax_DsEnv.inclusion_info (let scrut = (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env3) in
-                        (scrut).FStarC_TypeChecker_Env.dsenv) mname) in
-                      (pd, { FStarC_CheckedFiles.checked_module = tcmod;
-                        mii = mii;
-                        smt_encoding = smt_decls;
-                        tc_time = Prims.int_zero;
-                        extraction_time = (Prims.op_Plus extract_time iface_extraction_time) }, extracted_defs, env3))
-                  ))
-              ))
+            | ((tcmod, smt_decls), env2) -> (let deps = (FStarC_TypeChecker_Env.dep_graph env2) in
+              let pd = (match fmod with
+                  | (FStar_Pervasives.Inl (ast_mod)) -> (FStarC_Parser_Dep.parsing_data_of_modul deps fn (Some (ast_mod)))
+                  | (FStar_Pervasives.Inr (mod_)) -> (let pd = (FStarC_Parser_Dep.parsing_data_of deps fn) in
+                    let tmp7 = (FStarC_Parser_Dep.deps_of deps fn) in
+                    (pd, tmp7))
+                ) in
+              let mii = (FStarC_Syntax_DsEnv.inclusion_info (env2).FStarC_TypeChecker_Env.dsenv mname) in
+              (pd, { FStarC_CheckedFiles.checked_module = tcmod;
+                mii = mii;
+                smt_encoding = smt_decls;
+                tc_time = Prims.int_zero;
+                extraction_time = Prims.int_zero }, env2))
           ))) in
         (check_mod ()))
     ))) in
@@ -653,7 +590,7 @@ and tc_one_file_no_frame (fly_deps : bool) (skip_solver : bool) (env : FStarC_Ex
   let tmp2 = (not tmp1) in
   (if tmp2 then (let tmp3 = (if fly_deps then (let tmp3 = (FStarC_Parser_Dep.module_name_of_file fn) in
     (FStarC_Options.should_check tmp3)) else false) in
-  let r = (if tmp3 then None else (FStarC_CheckedFiles.load_module_from_cache (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env) fn)) in
+  let r = (if tmp3 then None else (FStarC_CheckedFiles.load_module_from_cache env fn)) in
   let tmp4 = (FStarC_Parser_Dep.module_name_of_file fn) in
   let tmp5 = (FStarC_Options.should_check tmp4) in
   let tmp6 = (if tmp5 then (let tmp6 = (FStarC_Options.force ()) in
@@ -678,23 +615,22 @@ and tc_one_file_no_frame (fly_deps : bool) (skip_solver : bool) (env : FStarC_Ex
       let tmp9 = (FStarC_Options.should_be_already_cached tmp8) in
       let tmp10 = (if tmp9 then (let tmp10 = (FStarC_Options.force ()) in
         (not tmp10)) else false) in
-      (if tmp10 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure (FStarC_List.op_At ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Expected %s to already be checked." fn)) :: []) why)) else ());
+      (if tmp10 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure (BatList.append ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Expected %s to already be checked." fn)) :: []) why)) else ());
       let tmp11 = (FStarC_Options.codegen ()) in
       let tmp12 = (match tmp11 with
           | (Some (v)) -> true
           | tmp12 -> false
         ) in
-      let tmp13 = (if tmp12 then (FStarC_Options.cmi ()) else false) in
-      let tmp14 = (if tmp13 then (let tmp14 = (FStarC_Options.force ()) in
-        (not tmp14)) else false) in
-      (if tmp14 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure (FStarC_List.op_At ((FStarC_Errors_Msg.text "Cross-module inlining expects all modules to be checked first.") :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Module %s was not checked." fn)) :: [])) why)) else ());
-      let tmp15 = (tc_source_file ()) in
-      (match tmp15 with
-        | (parsing_data, tc_result, mllib, env1) -> (let tmp16 = (FStarC_Errors.get_err_count ()) in
-          let tmp17 = ((=) tmp16 Prims.int_zero) in
-          let tmp18 = (if tmp17 then (FStarC_Options.should_write_checked_file fn) else false) in
-          (if tmp18 then (FStarC_CheckedFiles.store_module_to_cache (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env1) fn parsing_data tc_result) else ());
-          (tc_result, mllib, env1))
+      let tmp13 = (if tmp12 then (let tmp13 = (FStarC_Options.force ()) in
+        (not tmp13)) else false) in
+      (if tmp13 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure (BatList.append ((FStarC_Errors_Msg.text "Cross-module inlining expects all modules to be checked first.") :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Module %s was not checked." fn)) :: [])) why)) else ());
+      let tmp14 = (tc_source_file ()) in
+      (match tmp14 with
+        | (parsing_data, tc_result, env1) -> (let tmp15 = (FStarC_Errors.get_err_count ()) in
+          let tmp16 = ((=) tmp15 Prims.int_zero) in
+          let tmp17 = (if tmp16 then (FStarC_Options.should_write_checked_file fn) else false) in
+          (if tmp17 then (FStarC_CheckedFiles.store_module_to_cache env1 fn parsing_data tc_result) else ());
+          (tc_result, env1))
       ))
     | (Some (tc_result)) -> (let tcmod = (tc_result).FStarC_CheckedFiles.checked_module in
       let tmp7 = (FStarC_Options.dump_module (FStarC_Ident.string_of_lid (tcmod).FStarC_Syntax_Syntax.name)) in
@@ -710,28 +646,17 @@ and tc_one_file_no_frame (fly_deps : bool) (skip_solver : bool) (env : FStarC_Ex
             (record_encoded_modul tcmod1 smt_decls)))) else ());
             ((), env1))
         ))) in
-      let env1 = (FStarC_Profiling.profile (fun tmp8 -> (let tmp9 = (with_tcenv_of_env env (extend_tcenv tcmod)) in
-        (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp9))) None "FStarC.Universal.extend_tcenv") in
-      let tmp8 = (FStarC_Options.codegen ()) in
-      let mllib = (match tmp8 with
-          | None -> None
-          | (Some (tgt)) -> (let tmp9 = (FStarC_Options.should_extract (FStarC_Ident.string_of_lid (tcmod).FStarC_Syntax_Syntax.name) tgt) in
-            let tmp10 = (if tmp9 then ((not (tcmod).FStarC_Syntax_Syntax.is_interface) || ((=) tgt FStarC_Options.Krml)) else false) in
-            (if tmp10 then (let tmp11 = (maybe_extract_mldefs tcmod env1) in
-            (match tmp11 with
-              | (extracted_defs, u__extraction_time) -> extracted_defs
-            )) else None))
-        ) in
-      let tmp9 = (maybe_extract_ml_iface tcmod env1) in
-      (match tmp9 with
-        | (env2, u__time) -> (tc_result, mllib, env2)
-      ))
+      let env1 = (FStarC_Profiling.profile (fun tmp8 -> (let tmp9 = (extend_tcenv tcmod env) in
+        (match tmp9 with
+          | (u__1, u__2) -> u__2
+        ))) None "FStarC.Universal.extend_tcenv") in
+      (tc_result, env1))
   )) else (let tmp3 = (tc_source_file ()) in
   (match tmp3 with
-    | (tmp4, tc_result, mllib, env1) -> (tc_result, mllib, env1)
+    | (tmp4, tc_result, env1) -> (tc_result, env1)
   ))))))
 
-and tc_one_file_internal (fly_deps : bool) (skip_solver : bool) (env : FStarC_Extraction_ML_UEnv.uenv) (fn : string) : (FStarC_CheckedFiles.tc_result * ((((string) list * string) * (((FStarC_Extraction_ML_Syntax.mlsig1) list * (FStarC_Extraction_ML_Syntax.mlmodule1) list)) option)) option * FStarC_Extraction_ML_UEnv.uenv) =
+and tc_one_file_internal (fly_deps : bool) (skip_solver : bool) (env : FStarC_TypeChecker_Env.env) (fn : string) : (FStarC_CheckedFiles.tc_result * FStarC_TypeChecker_Env.env) =
   (if skip_solver then (let tmp = (FStarC_Parser_Dep.module_name_of_file fn) in
   let name = (Prims.strcat "interface of " tmp) in
   (push_iface_solver_frame env name);
@@ -740,27 +665,21 @@ and tc_one_file_internal (fly_deps : bool) (skip_solver : bool) (env : FStarC_Ex
   res) else (tc_one_file_no_frame fly_deps false env fn))
 
 let load_file (env : FStarC_TypeChecker_Env.env) (filename : string) : FStarC_TypeChecker_Env.env =
-  (let env1 = (env_of_tcenv env) in
-  let tmp = (tc_one_file_internal false false env1 filename) in
+  (let tmp = (tc_one_file_internal false false env filename) in
   (match tmp with
-    | (tc_result, tmp1, env2) -> (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env2)
+    | (tmp1, env1) -> env1
   ))
 
 let load_interface_of_current_file (env : FStarC_TypeChecker_Env.env) (filename : string) : FStarC_TypeChecker_Env.env =
-  (let uenv = (env_of_tcenv env) in
-  let tmp = (tc_one_file_internal false true uenv filename) in
+  (let tmp = (tc_one_file_internal false true env filename) in
   (match tmp with
-    | (tmp1, tmp2, uenv1) -> (FStarC_Extraction_ML_UEnv.tcenv_of_uenv uenv1)
+    | (tmp1, env1) -> env1
   ))
 
-let scan_and_load_fly_deps (filename : string) (env : FStarC_TypeChecker_Env.env) (input : ((FStarC_Parser_ParseIt.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : (FStarC_TypeChecker_Env.env * (string) list) =
-  (let tmp = (FStarC_Extraction_ML_UEnv.new_uenv env) in
-  let tmp1 = (scan_and_load_fly_deps_internal filename tmp input) in
-  (match tmp1 with
-    | (uenv, files) -> ((FStarC_Extraction_ML_UEnv.tcenv_of_uenv uenv), files)
-  ))
+let scan_and_load_fly_deps (filename : string) (env : FStarC_TypeChecker_Env.env) (frag_or_decl : ((FStarC_Parser_Frontend.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : (FStarC_TypeChecker_Env.env * (string) list) =
+  (scan_and_load_fly_deps_internal filename env frag_or_decl)
 
-let load_fly_deps_and_tc_one_fragment (filename : string) (is_interface : bool) (mod_ : (FStarC_Syntax_Syntax.modul) option) (tcenv : FStarC_TypeChecker_Env.env) (frag_or_decl : ((FStarC_Parser_ParseIt.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : ((FStarC_Syntax_Syntax.modul) option * FStarC_TypeChecker_Env.env * (FStarC_Parser_AST.decl) list * (string) list) =
+let load_fly_deps_and_tc_one_fragment (filename : string) (is_interface : bool) (mod_ : (FStarC_Syntax_Syntax.modul) option) (tcenv : FStarC_TypeChecker_Env.env) (frag_or_decl : ((FStarC_Parser_Frontend.input_frag * (FStarC_Parser_AST.decl) list), FStarC_Parser_AST.decl) FStar_Pervasives.either) : ((FStarC_Syntax_Syntax.modul) option * FStarC_TypeChecker_Env.env * (FStarC_Parser_AST.decl) list * (string) list) =
   (let ast_decls = (match frag_or_decl with
       | (FStar_Pervasives.Inl ((frag, lang_decls))) -> (let dfrag = (parse_frag frag lang_decls) in
         (match dfrag with
@@ -781,152 +700,36 @@ let load_fly_deps_and_tc_one_fragment (filename : string) (is_interface : bool) 
         ))
     )) (tcenv, mod_) ast_decls) in
   (match tmp with
-    | ((tcenv1, curmod), langs_filenames) -> (let tmp1 = (FStarC_List.unzip langs_filenames) in
+    | ((tcenv1, curmod), langs_filenames) -> (let tmp1 = (BatList.split langs_filenames) in
       (match tmp1 with
-        | (langs_l, filenames_l) -> (curmod, tcenv1, (FStarC_List.flatten langs_l), (FStarC_List.flatten filenames_l))
+        | (langs_l, filenames_l) -> (curmod, tcenv1, (BatList.flatten langs_l), (BatList.flatten filenames_l))
       ))
   ))
 
 let dbg_dep : (bool ref) =
   (FStarC_Debug.get_toggle "Dep")
 
-let rec emit__dedup (seen : (string) list) (ps : ((string * (FStarC_Extraction_KrmlAst.decl) list)) list) : ((string * (FStarC_Extraction_KrmlAst.decl) list)) list =
-  (match ps with
-    | [] -> []
-    | ((name, decls) :: ps1) -> (let tmp = (FStarC_List.existsb (fun n -> ((=) n name)) seen) in
-      (if tmp then (emit__dedup seen ps1) else (let tmp1 = (emit__dedup (name :: seen) ps1) in
-      ((name, decls) :: tmp1))))
-  )
-
-let emit (dep_graph : FStarC_Parser_Dep.deps) (mllib : ((FStarC_Extraction_ML_UEnv.uenv * (((string) list * string) * (((FStarC_Extraction_ML_Syntax.mlsig1) list * (FStarC_Extraction_ML_Syntax.mlmodule1) list)) option))) list) : unit =
-  (let opt = (FStarC_Options.codegen ()) in
-  (if ((<>) opt None) then (let ext = (match opt with
-      | (Some (FStarC_Options.FSharp)) -> ".fs"
-      | (Some (FStarC_Options.OCaml)) -> ".ml"
-      | (Some (FStarC_Options.Plugin)) -> ".ml"
-      | (Some (FStarC_Options.Krml)) -> ".krml"
-      | (Some (FStarC_Options.Extension)) -> ".ast"
-      | (Some (FStarC_Options.Custard)) -> ".custard"
-      | tmp -> (let tmp1 = (FStarC_Options.fStarC_Class_Show_show__option_codegen_t opt) in
-        let tmp2 = (Prims.strcat "Unrecognized extraction backend: " tmp1) in
-        (FStarC_Effect.failwith tmp2))
-    ) in
-  let ofile = (fun basename -> (let tmp = (FStarC_Options.output_to ()) in
-    (match tmp with
-      | (Some (fn)) -> fn
-      | None -> (FStarC_Find.prepend_output_dir basename)
-    ))) in
-  (match opt with
-    | (Some (FStarC_Options.FSharp)) -> (let printer = (if ((=) opt (Some (FStarC_Options.FSharp))) then FStarC_Extraction_ML_PrintFS.print_fs else FStarC_Extraction_ML_PrintML.print_ml) in
-      let tmp = (FStarC_Options.output_to ()) in
-      let tmp1 = (match tmp with
-          | (Some (v)) -> true
-          | tmp1 -> false
-        ) in
-      let tmp2 = (if tmp1 then (Prims.op_Greater (FStarC_List.length mllib) Prims.int_one) else false) in
-      (if tmp2 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "Cannot provide -o and extract multiple modules") :: ((FStarC_Errors_Msg.text "Please use -o with a single module, or specify an output directory with --odir") :: []))) else ());
-      (FStarC_List.iter (fun tmp3 -> (match tmp3 with
-        | (tmp4, mlmodule) -> (match mlmodule with
-            | (p, tmp5) -> (let basename = (Prims.strcat (FStarC_Extraction_ML_Util.flatten_mlpath p) ext) in
-              let filename = (ofile basename) in
-              let ml = (printer mlmodule) in
-              (FStarC_Util.write_file filename ml))
-          )
-      )) mllib))
-    | (Some (FStarC_Options.OCaml)) -> (let printer = (if ((=) opt (Some (FStarC_Options.FSharp))) then FStarC_Extraction_ML_PrintFS.print_fs else FStarC_Extraction_ML_PrintML.print_ml) in
-      let tmp = (FStarC_Options.output_to ()) in
-      let tmp1 = (match tmp with
-          | (Some (v)) -> true
-          | tmp1 -> false
-        ) in
-      let tmp2 = (if tmp1 then (Prims.op_Greater (FStarC_List.length mllib) Prims.int_one) else false) in
-      (if tmp2 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "Cannot provide -o and extract multiple modules") :: ((FStarC_Errors_Msg.text "Please use -o with a single module, or specify an output directory with --odir") :: []))) else ());
-      (FStarC_List.iter (fun tmp3 -> (match tmp3 with
-        | (tmp4, mlmodule) -> (match mlmodule with
-            | (p, tmp5) -> (let basename = (Prims.strcat (FStarC_Extraction_ML_Util.flatten_mlpath p) ext) in
-              let filename = (ofile basename) in
-              let ml = (printer mlmodule) in
-              (FStarC_Util.write_file filename ml))
-          )
-      )) mllib))
-    | (Some (FStarC_Options.Plugin)) -> (let printer = (if ((=) opt (Some (FStarC_Options.FSharp))) then FStarC_Extraction_ML_PrintFS.print_fs else FStarC_Extraction_ML_PrintML.print_ml) in
-      let tmp = (FStarC_Options.output_to ()) in
-      let tmp1 = (match tmp with
-          | (Some (v)) -> true
-          | tmp1 -> false
-        ) in
-      let tmp2 = (if tmp1 then (Prims.op_Greater (FStarC_List.length mllib) Prims.int_one) else false) in
-      (if tmp2 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "Cannot provide -o and extract multiple modules") :: ((FStarC_Errors_Msg.text "Please use -o with a single module, or specify an output directory with --odir") :: []))) else ());
-      (FStarC_List.iter (fun tmp3 -> (match tmp3 with
-        | (tmp4, mlmodule) -> (match mlmodule with
-            | (p, tmp5) -> (let basename = (Prims.strcat (FStarC_Extraction_ML_Util.flatten_mlpath p) ext) in
-              let filename = (ofile basename) in
-              let ml = (printer mlmodule) in
-              (FStarC_Util.write_file filename ml))
-          )
-      )) mllib))
-    | (Some (FStarC_Options.Custard)) -> ()
-    | (Some (FStarC_Options.Extension)) -> (let tmp = (FStarC_Options.output_to ()) in
-      let tmp1 = (match tmp with
-          | (Some (v)) -> true
-          | tmp1 -> false
-        ) in
-      let tmp2 = (if tmp1 then (Prims.op_Greater (FStarC_List.length mllib) Prims.int_one) else false) in
-      (if tmp2 then (FStarC_Errors.fStarC_Errors_raise_error0__list_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "Cannot provide -o and extract multiple modules") :: ((FStarC_Errors_Msg.text "Please use -o with a single module, or specify an output directory with --odir") :: []))) else ());
-      (FStarC_List.iter (fun tmp3 -> (match tmp3 with
-        | (env, m) -> (match m with
-            | (mname, modul) -> (let basename = (Prims.strcat (FStarC_Extraction_ML_Util.flatten_mlpath mname) ext) in
-              let filename = (ofile basename) in
-              (match modul with
-                | (Some ((tmp4, decls))) -> (let bindings = (FStarC_Extraction_ML_UEnv.bindings_of_uenv env) in
-                  let deps = (FStarC_Parser_Dep.deps_of_modul dep_graph (FStarC_Extraction_ML_Syntax.string_of_mlpath mname)) in
-                  (FStarC_Util.save_value_to_file filename (deps, bindings, decls)))
-                | None -> (FStarC_Effect.failwith "Unexpected ml modul in Extension extraction mode")
-              ))
-          )
-      )) mllib))
-    | (Some (FStarC_Options.Krml)) -> (let programs = (FStarC_List.collect (fun tmp -> (match tmp with
-          | (ue, m) -> (FStarC_Extraction_Krml.translate ue (m :: []))
-        )) mllib) in
-      let tmp = (emit__dedup [] (FStarC_List.rev programs)) in
-      let programs1 = (FStarC_List.rev tmp) in
-      let bin = (FStarC_Extraction_Krml.current_version, programs1) in
-      let tmp1 = (FStarC_Options.krmloutput ()) in
-      let oname = (match tmp1 with
-          | (Some (fname)) -> fname
-          | tmp2 -> (match programs1 with
-              | ((name, tmp3) :: []) -> (FStarC_Find.prepend_output_dir (Prims.strcat name ext))
-              | tmp3 -> (FStarC_Find.prepend_output_dir (Prims.strcat "out" ext))
-            )
-        ) in
-      (FStarC_Util.save_value_to_file oname bin))
-    | tmp -> (let tmp1 = (FStarC_Options.fStarC_Class_Show_show__option_codegen_t opt) in
-      let tmp2 = (Prims.strcat "Unrecognized extraction backend: " tmp1) in
-      (FStarC_Effect.failwith tmp2))
-  )) else ()))
-
-let batch_mode_tc (fly_deps : bool) (filenames : (string) list) (dep_graph : FStarC_Parser_Dep.deps) : ((FStarC_CheckedFiles.tc_result) list * FStarC_Extraction_ML_UEnv.uenv * (FStarC_Extraction_ML_UEnv.uenv -> FStarC_Extraction_ML_UEnv.uenv)) =
+let batch_mode_tc (fly_deps : bool) (filenames : (string) list) (dep_graph : FStarC_Parser_Dep.deps) : ((FStarC_CheckedFiles.tc_result) list * FStarC_TypeChecker_Env.env * (FStarC_TypeChecker_Env.env -> FStarC_TypeChecker_Env.env)) =
   (let tmp = (!(dbg_dep)) in
   (if tmp then ((FStarC_Format.print_string "Auto-deps kicked in; here's some info.\n");
-  (FStarC_Format.print1 "Here's the list of filenames we will process: %s\n" (FStarC_String.concat " " filenames));
-  let tmp1 = (FStarC_List.filter (fun fn -> (let tmp1 = (FStarC_Parser_Dep.module_name_of_file fn) in
+  (FStarC_Format.print1 "Here's the list of filenames we will process: %s\n" (BatString.concat " " filenames));
+  let tmp1 = (BatList.filter (fun fn -> (let tmp1 = (FStarC_Parser_Dep.module_name_of_file fn) in
     (FStarC_Options.should_verify tmp1))) filenames) in
-  let tmp2 = (FStarC_String.concat " " tmp1) in
+  let tmp2 = (BatString.concat " " tmp1) in
   (FStarC_Format.print1 "Here's the list of modules we will verify: %s\n" tmp2)) else ());
-  let tmp1 = (init_env dep_graph) in
-  let env = (FStarC_Extraction_ML_UEnv.new_uenv tmp1) in
-  let tmp2 = (tc_fold_interleave fly_deps None ([], [], env) filenames) in
-  (match tmp2 with
-    | (all_mods, mllibs, env1) -> (let tmp3 = (FStarC_Errors.get_err_count ()) in
-      let tmp4 = ((=) tmp3 Prims.int_zero) in
-      (if tmp4 then (let tmp5 = (FStarC_Options.codegen ()) in
-      (match tmp5 with
-        | (Some (FStarC_Options.Custard)) -> (FStarC_Custard_Driver.run dep_graph (FStarC_Extraction_ML_UEnv.tcenv_of_uenv env1))
-        | tmp6 -> (emit dep_graph mllibs)
-      )) else ());
-      let solver_refresh = (fun env2 -> (let tmp5 = (with_tcenv_of_env env2 (fun tcenv -> ((((tcenv).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.finish ());
-          ((), tcenv)))) in
-        (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd tmp5))) in
+  let env = (init_env dep_graph) in
+  let tmp1 = (tc_fold_interleave fly_deps None ([], env) filenames) in
+  (match tmp1 with
+    | (all_mods, env1) -> (let tmp2 = (FStarC_Errors.get_err_count ()) in
+      let tmp3 = ((=) tmp2 Prims.int_zero) in
+      let tmp4 = (if tmp3 then (let tmp4 = (FStarC_Options.codegen ()) in
+        (match tmp4 with
+          | (Some (v)) -> true
+          | tmp5 -> false
+        )) else false) in
+      (if tmp4 then (FStarC_Custard_Driver.run dep_graph env1) else ());
+      let solver_refresh = (fun env2 -> ((((env2).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.finish ());
+        env2)) in
       (all_mods, env1, solver_refresh))
   ))
 
