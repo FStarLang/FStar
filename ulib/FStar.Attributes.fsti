@@ -566,10 +566,10 @@ val cherry_borrowed : unit
     doc/ref/custard.md, section 5.7).
 
     This is for a type whose representation is an ABI rather than a private
-    choice: [FStarC.Extraction.KrmlAst] is marshalled to a file that karamel
-    reads back into its own [InputAst], whose OCaml declarations mirror the ML
-    extraction's output field for field.  For anything else the indirection is
-    a cost with nothing on the other side of it, and the default is right.
+    choice: a type marshalled to a file that an OCaml program reads back into
+    declarations mirroring the ML extraction's output field for field.  For
+    anything else the indirection is a cost with nothing on the other side of
+    it, and the default is right.
 
     An explicit [@@@custard_inline_field] on a field still fires: the
     attribute withdraws what Custard does uninvited, not what the source
