@@ -5083,6 +5083,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                   | None -> with_realized d) in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
+    let d = if is_krml_backend () && is_private_sigelt se then with_private d else d in
     if is_inlinable se && not (is_root st l)
     then with_inline d else d
 
@@ -5270,6 +5271,31 @@ and with_inline (d:decl) : ML decl =
   match d with
   | DLet l when not (l.dl_flags |> List.existsb Rec?) ->
     DLet { l with dl_flags = Inline :: l.dl_flags }
+  | d -> d
+
+(* On the karamel backends, F*'s [private] qualifier and the internal
+   [KrmlPrivate] attribute (see {!is_krml_private}) become karamel's [Private],
+   as they did with the legacy krml extraction: karamel then emits the
+   definition [static] and keeps it out of the header, and drops the flag
+   itself if a definition turns out to be used from another file.  The
+   direct C backends decide storage from [Root] instead (section 24). *)
+and is_krml_backend () : ML bool =
+  match Options.codegen_name () with
+  | "KrmlC" | "KrmlRust" -> true
+  | _ -> false
+
+and is_private_sigelt (se:sigelt) : ML bool =
+  List.contains S.Private se.sigquals ||
+  se.sigattrs |> List.existsb (fun attr ->
+    match (SS.compress attr).n with
+    | Tm_constant (Const_string ("KrmlPrivate", _)) -> true
+    | _ -> false)
+
+and with_private (d:decl) : ML decl =
+  match d with
+  | DLet l -> DLet { l with dl_flags = Private :: l.dl_flags }
+  | DType t -> DType { t with dt_flags = Private :: t.dt_flags }
+  | DExternal x -> DExternal { x with dx_flags = Private :: x.dx_flags }
   | d -> d
 
 (* [@@custard_opaque]: the representation is fixed outside F*, so neither
