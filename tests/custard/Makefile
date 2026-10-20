@@ -3370,6 +3370,10 @@ NOGREP_BoxedFields += "BoxedFields_Bar of bool \* string"
 # arrow behind more abbreviations than the old fuel of eight.
 CUSTARD_TESTS += HeapClosures
 
+# Matches nested in each other's last branch, too deep for a printer that
+# emits a trailing branch twice per level (PrintC's trial emission in [trim]).
+CUSTARD_TESTS += DeepMatch
+
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
 C_TESTS += CHeapArity
