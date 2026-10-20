@@ -326,6 +326,15 @@ cherry_string cherry_str_escaped(cherry_string s);
 /* FStar.Char: a char is its code point. */
 static inline uint32_t cherry_u32_of_char(uint32_t c) { return c; }
 static inline uint32_t cherry_char_of_u32(uint32_t c) { return c; }
+static inline cherry_int cherry_int_of_char(uint32_t c) { return cherry_int_of_i64(c); }
+static inline uint32_t cherry_char_of_int(cherry_int i) { return (uint32_t)cherry_int_to_i64(i); }
+/* As OCaml's: only the ASCII letters have a case. */
+static inline uint32_t cherry_char_lowercase(uint32_t c) {
+  return c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c;
+}
+static inline uint32_t cherry_char_uppercase(uint32_t c) {
+  return c >= 'a' && c <= 'z' ? c - ('a' - 'A') : c;
+}
 cherry_string cherry_string_of_int(cherry_int a);
 cherry_string cherry_string_of_bool(bool b);
 void cherry_print_string(cherry_string s);
@@ -603,6 +612,10 @@ void cherry_rename_file(cherry_string from, cherry_string to);
 cherry_string cherry_file_get_contents(cherry_string path);
 void cherry_touch_file(cherry_string path);
 cherry_string cherry_getcwd(void);
+cherry_string cherry_readdir(cherry_string path);
+bool cherry_same_file(cherry_string a, cherry_string b);
+bool cherry_isatty(uint64_t h);
+cherry_string cherry_uname(void);
 cherry_string cherry_exec_name(void);
 bool cherry_has_env(cherry_string name);
 cherry_string cherry_getenv(cherry_string name);
