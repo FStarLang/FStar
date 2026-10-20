@@ -59,6 +59,9 @@ module TEQ = FStarC.TypeChecker.TermEqAndSimplify
 module SynHash = FStarC.Syntax.Hash
 module CList = FStarC.CList
 module Free = FStarC.Syntax.Free
+module UnivEq = FStarC.TypeChecker.UnivEq
+module VCUtil = FStarC.TypeChecker.VCUtil
+open FStarC.TypeChecker.UnivEq { UDeferred, USolved, UFailed }
 
 let dbg_Discharge  = Debug.get_toggle "Discharge"
 let dbg_EQ  = Debug.get_toggle "EQ"
@@ -162,20 +165,8 @@ let memo_thunk (f:unit -> ML 'a) : ML (unit -> ML 'a) =
 (* lazy string, for error reporting *)
 type lstring = Thunk.t string
 
-(* Make a thunk for a string, but keep the UF state
- * so it can be set before calling the function. This is
- * used since most error messages call term_to_string,
- * which will resolve uvars and explode if the version is
- * wrong. *)
-let mklstr (f : unit -> ML string) : ML _
-  =
-    let uf = UF.get () in
-    Thunk.mk (fun () ->
-        let tx = UF.new_transaction () in
-        UF.set uf;
-        let r = f () in
-        UF.rollback tx;
-        r)
+(* see [UnivEq.mklstr] *)
+let mklstr (f : unit -> ML string) : ML lstring = UnivEq.mklstr f
 
 (* Instantiation of unification variables *)
 type uvi =
@@ -644,11 +635,7 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t : ML _
   U.set_uvar u.ctx_uvar_head t
 
 let commit (env:env_t) (uvis:list uvi)  = uvis |> List.iter (function
-    | UNIV(u, t)      ->
-      begin match t with
-        | U_unif u' -> UF.univ_union u u'
-        | _ -> UF.univ_change u t
-      end
+    | UNIV(u, t)      -> UnivEq.commit_univ u t
     | TERM(u, t) ->
       def_check_scoped #(list bv) #term t.pos "commit" (List.map (fun b -> b.binder_bv) u.ctx_uvar_binders) t;
       set_uvar env u None t
@@ -714,19 +701,7 @@ let sn_binders env (binders:binders) : ML _
         Replace all unification variables in u with their solution in wl, if any
         And normalize the result
 *)
-let norm_univ wl u : ML _
-  =
-    let rec aux u : ML _ =
-        let u = SS.compress_univ u in
-        match u with
-            | U_succ u ->
-              U_succ (aux u)
-
-            | U_max us ->
-              U_max (List.map aux us)
-
-            | _ -> u in
-    N.normalize_universe wl.tcenv (aux u)
+let norm_univ wl u : ML _ = UnivEq.norm_univ wl.tcenv u
 
 let normalize_refinement steps env t0 : ML term =
   Profiling.profile
@@ -1012,31 +987,7 @@ let rec has_uvar_needing_congruence env (t:term) : ML bool =
           | _ -> has_uvar_needing_congruence env a))
   | _ -> not (Setlike.is_empty (Free.uvars t))
 
-(* Deciding when it's okay to issue an SMT query for
- * equating a term whose head symbol is `head` with another term
- *
- * NB: this function only uses env for checking delta_depths,
- * so it's fine to use wl.tcenv.
- *)
-let rec may_relate_by_smt env is_eq head : ML _
-  =
-    match (SS.compress head).n with
-    | Tm_name _
-    | Tm_match _ -> true
-    | Tm_fvar fv ->
-      (match Env.delta_depth_of_fv env fv with
-       | Delta_equational_at_level _ ->
-         true
-       | Delta_abstract _ ->
-         //these may be relatable via a logical theory
-         //which may provide **equations** among abstract symbols
-         //Note, this is specifically not applicable for subtyping queries: see issue #1359
-         is_eq
-       | _ -> false)
-    | Tm_ascribed {tm=t}
-    | Tm_uinst (t, _)
-    | Tm_meta {tm=t} -> may_relate_by_smt env is_eq t
-    | _ -> false
+let may_relate_by_smt = VCUtil.may_relate_by_smt
 
 let may_relate env prel head  = may_relate_by_smt env (EQ? prel) head
 
@@ -1701,10 +1652,7 @@ let flex_prob_closing tcenv (bs:binders) (p:prob) : ML _
 (* ----------------------------------------------------- *)
 (* Solving universe equalities                           *)
 (* ----------------------------------------------------- *)
-type univ_eq_sol =
-  | UDeferred of worklist
-  | USolved   of worklist
-  | UFailed   of lstring
+type univ_eq_sol = UnivEq.univ_eq_sol worklist
 
 let ufailed_simple (s:string) : ML univ_eq_sol =
   UFailed (Thunk.mkv s)
@@ -1712,120 +1660,10 @@ let ufailed_simple (s:string) : ML univ_eq_sol =
 let ufailed_thunk (s: unit -> ML string) : ML univ_eq_sol =
   UFailed (mklstr s)
 
-
-let rec solve_universe_eq pid_orig wl u1 u2 : ML _
-  =
-    let u1 = N.normalize_universe wl.tcenv u1 in
-    let u2 = N.normalize_universe wl.tcenv u2 in
-    let rec occurs_univ v1 u : ML _ = match u with
-        | U_max us ->
-          us |> BU.for_some (fun u ->
-            let k, _ = U.univ_kernel u in
-            match k with
-                | U_unif v2 -> UF.univ_equiv v1 v2
-                | _ -> false)
-        | _ -> occurs_univ v1 (U_max [u]) in
-
-    let rec filter_out_common_univs (u1:list universe) (u2:list universe) : ML (list universe & list universe) =
-      let common_elts = u1 |> List.fold_left (fun uvs uv1 -> if u2 |> List.existsML (fun uv2 -> U.eq_univs uv1 uv2) then uv1::uvs else uvs) [] in
-      let filter = List.filter (fun u -> not (common_elts |> List.existsML (fun u' -> U.eq_univs u u'))) in
-      filter u1, filter u2
-    in
-
-    let try_umax_components u1 u2 msg =
-        if not wl.umax_heuristic_ok
-        then ufailed_simple "Unable to unify universe terms with umax"
-        else
-        match u1, u2 with
-            | U_max us1, U_max us2 ->
-              begin
-              //filter out common universes in us1 and us2
-              //this allows more cases to unify, e.g. us1 = [uvar; un] and us2=[un; un']
-              //with just structural comparison, this would fail to unify, but after filtering away un, we can unify uvar with un'
-              let us1, us2 = filter_out_common_univs us1 us2 in
-              if List.length us1 = List.length us2 //go for a structural match
-              then let rec aux wl us1 us2 : ML _ = match us1, us2 with
-                        | u1::us1, u2::us2 ->
-                          begin match solve_universe_eq pid_orig wl u1 u2 with
-                            | USolved wl ->
-                                aux wl us1 us2
-                            | failed -> failed
-                          end
-                        | _ -> USolved wl in
-                    aux wl us1 us2
-              else ufailed_thunk
-                             (fun () -> Format.fmt2 "Unable to unify universes: %s and %s"
-                                                   (show u1)
-                                                   (show u2))
-              end
-            | U_max us, u'
-            | u', U_max us ->
-                let rec aux wl us : ML _ = match us with
-                | [] -> USolved wl
-                | u::us ->
-                    begin match solve_universe_eq pid_orig wl u u' with
-                    | USolved wl ->
-                      aux wl us
-                    | failed -> failed
-                    end
-                in aux wl us
-
-            | _ ->
-              ufailed_thunk (fun () ->
-                            Format.fmt3 "Unable to unify universes: %s and %s (%s)"
-                                       (show u1)
-                                       (show u2) msg) in
-
-    match u1, u2 with
-        | U_bvar _, _
-        | U_unknown, _
-        | _, U_bvar _
-        | _, U_unknown -> failwith (Format.fmt2 "Impossible: found an de Bruijn universe variable or unknown universe: %s, %s"
-                                        (show u1)
-                                        (show u2))
-
-        | U_name x, U_name y ->
-          if (string_of_id x) = (string_of_id y)
-          then USolved wl
-          else ufailed_simple "Incompatible universes"
-
-        | U_zero, U_zero ->
-          USolved wl
-
-        | U_succ u1, U_succ u2 ->
-          solve_universe_eq pid_orig wl u1 u2
-
-        | U_unif v1, U_unif v2 ->
-          if UF.univ_equiv v1 v2
-          then USolved wl
-          else let wl = extend_universe_solution pid_orig [UNIV(v1, u2)] wl in
-               USolved wl
-
-        | U_unif v1, u
-        | u, U_unif v1 ->
-          let u = norm_univ wl u in
-          if occurs_univ v1 u
-          then try_umax_components u1 u2
-                (Format.fmt2 "Failed occurs check: %s occurs in %s" (show (U_unif v1)) (show u))
-          else USolved (extend_universe_solution pid_orig [UNIV(v1, u)] wl)
-
-        | U_max _, _
-        | _, U_max _ ->
-          if wl.defer_ok = DeferAny
-          then UDeferred wl
-          else let u1 = norm_univ wl u1 in
-               let u2 = norm_univ wl u2 in
-               if U.eq_univs u1 u2
-               then USolved wl
-               else try_umax_components u1 u2 ""
-
-        | U_succ _, U_zero
-        | U_succ _, U_name _
-        | U_zero,   U_succ _
-        | U_zero,   U_name _
-        | U_name _, U_succ _
-        | U_name _, U_zero ->
-          ufailed_simple "Incompatible universes"
+let solve_universe_eq pid_orig wl u1 u2 : ML univ_eq_sol
+  = UnivEq.solve_universe_eq wl.tcenv wl.umax_heuristic_ok (wl.defer_ok = DeferAny)
+      (fun wl v u -> extend_universe_solution pid_orig [UNIV(v, u)] wl)
+      wl u1 u2
 
 (* This balances two lists.  Given (xs, f) (ys, g), it will
  * take a maximal same-length prefix from each list, getting
@@ -1938,23 +1776,7 @@ let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : ML term =
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
-(* This function is also called by tactics, and should not drop the guards
-under [admit] (like simplify_guard does). *)
-let simplify_vc full_norm_allowed env t : ML _
-  =
-  Stats.record "simplify_vc" fun () ->
-  if !dbg_Simplification then
-    Format.print1 "Simplifying guard %s\n" (show t);
-  let steps = [Env.Beta;
-               Env.Eager_unfolding;
-               Env.Simplify;
-               Env.Primops;
-               Env.Exclude Env.Zeta] in
-  let steps = if full_norm_allowed then steps else Env.NoFullNorm::steps in
-  let t' = norm_with_steps "FStarC.TypeChecker.Rel.simplify_vc" steps env t in
-  if !dbg_Simplification then
-    Format.print1 "Simplified guard to %s\n" (show t');
-  t'
+let simplify_vc = VCUtil.simplify_vc
 
 let __simplify_guard full_norm_allowed env g  = match g.guard_f with
   | Trivial -> g

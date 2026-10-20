@@ -18,7 +18,7 @@ module FStarC.TypeChecker.Core
 open FStarC
 open FStarC.Effect
 open FStarC.Syntax.Syntax
-open FStarC.TypeChecker.Common
+open FStarC.TypeChecker.CommonBase
 open FStarC.Class.Show
 module Env = FStarC.TypeChecker.Env
 
@@ -96,7 +96,7 @@ val compute_term_type (g:Env.env) (e:term)
 val check_term_at_comp (g:Env.env) (e:term) (c:comp)
   : ML (either (option guard_and_tok_t) error)
 
-(* Check a nest of top-level recursive definitions (see TcTerm.guard_letrecs
+(* Check a nest of top-level recursive definitions (see Termination.guard_letrecs
    for termination), whose universes are opened and pushed in [g]. The guard
    may mention the top-level names of the nest, which the caller must bind
    to discharge it. *)

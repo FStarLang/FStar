@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module FStarC.TypeChecker.Core
-open FStarC.TypeChecker.Common
+open FStarC.TypeChecker.CommonBase
 (*
 
 This module implements a core typechecker for pure and ghost F* terms.
@@ -80,6 +80,19 @@ caches:
   The second level cache is explicit cleared by called clear_memo_table, which 
   FStarC.TypeChecker.Tc does at each top-level declaration.
 
+Dependencies:
+
+  This checker does not depend on the elaborator (TcTerm, TcUtil) or on the
+  unifier (Rel). The utilities it shares with them are in small modules:
+  VCUtil (labels and simplification of VCs), UnivEq (universe equality),
+  UniverseOf (the types of constants and syntactic universe computation),
+  Termination (the refined types of recursive definitions) and CommonBase.
+  Still, terms it is given may have been elaborated by TcTerm, and it
+  re-checks them; and a few Env callbacks (e.g.
+  [env.typeof_well_typed_tot_or_gtot_term], used by
+  Termination) dispatch to TcTerm at runtime, only to compute terms that
+  this checker then checks.
+
 *)
 open FStarC
 open FStar.List.Tot
@@ -95,7 +108,10 @@ module N = FStarC.TypeChecker.Normalize
 module PC = FStarC.Parser.Const
 module I = FStarC.Ident
 module BU = FStarC.Util
-module TcUtil = FStarC.TypeChecker.Util
+module VCUtil = FStarC.TypeChecker.VCUtil
+module UnivEq = FStarC.TypeChecker.UnivEq
+module UniverseOf = FStarC.TypeChecker.UniverseOf
+module Termination = FStarC.TypeChecker.Termination
 module Err = FStarC.TypeChecker.Err
 module Hash = FStarC.Syntax.Hash
 module Subst = FStarC.Syntax.Subst
@@ -672,7 +688,7 @@ let check_aqual (a0 a1:aqual)
 
 let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
   : result unit
-  = if FStarC.TypeChecker.Common.check_positivity_qual (SUBTYPING? rel) p0 p1
+  = if CommonBase.check_positivity_qual (SUBTYPING? rel) p0 p1
     then return ()
     else fail_str "Unequal positivity qualifiers"
 
@@ -779,7 +795,7 @@ let no_guard (g:result 'a)
       | Success ((x, Some g), cache) -> fail_str (Format.fmt1 "Unexpected guard: %s" (show g)) ctx cache
       | err -> err
 
-let equatable g t = t |> U.leftmost_head |> Rel.may_relate_by_smt g.tcenv true
+let equatable g t = t |> U.leftmost_head |> VCUtil.may_relate_by_smt g.tcenv true
 
 (* Whether an argument of an application, or of an application in an argument
    and so on, binds a variable, e.g. [p ** (exists* x. q x)], or [reveal #(a ->
@@ -1127,7 +1143,7 @@ let label_guard (#a:Type) (g:env) (r:R.t) (msg:unit -> ML Errors.error_message) 
       | Inr err -> fail_propagate err
       | Inl (res, None) -> return res
       | Inl (res, Some form) ->
-        reemit_guard g (TcUtil.label (msg ()) r form) ;!
+        reemit_guard g (VCUtil.label (msg ()) r form) ;!
         return res)
 
 (* Locate the goals of the guard of [f] at [r], unless they have a more
@@ -1161,10 +1177,10 @@ let label_subtyping (#a:Type) (g:env) (e:term) (t0 t1:typ) (f:result a)
       label_position g e.pos f
     else label_guard g e.pos (fun () -> Err.subtyping_failed g.tcenv t0 t1 ()) f
 
-let weaken_with_guard_formula env (p:FStarC.TypeChecker.Common.guard_formula) (g:result 'a)
+let weaken_with_guard_formula env (p:CommonBase.guard_formula) (g:result 'a)
   = match p with
-    | Common.Trivial -> g
-    | Common.NonTrivial p -> weaken env p g
+    | CommonBase.Trivial -> g
+    | CommonBase.NonTrivial p -> weaken env p g
 
 let insert (g:env) (e:term) (res:success (eff & typ))
 : result unit
@@ -1328,8 +1344,8 @@ let fail_effect_mismatch (#a:Type) (g:env) (e:term) (t_e:typ) (e_eff:eff) (targe
     in
     let t_e =
       match e_eff with
-      | ETot -> U.comp_result (TcUtil.maybe_assume_result_eq_pure_term g.tcenv e (S.mk_Total t_e))
-      | EGhost -> U.comp_result (TcUtil.maybe_assume_result_eq_pure_term g.tcenv e (S.mk_GTotal t_e))
+      | ETot -> U.comp_result (VCUtil.maybe_assume_result_eq_pure_term g.tcenv e (S.mk_Total t_e))
+      | EGhost -> U.comp_result (VCUtil.maybe_assume_result_eq_pure_term g.tcenv e (S.mk_GTotal t_e))
       | _ -> t_e
     in
     let ppt = N.term_to_doc g.tcenv in
@@ -1466,7 +1482,7 @@ let match_covers_bool (g:env) (t_sc:typ) (brs:list branch) : ML bool =
 
 let exhaustiveness_obligation (r:R.t) (path_condition:typ) : ML (option typ) =
   if U.is_t_false path_condition then None
-  else Some (TcUtil.label Err.exhaustiveness_check r (U.mk_imp path_condition U.t_false))
+  else Some (VCUtil.label Err.exhaustiveness_check r (U.mk_imp path_condition U.t_false))
 
 let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
   let dd0 = Env.delta_depth_of_term g t0 in
@@ -1474,7 +1490,7 @@ let maybe_relate_after_unfolding (g:Env.env) t0 t1 : ML side =
 
   if dd0 = dd1 then
     Both
-  else if Common.delta_depth_greater_than dd0 dd1 then
+  else if CommonBase.delta_depth_greater_than dd0 dd1 then
     Left
   else
     Right
@@ -1485,15 +1501,6 @@ instance showable_rel : showable relation = {
       | EQUALITY -> "=?="
       | SUBTYPING _ -> "<:?"
 }
-
-(* [Rel.teq_nosmt_force] raises an error, rather than returning [false], when
-   a universe constraint it deferred turns out to be unsatisfiable, e.g. for
-   [f u#1] and [f u#(max 1 b)]. Core then treats the terms as unequal, and
-   may still relate them after unfolding. *)
-let teq_nosmt_force (env:Env.env) (t0 t1:typ) : ML bool =
-  match Errors.catch_errors_and_ignore_rest (fun () -> Rel.teq_nosmt_force env t0 t1) with
-  | [], Some b -> b
-  | _ -> false
 
 (*
      G |- e : t0 <: t1 | p
@@ -1917,9 +1924,9 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
       | Tm_type u0, Tm_type u1 ->
         // when g.allow_universe_instantiation ->
         // See above remark regarding universe instantiations
-        if teq_nosmt_force g.tcenv t0 t1
+        if UnivEq.teq_univs g.tcenv [u0] [u1]
         then return ()
-        else err "teq_nosmt_force over Types failed"
+        else err "Unequal universes"
 
       | Tm_meta {tm=t0; meta=Meta_pattern _}, _
       | Tm_meta {tm=t0; meta=Meta_named _}, _
@@ -1938,9 +1945,9 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
       | Tm_uinst (f0, us0), Tm_uinst(f1, us1) ->
         if equal_term f0 f1
         then ( //heads are equal, equate universes
-             if teq_nosmt_force g.tcenv t0 t1
+             if UnivEq.teq_univs g.tcenv us0 us1
              then return ()
-             else err "teq_nosmt_force over Tm_uinst failed"
+             else err "Unequal universe instantiations"
         )
         else maybe_unfold_and_retry t0 t1
 
@@ -2076,7 +2083,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                     abbreviation at its head, e.g. [normal p] into the
                     [norm] request it stands for. A tactic processing the
                     VC may depend on it. *)
-                 let f1 = if U.is_unit x1.sort then Rel.simplify_vc false g0.tcenv f1 else f1 in
+                 let f1 = if U.is_unit x1.sort then VCUtil.simplify_vc false g0.tcenv f1 else f1 in
                  witness_guard g0 tm f1
 
             | SUBTYPING None ->
@@ -2790,7 +2797,7 @@ and do_check (g:env) (e:term)
       fail_str "Unhandled constant"
 
     | _ ->
-      let t = FStarC.TypeChecker.TcTerm.tc_constant g.tcenv e.pos c in
+      let t = UniverseOf.tc_constant g.tcenv e.pos c in
       return (ETot, t)
     end
 
@@ -2987,18 +2994,18 @@ and do_check (g:env) (e:term)
     | Tm_constant (FStarC.Const.Const_reflect _), _ ->
       fail_str "Ill-applied or unexpected constant"
 
-    | _, [(t1, _); (t2, _)] when TcUtil.short_circuit_head hd ->
+    | _, [(t1, _); (t2, _)] when VCUtil.short_circuit_head hd ->
       let! eff_hd, t_hd = check "app head" g hd in
       let! x, eff_arr1, s1 = is_arrow g t_hd in
       let! eff_arg1, t_t1 = check "app arg" g t1 in
       with_context "operator arg1" None (fun _ -> check_subtype g (Some t1) t_t1 x.binder_bv.sort) ;!
       let s1 = Subst.subst [NT(x.binder_bv, t1)] s1 in
       let! y, eff_arr2, s2 = is_arrow g s1 in
-      let guard_formula = TcUtil.short_circuit hd [(t1, None)] in
+      let guard_formula = VCUtil.short_circuit hd [(t1, None)] in
       let g' =
         match guard_formula with
-        | Common.Trivial -> g
-        | Common.NonTrivial gf -> push_hypothesis g gf
+        | CommonBase.Trivial -> g
+        | CommonBase.NonTrivial gf -> push_hypothesis g gf
       in
       let! eff_arg2, t_t2 = weaken_with_guard_formula g guard_formula (check "app arg" g' t2) in
       with_context "operator arg2" None (fun _ -> check_subtype g' (Some t2) t_t2 y.binder_bv.sort) ;!
@@ -3648,7 +3655,7 @@ and with_ascription_tactic (#a:Type) (g:env) (tac:option term) (f:unit -> ML (re
         | Inr err -> fail_propagate err
         | Inl (res, phi) ->
           let phi = match phi with | None -> U.t_true | Some phi -> phi in
-          reemit_guard g (FStarC.TypeChecker.Common.mk_by_tactic tac (U.mk_squash phi)) ;!
+          reemit_guard g (CommonBase.mk_by_tactic tac (U.mk_squash phi)) ;!
           return res)
 
 and check_against_typ_by_subtyping (g:env) (e:term) (t:typ)
@@ -3749,7 +3756,7 @@ and check_letrec_types (g:env) (lbs:list letbinding)
    [TcTerm.tc_abs], its first [arity] binders are opened as the binders of its
    type, and every terminating name in the nest is then in scope at a type
    refined to only accept arguments that precede those binders (see
-   [TcTerm.guard_letrecs]); the guard of the body is closed over those refined
+   [Termination.guard_letrecs]); the guard of the body is closed over those refined
    names right away, as it would be unsound to assume them at their declared
    types. Other definitions (and other names in the nest) are checked
    assuming the names at their declared types, as is sound for partial
@@ -3840,37 +3847,30 @@ and check_letrec_defs (g:env) (top:option (list subst_elt)) (lbs:list letbinding
              environment: as in TcTerm, that of the definition, which
              includes the recursive calls. *)
           let refined =
-            FStarC.TypeChecker.TcTerm.guard_letrecs
+            Termination.guard_letrecs true
               (Env.set_range { g'.tcenv with letrecs = letrecs } lb.lbdef.pos)
               formals c
           in
+          (* The refined types are the formal types, already checked, with a
+             [<<] refinement, whose universe instantiations [guard_letrecs]
+             leaves as fresh unification variables. Check the refined types
+             here, in context, which solves them. E.g., the decreases clause
+             of a polymorphically recursive function may not be well-typed
+             at the types of the recursive calls. *)
+          let rec check_refined (ts:list typ) : ML (result unit) =
+            match ts with
+            | [] -> return ()
+            | t::ts ->
+              let! _ = with_context "let rec refined type" (Some (CtxTerm t))
+                         (fun _ -> universe_of g' t) in
+              check_refined ts
+          in
+          check_refined (List.map (fun (_, t, _) -> t) refined) ;!
           let refined =
             refined |> List.map (fun (l, t, _) ->
-              (* [guard_letrecs] builds the refinements without universe
-                 instantiations; elaborate them, as [TcTerm.tc_abs] does.
-                 This is elaboration only: the refined type is the formal
-                 type, already checked, with a [<<] refinement. Its guard
-                 must not be discharged here, in [g'.tcenv], which lacks
-                 the equations of the enclosing [let]s. *)
-              let env = fst (Env.clear_expected_typ g'.tcenv) in
-              let env = { env with admit = true } in
-              let t, _ = FStarC.TypeChecker.TcTerm.tc_trivial_guard env t in
-              let t = N.reduce_uvar_solutions env t in
+              let t = N.reduce_uvar_solutions g'.tcenv t in
               S.mk_binder { Inl?.v l with sort = t }, universe_of_name l)
           in
-          (* The refined types are elaborated above without discharging
-             their guards; check them here, in context. E.g., the decreases
-             clause of a polymorphically recursive function may not be
-             well-typed at the types of the recursive calls. *)
-          let rec check_refined (bs:list (binder & universe)) : ML (result unit) =
-            match bs with
-            | [] -> return ()
-            | (b, _)::bs ->
-              let! _ = with_context "let rec refined type" (Some (CtxTerm b.binder_bv.sort))
-                         (fun _ -> universe_of g' b.binder_bv.sort) in
-              check_refined bs
-          in
-          check_refined refined ;!
           let bs = List.map fst refined @ List.map fst nonterminating in
           let bus = List.map snd refined @ List.map snd nonterminating in
           let g'' = push_binders g' bs in
@@ -3946,8 +3946,10 @@ and universe_of (g:env) (t:typ)
 
 and universe_of_well_typed_term (g:env) (t:typ)
   : ML (result universe)
-  = try
-      let u = FStarC.TypeChecker.TcTerm.universe_of g.tcenv t in
+  = (* Computed mostly syntactically (see [UniverseOf]); otherwise, by
+       checking [t]. *)
+    try
+      let u = UniverseOf.universe_of UniverseOf.no_hooks g.tcenv t in
       return u
     with
     | _ -> universe_of g t
@@ -4048,7 +4050,7 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
         when Ident.lid_equals (lid_of_fv fv_head) (lid_of_fv fv_pat) -> return fv_head
       | Tm_uinst ({n=Tm_fvar (fv_head)}, us_head), Tm_uinst ({n=Tm_fvar (fv_pat)}, us_pat)
         when Ident.lid_equals (lid_of_fv fv_head) (lid_of_fv fv_pat) ->
-        if teq_nosmt_force g.tcenv head_sc head_pat
+        if UnivEq.teq_univs g.tcenv us_head us_pat
         then return fv_head
         else err "Incompatible universe instantiations"
       | _, _ -> err (Format.fmt2 "Head constructors(%s and %s) not fvar"
