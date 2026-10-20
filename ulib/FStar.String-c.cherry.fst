@@ -26,10 +26,6 @@ open FStar.List.Tot
 open FStar.Char
 module U32 = FStar.UInt32
 
-(* Raises [Failure msg] (cherry.md, "Exceptions"), for the functions the
-   interface puts in [Ex]. *)
-private assume val failwith_ex : #a:Type -> string -> Ex a
-
 [@@custard_extern "cherry_str_byte_size"]
 private assume val byte_size : string -> nat
 [@@custard_extern "cherry_str_byte_at"]
@@ -199,12 +195,12 @@ let collect f s =
 
 let substring s i j =
   if i < 0 || j < 0 || i + j > length s
-  then failwith_ex "FStar.String.substring: out of bounds"
+  then FStar.All.failwith "FStar.String.substring: out of bounds"
   else c_sub s i j
 
 let get s i =
   if i < 0 || i >= length s
-  then failwith_ex "FStar.String.get: out of bounds"
+  then FStar.All.failwith "FStar.String.get: out of bounds"
   else c_index s i
 
 let concat_length _ _ = admit ()
