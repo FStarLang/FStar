@@ -18,7 +18,7 @@ FSTAR_ROOT ?= ../../..
 FSTAR_FILES := CustardPlugin.fst CustardPluginAux.fst CustardRulePlugin.fst \
                CustardRuleTest.fst CustardRuleArity.fst CustardRuleBare.fst \
                CustardRuleOverArity.fst CustardNormSteps.fst \
-               CustardFunctorLink.fst
+               CustardFunctorLink.fst CustardEmbA.fst CustardEmbB.fst
 
 # CustardRulePlugin registers a rule, so its *source* names FStarC.Custard's
 # own types: unlike an ordinary plugin, this one has to be checked with the
@@ -287,3 +287,53 @@ $(FL_DIR)/loaded: $(FL_DIR)/CustardFunctorLink.cmxs
 	touch $@
 
 all: $(FL_DIR)/loaded
+
+# ------------------------------------------------- embeddings across units
+
+# Issue 4689, section 13.7.  CustardEmbA generates the embedding of its
+# [@@plugin] type and exports it; CustardEmbB, linked against it, must use
+# that one rather than generate a second, and [plugin_embedding] names it
+# from F*.  The test checks that both native steps run.
+EMB_DIR := $(OUTPUT_DIR)/emb
+EMB_A   := CustardEmbAUnit
+EMB_B   := CustardEmbBUnit
+EMB_FLAGS = --codegen OCaml --custard_split --odir $(EMB_DIR) \
+	    --custard_link $(FSTAR_LIBDIR)/fstarc/fstarc.cui
+
+$(EMB_DIR)/CustardEmbA.cmxs: $(CACHE_DIR)/CustardEmbA.fst.checked
+	$(call msg, "EXTRACT SPLIT", CustardEmbA)
+	$(Q)rm -rf $(EMB_DIR) && mkdir -p $(EMB_DIR)
+	$(Q)$(FSTAR) $(EMB_FLAGS) --custard_unit $(EMB_A) \
+	  --custard_entry CustardEmbA --custard_entry_module CustardEmbA \
+	  CustardEmbA.fst
+	$(Q)cd $(EMB_DIR) && $(FSTAR_EXE) --ocamlenv ocamlfind ocamlopt -shared \
+	  -package fstar.compiler -o CustardEmbA.cmxs \
+	  $$(ls $(EMB_A)_*.ml 2>/dev/null) CustardEmbA.ml
+
+$(EMB_DIR)/CustardEmbB.cmxs: $(EMB_DIR)/CustardEmbA.cmxs $(CACHE_DIR)/CustardEmbB.fst.checked
+	$(call msg, "EXTRACT SPLIT", CustardEmbB)
+	$(Q)$(FSTAR) $(EMB_FLAGS) --custard_unit $(EMB_B) \
+	  --custard_link $(EMB_DIR)/$(EMB_A).cui \
+	  --custard_entry CustardEmbB --custard_entry_module CustardEmbB \
+	  CustardEmbB.fst
+	$(Q)grep -q 'e_color' $(EMB_DIR)/CustardEmbA.ml \
+	  || { echo "ERROR: CustardEmbA did not generate its embedding"; exit 1; }
+	$(Q)grep -q 'knot_e_color' $(EMB_DIR)/CustardEmbB.ml $$(ls $(EMB_DIR)/$(EMB_B)_*.ml 2>/dev/null) \
+	  && { echo "ERROR: CustardEmbB generated a second embedding"; exit 1; } || true
+	$(Q)grep -q '^  CustardEmbA.e_color$$' $(EMB_DIR)/CustardEmbB.ml \
+	  || { echo "ERROR: plugin_embedding did not name CustardEmbA.e_color"; exit 1; }
+	$(Q)cd $(EMB_DIR) && $(FSTAR_EXE) --ocamlenv ocamlfind ocamlopt -shared \
+	  -package fstar.compiler -o CustardEmbB.cmxs \
+	  $$(ls $(EMB_B)_*.ml 2>/dev/null) CustardEmbB.ml
+
+$(EMB_DIR)/test: $(EMB_DIR)/CustardEmbB.cmxs CustardEmbTest.fst
+	$(call msg, "CHECK NATIVE", CustardEmbTest)
+	$(Q)$(FSTAR) --load_cmxs $(abspath $(EMB_DIR))/CustardEmbA \
+	  --load_cmxs $(abspath $(EMB_DIR))/CustardEmbB \
+	  CustardEmbTest.fst > $(EMB_DIR)/test.log 2>&1 \
+	  || { echo "ERROR: the native check failed"; cat $(EMB_DIR)/test.log; exit 1; }
+	$(Q)grep -qF 'CustardEmbB: CustardEmbA.Red :: CustardEmbA.Blue 3 :: [] ok' $(EMB_DIR)/test.log \
+	  || { echo "ERROR: plugin_embedding did not embed"; cat $(EMB_DIR)/test.log; exit 1; }
+	touch $@
+
+all: $(EMB_DIR)/test
