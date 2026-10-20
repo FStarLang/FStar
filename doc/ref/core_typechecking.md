@@ -88,7 +88,7 @@ The driver for `let` is `Tc.tc_sig_let`, together with
   the user's annotation, not the inferred type, as `topt`.
 * **Recursive `let`s.** These use `Core.check_top_level_letrec`. The
   recursive names are replaced by fresh variables. Their types are refined
-  for termination using `TcTerm.guard_letrecs`, and the nest is checked like
+  for termination using `Termination.guard_letrecs`, and the nest is checked like
   an inner `let rec`.
 * **Failures.** Only Core decides whether a definition is accepted, and
   Core reports why it is not.
@@ -213,7 +213,7 @@ requests: in `norm [nbe; primops] ("a" ^ "b") == "ab"`, the simplifier
 reduces the argument's primitive application first, whereas processing the
 request itself, with only `primops`, does not unfold `(^)`.
 
-Core also simplifies (`Rel.simplify_vc`) the guard of a refinement of
+Core also simplifies (`VCUtil.simplify_vc`) the guard of a refinement of
 `unit` it witnesses, e.g. `()` against `squash p`. This head-unfolds
 `unfold` abbreviations, e.g. `normal p` into the `norm [...] p` request it
 stands for, and a tactic that processes the VC may depend on it
@@ -313,9 +313,7 @@ logical guard. The contract is stated above `Rel.try_teq` in `Rel.fsti`:
   and `check_has_type` use `try_teq` / `try_subtype`.
 
 So a client whose terms are not re-checked by Core must use the `_nosmt`
-functions. These clients are Core itself (`Rel.teq_nosmt_force`, wrapped so
-that a raised error is just a failed comparison), `TcInductive`,
-`Positivity`, the tactic interpreter, and Pulse's `RuntimeUtils`.
+functions. These clients are `TcInductive`, `Positivity`, the tactic interpreter, and Pulse's `RuntimeUtils`.
 
 Tactics that unify with guards allowed (`V2.Basic.__do_unify_wflags`) get
 the obligation from Core: once Rel has solved the uvars, outside lax mode,
@@ -466,13 +464,16 @@ Core used to serve tactics only (`core_check`) and only knew `Tot` and
   literal's token on its residual type, so Core unrefines these types in
   its guards, unless the body is ascribed a refinement type
   (`bug-reports/closed/Phase2CoreAscribedResidual`).
-* **Unification inside Core.** Core uses `Rel.teq_nosmt_force`, wrapped so
-  that a raised error (e.g. an unsatisfiable universe constraint) is a
-  failed comparison.
-* **Elaboration inside Core.** Core occasionally elaborates a term with
-  TcTerm, e.g. the `<<`-refined types of a `let rec`. These elaborations
-  run with `admit`: their environment lacks Core's hypotheses, and the
-  types involved are already known to be well-formed.
+* **No unification or elaboration inside Core.** Core does not depend on
+  Rel, TcTerm or TcUtil (see "Dependencies" in the header of
+  `FStarC.TypeChecker.Core`). It equates universes with
+  `UnivEq.teq_univs`, Rel's universe solver without the worklist; an
+  unsatisfiable universe constraint is a failed comparison. The
+  `<<`-refined types of a `let rec` are built by
+  `Termination.guard_letrecs` with fresh universe variables for `precedes`
+  and `===`, which Core solves when it checks those types. The utilities
+  it shares with the elaborator are in `VCUtil`, `UniverseOf`,
+  `Termination` and `CommonBase`.
 
 ## 5. Guards and facts
 
