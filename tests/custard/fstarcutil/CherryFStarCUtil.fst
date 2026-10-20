@@ -43,10 +43,9 @@ let main () : ML FStar.UInt32.t =
   let e = check (U.safe_int_of_string "" = None && U.safe_int_of_string "+12" = Some 12
                  && U.safe_int_of_string "z" = None && U.ensure_decimal "0xff" = "255") 6 e in
   (* Floats and conversions. *)
-  let f1 = fails (fun () -> U.float_of_string "junk") in
   let e = check (U.string_of_float (U.float_of_string "1.5") = "1.5"
                  && U.string_of_float (U.float_of_int64 3L) = "3."
-                 && U.string_of_float (U.float_of_string "-0") = "-0." && f1) 7 e in
+                 && U.string_of_float (U.float_of_string "-0") = "-0.") 7 e in
   let e = check (U.hex_string_of_byte 10uy = "0a" && U.hex_string_of_byte 255uy = "ff"
                  && U.int32_of_int 0x80000000 = (-2147483648l) && U.int_of_char 'A' = 65
                  && U.char_of_int 0xe9 = '\u00e9' && U.uint16_of_int 65537 = 1us) 8 e in
@@ -106,10 +105,9 @@ let main () : ML FStar.UInt32.t =
   let v = U.finally (fun () -> fin := !fin + 10) (fun () -> 7) in
   let e = check (m = "Failure(\"boom\")" && r = "x" && f1 && v = 7 && !fin = 11) 16 e in
   (* Lists and arrays. *)
-  let f1 = fails (fun () -> U.first_N 5 [1]) in
   let f2 = fails (fun () -> U.array_index (IA.of_list [1]) 1) in
   let e = check (U.first_N 2 [1; 2; 3] = ([1; 2], [3]) && U.prefix [1; 2; 3] = ([1; 2], 3)
-                 && U.nth_tail 2 [1; 2; 3] = [3] && f1 && f2
+                 && U.nth_tail 2 [1; 2; 3] = [3] && f2
                  && U.print_array string_of_int (IA.of_list [1; 2]) = "[| 1; 2 |]"
                  && U.array_length (IA.of_list [1; 2]) = 2) 17 e in
   let l = [1; 2] in

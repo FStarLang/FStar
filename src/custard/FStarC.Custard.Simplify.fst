@@ -4050,7 +4050,11 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
     forwarders := forwarder_table prog; reduce_decls prog) prog in
   (* Before [depat]: dropping a branch can leave a match with a single
      irrefutable one, which is exactly what [depat] removes entirely. *)
-  let prog = pass "prune" prune_decls prog in
+  (* Not under Cherry, whose debug mode checks that control does not reach
+     an [EUnreachable] after all (cherry.md, "Debug mode"); without it, the C
+     compiler is told the branch is dead, and drops it as this pass would. *)
+  let prog = if Options.custard_cherry () then prog
+             else pass "prune" prune_decls prog in
   let prog = pass "depat" depat_decls prog in
   (* After [depat]: a field of the record being inlined is read with an
      [EProj] only once [depat] has run, and that is what tells the pass a

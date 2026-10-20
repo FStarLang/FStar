@@ -30,8 +30,6 @@ module FStarC.Util
    - [hashcode] is FNV-1a, [trace_of_exn] and [stack_dump] are empty, and
      [physical_equality] compares the bits of its arguments, so it may say
      [false] for two copies of the same unboxed value;
-   - [string_of_bytes], [bytes_of_string], [string_of_unicode] and
-     [unicode_of_string] are not supported;
    - [waitpid] reports a signal by its POSIX number. *)
 
 open FStarC.Effect
@@ -50,10 +48,12 @@ module I64 = FStar.Int64
 module F = FStar.Float64
 module IA = FStar.ImmutableArray
 
-(* Raises [Failure msg], like [failwith]: Cherry rewrites it so (cherry.md,
-   "Exceptions").  It is total only so that the partial functions the
-   interface declares total can fail. *)
-private assume val failwith_tot : #a:Type -> string -> a
+(* The total functions are not defined on every input ([float_of_string] on
+   a malformed float, [prefix] on an empty list, ...).  Outside their domain
+   they have no case, or an unreachable one, which F* accepts because the
+   compiler is not verified; Cherry's debug mode reports such a call
+   (cherry.md, "Debug mode"). *)
+#set-options "--admit_smt_queries true"
 
 private let unsupported (#a:Type) (what:string) : ML a =
   failwith ("FStarC.Util." ^ what ^ " is not supported by the Cherry backend")
@@ -627,7 +627,7 @@ let float_of_int64 x = float_of_float64 (F.of_int x)
 
 let float_of_string s =
   if c_float_of_string_ok s then c_float_of_string s
-  else failwith_tot "float_of_string"
+  else false_elim ()
 
 let int_of_int32 x = I32.v x
 
@@ -646,10 +646,6 @@ private let hex_digit (n:int) : string =
 let hex_string_of_byte b =
   let n = U8.v b in
   hex_digit (n / 16) ^ hex_digit (n % 16)
-
-let string_of_bytes _ = failwith_tot "FStarC.Util.string_of_bytes is not supported by the Cherry backend"
-
-let bytes_of_string _ = failwith_tot "FStarC.Util.bytes_of_string is not supported by the Cherry backend"
 
 let base64_encode s = c_base64_encode s
 
@@ -797,7 +793,6 @@ let first_N #a n l =
     if i = n then List.Tot.rev acc, l
     else match l with
       | h :: tl -> aux (h :: acc) (i + 1) tl
-      | [] -> failwith_tot "firstN"
   in
   aux [] 0 l
 
@@ -805,7 +800,6 @@ let rec nth_tail n l =
   if n = 0 then l
   else match l with
     | _ :: tl -> nth_tail (n - 1) tl
-    | [] -> failwith_tot "tl"
 
 let prefix_until #a f l =
   let rec aux (prefix l:list a) : ML (option (list a & a & list a)) =
@@ -818,11 +812,6 @@ let prefix_until #a f l =
 let prefix l =
   match List.Tot.rev l with
   | hd :: tl -> List.Tot.rev tl, hd
-  | [] -> failwith_tot "impossible"
-
-let string_of_unicode _ = failwith_tot "FStarC.Util.string_of_unicode is not supported by the Cherry backend"
-
-let unicode_of_string _ = failwith_tot "FStarC.Util.unicode_of_string is not supported by the Cherry backend"
 
 let incr r = r := !r + 1
 
@@ -957,7 +946,7 @@ let touch_file fname = c_touch_file fname; check ()
 let ensure_decimal s =
   match parse_int s with
   | Some k -> string_of_int k
-  | None -> failwith_tot "Z.of_string: invalid digit"
+  | None -> false_elim ()
 
 (* Milliseconds since [t], a [cpu_time] *)
 private let ms_since (t:float) : ML float =

@@ -22,9 +22,6 @@ open FStarC.Effect
 open FStarC.Json
 module U64 = FStar.UInt64
 
-(* Raises [Failure msg] (cherry.md, "Exceptions"). *)
-private assume val failwith_tot : #a:Type -> string -> a
-
 (* In ulib/c/cherry.c; channel 1 is stdout and 2 is stderr. *)
 [@@custard_extern "cherry_isatty"]
 private assume val c_isatty : U64.t -> bool
@@ -81,17 +78,20 @@ let rec interleave (frags args:list string) : list string =
   | frag :: frags, arg :: args -> arg :: frag :: interleave frags args
   | _ -> []
 
+(* A format string must be given as many arguments as it has holes; that is
+   not checked, as the compiler is not verified, but Cherry's debug mode
+   reports a call that gives a different number (cherry.md, "Debug mode"),
+   where OCaml raises Failure. *)
+#push-options "--admit_smt_queries true"
 let fmt spec args =
   let frags = if spec = "" then [""] else FStarC.String.split_on_string spec "%s" in
   match frags with
   | frag :: frags' ->
     if List.Tot.length frags' = List.Tot.length args
     then FStarC.String.concat "" (frag :: interleave frags' args)
-    else failwith_tot ("Not enough arguments to format string " ^ spec
-               ^ " : expected " ^ string_of_int (List.Tot.length frags)
-               ^ " got [" ^ FStarC.String.concat ", " args
-               ^ "] frags are [" ^ FStarC.String.concat ", " frags ^ "]")
+    else false_elim ()
   | [] -> spec
+#pop-options
 
 let fmt1 f a = fmt f [a]
 let fmt2 f a b = fmt f [a;b]

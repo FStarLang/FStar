@@ -22,16 +22,19 @@ module FStarC.List
 
 open FStarC.Effect
 
-(* Raises [Failure msg], like [failwith]: Cherry rewrites it so (cherry.md,
-   "Exceptions").  It is total only so that the partial functions the
-   interface declares total can fail as the OCaml implementation does. *)
-private assume val failwith_tot : #a:Type -> string -> a
+(* The partial functions the interface declares total ([hd], [nth], [zip],
+   ...) have no case for the inputs they are not defined on: the match is
+   incomplete, which F* accepts only because the queries below are admitted,
+   as they are when the compiler is built.  Cherry's debug mode reports such
+   a call (cherry.md, "Debug mode"); a release build assumes it does not
+   happen. *)
+#set-options "--admit_smt_queries true"
 
 let isEmpty l = match l with [] -> true | _ -> false
 
 let singleton x = [x]
 
-let hd l = match l with x :: _ -> x | [] -> failwith_tot "hd"
+let hd l = match l with x :: _ -> x
 
 private let rec length_acc (#a:Type) (l:list a) (n:nat) : Tot nat (decreases l) =
   match l with [] -> n | _ :: t -> length_acc t (n + 1)
@@ -40,8 +43,7 @@ let length l = length_acc l 0
 
 let rec nth l i =
   match l with
-  | [] -> failwith_tot "nth"
-  | x :: t -> if i < 0 then failwith_tot "nth" else if i = 0 then x else nth t (i - 1)
+  | x :: t -> if i = 0 then x else nth t (i - 1)
 
 let rec rev_acc l acc = match l with [] -> acc | x :: t -> rev_acc t (x :: acc)
 
@@ -125,12 +127,10 @@ let rev_map_onto f l acc = fold_left (fun acc x -> f x :: acc) acc l
 
 let init l =
   match rev l with
-  | [] -> failwith_tot "init: empty list"
   | _ :: t -> rev t
 
 let rec last l =
   match l with
-  | [] -> failwith_tot "last"
   | [x] -> x
   | _ :: t -> last t
 
@@ -188,11 +188,9 @@ private let rec split_at_acc (#a:Type) (n:int) (l:list a) (acc:list a)
   : Tot (list a & list a) (decreases l) =
   if n = 0 then (rev acc, l)
   else match l with
-       | [] -> failwith_tot "splitAt: index past end of list"
        | x :: t -> split_at_acc (n - 1) t (x :: acc)
 
-let splitAt n l =
-  if n < 0 then failwith_tot "splitAt: negative index" else split_at_acc n l []
+let splitAt n l = split_at_acc n l []
 
 private let rec unzip_acc (#a #b:Type) (l:list (a & b)) (xs:list a) (ys:list b)
   : Tot (list a & list b) (decreases l) =
@@ -215,7 +213,6 @@ private let rec zip_acc (#a #b:Type) (l1:list a) (l2:list b) (acc:list (a & b))
   match l1, l2 with
   | [], [] -> rev acc
   | x :: t1, y :: t2 -> zip_acc t1 t2 ((x, y) :: acc)
-  | _, _ -> failwith_tot "zip: list lengths differ"
 
 let zip l1 l2 = zip_acc l1 l2 []
 
@@ -224,7 +221,6 @@ private let rec zip3_acc (#a #b #c:Type) (l1:list a) (l2:list b) (l3:list c) (ac
   match l1, l2, l3 with
   | [], [], [] -> rev acc
   | x :: t1, y :: t2, z :: t3 -> zip3_acc t1 t2 t3 ((x, y, z) :: acc)
-  | _, _, _ -> failwith_tot "zip3: list lengths differ"
 
 let zip3 l1 l2 l3 = zip3_acc l1 l2 l3 []
 
@@ -248,9 +244,9 @@ private let rec sort_n (#a:Type) (f:a -> a -> ML int) (n:int) (l:list a) : ML (l
 
 let sortWith f l = sort_n f (length l) l
 
-let tail l = match l with _ :: t -> t | [] -> failwith_tot "tl"
+let tail l = match l with _ :: t -> t
 
-let tl l = match l with _ :: t -> t | [] -> failwith_tot "tl"
+let tl l = match l with _ :: t -> t
 
 let rev_append l1 l2 = rev_acc l1 l2
 
@@ -284,7 +280,6 @@ let unique l = unique_acc l []
 
 private let rec index_from (#a:eqtype) (f:a -> bool) (l:list a) (i:int) : Tot int (decreases l) =
   match l with
-  | [] -> failwith_tot "index: not found"
   | x :: t -> if f x then i else index_from f t (i + 1)
 
 let index f l = index_from f l 0

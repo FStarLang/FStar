@@ -45,6 +45,12 @@ void cherry_any_mismatch(const cherry_rtti *have, const char *want) {
   abort();
 }
 
+void cherry_debug_fail(const char *what, const char *file, int line) {
+  fflush(stdout);
+  fprintf(stderr, "%s:%d: Cherry debug check failed: %s\n", file, line, what);
+  abort();
+}
+
 void cherry_exn_uncaught(void) {
   cherry_exn e = cherry_exn_take();
   fflush(stdout);

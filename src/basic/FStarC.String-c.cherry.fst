@@ -26,11 +26,6 @@ module I = FStarC.SmallInt
 module U32 = FStar.UInt32
 module S = FStar.String
 
-(* Raises [Failure msg], like [failwith]: Cherry rewrites it so (cherry.md,
-   "Exceptions").  It is total only so that the partial functions the
-   interface declares total can fail. *)
-private assume val failwith_tot : #a:Type -> string -> a
-
 (* In ulib/c/cherry.c. *)
 [@@custard_extern "cherry_str_size64"]
 private assume val size64 : string -> I.t
@@ -164,10 +159,13 @@ let uppercase s = uppercase_ascii s
 let escaped s = escaped_bytes s
 
 (* A single byte, as OCaml's [Char.chr]: a code point from 128 to 255 makes
-   a string that is not UTF-8. *)
+   a string that is not UTF-8.  One above 255 is outside its domain (OCaml
+   raises Invalid_argument); Cherry's debug mode reports it. *)
+#push-options "--admit_smt_queries true"
 let string_of_char c =
   let n = U32.v (u32_of_char c) in
-  if n < 256 then of_byte (u32_of_char c) else failwith_tot "Char.chr"
+  if n < 256 then of_byte (u32_of_char c) else false_elim ()
+#pop-options
 
 let substring s i j =
   if i < 0 || j < 0 || i + j > S.length s then failwith "String.substring: index out of bounds"

@@ -1,7 +1,9 @@
 module CherryFStarCList
 
-(* FStarC.List-c.cherry.fst: every function, the failures of the partial
-   ones as catchable [Failure]s, and long lists in a small stack. *)
+(* FStarC.List-c.cherry.fst: every function, the failures of the ML ones as
+   catchable [Failure]s, and long lists in a small stack.  The total partial
+   functions are not called outside their domain: that is undefined (and
+   caught by debug mode, tests/custard/debug). *)
 open FStarC.Effect
 module L = FStarC.List
 
@@ -66,17 +68,8 @@ let main () : ML FStar.UInt32.t =
                  && L.span (fun x -> x < 3) [1; 2; 3; 1] = ([1; 2], [3; 1])) 25 e in
   let e = check (L.deduplicate (fun x y -> x = y) [1; 2; 1] = [2; 1]
                  && L.fold_left_map (fun s x -> (s + x, s)) 0 [1; 2; 3] = (6, [0; 1; 3])) 26 e in
-  (* The partial functions raise Failure, and the length checks come after
-     the elements before the mismatch. *)
-  let f1 = fails (fun () -> L.hd ([] <: list int)) in
-  let f2 = fails (fun () -> L.nth l 4) in
-  let f3 = fails (fun () -> L.nth l (-1)) in
-  let f4 = fails (fun () -> L.zip [1] ([] <: list int)) in
-  let f5 = fails (fun () -> L.splitAt 5 l) in
-  let f6 = fails (fun () -> L.tl ([] <: list int)) in
-  let f7 = fails (fun () -> L.index (fun x -> x > 9) l) in
-  let f8 = fails (fun () -> L.init ([] <: list int)) in
-  let e = check (f1 && f2 && f3 && f4 && f5 && f6 && f7 && f8) 27 e in
+  (* The ML functions raise Failure, and the length checks come after the
+     elements before the mismatch. *)
   let seen = alloc 0 in
   let f9 = fails (fun () -> L.map2 (fun x _ -> seen := !seen + x) [1; 2] [0]) in
   let f10 = fails (fun () -> L.fold_right2 (fun x _ a -> seen := !seen + x; a) [1; 2] [0] ()) in
