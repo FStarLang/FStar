@@ -3831,6 +3831,38 @@ $(FSTARCBASIC_DIR)/CherryFStarCBasic.chran: fstarcbasic/CherryFStarCBasic.fst \
 
 all: $(FSTARCBASIC_DIR)/CherryFStarCBasic.chran
 
+# FStarC.Json-c.cherry.fst, against what Yojson.Basic gives for the same inputs.
+FSTARCJSON_DIR = $(CHERRY_DIR)/fstarcjson
+FSTARCJSON_ABS = $(abspath $(FSTARCJSON_DIR))
+FSTARCJSON_SRCS = $(FSTARCSTRING_SRCS) \
+  $(HASH_SRC)/FStarC.Json.fsti $(HASH_SRC)/FStarC.Json-c.cherry.fst
+$(FSTARCJSON_DIR)/CherryFStarCJson.chran: fstarcjson/CherryFStarCJson.fst \
+    fstarcjson/CherryFStarCJson.expected $(FSTARCJSON_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCJson)
+	$(Q)rm -rf $(FSTARCJSON_ABS) && mkdir -p $(FSTARCJSON_ABS)/src
+	$(Q)ln -s $(FSTARCJSON_SRCS) $(FSTARCJSON_ABS)/src/
+	$(Q)cd fstarcjson && for f in $(addprefix $(FSTARCJSON_ABS)/src/,$(notdir $(FSTARCJSON_SRCS))) \
+	    CherryFStarCJson.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCJSON_ABS)/src --cache_dir $(FSTARCJSON_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcjson && $(FSTAR_EXE) --include $(FSTARCJSON_ABS)/src --cache_dir $(FSTARCJSON_ABS) \
+	  --already_cached '*' --odir $(FSTARCJSON_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCJson.main \
+	  CherryFStarCJson.fst -o $(FSTARCJSON_ABS)/CherryFStarCJson.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCJson)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCJSON_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCJSON_ABS)/CherryFStarCJson.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCJSON_ABS)/CherryFStarCJson.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCJson)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCJSON_ABS)/CherryFStarCJson.chexe \
+	  > $(FSTARCJSON_ABS)/stdout.txt
+	$(Q)diff -u fstarcjson/CherryFStarCJson.expected $(FSTARCJSON_ABS)/stdout.txt
+	$(Q)touch $@
+
+all: $(FSTARCJSON_DIR)/CherryFStarCJson.chran
+
 ARRAY_DIR = $(CHERRY_DIR)/array
 ARRAY_ABS = $(abspath $(ARRAY_DIR))
 $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
