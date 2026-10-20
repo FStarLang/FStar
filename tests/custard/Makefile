@@ -2896,41 +2896,42 @@ C_TESTS    += FragCfg
 CGREP_FragCfg += "fc_mma("
 CNOGREP_FragCfg += "FragCfg_frag"
 
-# Section 51.3.  A prologue that follows the call graph.  Three callees, one
-# per reachability class: [only] is kernel-only and gets the exclusive
-# string, [both] is reached from the kernel and from host code and gets the
-# shared one, [host_only] is reached from neither and must be untouched.  The
-# strings are not CUDA's on purpose -- Custard does not read them, and a test
-# spelling __device__ would be checking a spelling.
+# Section 51.3.  A prologue that follows the call graph, and section 51.5:
+# the callees are copied once per distinct prologue, and only the copies are
+# decorated.  [only] and [deep] are reached from the two seeds alone, so the
+# originals go; [both] is reached from host code too, so its original stays,
+# undecorated; [host_only] is reached from neither seed and [opt_out] has a
+# prologue of its own, so neither is copied.  The strings are not CUDA's on
+# purpose -- Custard does not read them, and a test spelling __device__ would
+# be checking a spelling.
 C_TESTS += DevClosure
-CGREP_DevClosure += "/*ENTRY*/" "/*EXCL*/" "/*SHARED*/"
+CGREP_DevClosure += "/*ENTRY*/" "/*EXCL*/" "/*target(avx2)*/" \
+                    "DevClosure_both(" "DevClosure_host_only("
+# An original that only the seeds called is gone; nothing else is copied.
+CNOGREP_DevClosure += "DevClosure_only(" "DevClosure_deep(" "DevClosure_down(" \
+                      "DevClosure_opt_out__" "DevClosure_host_only__"
 # Which function got which prologue is the whole test, and a prologue sits on
 # the line before the definition it decorates, so the assertions are on pairs
 # of lines rather than on lines.  CPAIR_<t> is `A@B', asserting that some A is
 # immediately followed by a B; CNOPAIR_<t> asserts that none is.
-CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only" \
-                      "/*SHARED*/@DevClosure_both" \
-                      "/*ENTRY*/@DevClosure_kernel"
-CNOPAIR_DevClosure += "/*SHARED*/@DevClosure_only" \
-                      "/*EXCL*/@DevClosure_both" \
+CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only__EXCL(" \
+                      "/*EXCL*/@DevClosure_deep__EXCL(" \
+                      "/*EXCL*/@DevClosure_both__EXCL(" \
+                      "/*target(avx2)*/@DevClosure_only__avx2(" \
+                      "/*target(avx2)*/@DevClosure_deep__avx2(" \
+                      "/*target(avx2)*/@DevClosure_both__avx2(" \
+                      "/*target(avx2)*/@DevClosure_down__avx2(" \
+                      "/*OPT_OUT*/@DevClosure_opt_out(" \
+                      "/*ENTRY*/@DevClosure_kernel("
+CNOPAIR_DevClosure += "/*EXCL*/@DevClosure_both(" \
+                      "/*target(avx2)*/@DevClosure_both(" \
                       "/*EXCL*/@DevClosure_host_only" \
-                      "/*SHARED*/@DevClosure_host_only" \
+                      "/*target(avx2)*/@DevClosure_host_only" \
                       "/*EXCL*/@static uint32_t DevClosure_host_g"
-# Section 53.2.  The fourth node type: a *global* in the device closure.  The
-# closure covers functions, and a global reached from device code used to get
-# nothing -- one node type over from the case that was tested.
-CPAIR_DevClosure   += "/*EXCL*/@static uint32_t DevClosure_gk"
-
-# Section 53.2.  The other half, which cannot be marked at all: a global that
-# device *and* host code read.  The shared string describes a function, and
-# applying it to a variable on CUDA compiles with a warning and is wrong at
-# runtime, so Custard refuses instead of guessing.
-REJECT_TESTS += DevGShare
-CODE_DevGShare := 383
-FLAGS_DevGShare := --codegen C --custard_monomorphize_types true
-EGREP_DevGShare += "the global DevGShare.g is reached from device code"
-EGREP_DevGShare += "__managed__"
-NOEGREP_DevGShare += "please report"
+# Section 51.5.  A global is neither copied nor marked, even when seeds
+# with different prologues both read it.
+CNOPAIR_DevClosure += "/*EXCL*/@static uint32_t DevClosure_gk" \
+                      "/*target(avx2)*/@static uint32_t DevClosure_gk"
 
 # Section 53.3.  One C symbol, two prototypes.  Warning 367's own advice used
 # to end here, and following it alone gives a file that does not compile; the
