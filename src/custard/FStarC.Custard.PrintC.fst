@@ -5555,6 +5555,11 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   (* Custard compiles standalone programs (section 4.4).  An entry point
      returning a machine integer is the process exit status, which is what a C
      [main] returns; anything else is run for its effect. *)
+  (* Cherry keeps the command line for [FStarC.Util.get_cmd_args]. *)
+  let main_head () : ML string =
+    if Options.custard_cherry ()
+    then "int main(int argc, char **argv) {\n  cherry_set_args(argc, argv);\n"
+    else "int main(void) {\n" in
   let mains = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
@@ -5568,7 +5573,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          headers included above. *)
       let calls = (cu.cu_inits |> List.map (fun i -> "  " ^ i ^ "();\n")) @
                   (match inits with [] -> [] | _ -> ["  " ^ init_name ^ "();\n"]) in
-      let pre = "int main(void) {\n" ^ String.concat "" calls in
+      let pre = main_head () ^ String.concat "" calls in
       (* Cherry: an exception the program let escape. *)
       if Options.custard_cherry () then
         let chk = "  if (cherry_exn_slot) cherry_exn_uncaught();\n" in
@@ -5591,7 +5596,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
                   (match inits with [] -> [] | _ -> ["  " ^ init_name ^ "();\n"]) in
       let chk = if Options.custard_cherry ()
                 then "  if (cherry_exn_slot) cherry_exn_uncaught();\n" else "" in
-      ["int main(void) {\n" ^ String.concat "" calls ^ chk ^ "  return 0;\n}\n"]
+      [main_head () ^ String.concat "" calls ^ chk ^ "  return 0;\n}\n"]
     | _ -> mains in
 
   (* Section 107.  After every body has been rendered, which is when the set

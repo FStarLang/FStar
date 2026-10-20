@@ -1560,6 +1560,7 @@ let cherry_source_modules : list (list string) = [
   ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
   ["FStarC"; "Timing"];
+  ["FStarC"; "Util"];
 ]
 
 let is_cherry_source_module (ns : list string) : ML bool =

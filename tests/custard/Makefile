@@ -3754,6 +3754,42 @@ $(FSTARCSTRING_DIR)/CherryFStarCString.chran: fstarcstring/CherryFStarCString.fs
 
 all: $(FSTARCSTRING_DIR)/CherryFStarCString.chran
 
+FSTARCUTIL_DIR = $(CHERRY_DIR)/fstarcutil
+FSTARCUTIL_ABS = $(abspath $(FSTARCUTIL_DIR))
+FSTARCUTIL_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst \
+  $(HASH_SRC)/FStarC.List.fsti $(HASH_SRC)/FStarC.List-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst \
+  $(HASH_SRC)/FStarC.BaseTypes.fsti $(HASH_SRC)/FStarC.BaseTypes-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Json.fsti $(HASH_SRC)/FStarC.Format.fsti \
+  $(HASH_SRC)/FStarC.Util.fsti $(HASH_SRC)/FStarC.Util-c.cherry.fst
+$(FSTARCUTIL_DIR)/CherryFStarCUtil.chran: fstarcutil/CherryFStarCUtil.fst \
+    $(FSTARCUTIL_SRCS) $(FSTAR_EXE) $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h
+	$(call msg, "CHERRY", CherryFStarCUtil)
+	$(Q)rm -rf $(FSTARCUTIL_ABS) && mkdir -p $(FSTARCUTIL_ABS)/src $(FSTARCUTIL_ABS)/tmp
+	$(Q)ln -s $(FSTARCUTIL_SRCS) $(FSTARCUTIL_ABS)/src/
+	$(Q)cd fstarcutil && for f in $(addprefix $(FSTARCUTIL_ABS)/src/,$(notdir $(FSTARCUTIL_SRCS))) \
+	    CherryFStarCUtil.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCUTIL_ABS)/src --cache_dir $(FSTARCUTIL_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcutil && $(FSTAR_EXE) --include $(FSTARCUTIL_ABS)/src --cache_dir $(FSTARCUTIL_ABS) \
+	  --already_cached '*' --odir $(FSTARCUTIL_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCUtil.main \
+	  CherryFStarCUtil.fst -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCUtil)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCUTIL_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCUTIL_ABS)/CherryFStarCUtil.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCUtil)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 CHERRY_UTIL_TMP=$(FSTARCUTIL_ABS)/tmp \
+	  $(FSTARCUTIL_ABS)/CherryFStarCUtil.chexe arg1
+	$(Q)touch $@
+
+all: $(FSTARCUTIL_DIR)/CherryFStarCUtil.chran
+
 ARRAY_DIR = $(CHERRY_DIR)/array
 ARRAY_ABS = $(abspath $(ARRAY_DIR))
 $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
