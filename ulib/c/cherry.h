@@ -313,10 +313,33 @@ cherry_string cherry_str_make(cherry_int l, uint32_t c);
 cherry_int cherry_str_byte_size(cherry_string s);
 uint32_t cherry_str_byte_at(cherry_string s, cherry_int off);
 cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int len);
+/* FStarC.String's byte-level access, with FStarC.SmallInt offsets (signed,
+   in a uint64_t): the size, the byte at an offset (-1 out of bounds), and the
+   bytes [i, j) clamped to the string. */
+uint64_t cherry_str_size64(cherry_string s);
+uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i);
+cherry_string cherry_str_slice64(cherry_string s, uint64_t i, uint64_t j);
+/* The one-byte string of [b] < 256, which need not be UTF-8. */
+cherry_string cherry_str_of_byte(uint32_t b);
+/* ASCII case mapping; other bytes are unchanged. */
+cherry_string cherry_str_lowercase_ascii(cherry_string s);
+cherry_string cherry_str_uppercase_ascii(cherry_string s);
+/* OCaml's String.escaped: \\, \", \n, \t, \r and \b, other bytes outside
+   printable ASCII as \ddd (decimal). */
+cherry_string cherry_str_escaped(cherry_string s);
 
 /* FStar.Char: a char is its code point. */
 static inline uint32_t cherry_u32_of_char(uint32_t c) { return c; }
 static inline uint32_t cherry_char_of_u32(uint32_t c) { return c; }
+static inline cherry_int cherry_int_of_char(uint32_t c) { return cherry_int_of_i64(c); }
+static inline uint32_t cherry_char_of_int(cherry_int i) { return (uint32_t)cherry_int_to_i64(i); }
+/* As OCaml's: only the ASCII letters have a case. */
+static inline uint32_t cherry_char_lowercase(uint32_t c) {
+  return c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c;
+}
+static inline uint32_t cherry_char_uppercase(uint32_t c) {
+  return c >= 'a' && c <= 'z' ? c - ('a' - 'A') : c;
+}
 cherry_string cherry_string_of_int(cherry_int a);
 cherry_string cherry_string_of_bool(bool b);
 void cherry_print_string(cherry_string s);
@@ -429,6 +452,10 @@ static inline void cherry_exn_mark(cherry_exn e, int mode) {
 
 /* An exception nothing caught: reported, and the process exits. */
 void cherry_exn_uncaught(void);
+
+/* FStarC.Effect.exit and FStar.All.exit: flushes stdout and stderr and
+   ends the process with status [n]. */
+void cherry_exit(cherry_int n);
 
 /* ------------------------------------------------------------------------
    The any type (cherry.md, "The any type"): [FStar.Dyn.dyn].  A word and
@@ -560,5 +587,68 @@ static inline void cherry_ref_unlock(cherry_ref r) {
 #ifdef __cplusplus
 }
 #endif
+
+/* ------------------------------------------------------------------------
+   The operating system, for FStarC.Util-c.cherry.fst (cherry.c). */
+void cherry_set_args(int argc, char **argv);
+cherry_int cherry_argc(void);
+cherry_string cherry_argv(cherry_int i);
+cherry_string cherry_io_error(void);
+uint64_t cherry_chan_open(cherry_string path, uint32_t mode);
+void cherry_chan_close(uint64_t h);
+void cherry_chan_close_fd(uint64_t h);
+void cherry_chan_flush(uint64_t h);
+void cherry_chan_output(uint64_t h, cherry_string s);
+cherry_string cherry_chan_input_line(uint64_t h);
+bool cherry_chan_eof(uint64_t h);
+cherry_string cherry_chan_read(uint64_t h, uint64_t max);
+cherry_string cherry_chan_read_nonblock(uint64_t h, uint64_t max);
+bool cherry_poll_stdin(double secs);
+cherry_int cherry_mkdir(cherry_string path);
+void cherry_set_umask(void);
+void cherry_remove_all_in_dir(cherry_string path);
+bool cherry_file_exists(cherry_string path);
+bool cherry_is_directory(cherry_string path);
+cherry_string cherry_dirname(cherry_string path);
+cherry_string cherry_basename(cherry_string path);
+void cherry_copy_file(cherry_string from, cherry_string to);
+void cherry_remove_file(cherry_string path);
+void cherry_rename_file(cherry_string from, cherry_string to);
+cherry_string cherry_file_get_contents(cherry_string path);
+void cherry_touch_file(cherry_string path);
+cherry_string cherry_getcwd(void);
+cherry_string cherry_readdir(cherry_string path);
+bool cherry_same_file(cherry_string a, cherry_string b);
+bool cherry_isatty(uint64_t h);
+cherry_string cherry_uname(void);
+cherry_string cherry_exec_name(void);
+bool cherry_has_env(cherry_string name);
+cherry_string cherry_getenv(cherry_string name);
+void cherry_setenv(cherry_string name, cherry_string value);
+void cherry_proc_arg(cherry_string a);
+cherry_int cherry_spawn(cherry_string prog, bool piped);
+uint64_t cherry_spawned_chan(uint32_t i);
+void cherry_kill(cherry_int pid);
+cherry_int cherry_waitpid(cherry_int pid);
+cherry_int cherry_system(cherry_string cmd);
+void cherry_set_sigint(uint32_t mode);
+void cherry_sleep_ms(cherry_int n);
+double cherry_cpu_time(void);
+cherry_string cherry_string_of_float(double d);
+bool cherry_float_of_string_ok(cherry_string s);
+double cherry_float_of_string(cherry_string s);
+double cherry_f64_of_i64(int64_t i);
+cherry_string cherry_exn_to_string(cherry_exn e);
+cherry_string cherry_base64_encode(cherry_string s);
+bool cherry_base64_ok(cherry_string s);
+cherry_string cherry_base64_decode(cherry_string s);
+cherry_string cherry_md5_hex(cherry_string s);
+cherry_string cherry_md5_hex_file(cherry_string path);
+
+/* FStarC.Util.physical_equality: whether the two values have the same bits,
+   which for boxed values means the same cell. */
+#define cherry_physical_equality(a, b) __extension__({ \
+    __typeof__(a) cherry_pe_x_ = (a); __typeof__(b) cherry_pe_y_ = (b); \
+    memcmp(&cherry_pe_x_, &cherry_pe_y_, sizeof cherry_pe_x_) == 0; })
 
 #endif

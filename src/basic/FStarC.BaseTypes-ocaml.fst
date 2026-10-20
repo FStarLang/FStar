@@ -20,15 +20,9 @@ private assume new type ocaml_float : Type0
 
 type float = ocaml_float
 type double = ocaml_float
-type byte = FStar.UInt8.t
-type int8 = FStar.Int8.t
-type uint8 = FStar.UInt8.t
-type int16 = FStar.Int16.t
-type uint16 = FStar.UInt16.t
-type int32 = FStar.Int32.t
-type uint32 = FStar.UInt32.t
-type int64 = FStar.Int64.t
-type uint64 = FStar.UInt64.t
 
 [@@custard_extern "(fun (x:float) -> x)"]
 let float64_of_float _ = admit ()
+
+[@@custard_extern "(fun (x:float) -> x)"]
+let float_of_float64 _ = admit ()

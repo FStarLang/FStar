@@ -604,6 +604,21 @@ type flag =
       copied nor decorated.
 
       Consumed by {!FStarC.Custard.Simplify}.  No backend sees one. *)
+  | ClosureGuard of string
+  (** Section 51.6.  A C preprocessor condition for this declaration *and*
+      for the copies {!ClosurePrologue} makes for it, which
+      {!FStarC.Custard.Simplify} turns into a {!Guard} on each.  The
+      declaration itself is included because it calls those copies.  Copies
+      are made once per (prologue, guard) pair. *)
+  | Guard of string
+  (** Section 51.6.  The direct-to-C backend wraps this declaration's
+      prototype, header declaration and definition in [#if s ... #endif].
+      Other backends ignore it. *)
+  | IfDef of string
+  (** Section 51.6.  On an external of type [bool]: its value is the C
+      preprocessor condition [s].  An [if] testing it compiles to
+      [#if s / #else / #endif]; no other use is allowed (error 398), and no
+      declaration is emitted for it.  Direct-to-C backend only. *)
   | CMacro
   (** Section 68.  A parameterless definition of constant value becomes a C
       preprocessor [#define] rather than a variable.

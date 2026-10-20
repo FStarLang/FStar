@@ -430,6 +430,13 @@ let types : ref (HashTable.t string dtype) = mk_ref (HashTable.create 0)
 let ctors : ref (HashTable.t string (dtype & list (string & cty))) = mk_ref (HashTable.create 0)
 (* external name -> the symbol to call it by *)
 let externs : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+(* Section 51.6.  [@@custard_c_ifdef] external -> its preprocessor condition *)
+let ifdefs : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+
+let ifdef_of_flags (fs:list flag) : ML (option string) =
+  match List.tryFind IfDef? fs with
+  | Some (IfDef c) -> Some c
+  | _ -> None
 
 (* Which parameters of a definition survive into C.  A [unit] parameter the
    body never mentions carries no information -- it is F*'s way of writing a
@@ -1099,8 +1106,15 @@ let ty (t:cty) : ML string = decl_of t ""
    The functions are collected while the bodies are printed and emitted
    afterwards, above them, behind prototypes -- the same arrangement the
    program's own definitions use, and for the same reason. *)
-let eq_queue : ref (list (string & dtype)) = mk_ref []
+let eq_queue : ref (list (string & dtype & string & list string)) = mk_ref []
 let eq_seen : ref (HashTable.t string string) = mk_ref (HashTable.create 20)
+
+(* Issue 4715.  The fields a generated comparison has descended through,
+   outermost first, so that a type with no comparison found deep inside a
+   record can say which record and which field led there.  A queued helper
+   carries the declaration and path that first asked for it, since it is
+   drained after the declaration that asked has been printed. *)
+let eq_path : ref (list string) = mk_ref []
 
 (* Section 116.  Every C name the program itself defines, as the file will
    spell it -- filled after {!build_renames}, since a rename changes what that
@@ -1129,18 +1143,41 @@ let rec mentions_any (t:cty) : ML bool =
   | TBuf c | TRef (_, c) | TInline c -> mentions_any c
   | _ -> false
 
+let with_eq_step (#a:Type) (step:string) (f:unit -> ML a) : ML a =
+  let saved = !eq_path in
+  eq_path := saved @ [step];
+  let r = f () in
+  eq_path := saved;
+  r
+
 let rec eq_target (t:cty) : ML (option dtype) =
   match t with
   | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t" }, _) ->
     reject "an equality test on an immutable array"
       ["Cherry does not compare immutable arrays yet."]
+  (* Issue 4715.  Under Cherry a [TAny] is a [dyn], a box around a value of
+     any type, and nothing knows how to compare two of them: C's [==] on the
+     box does not compile.  [dyn] is not an eqtype, so only --lax or an
+     assumed [hasEq] gets here. *)
+  | TAny when Options.custard_cherry () ->
+    E.raise_error0 E.Error_CustardNoCRepresentation
+      ([text ("Custard: an equality test at FStar.Dyn.dyn, in " ^ !current ^ ".");
+        text "Cherry cannot compare two dyn values: dyn is not an eqtype, \
+              so the test is only reachable under --lax or an assumed hasEq."]
+       @ (match !eq_path with
+          | [] -> []
+          | ps -> [text ("The dyn is reached by comparing " ^
+                         String.concat ", then " ps ^ ".")])
+       @ chain_msg ())
   | TApp (n, []) when None? (builtin_type n) ->
     (match find_type n with
      | Some d when List.existsb Extern? d.dt_flags -> None
      | Some d when is_boxed_ty t -> Some d
      | Some d ->
        (match d.dt_body with
-        | TAbbrev u -> eq_target u
+        | TAbbrev u ->
+          with_eq_step ("the abbreviation " ^ string_of_name d.dt_name)
+            (fun () -> eq_target u)
         | TRecord _ -> Some d
         | TVariant _ -> if is_enum d then None else Some d
         | TAbstract -> None)
@@ -1162,7 +1199,7 @@ let eq_fn_of (t:cty) : ML (option string) =
      | None ->
        let f = alloc_name (c_name d.dt_name ^ "__eq") in
        HashTable.add !eq_seen k f;
-       eq_queue := !eq_queue @ [(f, d)];
+       eq_queue := !eq_queue @ [(f, d, !current, !eq_path)];
        Some f)
 
 let eq_proto (f:string) (d:dtype) : ML string =
@@ -1171,24 +1208,30 @@ let eq_proto (f:string) (d:dtype) : ML string =
 
 let eq_def (f:string) (d:dtype) : ML string =
   let n = c_name d.dt_name in
+  let fn = string_of_name d.dt_name in
   let hd = "static bool " ^ f ^ "(" ^ n ^ " a, " ^ n ^ " b) {\n" in
-  (* Section 44.2 again: [const char *] compares by contents. *)
-  let cmp (a:string) (b:string) (t:cty) : ML string =
+  (* Section 44.2 again: [const char *] compares by contents.  [step] names
+     the field for a rejection further down (issue 4715). *)
+  let cmp (step:string) (a:string) (b:string) (t:cty) : ML string =
     match content_eq t a b with
     | Some c -> c
-    | None -> match eq_fn_of t with
+    | None -> match with_eq_step step (fun () -> eq_fn_of t) with
          | Some g -> g ^ "(" ^ a ^ ", " ^ b ^ ")"
          | None -> "(" ^ a ^ " == " ^ b ^ ")" in
-  let all (pa:string) (pb:string) (fs : list (string & cty)) : ML string =
+  let field (cn:option name) (g:string) : string =
+    "field " ^ g ^
+    (match cn with Some c -> " of constructor " ^ c.id | None -> "") ^
+    " of " ^ fn in
+  let all (cn:option name) (pa:string) (pb:string) (fs : list (string & cty)) : ML string =
     match fs with
     | [] -> "true"
     | _ -> String.concat " && " (fs |> List.map (fun (g, t) ->
-             cmp (pa ^ "." ^ c_var g) (pb ^ "." ^ c_var g) t)) in
+             cmp (field cn g) (pa ^ "." ^ c_var g) (pb ^ "." ^ c_var g) t)) in
   (* Nothing to read: the parameters are named, so they have to be used. *)
   let trivial = "  (void)a; (void)b;\n  return true;\n}\n" in
-  let direct (fs : list (string & cty)) : ML string =
+  let direct (cn:option name) (fs : list (string & cty)) : ML string =
     if Nil? fs then hd ^ trivial
-    else hd ^ "  return " ^ all "a" "b" fs ^ ";\n}\n" in
+    else hd ^ "  return " ^ all cn "a" "b" fs ^ ";\n}\n" in
   match d.dt_body with
   (* Cherry: a cell.  The same pointer, or the same scalar, is equal to
      itself; otherwise both have to be cells with the same tag.  The last
@@ -1212,14 +1255,15 @@ let eq_def (f:string) (d:dtype) : ML string =
        "        " ^ cell ^ " *x = (" ^ cell ^ " *)a, *y = (" ^ cell ^ " *)b;\n" ^
        (if Nil? others then ""
         else "        if (!(" ^ String.concat " && " (others |> List.map (fun (g, t) ->
-               cmp ("x->" ^ c_var g) ("y->" ^ c_var g) t)) ^ ")) return false;\n") ^
+               cmp (field (Some cn) g) ("x->" ^ c_var g) ("y->" ^ c_var g) t)) ^ ")) return false;\n") ^
        (match next with
         | f :: _ -> "        a = x->" ^ c_var f ^ "; b = y->" ^ c_var f ^ ";\n        break;\n"
         | [] -> "        return true;\n") ^
        "      }\n"])) ^
     "      default: return false;\n    }\n  }\n}\n"
-  | TRecord fs -> direct fs
-  | TVariant cs when single_ctor d -> direct (snd (List.hd cs))
+  | TRecord fs -> direct None fs
+  | TVariant cs when single_ctor d ->
+    let cn, fs = List.hd cs in direct (Some cn) fs
   | TVariant cs ->
     hd ^ "  if (a.tag != b.tag) return false;\n" ^
     "  switch (a.tag) {\n" ^
@@ -1227,9 +1271,10 @@ let eq_def (f:string) (d:dtype) : ML string =
       "    case " ^ c_tag cn ^ ": return " ^
       (if Nil? fs then "true"
        else if arm_flat fs
-       then cmp ("a.val." ^ arm_name cn) ("b.val." ^ arm_name cn)
+       then cmp (field (Some cn) (fst (List.hd fs)))
+                ("a.val." ^ arm_name cn) ("b.val." ^ arm_name cn)
                 (snd (List.hd fs))
-       else all ("a.val." ^ arm_name cn)
+       else all (Some cn) ("a.val." ^ arm_name cn)
                 ("b.val." ^ arm_name cn) fs) ^ ";\n")) ^
     (* Every tag is a case, so this is unreachable -- and C still wants a
        [return] on the path that falls out of the switch. *)
@@ -1245,10 +1290,15 @@ let eq_decls () : ML (list string & list string) =
     if fuel <= 0 then failwith "Custard: generated equalities do not settle"
     else match !eq_queue with
     | [] -> ()
-    | (f, d) :: rest ->
+    | (f, d, origin, path) :: rest ->
       eq_queue := rest;
       protos := !protos @ [eq_proto f d];
+      let saved_current, saved_path = !current, !eq_path in
+      current := origin;
+      eq_path := path;
       defs := !defs @ [eq_def f d];
+      current := saved_current;
+      eq_path := saved_path;
       go (fuel - 1) in
   go 10000;
   (!protos, !defs)
@@ -1855,6 +1905,7 @@ let reset_program_state () : ML unit =
   types := HashTable.create 0;
   ctors := HashTable.create 0;
   externs := HashTable.create 0;
+  ifdefs := HashTable.create 0;
   keeps := HashTable.create 0;
   void_fns := HashTable.create 0;
   arities := HashTable.create 0;
@@ -1870,6 +1921,7 @@ let reset_program_state () : ML unit =
   arrow_ids := [];
   void_ret := false;
   eq_queue := [];
+  eq_path := [];
   eq_seen := HashTable.create 20;
   string_lits := HashTable.create 20;
   string_lit_defs := [];
@@ -2100,6 +2152,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EQual (n, _) when Options.custard_cherry () && Some? (fn_sig n) ->
     clo_request (ReqPap (n, 0, e.ty));
     "((cherry_fn)&" ^ static_clo_name n ^ ")"
+  | EQual (n, _) when Some? (HashTable.try_find !ifdefs (string_of_name n)) ->
+    E.raise_error0 E.Error_CustardBadIfDef [
+      text ("Custard: " ^ string_of_name n ^ " is a [@@custard_c_ifdef] flag, \
+             used as a value in " ^ !current ^ ".");
+      text "Its value is a preprocessor condition, which C has only in [#if]: \
+            the only use allowed is as the whole condition of an [if].  Write \
+            [if flag then ... else ...] and compute anything else inside the \
+            branches." ]
   | EQual (n, _) ->
     (match HashTable.try_find !externs (string_of_name n) with
      | Some t -> t
@@ -2371,8 +2431,11 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     "(" ^ (if Neq? o.po_op then "!(" ^ c ^ ")" else c) ^ ")"
   (* Section 107.  The same question at every other type C cannot compare
      with [==]: a struct, which is what a record, a tuple and every inductive
-     with a payload are here. *)
-  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && Some? (eq_fn_of a.ty) ->
+     with a payload are here.  Only for the polymorphic [=]: an operator at a
+     machine type compares at that type whatever its operands' IR types say,
+     which under Cherry may be [TAny] (issue 4715). *)
+  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && None? o.po_ty &&
+                         Some? (eq_fn_of a.ty) ->
     let g = (match eq_fn_of a.ty with Some g -> g | None -> "") in
     "(" ^ (if Neq? o.po_op then "!" else "") ^
     g ^ "(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ "))"
@@ -2796,6 +2859,21 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     String.concat "" (tmps |> List.map (fun ((b:binder), t, _) ->
       ind ^ "  " ^ lookup_var b.b_name ^ " = " ^ t ^ ";\n")) ^
     ind ^ "  goto custard_tail;\n" ^ ind ^ "}\n"
+
+  (* Section 51.6.  A test of a [@@custard_c_ifdef] flag is a test the
+     preprocessor makes.  Each arm keeps a block of its own, as it would
+     under a C [if], so that a name it declares cannot collide with one the
+     code after it declares. *)
+  | EIf ({ e = EQual (n, _) }, t, f)
+      when Some? (HashTable.try_find !ifdefs (string_of_name n)) ->
+    let cond = Some?.v (HashTable.try_find !ifdefs (string_of_name n)) in
+    let arm (body:string) : string =
+      if body = "" then "" else ind ^ "{\n" ^ body ^ ind ^ "}\n" in
+    let tt = arm (emit ind' d t) in
+    let ft = arm (emit ind' d f) in
+    ind ^ "#if " ^ cond ^ "\n" ^ tt ^
+    (if ft = "" then "" else ind ^ "#else\n" ^ ft) ^
+    ind ^ "#endif\n"
 
   | EIf (c, t, f) ->
     let out = mk_ref "" in
@@ -4068,6 +4146,13 @@ let prologue_of (l:dlet) : ML string =
   String.concat "" (l.dl_flags |> List.collect
     (function Prologue s -> [s ^ "\n"] | _ -> []))
 
+(* Section 51.6.  [#if g ... #endif] around every place the declaration is
+   written: its prototype, its header declaration and its definition. *)
+let guarded (l:dlet) (s:string) : ML string =
+  match List.tryFind Guard? l.dl_flags with
+  | Some (Guard g) -> "#if " ^ g ^ "\n" ^ s ^ "#endif\n"
+  | _ -> s
+
 let epilogue_of (l:dlet) : ML string =
   String.concat "" (l.dl_flags |> List.collect
     (function Epilogue s -> [s ^ "\n"] | _ -> []))
@@ -5183,6 +5268,20 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          cs |> List.iter (fun (c, fs) -> HashTable.add ct (string_of_name c) (t, fs))
        | _ -> ())
     | DExternal x ->
+      (match ifdef_of_flags x.dx_flags with
+       | Some c ->
+         if not (match x.dx_ty with
+                 | TApp (n, []) -> Some "bool" = builtin_type n
+                 | _ -> false) then begin
+           current := string_of_name x.dx_name;
+           E.raise_error0 E.Error_CustardBadIfDef [
+             text ("Custard: " ^ string_of_name x.dx_name ^
+                   " is marked [@@custard_c_ifdef] but is not a [bool].");
+             text "The attribute says the value is a preprocessor condition, \
+                   which is true or false and nothing else." ]
+         end;
+         HashTable.add !ifdefs (string_of_name x.dx_name) c
+       | None -> ());
       HashTable.add xt (string_of_name x.dx_name)
         (match x.dx_target with
          (* Section 121.3.  [emitted_name] answers exactly this; the case
@@ -5316,6 +5415,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let exts_named = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
+    | DExternal x when Some? (ifdef_of_flags x.dx_flags) -> []
     | DExternal x ->
       (match extern_decl x with
        | Some s ->
@@ -5394,11 +5494,11 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     match d with
     (* A public one is in the header, which this source includes; repeating it
        here would be a redefinition. *)
-    | DLet l when is_macro l -> if is_public l then [] else [prologue_of l ^ macro_decl l]
-    | DLet l when Nil? l.dl_binders -> [prologue_of l ^ storage l ^ global_decl l]
+    | DLet l when is_macro l -> if is_public l then [] else [guarded l (prologue_of l ^ macro_decl l)]
+    | DLet l when Nil? l.dl_binders -> [guarded l (prologue_of l ^ storage l ^ global_decl l)]
     | DLet l when Cons? l.dl_binders ->
       if is_public l then []
-      else [prologue_of l ^ storage l ^ inline_of l ^ proto_of l]
+      else [guarded l (prologue_of l ^ storage l ^ inline_of l ^ proto_of l)]
     | _ -> []) in
 
   let pub_decls = p |> List.collect (fun d ->
@@ -5407,22 +5507,22 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     (* Section 68.  A [#define] and nothing else: it has no linkage, so an
        [extern] declaration beside it would declare a different object, and
        the macro would then rewrite that declaration's own name. *)
-    | DLet l when is_public l && is_macro l -> [prologue_of l ^ macro_decl l]
+    | DLet l when is_public l && is_macro l -> [guarded l (prologue_of l ^ macro_decl l)]
     | DLet l when is_public l && Nil? l.dl_binders ->
       current := string_of_name l.dl_name;
       (match array_extern l with
-       | Some d -> [prologue_of l ^ d]
+       | Some d -> [guarded l (prologue_of l ^ d)]
        | None ->
-         [prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"])
-    | DLet l when is_public l -> [prologue_of l ^ inline_of l ^ proto_of l]
+         [guarded l (prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n")])
+    | DLet l when is_public l -> [guarded l (prologue_of l ^ inline_of l ^ proto_of l)]
     | _ -> []) in
 
   let defs = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
     | DLet l when Nil? l.dl_binders -> []
-    | DLet l -> [comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
-                 let_decl l ^ epilogue_of l]
+    | DLet l -> [guarded l (comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
+                            let_decl l ^ epilogue_of l)]
     | _ -> []) in
 
   (* In declaration order, which the SCC pass has already made a topological
@@ -5455,6 +5555,11 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   (* Custard compiles standalone programs (section 4.4).  An entry point
      returning a machine integer is the process exit status, which is what a C
      [main] returns; anything else is run for its effect. *)
+  (* Cherry keeps the command line for [FStarC.Util.get_cmd_args]. *)
+  let main_head () : ML string =
+    if Options.custard_cherry ()
+    then "int main(int argc, char **argv) {\n  cherry_set_args(argc, argv);\n"
+    else "int main(void) {\n" in
   let mains = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
@@ -5468,7 +5573,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          headers included above. *)
       let calls = (cu.cu_inits |> List.map (fun i -> "  " ^ i ^ "();\n")) @
                   (match inits with [] -> [] | _ -> ["  " ^ init_name ^ "();\n"]) in
-      let pre = "int main(void) {\n" ^ String.concat "" calls in
+      let pre = main_head () ^ String.concat "" calls in
       (* Cherry: an exception the program let escape. *)
       if Options.custard_cherry () then
         let chk = "  if (cherry_exn_slot) cherry_exn_uncaught();\n" in
@@ -5491,7 +5596,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
                   (match inits with [] -> [] | _ -> ["  " ^ init_name ^ "();\n"]) in
       let chk = if Options.custard_cherry ()
                 then "  if (cherry_exn_slot) cherry_exn_uncaught();\n" else "" in
-      ["int main(void) {\n" ^ String.concat "" calls ^ chk ^ "  return 0;\n}\n"]
+      [main_head () ^ String.concat "" calls ^ chk ^ "  return 0;\n}\n"]
     | _ -> mains in
 
   (* Section 107.  After every body has been rendered, which is when the set

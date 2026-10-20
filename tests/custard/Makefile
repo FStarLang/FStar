@@ -2684,6 +2684,10 @@ NOGREP_FloatsML += "FStar_Float64"
 # FStar.Pprint: PPrint on OCaml, ulib/FStar.Pprint-c.cherry.fst on Cherry.
 CUSTARD_TESTS += PrettyDoc
 
+# FStar.String: Batteries' UTF-8 functions on OCaml,
+# ulib/FStar.String-c.cherry.fst on Cherry.
+CUSTARD_TESTS += StringLib
+
 # Section 38.  OCaml's float is binary64 and there is no binary32 to round to,
 # so a single-precision program is refused rather than computed at the wrong
 # precision.
@@ -2932,6 +2936,18 @@ CNOPAIR_DevClosure += "/*EXCL*/@DevClosure_both(" \
 # with different prologues both read it.
 CNOPAIR_DevClosure += "/*EXCL*/@static uint32_t DevClosure_gk" \
                       "/*target(avx2)*/@static uint32_t DevClosure_gk"
+
+# Section 51.6.  The seed and its copies are wrapped in [#if], the caller
+# tests a [custard_c_ifdef] flag, and every prologue is an [#error], so the
+# C compiler is the assertion that nothing escaped the guard.
+C_TESTS += DevGuard
+CGREP_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)" "\#else" "\#if 1" \
+                  "DevGuard_helper__error_copy_escaped_its_guard("
+CPAIR_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)@\#error seed escaped"
+# A flag used as anything but the whole condition of an [if].
+REJECT_TESTS += DevGuardBad
+CODE_DevGuardBad = 398
+FLAGS_DevGuardBad := --codegen C
 
 # Section 53.3.  One C symbol, two prototypes.  Warning 367's own advice used
 # to end here, and following it alone gives a file that does not compile; the
@@ -3382,6 +3398,15 @@ CHERRY_CFLAGS_CherryDyn = -O2
 # Locals of different initializers share one C function.
 CHERRY_TESTS += CherryInitScope
 
+# Issue 4715.  An equality test that reaches a dyn is refused, naming the
+# fields that lead to it, rather than emitting a C [==] on cherry_any.
+REJECT_TESTS += CherryDynEq
+FLAGS_CherryDynEq  = --codegen Cherry --custard_monomorphize_types true
+CODE_CherryDynEq   = 368
+EGREP_CherryDynEq += "an equality test at FStar.Dyn.dyn, in CherryDynEq.main"
+EGREP_CherryDynEq += "field c of constructor W of"
+EGREP_CherryDynEq += "then field d of CherryDynEq.cell"
+
 # Separate compilation under Cherry: a library unit and an application linked
 # against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
 # helpers for the library's types, and its own copy of each exception's and
@@ -3735,6 +3760,141 @@ $(FSTARCLIST_DIR)/CherryFStarCList.chran: fstarclist/CherryFStarCList.fst \
 	$(Q)touch $@
 
 all: $(FSTARCLIST_DIR)/CherryFStarCList.chran
+
+FSTARCSTRING_DIR = $(CHERRY_DIR)/fstarcstring
+FSTARCSTRING_ABS = $(abspath $(FSTARCSTRING_DIR))
+FSTARCSTRING_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst
+$(FSTARCSTRING_DIR)/CherryFStarCString.chran: fstarcstring/CherryFStarCString.fst \
+    $(FSTARCSTRING_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCString)
+	$(Q)rm -rf $(FSTARCSTRING_ABS) && mkdir -p $(FSTARCSTRING_ABS)/src
+	$(Q)ln -s $(FSTARCSTRING_SRCS) $(FSTARCSTRING_ABS)/src/
+	$(Q)cd fstarcstring && for f in $(addprefix $(FSTARCSTRING_ABS)/src/,$(notdir $(FSTARCSTRING_SRCS))) \
+	    CherryFStarCString.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCSTRING_ABS)/src --cache_dir $(FSTARCSTRING_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcstring && $(FSTAR_EXE) --include $(FSTARCSTRING_ABS)/src --cache_dir $(FSTARCSTRING_ABS) \
+	  --already_cached '*' --odir $(FSTARCSTRING_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCString.main \
+	  CherryFStarCString.fst -o $(FSTARCSTRING_ABS)/CherryFStarCString.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCString)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCSTRING_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCSTRING_ABS)/CherryFStarCString.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCSTRING_ABS)/CherryFStarCString.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCString)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCSTRING_ABS)/CherryFStarCString.chexe
+	$(Q)touch $@
+
+all: $(FSTARCSTRING_DIR)/CherryFStarCString.chran
+
+FSTARCUTIL_DIR = $(CHERRY_DIR)/fstarcutil
+FSTARCUTIL_ABS = $(abspath $(FSTARCUTIL_DIR))
+FSTARCUTIL_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst \
+  $(HASH_SRC)/FStarC.List.fsti $(HASH_SRC)/FStarC.List-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst \
+  $(HASH_SRC)/FStarC.BaseTypes.fsti $(HASH_SRC)/FStarC.BaseTypes-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Json.fsti $(HASH_SRC)/FStarC.Format.fsti \
+  $(HASH_SRC)/FStarC.Util.fsti $(HASH_SRC)/FStarC.Util-c.cherry.fst
+$(FSTARCUTIL_DIR)/CherryFStarCUtil.chran: fstarcutil/CherryFStarCUtil.fst \
+    $(FSTARCUTIL_SRCS) $(FSTAR_EXE) $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h
+	$(call msg, "CHERRY", CherryFStarCUtil)
+	$(Q)rm -rf $(FSTARCUTIL_ABS) && mkdir -p $(FSTARCUTIL_ABS)/src $(FSTARCUTIL_ABS)/tmp
+	$(Q)ln -s $(FSTARCUTIL_SRCS) $(FSTARCUTIL_ABS)/src/
+	$(Q)cd fstarcutil && for f in $(addprefix $(FSTARCUTIL_ABS)/src/,$(notdir $(FSTARCUTIL_SRCS))) \
+	    CherryFStarCUtil.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCUTIL_ABS)/src --cache_dir $(FSTARCUTIL_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcutil && $(FSTAR_EXE) --include $(FSTARCUTIL_ABS)/src --cache_dir $(FSTARCUTIL_ABS) \
+	  --already_cached '*' --odir $(FSTARCUTIL_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCUtil.main \
+	  CherryFStarCUtil.fst -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCUtil)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCUTIL_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCUTIL_ABS)/CherryFStarCUtil.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCUtil)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 CHERRY_UTIL_TMP=$(FSTARCUTIL_ABS)/tmp \
+	  $(FSTARCUTIL_ABS)/CherryFStarCUtil.chexe arg1
+	$(Q)touch $@
+
+all: $(FSTARCUTIL_DIR)/CherryFStarCUtil.chran
+
+FSTARCBASIC_DIR = $(CHERRY_DIR)/fstarcbasic
+FSTARCBASIC_ABS = $(abspath $(FSTARCBASIC_DIR))
+FSTARCBASIC_SRCS = $(FSTARCUTIL_SRCS) $(HASH_SRC)/FStarC.Format-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Filepath.fsti $(HASH_SRC)/FStarC.Filepath-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Getopt.fsti $(HASH_SRC)/FStarC.Getopt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Platform.Base.fsti $(HASH_SRC)/FStarC.Platform.Base-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Plugins.Base.fsti $(HASH_SRC)/FStarC.Plugins.Base-c.cherry.fst
+$(FSTARCBASIC_DIR)/CherryFStarCBasic.chran: fstarcbasic/CherryFStarCBasic.fst \
+    $(FSTARCBASIC_SRCS) $(FSTAR_EXE) $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h
+	$(call msg, "CHERRY", CherryFStarCBasic)
+	$(Q)rm -rf $(FSTARCBASIC_ABS) && mkdir -p $(FSTARCBASIC_ABS)/src $(FSTARCBASIC_ABS)/tmp
+	$(Q)ln -s $(FSTARCBASIC_SRCS) $(FSTARCBASIC_ABS)/src/
+	$(Q)cd fstarcbasic && for f in $(addprefix $(FSTARCBASIC_ABS)/src/,$(notdir $(FSTARCBASIC_SRCS))) \
+	    CherryFStarCBasic.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCBASIC_ABS)/src --cache_dir $(FSTARCBASIC_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcbasic && $(FSTAR_EXE) --include $(FSTARCBASIC_ABS)/src --cache_dir $(FSTARCBASIC_ABS) \
+	  --already_cached '*' --odir $(FSTARCBASIC_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCBasic.main \
+	  CherryFStarCBasic.fst -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCBasic)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCBASIC_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCBASIC_ABS)/CherryFStarCBasic.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCBasic)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 CHERRY_UTIL_TMP=$(FSTARCBASIC_ABS)/tmp \
+	  $(FSTARCBASIC_ABS)/CherryFStarCBasic.chexe --flag -v 7 rest \
+	  > $(FSTARCBASIC_ABS)/stdout.txt 2> $(FSTARCBASIC_ABS)/stderr.txt \
+	  || { cat $(FSTARCBASIC_ABS)/stdout.txt $(FSTARCBASIC_ABS)/stderr.txt; exit 1; }
+	$(Q)printf 'hello world\nraw\ndone\n' | cmp - $(FSTARCBASIC_ABS)/stdout.txt
+	$(Q)printf 'warn w\nerr\n' | cmp - $(FSTARCBASIC_ABS)/stderr.txt
+	$(Q)touch $@
+
+all: $(FSTARCBASIC_DIR)/CherryFStarCBasic.chran
+
+# FStarC.Json-c.cherry.fst, against what Yojson.Basic gives for the same inputs.
+FSTARCJSON_DIR = $(CHERRY_DIR)/fstarcjson
+FSTARCJSON_ABS = $(abspath $(FSTARCJSON_DIR))
+FSTARCJSON_SRCS = $(FSTARCSTRING_SRCS) \
+  $(HASH_SRC)/FStarC.Json.fsti $(HASH_SRC)/FStarC.Json-c.cherry.fst
+$(FSTARCJSON_DIR)/CherryFStarCJson.chran: fstarcjson/CherryFStarCJson.fst \
+    fstarcjson/CherryFStarCJson.expected $(FSTARCJSON_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCJson)
+	$(Q)rm -rf $(FSTARCJSON_ABS) && mkdir -p $(FSTARCJSON_ABS)/src
+	$(Q)ln -s $(FSTARCJSON_SRCS) $(FSTARCJSON_ABS)/src/
+	$(Q)cd fstarcjson && for f in $(addprefix $(FSTARCJSON_ABS)/src/,$(notdir $(FSTARCJSON_SRCS))) \
+	    CherryFStarCJson.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCJSON_ABS)/src --cache_dir $(FSTARCJSON_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcjson && $(FSTAR_EXE) --include $(FSTARCJSON_ABS)/src --cache_dir $(FSTARCJSON_ABS) \
+	  --already_cached '*' --odir $(FSTARCJSON_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCJson.main \
+	  CherryFStarCJson.fst -o $(FSTARCJSON_ABS)/CherryFStarCJson.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCJson)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCJSON_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCJSON_ABS)/CherryFStarCJson.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCJSON_ABS)/CherryFStarCJson.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCJson)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCJSON_ABS)/CherryFStarCJson.chexe \
+	  > $(FSTARCJSON_ABS)/stdout.txt
+	$(Q)diff -u fstarcjson/CherryFStarCJson.expected $(FSTARCJSON_ABS)/stdout.txt
+	$(Q)touch $@
+
+all: $(FSTARCJSON_DIR)/CherryFStarCJson.chran
 
 ARRAY_DIR = $(CHERRY_DIR)/array
 ARRAY_ABS = $(abspath $(ARRAY_DIR))
