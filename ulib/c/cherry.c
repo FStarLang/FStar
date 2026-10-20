@@ -518,6 +518,74 @@ cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int le
   return cherry_str_of_bytes(cherry_str_data(s) + i, n);
 }
 
+uint64_t cherry_str_size64(cherry_string s) {
+  return (uint64_t)cherry_str_size(s);
+}
+
+uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i) {
+  return (int64_t)i >= 0 && i < cherry_str_size(s)
+    ? (unsigned char)cherry_str_data(s)[i] : UINT64_MAX;
+}
+
+cherry_string cherry_str_slice64(cherry_string s, uint64_t i, uint64_t j) {
+  int64_t n = (int64_t)cherry_str_size(s), a = (int64_t)i, b = (int64_t)j;
+  if (a < 0) a = 0;
+  if (b > n) b = n;
+  if (b <= a) return cherry_str_of_bytes("", 0);
+  return cherry_str_of_bytes(cherry_str_data(s) + a, (size_t)(b - a));
+}
+
+cherry_string cherry_str_of_byte(uint32_t b) {
+  char c = (char)(unsigned char)b;
+  return cherry_str_of_bytes(&c, 1);
+}
+
+static cherry_string str_map_ascii(cherry_string s, char lo, char hi, int d) {
+  size_t n = cherry_str_size(s);
+  cherry_string_cell *c = str_alloc(n, n + 1);
+  const char *p = cherry_str_data(s);
+  for (size_t i = 0; i < n; i++)
+    c->data[i] = (char)(p[i] >= lo && p[i] <= hi ? p[i] + d : p[i]);
+  return (cherry_string)c;
+}
+
+cherry_string cherry_str_lowercase_ascii(cherry_string s) {
+  return str_map_ascii(s, 'A', 'Z', 'a' - 'A');
+}
+
+cherry_string cherry_str_uppercase_ascii(cherry_string s) {
+  return str_map_ascii(s, 'a', 'z', 'A' - 'a');
+}
+
+cherry_string cherry_str_escaped(cherry_string s) {
+  const unsigned char *p = (const unsigned char *)cherry_str_data(s);
+  size_t n = cherry_str_size(s), m = 0;
+  for (size_t i = 0; i < n; i++)
+    m += strchr("\\\"\n\t\r\b", p[i]) && p[i] ? 2 : p[i] >= 32 && p[i] < 127 ? 1 : 4;
+  cherry_string_cell *c = str_alloc(m, m + 1);
+  char *q = c->data;
+  for (size_t i = 0; i < n; i++) {
+    unsigned char b = p[i];
+    switch (b) {
+    case '\\': *q++ = '\\'; *q++ = '\\'; break;
+    case '"': *q++ = '\\'; *q++ = '"'; break;
+    case '\n': *q++ = '\\'; *q++ = 'n'; break;
+    case '\t': *q++ = '\\'; *q++ = 't'; break;
+    case '\r': *q++ = '\\'; *q++ = 'r'; break;
+    case '\b': *q++ = '\\'; *q++ = 'b'; break;
+    default:
+      if (b >= 32 && b < 127) *q++ = (char)b;
+      else {
+        *q++ = '\\';
+        *q++ = (char)('0' + b / 100);
+        *q++ = (char)('0' + b / 10 % 10);
+        *q++ = (char)('0' + b % 10);
+      }
+    }
+  }
+  return (cherry_string)c;
+}
+
 cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
   size_t la = cherry_str_size(a), lb = cherry_str_size(b);
   int r = memcmp(cherry_str_data(a), cherry_str_data(b), la < lb ? la : lb);

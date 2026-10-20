@@ -3703,6 +3703,36 @@ $(FSTARCLIST_DIR)/CherryFStarCList.chran: fstarclist/CherryFStarCList.fst \
 
 all: $(FSTARCLIST_DIR)/CherryFStarCList.chran
 
+FSTARCSTRING_DIR = $(CHERRY_DIR)/fstarcstring
+FSTARCSTRING_ABS = $(abspath $(FSTARCSTRING_DIR))
+FSTARCSTRING_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst
+$(FSTARCSTRING_DIR)/CherryFStarCString.chran: fstarcstring/CherryFStarCString.fst \
+    $(FSTARCSTRING_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCString)
+	$(Q)rm -rf $(FSTARCSTRING_ABS) && mkdir -p $(FSTARCSTRING_ABS)/src
+	$(Q)ln -s $(FSTARCSTRING_SRCS) $(FSTARCSTRING_ABS)/src/
+	$(Q)cd fstarcstring && for f in $(addprefix $(FSTARCSTRING_ABS)/src/,$(notdir $(FSTARCSTRING_SRCS))) \
+	    CherryFStarCString.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCSTRING_ABS)/src --cache_dir $(FSTARCSTRING_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcstring && $(FSTAR_EXE) --include $(FSTARCSTRING_ABS)/src --cache_dir $(FSTARCSTRING_ABS) \
+	  --already_cached '*' --odir $(FSTARCSTRING_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCString.main \
+	  CherryFStarCString.fst -o $(FSTARCSTRING_ABS)/CherryFStarCString.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCString)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCSTRING_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCSTRING_ABS)/CherryFStarCString.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCSTRING_ABS)/CherryFStarCString.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCString)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCSTRING_ABS)/CherryFStarCString.chexe
+	$(Q)touch $@
+
+all: $(FSTARCSTRING_DIR)/CherryFStarCString.chran
+
 ARRAY_DIR = $(CHERRY_DIR)/array
 ARRAY_ABS = $(abspath $(ARRAY_DIR))
 $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \

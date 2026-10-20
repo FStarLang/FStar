@@ -308,6 +308,20 @@ cherry_string cherry_str_make(cherry_int l, uint32_t c);
 cherry_int cherry_str_byte_size(cherry_string s);
 uint32_t cherry_str_byte_at(cherry_string s, cherry_int off);
 cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int len);
+/* FStarC.String's byte-level access, with FStarC.SmallInt offsets (signed,
+   in a uint64_t): the size, the byte at an offset (-1 out of bounds), and the
+   bytes [i, j) clamped to the string. */
+uint64_t cherry_str_size64(cherry_string s);
+uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i);
+cherry_string cherry_str_slice64(cherry_string s, uint64_t i, uint64_t j);
+/* The one-byte string of [b] < 256, which need not be UTF-8. */
+cherry_string cherry_str_of_byte(uint32_t b);
+/* ASCII case mapping; other bytes are unchanged. */
+cherry_string cherry_str_lowercase_ascii(cherry_string s);
+cherry_string cherry_str_uppercase_ascii(cherry_string s);
+/* OCaml's String.escaped: \\, \", \n, \t, \r and \b, other bytes outside
+   printable ASCII as \ddd (decimal). */
+cherry_string cherry_str_escaped(cherry_string s);
 
 /* FStar.Char: a char is its code point. */
 static inline uint32_t cherry_u32_of_char(uint32_t c) { return c; }

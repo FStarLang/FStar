@@ -1459,12 +1459,12 @@ let run_let (l:dlet) : ML dlet =
 
 (* [failwith s] raises [Failure s] (cherry.md, "Exceptions"), so that it can
    be caught: the support modules' [failwith] is an external, and their
-   [Failure] is declared beside it.  [FStarC.List.failwith_tot] is the same
-   at a total type, for the partial functions its interface declares total. *)
+   [Failure] is declared beside it.  [failwith_tot] in [FStarC.List] and
+   [FStarC.String] is the same at a total type, for the partial functions its interface declares total. *)
 let failure_of (f:name) : option name =
   if f.id = "failwith" && (f.ns = ["FStar"; "All"] || f.ns = ["FStarC"; "Effect"])
   then Some { f with id = "Failure"; spec = None }
-  else if f.id = "failwith_tot" && f.ns = ["FStarC"; "List"]
+  else if f.id = "failwith_tot" && (f.ns = ["FStarC"; "List"] || f.ns = ["FStarC"; "String"])
   then Some { f with ns = ["FStarC"; "Effect"]; id = "Failure"; spec = None }
   else None
 
