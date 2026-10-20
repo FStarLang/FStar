@@ -3370,6 +3370,15 @@ NOGREP_BoxedFields += "BoxedFields_Bar of bool \* string"
 # arrow behind more abbreviations than the old fuel of eight.
 CUSTARD_TESTS += HeapClosures
 
+# A curried constructor through a monad dictionary passed at run time, at the
+# identity monad (FStarC.Syntax.VisitM's [Mktuple2 <$> f b <*> g a]).  Under
+# Cherry the closure goes into [any] taking one argument and comes out taking
+# two, a continuation's binder of arrow type is not [any] because the
+# continuation is, and an argument meets a head coerced to the arrow the call
+# was typed at.
+CUSTARD_TESTS += DynCurry
+FLAGS_DynCurry = --warn_error -367
+
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
 C_TESTS += CHeapArity

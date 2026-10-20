@@ -444,6 +444,14 @@ let rec mentions_any (t:cty) : ML bool =
   | TBuf c | TRef (_, c) | TInline c -> mentions_any c
   | _ -> false
 
+let rec mentions_tvar (t:cty) : ML bool =
+  match t with
+  | TVar _ -> true
+  | TArrow (a, _, b) -> mentions_tvar a || mentions_tvar b
+  | TApp (_, ts) | TTuple ts -> List.existsb mentions_tvar ts
+  | TBuf c | TRef (_, c) | TInline c -> mentions_tvar c
+  | _ -> false
+
 let co_counter : ref int = mk_ref 0
 let co_fresh () : ML string =
   co_counter := !co_counter + 1;
@@ -502,6 +510,25 @@ let rec coerce_any (a:expr) (t:cty) : ML expr =
       let g = coerce_any (mk (EApp (fv, args)) sr E_Impure) rest_ty in
       let call = mk (EApp (g, List.map (fun (b:binder) -> mk (EVar b.b_name) b.b_ty E_Pure) rest)) tr E_Impure in
       let lam = mk (EFun (bs, call)) t E_Pure in
+      mk (ELet (f, a.ty, a, lam)) t a.eff
+    end else
+    if List.length ss > List.length ts then begin
+      (* The source takes more arguments than the target: what the target
+         returns after its own is a closure over the rest -- a curried
+         constructor such as [Mktuple2] mapped into a monad, say, whose result
+         type is an arrow that the dictionary passed at run time sees as any. *)
+      let f = co_fresh () in
+      let fv = mk (EVar f) a.ty E_Pure in
+      let n = List.length ts in
+      let ss1, ss2 = List.splitAt n ss in
+      let bs1 = ts |> List.map (fun (ty, _) -> { b_name = co_fresh (); b_ty = ty }) in
+      let bs2 = ss2 |> List.map (fun (ty, _) -> { b_name = co_fresh (); b_ty = ty }) in
+      let args1 = List.map2 (fun (b:binder) ((s:cty), _) ->
+                    coerce_any (mk (EVar b.b_name) b.b_ty E_Pure) s) bs1 ss1 in
+      let args2 = bs2 |> List.map (fun (b:binder) -> mk (EVar b.b_name) b.b_ty E_Pure) in
+      let rest_ty = List.fold_right (fun ((x:cty), (ef:eff)) r -> TArrow (x, ef, r)) ss2 sr in
+      let inner = mk (EFun (bs2, mk (EApp (fv, args1 @ args2)) sr E_Impure)) rest_ty E_Pure in
+      let lam = mk (EFun (bs1, coerce_any inner tr)) t E_Pure in
       mk (ELet (f, a.ty, a, lam)) t a.eff
     end else
     if List.length ss <> List.length ts then mk (ECoerce (a, t)) t a.eff else
@@ -566,6 +593,15 @@ let rec lower_any (e:expr) : ML expr =
       match t with
       | TArrow (_, _, b) -> peel (n - 1) b
       | _ -> None in
+    (* The head may have been coerced below, to the arrow extraction typed
+       this call at: its parameters are then what the arguments must be. *)
+    let ps, _ = arrow_parts hd.ty in
+    let args =
+      if List.length ps < List.length args then args
+      else List.map2 (fun (a:expr) ((p:cty), _) ->
+             if a.ty <> p && (mentions_any a.ty || mentions_any p) && not (mentions_tvar p)
+             then coerce_any a p else a) args (fst (List.splitAt (List.length args) ps)) in
+    let e = { e with e = EApp (hd, args) } in
     (match peel (List.length args) hd.ty with
      | None -> e
      | Some r ->
