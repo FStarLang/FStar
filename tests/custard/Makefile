@@ -3939,6 +3939,48 @@ $(FSTARCJSON_DIR)/CherryFStarCJson.chran: fstarcjson/CherryFStarCJson.fst \
 
 all: $(FSTARCJSON_DIR)/CherryFStarCJson.chran
 
+# FStarC.HashTable-c.cherry.fst, against what OCaml's Hashtbl.Make prints for
+# the same operations (see the test's header).
+FSTARCHT_DIR = $(CHERRY_DIR)/fstarchashtable
+FSTARCHT_ABS = $(abspath $(FSTARCHT_DIR))
+CLASS_SRC = $(abspath $(FSTAR_ROOT)/src/class)
+DATA_SRC = $(abspath $(FSTAR_ROOT)/src/data)
+FSTARCHT_SRCS = $(FSTARCBASIC_SRCS) \
+  $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Order.fsti $(HASH_SRC)/FStarC.Order.fst \
+  $(CLASS_SRC)/FStarC.Class.Deq.fsti $(CLASS_SRC)/FStarC.Class.Deq.fst \
+  $(CLASS_SRC)/FStarC.Class.Show.fsti $(CLASS_SRC)/FStarC.Class.Show.fst \
+  $(CLASS_SRC)/FStarC.Class.Ord.fsti $(CLASS_SRC)/FStarC.Class.Ord.fst \
+  $(CLASS_SRC)/FStarC.Class.Hashable.fsti $(CLASS_SRC)/FStarC.Class.Hashable.fst \
+  $(DATA_SRC)/FStarC.HashTable.fsti $(DATA_SRC)/FStarC.HashTable-c.cherry.fst
+$(FSTARCHT_DIR)/CherryFStarCHashTable.chran: fstarchashtable/CherryFStarCHashTable.fst \
+    fstarchashtable/CherryFStarCHashTable.expected $(FSTARCHT_SRCS) $(FSTAR_EXE) \
+    $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h
+	$(call msg, "CHERRY", CherryFStarCHashTable)
+	$(Q)rm -rf $(FSTARCHT_ABS) && mkdir -p $(FSTARCHT_ABS)/src
+	$(Q)ln -s $(FSTARCHT_SRCS) $(FSTARCHT_ABS)/src/
+	$(Q)cd fstarchashtable && for f in $(addprefix $(FSTARCHT_ABS)/src/,$(notdir $(FSTARCHT_SRCS))) \
+	    CherryFStarCHashTable.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCHT_ABS)/src --cache_dir $(FSTARCHT_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarchashtable && $(FSTAR_EXE) --include $(FSTARCHT_ABS)/src --cache_dir $(FSTARCHT_ABS) \
+	  --already_cached '*' --odir $(FSTARCHT_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCHashTable.main \
+	  CherryFStarCHashTable.fst -o $(FSTARCHT_ABS)/CherryFStarCHashTable.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCHashTable)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCHT_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCHT_ABS)/CherryFStarCHashTable.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCHT_ABS)/CherryFStarCHashTable.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCHashTable)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCHT_ABS)/CherryFStarCHashTable.chexe \
+	  > $(FSTARCHT_ABS)/stdout.txt
+	$(Q)diff -u fstarchashtable/CherryFStarCHashTable.expected $(FSTARCHT_ABS)/stdout.txt
+	$(Q)touch $@
+
+all: $(FSTARCHT_DIR)/CherryFStarCHashTable.chran
+
 ARRAY_DIR = $(CHERRY_DIR)/array
 ARRAY_ABS = $(abspath $(ARRAY_DIR))
 $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
