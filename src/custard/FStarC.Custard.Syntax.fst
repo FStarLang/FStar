@@ -729,8 +729,7 @@ let flag_to_doc (f:flag) : ML document =
   | Comment s -> text ("(* " ^ s ^ " *)")
   | Prologue s -> text ("prologue " ^ s)
   | Epilogue s -> text ("epilogue " ^ s)
-  | ClosurePrologue (a, b) ->
-    text ("closure_prologue " ^ a ^ " / " ^ b)
+  | ClosurePrologue s -> text ("closure_prologue " ^ s)
   | CMacro -> text "c_macro"
   | CIfDef -> text "c_ifdef"
   | CReference -> text "c_reference"

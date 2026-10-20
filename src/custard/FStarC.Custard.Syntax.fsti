@@ -580,7 +580,7 @@ type flag =
   | Epilogue of string
   (** Text to emit immediately after the definition; the counterpart of
       {!Prologue}. *)
-  | ClosurePrologue of string & string
+  | ClosurePrologue of string
   (** Section 51.3.  A prologue for everything this declaration *reaches*,
       rather than for the declaration itself.
 
@@ -591,22 +591,19 @@ type flag =
       per-declaration flags a plugin can set, because the set is the
       transitive callees of a term the plugin has just built.
 
-      So this flag is propagated instead.  Every declaration reachable from
-      this one -- not this one, and not one that carries a {!Prologue} of its
-      own, which is another entry with its own regime -- receives a
-      {!Prologue}: the *first* string if the only way to reach it is through
-      a declaration marked this way, and the *second* if the ordinary program
-      reaches it as well.
+      So this flag is propagated instead, by *cloning* (section 51.5).
+      Every function reachable from this one -- not this one, and not one
+      that carries a {!Prologue} of its own, which is another entry with its
+      own regime -- is copied once per distinct string, the copy is given the
+      string as its {!Prologue} and a name disambiguated by it, and the calls
+      inside this declaration and inside the copies are redirected to the
+      copies.  The originals are left undecorated for whatever else calls
+      them.  In CUDA the string is ["__device__"]; for a CPU target it is a
+      [target(...)] attribute, which must never end up on a function some
+      caller reaches without checking the CPU first.  Globals are neither
+      copied nor decorated.
 
-      The two strings are the point.  In CUDA they are ["__device__"] and
-      ["__device__ __host__"], and a helper called from both a kernel and
-      host code needs the second and is miscompiled by the first.  Custard
-      does not read either string; it only decides which declaration gets
-      which, and that decision is a reachability question Custard can answer
-      and a plugin cannot.
-
-      Consumed by {!FStarC.Custard.Simplify}, which rewrites it into
-      {!Prologue}s.  No backend sees one. *)
+      Consumed by {!FStarC.Custard.Simplify}.  No backend sees one. *)
   | CMacro
   (** Section 68.  A parameterless definition of constant value becomes a C
       preprocessor [#define] rather than a variable.

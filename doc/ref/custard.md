@@ -12987,6 +12987,9 @@ Note that neither `clang` nor `g++` sees this, which is why it took getting
 to a kernel with a body. §41.4 recorded three of §36's answers checked
 against a real `nvcc`; this is the one §36 got wrong.
 
+*Superseded by §51.5, which copies the callees instead of marking them and
+drops the second string; what follows is the original design.*
+
 **`ClosurePrologue (exclusive, shared)`**, from a plugin's flag list or from
 `[@@custard_c_closure_prologue "..." "..."]` in source. Every declaration
 reachable from the carrier -- not the carrier, and not one carrying a
@@ -13040,6 +13043,68 @@ The reporter's next step is shared memory -- a non-empty `shmems` list,
 expects §49.5's answer (rewrite the binder's type from inside the rule) to
 run out there. §49.5 already says that is the wrong long-term tool; this is
 the round that dates it.
+
+
+## 51.5 Copies, not marks
+
+FStarLang/FStar#4711.  §51.3 was designed for CUDA, where adding
+`__device__` to a function only narrows who may call it, so marking a
+callee in place is safe and the shared string covers one host code calls
+too.  The same attribute then came to carry CPU `target(...)` attributes, on
+code calling intrinsics, and there marking in place is wrong twice over:
+
+- a `target("avx2")` on a helper that some caller reaches *without* a
+  runtime CPU check lets the compiler use AVX2 in code that runs on any
+  machine; and
+- a program with several targets has callees shared between seeds, and a
+  marked callee can carry only one string.  `propagate_prologues` gave it
+  the *first* seed's, whatever reached it.  In hacl-pulse the monomorphized
+  `Hacl.Mem.wipe` at `Hacl_Vec256_t`, reached only from AVX2 loops, came
+  out `target("bmi2")`: neither gcc nor clang would inline it into its
+  callers, ChaCha20 lost about 10%, and an `avx512f` in the same position
+  would have been an illegal instruction on an AVX2 machine.
+
+So the closure is now **copied**, which is how CUDA's own `__device__`
+model has it.  Every function a seed reaches gets one copy per distinct
+prologue; the copy carries the prologue as its `Prologue`, is `static`, and
+is named after it -- `spec` gains a suffix made of the prologue's
+alphanumeric words minus `attribute` and `target`, so
+`__attribute__((target("avx2")))` gives `Hacl_Mem_wipe__t_6_avx2` and
+`__device__` gives `f__device`, with a number added only on a collision.
+The seed's body and the copies' bodies are redirected to the copies, and the
+originals are untouched: they serve every other caller undecorated, and the
+second `dce` after the pass removes an original that only the seeds called.
+
+What is copied is a *function* this program defines.  The walk stops, as
+before, at a declaration carrying a `Prologue` or `ClosurePrologue` of its
+own, so `[@@CPrologue ""]` still opts a function out; and it skips imported
+declarations, externals, types and `CMacro`s, which have nothing to compile
+for a target.  Unlike §51.3 it no longer walks *through* such an entry:
+whatever it calls is its own business.
+
+**The second string is gone.**  A callee host code also reaches is now
+simply an original plus a copy, which in CUDA is a `__host__` function and
+a `__device__` one, so `__device__ __host__` has nothing left to say.
+`ClosurePrologue` carries one string and `custard_c_closure_prologue` takes
+one argument; the old two-argument form is a type error, which is the
+loudest way to retire it.
+
+**Globals are neither copied nor marked.**  A copy of a variable is a
+second variable, which changes the meaning of a program that writes to it.
+And marking one is wrong for a CPU target -- gcc ignores `target(...)` on a
+variable with a warning -- while §53.2's refusal of a global host code also
+reads (error 383) fires on every constant table a scalar and a vector path
+share, which is the ordinary shape of a crypto library.  CUDA does need
+`__device__` or `__constant__` on a table device code reads, but leaving it
+off fails loudly: nvcc reports the identifier as undefined in device code.
+So a CUDA program marks such a variable itself, with `[@@CPrologue
+"__device__"]`, and error 383 is retired.
+
+`tests/custard/DevClosure.fst` now has two seeds with different prologues
+sharing callees, a transitive callee, a recursive one (whose copy must call
+itself, or the original would survive), an opted-out one, and a global
+both seeds read, which comes out undecorated.  `DevGShare.fst` is gone with
+the refusal it tested.
 
 
 # 52 A gate that reads a stale artifact
@@ -13257,6 +13322,9 @@ the missing shape, and it is the shape every kernel launcher has.
 
 
 ## 53.2 Globals in the device closure
+
+*Superseded by §51.5: globals are no longer marked, and error 383 is
+retired.  What follows is the original design.*
 
 `propagate_prologues` marks `DLet`s, and a global *is* a `DLet` with no
 binders, so the pass had been marking them all along. The C printer's two
@@ -16427,9 +16495,9 @@ that ordering and from the report; the trigger does not reduce.
 
 Kuiper's first ask needs no change at all. They asked for "a prologue that
 applies to everything reachable from a kernel", and that is
-`ClosurePrologue (excl, shared)` and `Simplify.propagate_prologues`, added in
-§51.3. `Builtins.lift_named` takes a `list flag`, so a plugin passes
-`ClosurePrologue ("__device__", "__device__ __host__")` alongside
+`ClosurePrologue` and `Simplify.propagate_prologues`, added in §51.3 (and
+made to copy rather than mark in §51.5). `Builtins.lift_named` takes a
+`list flag`, so a plugin passes `ClosurePrologue "__device__"` alongside
 `Prologue "__global__"` and gets exactly the propagation they described.
 
 ### 72.5 For the record
