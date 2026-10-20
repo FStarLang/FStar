@@ -23687,6 +23687,12 @@ The compiler is bootstrapped by a Custard without the normalized key.  So
 table whose key type is an abbreviation of `string` is created at
 `#string`.
 
+The functor is OCaml-only, so this is `FStarC.HashTable-ocaml.fst`.  The
+interface `FStarC.HashTable.fsti` declares `t` and the operations
+`inline_for_extraction val`, and the OCaml backend still inlines the
+bodies above.  The Cherry build uses `FStarC.HashTable-c.cherry.fst`, an
+array of buckets in F\* that iterates in the order `Hashtbl` does.
+
 # 134 A constructor field under a `let`
 
 FStarLang/FStar#4630.  `iota` fires on a `match` whose scrutinee is a
