@@ -3382,6 +3382,15 @@ CHERRY_CFLAGS_CherryDyn = -O2
 # Locals of different initializers share one C function.
 CHERRY_TESTS += CherryInitScope
 
+# Issue 4715.  An equality test that reaches a dyn is refused, naming the
+# fields that lead to it, rather than emitting a C [==] on cherry_any.
+REJECT_TESTS += CherryDynEq
+FLAGS_CherryDynEq  = --codegen Cherry --custard_monomorphize_types true
+CODE_CherryDynEq   = 368
+EGREP_CherryDynEq += "an equality test at FStar.Dyn.dyn, in CherryDynEq.main"
+EGREP_CherryDynEq += "field c of constructor W of"
+EGREP_CherryDynEq += "then field d of CherryDynEq.cell"
+
 # Separate compilation under Cherry: a library unit and an application linked
 # against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
 # helpers for the library's types, and its own copy of each exception's and
