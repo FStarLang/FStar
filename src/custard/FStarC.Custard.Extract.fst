@@ -1904,6 +1904,13 @@ and functor_instance (st:state) (scrut:term) : ML (option name) =
     match HashTable.try_find st.names key with
     | Some nm -> Some nm
     | None ->
+    (* An instance a linked unit already made is that unit's module: OCaml
+       functor application is generative, so a second instance here would
+       have types incompatible with every upstream type mentioning the first
+       (issue #4689). *)
+    match import st key with
+    | Some nm -> Some nm
+    | None ->
       if Options.codegen () <> Some Options.OCaml then
         custard_error st E.Error_CustardBadFunctor [
           text ("Custard: " ^ Ident.string_of_lid fl ^ " is an OCaml functor \

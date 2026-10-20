@@ -17,7 +17,8 @@ FSTAR_ROOT ?= ../../..
 # plugin.test rule below instead.
 FSTAR_FILES := CustardPlugin.fst CustardPluginAux.fst CustardRulePlugin.fst \
                CustardRuleTest.fst CustardRuleArity.fst CustardRuleBare.fst \
-               CustardRuleOverArity.fst CustardNormSteps.fst
+               CustardRuleOverArity.fst CustardNormSteps.fst \
+               CustardFunctorLink.fst
 
 # CustardRulePlugin registers a rule, so its *source* names FStarC.Custard's
 # own types: unlike an ordinary plugin, this one has to be checked with the
@@ -251,3 +252,38 @@ $(NS_DIR)/loaded: $(NS_DIR)/CustardNormSteps.cmxs
 	touch $@
 
 all: $(NS_DIR)/loaded
+
+# ------------------------------------------------------ functors, split
+
+# Issue 4689.  A --with_fstarc unit that compiles its own copy of compiler
+# code using [FStarC.HashTable] must use the compiler's instance of the
+# [Hashtbl.Make] functor: OCaml functor application is generative, so a
+# second instance has a type incompatible with the compiler's records.
+FL_DIR  := $(OUTPUT_DIR)/functorlink
+FL_UNIT := CustardFunctorLinkUnit
+
+$(FL_DIR)/CustardFunctorLink.ml: $(CACHE_DIR)/CustardFunctorLink.fst.checked
+	$(call msg, "EXTRACT SPLIT", CustardFunctorLink)
+	$(Q)rm -rf $(FL_DIR) && mkdir -p $(FL_DIR)
+	$(Q)$(FSTAR) --codegen OCaml --custard_split --custard_unit $(FL_UNIT) \
+	  --custard_link $(FSTAR_LIBDIR)/fstarc/fstarc.cui \
+	  --custard_entry_module CustardFunctorLink --odir $(FL_DIR) \
+	  CustardFunctorLink.fst
+
+$(FL_DIR)/CustardFunctorLink.cmxs: $(FL_DIR)/CustardFunctorLink.ml
+	$(call msg, "FUNCTORLINK", CustardFunctorLink)
+	$(Q)grep -q 'Hashtbl.Make' $(FL_DIR)/*.ml \
+	  && { echo "ERROR: a second Hashtbl.Make instance was emitted"; exit 1; } || true
+	$(Q)cd $(FL_DIR) && $(FSTAR_EXE) --ocamlenv ocamlfind ocamlopt -shared \
+	  -package fstar.compiler -o CustardFunctorLink.cmxs \
+	  $$(ls $(FL_UNIT)_*.ml 2>/dev/null) CustardFunctorLink.ml
+
+$(FL_DIR)/loaded: $(FL_DIR)/CustardFunctorLink.cmxs
+	$(Q)$(FSTAR) --load_cmxs $(abspath $(FL_DIR))/CustardFunctorLink \
+	  CustardRuleBare.fst > $(FL_DIR)/load.log 2>&1 \
+	  || { echo "ERROR: the split plugin did not load"; cat $(FL_DIR)/load.log; exit 1; }
+	$(Q)grep -qF 'CustardFunctorLink: loaded' $(FL_DIR)/load.log \
+	  || { echo "ERROR: the split plugin did not run"; cat $(FL_DIR)/load.log; exit 1; }
+	touch $@
+
+all: $(FL_DIR)/loaded

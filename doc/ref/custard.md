@@ -23586,6 +23586,12 @@ of its argument's normal form (§133.5).  OCaml functor application is generativ
 applicative, so two F\* names for the same application have to be the
 same OCaml module, or their types would disagree.
 
+The same holds across units.  The `<functor>` key is looked up in the
+linked `.cui`s (§12.4) before a new instance is made, so a plugin that
+compiles its own copy of compiler code using `FStarC.HashTable` refers
+to the compiler's instance, whose type the compiler's records mention
+(issue #4689).
+
 The argument has to reduce to a record literal.  Its type fields are
 printed as `type f = ...`, and higher-kinded ones are rejected.  Each
 value field is compiled as a top-level definition of its own
