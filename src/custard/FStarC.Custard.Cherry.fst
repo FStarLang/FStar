@@ -1419,20 +1419,45 @@ let run_let (l:dlet) : ML dlet =
 let failure_of (f:name) : option name =
   if f.id = "failwith" && (f.ns = ["FStar"; "All"] || f.ns = ["FStarC"; "Effect"])
   then Some { f with id = "Failure"; spec = None }
-  else if f.id = "failwith_tot" && (f.ns = ["FStarC"; "List"] || f.ns = ["FStarC"; "String"])
+  else if f.id = "failwith_tot" && (f.ns = ["FStarC"; "List"] || f.ns = ["FStarC"; "String"] ||
+                                    f.ns = ["FStarC"; "Util"])
   then Some { f with ns = ["FStarC"; "Effect"]; id = "Failure"; spec = None }
   else None
 
+let is_effect_fn (f:name) (id:string) : bool =
+  f.id = id && (f.ns = ["FStar"; "All"] || f.ns = ["FStarC"; "Effect"])
+
+(* The runtime's [exit], which does not return: [exit n] at any type is a call
+   of it followed by a [raise] that only gives the expression its type. *)
+let cherry_exit_name : name = { ns = ["FStarC"; "Effect"]; id = "cherry_exit"; spec = None }
+
 let raise_failures (p:program) : ML program =
   let used : ref (list (name & cty)) = mk_ref [] in
+  let exit_ty : ref (option cty) = mk_ref None in
+  let use (x:name) (t:cty) : ML unit =
+    if not (List.existsb (fun (y, _) -> string_of_name y = string_of_name x) !used) then
+      used := (x, t) :: !used in
   let rec go (e:expr) : ML expr =
     match e.e with
     | EApp ({ e = EQual (f, _) }, [s]) when Some? (failure_of f) ->
       let x = Some?.v (failure_of f) in
       let s = go s in
-      if not (List.existsb (fun (y, _) -> string_of_name y = string_of_name x) !used) then
-        used := (x, s.ty) :: !used;
+      use x s.ty;
       mk (ERaise (mk (ECtor (x, [s])) TExn E_Pure)) e.ty E_Impure
+    (* [raise_notrace] differs from [raise] only in OCaml's backtraces. *)
+    | EApp ({ e = EQual (f, _) }, [x]) when is_effect_fn f "raise_notrace" ->
+      mk (ERaise (go x)) e.ty E_Impure
+    | EApp ({ e = EQual (f, _) }, [n]) when is_effect_fn f "exit" ->
+      let n = go n in
+      exit_ty := Some n.ty;
+      let failure = { ns = ["FStarC"; "Effect"]; id = "Failure"; spec = None } in
+      let str = TApp ({ ns = ["Prims"]; id = "string"; spec = None }, []) in
+      use failure str;
+      let fty = TArrow (n.ty, E_Impure, TUnit) in
+      let call = mk (EApp (mk (EQual (cherry_exit_name, [])) fty E_Pure, [n])) TUnit E_Impure in
+      let msg = mk (EConst (CString "exit")) str E_Pure in
+      mk (ESeq (call, mk (ERaise (mk (ECtor (failure, [msg])) TExn E_Pure)) e.ty E_Impure))
+        e.ty E_Impure
     | _ -> map_children go e in
   let p = p |> List.map (fun d ->
     match d with
@@ -1443,7 +1468,13 @@ let raise_failures (p:program) : ML program =
       | DExn y -> string_of_name y.de_name = string_of_name x
       | _ -> false) in
   let missing = !used |> List.filter (fun (x, _) -> not (declared x)) in
-  (missing |> List.map (fun (x, t) -> DExn { de_name = x; de_args = [t]; de_flags = [] })) @ p
+  let exit_decl =
+    match !exit_ty with
+    | None -> []
+    | Some t ->
+      [DExternal { dx_name = cherry_exit_name; dx_typars = []; dx_ty = TArrow (t, E_Impure, TUnit);
+                   dx_target = Some "cherry_exit"; dx_header = Some "cherry.h"; dx_flags = [] }] in
+  (missing |> List.map (fun (x, t) -> DExn { de_name = x; de_args = [t]; de_flags = [] })) @ exit_decl @ p
 
 (* A recursive record is boxed, and is boxed the way a recursive variant is:
    as a variant of one constructor, [Mk_] and the type's name. *)
