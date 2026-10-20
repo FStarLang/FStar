@@ -3721,7 +3721,7 @@ DEBUG_MSG_DebugMatch = incomplete match in DebugMatch.get
 DEBUG_MSG_DebugProj = incomplete match in DebugProj.main
 DEBUG_MSG_DebugBoxed = incomplete match in DebugBoxed.main
 DEBUG_MSG_DebugIArray = ImmutableArray.index: index out of bounds
-DEBUG_MSG_DebugUnreachable = unreachable code (FStar.Pervasives.false_elim) in DebugUnreachable.pos
+DEBUG_MSG_DebugUnreachable = unreachable code (FStar.Pervasives.false_elim) in DebugUnreachable.impossible
 $(DEBUG_DIR)/%.chran: debug/%.fst $(FSTAR_EXE)
 	$(call msg, "CHERRY", $*)
 	$(Q)rm -rf $(DEBUG_ABS)/$* && mkdir -p $(DEBUG_ABS)/$*
