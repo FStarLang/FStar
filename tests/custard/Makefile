@@ -3790,6 +3790,43 @@ $(FSTARCUTIL_DIR)/CherryFStarCUtil.chran: fstarcutil/CherryFStarCUtil.fst \
 
 all: $(FSTARCUTIL_DIR)/CherryFStarCUtil.chran
 
+FSTARCBASIC_DIR = $(CHERRY_DIR)/fstarcbasic
+FSTARCBASIC_ABS = $(abspath $(FSTARCBASIC_DIR))
+FSTARCBASIC_SRCS = $(FSTARCUTIL_SRCS) $(HASH_SRC)/FStarC.Format-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Filepath.fsti $(HASH_SRC)/FStarC.Filepath-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Getopt.fsti $(HASH_SRC)/FStarC.Getopt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Platform.Base.fsti $(HASH_SRC)/FStarC.Platform.Base-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Plugins.Base.fsti $(HASH_SRC)/FStarC.Plugins.Base-c.cherry.fst
+$(FSTARCBASIC_DIR)/CherryFStarCBasic.chran: fstarcbasic/CherryFStarCBasic.fst \
+    $(FSTARCBASIC_SRCS) $(FSTAR_EXE) $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h
+	$(call msg, "CHERRY", CherryFStarCBasic)
+	$(Q)rm -rf $(FSTARCBASIC_ABS) && mkdir -p $(FSTARCBASIC_ABS)/src $(FSTARCBASIC_ABS)/tmp
+	$(Q)ln -s $(FSTARCBASIC_SRCS) $(FSTARCBASIC_ABS)/src/
+	$(Q)cd fstarcbasic && for f in $(addprefix $(FSTARCBASIC_ABS)/src/,$(notdir $(FSTARCBASIC_SRCS))) \
+	    CherryFStarCBasic.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCBASIC_ABS)/src --cache_dir $(FSTARCBASIC_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcbasic && $(FSTAR_EXE) --include $(FSTARCBASIC_ABS)/src --cache_dir $(FSTARCBASIC_ABS) \
+	  --already_cached '*' --odir $(FSTARCBASIC_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCBasic.main \
+	  CherryFStarCBasic.fst -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCBasic)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCBASIC_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCBASIC_ABS)/CherryFStarCBasic.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCBasic)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 CHERRY_UTIL_TMP=$(FSTARCBASIC_ABS)/tmp \
+	  $(FSTARCBASIC_ABS)/CherryFStarCBasic.chexe --flag -v 7 rest \
+	  > $(FSTARCBASIC_ABS)/stdout.txt 2> $(FSTARCBASIC_ABS)/stderr.txt \
+	  || { cat $(FSTARCBASIC_ABS)/stdout.txt $(FSTARCBASIC_ABS)/stderr.txt; exit 1; }
+	$(Q)printf 'hello world\nraw\ndone\n' | cmp - $(FSTARCBASIC_ABS)/stdout.txt
+	$(Q)printf 'warn w\nerr\n' | cmp - $(FSTARCBASIC_ABS)/stderr.txt
+	$(Q)touch $@
+
+all: $(FSTARCBASIC_DIR)/CherryFStarCBasic.chran
+
 ARRAY_DIR = $(CHERRY_DIR)/array
 ARRAY_ABS = $(abspath $(ARRAY_DIR))
 $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \

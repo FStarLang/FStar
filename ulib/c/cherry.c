@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <spawn.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #if defined(__APPLE__)
@@ -1129,6 +1130,51 @@ cherry_string cherry_getcwd(void) {
   cherry_string r = str_of_c(d);
   free(d);
   return r;
+}
+
+/* The entries of a directory but "." and "..", in readdir's order (as
+   OCaml's Sys.readdir), each followed by a NUL byte. */
+cherry_string cherry_readdir(cherry_string path) {
+  DIR *dir = opendir(cherry_str_data(path));
+  if (dir == NULL) { io_fail(cherry_str_data(path)); return str_of_c(""); }
+  char *buf = NULL;
+  size_t n = 0, cap = 0;
+  struct dirent *e;
+  while ((e = readdir(dir)) != NULL) {
+    if (strcmp(e->d_name, ".") == 0 || strcmp(e->d_name, "..") == 0) continue;
+    size_t k = strlen(e->d_name) + 1;
+    if (n + k > cap) {
+      cap = 2 * (n + k);
+      buf = (char *)realloc(buf, cap);
+      if (buf == NULL) abort();
+    }
+    memcpy(buf + n, e->d_name, k);
+    n += k;
+  }
+  closedir(dir);
+  /* Without the last NUL, so that splitting at NULs gives the entries. */
+  cherry_string r = cherry_str_of_bytes(buf != NULL ? buf : "", n == 0 ? 0 : n - 1);
+  free(buf);
+  return r;
+}
+
+/* Whether two paths name the same file (device and inode). */
+bool cherry_same_file(cherry_string a, cherry_string b) {
+  struct stat sa, sb;
+  if (stat(cherry_str_data(a), &sa) != 0) { io_fail(cherry_str_data(a)); return false; }
+  if (stat(cherry_str_data(b), &sb) != 0) { io_fail(cherry_str_data(b)); return false; }
+  return sa.st_dev == sb.st_dev && sa.st_ino == sb.st_ino;
+}
+
+bool cherry_isatty(uint64_t h) {
+  FILE *f = chan_get(h);
+  return f != NULL && isatty(fileno(f));
+}
+
+/* What the uname command prints: the kernel's name. */
+cherry_string cherry_uname(void) {
+  struct utsname u;
+  return str_of_c(uname(&u) == 0 ? u.sysname : "Unix");
 }
 
 /* The executable's resolved path; argv[0] where it cannot be found. */
