@@ -1099,8 +1099,15 @@ let ty (t:cty) : ML string = decl_of t ""
    The functions are collected while the bodies are printed and emitted
    afterwards, above them, behind prototypes -- the same arrangement the
    program's own definitions use, and for the same reason. *)
-let eq_queue : ref (list (string & dtype)) = mk_ref []
+let eq_queue : ref (list (string & dtype & string & list string)) = mk_ref []
 let eq_seen : ref (HashTable.t string string) = mk_ref (HashTable.create 20)
+
+(* Issue 4715.  The fields a generated comparison has descended through,
+   outermost first, so that a type with no comparison found deep inside a
+   record can say which record and which field led there.  A queued helper
+   carries the declaration and path that first asked for it, since it is
+   drained after the declaration that asked has been printed. *)
+let eq_path : ref (list string) = mk_ref []
 
 (* Section 116.  Every C name the program itself defines, as the file will
    spell it -- filled after {!build_renames}, since a rename changes what that
@@ -1129,18 +1136,41 @@ let rec mentions_any (t:cty) : ML bool =
   | TBuf c | TRef (_, c) | TInline c -> mentions_any c
   | _ -> false
 
+let with_eq_step (#a:Type) (step:string) (f:unit -> ML a) : ML a =
+  let saved = !eq_path in
+  eq_path := saved @ [step];
+  let r = f () in
+  eq_path := saved;
+  r
+
 let rec eq_target (t:cty) : ML (option dtype) =
   match t with
   | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t" }, _) ->
     reject "an equality test on an immutable array"
       ["Cherry does not compare immutable arrays yet."]
+  (* Issue 4715.  Under Cherry a [TAny] is a [dyn], a box around a value of
+     any type, and nothing knows how to compare two of them: C's [==] on the
+     box does not compile.  [dyn] is not an eqtype, so only --lax or an
+     assumed [hasEq] gets here. *)
+  | TAny when Options.custard_cherry () ->
+    E.raise_error0 E.Error_CustardNoCRepresentation
+      ([text ("Custard: an equality test at FStar.Dyn.dyn, in " ^ !current ^ ".");
+        text "Cherry cannot compare two dyn values: dyn is not an eqtype, \
+              so the test is only reachable under --lax or an assumed hasEq."]
+       @ (match !eq_path with
+          | [] -> []
+          | ps -> [text ("The dyn is reached by comparing " ^
+                         String.concat ", then " ps ^ ".")])
+       @ chain_msg ())
   | TApp (n, []) when None? (builtin_type n) ->
     (match find_type n with
      | Some d when List.existsb Extern? d.dt_flags -> None
      | Some d when is_boxed_ty t -> Some d
      | Some d ->
        (match d.dt_body with
-        | TAbbrev u -> eq_target u
+        | TAbbrev u ->
+          with_eq_step ("the abbreviation " ^ string_of_name d.dt_name)
+            (fun () -> eq_target u)
         | TRecord _ -> Some d
         | TVariant _ -> if is_enum d then None else Some d
         | TAbstract -> None)
@@ -1162,7 +1192,7 @@ let eq_fn_of (t:cty) : ML (option string) =
      | None ->
        let f = alloc_name (c_name d.dt_name ^ "__eq") in
        HashTable.add !eq_seen k f;
-       eq_queue := !eq_queue @ [(f, d)];
+       eq_queue := !eq_queue @ [(f, d, !current, !eq_path)];
        Some f)
 
 let eq_proto (f:string) (d:dtype) : ML string =
@@ -1171,24 +1201,30 @@ let eq_proto (f:string) (d:dtype) : ML string =
 
 let eq_def (f:string) (d:dtype) : ML string =
   let n = c_name d.dt_name in
+  let fn = string_of_name d.dt_name in
   let hd = "static bool " ^ f ^ "(" ^ n ^ " a, " ^ n ^ " b) {\n" in
-  (* Section 44.2 again: [const char *] compares by contents. *)
-  let cmp (a:string) (b:string) (t:cty) : ML string =
+  (* Section 44.2 again: [const char *] compares by contents.  [step] names
+     the field for a rejection further down (issue 4715). *)
+  let cmp (step:string) (a:string) (b:string) (t:cty) : ML string =
     match content_eq t a b with
     | Some c -> c
-    | None -> match eq_fn_of t with
+    | None -> match with_eq_step step (fun () -> eq_fn_of t) with
          | Some g -> g ^ "(" ^ a ^ ", " ^ b ^ ")"
          | None -> "(" ^ a ^ " == " ^ b ^ ")" in
-  let all (pa:string) (pb:string) (fs : list (string & cty)) : ML string =
+  let field (cn:option name) (g:string) : string =
+    "field " ^ g ^
+    (match cn with Some c -> " of constructor " ^ c.id | None -> "") ^
+    " of " ^ fn in
+  let all (cn:option name) (pa:string) (pb:string) (fs : list (string & cty)) : ML string =
     match fs with
     | [] -> "true"
     | _ -> String.concat " && " (fs |> List.map (fun (g, t) ->
-             cmp (pa ^ "." ^ c_var g) (pb ^ "." ^ c_var g) t)) in
+             cmp (field cn g) (pa ^ "." ^ c_var g) (pb ^ "." ^ c_var g) t)) in
   (* Nothing to read: the parameters are named, so they have to be used. *)
   let trivial = "  (void)a; (void)b;\n  return true;\n}\n" in
-  let direct (fs : list (string & cty)) : ML string =
+  let direct (cn:option name) (fs : list (string & cty)) : ML string =
     if Nil? fs then hd ^ trivial
-    else hd ^ "  return " ^ all "a" "b" fs ^ ";\n}\n" in
+    else hd ^ "  return " ^ all cn "a" "b" fs ^ ";\n}\n" in
   match d.dt_body with
   (* Cherry: a cell.  The same pointer, or the same scalar, is equal to
      itself; otherwise both have to be cells with the same tag.  The last
@@ -1212,14 +1248,15 @@ let eq_def (f:string) (d:dtype) : ML string =
        "        " ^ cell ^ " *x = (" ^ cell ^ " *)a, *y = (" ^ cell ^ " *)b;\n" ^
        (if Nil? others then ""
         else "        if (!(" ^ String.concat " && " (others |> List.map (fun (g, t) ->
-               cmp ("x->" ^ c_var g) ("y->" ^ c_var g) t)) ^ ")) return false;\n") ^
+               cmp (field (Some cn) g) ("x->" ^ c_var g) ("y->" ^ c_var g) t)) ^ ")) return false;\n") ^
        (match next with
         | f :: _ -> "        a = x->" ^ c_var f ^ "; b = y->" ^ c_var f ^ ";\n        break;\n"
         | [] -> "        return true;\n") ^
        "      }\n"])) ^
     "      default: return false;\n    }\n  }\n}\n"
-  | TRecord fs -> direct fs
-  | TVariant cs when single_ctor d -> direct (snd (List.hd cs))
+  | TRecord fs -> direct None fs
+  | TVariant cs when single_ctor d ->
+    let cn, fs = List.hd cs in direct (Some cn) fs
   | TVariant cs ->
     hd ^ "  if (a.tag != b.tag) return false;\n" ^
     "  switch (a.tag) {\n" ^
@@ -1227,9 +1264,10 @@ let eq_def (f:string) (d:dtype) : ML string =
       "    case " ^ c_tag cn ^ ": return " ^
       (if Nil? fs then "true"
        else if arm_flat fs
-       then cmp ("a.val." ^ arm_name cn) ("b.val." ^ arm_name cn)
+       then cmp (field (Some cn) (fst (List.hd fs)))
+                ("a.val." ^ arm_name cn) ("b.val." ^ arm_name cn)
                 (snd (List.hd fs))
-       else all ("a.val." ^ arm_name cn)
+       else all (Some cn) ("a.val." ^ arm_name cn)
                 ("b.val." ^ arm_name cn) fs) ^ ";\n")) ^
     (* Every tag is a case, so this is unreachable -- and C still wants a
        [return] on the path that falls out of the switch. *)
@@ -1245,10 +1283,15 @@ let eq_decls () : ML (list string & list string) =
     if fuel <= 0 then failwith "Custard: generated equalities do not settle"
     else match !eq_queue with
     | [] -> ()
-    | (f, d) :: rest ->
+    | (f, d, origin, path) :: rest ->
       eq_queue := rest;
       protos := !protos @ [eq_proto f d];
+      let saved_current, saved_path = !current, !eq_path in
+      current := origin;
+      eq_path := path;
       defs := !defs @ [eq_def f d];
+      current := saved_current;
+      eq_path := saved_path;
       go (fuel - 1) in
   go 10000;
   (!protos, !defs)
@@ -1870,6 +1913,7 @@ let reset_program_state () : ML unit =
   arrow_ids := [];
   void_ret := false;
   eq_queue := [];
+  eq_path := [];
   eq_seen := HashTable.create 20;
   string_lits := HashTable.create 20;
   string_lit_defs := [];
@@ -2371,8 +2415,11 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     "(" ^ (if Neq? o.po_op then "!(" ^ c ^ ")" else c) ^ ")"
   (* Section 107.  The same question at every other type C cannot compare
      with [==]: a struct, which is what a record, a tuple and every inductive
-     with a payload are here. *)
-  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && Some? (eq_fn_of a.ty) ->
+     with a payload are here.  Only for the polymorphic [=]: an operator at a
+     machine type compares at that type whatever its operands' IR types say,
+     which under Cherry may be [TAny] (issue 4715). *)
+  | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && None? o.po_ty &&
+                         Some? (eq_fn_of a.ty) ->
     let g = (match eq_fn_of a.ty with Some g -> g | None -> "") in
     "(" ^ (if Neq? o.po_op then "!" else "") ^
     g ^ "(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ "))"
