@@ -523,6 +523,18 @@ let root_binder_of_enclosing (st:state) (v:S.bv) : ML bool =
 let local_inline_steps : list TcEnv.step = [
   TcEnv.AllowUnboundUniverses;
   TcEnv.Beta;
+  (* The redexes may sit inside a local [let rec], and they have to be fired
+     there too.  [Zeta] is on by default, and with it the normalizer ties the
+     knot: it unrolls the [let rec] once at its use and rebuilds every
+     recursive occurrence from the unreduced definition, so a substituted
+     local function stays a closure in the copy that is actually lifted, with
+     runtime type arguments (error 364; [tc_pat]'s [fail], used in its
+     [check_nested_pattern], is the case that found it).  As in
+     [custard_norm_steps], excluding [Zeta] together with
+     [PureSubtermsWithinComputations] selects the branch that normalizes
+     under the [let rec] and puts it back. *)
+  TcEnv.Exclude TcEnv.Zeta;
+  TcEnv.PureSubtermsWithinComputations;
 ]
 
 let custard_norm_steps : list TcEnv.step = [
