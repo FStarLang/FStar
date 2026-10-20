@@ -1493,18 +1493,14 @@ let cherry_realized_modules : list (list string) = [
   ["FStarC"; "Int"; "Extra"];
   ["FStarC"; "Json"];
   ["FStarC"; "List"];
-  ["FStarC"; "PIMap"];
-  ["FStarC"; "PSMap"];
   ["FStarC"; "Platform"; "Base"];
   ["FStarC"; "Plugins"; "Base"];
   ["FStarC"; "Pprint"];
-  ["FStarC"; "Range"];
   ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
   ["FStarC"; "Tactics"; "Native"];
   ["FStarC"; "Time"];
   ["FStarC"; "Timing"];
-  ["FStarC"; "Unionfind"];
   ["FStarC"; "Util"];
 ]
 
