@@ -509,6 +509,34 @@ val custard_float (width: int) : unit
     [[@@CPrologue "__device__"]]; nvcc rejects the program if you forget. *)
 val custard_c_closure_prologue (prologue: string) : unit
 
+(** Custard, C only: compile this definition, and the copies
+    [custard_c_closure_prologue] makes of the functions it reaches, only when
+    the preprocessor condition [cond] holds -- each prototype and definition
+    is wrapped in [#if cond ... #endif] (see doc/ref/custard.md, section
+    51.6).  A [target(...)] attribute is an error on a compiler for another
+    architecture, so code for one ISA is written
+    [[@@CPrologue "__attribute__((target(\"avx2\")))";
+       custard_c_closure_prologue "__attribute__((target(\"avx2\")))";
+       custard_c_closure_guard "defined(__x86_64__)"]].
+
+    The definition itself is guarded as well as its closure, since it calls
+    the guarded copies.  Callers must not reach it unguarded: test a
+    [custard_c_ifdef] flag with the same condition around the call (and
+    around the runtime CPU check, which is architecture specific too).
+    Custard does not check this. *)
+val custard_c_closure_guard (cond: string) : unit
+
+(** Custard, C only: on an [assume val] of type [bool], a C preprocessor
+    condition (see doc/ref/custard.md, section 51.6).  [if x then e1 else e2]
+    compiles to [#if cond / e1 / #else / e2 / #endif]; the condition of the
+    [if] must be the flag itself, and any other use of it is error 398.  F*
+    knows nothing about its value, so both branches are verified.
+
+    Unlike [CIfDef], the C text is given explicitly rather than derived from
+    the name, so it can be any [#if] expression, e.g.
+    [defined(__x86_64__) || defined(_M_X64)]. *)
+val custard_c_ifdef (cond: string) : unit
+
 (** Custard: written on a [tcclass], this says that its instances are ordinary
     runtime values rather than compile-time dictionaries, so an argument of
     this class type is passed at run time instead of being specialized on (see

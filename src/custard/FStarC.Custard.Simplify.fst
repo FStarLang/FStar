@@ -1858,7 +1858,14 @@ let dce (prog:program) : ML program =
    CUDA does need [__device__] or [__constant__] on a table device code
    reads, but leaving it off fails loudly -- nvcc reports the identifier as
    undefined in device code -- and the fix is an explicit [CPrologue] on the
-   variable. *)
+   variable.
+
+   Section 51.6.  A seed may also carry a [ClosureGuard g], a preprocessor
+   condition: a [target("avx2")] function does not even compile on an ARM
+   compiler.  The seed and its copies are given [Guard g], which the C
+   printer turns into [#if g ... #endif], and copies are made per (prologue,
+   guard) pair, since a copy one guard leaves out cannot serve a seed under
+   another.  The originals stay unguarded: they are portable code. *)
 
 (* The part of a prologue that says what it is for, as an identifier:
    [__attribute__((target("avx2")))] becomes [avx2] and [__device__] becomes
@@ -1884,15 +1891,34 @@ let propagate_prologues (prog:program) : ML program =
   let defs : HashTable.t string decl = HashTable.create 50 in
   prog |> List.iter (fun d -> HashTable.add defs (string_of_name (name_of_decl d)) d);
   let is_entry (d:decl) : ML bool =
-    decl_flags d |> List.existsb (fun f -> Prologue? f || ClosurePrologue? f) in
-  let seed_prologue (d:decl) : ML (option string) =
+    decl_flags d |> List.existsb (fun f ->
+      Prologue? f || ClosurePrologue? f || ClosureGuard? f) in
+  let first (l:dlet) (pick:flag -> option string) : ML (option string) =
+    match l.dl_flags |> List.collect (fun f ->
+            match pick f with Some s -> [s] | None -> []) with
+    | s :: _ -> Some s
+    | [] -> None in
+  let seed_guard (d:decl) : ML (option string) =
+    match d with
+    | DLet l -> first l (fun f -> match f with ClosureGuard s -> Some s | _ -> None)
+    | _ -> None in
+  (* A copy is made per (prologue, guard): the key, and what it decorates. *)
+  let seed_prologue (d:decl) : ML (option (string & list flag)) =
     match d with
     | DLet l ->
-      (match l.dl_flags |> List.collect (fun f ->
-               match f with ClosurePrologue s -> [s] | _ -> []) with
-       | s :: _ -> Some s
-       | [] -> None)
+      (match first l (fun f -> match f with ClosurePrologue s -> Some s | _ -> None) with
+       | Some p ->
+         (match seed_guard d with
+          | Some g -> Some (p ^ "\u0001" ^ g, [Prologue p; Guard g])
+          | None -> Some (p, [Prologue p]))
+       | None -> None)
     | _ -> None in
+  (* The seed's own guard, before anything else, so that the early exit
+     below cannot skip it. *)
+  let prog = prog |> List.map (fun d ->
+    match d, seed_guard d with
+    | DLet l, Some g -> DLet { l with dl_flags = Guard g :: l.dl_flags }
+    | d, _ -> d) in
   let copyable (d:decl) : ML bool =
     match d with
     | DLet l -> Cons? l.dl_binders && not (is_entry d) && None? (imported_unit d) &&
@@ -1904,11 +1930,13 @@ let propagate_prologues (prog:program) : ML program =
        which may collide with anything else in the program. *)
     let suffixes : HashTable.t string string = HashTable.create 8 in
     let suffix_taken : HashTable.t string bool = HashTable.create 8 in
-    let suffix_of (p:string) : ML string =
+    let suffix_of (p:string) (deco:list flag) : ML string =
       match HashTable.try_find suffixes p with
       | Some s -> s
       | None ->
-        let base = prologue_suffix p in
+        let base = match deco with
+                   | Prologue q :: _ -> prologue_suffix q
+                   | _ -> prologue_suffix p in
         let rec pick (i:int) : ML string =
           let s = if i = 0 then base else base ^ show i in
           if Some? (HashTable.try_find suffix_taken s) then pick (i + 1) else s in
@@ -1930,35 +1958,35 @@ let propagate_prologues (prog:program) : ML program =
     (* (prologue, original) -> the copy's name; and the copies, by original. *)
     let copies : HashTable.t string name = HashTable.create 50 in
     let made : HashTable.t string (list decl) = HashTable.create 50 in
-    let rec copy_of (p:string) (n:string) : ML (option name) =
+    let rec copy_of (p:string) (deco:list flag) (n:string) : ML (option name) =
       let key = p ^ "\u0000" ^ n in
       match HashTable.try_find copies key with
       | Some m -> Some m
       | None ->
         match HashTable.try_find defs n with
         | Some (DLet l) when copyable (DLet l) ->
-          let m = fresh_name l.dl_name (suffix_of p) in
+          let m = fresh_name l.dl_name (suffix_of p deco) in
           (* Before the body, so that recursion finds it. *)
           HashTable.add copies key m;
-          let body = redirect p l.dl_body in
+          let body = redirect p deco l.dl_body in
           let flags = l.dl_flags |> List.filter (fun f ->
                         not (Root? f || Entrypoint? f || Private? f || Rec? f)) in
           let c = DLet { l with dl_name = m; dl_body = body;
-                                dl_flags = Prologue p :: Private :: flags } in
+                                dl_flags = deco @ (Private :: flags) } in
           let prev = match HashTable.try_find made n with Some cs -> cs | None -> [] in
           HashTable.add made n (prev @ [c]);
           Some m
         | _ -> None
-    and redirect (p:string) (x:expr) : ML expr =
+    and redirect (p:string) (deco:list flag) (x:expr) : ML expr =
       match x.e with
       | EQual (n, tys) ->
-        (match copy_of p (string_of_name n) with
+        (match copy_of p deco (string_of_name n) with
          | Some m -> { x with e = EQual (m, tys) }
          | None -> x)
-      | _ -> map_children (redirect p) x in
+      | _ -> map_children (redirect p deco) x in
     let prog = prog |> List.map (fun d ->
       match d, seed_prologue d with
-      | DLet l, Some p -> DLet { l with dl_body = redirect p l.dl_body }
+      | DLet l, Some (p, deco) -> DLet { l with dl_body = redirect p deco l.dl_body }
       | d, _ -> d) in
     prog |> List.collect (fun d ->
       d :: (match HashTable.try_find made (string_of_name (name_of_decl d)) with

@@ -982,6 +982,8 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
        | "FStar.Attributes.CPrologue" -> [Prologue str]
        | "FStar.Attributes.CEpilogue" -> [Epilogue str]
        | "FStar.Attributes.custard_c_closure_prologue" -> [ClosurePrologue str]
+       | "FStar.Attributes.custard_c_closure_guard" -> [ClosureGuard str]
+       | "FStar.Attributes.custard_c_ifdef" -> [IfDef str]
        | _ -> [])
     | Tm_fvar fv, [] ->
       let nm = Ident.string_of_lid (S.lid_of_fv fv) in

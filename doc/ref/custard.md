@@ -13105,6 +13105,64 @@ both seeds read, which comes out undecorated.  `DevGShare.fst` is gone with
 the refusal it tested.
 
 
+## 51.6 Guards: code for one architecture
+
+§51.5 makes a `target("avx2")` copy safe to *run*: nothing reaches it
+without a runtime CPU check.  It is still not safe to *compile*.  On an ARM
+compiler the attribute is an error, and so are the intrinsics the seed
+calls, and so is `__builtin_cpu_supports("avx2")` in the caller.  All three
+need the preprocessor.  There are two attributes for this, both carrying a
+condition as C text that Custard does not read:
+
+```fstar
+[@@custard_c_ifdef "defined(__x86_64__)"]
+assume val x86 : bool
+
+[@@CPrologue "__attribute__((target(\"avx2\")))";
+   custard_c_closure_prologue "__attribute__((target(\"avx2\")))";
+   custard_c_closure_guard "defined(__x86_64__)"]
+let kernel_avx2 ... = ...
+
+let kernel x = if x86 then (if has_avx2 () then kernel_avx2 x else portable x)
+               else portable x
+```
+
+**`custard_c_closure_guard g`** (flag `ClosureGuard`) applies to the same
+functions as the closure prologue, plus the seed.  The seed has to be
+included because it calls the guarded copies.  `propagate_prologues` gives
+each of them `Guard g`, and makes copies per (prologue, guard) pair.  The
+C printer wraps every place a `Guard` declaration is written in
+`#if g ... #endif`: its prototype, its header declaration and its
+definition.  The originals stay unguarded, since they are portable code.  A
+seed with a guard and no closure prologue is just guarded.  Like a closure
+prologue, a closure guard makes its declaration an entry, so another seed's
+walk stops there.
+
+**`custard_c_ifdef c`** (flag `IfDef`), on an `assume val` of type `bool`,
+makes `if x then e1 else e2` compile to `#if c` / `#else` / `#endif`, each
+arm in a block of its own.  F\* knows nothing about `x`, so both branches
+are verified, as for any other unknown `bool`.  No declaration is emitted
+for it.  Any other use, including `not x` or `x && y` as a condition, is
+error 398 (`Error_CustardBadIfDef`), because C has a preprocessor condition
+only in `#if`.  A non-`bool` flag is also error 398.  This is karamel's
+`CIfDef` with the C text given explicitly rather than derived from the
+name, so the condition can be any `#if` expression.  The karamel backend
+has no field for that text and refuses the flag with the same error.
+
+The two conditions are separate strings, and nothing checks that a caller
+tests a flag with the guard's condition before reaching a guarded function.
+Tying them together -- making the guard an `IfDef` flag rather than a
+string, and checking that every reference to a guarded function is
+dominated by a test of it -- was considered and left for later, because it
+would allow only one condition per guard.  A missing test fails at compile
+time on the other architecture, as an undeclared function.
+
+`tests/custard/DevGuard.fst` guards a seed and its copies under a condition
+the test never defines, and gives them `#error` prologues, so anything that
+escapes the guard stops the C compiler.  Its `main` reaches the seed only
+under an `if` on a flag with that condition, with the portable original in
+the `#else` branch.  `DevGuardBad.fst` is error 398.  `.cui` version 20.
+
 # 52 A gate that reads a stale artifact
 
 Round 49 from the CBOR/CDDL reporter, and the shortest useful round in a
