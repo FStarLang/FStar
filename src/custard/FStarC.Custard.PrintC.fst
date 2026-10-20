@@ -1391,6 +1391,11 @@ let escape (s:string) : ML string =
   in
   String.concat "" (List.map esc (String.list_of_string s))
 
+(* Cherry's debug mode (cherry.h, CHERRY_DEBUG): the message a failed check
+   prints, as a C string literal naming the declaration it is in. *)
+let debug_what (what:string) : ML string =
+  "\"" ^ escape (what ^ " in " ^ !current) ^ "\""
+
 (* -------------------------------------------------------------------- *)
 (* Section 66: the 16-bit formats                                       *)
 (* -------------------------------------------------------------------- *)
@@ -2578,7 +2583,14 @@ and proj (v:string) (t:cty) (f:string) : ML string =
        let cs = (match d.dt_body with TVariant cs -> cs | _ -> []) in
        (match cs |> List.tryFind (fun (_, fs) ->
                       fs |> List.existsb (fun (g, _) -> g = f)) with
-        | Some (cn, _) -> cell_field v d cn f
+        | Some (cn, _) ->
+          (* F* has checked that the value was built by [cn]; debug mode
+             checks it again (cherry.h). *)
+          let v = if List.length cs > 1
+                  then "CHERRY_TAGGED(" ^ v ^ ", " ^ c_tag cn ^ ", " ^
+                       debug_what ("projector " ^ f ^ " on another constructor") ^ ")"
+                  else v in
+          cell_field v d cn f
         | None -> reject ("the field " ^ f) ["No constructor declares it."])
      | Some d when single_ctor d -> v ^ "." ^ c_var f
      | Some ({ dt_body = TRecord _ }) -> v ^ "." ^ c_var f
@@ -2591,7 +2603,12 @@ and proj (v:string) (t:cty) (f:string) : ML string =
         | TVariant cs ->
           (match cs |> List.tryFind (fun (_, fs) ->
                          fs |> List.existsb (fun (g, _) -> g = f)) with
-           | Some (cn, cfs) -> v ^ arm_sel cn cfs f
+           | Some (cn, cfs) ->
+             let v = if Options.custard_cherry ()
+                     then "CHERRY_TAGGED_U(" ^ v ^ ", " ^ c_tag cn ^ ", " ^
+                          debug_what ("projector " ^ f ^ " on another constructor") ^ ")"
+                     else v in
+             v ^ arm_sel cn cfs f
            | None -> reject ("the field " ^ f) ["No constructor declares it."])
         | _ -> reject ("the field " ^ f) [])
      | None -> reject ("a projection out of " ^ string_of_name n)
@@ -2922,6 +2939,10 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
 
   (* Control does not reach here.  [abort] is [_Noreturn], so no [return]
      has to follow it even in a value position. *)
+  (* Cherry: an [EUnreachable] is a fact F* proved, which debug mode checks
+     and a release build lets the C compiler rely on (cherry.h). *)
+  | EUnreachable s when Options.custard_cherry () ->
+    ind ^ "CHERRY_UNREACHABLE(" ^ debug_what ("unreachable code (" ^ s ^ ")") ^ ");\n"
   | EAbort s | EUnreachable s ->
     ind ^ "/* " ^ escape s ^ " */\n" ^ ind ^ "abort();\n"
 
@@ -3363,7 +3384,11 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
   let sv = c_expr out ind scrut in
   (* Branches whose body only aborts are gone by now (section 5.6); what is
      left is an empty match, which cannot be entered. *)
-  if Nil? brs then !out ^ finish ind D_Ignore sv ^ ind ^ "abort();\n" else
+  if Nil? brs then
+    !out ^ finish ind D_Ignore sv ^
+    (if Options.custard_cherry ()
+     then ind ^ "CHERRY_UNREACHABLE(" ^ debug_what "empty match" ^ ");\n"
+     else ind ^ "abort();\n") else
   (* The scrutinee is tested once per branch, so it has to be a name -- unless
      no branch looks at it, in which case naming it would leave an unused
      variable behind.  That happens for a single catch-all branch, which is
@@ -3452,9 +3477,15 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
        is nothing to attach a block to, so it is emitted flat -- otherwise the
        rest of the function would sit inside a pair of braces that says
        nothing. *)
-    let last (p:pat) (b:expr) : ML string =
-      if first then branch_body ind p b
-      else ind ^ "else" ^ brace ind false (branch_body ind' p b) in
+    let last (chk:list string) (p:pat) (b:expr) : ML string =
+      (* Cherry's debug mode checks that it does match, before its bindings
+         read the scrutinee (cherry.h, CHERRY_DEBUG). *)
+      let check (bi:string) : ML string =
+        if Nil? chk || not (Options.custard_cherry ()) then "" else
+        bi ^ "CHERRY_ASSUME(" ^ String.concat " && " chk ^ ", " ^
+        debug_what "incomplete match" ^ ");\n" in
+      if first then check ind ^ branch_body ind p b
+      else ind ^ "else" ^ brace ind false (check ind' ^ branch_body ind' p b) in
     match brs with
     | [] -> ""
     (* F* has already checked that the match is exhaustive, so the last branch
@@ -3465,13 +3496,14 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
        the last branch of the match any more. *)
     | [(p, g, b)] when not all_tested ->
       if Some? g then guard_rejected ();
-      last p b
+      let tests, _ = pat_tests x scrut.ty p in
+      last tests p b
     | (p, g, b) :: rest ->
       if Some? g then guard_rejected ();
       let tests, _ = pat_tests x scrut.ty p in
       (* Irrefutable, so it is the last branch that can run; anything after it
          is dead and C would warn about it. *)
-      if Nil? tests then last p b
+      if Nil? tests then last [] p b
       else
         (* The next arm is written as [else ...], so this one is [followed]
            exactly when there is a next arm. *)
@@ -4954,6 +4986,10 @@ let cherry_iarr_helpers () : ML (list string & list string) =
     let op (o:string) (x:string) : ML string =
       if counted then rc_call o t x ^ ";" else "" in
     let cell (x:string) : string = s ^ " *" ^ x in
+    (* Debug mode (cherry.h): F* has checked the index, lax code may not have. *)
+    let bounds (f:string) : ML string =
+      "  CHERRY_ASSUME(cherry_iarray_in_bounds(a, i), \"ImmutableArray." ^ f ^
+      ": index out of bounds\");\n" in
     let copy =
       "  for (size_t j = 0; j < n; j++) { d->data[j] = c->data[j]; " ^ op "inc" "d->data[j]" ^ " }\n" in
     protos := !protos @ [s ^ " { cherry_iarray_hdr h; " ^ decl_of t "data[]" ^ "; };\n"];
@@ -4981,7 +5017,8 @@ let cherry_iarr_helpers () : ML (list string & list string) =
        (if counted then "  if (cherry_mark_ref(a, m)) cherry_defer(a, " ^ p ^ "_markf, m);\n"
         else "  (void)cherry_mark_ref(a, m);\n");
     fn ("static inline " ^ decl_of t (p ^ "_index(cherry_iarray a, cherry_int i)"))
-       ("  " ^ decl_of t "x" ^ " = ((" ^ s ^ " *)a)->data[cherry_iarray_pos(i)];\n" ^
+       (bounds "index" ^
+        "  " ^ decl_of t "x" ^ " = ((" ^ s ^ " *)a)->data[cherry_iarray_pos(i)];\n" ^
         (if counted then "  " ^ op "inc" "x" ^ "\n" else "") ^ "  return x;\n");
     (* A shared or persistent array is copied, as is one with another
        reference: the copy takes a reference to every element, and the
@@ -4994,7 +5031,7 @@ let cherry_iarr_helpers () : ML (list string & list string) =
       "  " ^ copy ^
       "    " ^ p ^ "_dec(a);\n    c = d;\n  }\n" in
     fn ("static inline cherry_iarray " ^ p ^ "_upd(cherry_iarray a, cherry_int i, " ^ decl_of t "v" ^ ")")
-       (unique_or_copy "n" ^
+       (bounds "upd" ^ unique_or_copy "n" ^
         "  size_t k = cherry_iarray_pos(i);\n" ^
         (if counted then "  " ^ decl_of t "old" ^ " = c->data[k];\n" else "") ^
         "  c->data[k] = v;\n" ^

@@ -1483,9 +1483,14 @@ $(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 # is the one F* installs, found the way a user would find it.
 CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
 
+# Debug mode (cherry.md): every fact the generated code takes from F* --
+# exhaustive matches, projectors, array bounds -- is checked at run time.
+# CHERRY_DEBUG= builds the tests the way a release build is.
+CHERRY_DEBUG ?= -DCHERRY_DEBUG
+
 $(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc $$(CEXTRA_$$*)
 	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined $(CHERRY_CFLAGS_$*) \
 	  -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  -x c $< $(CHERRY_INC)/cherry.c $(CEXTRA_$*) -o $@
@@ -3432,7 +3437,7 @@ $(CHERRY_DIR)/CherrySepApp.c: $(CACHE_DIR)/CherrySepApp.fst.checked \
 
 $(CHERRY_DIR)/CherrySepApp.chran: $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/CherrySepApp.c
 	$(call msg, "CC-ASAN", CherrySepApp)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -O2 -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -O2 $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/CherrySepApp.c $(CHERRY_INC)/cherry.c \
 	  -o $(CHERRY_DIR)/CherrySepApp.chexe
@@ -3634,7 +3639,7 @@ $(HASH_DIR)/CherryHash.chran: hash/CherryHash.fst \
 	  --custard_monomorphize_types true --custard_main CherryHash.main \
 	  CherryHash.fst -o $(HASH_ABS)/CherryHash.c > /dev/null
 	$(call msg, "CC-ASAN", CherryHash)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(HASH_ABS) -I$(CHERRY_INC) \
 	  -x c $(HASH_ABS)/CherryHash.c $(CHERRY_INC)/cherry.c \
 	  -o $(HASH_ABS)/CherryHash.chexe
@@ -3661,7 +3666,7 @@ $(TIMING_DIR)/CherryTiming.chran: timing/CherryTiming.fst \
 	  --custard_monomorphize_types true --custard_main CherryTiming.main \
 	  CherryTiming.fst -o $(TIMING_ABS)/CherryTiming.c > /dev/null
 	$(call msg, "CC-ASAN", CherryTiming)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(TIMING_ABS) -I$(CHERRY_INC) \
 	  -x c $(TIMING_ABS)/CherryTiming.c $(CHERRY_INC)/cherry.c \
 	  -o $(TIMING_ABS)/CherryTiming.chexe
@@ -3694,7 +3699,7 @@ $(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
 	  --custard_monomorphize_types true --custard_main CherryTime.main \
 	  CherryTime.fst -o $(TIME_ABS)/CherryTime.c > /dev/null
 	$(call msg, "CC-ASAN", CherryTime)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(TIME_ABS) -I$(CHERRY_INC) \
 	  -x c $(TIME_ABS)/CherryTime.c $(CHERRY_INC)/cherry.c \
 	  -o $(TIME_ABS)/CherryTime.chexe
@@ -3703,6 +3708,44 @@ $(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
 	$(Q)touch $@
 
 all: $(TIME_DIR)/CherryTime.chran
+
+# Debug mode (cherry.md): each program breaks a fact F* would have proved, in
+# code whose queries are admitted, and must abort with the message below.
+# It is also compiled without -DCHERRY_DEBUG, to check that the release
+# build compiles cleanly, but not run, as what it does then is undefined (and
+# not optimized, which would let GCC diagnose that).
+DEBUG_DIR = $(CHERRY_DIR)/debug
+DEBUG_ABS = $(abspath $(DEBUG_DIR))
+DEBUG_TESTS = DebugMatch DebugProj DebugBoxed DebugIArray DebugUnreachable
+DEBUG_MSG_DebugMatch = incomplete match in DebugMatch.get
+DEBUG_MSG_DebugProj = incomplete match in DebugProj.main
+DEBUG_MSG_DebugBoxed = incomplete match in DebugBoxed.main
+DEBUG_MSG_DebugIArray = ImmutableArray.index: index out of bounds
+DEBUG_MSG_DebugUnreachable = unreachable code (FStar.Pervasives.false_elim) in DebugUnreachable.impossible
+$(DEBUG_DIR)/%.chran: debug/%.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", $*)
+	$(Q)rm -rf $(DEBUG_ABS)/$* && mkdir -p $(DEBUG_ABS)/$*
+	$(Q)cd debug && $(FSTAR_EXE) --admit_smt_queries true --cache_dir $(DEBUG_ABS)/$* \
+	  --cache_checked_modules --already_cached 'Prims FStar' $*.fst > /dev/null
+	$(Q)cd debug && $(FSTAR_EXE) --cache_dir $(DEBUG_ABS)/$* \
+	  --already_cached '*' --odir $(DEBUG_ABS)/$* --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main $*.main \
+	  $*.fst -o $(DEBUG_ABS)/$*/$*.c > /dev/null
+	$(call msg, "CC", $*)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(DEBUG_ABS)/$* -I$(CHERRY_INC) \
+	  -x c $(DEBUG_ABS)/$*/$*.c $(CHERRY_INC)/cherry.c -o $(DEBUG_ABS)/$*/$*.release
+	$(call msg, "CC-ASAN", $*)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -DCHERRY_DEBUG -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(DEBUG_ABS)/$* -I$(CHERRY_INC) \
+	  -x c $(DEBUG_ABS)/$*/$*.c $(CHERRY_INC)/cherry.c -o $(DEBUG_ABS)/$*/$*.chexe
+	$(call msg, "RUN-ASAN", $*)
+	$(Q)if $(DEBUG_ABS)/$*/$*.chexe 2> $(DEBUG_ABS)/$*/$*.err; then \
+	  echo "$*: ran to completion in debug mode"; exit 1; fi
+	$(Q)grep -qF -- "Cherry debug check failed: $(DEBUG_MSG_$*)" $(DEBUG_ABS)/$*/$*.err \
+	  || { cat $(DEBUG_ABS)/$*/$*.err; exit 1; }
+	$(Q)touch $@
+
+all: $(addprefix $(DEBUG_DIR)/, $(addsuffix .chran, $(DEBUG_TESTS)))
 
 SMALLINT_DIR = $(CHERRY_DIR)/smallint
 SMALLINT_ABS = $(abspath $(SMALLINT_DIR))
@@ -3721,7 +3764,7 @@ $(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
 	  --custard_monomorphize_types true --custard_main CherrySmallInt.main \
 	  CherrySmallInt.fst -o $(SMALLINT_ABS)/CherrySmallInt.c > /dev/null
 	$(call msg, "CC-ASAN", CherrySmallInt)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(SMALLINT_ABS) -I$(CHERRY_INC) \
 	  -x c $(SMALLINT_ABS)/CherrySmallInt.c $(CHERRY_INC)/cherry.c \
 	  -o $(SMALLINT_ABS)/CherrySmallInt.chexe
@@ -3751,7 +3794,7 @@ $(FSTARCLIST_DIR)/CherryFStarCList.chran: fstarclist/CherryFStarCList.fst \
 	  --custard_monomorphize_types true --custard_main CherryFStarCList.main \
 	  CherryFStarCList.fst -o $(FSTARCLIST_ABS)/CherryFStarCList.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCList)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCLIST_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCLIST_ABS)/CherryFStarCList.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCLIST_ABS)/CherryFStarCList.chexe
@@ -3781,7 +3824,7 @@ $(FSTARCSTRING_DIR)/CherryFStarCString.chran: fstarcstring/CherryFStarCString.fs
 	  --custard_monomorphize_types true --custard_main CherryFStarCString.main \
 	  CherryFStarCString.fst -o $(FSTARCSTRING_ABS)/CherryFStarCString.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCString)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCSTRING_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCSTRING_ABS)/CherryFStarCString.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCSTRING_ABS)/CherryFStarCString.chexe
@@ -3816,7 +3859,7 @@ $(FSTARCUTIL_DIR)/CherryFStarCUtil.chran: fstarcutil/CherryFStarCUtil.fst \
 	  --custard_monomorphize_types true --custard_main CherryFStarCUtil.main \
 	  CherryFStarCUtil.fst -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCUtil)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCUTIL_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCUTIL_ABS)/CherryFStarCUtil.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.chexe
@@ -3849,7 +3892,7 @@ $(FSTARCBASIC_DIR)/CherryFStarCBasic.chran: fstarcbasic/CherryFStarCBasic.fst \
 	  --custard_monomorphize_types true --custard_main CherryFStarCBasic.main \
 	  CherryFStarCBasic.fst -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCBasic)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCBASIC_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCBASIC_ABS)/CherryFStarCBasic.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.chexe
@@ -3884,7 +3927,7 @@ $(FSTARCJSON_DIR)/CherryFStarCJson.chran: fstarcjson/CherryFStarCJson.fst \
 	  --custard_monomorphize_types true --custard_main CherryFStarCJson.main \
 	  CherryFStarCJson.fst -o $(FSTARCJSON_ABS)/CherryFStarCJson.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCJson)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCJSON_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCJSON_ABS)/CherryFStarCJson.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCJSON_ABS)/CherryFStarCJson.chexe
@@ -3915,7 +3958,7 @@ $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
 	  --custard_monomorphize_types true --custard_main CherryArray.main \
 	  CherryArray.fst -o $(ARRAY_ABS)/CherryArray.c > /dev/null
 	$(call msg, "CC-ASAN", CherryArray)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(ARRAY_ABS) -I$(CHERRY_INC) \
 	  -x c $(ARRAY_ABS)/CherryArray.c $(CHERRY_INC)/cherry.c \
 	  -o $(ARRAY_ABS)/CherryArray.chexe

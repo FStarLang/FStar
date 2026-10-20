@@ -24,9 +24,6 @@ open FStarC.Effect
 module I = FStarC.SmallInt
 module S = FStarC.String
 
-(* Raises [Failure msg] (cherry.md, "Exceptions"). *)
-private assume val failwith_tot : #a:Type -> string -> a
-
 (* In ulib/c/cherry.c. *)
 [@@custard_extern "cherry_io_error"]
 private assume val io_error : unit -> ML string
@@ -50,11 +47,12 @@ private let check () : ML unit =
   let e = io_error () in
   if e <> "" then failwith e
 
-(* What follows the last '.'; OCaml raises Not_found if there is none. *)
+(* What follows the last '.', and "" if there is none (where OCaml raises
+   Not_found). *)
 let get_file_extension fn =
   let rec last (l:list string) : string =
     match l with
-    | [] | [_] -> failwith_tot "Not_found"
+    | [] | [_] -> ""
     | [_; x] -> x
     | _ :: l -> last l in
   last (S.split_on_string fn ".")
@@ -78,8 +76,10 @@ let path_to_string (absolute:bool) (cs:list string) : string =
   else if Nil? cs then "."
   else S.concat "/" cs
 
+(* An absolute [q] is the result on its own (where OCaml raises
+   Invalid_argument). *)
 let join_paths p q =
-  if is_absolute_posix q then failwith_tot "Invalid_argument(\"PathGen.concat\")"
+  if is_absolute_posix q then path_to_string true (components q)
   else path_to_string (is_absolute_posix p) (List.Tot.append (components p) (components q))
 
 let basename s = c_basename s
@@ -107,7 +107,8 @@ let file_exists f = c_file_exists f
 let is_directory f = c_is_directory f
 
 (* [rev_out] is the normalized prefix, reversed; it starts with a '..' only
-   if all of it is. *)
+   if all of it is.  A '..' above the root is the root, as in POSIX (where
+   OCaml raises Malformed_path). *)
 private
 let rec normalize (absolute:bool) (rev_out cs:list string) : Tot (list string) (decreases cs) =
   match cs with
@@ -117,7 +118,7 @@ let rec normalize (absolute:bool) (rev_out cs:list string) : Tot (list string) (
     (match rev_out with
      | c :: rev_out' when c <> ".." -> normalize absolute rev_out' cs
      | _ ->
-       if absolute then failwith_tot "BatPathGen.Make(S).Malformed_path"
+       if absolute then normalize absolute rev_out cs
        else normalize absolute (".." :: rev_out) cs)
   | c :: cs -> normalize absolute (c :: rev_out) cs
 

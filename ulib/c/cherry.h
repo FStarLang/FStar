@@ -37,6 +37,48 @@ static inline uint32_t cherry_tag(const cherry_obj *o) {
   return cherry_is_scalar(o) ? (uint32_t)((uintptr_t)o >> 1) : o->tag;
 }
 
+/* Debug mode (cherry.md, "Debug mode").  The generated code relies on facts
+   F* has checked -- a match is exhaustive, a projector is applied to its own
+   constructor, an index is in bounds -- and does not test them again.  Code
+   that was only lax-checked can break them.  Compiled with -DCHERRY_DEBUG,
+   every such fact is tested where it is relied on, and a failure aborts with
+   a message; without it, the tests are not even evaluated. */
+#if defined(__GNUC__)
+__attribute__((noreturn, cold))
+#endif
+void cherry_debug_fail(const char *what, const char *file, int line);
+#ifdef CHERRY_DEBUG
+#define CHERRY_ASSUME(c, what) \
+  ((c) ? (void)0 : cherry_debug_fail((what), __FILE__, __LINE__))
+static inline cherry_obj *cherry_debug_tag(cherry_obj *o, uint32_t t,
+                                           const char *what,
+                                           const char *file, int line) {
+  if (cherry_tag(o) != t) cherry_debug_fail(what, file, line);
+  return o;
+}
+/* A cell, after checking that it was built by the constructor with tag [t]. */
+#define CHERRY_TAGGED(v, t, what) \
+  cherry_debug_tag((cherry_obj *)(v), (t), (what), __FILE__, __LINE__)
+#define CHERRY_UNREACHABLE(what) cherry_debug_fail((what), __FILE__, __LINE__)
+/* The same for an unboxed tagged union, which is a value rather than a
+   pointer: a GNU statement expression, so that [v] is evaluated once. */
+#define CHERRY_TAGGED_U(v, t, what) \
+  (__extension__ ({ __typeof__(v) cherry_dv_ = (v); \
+     CHERRY_ASSUME(cherry_dv_.tag == (t), (what)); cherry_dv_; }))
+#else
+/* Not evaluated, but used, so that a variable only a check reads is not
+   reported unused.  What F* proved unreachable, the C compiler may assume
+   is. */
+#define CHERRY_ASSUME(c, what) ((void)sizeof((c) ? 1 : 0))
+#define CHERRY_TAGGED(v, t, what) (v)
+#define CHERRY_TAGGED_U(v, t, what) (v)
+#if defined(__GNUC__)
+#define CHERRY_UNREACHABLE(what) __builtin_unreachable()
+#else
+#define CHERRY_UNREACHABLE(what) abort()
+#endif
+#endif
+
 /* The count of a shared cell is updated by other threads at the same time,
    so every access to a count is atomic.  Relaxed loads and stores are plain
    moves on x86 and ARM; they are only there to keep the program free of
@@ -366,6 +408,12 @@ static inline cherry_int cherry_iarray_length(cherry_iarray a) {
    it is a small integer. */
 static inline size_t cherry_iarray_pos(cherry_int i) {
   return (size_t)cherry_int_val(i);
+}
+
+/* Debug mode: whether [i] is an index into [a]. */
+static inline bool cherry_iarray_in_bounds(cherry_iarray a, cherry_int i) {
+  return cherry_is_scalar(i) && cherry_int_val(i) >= 0 &&
+         (size_t)cherry_int_val(i) < ((cherry_iarray_hdr *)a)->size;
 }
 
 /* ------------------------------------------------------------------------

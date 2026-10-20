@@ -1011,9 +1011,8 @@ let infer_raises (p:program) : ML unit =
     let changed = mk_ref false in
     p |> List.iter (fun d ->
       match d with
-      (* A total definition too: the [failwith_tot] of Cherry's own
-         implementations of compiler modules raises (see [failure_of]), and so
-         do the total definitions that call it. *)
+      (* Whatever its effect: a definition that raises (a [failwith], see
+         [failure_of], in [Ex]) or calls one that does. *)
       | DLet l when not (HashTable.mem tbl (string_of_name l.dl_name)) && raises l.dl_body ->
         HashTable.add tbl (string_of_name l.dl_name) true; changed := true
       | _ -> ());
@@ -1464,15 +1463,10 @@ let run_let (l:dlet) : ML dlet =
 
 (* [failwith s] raises [Failure s] (cherry.md, "Exceptions"), so that it can
    be caught: the support modules' [failwith] is an external, and their
-   [Failure] is declared beside it.  The [failwith_tot] that Cherry's own
-   implementations of compiler modules ([FStarC.List], ...) declare is the
-   same at a total type, for the partial functions their interfaces declare
-   total. *)
+   [Failure] is declared beside it. *)
 let failure_of (f:name) : option name =
   if f.id = "failwith" && (f.ns = ["FStar"; "All"] || f.ns = ["FStarC"; "Effect"])
   then Some { f with id = "Failure"; spec = None }
-  else if f.id = "failwith_tot" && List.Tot.mem f.ns FStarC.Custard.Builtins.cherry_source_modules
-  then Some { f with ns = ["FStarC"; "Effect"]; id = "Failure"; spec = None }
   else None
 
 let is_effect_fn (f:name) (id:string) : bool =

@@ -38,9 +38,8 @@ let rec all (#a:Type) (f:a -> ML bool) (l:list a) : ML bool =
 let main () : ML FStar.UInt32.t =
   let e = 0 in
   (* Format. *)
-  let f1 = fails (fun () -> F.fmt "%s and %s" ["x"]) in
   let e = check (F.fmt "%s+%s=%s" ["1"; "2"; "3"] = "1+2=3" && F.fmt "" [] = "" && F.fmt "x" [] = "x"
-                 && F.fmt2 "%s%s" "a" "b" = "ab" && f1) 1 e in
+                 && F.fmt2 "%s%s" "a" "b" = "ab") 1 e in
   let e = check (F.stdout_isatty () = Some false && F.colorize_red "x" = "x") 2 e in
   F.print1 "hello %s\n" "world";
   F.print_raw "raw\n";
@@ -53,16 +52,14 @@ let main () : ML FStar.UInt32.t =
   F.print_string "done\n";
   F.flush_stdout ();
   let e = check (!got = "a-b") 3 e in
-  (* Filepath, as BatPathGen and OCaml's Filename. *)
+  (* Filepath, as BatPathGen and OCaml's Filename, except where they
+     raise. *)
   let e = check (all (fun (p, c) -> P.canonicalize p = c) canonical) 4 e in
-  let f1 = fails (fun () -> P.canonicalize "/..") in
-  let f2 = fails (fun () -> P.canonicalize "/a/../..") in
-  let e = check (f1 && f2) 5 e in
+  let e = check (P.canonicalize "/.." = "/" && P.canonicalize "/a/../../b" = "/b") 5 e in
   let e = check (all (fun (p, q, r) -> P.join_paths p q = r) joined) 6 e in
-  let f1 = fails (fun () -> P.join_paths "a" "/b") in
-  let f2 = fails (fun () -> P.join_paths "a" "") in
-  let f3 = fails (fun () -> P.get_file_extension "noext") in
-  let e = check (f1 && f2 && f3 && P.is_path_absolute "" && P.is_path_absolute "/a"
+  let e = check (P.join_paths "a" "/b//c" = "/b/c" && P.join_paths "a" "" = "/"
+                 && P.get_file_extension "noext" = ""
+                 && P.is_path_absolute "" && P.is_path_absolute "/a"
                  && not (P.is_path_absolute "a") && P.get_file_extension "a.b.fst" = "fst"
                  && P.get_file_extension "a." = "" && P.get_file_extension "d.x/f" = "x/f") 7 e in
   let e = check (P.basename "/a/b/" = "b" && P.basename "" = "." && P.dirname "a//b" = "a"

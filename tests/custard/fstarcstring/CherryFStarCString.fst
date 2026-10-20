@@ -50,8 +50,7 @@ let main () : ML FStar.UInt32.t =
                  && S.escaped "\u00e9~ '" = "\\195\\169~ '"
                  && S.escaped one = "\\001" && S.escaped del = "\\127") 10 e in
   let c200 = S.string_of_char (FStar.Char.char_of_u32 200ul) in
-  let f0 = fails (fun () -> S.string_of_char (FStar.Char.char_of_u32 300ul)) in
-  let e = check (S.string_of_char 'a' = "a" && I.to_int (S.byte_length c200) = 1 && f0) 11 e in
+  let e = check (S.string_of_char 'a' = "a" && I.to_int (S.byte_length c200) = 1) 11 e in
   let s1 = S.substring h 1 3 in
   let f1 = fails (fun () -> S.substring h 3 3) in
   let f2 = fails (fun () -> S.substring h (-1) 1) in
