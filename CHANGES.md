@@ -76,6 +76,14 @@ Guidelines for the changelog:
     Globals are no longer decorated (and error 383 is gone): a CUDA table
     read from device code needs an explicit `[@@CPrologue "__device__"]`.
 
+  * New `[@@custard_c_closure_guard "cond"]` wraps the decorated definition
+    and the copies its closure prologue makes in `#if cond ... #endif`, so
+    code for one architecture (`target("avx2")`, intrinsics) is not compiled
+    on another. New `[@@custard_c_ifdef "cond"]` on an `assume val x : bool`
+    compiles `if x then .. else ..` to `#if cond / #else / #endif`, which is
+    how a caller guards both the call and its runtime CPU check. Direct-to-C
+    backend only; any other use of the flag is error 398.
+
 ## New `Nd` effect for nondeterministic, but terminating, computations
 
   * `Nd` (an instance of the new primitive effect `NDET`) sits strictly

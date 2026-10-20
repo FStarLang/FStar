@@ -430,6 +430,13 @@ let types : ref (HashTable.t string dtype) = mk_ref (HashTable.create 0)
 let ctors : ref (HashTable.t string (dtype & list (string & cty))) = mk_ref (HashTable.create 0)
 (* external name -> the symbol to call it by *)
 let externs : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+(* Section 51.6.  [@@custard_c_ifdef] external -> its preprocessor condition *)
+let ifdefs : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+
+let ifdef_of_flags (fs:list flag) : ML (option string) =
+  match List.tryFind IfDef? fs with
+  | Some (IfDef c) -> Some c
+  | _ -> None
 
 (* Which parameters of a definition survive into C.  A [unit] parameter the
    body never mentions carries no information -- it is F*'s way of writing a
@@ -1898,6 +1905,7 @@ let reset_program_state () : ML unit =
   types := HashTable.create 0;
   ctors := HashTable.create 0;
   externs := HashTable.create 0;
+  ifdefs := HashTable.create 0;
   keeps := HashTable.create 0;
   void_fns := HashTable.create 0;
   arities := HashTable.create 0;
@@ -2144,6 +2152,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EQual (n, _) when Options.custard_cherry () && Some? (fn_sig n) ->
     clo_request (ReqPap (n, 0, e.ty));
     "((cherry_fn)&" ^ static_clo_name n ^ ")"
+  | EQual (n, _) when Some? (HashTable.try_find !ifdefs (string_of_name n)) ->
+    E.raise_error0 E.Error_CustardBadIfDef [
+      text ("Custard: " ^ string_of_name n ^ " is a [@@custard_c_ifdef] flag, \
+             used as a value in " ^ !current ^ ".");
+      text "Its value is a preprocessor condition, which C has only in [#if]: \
+            the only use allowed is as the whole condition of an [if].  Write \
+            [if flag then ... else ...] and compute anything else inside the \
+            branches." ]
   | EQual (n, _) ->
     (match HashTable.try_find !externs (string_of_name n) with
      | Some t -> t
@@ -2843,6 +2859,21 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     String.concat "" (tmps |> List.map (fun ((b:binder), t, _) ->
       ind ^ "  " ^ lookup_var b.b_name ^ " = " ^ t ^ ";\n")) ^
     ind ^ "  goto custard_tail;\n" ^ ind ^ "}\n"
+
+  (* Section 51.6.  A test of a [@@custard_c_ifdef] flag is a test the
+     preprocessor makes.  Each arm keeps a block of its own, as it would
+     under a C [if], so that a name it declares cannot collide with one the
+     code after it declares. *)
+  | EIf ({ e = EQual (n, _) }, t, f)
+      when Some? (HashTable.try_find !ifdefs (string_of_name n)) ->
+    let cond = Some?.v (HashTable.try_find !ifdefs (string_of_name n)) in
+    let arm (body:string) : string =
+      if body = "" then "" else ind ^ "{\n" ^ body ^ ind ^ "}\n" in
+    let tt = arm (emit ind' d t) in
+    let ft = arm (emit ind' d f) in
+    ind ^ "#if " ^ cond ^ "\n" ^ tt ^
+    (if ft = "" then "" else ind ^ "#else\n" ^ ft) ^
+    ind ^ "#endif\n"
 
   | EIf (c, t, f) ->
     let out = mk_ref "" in
@@ -4115,6 +4146,13 @@ let prologue_of (l:dlet) : ML string =
   String.concat "" (l.dl_flags |> List.collect
     (function Prologue s -> [s ^ "\n"] | _ -> []))
 
+(* Section 51.6.  [#if g ... #endif] around every place the declaration is
+   written: its prototype, its header declaration and its definition. *)
+let guarded (l:dlet) (s:string) : ML string =
+  match List.tryFind Guard? l.dl_flags with
+  | Some (Guard g) -> "#if " ^ g ^ "\n" ^ s ^ "#endif\n"
+  | _ -> s
+
 let epilogue_of (l:dlet) : ML string =
   String.concat "" (l.dl_flags |> List.collect
     (function Epilogue s -> [s ^ "\n"] | _ -> []))
@@ -5230,6 +5268,20 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
          cs |> List.iter (fun (c, fs) -> HashTable.add ct (string_of_name c) (t, fs))
        | _ -> ())
     | DExternal x ->
+      (match ifdef_of_flags x.dx_flags with
+       | Some c ->
+         if not (match x.dx_ty with
+                 | TApp (n, []) -> Some "bool" = builtin_type n
+                 | _ -> false) then begin
+           current := string_of_name x.dx_name;
+           E.raise_error0 E.Error_CustardBadIfDef [
+             text ("Custard: " ^ string_of_name x.dx_name ^
+                   " is marked [@@custard_c_ifdef] but is not a [bool].");
+             text "The attribute says the value is a preprocessor condition, \
+                   which is true or false and nothing else." ]
+         end;
+         HashTable.add !ifdefs (string_of_name x.dx_name) c
+       | None -> ());
       HashTable.add xt (string_of_name x.dx_name)
         (match x.dx_target with
          (* Section 121.3.  [emitted_name] answers exactly this; the case
@@ -5363,6 +5415,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   let exts_named = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
+    | DExternal x when Some? (ifdef_of_flags x.dx_flags) -> []
     | DExternal x ->
       (match extern_decl x with
        | Some s ->
@@ -5441,11 +5494,11 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     match d with
     (* A public one is in the header, which this source includes; repeating it
        here would be a redefinition. *)
-    | DLet l when is_macro l -> if is_public l then [] else [prologue_of l ^ macro_decl l]
-    | DLet l when Nil? l.dl_binders -> [prologue_of l ^ storage l ^ global_decl l]
+    | DLet l when is_macro l -> if is_public l then [] else [guarded l (prologue_of l ^ macro_decl l)]
+    | DLet l when Nil? l.dl_binders -> [guarded l (prologue_of l ^ storage l ^ global_decl l)]
     | DLet l when Cons? l.dl_binders ->
       if is_public l then []
-      else [prologue_of l ^ storage l ^ inline_of l ^ proto_of l]
+      else [guarded l (prologue_of l ^ storage l ^ inline_of l ^ proto_of l)]
     | _ -> []) in
 
   let pub_decls = p |> List.collect (fun d ->
@@ -5454,22 +5507,22 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     (* Section 68.  A [#define] and nothing else: it has no linkage, so an
        [extern] declaration beside it would declare a different object, and
        the macro would then rewrite that declaration's own name. *)
-    | DLet l when is_public l && is_macro l -> [prologue_of l ^ macro_decl l]
+    | DLet l when is_public l && is_macro l -> [guarded l (prologue_of l ^ macro_decl l)]
     | DLet l when is_public l && Nil? l.dl_binders ->
       current := string_of_name l.dl_name;
       (match array_extern l with
-       | Some d -> [prologue_of l ^ d]
+       | Some d -> [guarded l (prologue_of l ^ d)]
        | None ->
-         [prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"])
-    | DLet l when is_public l -> [prologue_of l ^ inline_of l ^ proto_of l]
+         [guarded l (prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n")])
+    | DLet l when is_public l -> [guarded l (prologue_of l ^ inline_of l ^ proto_of l)]
     | _ -> []) in
 
   let defs = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
     | DLet l when Nil? l.dl_binders -> []
-    | DLet l -> [comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
-                 let_decl l ^ epilogue_of l]
+    | DLet l -> [guarded l (comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
+                            let_decl l ^ epilogue_of l)]
     | _ -> []) in
 
   (* In declaration order, which the SCC pass has already made a topological

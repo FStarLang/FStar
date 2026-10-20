@@ -2933,6 +2933,18 @@ CNOPAIR_DevClosure += "/*EXCL*/@DevClosure_both(" \
 CNOPAIR_DevClosure += "/*EXCL*/@static uint32_t DevClosure_gk" \
                       "/*target(avx2)*/@static uint32_t DevClosure_gk"
 
+# Section 51.6.  The seed and its copies are wrapped in [#if], the caller
+# tests a [custard_c_ifdef] flag, and every prologue is an [#error], so the
+# C compiler is the assertion that nothing escaped the guard.
+C_TESTS += DevGuard
+CGREP_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)" "\#else" "\#if 1" \
+                  "DevGuard_helper__error_copy_escaped_its_guard("
+CPAIR_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)@\#error seed escaped"
+# A flag used as anything but the whole condition of an [if].
+REJECT_TESTS += DevGuardBad
+CODE_DevGuardBad = 398
+FLAGS_DevGuardBad := --codegen C
+
 # Section 53.3.  One C symbol, two prototypes.  Warning 367's own advice used
 # to end here, and following it alone gives a file that does not compile; the
 # fix is [@@custard_c_header], which is also the answer for a variadic macro.
