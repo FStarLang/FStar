@@ -22946,6 +22946,16 @@ was never put into --- `fun (g : bool -> int & bool) -> ... (g <: any -> any) v`
 a continuation handed to `bind` through a dictionary passed at run time
 (`tests/custard/DynCurry.fst`).
 
+Coercing each argument to the head's parameter needs the head's real
+parameters.  A name partially applied, `mixed as_a as_b embed f` of an
+eight-parameter `mixed` stored as a four-parameter `interp_t`, is typed at
+what remains of its arrow, so the parameters read off its type are those of
+the closure the call returns: `f` was coerced to the type of `args`.  A
+head that names a definition is read at its signature instead
+(`at_signature`, which `coerce_any` already used for a definition taken as a
+value; `tests/custard/DynPartial.fst`, after
+`FStarC.TypeChecker.Primops.Array.ops`).
+
 ### 126.7 One test loses a backend, and says so
 
 `tests/floats/Test01` ran the whole of `FStar.Float32` and `FStar.Float64`

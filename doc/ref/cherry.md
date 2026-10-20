@@ -87,11 +87,11 @@ Extraction also produces `TAny` where OCaml would use `Obj.t`: dependent types (
 - A type variable that monomorphization left standing (e.g. the `'a` of `ret : #a:Type -> a -> m a`) becomes `any`.
 - A pattern variable bound from an `any` field is typed `any` in its branch, so that the coercion out of it is not taken for a no-op.
 - Conversely, a use typed `any` of a pattern variable bound from a concrete field (a generated projector's pattern variable has no sort) puts that variable into `any`; a match all of whose arms put one concrete type into `any` is put into `any` once, so that taking it out again at that type cancels (`tests/custard/CherryProjVal`).
-- An application is typed by its head. Where the head returns `any` and extraction typed the call concretely, the result is coerced. Where extraction typed the call `any` and the head knows better, the call keeps the head's type and its consumer coerces it. Where a head was itself coerced to the arrow extraction typed the call at, each argument is coerced to that arrow's parameter.
+- An application is typed by its head. Where the head returns `any` and extraction typed the call concretely, the result is coerced. Where extraction typed the call `any` and the head knows better, the call keeps the head's type and its consumer coerces it. Where a head was itself coerced to the arrow extraction typed the call at, each argument is coerced to that arrow's parameter. A head naming a definition is checked against the definition's signature, since a partially applied name may be typed at the arrow that remains (`tests/custard/DynPartial`).
 - The arms of an `if` or `match` typed `any` are coerced to `any`, and a function body to its declared result type. Extraction types an `if` or `match` `any` only when its branches really disagree: types equal up to abbreviations (`type fname = string`) are agreement. Test: `tests/custard/CherryAnyIf.fst`.
 - A closure stored in `any` is stored at its uniform type, with every parameter and the result `any`. A coercion between arrow types builds an adapting lambda that coerces each argument and the result. If the source arrow takes fewer parameters than the target, the adapter applies the source to the first ones and adapts the closure it returns to the rest. If it takes more (a curried constructor through a monad at the identity, say), the adapter takes the target's parameters and returns a closure over the source's remaining ones, adapted to the target's result.
 
-`tests/custard/AnyLambda`, `AnyCond`, `HigherKind`, `RetArity`, `Combinators` and `DynCurry` cover these.
+`tests/custard/AnyLambda`, `AnyCond`, `HigherKind`, `RetArity`, `Combinators`, `DynCurry` and `DynPartial` cover these.
 
 ## References
 
