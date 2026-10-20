@@ -22937,6 +22937,15 @@ function given three.  `over_applied` recognizes the shape and coerces the
 head to `TAny`, which is what the target is given for the same call
 written at the top level.
 
+A binder with a trusted type of its own is the converse, and it is not
+overridden by an expected parameter of `TAny` either.  The lambda is then
+coerced as a whole, since its type disagrees with the expectation, and its
+body has to agree with the binder as declared: Cherry prints that type.
+Taking `TAny` for the binder coerced its uses out of an `any` that the value
+was never put into --- `fun (g : bool -> int & bool) -> ... (g <: any -> any) v`,
+a continuation handed to `bind` through a dictionary passed at run time
+(`tests/custard/DynCurry.fst`).
+
 ### 126.7 One test loses a backend, and says so
 
 `tests/floats/Test01` ran the whole of `FStar.Float32` and `FStar.Float64`

@@ -3602,11 +3602,21 @@ let coerce_prog (prog:program) : ML program =
          rejects the second. *)
       let hint (b:binder) : ML (option cty) =
         if TAny? b.b_ty then Some TAny else trust b.b_ty in
+      (* An expected [TAny] parameter does not override a binder whose own
+         type is trusted: the lambda is then coerced as a whole (the [check]
+         around this node sees its type disagree), and the backends that
+         print the binder -- Cherry -- print that type, so the body has to
+         agree with it.  Taking [TAny] here instead coerced each use of the
+         binder out of [any] that was never put into it. *)
+      let param (b:binder) (p:cty) : ML (option cty) =
+        match p, trust b.b_ty with
+        | TAny, Some t -> Some t
+        | _ -> Some p in
       let ps, res =
         (match exp with
          | Some t ->
            (match peel_arrows (List.length bs) t with
-            | Some (ps, res) -> (ps |> List.map Some, Some res)
+            | Some (ps, res) -> (List.map2 param bs ps, Some res)
             | None -> (bs |> List.map hint, None))
          | None -> (bs |> List.map hint, None)) in
       let env = List.fold_left (fun env ((b:binder), t) -> extend env b.b_name t)
