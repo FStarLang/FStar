@@ -1555,8 +1555,10 @@ let cherry_source_modules : list (list string) = [
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
   ["FStar"; "Pprint"];
+  ["FStarC"; "Array"];
   ["FStarC"; "BaseTypes"];
   ["FStarC"; "Hash"];
+  ["FStarC"; "List"];
   ["FStarC"; "Pprint"];
   ["FStarC"; "SmallInt"];
   ["FStarC"; "StringBuffer"];

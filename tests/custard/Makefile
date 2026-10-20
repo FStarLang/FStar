@@ -2896,41 +2896,42 @@ C_TESTS    += FragCfg
 CGREP_FragCfg += "fc_mma("
 CNOGREP_FragCfg += "FragCfg_frag"
 
-# Section 51.3.  A prologue that follows the call graph.  Three callees, one
-# per reachability class: [only] is kernel-only and gets the exclusive
-# string, [both] is reached from the kernel and from host code and gets the
-# shared one, [host_only] is reached from neither and must be untouched.  The
-# strings are not CUDA's on purpose -- Custard does not read them, and a test
-# spelling __device__ would be checking a spelling.
+# Section 51.3.  A prologue that follows the call graph, and section 51.5:
+# the callees are copied once per distinct prologue, and only the copies are
+# decorated.  [only] and [deep] are reached from the two seeds alone, so the
+# originals go; [both] is reached from host code too, so its original stays,
+# undecorated; [host_only] is reached from neither seed and [opt_out] has a
+# prologue of its own, so neither is copied.  The strings are not CUDA's on
+# purpose -- Custard does not read them, and a test spelling __device__ would
+# be checking a spelling.
 C_TESTS += DevClosure
-CGREP_DevClosure += "/*ENTRY*/" "/*EXCL*/" "/*SHARED*/"
+CGREP_DevClosure += "/*ENTRY*/" "/*EXCL*/" "/*target(avx2)*/" \
+                    "DevClosure_both(" "DevClosure_host_only("
+# An original that only the seeds called is gone; nothing else is copied.
+CNOGREP_DevClosure += "DevClosure_only(" "DevClosure_deep(" "DevClosure_down(" \
+                      "DevClosure_opt_out__" "DevClosure_host_only__"
 # Which function got which prologue is the whole test, and a prologue sits on
 # the line before the definition it decorates, so the assertions are on pairs
 # of lines rather than on lines.  CPAIR_<t> is `A@B', asserting that some A is
 # immediately followed by a B; CNOPAIR_<t> asserts that none is.
-CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only" \
-                      "/*SHARED*/@DevClosure_both" \
-                      "/*ENTRY*/@DevClosure_kernel"
-CNOPAIR_DevClosure += "/*SHARED*/@DevClosure_only" \
-                      "/*EXCL*/@DevClosure_both" \
+CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only__EXCL(" \
+                      "/*EXCL*/@DevClosure_deep__EXCL(" \
+                      "/*EXCL*/@DevClosure_both__EXCL(" \
+                      "/*target(avx2)*/@DevClosure_only__avx2(" \
+                      "/*target(avx2)*/@DevClosure_deep__avx2(" \
+                      "/*target(avx2)*/@DevClosure_both__avx2(" \
+                      "/*target(avx2)*/@DevClosure_down__avx2(" \
+                      "/*OPT_OUT*/@DevClosure_opt_out(" \
+                      "/*ENTRY*/@DevClosure_kernel("
+CNOPAIR_DevClosure += "/*EXCL*/@DevClosure_both(" \
+                      "/*target(avx2)*/@DevClosure_both(" \
                       "/*EXCL*/@DevClosure_host_only" \
-                      "/*SHARED*/@DevClosure_host_only" \
+                      "/*target(avx2)*/@DevClosure_host_only" \
                       "/*EXCL*/@static uint32_t DevClosure_host_g"
-# Section 53.2.  The fourth node type: a *global* in the device closure.  The
-# closure covers functions, and a global reached from device code used to get
-# nothing -- one node type over from the case that was tested.
-CPAIR_DevClosure   += "/*EXCL*/@static uint32_t DevClosure_gk"
-
-# Section 53.2.  The other half, which cannot be marked at all: a global that
-# device *and* host code read.  The shared string describes a function, and
-# applying it to a variable on CUDA compiles with a warning and is wrong at
-# runtime, so Custard refuses instead of guessing.
-REJECT_TESTS += DevGShare
-CODE_DevGShare := 383
-FLAGS_DevGShare := --codegen C --custard_monomorphize_types true
-EGREP_DevGShare += "the global DevGShare.g is reached from device code"
-EGREP_DevGShare += "__managed__"
-NOEGREP_DevGShare += "please report"
+# Section 51.5.  A global is neither copied nor marked, even when seeds
+# with different prologues both read it.
+CNOPAIR_DevClosure += "/*EXCL*/@static uint32_t DevClosure_gk" \
+                      "/*target(avx2)*/@static uint32_t DevClosure_gk"
 
 # Section 53.3.  One C symbol, two prototypes.  Warning 367's own advice used
 # to end here, and following it alone gives a file that does not compile; the
@@ -3358,10 +3359,14 @@ REJECT_TESTS += ArrowUnfoldLimit
 CODE_ArrowUnfoldLimit := 365
 EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 
+# Cherry: branches whose types agree only up to an abbreviation are not
+# joined to any.
+CHERRY_TESTS += CherryAnyIf
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
@@ -3373,6 +3378,9 @@ CHERRY_RUN_CherryIArray = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryExn = -O2
 CHERRY_RUN_CherryExn = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryDyn = -O2
+
+# Locals of different initializers share one C function.
+CHERRY_TESTS += CherryInitScope
 
 # Separate compilation under Cherry: a library unit and an application linked
 # against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
@@ -3697,6 +3705,65 @@ $(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
 	$(Q)touch $@
 
 all: $(SMALLINT_DIR)/CherrySmallInt.chran
+
+FSTARCLIST_DIR = $(CHERRY_DIR)/fstarclist
+FSTARCLIST_ABS = $(abspath $(FSTARCLIST_DIR))
+FSTARCLIST_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.List.fsti $(HASH_SRC)/FStarC.List-c.cherry.fst
+# The small stack checks that every function runs in constant stack.
+$(FSTARCLIST_DIR)/CherryFStarCList.chran: fstarclist/CherryFStarCList.fst \
+    $(FSTARCLIST_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCList)
+	$(Q)rm -rf $(FSTARCLIST_ABS) && mkdir -p $(FSTARCLIST_ABS)/src
+	$(Q)ln -s $(FSTARCLIST_SRCS) $(FSTARCLIST_ABS)/src/
+	$(Q)cd fstarclist && for f in $(addprefix $(FSTARCLIST_ABS)/src/,$(notdir $(FSTARCLIST_SRCS))) \
+	    CherryFStarCList.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCLIST_ABS)/src --cache_dir $(FSTARCLIST_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarclist && $(FSTAR_EXE) --include $(FSTARCLIST_ABS)/src --cache_dir $(FSTARCLIST_ABS) \
+	  --already_cached '*' --odir $(FSTARCLIST_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCList.main \
+	  CherryFStarCList.fst -o $(FSTARCLIST_ABS)/CherryFStarCList.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCList)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCLIST_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCLIST_ABS)/CherryFStarCList.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCLIST_ABS)/CherryFStarCList.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCList)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCLIST_ABS)/CherryFStarCList.chexe
+	$(Q)touch $@
+
+all: $(FSTARCLIST_DIR)/CherryFStarCList.chran
+
+ARRAY_DIR = $(CHERRY_DIR)/array
+ARRAY_ABS = $(abspath $(ARRAY_DIR))
+$(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
+    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+    $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryArray)
+	$(Q)rm -rf $(ARRAY_ABS) && mkdir -p $(ARRAY_ABS)
+	$(Q)cd array && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+	    $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst \
+	    CherryArray.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(ARRAY_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd array && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(ARRAY_ABS) \
+	  --already_cached '*' --odir $(ARRAY_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryArray.main \
+	  CherryArray.fst -o $(ARRAY_ABS)/CherryArray.c > /dev/null
+	$(call msg, "CC-ASAN", CherryArray)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(ARRAY_ABS) -I$(CHERRY_INC) \
+	  -x c $(ARRAY_ABS)/CherryArray.c $(CHERRY_INC)/cherry.c \
+	  -o $(ARRAY_ABS)/CherryArray.chexe
+	$(call msg, "RUN-ASAN", CherryArray)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(ARRAY_ABS)/CherryArray.chexe
+	$(Q)touch $@
+
+all: $(ARRAY_DIR)/CherryArray.chran
 
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this

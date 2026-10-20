@@ -408,7 +408,7 @@ type error_code =
   | Error_CustardBadFloatLiteral
   | Warning_CustardRuleArity
   | Warning_CustardExternErasure
-  | Error_CustardSharedGlobal
+  | Unused02
   | Error_CustardExternConflict
   | Error_CustardEntryNotFound
   | Error_CustardBadFloatWidth

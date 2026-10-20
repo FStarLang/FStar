@@ -492,13 +492,22 @@ val custard_float (width: int) : unit
     transitive callees, which is a reachability question about the whole
     program.
 
-    So Custard computes it.  Every definition reachable from this one -- not
-    this one, and not one carrying a [CPrologue] of its own -- receives a
-    prologue: [exclusive] when the only route to it is through a definition
-    marked this way, and [shared] when the rest of the program reaches it as
-    well.  For CUDA those are ["__device__"] and ["__device__ __host__"], and
-    a helper called from both a kernel and host code needs the second. *)
-val custard_c_closure_prologue (exclusive: string) (shared: string) : unit
+    So Custard computes it.  Every function reachable from this one -- not
+    this one, and not one carrying a [CPrologue] of its own -- is *cloned*:
+    the copy gets [prologue] and a name disambiguated by it, and the calls
+    from this definition and from the copies go to the copies.  The original
+    stays undecorated for every other caller, and is dropped if nothing else
+    calls it.  Definitions with different prologues get different copies.
+
+    For CUDA the prologue is ["__device__"].  For CPU-specific code it is a
+    [target(...)] attribute, and cloning is what makes that safe: an
+    attribute like [target("avx2")] is never added to a function that is
+    reachable without a runtime CPU check.
+
+    Globals (definitions with no arguments) are neither copied nor given the
+    prologue.  For CUDA, mark a table device code reads explicitly, e.g.
+    [[@@CPrologue "__device__"]]; nvcc rejects the program if you forget. *)
+val custard_c_closure_prologue (prologue: string) : unit
 
 (** Custard: written on a [tcclass], this says that its instances are ordinary
     runtime values rather than compile-time dictionaries, so an argument of
@@ -566,10 +575,10 @@ val cherry_borrowed : unit
     doc/ref/custard.md, section 5.7).
 
     This is for a type whose representation is an ABI rather than a private
-    choice: [FStarC.Extraction.KrmlAst] is marshalled to a file that karamel
-    reads back into its own [InputAst], whose OCaml declarations mirror the ML
-    extraction's output field for field.  For anything else the indirection is
-    a cost with nothing on the other side of it, and the default is right.
+    choice: a type marshalled to a file that an OCaml program reads back into
+    declarations mirroring the ML extraction's output field for field.  For
+    anything else the indirection is a cost with nothing on the other side of
+    it, and the default is right.
 
     An explicit [@@@custard_inline_field] on a field still fires: the
     attribute withdraws what Custard does uninvited, not what the source

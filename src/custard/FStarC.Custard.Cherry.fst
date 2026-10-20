@@ -517,18 +517,36 @@ let rec coerce_any (a:expr) (t:cty) : ML expr =
 
 (* A pattern variable's uses are typed at what the branch reads it as; one
    bound from a field of type any is retyped any, so that its coercion out of
-   any is not mistaken for a no-op. *)
+   any is not mistaken for a no-op.  Conversely a use typed any of one bound
+   from a concrete field is that variable put into any: a pattern variable of
+   a generated projector has no sort, so extraction types it any, while the
+   pattern binds it at the field's type. *)
 let rec retype_vars (env:list (string & cty)) (e:expr) : ML expr =
   match e.e with
   | EVar x ->
     (match List.tryFind (fun (y, _) -> y = x) env with
-     | Some (_, t) -> { e with ty = t }
-     | None -> e)
+     | Some (_, t) when mentions_any t -> { e with ty = t }
+     | Some (_, t) when e.ty = TAny -> mk (ECoerce ({ e with ty = t }, TAny)) TAny e.eff
+     | _ -> e)
+  (* A binder shadows. *)
+  | ELet (x, t, a, b) ->
+    let env' = List.filter (fun (y, _) -> y <> x) env in
+    { e with e = ELet (x, t, retype_vars env a, retype_vars env' b) }
+  | EFun (bs, b) ->
+    let env' = List.filter (fun (y, _) -> not (List.existsb (fun (c:binder) -> c.b_name = y) bs)) env in
+    { e with e = EFun (bs, retype_vars env' b) }
+  | EMatch (sc, brs) ->
+    let sub (br:branch) : ML branch =
+      let p, g, b = br in
+      let vs = pat_vars p in
+      let env' = List.filter (fun (y, _) -> not (List.mem y vs)) env in
+      (p, (match g with Some g -> Some (retype_vars env' g) | None -> None), retype_vars env' b) in
+    { e with e = EMatch (retype_vars env sc, List.map sub brs) }
   | _ -> map_children (retype_vars env) e
 
 let retype_branch (st:cty) (br:branch) : ML branch =
   let p, g, b = br in
-  let env = pat_binds_opt p st |> List.filter (fun (_, t) -> mentions_any t) in
+  let env = pat_binds_opt p st in
   if Nil? env then br
   else (p, (match g with Some g -> Some (retype_vars env g) | None -> None), retype_vars env b)
 
@@ -557,6 +575,17 @@ let rec lower_any (e:expr) : ML expr =
           consumer to coerce if it wants any. *)
        else if e.ty = TAny then { e with ty = r }
        else e)
+  (* A match typed any whose every arm puts a value of one concrete type into
+     any puts the match into any instead, once: what takes it out again at
+     that type then cancels against it. *)
+  | EMatch (sc, brs) when e.ty = TAny && Some? (common_mk brs) ->
+    let t = Some?.v (common_mk brs) in
+    let unmk (b:expr) : expr =
+      match b.e with
+      | EOp ({ po_op = Dyn "mk" }, [x]) -> x
+      | _ -> { b with ty = t } in
+    let m = { e with e = EMatch (sc, List.map (fun (p, g, b) -> (p, g, unmk b)) brs); ty = t } in
+    mk (EOp ({ po_op = Dyn "mk"; po_ty = None }, [m])) TAny e.eff
   (* Arms typed otherwise than the conditional they belong to, through any,
      are coerced to it: when the conditional is typed through any, or when
      an arm is -- a nested conditional typed any under one that is not. *)
@@ -566,6 +595,22 @@ let rec lower_any (e:expr) : ML expr =
     when mentions_any e.ty || List.existsb (fun (_, _, (b:expr)) -> mentions_any b.ty) brs ->
     { e with e = EMatch (sc, List.map (fun (p, g, b) -> (p, g, arm_to e.ty b)) brs) }
   | _ -> e
+
+(* The concrete type every arm puts into any, when they all do (an arm that
+   does not return does not count). *)
+and common_mk (brs:list branch) : option cty =
+  let rec go (acc:option cty) (brs:list branch) : option cty =
+    match brs with
+    | [] -> acc
+    | (_, _, b) :: rest ->
+      match b.e with
+      | EAbort _ | EUnreachable _ | ERaise _ -> go acc rest
+      | EOp ({ po_op = Dyn "mk" }, [x]) when not (mentions_any x.ty) ->
+        (match acc with
+         | None -> go (Some x.ty) rest
+         | Some t -> if t = x.ty then go acc rest else None)
+      | _ -> None in
+  go None brs
 
 and arm_to (t:cty) (a:expr) : ML expr =
   match a.e with
@@ -1414,10 +1459,13 @@ let run_let (l:dlet) : ML dlet =
 
 (* [failwith s] raises [Failure s] (cherry.md, "Exceptions"), so that it can
    be caught: the support modules' [failwith] is an external, and their
-   [Failure] is declared beside it. *)
+   [Failure] is declared beside it.  [FStarC.List.failwith_tot] is the same
+   at a total type, for the partial functions its interface declares total. *)
 let failure_of (f:name) : option name =
   if f.id = "failwith" && (f.ns = ["FStar"; "All"] || f.ns = ["FStarC"; "Effect"])
   then Some { f with id = "Failure"; spec = None }
+  else if f.id = "failwith_tot" && f.ns = ["FStarC"; "List"]
+  then Some { f with ns = ["FStarC"; "Effect"]; id = "Failure"; spec = None }
   else None
 
 let raise_failures (p:program) : ML program =

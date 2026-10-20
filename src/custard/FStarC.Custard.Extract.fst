@@ -981,16 +981,7 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
        | "FStar.Attributes.Comment" -> [Comment str]
        | "FStar.Attributes.CPrologue" -> [Prologue str]
        | "FStar.Attributes.CEpilogue" -> [Epilogue str]
-       | _ -> [])
-    (* Section 51.3.  Two strings, so it does not fit the one-argument shape
-       above: the exclusive prologue and the one for a callee the rest of the
-       program reaches too. *)
-    | Tm_fvar fv, [({ n = Tm_constant (Const_string (a, _)) }, _);
-                   ({ n = Tm_constant (Const_string (b, _)) }, _)] ->
-      let nm = Ident.string_of_lid (S.lid_of_fv fv) in
-      if not (fresh (nm ^ "\u0000" ^ a ^ "\u0000" ^ b)) then [] else
-      (match nm with
-       | "FStar.Attributes.custard_c_closure_prologue" -> [ClosurePrologue (a, b)]
+       | "FStar.Attributes.custard_c_closure_prologue" -> [ClosurePrologue str]
        | _ -> [])
     | Tm_fvar fv, [] ->
       let nm = Ident.string_of_lid (S.lid_of_fv fv) in
@@ -1584,6 +1575,23 @@ let rec head_ty (st:state) (ty:cty) (fuel:int) : ML cty =
   else match unfold_abbrev st ty with
        | Some ty' -> head_ty st ty' (fuel - 1)
        | None -> ty
+
+(* Every abbreviation unfolded, at every depth: two types the target would
+   agree on, [fname] and [string] for [type fname = string], come out equal. *)
+let rec unfold_abbrevs (st:state) (fuel:int) (ty:cty) : ML cty =
+  if fuel <= 0 then ty else
+  let go = unfold_abbrevs st (fuel - 1) in
+  match unfold_abbrev st ty with
+  | Some ty' -> go ty'
+  | None ->
+    match ty with
+    | TArrow (a, e, b) -> TArrow (go a, e, go b)
+    | TTuple cs -> TTuple (List.map go cs)
+    | TBuf c -> TBuf (go c)
+    | TRef (k, c) -> TRef (k, go c)
+    | TInline c -> TInline (go c)
+    | TApp (n, args) -> TApp (n, List.map go args)
+    | _ -> ty
 
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
@@ -3533,12 +3541,19 @@ and expr_of_term (st:state) (t:term) : ML expr =
        value of no common representation, and saying otherwise is a claim the
        rest of the pipeline believes: [narrow_rets] reads a body's type
        straight off this node, so a [d:dir -> arg_type d] whose first branch
-       is a [bool] came out declared [bool]. *)
+       is a [bool] came out declared [bool].  Agreement is up to
+       abbreviations: [if c then r.file_name else refind r.file_name] has a
+       branch of type [file_name] and one of type [string], and calling that
+       [any] made Cherry box both arms into a [string] variable. *)
     let ty =
       match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
                 |> List.filter (fun t -> not (TAny? t)) with
       | [] -> TAny
-      | t :: ts -> if ts |> List.for_all (fun u -> u = t) then t else TAny in
+      | t :: ts ->
+        if ts |> List.for_all (fun u -> u = t) then t else
+        let t' = unfold_abbrevs st 100 t in
+        if ts |> List.for_all (fun u -> unfold_abbrevs st 100 u = t') then t
+        else TAny in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
@@ -5083,6 +5098,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                   | None -> with_realized d) in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
+    let d = if is_krml_backend () && is_private_sigelt se then with_private d else d in
     if is_inlinable se && not (is_root st l)
     then with_inline d else d
 
@@ -5270,6 +5286,31 @@ and with_inline (d:decl) : ML decl =
   match d with
   | DLet l when not (l.dl_flags |> List.existsb Rec?) ->
     DLet { l with dl_flags = Inline :: l.dl_flags }
+  | d -> d
+
+(* On the karamel backends, F*'s [private] qualifier and the internal
+   [KrmlPrivate] attribute (see {!is_krml_private}) become karamel's [Private],
+   as they did with the legacy krml extraction: karamel then emits the
+   definition [static] and keeps it out of the header, and drops the flag
+   itself if a definition turns out to be used from another file.  The
+   direct C backends decide storage from [Root] instead (section 24). *)
+and is_krml_backend () : ML bool =
+  match Options.codegen_name () with
+  | "KrmlC" | "KrmlRust" -> true
+  | _ -> false
+
+and is_private_sigelt (se:sigelt) : ML bool =
+  List.contains S.Private se.sigquals ||
+  se.sigattrs |> List.existsb (fun attr ->
+    match (SS.compress attr).n with
+    | Tm_constant (Const_string ("KrmlPrivate", _)) -> true
+    | _ -> false)
+
+and with_private (d:decl) : ML decl =
+  match d with
+  | DLet l -> DLet { l with dl_flags = Private :: l.dl_flags }
+  | DType t -> DType { t with dt_flags = Private :: t.dt_flags }
+  | DExternal x -> DExternal { x with dx_flags = Private :: x.dx_flags }
   | d -> d
 
 (* [@@custard_opaque]: the representation is fixed outside F*, so neither
@@ -6380,9 +6421,9 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
    else has to say so with [@@@custard_inline_field] on the binder.
 
    [@@custard_boxed_fields] on the *type* withdraws the uninvited half: a type
-   whose representation is an ABI -- [FStarC.Extraction.KrmlAst], marshalled
-   to a file karamel reads back -- has to be laid out the way the ML
-   extraction lays it out, tuple field and all (section 5.7).  An explicit
+   whose representation is an ABI -- marshalled to a file another program
+   reads back -- has to be laid out the way the ML extraction lays it out,
+   tuple field and all (section 5.7).  An explicit
    request on a field still fires, since that one is the source's.
 
    The marker rides on the field's *type* so that it survives the passes that
