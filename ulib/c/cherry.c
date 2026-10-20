@@ -836,6 +836,18 @@ uint64_t cherry_now_ns(void) {
   return (uint64_t)ts.tv_sec * 1000000000u + (uint64_t)ts.tv_nsec;
 }
 
+uint64_t cherry_wall_ns(void) {
+  struct timespec ts;
+  timespec_get(&ts, TIME_UTC);
+  return (uint64_t)ts.tv_sec * 1000000000u + (uint64_t)ts.tv_nsec;
+}
+
+uint64_t cherry_file_mtime_ns(cherry_string path) {
+  struct stat st;
+  if (stat(cherry_str_data(path), &st) != 0) return UINT64_MAX;
+  return (uint64_t)st.st_mtime * 1000000000u;
+}
+
 /* ------------------------------------------------------------------------
    The operating system, for FStarC.Util-c.cherry.fst: the command line,
    channels, files and directories, processes and signals.  An external

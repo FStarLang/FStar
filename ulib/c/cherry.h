@@ -300,6 +300,11 @@ cherry_int cherry_str_compare(cherry_string a, cherry_string b);
 uint64_t cherry_str_fnv1a(cherry_string s);
 /* Nanoseconds of the monotonic clock (FStarC.Timing). */
 uint64_t cherry_now_ns(void);
+/* Wall-clock nanoseconds since the Unix epoch (FStarC.Time). */
+uint64_t cherry_wall_ns(void);
+/* A file's modification time in nanoseconds since the epoch, UINT64_MAX
+   when it cannot be read. */
+uint64_t cherry_file_mtime_ns(cherry_string path);
 /* [FStar.String.make l c]: [l] copies of the code point [c]. */
 cherry_string cherry_str_make(cherry_int l, uint32_t c);
 /* Byte-level access, for FStar.Pprint (whose lengths and offsets are in
