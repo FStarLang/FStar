@@ -215,6 +215,23 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
     let hyp (t:term) : ML decl =
         mkAssume (t, None, fresh_name "@hypothesis_")
     in
+    (* The atoms the query already assumes: the conjuncts of its
+       preconditions ([squash]-typed binders) and of the premises of its
+       implications. A proven sibling that hides a quantifier (see
+       [hides_quantifier]) is still assumed when it is one of them: the solver
+       has that quantifier already, and the atom itself may help it. This is
+       only a heuristic, and so is not scoped: assuming a proven sibling is
+       always sound. *)
+    let known : ref (list string) = mk_ref [] in
+    let add_known (env:env_t) (p:S.term) : ML unit =
+      collect_hyp_conjuncts p |> List.iter (fun c ->
+        let e, _ = encode_formula c env in
+        if quantifier_free e then known := hash_of_term e :: !known)
+    in
+    let is_known (e:term) : ML bool =
+      let h = hash_of_term e in
+      List.existsb (fun k -> k = h) !known
+    in
     let mk_leaf (env:env_t) (msg:Errors.error_message) (ropt:option Range.t) (q:S.term)
       : ML (goal_tree & decls_t) =
         let open FStarC.Pprint in
@@ -285,7 +302,10 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
                 if ok && not (GTrivial? rest)
                 then
                   let parts = collect_hyp_conjuncts c in
-                  let hides = hides_quantifier env.tcenv in
+                  let hides (c:S.term) : ML bool =
+                    hides_quantifier env.tcenv c &&
+                    not (is_known (fst (encode_formula c env)))
+                  in
                   let e, decls'' = encode_formula c env in
                   if quantifier_free e && not (List.existsb hides parts)
                   then gctx [hyp e] [CHyp c] rest, decls''
@@ -310,6 +330,7 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
           seq (collect_conjuncts q)
 
         | Some (BaseConn (lid, [(lhs, _); (rhs, _)])) when lid_equals lid Const.imp_lid ->
+          add_known env lhs;
           let t, decls, ok = aux env default_msg ropt rhs in
           (match t with
            | GTrivial -> GTrivial, decls, ok
@@ -395,6 +416,10 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
               ([], [], env, [], [])
           in
           let vars, guards, names = List.rev vars, List.rev guards, List.rev names in
+          names |> List.iter (fun (x:S.bv) ->
+            match U.un_squash x.sort with
+            | Some p -> add_known env' p
+            | None -> ());
           let t, decls', ok = aux env' default_msg ropt body in
           let ds = (vars |> List.map (fun fv -> DeclFun (fv_name fv) [] (fv_sort fv) None))
                  @ (guards |> List.filter (function App TrueOp [] _ -> false | _ -> true) |> List.map hyp) in

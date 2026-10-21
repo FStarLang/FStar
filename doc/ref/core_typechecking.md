@@ -603,7 +603,11 @@ files to test changes that affect recorded types.
   the context of each goal (§5). A proven conjunct that is not
   quantifier-free contributes its quantifier-free parts. A conjunct
   mentioning a definition whose body is quantified is not assumed
-  ([#4615](https://github.com/FStarLang/FStar/issues/4615)). Proofs
+  ([#4615](https://github.com/FStarLang/FStar/issues/4615)), unless the
+  query already assumes that same atom, e.g. as a conjunct of a
+  precondition or of an implication's premise: then the solver has its
+  quantifier anyway, and dropping the atom only made re-proving a lemma's
+  own precondition (e.g. for a call) harder. Proofs
   adjusted for this include `FStar.Math.Lemmas` (`modulo_sub_lemma`,
   `lemma_mod_plus`, `lemma_div_plus`), `FStar.Math.Fermat`,
   `FStar.UInt<N>.eq_mask`/`gte_mask`, `Quicksort.Base.lemma_sorted_append`,
