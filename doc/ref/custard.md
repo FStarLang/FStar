@@ -6440,6 +6440,15 @@ counters, and letting them run renumbered the variables of the branch that was
 *kept* (`ns` came out as `ns_3`).  `scope` was already saved and restored;
 `ctr` and `declared` now are too.
 
+The trial is also only made where a body *can* come out empty: where the
+match's value is discarded (`D_Ignore`, or `D_Return` in a `void` function).
+A value that is assigned or returned always gets a statement.  This matters
+for more than the work saved: the arm that is kept is emitted again, so
+trying the last arm of every match costs twice per level of matches nested
+in each other's last arm, and the compiler's own unit-test driver had nests
+deep enough that printing it did not finish.  `tests/custard/DeepMatch.fst`
+is twenty-eight of them.
+
 Thirty lines of the DICE output went, and the test the fix suggested found one
 more, in the previous section's own work: `custard_init_globals` was emitted
 even for a program with no globals, an empty function that `main` then called.

@@ -3446,13 +3446,26 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      are counters, and letting them run would renumber the variables of the
      branch that is kept ([ns] would come out as [ns_3]).  [scope] is already
      saved by [branch_body]; these two are saved here. *)
+  (* Only a destination that discards the value can receive nothing: one that
+     assigns or returns it always gets a statement.  The trial emission is
+     skipped there, and not only to save the work: the branch kept is
+     emitted again, so trying every match's last branch is exponential in
+     how deeply such matches nest. *)
+  let discards =
+    (match d with
+     | D_Ignore -> true
+     | D_Return -> !void_ret
+     | _ -> false) in
   let emits_nothing (p:pat) (b:expr) : ML bool =
+    discards &&
+    begin
     let saved_ctr = !ctr in
     let saved_declared = HashTable.copy !declared in
     let s = branch_body ind' p b in
     ctr := saved_ctr;
     declared := saved_declared;
-    s = "" in
+    s = ""
+    end in
   let rec trim (rbs:list branch) : ML (list branch) =
     match rbs with
     | (p, _, b) :: rest when emits_nothing p b -> trim rest

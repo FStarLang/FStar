@@ -668,11 +668,25 @@ and arm_to (t:cty) (a:expr) : ML expr =
    [match x with pre | _ -> if (match x with p -> g | _ -> false)
                              then (match x with p -> b) else (match x with rest)].
    The earlier branches [pre] have no guard and come first, so they keep
-   their priority; [x] is a variable, so matching it again is cheap. *)
-let rec unguard (e:expr) : ML expr =
-  let e = map_children unguard e in
+   their priority; [x] is a variable, so matching it again is cheap.
+
+   A [try]'s handlers are a match on the exception, which the reference
+   counting pass only builds later, so a guarded handler is made a match here:
+   [try s with brs] is [try s with x -> (match x with brs | _ -> raise x)],
+   whose guards are then removed as above. *)
+let has_guard (brs:list branch) : ML bool = List.existsb (fun (_, g, _) -> Some? g) brs
+
+let rec unguard (e:expr) : ML expr = unguard_node (map_children unguard e)
+
+and unguard_node (e:expr) : ML expr =
   match e.e with
-  | EMatch (sc, brs) when List.existsb (fun (_, g, _) -> Some? g) brs ->
+  | ETry (s, brs) when has_guard brs ->
+    let x = co_fresh () in
+    let xv = mk (EVar x) TExn E_Pure in
+    let again = mk (ERaise xv) e.ty E_Impure in
+    let h = unguard_node (mk (EMatch (xv, brs @ [(PWild, None, again)])) e.ty E_Impure) in
+    { e with e = ETry (s, [(PVar x, None, h)]) }
+  | EMatch (sc, brs) when has_guard brs ->
     let rec go (scv:expr) (brs:list branch) : ML expr =
       let rec split (pre:list branch) (brs:list branch) =
         match brs with

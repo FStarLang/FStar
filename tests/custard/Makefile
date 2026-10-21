@@ -3388,6 +3388,10 @@ FLAGS_DynPartial = --warn_error -367
 CUSTARD_TESTS += CoerceLamRes CoerceCtor
 FLAGS_CoerceLamRes = --warn_error -367
 
+# Matches nested in each other's last branch, too deep for a printer that
+# emits a trailing branch twice per level (PrintC's trial emission in [trim]).
+CUSTARD_TESTS += DeepMatch
+
 # A parameter that only a self tail call reads, passing it unchanged: the loop
 # does not write it, so C sees it unused, and -Werror rejects that unless it is
 # voided.
