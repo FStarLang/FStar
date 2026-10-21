@@ -1559,6 +1559,7 @@ let cherry_source_modules : list (list string) = [
   ["FStarC"; "Format"];
   ["FStarC"; "Getopt"];
   ["FStarC"; "Hash"];
+  ["FStarC"; "Int"; "Extra"];
   ["FStarC"; "Json"];
   ["FStarC"; "List"];
   ["FStarC"; "Platform"; "Base"];
