@@ -596,6 +596,15 @@ val cherry_owned : unit
     the value.  Overrides borrow inference, like [cherry_owned]. *)
 val cherry_borrowed : unit
 
+(** Cherry (cherry.md, "Boxed types"): represent this type as a
+    reference-counted heap cell, as a recursive type is, rather than as a C
+    struct passed by value.  For a large record that is passed around a lot
+    and rarely built: a copy of it is a pointer and a count, rather than
+    every field and the count of each.  Written on the type:
+    [[@@cherry_boxed] noeq type cfg = { ... }].  No effect on other
+    backends. *)
+val cherry_boxed : unit
+
 (** Custard: keep every field of this type's constructors boxed, that is, lay
     the type out the way the ML extraction does.  It turns off the automatic
     inlining of tuple fields that [custard_inline_field] describes, so

@@ -757,6 +757,9 @@ type flag =
       the hand-written one, and a realization mirrors what the F* source said
       -- [FStarC.Parser.Frontend.code_fragment] is an OCaml record and
       [FStar.Pervasives.dtuple4] an OCaml variant. *)
+  | CherryBoxed
+  (** [[@@cherry_boxed]]: under Cherry the type is a counted heap cell, as a
+      recursive type is (cherry.md, "Boxed types"). *)
   | Existential of string & string
   (** Section 33.4.  The source inductive is an existential package: the
       constructor named first stores a [Type0] field, named second, that a

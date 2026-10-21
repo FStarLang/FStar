@@ -959,6 +959,7 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_compile_time_attr,    "custard_compile_time";
   PC.custard_float_attr,           "custard_float";
   PC.custard_boxed_fields_attr,    "custard_boxed_fields";
+  PC.cherry_boxed_attr,            "cherry_boxed";
 ]
 
 (* Attributes that describe one *field* of a constructor. *)
@@ -1141,6 +1142,9 @@ let attr_home (nm:string) : string =
   | "custard_boxed_fields" ->
     "It keeps the fields of a *type's* constructors boxed, so it goes on \
      that type."
+  | "cherry_boxed" ->
+    "It makes a *type* a counted heap cell under Cherry, so it goes on that \
+     type."
   | _ -> ""
 
 let report_attr (nm:string) (site:string) (why:string) : ML unit =
@@ -6494,6 +6498,11 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     match se with
     | Some se -> U.has_attribute se.sigattrs PC.custard_boxed_fields_attr
     | None -> false in
+  (* Cherry: a counted heap cell; the newtype collapse would undo that. *)
+  let cherry_boxed =
+    match se with
+    | Some se -> U.has_attribute se.sigattrs PC.cherry_boxed_attr
+    | None -> false in
   (* Only the *type* parameters become parameters of the target type; a value
      index has no counterpart in the target's type language. *)
   let ty_params = params |> List.collect (fun b ->
@@ -6560,7 +6569,8 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     dt_name   = nm;
     dt_params = ty_params;
     dt_body   = TVariant (ctors |> List.map ctor);
-    dt_flags  = (if is_record then [SourceRecord] else []) @ existential;
+    dt_flags  = (if is_record then [SourceRecord] else []) @
+                (if cherry_boxed then [CherryBoxed; NoNewtype] else []) @ existential;
   }
 
 (* -------------------------------------------------------------------- *)
