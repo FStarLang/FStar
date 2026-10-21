@@ -3436,6 +3436,17 @@ CHERRY_CFLAGS_CherryExn = -O2
 CHERRY_RUN_CherryExn = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryDyn = -O2
 
+# Cherry: integer literals of 2^30 and more are static cells, never built
+# at run time.
+$(CHERRY_DIR)/CherryInt.chgrep: $(CHERRY_DIR)/CherryInt.chc
+	$(Q)for p in 'CHERRY_INT_LIT(' 'CHERRY_INT_WIDE(INT64_C(4611686018427387903)'; do \
+	  grep -qF -- "$$p" $< \
+	    || { echo "ERROR: CherryInt's C output is missing $$p"; exit 1; }; done
+	$(Q)! grep -q 'cherry_int_of_decimal' $< \
+	  || { echo "ERROR: CherryInt builds a literal at run time"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryInt.chgrep
+
 # Locals of different initializers share one C function.
 CHERRY_TESTS += CherryInitScope
 

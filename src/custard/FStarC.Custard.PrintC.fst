@@ -1577,6 +1577,31 @@ let string_lit (s:string) : ML string =
       ["CHERRY_STRING_LIT(" ^ n ^ ", \"" ^ escape s ^ "\");\n"];
     n
 
+(* Cherry: an integer literal that is not a small integer on every target is
+   a static persistent cell ([CHERRY_INT_LIT] in cherry.h), one per value, so
+   evaluating it allocates nothing.  One that is small where small integers
+   have 63 bits is [CHERRY_INT_WIDE], which is that small integer there. *)
+let int_lits : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+
+let rec limbs (m:int) : ML (list string) =
+  if m = 0 then [] else (show (m % 4294967296) ^ "u") :: limbs (m / 4294967296)
+
+let int_lit (v:int) : ML string =
+  let n =
+    match HashTable.try_find !int_lits (show v) with
+    | Some n -> n
+    | None ->
+      let n = alloc_name "cherry_intlit" in
+      HashTable.add !int_lits (show v) n;
+      let ds = limbs (if v < 0 then - v else v) in
+      string_lit_defs := !string_lit_defs @
+        ["CHERRY_INT_LIT(" ^ n ^ ", " ^ (if v < 0 then "1" else "0") ^ ", " ^
+         show (List.length ds) ^ ", " ^ String.concat ", " ds ^ ");\n"];
+      n in
+  if v < 4611686018427387904 && v >= - 4611686018427387904
+  then "CHERRY_INT_WIDE(INT64_C(" ^ show v ^ "), " ^ n ^ ")"
+  else "((cherry_int)&" ^ n ^ ")"
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> unit_value
@@ -1598,7 +1623,7 @@ let constant (c:constant) : ML string =
   | CInt (v, _, None) when Options.custard_cherry () ->
     if v < 1073741824 && v > -1073741824
     then "CHERRY_INT_SMALL(" ^ show v ^ ")"
-    else "cherry_int_of_decimal(\"" ^ show v ^ "\")"
+    else int_lit v
   | CString s when Options.custard_cherry () -> "((cherry_string)&" ^ string_lit s ^ ")"
   | CInt (v, b, None) ->
     reject ("the unbounded integer literal " ^ int_lit_to_string v b)
@@ -1934,6 +1959,7 @@ let reset_program_state () : ML unit =
   eq_seen := HashTable.create 20;
   string_lits := HashTable.create 20;
   string_lit_defs := [];
+  int_lits := HashTable.create 20;
   boxed_tbl := HashTable.create 0;
   nonplain_tbl := HashTable.create 0;
   taken_names := HashTable.create 50;
@@ -3272,12 +3298,12 @@ and pat_tests (path:string) (t:cty) (p:pat)
   (* Section 44.2.  A string pattern is a test on contents, not on address:
      [pat_tests] is handed the type of the path, so it can see the difference
      without looking at the constant. *)
-  (* A Cherry integer literal that is not a small integer is a cell: the
-     test builds and releases it rather than leaving it to leak. *)
+  (* A Cherry integer literal that is not a small integer is a cell, so the
+     test compares contents. *)
   | PConst (CInt (v, _, None))
     when Options.custard_cherry () &&
          not (v < 1073741824 && v > -1073741824) ->
-    (["cherry_int_eq_decimal(" ^ path ^ ", \"" ^ show v ^ "\")"], [])
+    (["cherry_int_eq(" ^ path ^ ", " ^ int_lit v ^ ")"], [])
   | PConst c when Some? (content_eq t "" "") ->
     (match content_eq t path (constant c) with
      | Some c -> ([c], [])
