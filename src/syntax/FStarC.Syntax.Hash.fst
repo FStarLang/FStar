@@ -347,7 +347,7 @@ and equal_flag (c:bool) f1 f2
   | SMTPAT p1, SMTPAT p2 ->
     equal_term_c c p1 p2
 
-  | _ -> f1 = f2
+  | _ -> false
 
 and equal_decreases_order (c:bool) d1 d2
   : ML bool

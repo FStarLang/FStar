@@ -122,6 +122,17 @@ val emit : state -> string -> decl -> ML unit
 (** Whether [emit] has already been given this key. *)
 val emitted : state -> string -> ML bool
 
+(** [emit], and also export the declaration under [key] in this unit's
+    `.cui`, so that a downstream unit's [import_key] finds it. *)
+val emit_exported : state -> string -> decl -> ML unit
+
+(** Section 12.4: the declaration a linked unit exports under [key], if any.
+    It is recorded as an import and its name returned. *)
+val import_key : state -> string -> ML (option name)
+
+(** Section 13.7: how [plugin_embedding #t] is compiled. *)
+val set_embedding_hook : (state -> FStarC.Syntax.Syntax.term -> ML expr) -> ML unit
+
 (** The declarations this run took from a linked unit rather than compiling
     (section 12.4).  They are deliberately *not* part of the program: they must
     not be renamed, simplified or emitted.  The later passes consult them --
