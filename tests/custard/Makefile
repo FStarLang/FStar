@@ -1488,6 +1488,14 @@ CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
 # CHERRY_DEBUG= builds the tests the way a release build is.
 CHERRY_DEBUG ?= -DCHERRY_DEBUG
 
+# Whether $(CC) honours CHERRY_MUSTTAIL (cherry.md, "Tail calls"; GCC 15 or
+# later).  Without it no tail call is guaranteed, and a test that needs
+# constant stack is built with $(CHERRY_TAIL_CFLAGS): at -O2 GCC turns its
+# tail calls into jumps anyway.
+CHERRY_MUSTTAIL_OK = $(shell printf '\043include "cherry.h"\nCHERRY_MUSTTAIL\n' \
+  | $(CC) -E -P -I$(CHERRY_INC) -x c - 2>/dev/null | tail -1 | grep -c musttail)
+CHERRY_TAIL_CFLAGS = $(if $(filter 0,$(CHERRY_MUSTTAIL_OK)),-O2)
+
 $(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc $$(CEXTRA_$$*)
 	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -3416,6 +3424,7 @@ all: $(CHERRY_DIR)/LocalFunDup.chonce
 # guaranteed (CHERRY_MUSTTAIL), so a million iterations fit in a 1 MB stack.
 CUSTARD_TESTS += MutualTail
 CHERRY_RUN_MutualTail = ulimit -s 1024 &&
+CHERRY_CFLAGS_MutualTail = $(CHERRY_TAIL_CFLAGS)
 $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)for p in 'CHERRY_MUSTTAIL return MutualTail_pong(' \
 	    'CHERRY_MUSTTAIL return MutualTail_ping(' \
