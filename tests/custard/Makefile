@@ -3411,6 +3411,24 @@ $(CHERRY_DIR)/LocalFunDup.chonce: $(CHERRY_DIR)/LocalFunDup.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/LocalFunDup.chonce
 
+# Cherry: tail calls other than self calls -- between functions of different
+# signatures, in a function returning unit, and through a closure -- are
+# guaranteed (CHERRY_MUSTTAIL), so a million iterations fit in a 1 MB stack.
+CUSTARD_TESTS += MutualTail
+CHERRY_RUN_MutualTail = ulimit -s 1024 &&
+$(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
+	$(Q)for p in 'CHERRY_MUSTTAIL return MutualTail_pong(' \
+	    'CHERRY_MUSTTAIL return MutualTail_ping(' \
+	    'CHERRY_TAILCALL_VOID(MutualTail_tick(' \
+	    'CHERRY_TAILCALL_VOID(MutualTail_tock(' \
+	    'CHERRY_MUSTTAIL return cherry_apply_'; do \
+	  grep -qF -- "$$p" $< \
+	    || { echo "ERROR: MutualTail's C output is missing $$p"; exit 1; }; done
+	$(Q)$(CC) -std=c11 -O2 -Wall -Wextra -Werror -Wno-free-nonheap-object \
+	  -I$(CHERRY_DIR) -I$(CHERRY_INC) -c -x c $< -o $(basename $@).o
+	$(Q)touch $@
+all: $(CHERRY_DIR)/MutualTail.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
@@ -3638,7 +3656,7 @@ CHERRY_OCAML_SKIP = Externs KeyNames FunctorHashtbl FunctorClass Reify \
 
 $(CHERRY_DIR)/%.chdiff: $(CHERRY_DIR)/%.chexe %.out.expected
 	$(call msg, "DIFF-ASAN", $(basename $(notdir $@)))
-	$(Q)ASAN_OPTIONS=detect_leaks=1 $< > $(CHERRY_DIR)/$*.chout
+	$(Q)$(CHERRY_RUN_$*) ASAN_OPTIONS=detect_leaks=1 $< > $(CHERRY_DIR)/$*.chout
 	$(Q)diff -u $*.out.expected $(CHERRY_DIR)/$*.chout
 	$(Q)touch $@
 

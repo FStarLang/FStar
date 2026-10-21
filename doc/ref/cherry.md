@@ -54,6 +54,7 @@ Borrow inference runs per monomorphized instance, over the strongly connected co
    - it may be reset/reused (in-place updates of strings, immutable arrays, constructor cells);
    - it is passed to an owned parameter;
    - it is passed to an owned parameter in a tail call. This preserves the tail call, which would otherwise be followed by a dec.
+   - its function is used as a closure (a value or a partial application) and the closure is applied to it. The closure's entry point takes it owned, so this keeps the entry point's call a tail call (see Tail calls).
 3. Storing a parameter into a constructor, closure, or partial application marks it owned, as in Lean: the stored value is usually consumed, so an owned parameter saves an inc.
 
 Mutual recursion cannot span F* modules, so inference proceeds in module dependency order. The inferred conventions are exported in the module's custard interface (Loader/imports) so that callers in other modules agree with them.
@@ -126,8 +127,23 @@ The prototype implements this as follows:
 - A closure whose remaining parameters are all units (a thunk, or a partial application that leaves only units) gets the arity `CHERRY_ARITY_UNITS`, not 0. Applying it to no further arguments returns it unchanged if the type says that more arrows follow, and runs it otherwise. With arity 0, a partial application `f x` of `f x ()` would run `f` early.
 - As on OCaml, closures are polymorphic, so erased binders stay in a lambda as unit parameters (`heap_closures` in Extract). Otherwise the same closure would have different arities at different types.
 - A self tail call in a definition becomes a jump to its start (`goto custard_tail`), so tail-recursive loops run in constant stack.
+- Other tail calls are guaranteed tail calls where possible; see Tail calls.
 - A closure call borrows the closure and takes the arguments owned; a partial application takes its arguments owned.
 - A global of function type holds a closure (persistent, see Globals), so a call through it is a closure call. This includes the exception test after it: whether the global's initializer raises says nothing about whether the closure does.
+
+### Tail calls
+
+ML code loops by recursion, and relies on every call in tail position running in constant stack: mutual recursion, recursion through a closure, and continuation-passing style. OCaml guarantees this, and C does not. Self tail calls become jumps (above). Every other call in tail position is marked `CHERRY_MUSTTAIL`, which `cherry.h` defines as GCC's `__attribute__((musttail))` (GCC 15 or later, on x86-64 and AArch64):
+- in a definition, a saturated call of another definition, and a closure call through `cherry_apply_T_k`;
+- in the generated helpers, the exact-arity call of `cherry_apply_T_k`, and the call in a closure's entry point.
+
+In a function returning `void`, the call is `CHERRY_TAILCALL_VOID(f(...))`, a `return` of the `void` call, which ISO C allows only as an extension.
+
+GCC honours `musttail` at every optimization level, but at `-O0` only when the call needs no stack the caller does not have and its result is not copied after it. So a call is marked only when every argument and the result fit in registers: at most two 8-byte words each, at most six in all, by a conservative estimate (`reg_words` in PrintC). The result type must also be the caller's. Calls are not marked in a definition that allocates on the stack, or to externs, which may be macros. An unmarked tail call is an ordinary call, which GCC usually turns into a jump at `-O2` anyway.
+
+The caller must not release anything after the call. Borrow inference ensures this for arguments (see Borrow inference). A closure's entry point still increments the captured values before the call, and the call is not marked if the function borrows any of the entry point's arguments; this happens only when the convention is fixed.
+
+Clang's `musttail` requires the caller and callee to have identical prototypes, which these calls rarely do. On clang and other compilers, `CHERRY_MUSTTAIL` is empty and `CHERRY_TAILCALL_VOID(c)` is `c`. Both can be predefined to override the choice. Test: `tests/custard/MutualTail`, run in a 1 MB stack.
 
 ## Inductive types
 

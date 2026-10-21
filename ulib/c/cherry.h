@@ -37,6 +37,40 @@ static inline uint32_t cherry_tag(const cherry_obj *o) {
   return cherry_is_scalar(o) ? (uint32_t)((uintptr_t)o >> 1) : o->tag;
 }
 
+/* Guaranteed tail calls (cherry.md, "Tail calls").  ML code loops by
+   recursion, through other functions and closures as well as itself, and
+   needs every call in tail position to run in constant stack.  The code
+   generator marks such a call only when its arguments and result are passed
+   in registers, which is what GCC needs to honour the mark at every
+   optimization level.  Clang requires the caller's and callee's prototypes
+   to match exactly, which these calls rarely do, so there the mark is empty
+   and the call an ordinary one -- as it is on any other compiler.  Define
+   CHERRY_MUSTTAIL (and CHERRY_TAILCALL_VOID) to override the choice. */
+#ifndef CHERRY_MUSTTAIL
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 15 && \
+    (defined(__x86_64__) || defined(__aarch64__)) && !defined(_WIN32)
+#define CHERRY_MUSTTAIL __attribute__((musttail))
+/* A struct parameter is passed in registers but may have its address taken
+   by the sanitizers' instrumentation, which this warns about; it cannot be
+   what the generated code does, which never takes a parameter's address. */
+#pragma GCC diagnostic ignored "-Wmaybe-musttail-local-addr"
+/* A [void] function's tail call: [return] with an expression is what the
+   attribute applies to, and in a [void] function ISO C only allows it as an
+   extension, so the pedantic warning is silenced for just this statement. */
+#define CHERRY_TAILCALL_VOID(call) do { \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wpedantic\"") \
+    __attribute__((musttail)) return call; \
+    _Pragma("GCC diagnostic pop") \
+  } while (0)
+#else
+#define CHERRY_MUSTTAIL
+#endif
+#endif
+#ifndef CHERRY_TAILCALL_VOID
+#define CHERRY_TAILCALL_VOID(call) call
+#endif
+
 /* Debug mode (cherry.md, "Debug mode").  The generated code relies on facts
    F* has checked -- a match is exhaustive, a projector is applied to its own
    constructor, an index is in bounds -- and does not test them again.  Code

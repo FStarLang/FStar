@@ -466,6 +466,10 @@ let void_ret : ref bool = mk_ref false
    eliminate the call.  [tail_self] holds the definition's kept parameters
    when the transformation is allowed, and [tail_used] whether it happened. *)
 let tail_self : ref (option (string & list binder)) = mk_ref None
+(* Cherry: whether the other tail calls of the definition being printed may
+   be marked [CHERRY_MUSTTAIL] -- not when it allocates on the stack, since an
+   argument could point into the frame the call discards. *)
+let musttail_ok : ref bool = mk_ref false
 let tail_used : ref bool = mk_ref false
 
 let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
@@ -931,6 +935,80 @@ let content_eq (t:cty) (a b:string) : ML (option string) =
    literal wants.  Building the two together is what lets a returned pointer
    ([uint32_t *f(void)]) and a stored function ([size_t ( *hashf)(size_t)]) come
    out right without special cases at each use. *)
+(* Cherry: an upper bound on the number of 8-byte registers a value of type
+   [t] occupies when passed or returned, or [None] when it may not fit in two
+   and so may be passed or returned in memory.  Over-counting is safe: this
+   only decides whether a tail call can be marked [musttail] (cherry.md, "Tail
+   calls"), and a call that is not marked is merely an ordinary call. *)
+let rec reg_words (fuel:int) (t:cty) : ML (option int) =
+  let sum (ts:list cty) : ML (option int) =
+    List.fold_left (fun acc t ->
+      match acc, reg_words (fuel - 1) t with
+      | Some a, Some b -> Some (a + b)
+      | _ -> None) (Some 0) ts in
+  let small (r:option int) : option int =
+    match r with Some n when n <= 2 -> Some n | _ -> None in
+  if fuel <= 0 then None else
+  match t with
+  | TUnit | TFloat _ | TArrow _ | TRef _ | TBuf _ | TExn -> Some 1
+  | TInt (_, W128) -> Some 2
+  | TInt _ -> Some 1
+  | TAny -> Some 2
+  | TTuple ts -> small (sum ts)
+  | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t"; spec = None }, [_]) -> Some 1
+  | TApp (n, _) when is_boxed_name n -> Some 1
+  | TApp (n, []) when Some? (builtin_type n) -> Some 1
+  | TApp (n, []) ->
+    (match find_type n with
+     | Some d when is_enum d -> Some 1
+     | Some { dt_body = TAbbrev c } -> reg_words (fuel - 1) c
+     | Some { dt_body = TRecord fs } -> small (sum (List.map snd fs))
+     | Some ({ dt_body = TVariant [(_, fs)] }) -> small (sum (List.map snd fs))
+     | Some { dt_body = TVariant cs } ->
+       small (List.fold_left (fun acc (_, fs) ->
+                match acc, sum (List.map snd fs) with
+                | Some a, Some b -> Some (if a >= 1 + b then a else 1 + b)
+                | _ -> None) (Some 1) cs)
+     | _ -> None)
+  | _ -> None
+
+(* Whether values of type [t] are C scalars (integers and pointers) rather
+   than structs. *)
+let rec scalar_ty (fuel:int) (t:cty) : ML bool =
+  if fuel <= 0 then false else
+  match t with
+  | TUnit | TFloat _ | TArrow _ | TRef _ | TBuf _ | TExn -> true
+  | TInt (_, W128) -> false
+  | TInt _ -> true
+  | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t"; spec = None }, [_]) -> true
+  | TApp (n, _) when is_boxed_name n -> true
+  | TApp (n, []) when Some? (builtin_type n) -> true
+  | TApp (n, []) ->
+    (match find_type n with
+     | Some d when is_enum d -> true
+     | Some { dt_body = TAbbrev c } -> scalar_ty (fuel - 1) c
+     | _ -> false)
+  | _ -> false
+
+(* Whether a call taking arguments of types [args] and returning [ret] can be
+   a guaranteed tail call wherever its signature matches the caller's: every
+   argument in registers, so the callee needs no stack slots the caller lacks,
+   and the result in registers, since one returned in memory is copied after
+   the call.  The result must moreover be a scalar: GCC 15 cannot keep the
+   mark on a call returning a struct in a function that is then inlined into
+   another marked call, and reports an error at [-O2].  Six is the integer registers of the x86-64 System V convention,
+   the smallest of the targets [CHERRY_MUSTTAIL] is enabled on. *)
+let musttail_sig_ok (args:list cty) (ret:option cty) : ML bool =
+  (match ret with
+   | None -> true
+   | Some r -> scalar_ty 8 r) &&
+  (match List.fold_left (fun acc t ->
+           match acc, reg_words 8 t with
+           | Some a, Some b when b <= 2 -> Some (a + b)
+           | _ -> None) (Some 0) args with
+   | Some n -> n <= 6
+   | None -> false)
+
 let rec decl_of (t:cty) (x:string) : ML string =
   match t with
   (* Every ML reference is the one runtime type; the cells differ, and the
@@ -1076,6 +1154,45 @@ and base_ty (t:cty) : ML string =
 
 (* The abstract declarator: a type as a cast or a compound literal spells it. *)
 let ty (t:cty) : ML string = decl_of t ""
+
+(* Cherry: how the C of a call in tail position of the definition being
+   printed starts -- the name of the function it calls, or for a closure the
+   prefix of every apply helper -- when the call can be a guaranteed tail call: a definition,
+   given all its arguments, or a closure through its apply helper, whose C
+   signature passes everything in registers and returns what the caller
+   returns.  [None] for anything else, which stays an ordinary call. *)
+let musttail_head (hd:expr) (args:list expr) (ret:cty) : ML (option string) =
+  if not !musttail_ok then None else
+  let caller_ret = match !cur_ret with Some t -> decl_of t "" | None -> "" in
+  let nonunit (ts:list cty) = List.filter (fun t -> not (TUnit? t)) ts in
+  if is_closure_app hd args then
+    (match hd.e with
+     | EQual (n, _) when Some? (fn_sig n) -> None
+     | _ ->
+       if !void_ret || TUnit? ret || decl_of ret "" <> caller_ret then None
+       else if musttail_sig_ok (TArrow (TUnit, E_Pure, TUnit) ::
+                                nonunit (List.map (fun (a:expr) -> a.ty) args)) (Some ret)
+       then Some "cherry_apply_"
+       else None)
+  else
+    match hd.e with
+    | EQual (n, _) ->
+      let f = string_of_name n in
+      if Some? (HashTable.try_find !externs f) then None else
+      (match fn_sig n with
+       | None -> None
+       | Some (bs, fret) ->
+         let tys = List.map (fun (b:binder) -> b.b_ty) bs in
+         let tys = match HashTable.try_find !keeps f with
+                   | Some flags -> filter_by flags tys
+                   | None -> nonunit tys in
+         let void = Some? (HashTable.try_find !void_fns f) in
+         if void <> !void_ret then None
+         else if not void && decl_of fret "" <> caller_ret then None
+         else if musttail_sig_ok tys (if void then None else Some fret)
+         then Some (c_name n ^ "(")
+         else None)
+    | _ -> None
 
 (* -------------------------------------------------------------------- *)
 (* Structural equality (section 107)                                    *)
@@ -3062,6 +3179,30 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     !out ^ ind ^ "memmove(" ^ dstv ^ " + " ^ div ^ ", " ^ srcv ^ " + " ^ siv ^
     ", " ^ group lenv ^ " * sizeof(" ^ elt ^ "));\n" ^ unit_result ind d
 
+  (* Cherry: any other call in tail position is a guaranteed tail call when
+     the target can make it one (cherry.md, "Tail calls"), so that mutual
+     recursion, and recursion through a closure, run in constant stack as
+     they do in OCaml. *)
+  | EApp (hd, args) when D_Return? d && Some? (musttail_head hd args e.ty) ->
+    let head = Some?.v (musttail_head hd args e.ty) in
+    let out = mk_ref "" in
+    let s = c_rvalue out ind e.ty e in
+    if !void_ret then begin
+      (* The [void] call has gone into [out] as the last statement. *)
+      let o = !out in
+      let call_start = ind ^ head in
+      let lines = String.split ['\n'] o in
+      match List.rev lines with
+      | "" :: last :: rest when starts_with last call_start ->
+        let call = String.substring last (String.length ind)
+                     (String.length last - String.length ind - 1) in
+        String.concat "\n" (List.rev rest) ^ (if Nil? rest then "" else "\n") ^
+        ind ^ "CHERRY_TAILCALL_VOID(" ^ call ^ ");\n"
+      | _ -> o ^ finish ind d s
+    end
+    else if starts_with s head then !out ^ ind ^ "CHERRY_MUSTTAIL return " ^ s ^ ";\n"
+    else !out ^ finish ind d s
+
   | _ ->
     let out = mk_ref "" in
     (* Section 59.  [D_Return] and [D_Assign] are assignment contexts whose
@@ -4019,8 +4160,10 @@ let let_decl (l:dlet) : ML string =
     (if Options.custard_cherry () && not (stack_allocates l.dl_body)
      then Some (string_of_name l.dl_name, kept_binders l)
      else None);
+  musttail_ok := Options.custard_cherry () && not (stack_allocates l.dl_body);
   let body = emit "  " D_Return l.dl_body in
   tail_self := None;
+  musttail_ok := false;
   signature l ^ " {\n" ^ voids ^
   (if !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
 
@@ -5138,9 +5281,14 @@ let cherry_closure_helpers () : ML (list string & list string) =
         "  env->clo.arity = " ^ arity ^ ";\n" ^
         String.concat "" (fields |> List.map (fun (x, _) -> "  env->" ^ x ^ " = " ^ x ^ ";\n")) ^
         "  return (cherry_fn)env;\n") in
-  let ret_of (call:string) (ret:cty) (void:bool) : ML string =
+  (* What marks a [return] of a call with arguments [ts] and result [ret] a
+     guaranteed tail call, when it can be one (cherry.md, "Tail calls"). *)
+  let mt (ts:list cty) (ret:cty) : ML string =
+    if musttail_sig_ok (List.filter (fun t -> not (TUnit? t)) ts) (Some ret)
+    then "CHERRY_MUSTTAIL " else "" in
+  let ret_of (call:string) (ts:list cty) (ret:cty) (void:bool) : ML string =
     if void then "  " ^ call ^ ";\n  return " ^ unit_value ^ ";\n"
-    else "  return " ^ call ^ ";\n" in
+    else "  " ^ mt ts ret ^ "return " ^ call ^ ";\n" in
   let gen (r:clo_req) : ML unit =
     match r with
     | ReqPap (n, k, vty) ->
@@ -5172,7 +5320,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
       let fields_owned = List.zip fields own_f |> List.collect (fun (f, o) -> if o then [f] else []) in
       let borrowed_ps = List.zip eparams own_p |> List.collect (fun (x, o) -> if o then [] else [x]) in
       let ret_of (call:string) (ret:cty) (void:bool) : ML string =
-        if Nil? (List.filter (fun (_, t) -> is_nonplain_ty t) borrowed_ps) then ret_of call ret void
+        if Nil? (List.filter (fun (_, t) -> is_nonplain_ty t) borrowed_ps) then ret_of call tys ret void
         else if void then "  " ^ call ^ ";\n" ^ on "dec" "" borrowed_ps ^ "  return " ^ unit_value ^ ";\n"
         else "  " ^ decl_of ret "r" ^ " = " ^ call ^ ";\n" ^ on "dec" "" borrowed_ps ^ "  return r;\n" in
       if k = 0 then begin
@@ -5219,11 +5367,13 @@ let cherry_closure_helpers () : ML (list string & list string) =
         "      cherry_dec_fn(g);\n" ^
         "      return r;\n" ^
         "    }\n") in
-      let exact = "    case " ^ string_of_int kn ^ ": return " ^ call_code rk "f" given ^ ";\n" in
+      let fty = TArrow (TUnit, E_Pure, TUnit) in
+      let exact = "    case " ^ string_of_int kn ^ ": " ^ mt (fty :: List.map snd given) rk ^
+                  "return " ^ call_code rk "f" given ^ ";\n" in
       let units =
         if kn > 0 then ""
         else if Some? (arrow_view rk) then "    case CHERRY_ARITY_UNITS: cherry_inc(f); return f;\n"
-        else "    case CHERRY_ARITY_UNITS: return " ^ call_code rk "f" [] ^ ";\n" in
+        else "    case CHERRY_ARITY_UNITS: " ^ mt [fty] rk ^ "return " ^ call_code rk "f" [] ^ ";\n" in
       (* A closure taking more: what it was given is captured. *)
       let over = range (kn + 1) (kn + nonunit_arrows rk) |> List.map (fun m ->
         if kn = 0 then "    case " ^ string_of_int m ^ ": cherry_inc(f); return f;\n" else begin
@@ -5248,7 +5398,8 @@ let cherry_closure_helpers () : ML (list string & list string) =
                                      names eparams) ^ ")" in
       closure ("cherry_papc_env_" ^ arrow_id t ^ "_" ^ string_of_int k ^ "_" ^ string_of_int m)
               (("f", t) :: fields) (string_of_int left) (papc_name t k m ^ "_entry") rm eparams
-              (on "inc" "env->" fields ^ "  return " ^ call ^ ";\n")
+              (on "inc" "env->" fields ^ "  " ^
+               mt (t :: List.map snd fields @ List.map snd eparams) rm ^ "return " ^ call ^ ";\n")
               (papc_name t k m) in
   let rec drain () : ML unit =
     match !clo_queue with
