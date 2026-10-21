@@ -4584,7 +4584,7 @@ let comment_of (l:dlet) : ML string =
    producer's modules from the `.cui` makes the two agree by construction,
    and does so without asking the consumer to repeat a flag that describes
    somebody else's output. *)
-let build_renames (extra:list string) (p:program) : ML unit =
+let build_renames (check:bool) (extra:list string) (p:program) : ML unit =
   let mods = Options.custard_c_no_prefix () @ extra in
   renames := HashTable.create 0;
   if Nil? mods then () else begin
@@ -4646,15 +4646,15 @@ let build_renames (extra:list string) (p:program) : ML unit =
           let tgt = escape_kw (sanitize dn.id) in
           let src = string_of_name dn in
           (match HashTable.try_find claimed tgt with
-           | Some other ->
+           | Some other when check ->
              E.raise_error0 E.Error_CustardExportCollision [
                text ("Custard: --custard_c_no_prefix would name both " ^
                      other ^ " and " ^ src ^ " `" ^ tgt ^
                      "' in the generated C.");
                text "Two definitions cannot share one external name."; ]
-           | None -> ());
+           | _ -> ());
           (match HashTable.try_find taken tgt with
-           | Some other when other <> src ->
+           | Some other when check && other <> src ->
              E.raise_error0 E.Error_CustardExportCollision [
                text ("Custard: --custard_c_no_prefix would name " ^ src ^
                      " `" ^ tgt ^ "', which is already the name of " ^
@@ -4669,7 +4669,7 @@ module."; ]
     (* A module named but contributing nothing is almost always a typo or a
        forgotten --custard_entry_module, and silence there costs a round. *)
     mods |> List.iter (fun m ->
-      if None? (HashTable.try_find used_mod m) then
+      if check && None? (HashTable.try_find used_mod m) then
         E.log_issue0 E.Warning_CustardNoPublicDefinitions [
           text ("Custard: --custard_c_no_prefix " ^ m ^ " renamed nothing.");
           text "The option applies to types, to assume vals, and to \
@@ -4677,6 +4677,14 @@ definitions with external linkage.  Name the module with \
 --custard_entry_module, or its definitions with --custard_entry, so that \
 they are part of this unit's interface."; ])
   end
+
+let foreign_targets (cu:unit_info) (p:program) : ML (list (string & string)) =
+  reset_program_state ();
+  (* Binding adoption can change these names; validate only the final program. *)
+  build_renames false cu.cu_no_prefix p;
+  p |> List.collect (function
+    | DExternal x -> [(string_of_name x.dx_name, emitted_name (DExternal x))]
+    | _ -> [])
 
 (* Two program names that C spells the same way.  [sanitize] is not
    injective -- [mk_comp'] and [mk_comp_] are both [mk_comp_] -- and no choice
@@ -5838,7 +5846,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
      resolves through [c_name], which reads {!renames}.  Filling it first and
      renaming afterwards left the table holding the name the option had just
      replaced.  Nothing in here reads a table, so the move costs nothing. *)
-  build_renames cu.cu_no_prefix p;
+  build_renames true cu.cu_no_prefix p;
   rename_clashes init_name p;
   (* Section 116.  After the renames and before anything is printed, because
      the first generated name may be allocated as early as the first body.

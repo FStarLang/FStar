@@ -302,9 +302,8 @@ let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
        another Custard unit does.  Exporting it would tell a downstream unit
        the symbol is already compiled, and that unit would then skip the very
        definition it was there to contribute; the link would come out with a
-       reference and nothing to resolve it against.  A downstream unit derives
-       an external's signature from the source anyway, exactly as this one
-       did, so nothing is lost by leaving it out. *)
+       reference and nothing to resolve it against.  Non-owning bindings are
+       published separately, without answering an implementation lookup. *)
     if DExternal? d then [] else
     (* Section 42.1.  A C unit's interface is its linking interface: what the
        header declares and nothing else.  A [static] definition offered here
@@ -346,11 +345,16 @@ let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
 
 let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
                      (hdr_file:option string) (init:option string)
+                     (targets:list (string & string))
                      (prog:program) (infos:list (name & type_info))
   : ML unit =
   match Options.custard_unit () with
   | None -> ()
   | Some u ->
+    let keys = HashTable.create 100 in
+    Extract.exported_keys st |> List.iter (fun (n, k) -> HashTable.add keys n k);
+    let names = HashTable.create 100 in
+    targets |> List.iter (fun (n, c) -> HashTable.add names n c);
     let i = {
       Unit.ui_header = {
         Unit.uh_version = Unit.current_version;
@@ -378,6 +382,16 @@ let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
         Unit.uh_init    = init;
       };
       Unit.ui_entries = unit_entries (Extract.exported_keys st) homes prog infos;
+      Unit.ui_foreign = prog |> List.collect (function
+        | DExternal x when None? (imported_unit (DExternal x)) ->
+          (match HashTable.try_find keys (string_of_name x.dx_name) with
+           | Some k ->
+             let target = match HashTable.try_find names (string_of_name x.dx_name) with
+                          | Some c -> Some c | None -> x.dx_target in
+             [{ Unit.uf_key = k; Unit.uf_decl =
+                 { x with dx_target = target; dx_flags = Unit.foreign_flags x.dx_flags } }]
+           | None -> [])
+        | _ -> []);
     } in
     if Options.custard_dump_cui () then
       Format.print_string (Unit.iface_to_string i);
@@ -458,6 +472,12 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog, infos, vd =
     phase "layout" (fun () -> Layout.run (imported_type_infos imports) prog) in
+  let targets =
+    if Options.codegen_c () && Cons? (Options.custard_links ()) then
+      C.foreign_targets { C.no_unit with C.cu_no_prefix = Extract.link_no_prefix st }
+        (List.map fst imports @ prog)
+    else [] in
+  let prog = phase "foreign-bindings" (fun () -> Extract.apply_foreign_bindings st targets prog) in
   (* Effect-guarded simplification (sections 6 and 7.3).  [vd] is the
      representation the analysis above settled on; nothing below decides one. *)
   let prog = phase "simplify" (fun () ->
@@ -592,7 +612,9 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       then Some (stem ^ ".h"), C.init_globals_name cu (List.map fst imports @ prog)
       else None, None in
     let prog = if Some? cherried then Cherry.record_conventions prog else prog in
-    write_unit_iface st homes hdr_file init prog infos);
+    let targets = if backend = "C" && Some? (Options.custard_unit ())
+                  then C.foreign_targets cu (List.map fst imports @ prog) else [] in
+    write_unit_iface st homes hdr_file init targets prog infos);
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   if Options.custard_warn_any () then warn_any prog;

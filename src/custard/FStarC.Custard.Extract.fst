@@ -347,6 +347,8 @@ type state = {
      stops. *)
   names:   HashTable.t string name;
   emitted: HashTable.t string decl;
+  (* Capture choices while the source lid is known: target names may unstub it. *)
+  foreign_choices: HashTable.t string (option string & bool & list flag);
   (* Emission order, reversed: a definition is appended once its body has been
      translated, so uses come after definitions. *)
   order:   ref (list string);
@@ -474,6 +476,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   env     = envr;
   names   = HashTable.create 100;
   emitted = HashTable.create 100;
+  foreign_choices = HashTable.create 20;
   order   = mk_ref [];
   classes = HashTable.create 100;
   bflags = HashTable.create 100;
@@ -1770,6 +1773,18 @@ let rec request (st:state) (k:spec_key) : ML name =
       let d = E.with_ctx ("While extracting " ^ clip_chain_entry key) (fun () ->
                 Prof.timed "extract_lid"
                   (fun () -> extract_lid st l nm k.sk_subst k.sk_holes)) in
+      if DExternal? d && Some? (Unit.lookup_foreign st.links key) then begin
+        let attrs = match TcEnv.lookup_sigelt (tcenv st) l with
+                    | Some se -> source_attrs se l
+                    | None -> [] in
+        let rule = match Builtins.rule_of_attributes attrs with
+                   | Some r -> Some r | None -> Builtins.lookup_rule l in
+        let target, header =
+          match rule with
+          | Some (Builtins.Rule_extern e) -> e.Builtins.x_name, Some? e.Builtins.x_header
+          | _ -> None, false in
+        HashTable.add st.foreign_choices key (target, header, c_decoration_flags attrs)
+      end;
       st.chain := saved;
       st.chainlids := saved_lids;
       HashTable.add st.emitted key d;
@@ -5217,7 +5232,9 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     let typars, ty, cf = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                 dx_target = x.Builtins.x_name; dx_header = x.Builtins.x_header;
-                dx_flags = cf }
+                dx_flags = (match se with
+                            | Some se -> c_decoration_flags (source_attrs se l)
+                            | None -> []) @ cf }
   | _ ->
   let is_opaque = (match rule with Some Builtins.Rule_opaque -> true | _ -> false) in
   let is_realized = (match rule with Some Builtins.Rule_realized -> true | _ -> false) in
@@ -7168,6 +7185,36 @@ let link_inits (st:state) : ML (list string) = Unit.link_inits st.links
 
 let exported_keys (st:state) : ML (list (string & string)) =
   HashTable.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
+
+let apply_foreign_bindings (st:state) (targets:list (string & string)) (prog:program) : ML program =
+  if Unit.is_empty st.links then prog else
+  let keys = HashTable.create 100 in
+  exported_keys st |> List.iter (fun (n, k) -> HashTable.add keys n k);
+  let names = HashTable.create 100 in
+  targets |> List.iter (fun (n, c) -> HashTable.add names n c);
+  prog |> List.map (fun d ->
+    match d with
+    | DExternal x ->
+      (match HashTable.try_find keys (string_of_name x.dx_name) with
+       | None -> d
+       | Some key ->
+         match Unit.lookup_foreign st.links key with
+         | None -> d
+         | Some (u, b) ->
+           let explicit_target, explicit_header, flags =
+             match HashTable.try_find st.foreign_choices key with
+             | Some choices -> choices
+             | None -> custard_error st E.Error_CustardBadUnitInterface [
+                 text ("Custard lost the source binding choices for " ^ key ^ ".");
+                 text "This is an internal Custard error; please report it." ] in
+           let explicit_target =
+             if Some? explicit_target then explicit_target
+             else if None? x.dx_target && None? x.dx_name.spec &&
+                     List.mem (String.concat "." x.dx_name.ns) (Options.custard_c_no_prefix ())
+             then HashTable.try_find names (string_of_name x.dx_name)
+             else None in
+           DExternal (Unit.apply_foreign u b x explicit_target explicit_header flags))
+    | _ -> d)
 
 let loaded_digests (_:state) : ML (list (string & string)) = Loader.loaded_digests ()
 

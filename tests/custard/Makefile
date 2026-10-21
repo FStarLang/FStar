@@ -1597,6 +1597,15 @@ NOGREP_SepApp += "type sepLib_named"
 GREP_SepApp  += "SepLib.sepLib_describe"
 GREP_SepApp  += "SepLib.SepLib_Rect"
 
+$(OUTPUT_DIR)/foreignbindings.ran: foreignbindings.py $(wildcard foreign-bindings/*) $(FSTAR_EXE)
+	$(call msg, "FOREIGN-BINDINGS", CUIs)
+	@mkdir -p $(OUTPUT_DIR)/foreignbindings
+	$(Q)python3 foreignbindings.py --fstar '$(FSTAR)' \
+	  --out $(OUTPUT_DIR)/foreignbindings --cc '$(CC)' --cxx '$(CXX)'
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/foreignbindings.ran
+
 # Section 42: separate compilation for C.  The same shape as SepLib/SepApp
 # above and a different set of assertions, because C is where the questions
 # were: what a unit offers (42.1), what a downstream unit may not define twice
