@@ -367,6 +367,10 @@ cherry_int cherry_big_ediv(cherry_int a, cherry_int b) {
 }
 
 cherry_int cherry_big_erem(cherry_int a, cherry_int b) {
+  /* A small dividend over a big divisor: the quotient is 0 or +-1 (see
+     cherry_big_ediv), so the remainder is [a] or [a + |b|]. */
+  if (cherry_is_scalar(a) && !cherry_is_scalar(b) && cherry_int_val(a) < 0)
+    return ((const cherry_bigint *)b)->neg ? cherry_int_sub(a, b) : cherry_int_add(a, b);
   cherry_int r;
   big_edivmod(a, b, NULL, &r);
   return r;
