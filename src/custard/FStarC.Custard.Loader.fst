@@ -144,6 +144,12 @@ let module_is_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML bool =
     && None? (HashTable.try_find iface_only m') in
   loaded env m want_impl
 
+(* The search [Dep.cache_file_name] makes, without its failure. *)
+let impl_is_checked (deps:Dep.deps) (m:string) : ML bool =
+  match Dep.implementation_of deps (Dep.module_key_for_target deps (Options.codegen_target ()) m) with
+  | None -> false
+  | Some fn -> Some? (Find.find_file (Filepath.basename fn ^ ".checked"))
+
 (* Modules whose loading is in progress, to break the recursion below. *)
 let loading : HashTable.t string unit = HashTable.create 100
 
