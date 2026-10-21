@@ -190,6 +190,13 @@ checked term carries:
 
 ### Trusted tactic results
 
+With two phases, phase 1 left `synth_by_tactic tau` in place, and phase 2
+ran the tactic and used its result at the requested type: the VC generator
+was the one that ran the tactic, so nothing checked the result afterwards.
+Now the elaborator runs the tactic once, and Core checks the elaborated term
+from scratch, without running tactics. Core thus needs to know which
+subterms a tactic justified.
+
 TcTerm gives the result of `_ by tac` the requested type without checking
 it. Checking it again, e.g. `()` against `squash goal`, would ask the SMT
 solver to prove what the tactic proved, which may be well beyond it
