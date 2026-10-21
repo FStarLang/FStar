@@ -143,7 +143,7 @@ GCC honours `musttail` at every optimization level, but at `-O0` only when the c
 
 The caller must not release anything after the call. Borrow inference ensures this for arguments (see Borrow inference). A closure's entry point still increments the captured values before the call, and the call is not marked if the function borrows any of the entry point's arguments; this happens only when the convention is fixed.
 
-Clang's `musttail` requires the caller and callee to have identical prototypes, which these calls rarely do. On clang and other compilers, `CHERRY_MUSTTAIL` is empty and `CHERRY_TAILCALL_VOID(c)` is `c`. Both can be predefined to override the choice. Test: `tests/custard/MutualTail`, run in a 1 MB stack.
+Clang's `musttail` requires the caller and callee to have identical prototypes, which these calls rarely do. On clang and other compilers, `CHERRY_MUSTTAIL` is empty and `CHERRY_TAILCALL_VOID(c)` is `c`. Both can be predefined to override the choice. Test: `tests/custard/MutualTail`, run in a 1 MB stack; with a compiler that does not honour the mark (GCC before 15), it is built at `-O2` instead of `-O0`, which then turns the calls into jumps unasked.
 
 ## Inductive types
 
