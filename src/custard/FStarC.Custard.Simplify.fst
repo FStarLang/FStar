@@ -3535,7 +3535,9 @@ let coerce_prog (prog:program) : ML program =
     | _ -> mk (ECoerce (x, t)) t x.eff in
   let rec check (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let x = go env exp x in
-    if Some? exp && pushes_down x then x else
+    (* Every result position of such a node now has the expected type, so the
+       node has it too.  A lifted lambda's result type is its body's. *)
+    if Some? exp && pushes_down x then { x with ty = Some?.v exp } else
     match exp, infer env x with
     | Some e, Some t -> if cty_mismatch t e then coerce x e else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
@@ -3549,7 +3551,17 @@ let coerce_prog (prog:program) : ML program =
        argument rather than taking Custard's word for it -- then has two
        incompatible types for one expression.  A node whose type is itself
        [TAny] says nothing and is left alone. *)
-    | Some e, None -> if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e else x
+    | Some e, None ->
+      if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e
+      (* A value built in place and typed [TAny] -- a constructor out of an
+         inlined polymorphic [return], say -- is built at whatever type its
+         position wants; left at [TAny] under a parent that now has that type
+         (see above), Cherry would take it out of an [any] it was never put
+         into. *)
+      else if TAny? x.ty && not (has_any e) &&
+              (match x.e with ECtor _ | ERecord _ | ETuple _ | EConst _ -> true | _ -> false)
+      then { x with ty = e }
+      else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
@@ -3640,7 +3652,24 @@ let coerce_prog (prog:program) : ML program =
          | None -> (bs |> List.map hint, None)) in
       let env = List.fold_left (fun env ((b:binder), t) -> extend env b.b_name t)
                                env (List.zip bs ps) in
-      same (EFun (bs, check env res body))
+      (* The lambda returns what its body does once checked: the body may
+         have been coerced to the expected result.  Left at its old result
+         type, the lambda disagrees with the expectation and is coerced as a
+         whole as well, and Cherry's adapter then takes the body's [any] out
+         at the old type it was never at. *)
+      let rec with_res (n:int) (t:cty) (r:cty) : option cty =
+        if n = 0 then Some r else
+        match t with
+        | TArrow (a, f, b) ->
+          (match with_res (n - 1) b r with
+           | Some b -> Some (TArrow (a, f, b))
+           | None -> None)
+        | _ -> None in
+      let body = check env res body in
+      let ty = (match with_res (List.length bs) x.ty body.ty with
+                | Some t -> t
+                | None -> x.ty) in
+      { x with e = EFun (bs, body); ty = ty }
     | EApp (h, es) ->
       (match infer env h with
        | Some t ->
