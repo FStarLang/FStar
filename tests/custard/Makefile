@@ -3442,6 +3442,7 @@ all: $(CHERRY_DIR)/MutualTail.chgrep
 # variant, and a call passing one is a guaranteed tail call.
 CUSTARD_TESTS += CherryBoxedAttr
 CHERRY_RUN_CherryBoxedAttr = ulimit -s 1024 &&
+CHERRY_CFLAGS_CherryBoxedAttr = $(CHERRY_TAIL_CFLAGS)
 $(CHERRY_DIR)/CherryBoxedAttr.chgrep: $(CHERRY_DIR)/CherryBoxedAttr.chc
 	$(Q)for p in 'typedef cherry_obj *CherryBoxedAttr_outer;' \
 	    'typedef cherry_obj *CherryBoxedAttr_inner;' \

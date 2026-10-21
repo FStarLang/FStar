@@ -23,7 +23,7 @@ let area (s:shape) : int =
 let rec walk (o:outer) (k:int) : ML int =
   if k = 0 then o.n + o.i.a else step { o with n = o.f o.n } (k - 1) "x"
 and step (o:outer) (k:int) (s:string) : ML int =
-  walk { o with i = { o.i with name = o.i.name ^ s; a = o.i.a + 1 } } k
+  walk { o with i = { o.i with name = s; a = o.i.a + 1 } } k
 
 let main () : ML unit =
   let o = { i = { a = 1; name = "" }; n = 0; f = (fun x -> x + 2);
