@@ -575,7 +575,7 @@ $(OUTPUT_DIR)/CastSubscript.dcexe $(OUTPUT_DIR)/CastSubscript.dcxx: CastSubscrip
 # Section 61.2.  Two negation sites, broken for two different reasons.
 # EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
 C_TESTS += ExtFlag
-CGREP_ExtFlag = "if (!(EXT_FLAG)) return 0;" "if (!(EXT_FLAG)) r = 0;"
+CGREP_ExtFlag = "if (!(EXT_FLAG)) {" "return 0;" "r = 0;"
 CNOGREP_ExtFlag = "!EXT_FLAG"
 
 # The Cherry backend (cherry.md, "References"): Pulse references and

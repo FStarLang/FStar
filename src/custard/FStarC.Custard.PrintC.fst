@@ -2931,9 +2931,9 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        exactly this behind. *)
     !out ^
     (if tt = "" && ft = "" then ""
-     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind false ft
-     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind (ft <> "") tt ^
-          (if ft = "" then "" else ind ^ "else" ^ brace ind false ft))
+     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind ft
+     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind tt ^
+          (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
 
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
 
@@ -3356,40 +3356,10 @@ and pat_tests (path:string) (t:cty) (p:pat)
        let t2, b2 = go fields ps in
        (tests @ t2, b2))
 
-and drop_indent (l:string) : ML string =
-  if String.length l > 0 && String.substring l 0 1 = " "
-  then drop_indent (String.substring l 1 (String.length l - 1))
-  else l
-
-(* The body of an [if] or an [else], which the caller has emitted at [ind ^
-   "  "].  A single statement does not need a block, and one statement per
-   line is an invariant of this printer, so a body with one newline in it is
-   one statement.
-
-   [followed] says that the caller writes an [else] straight after this body,
-   and then a single statement is not enough: C's [else] binds to the nearest
-   unmatched [if], so an unbraced [if (b) c;] in the [then] arm captures it
-   and the arm that was meant to run when the *outer* test failed runs when
-   the inner one did.  That is section 6's dangling [else], it is silent --
-   the C is well formed and means something else -- and it is why a body that
-   can capture is braced even though it is one statement. *)
-and brace (ind:string) (followed:bool) (body:string) : ML string =
-  let lines = String.split ['\n'] body in
-  match lines with
-  | [""] -> " { }\n"
-  | [l; ""] -> if followed && dangles l
-               then " {\n" ^ body ^ ind ^ "}\n"
-               else " " ^ drop_indent l ^ "\n"
-  | _ -> " {\n" ^ body ^ ind ^ "}\n"
-
-(* Can this one statement capture an [else] written after it?  Only an [if]
-   with no [else] of its own can, and on one line that is a statement that
-   opens with [if (] and does not close with a brace: [if (p == NULL) {
-   abort(); }] is written whole and has nothing left to capture. *)
-and dangles (l:string) : ML bool =
-  let l = drop_indent l in
-  let n = String.length l in
-  starts_with l "if (" && not (n > 0 && String.substring l (n - 1) 1 = "}")
+(* A foreign statement macro can hide an unmatched [if] or several statements
+   on one printed line.  Always brace conditional arms, including match arms. *)
+and brace (ind:string) (body:string) : ML string =
+  if body = "" then " { }\n" else " {\n" ^ body ^ ind ^ "}\n"
 
 and starts_with (s:string) (pre:string) : ML bool =
   String.length s >= String.length pre &&
@@ -3505,7 +3475,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
         bi ^ "CHERRY_ASSUME(" ^ String.concat " && " chk ^ ", " ^
         debug_what "incomplete match" ^ ");\n" in
       if first then check ind ^ branch_body ind p b
-      else ind ^ "else" ^ brace ind false (check ind' ^ branch_body ind' p b) in
+      else ind ^ "else" ^ brace ind (check ind' ^ branch_body ind' p b) in
     match brs with
     | [] -> ""
     (* F* has already checked that the match is exhaustive, so the last branch
@@ -3525,12 +3495,10 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
          is dead and C would warn about it. *)
       if Nil? tests then last [] p b
       else
-        (* The next arm is written as [else ...], so this one is [followed]
-           exactly when there is a next arm. *)
         let after = go false rest in
         (if first then ind else ind ^ "else ") ^
         "if (" ^ String.concat " && " tests ^ ")" ^
-        brace ind (after <> "") (branch_body ind' p b) ^
+        brace ind (branch_body ind' p b) ^
         after in
   head ^ go true kept
 

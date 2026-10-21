@@ -460,6 +460,10 @@ CGREP_CExternGrouping = "(CG_NUMBER) * 3" "(CG_FALSE) && (CG_FLAG)" \
                         "(uint8_t)(CG_WIDE)" "(CG_BOX).value" \
                         "= (CG_BOX_FN());" "= (CG_VARIANT);" \
                         "cg_identity((CG_COMMA))" "(void)(cg_tick());"
+C_TESTS += CExternStmt
+FLAGS_CExternStmt = --custard_entry_module CExternStmt
+CGREP_CExternStmt = "if (a) {" "else if (x == CEXTERNSTMT_B) {"
+CNOGREP_CExternStmt = "if (a) CS_" "else CS_"
 C_TESTS += Rotate
 KRML_TESTS += Rotate
 # The mask is the whole point of the rule, so the C is pinned as well as run:
@@ -707,8 +711,10 @@ CNOGREP_CFunPtr = "(*)("
 # Section 59: [n == 0], not [n == ((uint32_t)0U)] -- [n] carries the type,
 # so the literal's cast was saying what the other operand already said.
 CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
-                    "if (s.tag == KRMLBASIC_SQUARE) return (s.val.Square" \
-                    "if (n == 0) return acc;"
+                    "if (s.tag == KRMLBASIC_SQUARE) {" \
+                    "if (n == 0) {"
+CPAIR_KrmlBasic   = "if (s.tag == KRMLBASIC_SQUARE) {@return (s.val.Square" \
+                    "if (n == 0) {@return acc;"
 CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
 
 # Each of these is extracted with --custard_entry and *no* --custard_main, as a
@@ -1428,6 +1434,7 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 .SECONDEXPANSION:
 
 $(OUTPUT_DIR)/CExternGrouping.dcexe $(OUTPUT_DIR)/CExternGrouping.dcxx: CExternGrouping_stubs.h
+$(OUTPUT_DIR)/CExternStmt.dcexe $(OUTPUT_DIR)/CExternStmt.dcxx: CExternStmt_stubs.h
 
 # [CEXTRA_Name] names hand-written C to link beside the generated unit.
 # Every other test that reaches C from outside F* does it with a header of
@@ -2788,7 +2795,8 @@ FSNOGREP_TyvarQuote += "'t'"
 C_TESTS += MatchFun
 # The arms are beta-reduced where they stand, so the emitted function is two
 # returns and holds no function value at all.
-CGREP_MatchFun += "if (c == MATCHFUN_A) return (m + n);"
+CGREP_MatchFun += "if (c == MATCHFUN_A) {"
+CPAIR_MatchFun += "if (c == MATCHFUN_A) {@return (m + n);"
 CNOGREP_MatchFun += "(*"
 
 # Section 77.5.  [--custard_no_unfold] keeps an abbreviation of an applied
