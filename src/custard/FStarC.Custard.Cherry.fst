@@ -819,6 +819,23 @@ let rec builds (t:cty) (e:expr) : ML bool =
   | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) | ECoerce (a, _) -> builds t a
   | _ -> false
 
+(* Whether [y] dies somewhere in [e] before a cell of the boxed type [t] is
+   built: either [e] no longer needs [y] and builds one, or a later part of it,
+   or an arm of a conditional in it, does.  These are the places where the
+   reference counting pass releases [y] just before the rest of the code, and
+   where [reuse_at_death] can reuse it instead. *)
+let rec dies_building (y:string) (t:cty) (e:expr) : ML bool =
+  if not (List.mem y (fv e)) then builds t e else
+  match e.e with
+  | ELet (z, _, a, b) ->
+    if List.mem y (without [z] (fv b)) then dies_building y t b else dies_building y t a
+  | ESeq (a, b) ->
+    if List.mem y (fv b) then dies_building y t b else dies_building y t a
+  | EIf (_, a, b) -> dies_building y t a || dies_building y t b
+  | EMatch (_, brs) -> brs |> List.existsb (fun (p, _, b) ->
+                         not (List.mem y (pat_vars p)) && dies_building y t b)
+  | _ -> false
+
 let rec set_nth (i:int) (x:bool) (l:list bool) : ML (list bool) =
   match l with
   | [] -> []
@@ -920,15 +937,15 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       | EIf (c, t, f) -> go false c; go tail t; go tail f
       | EMatch (sc, brs) ->
         go false sc;
-        (* A parameter matched in a branch that no longer needs it and
-           builds a cell of its type is owned, so that the cell can be
-           reused. *)
+        (* A parameter matched in a branch that stops needing it, there
+           or further in, and then builds a cell of its type is owned, so
+           that the cell can be reused. *)
         (match sc.e with
          | EVar y when Some? (param_ix y) && HashTable.mem !boxed_tbl
                          (match sc.ty with TApp (n, []) -> string_of_name n | _ -> "") ->
            if brs |> List.existsb (fun (p, _, b) ->
                 (match p with PCtor (_, _ :: _) -> true | _ -> false) &&
-                not (List.mem y (fv b)) && builds sc.ty b)
+                dies_building y sc.ty b)
            then own_arg sc
          | _ -> ());
         let borrowed_sc = (match sc.e with
@@ -1116,6 +1133,53 @@ let rec reuse_in (w:string) (wt:cty) (old:name) (e:expr) : ML (option expr) =
                                match r with
                                | Some b' -> (p, g, b')
                                | None -> (p, g, free_tok b)));
+                  eff = E_Impure }
+  | _ -> None
+
+(* [e], with reference counting already made explicit, in a branch of a
+   match on the owned cell [x] (of constructor [old]) that still needs [x] at
+   its start: where [x] is released just before code that builds a cell of
+   its type, the release becomes a reset whose token that code reuses (Lean
+   places the reset where the variable dies in the same way).  The fields the
+   branch uses were counted at its start, so the reset keeps none of them.
+   [None] when there is no such place. *)
+let rec reuse_at_death (x:string) (wt:cty) (old:name) (ps:list pat) (e:expr) : ML (option expr) =
+  let go = reuse_at_death x wt old ps in
+  match e.e with
+  | ESeq ({ e = EOp ({ po_op = RcDec }, [{ e = EVar y }]) }, rest) when y = x ->
+    let w = fresh () in
+    (match reuse_in w wt old rest with
+     | Some rest' ->
+       let kept = List.map (fun _ -> false) ps in
+       let reset = mk (EOp ({ po_op = Reset (old, kept); po_ty = None }, [var x wt])) wt E_Impure in
+       Some (let_ w wt reset rest')
+     | None -> None)
+  | ESeq (a, b) ->
+    (match go b with
+     | Some b' -> Some { e with e = ESeq (a, b'); eff = E_Impure }
+     | None ->
+       match go a with
+       | Some a' -> Some { e with e = ESeq (a', b); eff = E_Impure }
+       | None -> None)
+  | ELet (y, t, a, b) ->
+    (match go b with
+     | Some b' -> Some { e with e = ELet (y, t, a, b'); eff = E_Impure }
+     | None ->
+       match go a with
+       | Some a' -> Some { e with e = ELet (y, t, a', b); eff = E_Impure }
+       | None -> None)
+  | EIf (c, t, f) ->
+    (match go t, go f with
+     | None, None -> None
+     | t', f' ->
+       Some { e with e = EIf (c, (match t' with Some t -> t | None -> t),
+                                 (match f' with Some f -> f | None -> f));
+                     eff = E_Impure })
+  | EMatch (sc, brs) ->
+    let rs = brs |> List.map (fun (p, g, b) -> (p, g, b, go b)) in
+    if rs |> List.for_all (fun (_, _, _, r) -> None? r) then None else
+    Some { e with e = EMatch (sc, rs |> List.map (fun (p, g, b, r) ->
+                               (p, g, (match r with Some b' -> b' | None -> b))));
                   eff = E_Impure }
   | _ -> None
 
@@ -1468,6 +1532,16 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
                       (match st with TApp (n, []) -> string_of_name n | _ -> "") -> []
                   | _ -> dead_x) in
     let body = rc (keep @ fields) b in
+    let boxed_st = HashTable.mem !boxed_tbl (match st with
+                                             | TApp (n, []) -> string_of_name n
+                                             | _ -> "") in
+    let body =
+      (match p with
+       | PCtor (c, ps) when Nil? dead_x && Cons? ps && boxed_st && List.mem x live ->
+         (match reuse_at_death x st c ps body with
+          | Some body' -> body'
+          | None -> body)
+       | _ -> body) in
     let plain () : ML branch = (p, g, decs dead_other (incs fields (decs dead_x body))) in
     (* The scrutinee dies here: a cell this branch builds can reuse its memory
        (cherry.md, "Heap cell reuse").  Each field is bound by a variable or
