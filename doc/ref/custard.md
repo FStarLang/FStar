@@ -273,8 +273,8 @@ Notes:
   `FStar.SizeT` (§8.1): it *computes*, so it fuses with nothing and is dropped
   only when the two widths are equal.  The two were one node until §17.2; see
   there for the miscompilation that cost.
-- **No local `letrec`.**  `ELet` is non-recursive; local recursive functions
-  and local closures that need to be recursive are lambda-lifted to top-level
+- **No local `letrec`.**  `ELet` is non-recursive; local functions, recursive
+  or not, are lambda-lifted to top-level
   decls during phase 2 (which is easy: the extraction loop already creates
   top-level decls on demand, so lifting is just "request a specialization of a
   fresh name").  This is what breaks the `decl`/`expr` mutual recursion.
@@ -887,7 +887,7 @@ Processing one item `(lid, margs) ↦ nm`:
    normal form, and `request (g, margs')`.  The two failure modes — partial
    application, and a `Poly` argument in a `Mono` position — are rejected here
    with the diagnostics of §3.2.
-4. **Lambda-lift** local recursive functions and emit them as extra decls.
+4. **Lambda-lift** local functions and emit them as extra decls.
 5. **Emit** the `DLet` and record it.
 
 Types are handled by the same loop: `TApp (ind, args)` requests a
@@ -2259,7 +2259,8 @@ regression is `tests/custard/MonoState.fst`.
 ### 5.10 Local `let rec`
 
 A local `let rec` is lambda-lifted to a top-level `DLet` rather than given an
-IR node of its own.
+IR node of its own.  So is a non-recursive local function, unless §5.11
+inlines it.
 
 The IR's `ELet` is documented non-recursive, and adding an `ELetRec` would mean
 teaching every traversal about it.  There are ~57 `ELet` sites across a dozen
@@ -2293,10 +2294,19 @@ Occurrences of a lifted name in the body of the enclosing definition become
 `EQual (nm, tyargs)` applied to the captures.  The partial application is pure:
 the binders the user actually wrote are always still missing.
 
+A non-recursive local function is lifted for the sake of its calls.  As a
+closure, every call to it was an indirect call, and on Cherry the closure was
+allocated and then released after the last call returned, so no call to it
+could be a tail call.  `Normalize.norm`'s `fallback`, which calls `norm` back
+in tail position, made the unit tests' stack grow with the length of the term.
+Lifted, a full application is a direct call that passes the captures as
+arguments; only a use as a value still builds a closure, the partial
+application above.  `tests/custard/MutualTail.fst`'s `walk` checks the tail call.
+
 ### 5.11 Polymorphic local functions are inlined
 
 A non-recursive local `let` whose definition is a lambda **that binds at least
-one type** is substituted at its uses rather than compiled as a closure.
+one type** is substituted at its uses rather than lambda-lifted (§5.10).
 
 A local function is the one construct with no top-level identity: it cannot be
 specialized, because specialization is keyed on a `lid`, and it cannot be
@@ -2366,7 +2376,7 @@ duplication.
 
 `tests/custard/LocalPoly.fst` pins both halves: the polymorphic helper is gone
 from the output and specialized per type, and the four nested monomorphic
-helpers are still there, once each.
+helpers are still there, lambda-lifted once each (§5.10).
 
 A local `let rec` cannot be substituted and is lambda-lifted instead (§5.10).
 

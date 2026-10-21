@@ -25,6 +25,15 @@ let rec step (k:int -> ML int) (n:int) : ML int =
 
 let rec around (n:int) : ML int = step around n
 
+(* A local function is lambda-lifted rather than allocated as a closure, so
+   its calls are direct and the tail calls stay tail calls; the shape of
+   [Normalize.norm]'s [fallback]. *)
+let rec walk (n:int) (acc:int) : ML int =
+  let fallback (k:int) : ML int = walk (n - k) (acc + k) in
+  if n <= 0 then acc
+  else if n % 2 = 0 then fallback 2
+  else fallback 1
+
 (* A tail call returning a struct is not marked: GCC 15 rejects the mark at
    -O2 once [pick] is inlined into its closure's entry point, whose own call
    would be marked too.  The .chgrep rule compiles this at -O2. *)
@@ -43,4 +52,5 @@ let main () : ML unit =
   tick 1000000;
   FStar.IO.print_string (string_of_int !count ^ "\n");
   FStar.IO.print_string (string_of_int (around 1000000) ^ "\n");
-  FStar.IO.print_string (string_of_int (use pick) ^ "\n")
+  FStar.IO.print_string (string_of_int (use pick) ^ "\n");
+  FStar.IO.print_string (string_of_int (walk 1000001 0) ^ "\n")

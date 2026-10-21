@@ -263,10 +263,11 @@ NOGREP_SortBy   = "sortBy_Mkord" "type .*sortBy_ord"
 GREP_LocalPoly     = "localPoly_try_unembed__int" "localPoly_try_unembed__bool" \
                      "localPoly_un__int" "localPoly_un__bool"
 NOGREP_LocalPoly   = "localPoly_Mkemb" "localPoly_e_int" "localPoly_e_bool"
-# ... but a *monomorphic* local helper is left alone.  Inlining it would buy
-# nothing (it has no type argument to make concrete) and cost 2^n on the
-# nested, twice-used helpers in [nested].
-GREP_LocalPoly    += "let a = (fun y" "let b = (fun y" "let c = (fun y"
+# ... but a *monomorphic* local helper is lambda-lifted, once.  Inlining it
+# would buy nothing (it has no type argument to make concrete) and cost 2^n on
+# the nested, twice-used helpers in [nested].
+GREP_LocalPoly    += "let localPoly_nested__a (x" "let localPoly_nested__b (x" \
+                     "let localPoly_nested__c (x"
 
 # A dependent inductive parameter list ({| printable a |} after a:Type) has to
 # be opened before its sorts are looked at.
@@ -3421,6 +3422,7 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	    'CHERRY_MUSTTAIL return MutualTail_ping(' \
 	    'CHERRY_TAILCALL_VOID(MutualTail_tick(' \
 	    'CHERRY_TAILCALL_VOID(MutualTail_tock(' \
+	    'CHERRY_MUSTTAIL return MutualTail_walk__fallback(' \
 	    'CHERRY_MUSTTAIL return cherry_apply_'; do \
 	  grep -qF -- "$$p" $< \
 	    || { echo "ERROR: MutualTail's C output is missing $$p"; exit 1; }; done
