@@ -3392,6 +3392,11 @@ FLAGS_CoerceLamRes = --warn_error -367
 # emits a trailing branch twice per level (PrintC's trial emission in [trim]).
 CUSTARD_TESTS += DeepMatch
 
+# A parameter that only a self tail call reads, passing it unchanged: the loop
+# does not write it, so C sees it unused, and -Werror rejects that unless it is
+# voided.
+CUSTARD_TESTS += TailKept
+
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
 C_TESTS += CHeapArity
