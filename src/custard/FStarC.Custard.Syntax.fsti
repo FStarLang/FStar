@@ -644,20 +644,21 @@ type flag =
 
       The body must be a constant expression; error 389 if it is not. *)
   | CIfDef
-  (** karamel-only.  An [assume val] of type [bool] whose value is a C
+  (** An [assume val] of type [bool] whose value is a C
       preprocessor condition: a test of it compiles to [#if] rather than to a
       read of a variable.
 
       karamel's [@@ CIfDef ], recognized under the same F\* attribute and
-      carried through to it unchanged, because the backend that acts on it is
-      karamel's and the decision it makes -- which [if] becomes a [#if] -- is
-      about the C it prints.
+      carried through to it unchanged.  Direct C prints [defined(NAME)] in
+      preprocessor conditions, including boolean combinations and mixed
+      compile-time/runtime guards.  A value use becomes a boolean literal
+      selected by preprocessing, not a read of an external object.
 
       Like {!CMacro} this is not decoration.  A compile-time flag that
       survives as a variable is a variable the target never defines, so the
       reference is a link error if the declaration is kept and an undeclared
-      identifier if it is dropped.  Only the direct-to-C backend has no use
-      for it, and ignores it. *)
+      identifier if it is dropped.  Presence is what matters: a macro
+      defined as [0] still makes its CIfDef flag true. *)
   | CReference
   (** Section 70.2.  Values of this external type are *handles*: a binding of
       one aliases rather than copies.

@@ -2737,6 +2737,31 @@ KRMLFLAGS_KrmlMacro := -add-include 'Custard.c:"KrmlMacro_stubs.h"'
 # [IfDef], so the test compiles to [#if] rather than to a read of a symbol
 # nothing defines.  Linking and running is the assertion.
 KRML_TESTS += KrmlIfDef
+C_TESTS += KrmlIfDef
+CGREP_KrmlIfDef += "\#if defined(KrmlIfDef_krml_ifdef_flag)"
+CNOGREP_KrmlIfDef += "extern bool"
+
+$(OUTPUT_DIR)/cifdef.checked: $(addprefix $(CACHE_DIR)/, CIfDef.fst.checked CIfDefApp.fst.checked CIfDefGlobal.fst.checked) $(FSTAR_EXE) cifdef.py CIfDef_stubs.h CIfDefGlobal_main.c
+	$(call msg, "CIFDEF", CIfDef)
+	$(Q)python3 cifdef.py --fstar "$(FSTAR)" --cc "$(CC)" --cxx "$(CXX)" \
+	  --output $(OUTPUT_DIR)/cifdef
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/cifdef.checked
+
+REJECT_TESTS += CIfDefBadType CIfDefBadFunction CIfDefBadDefinition CIfDefBadName
+FLAGS_CIfDefBadType = --codegen C --custard_entry CIfDefBadType.flag
+FLAGS_CIfDefBadFunction = --codegen C --custard_entry CIfDefBadFunction.flag
+FLAGS_CIfDefBadDefinition = --codegen C --custard_entry CIfDefBadDefinition.flag
+FLAGS_CIfDefBadName = --codegen C --custard_entry CIfDefBadName.flag
+CODE_CIfDefBadType = 368
+CODE_CIfDefBadFunction = 368
+CODE_CIfDefBadDefinition = 368
+CODE_CIfDefBadName = 368
+EGREP_CIfDefBadType = "a CIfDef declaration that is not bool"
+EGREP_CIfDefBadFunction = "a CIfDef declaration that is not bool"
+EGREP_CIfDefBadDefinition = "CIfDef on a definition"
+EGREP_CIfDefBadName = "CIfDef target must be a C preprocessor identifier"
 
 # Section 65.  An external belongs to its own module's file, not to the file
 # of the first thing its type mentions.

@@ -15882,6 +15882,29 @@ constant is reduced to the constant before this test sees it, so the error is
 reached only by a body that genuinely depends on something run-time, which is
 the case where refusing is right.
 
+#### Direct-C compile-time flags: `CIfDef`
+
+`[@@FStar.Attributes.CIfDef] assume val feature : bool` names a C
+preprocessor flag. With `--codegen C`, an `if` guarded by it becomes
+`#if defined(NAME)`, not a runtime read of an `extern bool`. A macro defined
+as `0` is still **present** and makes the flag true, matching KaRaMeL.
+The name follows ordinary C naming; `custard_extern` can supply an exact
+macro name, and `custard_c_header` can supply a header defining it.
+
+Boolean combinations (`&&`, `||`, `not`), nested conditions and local aliases
+retain preprocessing semantics. Mixed runtime/compile-time guards are split
+without changing short-circuit evaluation: `feature && runtime_test ()`
+does not evaluate `runtime_test` when the macro is absent. This also keeps
+conditionally supplied C APIs out of inactive branches. A flag used as a
+Boolean value is materialized as a preprocessing-selected literal.
+
+The attribute requires an assumed Boolean value, not a function or a
+definition; invalid declarations and invalid macro identifiers are rejected.
+It does not make arbitrary called functions, or their types, conditional:
+foreign declarations needing conditional types should be supplied by a header.
+`tests/custard/cifdef.py` exercises absent, empty, zero and nonzero definitions,
+standalone, separately compiled and global-only units, and C and C++ consumers.
+
 ### 68.4  Two notes recorded without action
 
 **EverParse's rlimit.**  `CBOR.Pulse.Raw.Format.Serialize.fst` needs

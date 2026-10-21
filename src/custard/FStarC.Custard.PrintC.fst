@@ -439,6 +439,83 @@ let ifdef_of_flags (fs:list flag) : ML (option string) =
   | Some (IfDef c) -> Some c
   | _ -> None
 
+(* A CIfDef names a macro's presence, not an object or the macro's value.
+   Local aliases keep that distinction until their uses are printed. *)
+let cifdefs : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+let ifdef_aliases : ref (list (string & string)) = mk_ref []
+let ifdef_references : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+let ifdefs_present : ref bool = mk_ref false
+let ifdef_body : ref bool = mk_ref false
+
+let is_ifdef_bool (t:cty) : ML bool =
+  match t with
+  | TApp (n, []) -> string_of_name n = "Prims.bool"
+  | _ -> false
+
+let ifdef_alias (x:string) : ML (option string) =
+  !ifdef_aliases |> List.tryPick (fun (y, c) -> if x = y then Some c else None)
+
+let with_ifdef_alias (x c:string) (f:unit -> ML string) : ML string =
+  let saved = !ifdef_aliases in
+  ifdef_aliases := (x, c) :: saved;
+  let s = f () in
+  ifdef_aliases := saved;
+  s
+
+let rec mentions_ifdef (e:expr) : ML bool =
+  if not !ifdefs_present then false else
+  match e.e with
+  | EQual (n, _) -> HashTable.mem !cifdefs (string_of_name n)
+  | EVar x -> Some? (ifdef_alias x)
+  | _ -> exists_child mentions_ifdef e
+
+(* Preprocessing can remove every use of a private definition.  Keep its
+   address used by the body that refers to it, including global initializers,
+   without changing linkage or reading possibly uninitialized storage. *)
+let ifdef_uses (body:expr) : ML string =
+  if not !ifdef_body then "" else
+  let seen = HashTable.create 8 in
+  let uses = mk_ref [] in
+  let rec collect (e:expr) : ML unit =
+    (match e.e with
+     | EQual (n, _) ->
+       let k = string_of_name n in
+       if HashTable.mem !ifdef_references k && not (HashTable.mem seen k) then begin
+         HashTable.add seen k true;
+         uses := ("  (void)&" ^ c_name n ^ ";\n") :: !uses
+       end
+     | _ -> ());
+    iter_children collect e in
+  collect body;
+  String.concat "" (List.rev !uses)
+
+let rec ifdef_condition (e:expr) : ML (option string) =
+  let binary (op:string) (a b:expr) : ML (option string) =
+    match ifdef_condition a, ifdef_condition b with
+    | Some a, Some b -> Some (group a ^ " " ^ op ^ " " ^ group b)
+    | _ -> None in
+  match e.e with
+  | EQual (n, _) ->
+    (match HashTable.try_find !cifdefs (string_of_name n) with
+     | Some s -> Some ("defined(" ^ s ^ ")")
+     | None -> None)
+  | EVar x -> ifdef_alias x
+  | EConst (CBool b) -> Some (if b then "1" else "0")
+  | EOp ({ po_op = And; po_ty = None }, [a; b]) -> binary "&&" a b
+  | EOp ({ po_op = Or; po_ty = None }, [a; b]) -> binary "||" a b
+  | EOp ({ po_op = Eq; po_ty = None }, [a; b]) -> binary "==" a b
+  | EOp ({ po_op = Neq; po_ty = None }, [a; b]) -> binary "!=" a b
+  | EOp ({ po_op = Not; po_ty = None }, [a]) ->
+    (match ifdef_condition a with Some s -> Some (negate s) | None -> None)
+  | EIf (c, t, f) ->
+    (match ifdef_condition c, ifdef_condition t, ifdef_condition f with
+     | Some c, Some t, Some f ->
+       Some (group c ^ " ? " ^ group t ^ " : " ^ group f)
+     | _ -> None)
+  | ECoerce (a, t) | ECast (a, t) when is_ifdef_bool a.ty && is_ifdef_bool t ->
+    ifdef_condition a
+  | _ -> None
+
 (* Which parameters of a definition survive into C.  A [unit] parameter the
    body never mentions carries no information -- it is F*'s way of writing a
    thunk, and C has no laziness to preserve -- so it is dropped from the
@@ -2022,6 +2099,7 @@ let scope : ref (list (string & (c_expression & bool))) = mk_ref []
 let declared : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 let reset_scope () : ML unit =
+  ifdef_aliases := [];
   scope := []; declared := HashTable.create 20
 
 let bind_gen (x:string) (cell:bool) : ML string =
@@ -2112,6 +2190,11 @@ let reset_program_state () : ML unit =
   ctors := HashTable.create 0;
   externs := HashTable.create 0;
   ifdefs := HashTable.create 0;
+  cifdefs := HashTable.create 0;
+  ifdef_aliases := [];
+  ifdef_references := HashTable.create 0;
+  ifdefs_present := false;
+  ifdef_body := false;
   keeps := HashTable.create 0;
   void_fns := HashTable.create 0;
   arities := HashTable.create 0;
@@ -2371,12 +2454,18 @@ and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
      | _ -> c_postfix (constant c))
   (* Every other use of a collapsed cell wants the pointer -- passing it to a
      function expecting a [ref], say -- and C can produce one on demand. *)
+  | EVar x when Some? (ifdef_alias x) ->
+    hoist out ind { e with e = EIf (e,
+      { e with e = EConst (CBool true) }, { e with e = EConst (CBool false) }) }
   | EVar x ->
     if is_cell x then c_unary ("&" ^ lookup_var x) else lookup_var_doc x
   | EAny ->
     (* What an uninitialized stack slot holds.  A zero of the right type is a
        legal value of it and is what C would give a static. *)
     c_postfix ("(" ^ ty e.ty ^ "){0}")
+  | EQual (n, _) when HashTable.mem !cifdefs (string_of_name n) ->
+    hoist out ind { e with e = EIf (e,
+      { e with e = EConst (CBool true) }, { e with e = EConst (CBool false) }) }
   (* A definition as a value is its static closure. *)
   | EQual (n, _) when Options.custard_cherry () && Some? (fn_sig n) ->
     clo_request (ReqPap (n, 0, e.ty));
@@ -2937,6 +3026,33 @@ and finish (ind:string) (d:dest) (s:string) : ML string =
 and emit (ind:string) (d:dest) (e:expr) : ML string =
   let ind' = ind ^ "  " in
   match e.e with
+  | ELet (x, t, e1, e2) when is_ifdef_bool t && mentions_ifdef e1 ->
+    (match ifdef_condition e1 with
+     | Some c -> with_ifdef_alias x c (fun () -> emit ind d e2)
+     | None ->
+       (* Fuse an immediately consumed ANF guard back into its test.  Moving
+          only into the first evaluated subexpression preserves effects and
+          avoids duplicating the rest of a sequence for each named guard. *)
+       let unused (e:expr) : ML bool = not (List.mem x (vars_of e)) in
+       let rec fuse (body:expr) : ML (option expr) =
+         match body.e with
+         | EIf ({ e = EVar y }, t, f) when x = y && unused t && unused f ->
+           Some { body with e = EIf (e1, t, f) }
+         | ELet (y, ty, init, rest) when unused rest ->
+           (match fuse init with
+            | Some init -> Some { body with e = ELet (y, ty, init, rest) }
+            | None -> None)
+         | ESeq (init, rest) when unused rest ->
+           (match fuse init with
+            | Some init -> Some { body with e = ESeq (init, rest) }
+            | None -> None)
+         | _ -> None in
+       (match fuse e2 with
+        | Some body -> emit ind d body
+        | None ->
+          emit_condition ind e1
+            (fun i -> with_ifdef_alias x "1" (fun () -> emit i d e2))
+            (fun i -> with_ifdef_alias x "0" (fun () -> emit i d e2))))
   (* [e1] is elaborated before [x] is bound: the IR scopes [x] over [e2] only,
      and a name reused between the two must not capture. *)
   (* A [unit] binding names the only value of its type, so there is nothing to
@@ -3007,7 +3123,8 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        before anything is written to it.  Pulse only hands out [pts_to_uninit]
        for these, so a read is not reachable until a write has happened. *)
     !out ^ ind ^ decl_of t nm ^
-    (if EAny? init.e then "" else " = " ^ iv) ^ ";\n" ^ s2
+    (if EAny? init.e then "" else " = " ^ iv) ^ ";\n" ^
+    (if !ifdef_body then ind ^ "(void)&" ^ nm ^ ";\n" else "") ^ s2
 
   (* Section 97.  [let mut a = alloc v n] used to declare a pointer, allocate
      into a second name, and assign one to the other.  The second name is not
@@ -3036,7 +3153,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
       scope := saved'; s in
     let s2 = emit ind d e2 in
     scope := saved;
-    s1 ^ s2
+    s1 ^ (if !ifdef_body then ind ^ "(void)&" ^ nm ^ ";\n" else "") ^ s2
 
   (* A binding nothing reads.  A pattern match that names no field it uses
      leaves one behind -- [let _letpattern = x in ...] -- and C, told
@@ -3085,8 +3202,9 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
             let x = if binds_by_ref t && is_lvalue e1 then "&" ^ x else x in
             !out ^ ind ^ decl_of t x ^ " = " ^ v ^ ";\n") in
     let s2 = emit ind d e2 in
+    let unused = if !ifdef_body then ind ^ "(void)&" ^ lookup_var x ^ ";\n" else "" in
     scope := saved;
-    s1 ^ s2
+    s1 ^ unused ^ s2
 
   | ESeq (e1, e2) -> emit ind D_Ignore e1 ^ emit ind d e2
 
@@ -3150,24 +3268,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     ind ^ "#endif\n"
 
   | EIf (c, t, f) ->
-    let out = mk_ref "" in
-    let cs = c_expr out ind c in
-    let tt = emit ind' d t in
-    let ft = emit ind' d f in
-    (* An empty arm is not worth a pair of braces.  When it is the [then] arm,
-       negating the condition is what removes it -- which happens whenever a
-       branch's only job is to fall through, as an [if] with no [else] in the
-       source does.  When it is *both*, the test is not worth emitting either:
-       [c_expr] has already hoisted whatever evaluating the condition does
-       into [out], so what is left of it is pure and discarding it changes
-       nothing.  Pulse's [return] compiles to a flag and a test of that flag
-       around the rest of the block, so a [return] in the last position leaves
-       exactly this behind. *)
-    !out ^
-    (if tt = "" && ft = "" then ""
-     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind ft
-     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind tt ^
-          (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
+    emit_condition ind c (fun i -> emit i d t) (fun i -> emit i d f)
 
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
 
@@ -3645,6 +3746,45 @@ and starts_with (s:string) (pre:string) : ML bool =
 and guard_rejected (#a:Type) () : ML a =
   reject "a pattern guard"
     ["Rewrite the guard as an 'if' in the branch body."]
+
+and emit_condition (ind:string) (c:expr)
+                   (yes:string -> ML string) (no:string -> ML string) : ML string =
+  match (if mentions_ifdef c then ifdef_condition c else None) with
+  | Some "1" -> yes ind
+  | Some "0" -> no ind
+  | Some condition ->
+    let tt = yes ind in
+    let ft = no ind in
+    if tt = "" && ft = "" then ""
+    else "#if " ^ condition ^ "\n" ^ tt ^
+         (if ft = "" then "" else "#else\n" ^ ft) ^ "#endif\n"
+  | None ->
+    match c.e with
+    | EConst (CBool true) -> yes ind
+    | EConst (CBool false) -> no ind
+    | EOp ({ po_op = And; po_ty = None }, [a; b]) when mentions_ifdef c ->
+      emit_condition ind a (fun i -> emit_condition i b yes no) no
+    | EOp ({ po_op = Or; po_ty = None }, [a; b]) when mentions_ifdef c ->
+      emit_condition ind a yes (fun i -> emit_condition i b yes no)
+    | EOp ({ po_op = Not; po_ty = None }, [a]) when mentions_ifdef c ->
+      emit_condition ind a no yes
+    | EIf (a, b, f) when mentions_ifdef c ->
+      emit_condition ind a
+        (fun i -> emit_condition i b yes no)
+        (fun i -> emit_condition i f yes no)
+    | ECoerce (a, t) | ECast (a, t)
+        when is_ifdef_bool a.ty && is_ifdef_bool t && mentions_ifdef c ->
+      emit_condition ind a yes no
+    | _ ->
+      let out = mk_ref "" in
+      let cs = c_expr out ind c in
+      let tt = yes (ind ^ "  ") in
+      let ft = no (ind ^ "  ") in
+      !out ^
+      (if tt = "" && ft = "" then ""
+       else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind ft
+       else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind tt ^
+            (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
 
 and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string =
   let out = mk_ref "" in
@@ -4264,7 +4404,8 @@ let global_init (first:bool) (l:dlet) : ML string =
   void_ret := false;
   cur_ret := None;
   if first then (ctr := 0; reset_scope ()) else scope := [];
-  emit "  " (D_Assign (c_name l.dl_name)) l.dl_body ^
+  ifdef_body := mentions_ifdef l.dl_body;
+  ifdef_uses l.dl_body ^ emit "  " (D_Assign (c_name l.dl_name)) l.dl_body ^
   (* Under Cherry a global's value is made persistent once it is computed:
      nothing counts references to it again, so reading it is free. *)
   (if is_nonplain_ty l.dl_ret
@@ -4284,6 +4425,7 @@ let let_decl (l:dlet) : ML string =
   void_ret := TUnit? l.dl_ret;
   cur_ret := Some l.dl_ret;
   reset_scope ();
+  ifdef_body := mentions_ifdef l.dl_body;
   kept_binders l |> List.iter (fun b -> let _ = bind_var b.b_name in ());
   (* Section 53.1.  A dropped parameter is a unit one, so a body that mentions
      it wants the only value of that type; binding the name to the constant
@@ -4306,15 +4448,16 @@ let let_decl (l:dlet) : ML string =
                   kept_binders l |> List.map (fun b -> (b, lookup_var b.b_name)))]
      else []);
   musttail_ok := ok;
+  let conditional_uses = ifdef_uses l.dl_body in
   let body = emit "  " D_Return l.dl_body in
   tail_targets := [];
   musttail_ok := false;
   let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
     let v = lookup_var b.b_name in
-    if List.existsb (fun y -> y = b.b_name) used &&
+    if not !ifdef_body && List.existsb (fun y -> y = b.b_name) used &&
        not (List.mem v !tail_kept) then []
     else ["  (void)" ^ v ^ ";\n"])) in
-  signature l ^ " {\n" ^ voids ^
+  signature l ^ " {\n" ^ voids ^ conditional_uses ^
   (if Cons? !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
 
 (* Cherry: the C function a tail group is printed as (cherry.md, "Tail
@@ -4358,12 +4501,13 @@ let tail_group_decl (g:tail_group) : ML string =
     current := string_of_name l.dl_name;
     scope := sc;
     let used = vars_of l.dl_body in
+    let conditional_uses = ifdef_uses l.dl_body in
     let body = emit "    " D_Return l.dl_body in
     let voids = String.concat "" (bs |> List.collect (fun ((b:binder), x) ->
-      if List.existsb (fun y -> y = b.b_name) used &&
+      if not !ifdef_body && List.existsb (fun y -> y = b.b_name) used &&
          not (List.mem x !tail_kept) then []
       else ["    (void)" ^ x ^ ";\n"])) in
-    label i ^ ": {\n" ^ voids ^ body ^
+    label i ^ ": {\n" ^ voids ^ conditional_uses ^ body ^
     (if !void_ret then "    return;\n" else "") ^ "  }\n") in
   tail_targets := [];
   musttail_ok := false;
@@ -4424,7 +4568,7 @@ let is_c_identifier (s:string) : ML bool =
      (n >= 0x30 && n <= 0x39) || n = 0x5f))
 
 let extern_decl (x:dexternal) : ML (option string) =
-  if Some? x.dx_header then None else
+  if Some? x.dx_header || has_flag x.dx_flags CIfDef then None else
   let () = match x.dx_target with
            | Some t when not (is_c_identifier t) ->
              current := string_of_name x.dx_name;
@@ -5933,6 +6077,10 @@ let print_program (base:string) (cu:unit_info) (p:program)
   let vt = HashTable.create 50 in
   let at = HashTable.create 50 in
   p |> List.iter (fun d ->
+    if has_flag (decl_flags d) CIfDef && not (DExternal? d) then begin
+      current := string_of_name (name_of_decl d);
+      reject "CIfDef on a definition" ["Use CIfDef on an assume val of type bool."]
+    end;
     match d with
     | DType t ->
       HashTable.add tt (string_of_name t.dt_name) t;
@@ -5961,6 +6109,19 @@ let print_program (base:string) (cu:unit_info) (p:program)
          end;
          HashTable.add !ifdefs (string_of_name x.dx_name) c
        | None -> ());
+      if has_flag x.dx_flags CIfDef then begin
+        current := string_of_name x.dx_name;
+        if not (is_ifdef_bool x.dx_ty) then
+          reject "a CIfDef declaration that is not bool"
+            ["Use CIfDef on an assume val of type bool, not a function or another type."];
+        let nm = emitted_name d in
+        if not (is_c_identifier nm) ||
+           (let c = FStar.Char.int_of_char (String.get nm 0) in c >= 0x30 && c <= 0x39)
+        then reject ("the CIfDef macro name `" ^ nm ^ "'")
+               ["A CIfDef target must be a C preprocessor identifier."];
+        HashTable.add !cifdefs (string_of_name x.dx_name) nm;
+        ifdefs_present := true
+      end;
       HashTable.add xt (string_of_name x.dx_name)
         (match x.dx_target with
          (* Section 121.3.  [emitted_name] answers exactly this; the case
@@ -6054,6 +6215,14 @@ let print_program (base:string) (cu:unit_info) (p:program)
      boxed_tbl := bt; nonplain_tbl := nt
    end);
   build_macros p;
+  if !ifdefs_present then
+    p |> List.iter (fun d ->
+      match d with
+      | DLet l when local d && not (is_public l) && not (is_macro l) &&
+                    not (has_flag l.dl_flags Entrypoint) &&
+                    not (has_flag l.dl_flags Inline) ->
+        HashTable.add !ifdef_references (string_of_name l.dl_name) true
+      | _ -> ());
   check_interface_names p;
   check_emitted_names init_name p;
   check_reference_copies p;
