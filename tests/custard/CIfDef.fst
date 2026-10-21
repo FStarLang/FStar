@@ -16,8 +16,12 @@ assume val native_first : bool
 let native_selection () : U32.t =
   if native_first then 1ul else 0ul
 
+[@@custard_c_closure_guard "defined(CUSTARD_IFDEF_A)"]
+let native_payload () : U32.t = 1ul
+
 let legacy_selection () : U32.t =
-  if first then 1ul else 0ul
+  let selected = if native_first then native_payload () else 0ul in
+  if first then selected else 0ul
 
 [@@custard_extern "cifdef_payload"; custard_c_header "CIfDef_stubs.h"]
 assume val payload : Type0

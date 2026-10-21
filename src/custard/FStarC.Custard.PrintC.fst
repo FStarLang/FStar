@@ -443,7 +443,7 @@ let ifdef_of_flags (fs:list flag) : ML (option string) =
    Local aliases keep that distinction until their uses are printed. *)
 let cifdefs : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 let ifdef_aliases : ref (list (string & string)) = mk_ref []
-let ifdef_references : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+let ifdef_references : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 let ifdefs_present : ref bool = mk_ref false
 let ifdef_body : ref bool = mk_ref false
 
@@ -480,10 +480,11 @@ let ifdef_uses (body:expr) : ML string =
     (match e.e with
      | EQual (n, _) ->
        let k = string_of_name n in
-       if HashTable.mem !ifdef_references k && not (HashTable.mem seen k) then begin
+       (match HashTable.try_find !ifdef_references k with
+        | Some use when not (HashTable.mem seen k) ->
          HashTable.add seen k true;
-         uses := ("  (void)&" ^ c_name n ^ ";\n") :: !uses
-       end
+         uses := use :: !uses
+        | _ -> ())
      | _ -> ());
     iter_children collect e in
   collect body;
@@ -6221,7 +6222,8 @@ let print_program (base:string) (cu:unit_info) (p:program)
       | DLet l when local d && not (is_public l) && not (is_macro l) &&
                     not (has_flag l.dl_flags Entrypoint) &&
                     not (has_flag l.dl_flags Inline) ->
-        HashTable.add !ifdef_references (string_of_name l.dl_name) true
+        HashTable.add !ifdef_references (string_of_name l.dl_name)
+          (guarded l ("  (void)&" ^ c_name l.dl_name ^ ";\n"))
       | _ -> ());
   check_interface_names p;
   check_emitted_names init_name p;
