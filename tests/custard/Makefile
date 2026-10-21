@@ -1491,10 +1491,11 @@ CHERRY_DEBUG ?= -DCHERRY_DEBUG
 # Whether $(CC) honours CHERRY_MUSTTAIL (cherry.md, "Tail calls"; GCC 15 or
 # later).  Without it no tail call is guaranteed, and a test that needs
 # constant stack is built with $(CHERRY_TAIL_CFLAGS): at -O2 GCC turns its
-# tail calls into jumps anyway.
+# tail calls into jumps anyway.  (At -O2, GCC also takes the release of a
+# static literal, which never frees it, for a free of a non-heap object.)
 CHERRY_MUSTTAIL_OK = $(shell printf '\043include "cherry.h"\nCHERRY_MUSTTAIL\n' \
   | $(CC) -E -P -I$(CHERRY_INC) -x c - 2>/dev/null | tail -1 | grep -c musttail)
-CHERRY_TAIL_CFLAGS = $(if $(filter 0,$(CHERRY_MUSTTAIL_OK)),-O2)
+CHERRY_TAIL_CFLAGS = $(if $(filter 0,$(CHERRY_MUSTTAIL_OK)),-O2 -Wno-free-nonheap-object)
 
 $(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc $$(CEXTRA_$$*)
 	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
