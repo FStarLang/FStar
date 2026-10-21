@@ -6346,6 +6346,17 @@ other two backends, so there the inlining buys nothing and is not worth that.
 > A transformation that only one backend needs belongs behind a test on the
 > backend, not in the shared pipeline.
 
+"At most one" counts the worst branch: the alternatives of a `match`, `if` or
+`try` are not added up.  That is the right count for plain C, which has no
+other way to compile the lambda, but it copies the lambda into every branch
+that calls it, and the lambdas it calls into each copy.  Cherry has heap
+closures, so there the substitution is an optimization and must not copy code:
+under Cherry the lambda is substituted only where it is written once.  The
+local helpers of `FStarC.TypeChecker.Rel.solve_t'` had made it a single C
+function of 200,000 lines with a 1.2MB stack frame; it is 8,500 lines now.
+`tests/custard/LocalFunDup.fst` checks that the helper is called from one
+place.
+
 ### 14.8 Two clones of one type
 
 With `--custard_monomorphize_types`, `option sid_t` and `option U16.t` asked

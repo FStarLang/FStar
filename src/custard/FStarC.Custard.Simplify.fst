@@ -682,6 +682,16 @@ let rec count (v:string) (x:expr) : ML int =
     | _ -> fold_children (fun acc e -> imin 2 (acc + count v e)) 0 x)
   else 0
 
+(* How many times does [v] occur in [x] as written, alternatives included?
+   Capped at 2.  This is the count that measures code size, where [count]
+   measures work: substituting something used once in each of n branches
+   copies it n times. *)
+let rec occurrences (v:string) (x:expr) : ML int =
+  if occurs v x then (match x.e with
+    | EVar _ -> 1
+    | _ -> fold_children (fun acc e -> imin 2 (acc + occurrences v e)) 0 x)
+  else 0
+
 (* Duplicating an argument is only sound when evaluating it is unobservable,
    and only desirable when it is trivial; otherwise it gets a [let], which the
    simplifier will drop again if the parameter turns out to be unused. *)
@@ -1004,7 +1014,14 @@ let rec reduce (x:expr) : ML expr =
      precise as the body's own -- on the OCaml path that turned a [ref] into
      [any], and an [any] prints as an array rather than as a [ref].  C has no
      closures at all, so there the inlining is not an optimization but the
-     only way the program compiles. *)
+     only way the program compiles.
+
+     Cherry has heap closures, so there it *is* an optimization, and one that
+     must not copy code: [count] takes the worst branch, so a helper called
+     once in each arm of a [match] would be copied into every arm, and the
+     helpers it calls into each copy.  In [FStarC.TypeChecker.Rel.solve_t']
+     that made a single C function of 200,000 lines with a 1.2MB stack frame.
+     Under Cherry the lambda is substituted only where it is written once. *)
   | ELet (v, ty, e1, e2) ->
     let e1 = reduce e1 in
     (* The body first: the rewrites below ask questions about how [v] is used,
@@ -1015,7 +1032,9 @@ let rec reduce (x:expr) : ML expr =
        propagated yet. *)
     let e2 = reduce e2 in
     if Options.codegen_c ()
-       && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
+       && EFun? e1.e && called_only v e2
+       && (if Options.custard_cherry () then occurrences v e2 <= 1
+           else count v e2 <= 1) then
       let sm : subst = HashTable.create 5 in
       HashTable.add sm v e1;
       reduce (sub sm e2)
