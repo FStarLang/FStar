@@ -2528,7 +2528,6 @@ and app_facts (g:env) (e:term)
           aux U.t_true brs
       in
       handle_with facts (fun _ -> return [])
-    | Tm_meta {meta=Meta_desugared Tactic_synthesized} -> return []
     | Tm_ascribed {tm}
     | Tm_meta {tm} -> app_facts g tm
     | _ -> return []
@@ -2714,20 +2713,6 @@ and do_check (g:env) (e:term)
        check_subtype g (Some e) t_e repr ;!
        return (EEff m, a))
      | _ -> fail_str "Ill-applied reflect")
-
-  | Tm_meta {tm=asc; meta=Meta_desugared Tactic_synthesized}
-      when Tm_ascribed? (Subst.compress asc).n ->
-    let Tm_ascribed {asc=(asc, _, _)} = (Subst.compress asc).n in
-    (match asc with
-    | Inr _ -> fail_str "Unexpected computation type on a synthesized term"
-    | Inl t ->
-    (* The result of a tactic, as elaborated by [TcTerm.tc_synth]. As
-       TcTerm, Core trusts the tactic engine to have checked that it has type
-       [t]; e.g. the witness of [_ by canon ()] is [()], at a type [squash p]
-       that [canon] proved by rewriting, not the SMT solver. *)
-    let! _, t' = check "synthesized term type" g t in
-    is_type g t';!
-    return (ETot, t))
 
   | Tm_meta {tm=t} ->
     memo_check g t
@@ -3020,6 +3005,26 @@ and do_check (g:env) (e:term)
       let! _, t_a = check "quantifier domain" g a in
       let! u = is_type g t_a in
       check_app (S.mk_Tm_uinst hd [u]) args
+
+    | _, [(t, Some ({ aqual_implicit = true })); (tau, None)]
+        when U.is_synth_by_tactic hd ->
+      (* [synth_by_tactic #t tau] is left for Core by [TcTerm.tc_synth]
+         when [t] is a proof goal: its tactic is to prove that goal, here,
+         in the context in which Core checks it, as for [assert p by tau].
+         A synthesis at any other type must have been run by the
+         elaborator, and replaced by the tactic's result; the declaration
+         of [synth_by_tactic] in the library gives no obligation for it. *)
+      let! eff, ty = check_app hd args in
+      (match VCUtil.synth_proof_goal g.tcenv t with
+       | Some p ->
+         reemit_guard g (CommonBase.mk_by_tactic tau p) ;!
+         return (eff, ty)
+       | None ->
+         fail [
+           text "This synthesis by a tactic was not run, and its type"
+           ^/^ fquotes (pp t) ^/^ text "is not a proposition."
+           ^/^ text "Synthesis is supported only in the definitions of top-level let-bindings."
+         ])
 
     | _ -> check_app hd args
   )

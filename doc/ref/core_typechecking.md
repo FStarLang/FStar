@@ -173,44 +173,61 @@ checked term carries:
     effectful). The rewritten term is checked again with `tc_term`, which
     inserts the annotations (`tests/custard/plugin`,
     `CustardPlugin.sc_left`, `sc_right`).
-* **Tactics that produce terms.** `synth_by_tactic` and the tactic of an
-  ascription `e <: t by tac` run during elaboration, and their results are
-  left in the elaborated term. A goal may mention uvars that are solved
-  only after the tactic would run: in `conv_squash h (_ by trefl ())`, the
-  implicits of `conv_squash` wait on the deferred subtyping of `h`. So a
-  definition that mentions `synth_by_tactic` is elaborated twice: first
-  without synthesis, then with it (`TcUtil.with_synth`), over the first
-  elaboration, whose goals are fully resolved. Other callers of TcTerm do
-  not run synthesis (`TcUtil.synth_mode`).
+* **Tactics that produce terms.** `synth_by_tactic` at a type that is not
+  a proposition runs during elaboration, and its result is left in the
+  elaborated term (see "Tactic synthesis" below for the other case). A goal
+  may mention uvars that are solved only after the tactic would run: in
+  `f h (_ by tac)`, the implicits of `f` may wait on the deferred subtyping
+  of `h`. So a definition that mentions `synth_by_tactic` is elaborated
+  twice: first without synthesis, then with it (`TcUtil.with_synth`), over
+  the first elaboration, whose goals are fully resolved. Other callers of
+  TcTerm do not run synthesis (`TcUtil.synth_mode`): see the known gap
+  below.
 * **Projector types of parameterized inductives** (`TcInductive`). A
   projector's type substitutes the earlier fields of the constructor by
   projections of the projectee. These projections take the type's
   parameters as implicit arguments; they used to be built without them,
   which Rel tolerated but Core rejects.
 
-### Trusted tactic results
+### Tactic synthesis
 
 With two phases, phase 1 left `synth_by_tactic tau` in place, and phase 2
 ran the tactic and used its result at the requested type: the VC generator
 was the one that ran the tactic, so nothing checked the result afterwards.
-Now the elaborator runs the tactic once, and Core checks the elaborated term
-from scratch, without running tactics. Core thus needs to know which
-subterms a tactic justified.
+Now Core checks every elaborated term from scratch, and nothing a tactic
+produces is trusted. There are two cases, decided by
+`VCUtil.synth_proof_goal`, which TcTerm and Core share:
 
-TcTerm gives the result of `_ by tac` the requested type without checking
-it. Checking it again, e.g. `()` against `squash goal`, would ask the SMT
-solver to prove what the tactic proved, which may be well beyond it
-(nonlinear arithmetic in `FStar.UInt128`, `FStar.Math.Euclid`). So
-`TcTerm.tc_synth` marks its result as `Tm_meta (Tm_ascribed (e, typ),
-Meta_desugared Tactic_synthesized)`. Core only checks that `typ` is a type,
-and returns `typ`. The trust is explicit and confined to that node. The
-normalizer keeps the marker, as it does `Machine_integer`. The marker
-contributes no facts. The driver removes it (`Tc.strip_tactic_synthesized`)
-before the definition is recorded, so clients and tactics (e.g. `def_of` in
-`examples/tactics/Normalization.fst`) see the tactic's result as written.
+* **Proofs.** When the requested type is a proof goal, i.e. all of its
+  inhabitants are `()` (`squash p`, `u:unit{p}`, or a proposition such as
+  `a == b`), the elaborator does not run the tactic
+  (`TcTerm.tc_synth`): it leaves `synth_by_tactic #t tau` in the term.
+  Core checks it as an application and adds the guard `with_tactic tau p`,
+  as for `assert p by tau`: the tactic proves the goal that Core computes,
+  in Core's context, when the guard is discharged. Re-checking a result
+  `()` against `squash p` instead would ask the SMT solver to prove what
+  the tactic proved, which may be well beyond it (nonlinear arithmetic in
+  `FStar.UInt128`, `FStar.Math.Euclid`). Once Core has accepted the
+  definition, the driver replaces these applications by `()`
+  (`Tc.erase_synthesized_proofs`) before recording it. In a lax
+  definition, Core does not run, nor do these tactics.
+* **Other terms.** The elaborator runs the tactic, and Core checks its
+  result like any other term. The result is left as the tactic wrote it,
+  without an ascription, so that clients and tactics (e.g. `def_of` in
+  `examples/tactics/Normalization.fst`) see it as written. Core rejects a
+  `synth_by_tactic` left unrun at such a type: the library's declaration
+  of `synth_by_tactic` (`Tot t`) would otherwise give a value of any type
+  with no obligation.
 
 For `e <: t by tac`, Core wraps the guard of the ascription with the tactic
 (`with_ascription_tactic`), even when the guard is trivial.
+
+**Known gap: synthesis outside `let`.** Only the definitions of top-level
+`let`s are elaborated with synthesis (`Tc.tc_sig_let`). A
+`synth_by_tactic` at a type that is not a proposition elsewhere, e.g. in
+the type of a `val` or `assume val`, or of a constructor's argument, is not
+run, and Core rejects it ("This synthesis by a tactic was not run").
+Before Core, phase 2 ran these. To be revisited.
 
 ### Guards are simplified before discharge
 
@@ -283,8 +300,6 @@ that its checks can be memoized. Its indices start at 2^40
 
 **Terms not checked again.** These are justified otherwise:
 
-* What a tactic produces is justified by the goals the tactic discharges
-  (`Tactic_synthesized`, §1). The tactic itself is checked by Core.
 * The result of postprocessing (`postprocess_with`,
   `postprocess_for_extraction_with`) is justified by the equality proof the
   tactic must produce.

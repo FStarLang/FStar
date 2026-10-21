@@ -48,6 +48,14 @@ let rec is_unit_like (t:term) : ML bool =
        | Tm_refine {b} -> is_unit_like b.sort
        | _ -> Some? (U.un_squash t)
 
+let synth_proof_goal (env:Env.env) (t:typ) : ML (option typ) =
+  match U.un_squash t with
+  | Some p -> Some p
+  | None ->
+    if is_unit_like (N.unfold_whnf env t) && not (U.is_unit t)
+    then Some t
+    else None
+
 (* A match on a scrutinee the solver cannot reduce.
  *
  * Such a term is a dead end for an equation [x == e]: the solver can take
