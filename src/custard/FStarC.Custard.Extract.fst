@@ -624,6 +624,17 @@ let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.docu
 let custard_warning (st:state) (code:E.error_code) (msg:list Pprint.document) : ML unit =
   E.log_issue0 code (msg @ request_chain st)
 
+(* Section 13.7.  [plugin_embedding #t] is compiled to the embedding of [t]
+   that [RegEmb] builds, which is the only place that knows how; [RegEmb]
+   depends on this module, so it is reached through a hook the driver sets. *)
+let plugin_embedding_lid : Ident.lident =
+  PC.p2l ["FStarC"; "Syntax"; "Embeddings"; "Base"; "plugin_embedding"]
+
+let embedding_hook : ref (state -> term -> ML expr) =
+  mk_ref (fun (st:state) (_:term) ->
+    custard_error st E.Error_CustardUnrepresentableValue [
+      text "Custard: plugin_embedding is not available in this extraction." ])
+
 (* Every normalization Custard performs runs under a step budget.
 
    Custard reduces terms nobody wrote for it: a specialization key has to be a
@@ -4262,6 +4273,14 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     let ufs = binder_flags st "u:" l Mono.unit_binders in
     mk (ECtor (nm, value_args st (drop_flagged flags ufs) (drop_flagged flags args)))
        (ctor_result_ty st l args) E_Pure
+  else if Ident.lid_equals l plugin_embedding_lid then
+    (* Section 13.7. *)
+    match args with
+    | [(t, _)] -> !embedding_hook st t
+    | _ ->
+      custard_error st E.Error_CustardUnrepresentableValue [
+        text "Custard: plugin_embedding must be applied to exactly its type \
+              argument." ]
   else
     (* Section 133. *)
     match functor_member_app st l args with
@@ -6958,6 +6977,17 @@ let emit (st:state) (key:string) (d:decl) : ML unit =
 
 let emitted (st:state) (key:string) : ML bool =
   Some? (HashTable.try_find st.emitted key)
+
+let emit_exported (st:state) (key:string) (d:decl) : ML unit =
+  if not (emitted st key) then begin
+    emit st key d;
+    HashTable.add st.names key (name_of_decl d)
+  end
+
+let import_key (st:state) (key:string) : ML (option name) = import st key
+
+let set_embedding_hook (f:state -> term -> ML expr) : ML unit =
+  embedding_hook := f
 
 let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.imports
 
