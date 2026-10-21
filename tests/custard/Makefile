@@ -3415,6 +3415,14 @@ $(CHERRY_DIR)/LocalFunDup.chonce: $(CHERRY_DIR)/LocalFunDup.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/LocalFunDup.chonce
 
+# Cherry: a matched cell that dies on one arm of a conditional inside the
+# branch is reused there.
+$(CHERRY_DIR)/CherryReuse.chgrep: $(CHERRY_DIR)/CherryReuse.chc
+	$(Q)sed -n '/^static .* CherryReuse_add_new(.*{$$/,/^}/p' $< | grep -q 'cherry_reuse_' \
+	  || { echo "ERROR: CherryReuse_add_new does not reuse its cell"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryReuse.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.

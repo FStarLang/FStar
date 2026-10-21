@@ -194,6 +194,7 @@ A loop body is not searched, since it may build any number of cells.
 
 - `reset x`: if `x` is unique (rc = 1), the fields the branch uses are moved out of it (no inc), the others are released, and `x`'s memory becomes the token. Otherwise the used fields are inc'd, `x` is dec'd, and the token is null. A shared cell (rc < 0) is never reused, because its fields are shared too and the rebuilt cell's would not be. Immortal cells (rc = 0) are never reused either.
 - `reuse w` builds any constructor of the same monomorphized type. If the token is non-null and the new cell fits in the old one (a `sizeof` comparison that the C compiler folds), the cell is updated in place: tag and fields. Otherwise the token is freed and a new cell is allocated.
+- When the branch still needs `x` at its start, the reset goes where `x` dies instead, as in Lean: on an arm of an `if` or `match` inside the branch, or after the code that last uses it, when what follows builds a cell of the type. The fields the branch uses were counted at its start, so this reset keeps none of them. This is the shape of `FStarC.FlatSet.add`, `| y :: yy -> if x =? y then s else y :: add x yy` (test: `add_new` in `CherryReuse`).
 - Borrow inference makes a parameter owned when such a branch could reuse it (rule 2).
 - The fields of `x` must be bound by variables, or by patterns that bind none (e.g. `Node Leaf s Leaf`), so that the reset can tell which fields are kept.
 
