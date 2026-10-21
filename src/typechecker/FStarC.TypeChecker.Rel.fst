@@ -5243,6 +5243,15 @@ let dedup_vc (vc:term) : ML term =
   let compress_all (t:term) : ML term = FStarC.Syntax.Visit.visit_term false (fun t -> t) t in
   let rec go (known:SynHash.term_map unit) (t:term) : ML (term & SynHash.term_map unit) =
     let t0 = SS.compress t in
+    match t0.n with
+    | Tm_meta {tm; meta=Meta_labeled l} ->
+      (* Error-reporting labels (e.g. those Core puts on every guard) only
+         change the message reported for a failure; look through them, or a
+         label at the top of a guard hides all of its conjuncts. *)
+      let tm, known = go known tm in
+      if U.is_t_true tm then U.t_true, known
+      else S.mk (Tm_meta {tm; meta=Meta_labeled l}) t0.pos, known
+    | _ ->
     let hd, args = U.head_and_args_full t0 in
     match args with
     | [(t1, _); (t2, _)] when head_is PC.and_lid hd ->
