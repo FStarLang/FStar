@@ -3388,6 +3388,10 @@ FLAGS_DynPartial = --warn_error -367
 CUSTARD_TESTS += CoerceLamRes CoerceCtor
 FLAGS_CoerceLamRes = --warn_error -367
 
+# Matches nested in each other's last branch, too deep for a printer that
+# emits a trailing branch twice per level (PrintC's trial emission in [trim]).
+CUSTARD_TESTS += DeepMatch
+
 # Section 4.4.  A module's initializers run before a global of a module that
 # refers to it is computed, though nothing refers to them.
 CUSTARD_TESTS += InitOrder
