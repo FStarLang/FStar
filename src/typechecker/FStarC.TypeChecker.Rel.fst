@@ -5679,6 +5679,16 @@ let is_tac_implicit_resolved (env:env) (i:implicit) : ML bool =
     |> Setlike.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
 
+(* How eagerly [resolve_implicits'] runs meta-arg tactics on open goals.
+   - Defer_open: defer a goal if its type or its context has free uvars.
+   - Defer_open_typ: run goals whose type is closed (modulo the fundeps of
+     its class) even if their context is open; defer the others.
+   - Defer_none: run every goal. *)
+type defer_open_metas_t =
+  | Defer_open
+  | Defer_open_typ
+  | Defer_none
+
 // is_tac: this is a call from within the tactic engine, hence do not use
 //         tactics for resolving implicits to avoid reentrancy.
 //
@@ -5731,17 +5741,18 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   in
   (* / cache *) 
 
-  let rec until_fixpoint (acc : tagged_implicits & (*changed:*)bool & (*defer_open_metas:*)bool )
+  let rec until_fixpoint (acc : tagged_implicits & (*changed:*)bool & (*defer_open_metas:*)defer_open_metas_t )
                          (implicits:Env.implicits) 
     : ML tagged_implicits =
 
     let out, changed, defer_open_metas = acc in
     (* changed: we made some progress
-       defer_open_metas: starts at true, it means to not try to run
+       defer_open_metas: starts at Defer_open, it means to not try to run
          meta arg tactics in environments/types that have unresolved
-         uvars. We first do a pass with this set to true, and if nothing
-         changed, we then give up and set it to false, trying to eagerly
-         solve some partially-unresolved constraints. This is definitely
+         uvars. We first do a pass with Defer_open, and if nothing
+         changed, a pass with Defer_open_typ, and then we give up and use
+         Defer_none, trying to eagerly solve some partially-unresolved
+         constraints. This is definitely
          not ideal, maybe the right thing to do is to never run metas
          in open contexts, but that is raising many regressions rihgt now,
          particularly in Steel (which uses the resolve_implicits hook pervasively). *)
@@ -5750,16 +5761,25 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
     | [] ->
       if changed then (
         (* We made some progress, keep going from the start *)
-        until_fixpoint ([], false, true) (List.map fst out)
-      ) else if defer_open_metas then (
-        (* No progress... but we could try being more eager with metas. *)
-        until_fixpoint ([], false, false) (List.map fst out)
+        until_fixpoint ([], false, Defer_open) (List.map fst out)
+      ) else if Defer_open? defer_open_metas then (
+        (* No progress... but we could try being more eager with metas.
+           First run only the goals whose type is closed: a context with
+           free uvars (e.g. the binders of a signature whose types still
+           mention uvars) makes every goal open, and solving a goal whose
+           type is closed may well determine those uvars.
+           Each pass reverses the list; we undo that here so that this
+           extra pass does not change the order seen by later passes
+           (and hence which unresolved implicit gets reported). *)
+        until_fixpoint ([], false, Defer_open_typ) (List.rev (List.map fst out))
+      ) else if Defer_open_typ? defer_open_metas then (
+        until_fixpoint ([], false, Defer_none) (List.map fst out)
       ) else (
            //Nothing changed in this iteration of the loop
            //We will try to make progress by either solving a single valued implicit,
            //  or solving an implicit that generates univ constraint, with force flag on
            let imps, changed = try_solve_single_valued_implicits env is_tac (List.map fst out) in
-           if changed then until_fixpoint ([], false, true) imps
+           if changed then until_fixpoint ([], false, Defer_open) imps
            else let imp_opt, rest = pick_a_univ_deffered_implicit out in
                 (match imp_opt with
                  | None -> rest  //No such implicit exists, return remaining implicits
@@ -5771,7 +5791,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                        imp
                        is_tac
                        force_univ_constraints |> Option.must in
-                   until_fixpoint ([], false, true) (Listlike.to_list imps ++ List.map fst rest))
+                   until_fixpoint ([], false, Defer_open) (Listlike.to_list imps ++ List.map fst rest))
       )
 
     | hd::tl ->
@@ -5838,7 +5858,13 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
           else has_free_uvars typ
         in
         let is_open = typ_is_open || gamma_has_free_uvars ctx_u.ctx_uvar_gamma in
-        if defer_open_metas && is_open then (
+        let defer =
+          match defer_open_metas with
+          | Defer_open -> is_open
+          | Defer_open_typ -> typ_is_open
+          | Defer_none -> false
+        in
+        if defer then (
           (* If the result type or env for this meta arg has a free uvar, delay it.
           Some other meta arg being solved may instantiate the uvar. See #3130. *)
           if !dbg_Rel || !dbg_Imps then
@@ -5921,7 +5947,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
         end
       end
   in
-  until_fixpoint ([], false, true) implicits
+  until_fixpoint ([], false, Defer_open) implicits
 
 let resolve_implicits env g : ML _
   =
