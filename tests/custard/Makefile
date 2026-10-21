@@ -2156,7 +2156,7 @@ CGREP_FloatOptIn += "bool ok10 = ((float)16777217LL < 1000000000.0f);"
 # definition's own attributes beats the builtin table.
 CGREP_FloatOptIn += "((0.0f + 1.0f) == 1.0f)"
 CGREP_FloatOptIn += "\#include \"float.h\""
-CGREP_FloatOptIn += "(1.0f < FLT_MAX)"
+CGREP_FloatOptIn += "(1.0f < (FLT_MAX))"
 # The whole point: the library's names do not survive as calls.  Before the
 # attribute existed every one of these was an undefined FloatLib_* symbol.
 CNOGREP_FloatOptIn += "FloatLib"
@@ -2216,7 +2216,9 @@ CNOGREP_Narrow += "CUSTARD_F16_LIT(15872U) + CUSTARD_F16_LIT(16512U)"
 # fragment type as auto -- and this pins that the value path agrees.
 C_TESTS += ExternKw
 CGREP_ExternKw += "KW_SIZEOF(float)"
+CGREP_ExternKw += "KW_SIZEOF(KW_FLOAT())"
 CNOGREP_ExternKw += "float_"
+$(OUTPUT_DIR)/ExternKw.dcexe $(OUTPUT_DIR)/ExternKw.dcxx: ExternKw_stubs.h
 
 # Sections 66 and 98.  The 16-bit vocabulary reaches the generated header
 # through [@@custard_c_header], so those includes have to be emitted above the
@@ -2546,7 +2548,7 @@ C_TESTS += PolyExtern
 CEXTRA_PolyExtern = PolyExtern_stubs.c
 CGREP_PolyExtern += "extern uint32_t PolyExtern_identity__t(uint32_t);"
 CGREP_PolyExtern += "extern PolyExtern_pair PolyExtern_identity__pair(PolyExtern_pair);"
-CGREP_PolyExtern += "uint32_t x = PolyExtern_identity__t("
+CGREP_PolyExtern += "uint32_t x = (PolyExtern_identity__t("
 # No leftover type parameter: the variable was substituted away, not passed.
 CNOGREP_PolyExtern += "void *"
 
@@ -2561,8 +2563,8 @@ C_TESTS += Half
 CGREP_Half += "include \"Half_stubs.h"
 CGREP_Half += "__half p_h;"
 CGREP_Half += "__nv_bfloat16 p_b;"
-CGREP_Half += "Half_twice__half(__hadd, p.p_h)"
-CGREP_Half += "Half_twice__bfloat16(__hadd_bf, p.p_b)"
+CGREP_Half += "Half_twice__half((__hadd), p.p_h)"
+CGREP_Half += "Half_twice__bfloat16((__hadd_bf), p.p_b)"
 CGREP_Half += "static __half Half_twice__half(__half"
 CNOGREP_Half += "Half_half"
 CNOGREP_Half += "Half_bfloat16"
@@ -2649,8 +2651,8 @@ KRML_TESTS += PatStrKrml
 # wmma::mma_sync into wmma__mma_sync -- a name that does not exist.  The type
 # path had always been verbatim, which is why the type beside the call worked.
 C_TESTS += TensorC
-CGREP_TensorC += "tc_auto_ref a = TC_NS(mk_a)()"
-CGREP_TensorC += "return TC_NS(sum)(a, c);"
+CGREP_TensorC += "tc_auto_ref a = (TC_NS(mk_a)())"
+CGREP_TensorC += "return (TC_NS(sum)(a, c));"
 CNOGREP_TensorC += "TC_NS_"
 CNOGREP_TensorC += "tc_auto_ref_"
 # The decoration goes on the definition *and* on the prototype, and exactly

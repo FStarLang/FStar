@@ -2142,6 +2142,18 @@ let rec zip_fields (fs : list (string & cty)) (vs : list string) : list (string 
   | (f, _) :: fs, v :: vs -> (f, v) :: zip_fields fs vs
   | _ -> []
 
+(* An abstract type with no C representation can carry raw macro tokens, such
+   as [float] in a type-taking macro.  Those are not runtime expressions. *)
+let rec is_foreign_token (t:cty) : ML bool =
+  match t with
+  | TApp (n, _) when None? (builtin_type n) ->
+    (match find_type n with
+     | Some d when List.existsb Extern? d.dt_flags -> false
+     | Some { dt_body = TAbstract } -> true
+     | Some { dt_body = TAbbrev t } -> is_foreign_token t
+     | _ -> false)
+  | _ -> false
+
 let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   if is_stmt e then hoist out ind e
   else match e.e with
@@ -2168,7 +2180,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EQual (n, _) ->
     (match HashTable.try_find !externs (string_of_name n) with
      (* A foreign name may expand to an expression rather than one C token. *)
-     | Some t -> group t
+     | Some t -> if is_foreign_token e.ty then t else group t
      | None -> c_name n)
   | EApp (hd, args) when is_closure_app hd args ->
     let k = List.length args in
@@ -2289,7 +2301,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
                           && None? (HashTable.try_find !void_fns (string_of_name n)) ->
         (* Group the expansion, not the head: function-like macros must still
            be invoked, and a pointer cast must cover their whole result. *)
-        let call = group call in
+        let call = if is_foreign_token e.ty then call else group call in
         if TBuf? e.ty || TRef? e.ty then "(" ^ ty e.ty ^ ")" ^ call else call
       | _ -> call in
     (* A [void] call is a statement, not an operand.  It runs here and stands
