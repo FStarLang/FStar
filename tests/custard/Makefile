@@ -263,11 +263,10 @@ NOGREP_SortBy   = "sortBy_Mkord" "type .*sortBy_ord"
 GREP_LocalPoly     = "localPoly_try_unembed__int" "localPoly_try_unembed__bool" \
                      "localPoly_un__int" "localPoly_un__bool"
 NOGREP_LocalPoly   = "localPoly_Mkemb" "localPoly_e_int" "localPoly_e_bool"
-# ... but a *monomorphic* local helper is lambda-lifted, once.  Inlining it
-# would buy nothing (it has no type argument to make concrete) and cost 2^n on
-# the nested, twice-used helpers in [nested].
-GREP_LocalPoly    += "let localPoly_nested__a (x" "let localPoly_nested__b (x" \
-                     "let localPoly_nested__c (x"
+# ... but a *monomorphic* local helper is left alone.  Inlining it would buy
+# nothing (it has no type argument to make concrete) and cost 2^n on the
+# nested, twice-used helpers in [nested].
+GREP_LocalPoly    += "let a = (fun y" "let b = (fun y" "let c = (fun y"
 
 # A dependent inductive parameter list ({| printable a |} after a:Type) has to
 # be opened before its sorts are looked at.
@@ -3449,6 +3448,15 @@ CHERRY_CFLAGS_CherryDyn = -O2
 
 # Locals of different initializers share one C function.
 CHERRY_TESTS += CherryInitScope
+
+# A local function whose type reduces to an arrow only through a match is
+# lambda-lifted with the arrow's parameter and result (Extract.local_formals).
+CHERRY_TESTS += CherryLiftMatch
+$(CHERRY_DIR)/CherryLiftMatch.chgrep: $(CHERRY_DIR)/CherryLiftMatch.chc
+	$(Q)grep -qF 'static cherry_string CherryLiftMatch_main__f(cherry_int src)' $< \
+	  || { echo "ERROR: CherryLiftMatch's lifted local has the wrong signature"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryLiftMatch.chgrep
 
 # Issue 4715.  An equality test that reaches a dyn is refused, naming the
 # fields that lead to it, rather than emitting a C [==] on cherry_any.

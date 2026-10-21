@@ -3543,12 +3543,18 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let erased_lb = TcUtil.must_erase_for_extraction (tcenv st) lb.lbtyp &&
                        U.is_pure_or_ghost_effect lb.lbeff in
        let def = U.unmeta lb.lbdef in
-       if not erased_lb && Tm_abs? (SS.compress def).n then begin
-         (* Section 5.10: a local function that is not inlined is
+       if not erased_lb && Options.codegen_name () = "Cherry" &&
+          Tm_abs? (SS.compress def).n &&
+          (let xs, _, _ = U.abs_formals def in
+           let bs, _ = local_formals st lb.lbtyp (List.length xs) in
+           List.length bs >= List.length xs) then begin
+         (* Section 5.10: on Cherry, a local function that is not inlined is
             lambda-lifted, just like a local [let rec].  A call to it is then
             a direct call taking its captures as arguments, which allocates
             no closure, and in tail position is a tail call; a closure would
-            have to be released after the call returned. *)
+            have to be released after the call returned.  Only when its type
+            shows an arrow for each binder of the definiens: the lifted
+            declaration's signature comes from the type. *)
          HashTable.add st.letdefs (show bv.index) lb.lbdef;
          lift_locals st [{ lb with lbname = Inl bv; lbdef = def }] body
        end else
@@ -3934,25 +3940,30 @@ and unfold_typ_abbrev (st:state) (ty:typ) : ML (option typ) =
        let us = if List.length us = List.length univs then us
                 else List.map (fun _ -> U_zero) univs in
        let _, def = TcEnv.inst_tscheme_with (univs, def) us in
-       Some (N.normalize [TcEnv.Beta] (tcenv st) (S.mk_Tm_app def args ty.pos))
+       Some (N.normalize [TcEnv.Beta; TcEnv.Iota] (tcenv st) (S.mk_Tm_app def args ty.pos))
      | None -> None)
   | _ -> None
+
+(* The arrows of [ty], the type of a local definition whose definiens has [nx]
+   binders.  An abbreviation, [interp : interp_t] or [t0 -> t1 -> result a],
+   may hide arrows that the definiens binds; so may a type computed by a
+   match, [f : t true] with [t true = int -> p] (tests/bug-reports Bug1714). *)
+and local_formals (st:state) (ty:typ) (nx:int) : ML (binders & comp) =
+  let rec formals (fuel:int) (ty:typ) : ML (binders & comp) =
+    let bs, c = U.arrow_formals_comp ty in
+    if fuel <= 0 || List.length bs >= nx || not (U.is_total_comp c)
+    then bs, c
+    else match unfold_typ_abbrev st (U.comp_result c) with
+         | None -> bs, c
+         | Some r -> let bs', c' = formals (fuel - 1) r in bs @ bs', c' in
+  formals 10 ty
 
 (* The result type and effect of a local definition whose definiens has [xs]
    binders.  As at top level (see [extract_letbinding]), the definiens may have
    more binders than its type has arrows, and each extra one consumes an arrow
    -- and with it the effect that a call site actually runs. *)
 and local_result (st:state) (ty:typ) (xs:binders) : ML (cty & eff) =
-  (* An abbreviation, [interp : interp_t] or [t0 -> t1 -> result a], may hide
-     arrows that the definiens binds. *)
-  let rec formals (fuel:int) (ty:typ) : ML (binders & comp) =
-    let bs, c = U.arrow_formals_comp ty in
-    if fuel <= 0 || List.length bs >= List.length xs || not (U.is_total_comp c)
-    then bs, c
-    else match unfold_typ_abbrev st (U.comp_result c) with
-         | None -> bs, c
-         | Some r -> let bs', c' = formals (fuel - 1) r in bs @ bs', c' in
-  let bs, c = formals 10 ty in
+  let bs, c = local_formals st ty (List.length xs) in
   (* The type's binders and the definiens' are different names for the same
      things, and the result type may mention them. *)
   let rec realign (bs:binders) (xs:binders) : ML (list subst_elt) =
