@@ -466,16 +466,19 @@ let uniform_arrow (t:cty) : ML cty =
   let ps, _ = arrow_parts t in
   List.fold_right (fun ((_:cty), (ef:eff)) r -> TArrow (TAny, ef, r)) ps TAny
 
+(* A definition used as a value is a closure of its signature's type,
+   whatever it was typed at. *)
+let at_signature (a:expr) : ML expr =
+  match a.e with
+  | EQual (n, _) ->
+    (match HashTable.try_find !fn_tbl (string_of_name n) with
+     | Some (bs, r) ->
+       { a with ty = List.fold_right (fun (b:binder) r -> TArrow (b.b_ty, E_Impure, r)) bs r }
+     | None -> a)
+  | _ -> a
+
 let rec coerce_any (a:expr) (t:cty) : ML expr =
-  (* A definition used as a value is a closure of its signature's type,
-     whatever it was typed at. *)
-  let a = match a.e with
-          | EQual (n, _) ->
-            (match HashTable.try_find !fn_tbl (string_of_name n) with
-             | Some (bs, r) ->
-               { a with ty = List.fold_right (fun (b:binder) r -> TArrow (b.b_ty, E_Impure, r)) bs r }
-             | None -> a)
-          | _ -> a in
+  let a = at_signature a in
   if a.ty = t then a else
   match a.e with
   | EOp ({ po_op = Dyn "mk" }, [x]) when x.ty = t -> x
@@ -594,8 +597,10 @@ let rec lower_any (e:expr) : ML expr =
       | TArrow (_, _, b) -> peel (n - 1) b
       | _ -> None in
     (* The head may have been coerced below, to the arrow extraction typed
-       this call at: its parameters are then what the arguments must be. *)
-    let ps, _ = arrow_parts hd.ty in
+       this call at: its parameters are then what the arguments must be.  A
+       definition's are its signature's, whatever its name was typed at (a
+       partial application's name may be typed at what remains). *)
+    let ps, _ = arrow_parts (at_signature hd).ty in
     let args =
       if List.length ps < List.length args then args
       else List.map2 (fun (a:expr) ((p:cty), _) ->

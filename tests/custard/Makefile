@@ -3378,6 +3378,8 @@ CUSTARD_TESTS += HeapClosures
 # was typed at.
 CUSTARD_TESTS += DynCurry
 FLAGS_DynCurry = --warn_error -367
+CUSTARD_TESTS += DynPartial
+FLAGS_DynPartial = --warn_error -367
 
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
