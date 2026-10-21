@@ -762,21 +762,11 @@ let incs (o:owned) (e:expr) : ML expr =
 let let_ (x:string) (t:cty) (e1 e2:expr) : expr =
   mk (ELet (x, t, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
 
-(* An integer literal too large to be a small integer on a 32-bit target is
-   a cell, allocated where it is evaluated. *)
-let small_int_bound : int = 1073741824
-
-let is_big_literal (c:constant) : bool =
-  match c with
-  | CInt (v, _, None) -> v >= small_int_bound || v <= - small_int_bound
-  | _ -> false
-
 (* An operand that can stay where it is: a variable, or something whose
    evaluation neither involves a counted value nor does anything. *)
 let is_atom (a:expr) : ML bool =
   match a.e with
-  | EConst c -> not (is_big_literal c)
-  | EVar _ | EQual _ -> true
+  | EConst _ | EVar _ | EQual _ -> true
   | _ -> not (touches a) && is_pure a.eff
 
 (* The calling convention of each definition (cherry.md, "Borrow
