@@ -3729,6 +3729,37 @@ $(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
 
 all: $(TIME_DIR)/CherryTime.chran
 
+INTEXTRA_DIR = $(CHERRY_DIR)/intextra
+INTEXTRA_ABS = $(abspath $(INTEXTRA_DIR))
+# Only the modules the test needs, linked into a directory of their own:
+# including all of src/basic would put its FStar.Errors.Msg.fst, which the
+# typeclass tactics depend on, in place of ulib's.
+INTEXTRA_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.Int.Extra.fsti $(HASH_SRC)/FStarC.Int.Extra-c.cherry.fst
+$(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryIntExtra)
+	$(Q)rm -rf $(INTEXTRA_ABS) && mkdir -p $(INTEXTRA_ABS)/src
+	$(Q)ln -s $(INTEXTRA_SRCS) $(INTEXTRA_ABS)/src/
+	$(Q)cd intextra && for f in $(addprefix $(INTEXTRA_ABS)/src/,$(notdir $(INTEXTRA_SRCS))) \
+	    CherryIntExtra.fst; do \
+	  $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd intextra && $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
+	  --already_cached '*' --odir $(INTEXTRA_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryIntExtra.main \
+	  CherryIntExtra.fst -o $(INTEXTRA_ABS)/CherryIntExtra.c > /dev/null
+	$(call msg, "CC-ASAN", CherryIntExtra)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(INTEXTRA_ABS) -I$(CHERRY_INC) \
+	  -x c $(INTEXTRA_ABS)/CherryIntExtra.c $(CHERRY_INC)/cherry.c \
+	  -o $(INTEXTRA_ABS)/CherryIntExtra.chexe
+	$(call msg, "RUN-ASAN", CherryIntExtra)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(INTEXTRA_ABS)/CherryIntExtra.chexe
+	$(Q)touch $@
+
+all: $(INTEXTRA_DIR)/CherryIntExtra.chran
+
 # Debug mode (cherry.md): each program breaks a fact F* would have proved, in
 # code whose queries are admitted, and must abort with the message below.
 # It is also compiled without -DCHERRY_DEBUG, to check that the release
