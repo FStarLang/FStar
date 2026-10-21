@@ -3370,6 +3370,24 @@ NOGREP_BoxedFields += "BoxedFields_Bar of bool \* string"
 # arrow behind more abbreviations than the old fuel of eight.
 CUSTARD_TESTS += HeapClosures
 
+# A curried constructor through a monad dictionary passed at run time, at the
+# identity monad (FStarC.Syntax.VisitM's [Mktuple2 <$> f b <*> g a]).  Under
+# Cherry the closure goes into [any] taking one argument and comes out taking
+# two, a continuation's binder of arrow type is not [any] because the
+# continuation is, and an argument meets a head coerced to the arrow the call
+# was typed at.
+CUSTARD_TESTS += DynCurry
+FLAGS_DynCurry = --warn_error -367
+CUSTARD_TESTS += DynPartial
+FLAGS_DynPartial = --warn_error -367
+
+# Section 5.4: the coercion pass retypes what it pushes an expectation into --
+# a lambda takes its coerced body's result type, a constructor built at [any]
+# takes the type its position wants -- so that Cherry does not take a value
+# out of an [any] it was never put into.
+CUSTARD_TESTS += CoerceLamRes CoerceCtor
+FLAGS_CoerceLamRes = --warn_error -367
+
 # Matches nested in each other's last branch, too deep for a printer that
 # emits a trailing branch twice per level (PrintC's trial emission in [trim]).
 CUSTARD_TESTS += DeepMatch
@@ -3387,6 +3405,15 @@ EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 # Cherry: branches whose types agree only up to an abbreviation are not
 # joined to any.
 CHERRY_TESTS += CherryAnyIf
+
+# Cherry: a monomorphic local function called once in each of several
+# branches stays one closure rather than a copy per branch (Simplify.reduce).
+CUSTARD_TESTS += LocalFunDup
+$(CHERRY_DIR)/LocalFunDup.chonce: $(CHERRY_DIR)/LocalFunDup.chc
+	$(Q)test "$$(grep -c 'LocalFunDup_marker();' $<)" = 1 \
+	  || { echo "ERROR: LocalFunDup's local function was copied"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/LocalFunDup.chonce
 
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
@@ -3712,6 +3739,37 @@ $(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
 	$(Q)touch $@
 
 all: $(TIME_DIR)/CherryTime.chran
+
+INTEXTRA_DIR = $(CHERRY_DIR)/intextra
+INTEXTRA_ABS = $(abspath $(INTEXTRA_DIR))
+# Only the modules the test needs, linked into a directory of their own:
+# including all of src/basic would put its FStar.Errors.Msg.fst, which the
+# typeclass tactics depend on, in place of ulib's.
+INTEXTRA_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.Int.Extra.fsti $(HASH_SRC)/FStarC.Int.Extra-c.cherry.fst
+$(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryIntExtra)
+	$(Q)rm -rf $(INTEXTRA_ABS) && mkdir -p $(INTEXTRA_ABS)/src
+	$(Q)ln -s $(INTEXTRA_SRCS) $(INTEXTRA_ABS)/src/
+	$(Q)cd intextra && for f in $(addprefix $(INTEXTRA_ABS)/src/,$(notdir $(INTEXTRA_SRCS))) \
+	    CherryIntExtra.fst; do \
+	  $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd intextra && $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
+	  --already_cached '*' --odir $(INTEXTRA_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryIntExtra.main \
+	  CherryIntExtra.fst -o $(INTEXTRA_ABS)/CherryIntExtra.c > /dev/null
+	$(call msg, "CC-ASAN", CherryIntExtra)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(INTEXTRA_ABS) -I$(CHERRY_INC) \
+	  -x c $(INTEXTRA_ABS)/CherryIntExtra.c $(CHERRY_INC)/cherry.c \
+	  -o $(INTEXTRA_ABS)/CherryIntExtra.chexe
+	$(call msg, "RUN-ASAN", CherryIntExtra)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(INTEXTRA_ABS)/CherryIntExtra.chexe
+	$(Q)touch $@
+
+all: $(INTEXTRA_DIR)/CherryIntExtra.chran
 
 # Debug mode (cherry.md): each program breaks a fact F* would have proved, in
 # code whose queries are admitted, and must abort with the message below.

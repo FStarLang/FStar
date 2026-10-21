@@ -499,7 +499,7 @@ static inline void cherry_exn_mark(cherry_exn e, int mode) {
 }
 
 /* An exception nothing caught: reported, and the process exits. */
-void cherry_exn_uncaught(void);
+__attribute__((noreturn, cold)) void cherry_exn_uncaught(void);
 
 /* FStarC.Effect.exit and FStar.All.exit: flushes stdout and stderr and
    ends the process with status [n]. */

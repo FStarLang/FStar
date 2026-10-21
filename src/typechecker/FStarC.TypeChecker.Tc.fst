@@ -120,7 +120,7 @@ let tc_decl_attributes env se =
   let blacklisted_attrs, other_attrs =
     if lid_exists env PC.attr_substitute_lid
     then ([], se.sigattrs)
-    else partition ((=) attr_substitute) se.sigattrs
+    else partition (U.is_fvar PC.attr_substitute_lid) se.sigattrs
   in
   let g, other_attrs = tc_attributes env other_attrs in
   Rel.force_trivial_guard env g;
