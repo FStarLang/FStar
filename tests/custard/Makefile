@@ -3388,6 +3388,10 @@ FLAGS_DynPartial = --warn_error -367
 CUSTARD_TESTS += CoerceLamRes CoerceCtor
 FLAGS_CoerceLamRes = --warn_error -367
 
+# Matches nested in each other's last branch, too deep for a printer that
+# emits a trailing branch twice per level (PrintC's trial emission in [trim]).
+CUSTARD_TESTS += DeepMatch
+
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
 C_TESTS += CHeapArity
