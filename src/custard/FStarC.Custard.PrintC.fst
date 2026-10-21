@@ -467,6 +467,10 @@ let void_ret : ref bool = mk_ref false
    when the transformation is allowed, and [tail_used] whether it happened. *)
 let tail_self : ref (option (string & list binder)) = mk_ref None
 let tail_used : ref bool = mk_ref false
+(* The parameters some self tail call passes unchanged.  Such a call writes
+   nothing to them, so a parameter whose only use is that one is unused as far
+   as C can tell, and gets voided like one the body never mentions. *)
+let tail_kept : ref (list string) = mk_ref []
 
 let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
   match flags, xs with
@@ -2867,6 +2871,8 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let vals = List.map2 (fun (b:binder) (a:expr) -> (b, c_rvalue out ind b.b_ty a)) bs args in
     (* Every argument is read before any parameter is written. *)
     let moves = vals |> List.filter (fun ((b:binder), v) -> v <> lookup_var b.b_name) in
+    vals |> List.iter (fun ((b:binder), v) ->
+      if v = lookup_var b.b_name then tail_kept := v :: !tail_kept);
     let tmps = moves |> List.map (fun ((b:binder), v) ->
       let t = fresh "tail" in
       (b, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
@@ -4011,16 +4017,19 @@ let let_decl (l:dlet) : ML string =
   (* C also warns about an unused *parameter*, and a definition's parameters
      have to be named, so the ones the body never mentions are voided
      explicitly. *)
-  let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
-    if List.existsb (fun y -> y = b.b_name) used then []
-    else ["  (void)" ^ lookup_var b.b_name ^ ";\n"])) in
   tail_used := false;
+  tail_kept := [];
   tail_self :=
     (if Options.custard_cherry () && not (stack_allocates l.dl_body)
      then Some (string_of_name l.dl_name, kept_binders l)
      else None);
   let body = emit "  " D_Return l.dl_body in
   tail_self := None;
+  let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
+    let v = lookup_var b.b_name in
+    if List.existsb (fun y -> y = b.b_name) used &&
+       not (List.mem v !tail_kept) then []
+    else ["  (void)" ^ v ^ ";\n"])) in
   signature l ^ " {\n" ^ voids ^
   (if !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
 
