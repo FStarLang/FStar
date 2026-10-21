@@ -1866,6 +1866,15 @@ Two rules fall out of that and are worth naming:
   down to the terms that produce their value, so each of those has already been
   coerced and the node agrees by construction.  Asking a second time is exactly
   how a coercion ends up around the `if` as well as inside each branch.
+  Such a node then *takes* the expected type, since every value it can
+  produce now has it; so does a lambda, whose result type becomes that of its
+  checked body.  Left at the old type, the node disagrees with its parent's
+  view of it, and Cherry, which reads a node's type to decide where a value
+  goes into or comes out of an `any`, unboxes a value that was never boxed.
+  For the same reason a constructor, record, tuple or constant typed `TAny`
+  --- a `Some` out of an inlined polymorphic `return` --- takes a concrete
+  expected type: it is built in place, at whatever type its position wants
+  (tests: `CoerceLamRes`, `CoerceCtor`).
 
 A scrutinee, a projection and a discriminator are the one place the expectation
 is manufactured rather than read off: a value of type `Obj.t` cannot be taken
