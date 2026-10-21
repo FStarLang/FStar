@@ -373,9 +373,21 @@ Core used to serve tactics only (`core_check`) and only knew `Tot` and
     Refinements are never looked through for this.
   * The same applies to a `fun` passed as an argument whose formal type is
     an arrow.
-  * An annotated `let` whose definition is a `let`, `match` or `fun` is
-    checked against its annotation when the definition's own type needs a
-    guard to be related to it.
+  * The definition of a `let` is checked bidirectionally, in one pass
+    (`check_let_def`). Without an annotation, its type is synthesized.
+    With one, the annotation is checked to be a type, and then:
+    * A pure or ghost definition is checked against it, so it is pushed
+      into a definition that is a `let`, `match` or `fun`. For example, in
+      `let f : t = (lemma (); f0) in e`, `f0` meets `t` under the lemma.
+    * An effectful definition has its type synthesized and related to the
+      annotation by subtyping. The postcondition of an effectful
+      computation is carried only by its synthesized type, e.g. `n >= 0`
+      after `if n < 0 then fail ""` (`FStar.Tactics.V2.Derived.repeatn`).
+      Pushing the annotation would lose it.
+
+    The choice uses `lb.lbeff`, the effect elaboration recorded for the
+    whole `let`, which bounds the definition's. It only selects between
+    two sound strategies.
   * Local `let rec`: the expected type is pushed into the body, which sees
     the recursive functions only through their types
     (`bug-reports/closed/Phase2CoreLetRecTail`).
@@ -539,6 +551,23 @@ A pure `let x = e1 in e2` closes its guard as `forall x. x == e1 ==> facts
   would put every earlier `calc` step into the context of every later one.
 * When `x` is not quantified and the `let` is annotated, what the
   annotation says about `e1` is added as a fact, before `e1`'s own facts.
+
+The variable `x` is bound at the annotation of the `let`, or else at the
+type synthesized for `e1` (`let_binder_sort`). The universe of a
+synthesized type is computed without checking that type again
+(`universe_of_well_typed_term`). When `e1`'s type was also synthesized for
+an annotated `let` (an effectful `e1`, or one into which the annotation is
+not pushed), its refinement is added to `x`'s type: the annotation may be
+one that elaboration inferred, which lacks the definition's postcondition.
+When the annotation is pushed into a pure `e1`, `e1` is recorded in the
+cache at the annotation, so that its facts are computed without
+synthesizing its type again. What `e1` establishes beyond its annotation
+then reaches the body as facts: those of `e1` and its subterms, and those
+of the expression that the `let`s of `e1` end with (`let_tail_facts`). For
+example, `eliminate exists x. p x with lemma x` elaborates to
+`let _ : unit = (let x = .. in lemma x) in ..`, where only the type of
+`lemma x` says what it proves
+(`PulseCore.IndirectionTheoryActions.witness_exists`).
 
 For a top-level `let rec`, the driver binds the names of the nest before
 the binders (`is_nest_name`). The SMT encoding closes a query only over the

@@ -2532,6 +2532,39 @@ and app_facts (g:env) (e:term)
     | Tm_meta {tm} -> app_facts g tm
     | _ -> return []
 
+(* What the expression that the [let]s of [e] end with says about it, under
+   those [let]s, e.g. [p] for [let x = e1 in lemma x], where
+   [lemma x : squash p]. [app_facts] collects only the facts of the subterms
+   of that expression. Needed for a definition checked against its
+   annotation, whose own type, which would say it, is then not synthesized
+   (see [check_let_def]). The branches of a [match] are left to
+   [app_facts]; a function has no facts. *)
+and let_tail_facts (g:env) (e:term)
+  : ML (result (list term))
+  = match (Subst.compress e).n with
+    | Tm_let {lbs=(false, [lb]); body} ->
+      let Inl x0 = lb.lbname in
+      (match! type_of_checked g lb.lbdef with
+       | None -> return []
+       | Some (eff_def, tdef) ->
+         let g', x, body = open_term g (S.mk_binder { x0 with sort = tdef }) body in
+         let! facts = let_tail_facts g' body in
+         if is_tot_or_ghost_eff eff_def
+         then return (List.map (Subst.subst [NT(x.binder_bv, lb.lbdef)]) facts)
+         else return (List.filter (fun f -> not (mem x.binder_bv (FStarC.Syntax.Free.names f))) facts))
+    | Tm_let {lbs=(true, lbs); body} ->
+      let lbs, body = Subst.open_let_rec lbs body in
+      let xs = letrec_binders lbs in
+      let! facts = let_tail_facts (push_binders g xs) body in
+      return (facts |> List.filter (fun f ->
+                let fvs = FStarC.Syntax.Free.names f in
+                not (BU.for_some (fun (x:binder) -> mem x.binder_bv fvs) xs)))
+    | Tm_ascribed {tm}
+    | Tm_meta {tm} -> let_tail_facts g tm
+    | Tm_match _
+    | Tm_abs _ -> return []
+    | _ -> term_facts g e
+
 (* Run [f], dropping its guard: for computations whose guards have already
    been emitted. The cache is kept only when there was no guard: its entries
    claim their guards have been emitted. *)
@@ -3176,48 +3209,90 @@ and smt_lemma_as_forall (g:env) (t:typ)
                                 meta=Meta_pattern (S.binders_to_names bs0, patterns)}) t.pos in
       return (List.fold_right2 (fun (b:binder) u out -> U.mk_forall u b.binder_bv out) bs0 us body)
 
-(* A non-recursive [let], whose body is checked against [expected] if given,
-   or else has its type synthesized. *)
+(* A non-recursive [let x = e in body], with [body] checked against [expected]
+   if given. In three steps: the definition ([check_let_def]); the body, with
+   [x] bound at [let_binder_sort]; and the closing of the body's guard over
+   [x] ([close_let_guard]) and, with no expected type, of its type
+   ([let_result_typ]). *)
 and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
   : ML (result (eff & typ))
   = let Inl x0 = lb.lbname in
-    let! eff_def, tdef = check "let definition" g lb.lbdef in
-    let pure_def = is_tot_or_ghost_eff eff_def in
-    (* A [let] appearing inside a *type* may still carry the annotation the
-       desugarer left, i.e. none at all: not every producer of a term runs it
-       through the elaborator first. The definition's own type is then the
-       only annotation there is, and it needs no separate check. *)
-    let unannotated = Tm_unknown? (Subst.compress lb.lbtyp).n in
-    let lbtyp = if unannotated then tdef else lb.lbtyp in
-    let! _, ttyp = check "let type" g lbtyp in
-    let! u = is_type g ttyp in
-    (* When relating the definition's type to the annotation needs a guard,
-       and the definition is one that an expected type is pushed into, it is
-       checked against the annotation instead, as TcTerm does: the guard is
-       then where the definition's own hypotheses are in scope, e.g. in
-       [let f : t = lemma (); f0 in e], relating [f0]'s type to [t] under the
-       lemma. *)
-    let pushable =
-      match (Subst.compress (U.unmeta lb.lbdef)).n with
-      | Tm_let {lbs=(false, _)} | Tm_match _ | Tm_abs _ -> not unannotated
-      | _ -> false
-    in
-    with_context "let subtyping" None (fun _ ->
-      let subtyping () = check_subtype g (if pure_def then Some lb.lbdef else None) tdef lbtyp in
-      if pushable
-      then handle_with (no_guard (subtyping ())) (fun _ ->
-             let! eff = check_against_typ g lb.lbdef lbtyp in
-             if eff_eq eff eff_def then return ()
-             else subtyping ())
-      else subtyping ()) ;!
-    (* The body is checked with [x] at its annotation, as the user wrote it
-       (it may well be the only form of it that exposes, say, an arrow),
-       further refined by what the definition's own type says about it: the
-       annotation may be one that elaboration inferred, which lacks the
-       refinements that carry the definition's postcondition (a lemma's, say).
-       [lb.lbdef] has both types, so [x] may be assumed to have both. *)
-    let x_sort =
-      if unannotated || U.term_eq lbtyp tdef then tdef
+    let! eff_def, lbtyp, u, tdef = check_let_def g lb in
+    let x0 = { x0 with sort = let_binder_sort g lbtyp tdef } in
+    let g', x, body = open_term g (S.mk_binder x0) body in
+    close_let_guard g lb eff_def lbtyp tdef x u (
+      match expected with
+      | Some t ->
+        let! eff_body = check_against_typ g' body t in
+        let! eff = join_eff g eff_def eff_body in
+        return (eff, t)
+      | None ->
+        let! eff_body, t = check "let body" g' body in
+        let! t = let_result_typ g g' lb.lbdef eff_def x u body eff_body t in
+        let! eff = join_eff g eff_def eff_body in
+        return (eff, t))
+
+(* The definition [e] of a non-recursive [let]. Returns the effect of [e],
+   the type [lbtyp] at which it is bound (its annotation, or else its own
+   type), the universe of [lbtyp], and the type synthesized for [e], if any.
+
+   Without an annotation, the type of [e] is synthesized. With one, the
+   annotation is checked to be a type, and then:
+   * A pure or ghost [e] is checked against it (see [check_against_typ]):
+     the obligations of [e] meeting it are then where [e]'s own hypotheses
+     are in scope, e.g. in [let f : t = (lemma (); f0) in body], [f0] meets
+     [t] under the lemma. What [e] establishes beyond its annotation is
+     stated in the VC of the body (see [close_let_guard]).
+   * The result of an effectful [e] is described by its type only, which
+     carries its postcondition, e.g. that [n >= 0] after
+     [if n < 0 then fail ""]: that type is synthesized, and then related to
+     the annotation.
+   The effect the elaborator recorded in [lb.lbeff], that of the whole
+   [let], bounds that of [e]: when it is pure or ghost, so is [e]. It only
+   chooses between the two strategies, both of which are sound. *)
+and check_let_def (g:env) (lb:letbinding)
+  : ML (result (eff & typ & universe & option typ))
+  = if Tm_unknown? (Subst.compress lb.lbtyp).n
+    then (
+      (* A [let] appearing inside a *type* may still carry the annotation the
+         desugarer left, i.e. none at all: not every producer of a term runs
+         it through the elaborator first. *)
+      let! eff, tdef = check "let definition" g lb.lbdef in
+      (* The definition's type, which Core computed, is well-formed: only
+         its universe is needed. *)
+      let! u = quietly (universe_of_well_typed_term g tdef) in
+      return (eff, tdef, u, Some tdef)
+    )
+    else (
+      let! u = with_context "let type" (Some (CtxTerm lb.lbtyp)) (fun _ -> universe_of g lb.lbtyp) in
+      let pure =
+        U.is_pure_or_ghost_effect lb.lbeff
+        || Ident.lid_equals lb.lbeff PC.effect_Lemma_lid in
+      let! eff, tdef =
+        with_context "let definition" (Some (CtxTerm lb.lbdef)) (fun _ ->
+          if pure
+          then check_against_typ_synth g lb.lbdef lb.lbtyp
+          else check_against_typ_by_subtyping g lb.lbdef lb.lbtyp) in
+      (* When the annotation was pushed into it, [e] has been checked at
+         that type: recording it lets the facts about [e] (see [app_facts])
+         be computed without synthesizing its type again. *)
+      (if None? tdef then insert g (cache_key lb.lbdef) ((eff, lb.lbtyp), None) else return ()) ;!
+      return (eff, lb.lbtyp, u, tdef)
+    )
+
+(* The type at which a [let]'s body sees its variable: its annotation
+   [lbtyp], as the user wrote it (it may well be the only form of it that
+   exposes, say, an arrow), further refined by what the type [tdef]
+   synthesized for the definition says about it. The annotation may be one
+   that elaboration inferred, which lacks the refinements that carry the
+   definition's postcondition (a lemma's, say). The definition has both
+   types, so the variable may be assumed to have both. *)
+and let_binder_sort (g:env) (lbtyp:typ) (tdef:option typ)
+  : ML typ
+  = match tdef with
+    | None -> lbtyp
+    | Some tdef ->
+      if U.term_eq lbtyp tdef then tdef
       else
         let refinement (t:typ) : ML (option (bv & term)) =
           match (Subst.compress (U.flatten_refinement t)).n with
@@ -3237,17 +3312,22 @@ and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
         match r with
         | Some (y, phi) -> U.refine { y with sort = lbtyp } phi
         | None -> lbtyp
-    in
-    let x0 = { x0 with sort = x_sort } in
-    let g', x, body = open_term g (S.mk_binder x0) body in
-    (* A pure or ghost definition is a term, so the body may assume the
-       defining equation and the variable can be eliminated from the body's
-       type by substitution. The result of an effectful definition is neither:
-       the variable is merely a binder of its type. *)
+
+(* Close the guard of [f], the body of a [let] binding [x] (of universe [u])
+   to the definition [lb.lbdef], of effect [eff_def]. The variable of an
+   effectful definition is merely a binder of its type. A pure or ghost
+   definition is a term: the guard may assume its defining equation, or have
+   it substituted for [x], and the facts about it (see [term_facts]). *)
+and close_let_guard (g:env) (lb:letbinding) (eff_def:eff) (lbtyp:typ) (tdef:option typ)
+                    (x:binder) (u:universe) (f:result (eff & typ))
+  : ML (result (eff & typ))
+  = if not (is_tot_or_ghost_eff eff_def) then with_binders g [x] [u] f else
+    let annotated = not (Tm_unknown? (Subst.compress lb.lbtyp).n) in
     let smt_lemma_typ =
       if U.is_smt_lemma lbtyp then Some lbtyp
-      else if U.is_smt_lemma tdef then Some tdef
-      else None
+      else match tdef with
+           | Some t when U.is_smt_lemma t -> Some t
+           | _ -> None
     in
     (* As in [TcUtil.should_return], the defining equation of [x] is only
        worth stating if [x] may have more than one value, i.e. its type (or,
@@ -3256,162 +3336,132 @@ and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
        only drag the definition, a lambda say, into the context of every
        later obligation. *)
     let def_eq_useful =
-      let rec is_unit_like (t:term) : ML bool =
-        let t = Subst.compress t in
-        if U.is_unit t then true
-        else match t.n with
-             | Tm_refine {b} -> is_unit_like b.sort
-             | _ -> Some? (U.un_squash t)
-      in
       let c = lbtyp |> U.arrow_formals_comp |> snd in
       U.is_pure_or_ghost_comp c
-      && not (is_unit_like (N.unfold_whnf g.tcenv (U.comp_result c)))
+      && not (VCUtil.is_unit_like (N.unfold_whnf g.tcenv (U.comp_result c)))
       && (let head, _ = U.head_and_args_full lb.lbdef in
           match (U.un_uinst head).n with
           | Tm_fvar fv -> not (Env.is_irreducible g.tcenv (S.lid_of_fv fv))
           | _ -> true)
     in
-    let close (f:result (eff & typ)) : ML (result (eff & typ)) =
-      if !dbg_facts then Format.print3 "let %s : %s, pure=%s\n" (show lb.lbdef) (show tdef) (show pure_def);
-      if pure_def then
-        (* What [x]'s type says about it, e.g. the postcondition of a lemma
-           call, is also stated about the definition itself: a binder the
-           guard does not mention is dropped when the guard is simplified,
-           and its type with it. *)
-        with_guard f (function
-          | Inr err -> fail_propagate err
-          | Inl (res, None) -> return res
-          | Inl (res, Some form) ->
-            (* A local lemma with SMT patterns, e.g.
-               [let fwd x : Lemma (p x) [SMTPat (f x)] = ... in e], is
-               available to the SMT solver in [e], as [TcTerm] does. *)
-            let! form =
-              match smt_lemma_typ with
-              | None -> return form
-              | Some lem_typ ->
-                let! quant = handle_with (smt_lemma_as_forall g lem_typ) (fun _ -> return U.t_true) in
-                return (U.mk_imp quant form)
-            in
-            (* [let unfold x = e] asks for [e] to be substituted into the
-               VC, as [TcTerm] does. *)
-            let inline_vc = U.has_attribute lb.lbattrs PC.inline_let_vc_attr in
-            (* Without SMT, the guard must simplify to [True] as it stands:
-               substituting the definition (which is equivalent to
-               quantifying over [x] with its defining equation) lets it do
-               so when it relates [x] to the definition itself. *)
-            let inline_vc = inline_vc || Options.no_smt () in
-            (* Even when [x] does not occur in the guard, its defining
-               equation is kept if it is useful, as TcTerm does: the
-               definition may be there only to put a term into the VC, as a
-               trigger, e.g. [introduce forall x y. q x y with let p = (x, y) in ()]. *)
-            let x_free = def_eq_useful || mem x.binder_bv (FStarC.Syntax.Free.names form) in
-            (* When [x] is quantified (whether or not along with its defining
-               equation), what the definition's own type says about it is
-               already said by [x]'s type; only the facts about its subterms
-               remain. Restating it about the definition itself, which the
-               guard does not relate to [x] when the equation is not useful
-               (e.g. [let x1 = indefinite_description1 p in ...], with an
-               irreducible head), only adds a quantified hypothesis for the
-               SMT solver to trip on. *)
-            let! facts =
-              if x_free && not inline_vc
-              then app_facts g lb.lbdef
-              else term_facts g lb.lbdef
-            in
-            (* Unless [x] is quantified at its type, what that type, when
-               annotated, says about the definition is also a fact, and is
-               preferred, as TcTerm assumes it: it may be stated differently
-               than the definition's own type, even when the two are
-               [term_eq], e.g. in the residual types of abstractions, which
-               the SMT encoding of the abstractions depends on. E.g.
-               [let _ : squash (p (fun x -> f x)) = lemma f in e], where
-               [lemma]'s statement has its abstraction at a type that is
-               equal to, but not syntactically, [f]'s. *)
-            let facts =
-              if (x_free && not inline_vc) || unannotated then facts
-              else type_facts g true lb.lbdef lbtyp @ facts
-            in
-            let facts = dedup_facts facts in
-            if !dbg_facts then Format.print2 "let facts for %s: %s\n" (show lb.lbdef) (show facts);
-            let form =
-              if inline_vc then Subst.subst [NT(x.binder_bv, lb.lbdef)] form
-              else if not x_free then form
-              else if def_eq_useful then close_with_definition x u lb.lbdef form
-              else U.mk_forall u x.binder_bv form in
-            let form = if Nil? facts then form else U.mk_imp (U.mk_conj_l facts) form in
-            reemit_guard g form ;!
-            return res)
-      else with_binders g [x] [u] f
-    in
-    close (
-      match expected with
-      | Some t ->
-        let! eff_body = check_against_typ g' body t in
-        let! eff = join_eff g eff_def eff_body in
-        return (eff, t)
-      | None ->
-        let! eff_body, t = check "let body" g' body in
-        let x_in_t = mem x.binder_bv (FStarC.Syntax.Free.names t) in
-        let! t =
-          if pure_def && x_in_t
-          then return (Subst.subst [NT(x.binder_bv, lb.lbdef)] t)
-          else if pure_def then
-            (* The definition's refinement is a fact about the rest of the
-               computation; for a pure body, it is kept in the VC (see
-               [close] above), but the result of an effectful body is only
-               described by its type, so it is kept there, e.g.
-               [let Some x = admit (); f () in ...] where [admit () :
-               _:unit{False}] and [f] is effectful: the exhaustiveness
-               check of the pattern relies on [False]. *)
-            if is_tot_or_ghost_eff eff_body then return t
-            else
-              let phi_x = U.refinement_hypothesis
-                            (N.normalize_refinement N.whnf_steps g.tcenv x.binder_bv.sort)
-                            (S.bv_to_name x.binder_bv) in
-              let is_true =
-                match (U.un_uinst (Subst.compress phi_x)).n with
-                | Tm_fvar fv -> S.fv_eq_lid fv PC.true_lid
-                | _ -> false
-              in
-              if is_true then return t
-              else
-                let r = S.new_bv None t in
-                return (U.refine r (U.mk_exists u x.binder_bv phi_x))
-          else
-            (* The result of an effectful definition cannot be substituted
-               into the body's type. As in [TcUtil], [x] is instead closed
-               existentially, over what the body's type says about it and,
-               for a pure body, over the body itself (the value of the
-               [let]), e.g. [let s = f x in C s y] has type
-               [r:t{exists s. r == C s y}]. *)
-            let x_in_body = mem x.binder_bv (FStarC.Syntax.Free.names body) in
-            let eq_body = is_tot_or_ghost_eff eff_body in
-            if not x_in_t && not eq_body then return t
-            else if not x_in_t && not x_in_body then
-              (* E.g., [let tok = f () in v]: its value is [v]. *)
-              if U.is_unit (U.unrefine (N.unfold_whnf g'.tcenv t)) then return t
-              else
-                let r = S.new_bv None t in
-                let! u_b = universe_of_well_typed_term g' t in
-                return (U.refine r (U.mk_eq2 u_b t (S.bv_to_name r) body))
-            else
-              let tn = if x_in_t then N.normalize_refinement N.whnf_steps g'.tcenv t else t in
-              let base = if x_in_t then U.unrefine tn else t in
-              if mem x.binder_bv (FStarC.Syntax.Free.names base)
-              then fail_str "Name escapes its scope"
-              else
-                let r = S.new_bv None base in
-                let phi_t = if x_in_t then [U.refinement_hypothesis tn (S.bv_to_name r)] else [] in
-                let! eq =
-                  if eq_body then
-                    let! u_b = universe_of_well_typed_term g' base in
-                    return [U.mk_eq2 u_b base (S.bv_to_name r) body]
-                  else return []
-                in
-                return (U.refine r (mk_exists_unrefined u x.binder_bv (U.mk_conj_l (phi_t @ eq))))
+    with_guard f (function
+      | Inr err -> fail_propagate err
+      | Inl (res, None) -> return res
+      | Inl (res, Some form) ->
+        (* A local lemma with SMT patterns, e.g.
+           [let fwd x : Lemma (p x) [SMTPat (f x)] = ... in e], is available
+           to the SMT solver in [e], as [TcTerm] does. *)
+        let! form =
+          match smt_lemma_typ with
+          | None -> return form
+          | Some lem_typ ->
+            let! quant = handle_with (smt_lemma_as_forall g lem_typ) (fun _ -> return U.t_true) in
+            return (U.mk_imp quant form)
         in
-        let! eff = join_eff g eff_def eff_body in
-        return (eff, t)
+        (* [let unfold x = e] asks for [e] to be substituted into the VC, as
+           [TcTerm] does. Without SMT, the guard must simplify to [True] as it
+           stands: substituting the definition (which is equivalent to
+           quantifying over [x] with its defining equation) lets it do so
+           when it relates [x] to the definition itself. *)
+        let inline_vc = U.has_attribute lb.lbattrs PC.inline_let_vc_attr || Options.no_smt () in
+        (* Even when [x] does not occur in the guard, its defining equation
+           is kept if it is useful, as TcTerm does: the definition may be
+           there only to put a term into the VC, as a trigger, e.g.
+           [introduce forall x y. q x y with let p = (x, y) in ()]. *)
+        let x_free = def_eq_useful || mem x.binder_bv (FStarC.Syntax.Free.names form) in
+        let quantified = x_free && not inline_vc in
+        (* When [x] is quantified, what the definition's own type says about
+           it is already said by [x]'s type: only the facts about its
+           subterms remain. Otherwise they are stated about the definition
+           itself, and, preferably, what its annotation says about it, as
+           TcTerm assumes it: it may be stated differently than the
+           definition's own type, even when the two are [term_eq], e.g. in
+           the residual types of abstractions, which the SMT encoding of the
+           abstractions depends on, as in
+           [let _ : squash (p (fun x -> f x)) = lemma f in e]. *)
+        let! facts = if quantified then app_facts g lb.lbdef else term_facts g lb.lbdef in
+        let facts =
+          if quantified || not annotated then facts
+          else type_facts g true lb.lbdef lbtyp @ facts
+        in
+        (* When the annotation was pushed into the definition, its type was
+           not synthesized: what it would have said about the definition
+           beyond the annotation is stated here instead (see
+           [let_binder_sort]), e.g. the [squash p] of
+           [let _ : unit = (let x = e1 in lemma x) in body]. *)
+        let! facts =
+          match tdef with
+          | None -> let! tail = let_tail_facts g lb.lbdef in return (facts @ tail)
+          | Some _ -> return facts
+        in
+        let facts = dedup_facts facts in
+        if !dbg_facts then Format.print2 "let facts for %s: %s\n" (show lb.lbdef) (show facts);
+        let form =
+          if inline_vc then Subst.subst [NT(x.binder_bv, lb.lbdef)] form
+          else if not x_free then form
+          else if def_eq_useful then close_with_definition x u lb.lbdef form
+          else U.mk_forall u x.binder_bv form in
+        let form = if Nil? facts then form else U.mk_imp (U.mk_conj_l facts) form in
+        reemit_guard g form ;!
+        return res)
+
+(* The type of [let x = e in body], from the type [t] of [body], in which
+   [x] may not escape. *)
+and let_result_typ (g g':env) (e:term) (eff_def:eff) (x:binder) (u:universe)
+                   (body:term) (eff_body:eff) (t:typ)
+  : ML (result typ)
+  = let x_in_t = mem x.binder_bv (FStarC.Syntax.Free.names t) in
+    if is_tot_or_ghost_eff eff_def then (
+      if x_in_t
+      then return (Subst.subst [NT(x.binder_bv, e)] t)
+      (* The definition's refinement is a fact about the rest of the
+         computation; for a pure body, it is kept in the VC (see
+         [close_let_guard]), but the result of an effectful body is only
+         described by its type, so it is kept there, e.g.
+         [let Some x = admit (); f () in ...] where [admit () : _:unit{False}]
+         and [f] is effectful: the exhaustiveness check of the pattern relies
+         on [False]. *)
+      else if is_tot_or_ghost_eff eff_body then return t
+      else
+        let phi_x = U.refinement_hypothesis
+                      (N.normalize_refinement N.whnf_steps g.tcenv x.binder_bv.sort)
+                      (S.bv_to_name x.binder_bv) in
+        if U.is_t_true phi_x then return t
+        else
+          let r = S.new_bv None t in
+          return (U.refine r (U.mk_exists u x.binder_bv phi_x))
+    )
+    else (
+      (* The result of an effectful definition cannot be substituted into
+         the body's type. As in [TcUtil], [x] is instead closed
+         existentially, over what the body's type says about it and, for a
+         pure body, over the body itself (the value of the [let]), e.g.
+         [let s = f x in C s y] has type [r:t{exists s. r == C s y}]. *)
+      let x_in_body = mem x.binder_bv (FStarC.Syntax.Free.names body) in
+      let eq_body = is_tot_or_ghost_eff eff_body in
+      if not x_in_t && not eq_body then return t
+      else if not x_in_t && not x_in_body then
+        (* E.g., [let tok = f () in v]: its value is [v]. *)
+        if U.is_unit (U.unrefine (N.unfold_whnf g'.tcenv t)) then return t
+        else
+          let r = S.new_bv None t in
+          let! u_b = universe_of_well_typed_term g' t in
+          return (U.refine r (U.mk_eq2 u_b t (S.bv_to_name r) body))
+      else
+        let tn = if x_in_t then N.normalize_refinement N.whnf_steps g'.tcenv t else t in
+        let base = if x_in_t then U.unrefine tn else t in
+        if mem x.binder_bv (FStarC.Syntax.Free.names base)
+        then fail_str "Name escapes its scope"
+        else
+          let r = S.new_bv None base in
+          let phi_t = if x_in_t then [U.refinement_hypothesis tn (S.bv_to_name r)] else [] in
+          let! eq =
+            if eq_body then
+              let! u_b = universe_of_well_typed_term g' base in
+              return [U.mk_eq2 u_b base (S.bv_to_name r) body]
+            else return []
+          in
+          return (U.refine r (mk_exists_unrefined u x.binder_bv (U.mk_conj_l (phi_t @ eq))))
     )
 
 (* A [match] without a return annotation, whose branches are checked against
@@ -3579,6 +3629,14 @@ and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option 
    with the pure result of an effectful computation as the witness. *)
 and check_against_typ (g:env) (e:term) (t:typ)
   : ML (result eff)
+  = let! eff, _ = check_against_typ_synth g e t in
+    return eff
+
+(* As [check_against_typ], also returning the type synthesized for [e] when
+   [e] is not one that the expected type is pushed into: that type is then
+   related to [t] by subtyping, and may say more about [e] than [t] does. *)
+and check_against_typ_synth (g:env) (e:term) (t:typ)
+  : ML (result (eff & option typ))
   = (* As in [do_check_and_promote]: e.g. [let z = ghost_f y in ()] is
        total, and may be composed with [Div]. *)
     let promote (ef:eff) : ML eff =
@@ -3589,11 +3647,11 @@ and check_against_typ (g:env) (e:term) (t:typ)
     match (Subst.compress e).n with
     | Tm_let {lbs=(false, [lb]); body} ->
       let! eff, _ = check_let g lb body (Some t) in
-      return (promote eff)
+      return (promote eff, None)
     | Tm_match {scrutinee=sc; ret_opt=None; brs; rc_opt}
         when List.for_all (fun (_, w, _) -> None? w) brs ->
       let! eff, _ = check_match g e.pos sc brs rc_opt (Some t) in
-      return (promote eff)
+      return (promote eff, None)
     | Tm_let {lbs=(true, lbs); body} ->
       (* The SMT encoding knows nothing of a local recursive function, so the
          expected type is related to the body's, rather than to the whole
@@ -3605,12 +3663,12 @@ and check_against_typ (g:env) (e:term) (t:typ)
         with_binders g xs us (
           check_letrec_defs g None lbs us ;!
           check_against_typ (push_binders g xs) body t) in
-      return (promote eff)
+      return (promote eff, None)
     | Tm_meta {tm}
         when (match (Subst.compress (U.unmeta tm)).n with
               | Tm_let _ | Tm_match _ -> true
               | _ -> false) ->
-      check_against_typ g tm t
+      check_against_typ_synth g tm t
     | Tm_abs _ ->
       begin match abs_against_arrow g e t with
       | None -> check_against_typ_by_subtyping g e t
@@ -3645,7 +3703,7 @@ and check_against_typ (g:env) (e:term) (t:typ)
             label_postcondition gi_ e (check_against_comp gi_ body (Subst.subst_comp sub c)))
       in
       check_formals g formals xs us ;!
-      return ETot
+      return (ETot, None)
       end
     | _ -> check_against_typ_by_subtyping g e t
 
@@ -3664,14 +3722,14 @@ and with_ascription_tactic (#a:Type) (g:env) (tac:option term) (f:unit -> ML (re
           return res)
 
 and check_against_typ_by_subtyping (g:env) (e:term) (t:typ)
-  : ML (result eff)
+  : ML (result (eff & option typ))
   = let! eff, te = check "checked term" g e in
     let w = if is_tot_or_ghost_eff eff then Some e else None in
     let chk () = check_subtype g w te t in
     with_context "subtyping" (Some (CtxRel te (SUBTYPING w) t)) (fun _ ->
       (* [check_subtype] labels its guard when it has a witness. *)
       if Some? w then chk () else label_subtyping g e te t (chk ())) ;!
-    return eff
+    return (eff, Some te)
 
 (* For [e = fun xs -> body] (one group of binders) and [t] an arrow with at
    least as many binders, looking through abbreviations but not through
