@@ -17,6 +17,23 @@ assume val hook (x:U32.t) : U32.t
 
 let helper (x:U32.t) : U32.t = U32.add_mod x 1ul
 
+[@@A.CInline]
+let helper' (x:U32.t) : U32.t = U32.add_mod x 2ul
+
+[@@A.CInline]
+let helper_ (x:U32.t) : U32.t = U32.add_mod x 3ul
+
+[@@A.CInline]
+let hidden_collision (x:U32.t) : U32.t = U32.add_mod x 1ul
+
+[@@A.CMacro]
+let internal_limit = 19ul
+
+[@@A.CInline]
+let collision (x:U32.t) : U32.t =
+  U32.add_mod (U32.add_mod (helper' x) (helper_ x))
+    (U32.add_mod internal_limit (hidden_collision x))
+
 let plain (x:U32.t) : U32.t = helper x
 
 [@@A.CInline]

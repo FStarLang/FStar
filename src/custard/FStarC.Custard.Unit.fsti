@@ -79,6 +79,10 @@ type header = {
   (** Emission policy, not a layout option: ordinary C units may include and
       call a static-header unit without enabling this option themselves. *)
   uh_static_header: bool;
+  (** Actual C spellings of definitions provided by a static header, including
+      private helpers without specialization keys. Imports adopt these names;
+      new definitions must not collide with any of them. *)
+  uh_c_names: list (string & string);
 }
 
 (** A non-owning binding, never an answer to an implementation lookup. *)
@@ -167,3 +171,6 @@ val link_inits : links -> ML (list string)
     imported declaration, so that a call goes out under the name the header
     it is compiled against declares. *)
 val link_no_prefix : links -> ML (list string)
+
+(** Static-header definition names, grouped by the unit that provides them. *)
+val link_c_names : links -> ML (list (string & list (string & string)))

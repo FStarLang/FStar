@@ -41,9 +41,15 @@ def extract(source, roots, *options, static=True, output=None):
 
 
 roots = ["StaticHeader." + n for n in
-         ("limit", "plain", "api", "equal", "countdown", "get_nan")]
+         ("limit", "plain", "api", "equal", "countdown", "get_nan", "collision")]
 dump = extract("StaticHeader", roots, "--custard_unit", "StaticLib", "--custard_dump_cui")
 assert "static-header: true" in dump
+assert "let StaticHeader.helper" in dump
+assert "let StaticHeader.internal_limit" in dump
+assert "let StaticHeader.unreachable" not in dump
+assert "external StaticHeader.foreign" not in dump
+names = dict(re.findall(r"^  C name: (.+) = (\w+)$", dump, re.MULTILINE))
+assert names["StaticHeader.helper'"] != names["StaticHeader.helper_"]
 extract("StaticHeaderOther", ["StaticHeaderOther.equal"],
         "--custard_unit", "StaticOther")
 extract("StaticHeaderCompare", ["StaticHeaderCompare.equal"],
@@ -103,9 +109,47 @@ assert "StaticHeader_" not in symbols
 extract("StaticHeaderApp", [], "--custard_main", "StaticHeaderApp.main",
         "--custard_link", str(out / "StaticLib.cui"),
         static=False, output="App.c")
-run(cc + ["-std=c11"] + common +
-    [str(out / "App.c"), "StaticHeader_stubs.c", "-o", str(out / "app")])
-run([str(out / "app")])
+app = (out / "App.c").read_text() + (out / "App.h").read_text()
+for name in ("StaticHeader_helper", names["StaticHeader.helper'"],
+             names["StaticHeader.helper_"]):
+    assert name + "(" in app
+    assert not re.search(r"\bstatic\s+(?:inline\s+)?uint32_t\s+" +
+                         re.escape(name) + r"\(", app)
+assert "#define STATICHEADER_INTERNAL_LIMIT" not in app
+for compiler, standard in ((cc, "c11"), (cxx, "c++17")):
+    run(compiler + ["-std=" + standard] + common +
+        ["-x", "c" if standard == "c11" else "c++", str(out / "App.c"),
+         "-x", "none", str(out / "stubs.o"), "-o", str(out / "app")])
+    run([str(out / "app")])
+
+# A second header reuses private helpers rather than materializing them.
+# The consumer imports both its new helper and the original header's helper.
+reuse_dump = extract("StaticHeaderReuse", ["StaticHeaderReuse.api"],
+                    "--custard_unit", "StaticReuse", "--custard_dump_cui",
+                    "--custard_c_no_prefix", "StaticHeaderReuse",
+                    "--custard_link", str(out / "StaticLib.cui"))
+assert "let StaticHeader.helper\n" not in reuse_dump
+assert "let StaticHeaderReuse.helper" in reuse_dump
+assert "static uint32_t StaticHeader_helper(" not in (out / "StaticReuse.h").read_text()
+
+# This helper has a different F* name but the same default C name as an
+# unrequested helper in StaticLib. It must be renamed and its CUI must record
+# that spelling so a third unit can call it correctly.
+collision_dump = extract("StaticHeader_hidden", ["StaticHeader_hidden.api"],
+                         "--custard_unit", "StaticCollision", "--custard_dump_cui",
+                         "--custard_link", str(out / "StaticLib.cui"))
+assert ("C name: StaticHeader_hidden.collision = StaticHeader_hidden_collision_1"
+        in collision_dump)
+extract("StaticHeaderReuseApp", [], "--custard_main", "StaticHeaderReuseApp.main",
+        "--custard_link", str(out / "StaticLib.cui"),
+        "--custard_link", str(out / "StaticReuse.cui"),
+        "--custard_link", str(out / "StaticCollision.cui"),
+        static=False, output="ReuseApp.c")
+for compiler, standard in ((cc, "c11"), (cxx, "c++17")):
+    run(compiler + ["-std=" + standard] + common +
+        ["-x", "c" if standard == "c11" else "c++", str(out / "ReuseApp.c"),
+         "-x", "none", str(out / "stubs.o"), "-o", str(out / "reuse-app")])
+    run([str(out / "reuse-app")])
 
 # A non-inline API deliberately remains non-inline. Unused-function warnings
 # are the consumer's to configure, not a reason to silently change CInline.
@@ -115,7 +159,8 @@ run(cc + ["-std=c11", "-Wno-unused-function"] + common +
     [str(unused), "StaticHeader_stubs.c", "-o", str(out / "unused")])
 
 
-def reject(name, root, message, *options, codegen="C", filename=None):
+def reject(name, root, message, *options, codegen="C", filename=None,
+           source="StaticHeaderReject", code=155):
     target = out / (filename or (name + ".h"))
     target.unlink(missing_ok=True)
     command = fstar + [
@@ -123,12 +168,12 @@ def reject(name, root, message, *options, codegen="C", filename=None):
         "--custard_monomorphize_types", "true",
         "--custard_entry", root, "--odir", str(out),
         "-o", str(target),
-    ] + list(options) + ["StaticHeaderReject.fst"]
+    ] + list(options) + [source + ".fst"]
     result = subprocess.run(command, text=True, stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
     (out / (name + ".log")).write_text(result.stdout)
     diagnostic = re.sub(r"\s+", " ", result.stdout)
-    assert result.returncode != 0 and "Error 155" in diagnostic, result.stdout
+    assert result.returncode != 0 and f"Error {code}" in diagnostic, result.stdout
     assert message in diagnostic, result.stdout
     assert not target.exists(), "failed extraction wrote " + str(target)
 
@@ -148,4 +193,17 @@ extract("StaticHeaderReject", ["StaticHeaderReject.computed"],
         "--custard_unit", "StaticState", static=False, output="StaticState.c")
 reject("linked-init", "StaticHeaderReject.apply", "unit with runtime initialization",
        "--custard_link", str(out / "StaticState.cui"))
+
+# A root's specified C name cannot be changed to avoid a header's definition.
+reject("root-collision", "StaticHeader_hidden.collision", "both named",
+       "--custard_link", str(out / "StaticLib.cui"),
+       source="StaticHeader_hidden", code=374)
+
+# Independent producers can choose colliding private names. Fail at CUI load
+# instead of handing a consumer two headers that redefine a C function.
+extract("StaticHeader_hidden", ["StaticHeader_hidden.api"],
+        "--custard_unit", "StaticIndependent")
+reject("header-collision", "StaticHeaderReject.apply", "both define the C name",
+       "--custard_link", str(out / "StaticLib.cui"),
+       "--custard_link", str(out / "StaticIndependent.cui"), code=369)
 print("static-header extraction, C/C++ consumers and rejection tests passed")

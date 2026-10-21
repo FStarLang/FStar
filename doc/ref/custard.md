@@ -8307,7 +8307,21 @@ The compiler does not silently add `inline`.
 
 Separate C units can include a header-only unit through `--custard_link`;
 the `.cui` records header-only emission without requiring consumers to select
-the same mode. Header-only units cannot depend on runtime initializers.
+the same mode. It also exports specialization keys for private definitions
+actually present in that header, with bodies stripped and visibility unchanged.
+Downstream extraction imports those helpers instead of defining them again;
+ordinary C units still do not export their private source-file definitions.
+Foreign declarations remain non-owning holes, not exported implementations.
+
+Static-header interfaces record the final C spellings of all their retained
+definitions, including helpers without reusable specialization keys. Consumers
+adopt the recorded spelling for an imported helper and reserve every recorded
+name, even if that helper is not requested. New private definitions can be
+renamed around those names; an API name that cannot be changed is rejected on
+collision. Linking independent headers that already define the same C name is
+also rejected. CUIs are build artifacts: rebuild older-format interfaces.
+
+Header-only units cannot depend on runtime initializers.
 Generated comparison helpers are prefixed by the output header's stem so
 that a unit comparing an imported type does not redefine its dependency's
 private helper.
@@ -11587,6 +11601,10 @@ not know which backend will print it. What was missing was entirely a *C*
 question, and it is four questions, not one.
 
 ## 42.1 What a C unit offers: the linking interface, and nothing else
+
+This section describes ordinary header/source units. Header-only units
+(§24.0) also provide their private definitions through the included header
+and therefore export their reusable specialization keys.
 
 The decision that makes the rest fall out: **a C unit's `.cui` describes its
 linking interface**, so it exports what the header file declares and nothing

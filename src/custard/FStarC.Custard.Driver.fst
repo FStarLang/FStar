@@ -307,10 +307,14 @@ let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
     if DExternal? d then [] else
     (* Section 42.1.  A C unit's interface is its linking interface: what the
        header declares and nothing else.  A [static] definition offered here
-       would be a symbol the consumer cannot name.  Types are all kept, since
+       would be a symbol the consumer cannot name. A static header instead
+       defines its private helpers in the consumer's translation unit, so
+       their keys are reusable without changing visibility or linkage.
+       Types are all kept, since
        the header carries the whole type language -- and because that is what
        keeps two headers from defining one [struct] twice (section 42.2). *)
     if Options.codegen_c ()
+       && not (Options.custard_static_header ())
        && (match d with DLet dl -> not (C.is_public dl) | _ -> false)
     then [] else
     let d, ti =
@@ -346,6 +350,7 @@ let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
 let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
                      (hdr_file:option string) (init:option string)
                      (targets:list (string & string))
+                     (c_names:list (string & string))
                      (prog:program) (infos:list (name & type_info))
   : ML unit =
   match Options.custard_unit () with
@@ -381,6 +386,7 @@ let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
         Unit.uh_header  = hdr_file;
         Unit.uh_init    = init;
         Unit.uh_static_header = Options.custard_static_header ();
+        Unit.uh_c_names = c_names;
       };
       Unit.ui_entries = unit_entries (Extract.exported_keys st) homes prog infos;
       (* Functor members resolve through their instance, not a source binding. *)
@@ -592,7 +598,8 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     else { C.cu_name    = Options.custard_unit ();
            C.cu_headers = Extract.link_headers st;
            C.cu_inits   = Extract.link_inits st;
-           C.cu_no_prefix = Extract.link_no_prefix st } in
+           C.cu_no_prefix = Extract.link_no_prefix st;
+           C.cu_c_names = Extract.link_c_names st } in
   if Options.custard_static_header () then begin
     if FStarC.Filepath.basename ofile <> stem ^ ".h" then
       E.raise_error0 E.Fatal_OptionsNotCompatible [
@@ -652,7 +659,11 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     let prog = if Some? cherried then Cherry.record_conventions prog else prog in
     let targets = if backend = "C" && Some? (Options.custard_unit ())
                   then C.foreign_targets cu (List.map fst imports @ prog) else [] in
-    write_unit_iface st homes hdr_file init targets prog infos);
+    let c_names =
+      if backend = "C" && Options.custard_static_header () && Some? (Options.custard_unit ())
+      then C.static_header_names cu (List.map fst imports @ prog)
+      else [] in
+    write_unit_iface st homes hdr_file init targets c_names prog infos);
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   if Options.custard_warn_any () then warn_any prog;

@@ -36,6 +36,9 @@ type unit_info = {
       declares it, which is a function of the *producer's* setting and not of
       this run's. *)
   cu_no_prefix: list string;
+  (** All definition names provided by linked static headers, by owning unit.
+      Includes unrequested helpers so local names cannot collide with them. *)
+  cu_c_names: list (string & list (string & string));
 }
 
 val no_unit : unit_info
@@ -48,13 +51,16 @@ val no_unit : unit_info
 val init_globals_name : unit_info -> program -> ML (option string)
 
 (** Whether a declaration is part of this translation unit's public API
-    (section 24), which is also why a C unit's `.cui` offers only these
-    (section 42.1). Ordinary C output gives these external linkage; static-header
+    (section 24). Ordinary C output gives these external linkage; static-header
     output preserves API visibility but gives all definitions internal linkage. *)
 val is_public : dlet -> ML bool
 
 (** Resolve foreign C targets using the same naming rules as the printer. *)
 val foreign_targets : unit_info -> program -> ML (list (string & string))
+
+(** Actual names of definitions emitted in a static header, for its CUI.
+    Uses the same naming pass as the printer, including private-name clashes. *)
+val static_header_names : unit_info -> program -> ML (list (string & string))
 
 (** The whole program as one self-contained C11 translation unit (section 6,
     M8): a header and a source, in that order, or a header and an empty source

@@ -29,7 +29,7 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 module HashTable = FStarC.HashTable
 
-let current_version = 33
+let current_version = 34
 
 (* The IR is plain first-order data -- no references, no closures, no
    hashconsing -- so the same mechanism that stores checked files stores a
@@ -208,6 +208,8 @@ let iface_to_string (i:iface) : ML string =
     h.uh_name (show h.uh_version) h.uh_backend
     (opt "header" h.uh_header ^ opt "init" h.uh_init ^
      (if h.uh_static_header then "\n  static-header: true" else "") ^ "\n" ^
+     String.concat "" (h.uh_c_names |> List.map (fun (n, c) ->
+       BU.fmt2 "  C name: %s = %s\n" n c)) ^
      BU.fmt3 "  options: %s\n  %s checked files\n\n%s"
        (String.concat ", " (h.uh_options |> List.map (fun (k, v) -> k ^ "=" ^ v)))
        (show (List.length h.uh_digests))
@@ -227,6 +229,7 @@ type unit_ref = {
   ur_header: option string;
   ur_init:   option string;
   ur_no_prefix: list string;
+  ur_c_names: list (string & string);
 }
 
 (* [string & entry]: the unit an entry came from, kept alongside it so a
@@ -243,6 +246,7 @@ let empty_links : links =
 let load_links (fns:list string) : ML links =
   let tbl : HashTable.t string (string & entry) = HashTable.create 1000 in
   let foreign : HashTable.t string (string & foreign_binding) = HashTable.create 100 in
+  let c_names : HashTable.t string (string & string) = HashTable.create 100 in
   (* [List.map] rather than a reference, so that [lk_units] comes out in
      --custard_link order without a reversal to get wrong. *)
   let units = fns |> List.map (fun fn ->
@@ -284,10 +288,20 @@ let load_links (fns:list string) : ML links =
             text "Link order cannot select a foreign binding; rebuild with compatible bindings."
           ]
       | None -> HashTable.add foreign b.uf_key (u, b));
+    i.ui_header.uh_c_names |> List.iter (fun (n, c) ->
+      match HashTable.try_find c_names c with
+      | Some (u', n') when u' <> u ->
+        bad fn [
+          text (BU.fmt3 "Static headers from %s and %s both define the C name `%s'." u' u c);
+          text (BU.fmt2 "The definitions are %s and %s." n' n);
+          text "Rebuild one unit with the other linked, or rename one of the definitions."
+        ]
+      | _ -> HashTable.add c_names c (u, n));
     { ur_name   = u;
       ur_header = i.ui_header.uh_header;
       ur_init   = i.ui_header.uh_init;
-      ur_no_prefix = i.ui_header.uh_no_prefix }) in
+      ur_no_prefix = i.ui_header.uh_no_prefix;
+      ur_c_names = i.ui_header.uh_c_names }) in
   if O.custard_dump_cui () && fns <> [] then
     BU.print1 "Custard: linked %s specializations.\n" (show (List.length (HashTable.keys tbl)));
   { lk_tbl = tbl; lk_foreign = foreign; lk_units = units }
@@ -319,3 +333,6 @@ let link_inits (l:links) : ML (list string) =
 
 let link_no_prefix (l:links) : ML (list string) =
   l.lk_units |> List.collect (fun u -> u.ur_no_prefix)
+
+let link_c_names (l:links) : ML (list (string & list (string & string))) =
+  l.lk_units |> List.map (fun u -> (u.ur_name, u.ur_c_names))

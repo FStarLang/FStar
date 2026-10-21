@@ -7180,6 +7180,8 @@ let link_homes (st:state) : ML (list string) = Unit.link_homes st.links
 let link_headers (st:state) : ML (list string) = Unit.link_headers st.links
 
 let link_no_prefix (st:state) : ML (list string) = Unit.link_no_prefix st.links
+let link_c_names (st:state) : ML (list (string & list (string & string))) =
+  Unit.link_c_names st.links
 
 let link_inits (st:state) : ML (list string) = Unit.link_inits st.links
 

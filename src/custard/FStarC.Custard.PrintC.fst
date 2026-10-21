@@ -4501,7 +4501,7 @@ let trim_nl (s:string) : ML string =
    an implementation detail of the call the rule emitted, not an export.  A
    rule that wants it [static] passes [Private] and gets it. *)
 let no_unit : unit_info =
-  { cu_name = None; cu_headers = []; cu_inits = []; cu_no_prefix = [] }
+  { cu_name = None; cu_headers = []; cu_inits = []; cu_no_prefix = []; cu_c_names = [] }
 
 (* Section 42.3.  One fixed name per unit is a duplicate symbol the moment two
    units are linked, so [--custard_unit] namespaces it.  With no unit name the
@@ -4746,16 +4746,22 @@ let foreign_targets (cu:unit_info) (p:program) : ML (list (string & string)) =
    one of their names, and a clash between two of them is still error 374 in
    {!check_emitted_names}.  Runs after {!build_renames} and before the names
    are seeded into {!taken_names}. *)
-let rename_clashes (init_name:string) (p:program) : ML unit =
+let header_names (cu:unit_info) : ML (list (string & string)) =
+  cu.cu_c_names |> List.collect (fun (u, ns) ->
+    ns |> List.map (fun (n, c) -> ("definition " ^ n ^ " in static-header unit " ^ u, c)))
+
+let rename_clashes (init_name:string) (reserved:list (string & string)) (p:program) : ML unit =
   let movable (d:decl) : ML bool =
     local d && None? (extern_target d) &&
     (match d with
      | DLet l -> not (is_public l) && not (is_macro l)
      | _ -> false) in
   let wanted : HashTable.t string bool = HashTable.create 50 in
+  reserved |> List.iter (fun (_, nm) -> HashTable.add wanted nm true);
   p |> List.iter (fun d -> HashTable.add wanted (emitted_name d) true);
   HashTable.add wanted init_name true;
   let claimed : HashTable.t string bool = HashTable.create 50 in
+  reserved |> List.iter (fun (_, nm) -> HashTable.add claimed nm true);
   HashTable.add claimed init_name true;
   p |> List.iter (fun d ->
     if not (movable d) then HashTable.add claimed (emitted_name d) true);
@@ -4864,6 +4870,31 @@ let build_macros (p:program) : ML unit =
     | _ -> ());
   macros := final
 
+let prepare_names (cu:unit_info) (p:program) : ML unit =
+  build_renames true cu.cu_no_prefix p;
+  let imported : HashTable.t string string = HashTable.create 50 in
+  cu.cu_c_names |> List.iter (fun (u, ns) ->
+    ns |> List.iter (fun (n, c) -> HashTable.add imported (u ^ "\u0000" ^ n) c));
+  p |> List.iter (fun d ->
+    match imported_unit d with
+    | Some u ->
+      let n = string_of_name (name_of_decl d) in
+      (match HashTable.try_find imported (u ^ "\u0000" ^ n) with
+       | Some c -> HashTable.add !renames n c
+       | None -> ())
+    | None -> ());
+  rename_clashes (init_name cu) (header_names cu) p;
+  build_macros p
+
+let static_header_names (cu:unit_info) (p:program) : ML (list (string & string)) =
+  reset_program_state ();
+  prepare_names cu p;
+  p |> List.collect (fun d ->
+    match d with
+    | DLet l when local d && not (has_flag l.dl_flags Inline) ->
+      [(string_of_name l.dl_name, emitted_name d)]
+    | _ -> [])
+
 (* Section 70.2.  A reference binding fixes the case the attribute is about --
    a local bound from an lvalue -- and there is one place left where a copy of
    a handle can still lose a write: a parameter of a function Custard compiles
@@ -4964,7 +4995,7 @@ let check_interface_names (p:program) : ML unit =
    archive member is never pulled in, and the program silently runs the wrong
    body.  That is the whole point of the attribute inverted -- naming a symbol
    the program does not own -- so it is caught here instead. *)
-let check_emitted_names (init_name:string) (p:program) : ML unit =
+let check_emitted_names (init_name:string) (reserved:list (string & string)) (p:program) : ML unit =
   let seen : HashTable.t string (string & bool) = HashTable.create 50 in
   let claim (nm:string) (who:string) (ext:bool) : ML unit =
     match HashTable.try_find seen nm with
@@ -4981,6 +5012,7 @@ let check_emitted_names (init_name:string) (p:program) : ML unit =
            [ text "A name given by [@@custard_extern] is taken verbatim and names a symbol outside this program, so a definition that lands on it would take that symbol over -- with no diagnostic from the C compiler and no link error, because the definition simply wins." ]
          else []))
     | _ -> HashTable.add seen nm (who, ext) in
+  reserved |> List.iter (fun (who, nm) -> claim nm who false);
   (* Only when there is one: the initializer is emitted only for a unit that
      has a global to set up, and a name nothing prints cannot collide. *)
   if Cons? (global_inits_of p) then
@@ -5922,8 +5954,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
      resolves through [c_name], which reads {!renames}.  Filling it first and
      renaming afterwards left the table holding the name the option had just
      replaced.  Nothing in here reads a table, so the move costs nothing. *)
-  build_renames true cu.cu_no_prefix p;
-  rename_clashes init_name p;
+  prepare_names cu p;
   (* Section 116.  After the renames and before anything is printed, because
      the first generated name may be allocated as early as the first body.
      [reset_program_state] emptied the table; this seeds it, under the
@@ -5931,6 +5962,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
      is nothing to spell out here.  The initializer is the one name no
      declaration stands behind (section 117.3). *)
   p |> List.iter (fun d -> HashTable.add !taken_names (emitted_name d) true);
+  header_names cu |> List.iter (fun (_, nm) -> HashTable.add !taken_names nm true);
   HashTable.add !taken_names init_name true;
   let tt = HashTable.create 50 in
   let ct = HashTable.create 50 in
@@ -6059,9 +6091,8 @@ let print_program (base:string) (cu:unit_info) (p:program)
      Cherry.nonplain_types p |> List.iter (fun k -> HashTable.add nt k true);
      boxed_tbl := bt; nonplain_tbl := nt
    end);
-  build_macros p;
   check_interface_names p;
-  check_emitted_names init_name p;
+  check_emitted_names init_name (header_names cu) p;
   check_reference_copies p;
   arities := at;
   if Options.custard_cherry () then build_tail_groups p;
