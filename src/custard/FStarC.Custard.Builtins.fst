@@ -1498,7 +1498,6 @@ let cherry_realized_modules : list (list string) = [
   ["FStarC"; "Pprint"];
   ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
-  ["FStarC"; "Tactics"; "Native"];
   ["FStarC"; "Time"];
   ["FStarC"; "Timing"];
   ["FStarC"; "Util"];
