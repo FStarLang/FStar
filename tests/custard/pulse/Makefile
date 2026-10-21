@@ -565,6 +565,12 @@ CNOGREP_CDangle += "if (a) if ("
 C_TESTS += ExtPtr
 CGREP_ExtPtr = "(uint8_t *)extptr_base"
 
+# Casted reference and array results must be grouped before subscripting.
+C_TESTS += CastSubscript
+CGREP_CastSubscript = "(uint32_t *)cast_subscript_ref" "(uint32_t *)cast_subscript_array"
+CGREP_CastSubscript += "))[0] = 11;" "))[1] = 29;"
+$(OUTPUT_DIR)/CastSubscript.dcexe $(OUTPUT_DIR)/CastSubscript.dcxx: CastSubscript_stubs.h
+
 # Section 61.2.  Two negation sites, broken for two different reasons.
 # EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
 C_TESTS += ExtFlag

@@ -2382,9 +2382,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
        String.concat ", " (w' :: ("sizeof(" ^ cell_struct d0 old ^ ")") :: vals) ^ ")"
      | _ -> failwith "Cherry: reuse of an unknown constructor")
   | EOp ({ po_op = BufRead }, [b; i]) ->
-    (match b.e with
-     | EVar y when is_cell y -> lookup_var y
-     | _ -> c_expr out ind b ^ "[" ^ c_rvalue out ind i.ty i ^ "]")
+    c_subscript out ind b i
   | EOp ({ po_op = BufSub }, [b; i]) ->
     "(" ^ c_expr out ind b ^ " + " ^ c_rvalue out ind i.ty i ^ ")"
   | EOp ({ po_op = BufNull }, []) -> "(" ^ ty e.ty ^ ")NULL"
@@ -2633,6 +2631,15 @@ and c_rvalue (out:ref string) (ind:string) (target:cty) (e:expr) : ML string =
      | Some s -> s
      | None -> c_expr out ind e)
   | _ -> c_expr out ind e
+
+and c_subscript (out:ref string) (ind:string) (b:expr) (i:expr) : ML string =
+  match b.e with
+  | EVar y when is_cell y -> lookup_var y
+  | _ ->
+    let base = c_expr out ind b in
+    (* A subscript binds tighter than a cast or a unary operator. *)
+    let base = match b.e with EVar _ -> base | _ -> group base in
+    base ^ "[" ^ c_rvalue out ind i.ty i ^ "]"
 
 (* Cherry: a call of a Pulse container helper ([PBuf]).  The first operand
    is the container, except in an allocation. *)
@@ -3024,10 +3031,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
 
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
     let out = mk_ref "" in
-    let lhs =
-      match b.e with
-      | EVar y when is_cell y -> lookup_var y
-      | _ -> c_expr out ind b ^ "[" ^ c_rvalue out ind i.ty i ^ "]" in
+    let lhs = c_subscript out ind b i in
     (* Section 59.  An assignment to a cell of the element type. *)
     let v = c_rvalue out ind v.ty v in
     !out ^ ind ^ lhs ^ " = " ^ v ^ ";\n" ^ unit_result ind d
