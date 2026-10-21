@@ -2209,7 +2209,7 @@ let maybe_coerce_lc env (e:term) (lc:comp) (exp_t:term) : ML (term & comp & guar
         | Tm_uinst (hd, _), [(_, aq_t); (e, aq_e)]
           when U.is_fvar hide_or_reveal hd &&
                Some? aq_t && (Some?.v aq_t).aqual_implicit &&
-               (aq_e = None || not (Some?.v aq_e).aqual_implicit) ->
+               (None? aq_e || not (Some?.v aq_e).aqual_implicit) ->
           Some e
         | _ -> None
       in
