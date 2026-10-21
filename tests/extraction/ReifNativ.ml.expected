@@ -3,16 +3,6 @@
 
 type 'a reifNativ_repr = (Prims.int -> 'a)
 
-let reifNativ_return (x : 'a) (tmp : Prims.int) : 'a =
-  x
-
-let reifNativ_bind (x : (Prims.int -> 'a)) (f : ('a -> (Prims.int -> 'b))) (tmp : Prims.int) : 'b =
-  (let v = (x Prims.int_zero) in
-  (f v Prims.int_zero))
-
-let reifNativ_lift (f : (unit -> 'a)) (tmp : Prims.int) : 'a =
-  (f ())
-
 let reifNativ_test (tmp : unit) : bool =
   true
 
@@ -24,4 +14,14 @@ let reifNativ_test2 (tmp : unit) : bool =
 let reifNativ_top : Prims.int =
   (let tmp = (reifNativ_test2 ()) in
   (if tmp then Prims.int_one else Prims.int_zero))
+
+let reifNativ_return (x : 'a) (tmp : Prims.int) : 'a =
+  x
+
+let reifNativ_bind (x : (Prims.int -> 'a)) (f : ('a -> (Prims.int -> 'b))) (tmp : Prims.int) : 'b =
+  (let v = (x Prims.int_zero) in
+  (f v Prims.int_zero))
+
+let reifNativ_lift (f : (unit -> 'a)) (tmp : Prims.int) : 'a =
+  (f ())
 
