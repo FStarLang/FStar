@@ -2,8 +2,8 @@ module CherryLiftMatch
 module U32 = FStar.UInt32
 
 (* A local function whose type is a match, as in bug-reports/closed/Bug1714:
-   [t true] reduces to [arrow int p], so the local is lambda-lifted with one
-   [int] parameter returning [p]. *)
+   [t true] is [arrow int p], which the local's type does not show, so it is
+   not lambda-lifted, which would take the result type from the type. *)
 let arrow (a b:Type) = a -> b
 
 type p = | Print : string -> p

@@ -2307,10 +2307,10 @@ Only on Cherry: OCaml's closures are cheap and its tail calls guaranteed, and
 the C backends rely on a local function staying a value that later passes can
 inline (`pulse/test/InlineArrayLen` sizes an array by one).  And only when the
 local's type shows an arrow for each binder of its definiens, since the lifted
-declaration's signature is read off the type.  Unfolding the type to find them
-reduces matches as well as abbreviations: in `tests/bug-reports/closed/Bug1714`,
-`f : t true = fun src -> ...` with `t true` a match that reduces to
-`arrow int p`.
+declaration's signature is read off the type.  In
+`tests/bug-reports/closed/Bug1714`, `f : t true = fun src -> ...` with `t` a
+recursive type function, which unfolding abbreviations does not see through,
+stays a closure; lifted, it had result type `int -> p`.
 
 ### 5.11 Polymorphic local functions are inlined
 

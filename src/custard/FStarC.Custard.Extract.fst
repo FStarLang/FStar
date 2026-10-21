@@ -3940,14 +3940,13 @@ and unfold_typ_abbrev (st:state) (ty:typ) : ML (option typ) =
        let us = if List.length us = List.length univs then us
                 else List.map (fun _ -> U_zero) univs in
        let _, def = TcEnv.inst_tscheme_with (univs, def) us in
-       Some (N.normalize [TcEnv.Beta; TcEnv.Iota] (tcenv st) (S.mk_Tm_app def args ty.pos))
+       Some (N.normalize [TcEnv.Beta] (tcenv st) (S.mk_Tm_app def args ty.pos))
      | None -> None)
   | _ -> None
 
 (* The arrows of [ty], the type of a local definition whose definiens has [nx]
    binders.  An abbreviation, [interp : interp_t] or [t0 -> t1 -> result a],
-   may hide arrows that the definiens binds; so may a type computed by a
-   match, [f : t true] with [t true = int -> p] (tests/bug-reports Bug1714). *)
+   may hide arrows that the definiens binds. *)
 and local_formals (st:state) (ty:typ) (nx:int) : ML (binders & comp) =
   let rec formals (fuel:int) (ty:typ) : ML (binders & comp) =
     let bs, c = U.arrow_formals_comp ty in

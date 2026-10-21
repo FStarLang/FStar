@@ -3459,12 +3459,13 @@ CHERRY_CFLAGS_CherryDyn = -O2
 # Locals of different initializers share one C function.
 CHERRY_TESTS += CherryInitScope
 
-# A local function whose type reduces to an arrow only through a match is
-# lambda-lifted with the arrow's parameter and result (Extract.local_formals).
+# A local function whose type is an arrow only through a recursive type
+# function is not lambda-lifted, which would read its result type off its
+# type: it stays a closure returning [p].
 CHERRY_TESTS += CherryLiftMatch
 $(CHERRY_DIR)/CherryLiftMatch.chgrep: $(CHERRY_DIR)/CherryLiftMatch.chc
-	$(Q)grep -qF 'static cherry_string CherryLiftMatch_main__f(cherry_int src)' $< \
-	  || { echo "ERROR: CherryLiftMatch's lifted local has the wrong signature"; exit 1; }
+	$(Q)grep -qE '^static cherry_string CherryLiftMatch_main__[a-z]+\(cherry_int src\)' $< \
+	  || { echo "ERROR: CherryLiftMatch's local has the wrong signature"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryLiftMatch.chgrep
 
