@@ -454,6 +454,12 @@ EGREP_FSPun = "which .NET cannot express"
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
 C_TESTS += KrmlBasic CExtern IndexedSquash CDeadLet CFunPtr
+C_TESTS += CExternGrouping
+FLAGS_CExternGrouping = --custard_entry_module CExternGrouping
+CGREP_CExternGrouping = "(CG_NUMBER) * 3" "(CG_FALSE) && (CG_FLAG)" \
+                        "(uint8_t)(CG_WIDE)" "(CG_BOX).value" \
+                        "= (CG_BOX_FN());" "= (CG_VARIANT);" \
+                        "cg_identity((CG_COMMA))" "(void)(cg_tick());"
 C_TESTS += Rotate
 KRML_TESTS += Rotate
 # The mask is the whole point of the rule, so the C is pinned as well as run:
@@ -641,8 +647,8 @@ FLAGS_CExtern   = --custard_extern_type 'CExtern.tag=cextern_tag_t@CExtern_stubs
 CGREP_CExtern   = "include \"CExtern_stubs.h" \
                   "cextern_handle_t b_h;" \
                   "void custard_init_globals(void)" \
-                  "CExtern_gt = cextern_mk_tag();" \
-                  "if (c.tag == CEXTERN_BUMP) cextern_bump(" \
+                  "CExtern_gt = (cextern_mk_tag());" \
+                  "if (c.tag == CEXTERN_BUMP)" "cextern_bump(" \
                   "uint32_t CExtern_base = 7;" \
                   "uint8_t CExtern_low = (uint8_t)300;" \
                   "cextern_make(((uint32_t)41U))"
@@ -1420,6 +1426,8 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 # command-line argument: editing the hand-written half must rebuild.  It is
 # harmless for the rules below, whose prerequisites contain no [$].
 .SECONDEXPANSION:
+
+$(OUTPUT_DIR)/CExternGrouping.dcexe $(OUTPUT_DIR)/CExternGrouping.dcxx: CExternGrouping_stubs.h
 
 # [CEXTRA_Name] names hand-written C to link beside the generated unit.
 # Every other test that reaches C from outside F* does it with a header of
@@ -4144,4 +4152,3 @@ GREP_Realized     = "FStar_Pervasives.Mkdtuple3" \
 # No record recovery, no projection, and the erased GTot call is gone.
 # No record recovery, no projection, no erased GTot call -- and no [Obj.t].
 NOGREP_Realized   = "u__1" "gmagic" "Obj.t"
-

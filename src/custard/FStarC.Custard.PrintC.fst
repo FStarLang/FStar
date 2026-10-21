@@ -2167,7 +2167,8 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
             branches." ]
   | EQual (n, _) ->
     (match HashTable.try_find !externs (string_of_name n) with
-     | Some t -> t
+     (* A foreign name may expand to an expression rather than one C token. *)
+     | Some t -> group t
      | None -> c_name n)
   | EApp (hd, args) when is_closure_app hd args ->
     let k = List.length args in
@@ -2260,7 +2261,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
         (match HashTable.try_find !externs (string_of_name n) with
          | Some t -> t
          | None -> c_name n)
-      | _ -> c_expr out ind hd in
+      | _ -> group (c_expr out ind hd) in
     let call = head ^ "(" ^
                String.concat ", "
                  (args |> List.map (fun (a:expr) ->
@@ -2285,8 +2286,11 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     let call =
       match hd.e with
       | EQual (n, _) when Some? (HashTable.try_find !externs (string_of_name n))
-                          && (TBuf? e.ty || TRef? e.ty) ->
-        "(" ^ ty e.ty ^ ")" ^ call
+                          && None? (HashTable.try_find !void_fns (string_of_name n)) ->
+        (* Group the expansion, not the head: function-like macros must still
+           be invoked, and a pointer cast must cover their whole result. *)
+        let call = group call in
+        if TBuf? e.ty || TRef? e.ty then "(" ^ ty e.ty ^ ")" ^ call else call
       | _ -> call in
     (* A [void] call is a statement, not an operand.  It runs here and stands
        for the unit value, which is what the caller was going to do with it. *)
@@ -2692,13 +2696,13 @@ and finish (ind:string) (d:dest) (s:string) : ML string =
      function the value can simply be dropped and control fall off the end --
      which is where it was going anyway. *)
   | D_Return when !void_ret ->
-    if s = unit_value then "" else ind ^ "(void)(" ^ s ^ ");\n"
+    if s = unit_value then "" else ind ^ "(void)" ^ group s ^ ";\n"
   | D_Return -> ind ^ "return " ^ s ^ ";\n"
   | D_Assign x -> ind ^ x ^ " = " ^ s ^ ";\n"
   (* The value is computed for its effect; the cast silences the warning that
      it is unused.  A unit constant computes nothing, so it needs neither. *)
   | D_Ignore ->
-    if s = unit_value then "" else ind ^ "(void)(" ^ s ^ ");\n"
+    if s = unit_value then "" else ind ^ "(void)" ^ group s ^ ";\n"
 
 and emit (ind:string) (d:dest) (e:expr) : ML string =
   let ind' = ind ^ "  " in

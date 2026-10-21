@@ -366,7 +366,7 @@ C_TESTS += ExtBuf
 # what enforces it: extbuf_base is a macro yielding void *, which C converts
 # implicitly and C++ refuses.  Removing the cast from PrintC leaves this
 # file compiling clean under gcc and failing under g++.
-CGREP_ExtBuf = "(uint8_t *)extbuf_base"
+CGREP_ExtBuf = "(uint8_t *)(extbuf_base"
 # The returned pointer must be *bound* to a typed variable.  Discarding it
 # would emit a (void) cast, which C++ accepts with or without the fix.
 CGREP_ExtBuf += "uint8_t *"
@@ -563,11 +563,12 @@ CNOGREP_CDangle += "if (a) if ("
 # call site has to carry the cast.  The load-bearing check is the CXX step
 # of the [%.dc] rule below, not the grep; the grep just pins the shape.
 C_TESTS += ExtPtr
-CGREP_ExtPtr = "(uint8_t *)extptr_base"
+CGREP_ExtPtr = "(uint8_t *)(extptr_base"
 
 # Casted reference and array results must be grouped before subscripting.
 C_TESTS += CastSubscript
-CGREP_CastSubscript = "(uint32_t *)cast_subscript_ref" "(uint32_t *)cast_subscript_array"
+CGREP_CastSubscript = "(uint32_t *)(cast_subscript_ref" "(uint32_t *)(cast_subscript_array"
+CGREP_CastSubscript += "(uint32_t *)(cast_subscript_macro_ref"
 CGREP_CastSubscript += "))[0] = 11;" "))[1] = 29;"
 $(OUTPUT_DIR)/CastSubscript.dcexe $(OUTPUT_DIR)/CastSubscript.dcxx: CastSubscript_stubs.h
 
