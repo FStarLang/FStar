@@ -12,24 +12,29 @@ open FStar.Attributes
 /// number of per-declaration flags that fixes it -- the set is the transitive
 /// callees.
 ///
-/// The three classes a callee can fall into are all here.
+/// Section 51.5.  The callees are copied, once per distinct prologue, and
+/// the copies get the prologue; the originals are left alone for everyone
+/// else (FStarLang/FStar#4711).
 ///
-///  * [only] is reached from the kernel and from nowhere else, so it gets the
-///    exclusive string.
-///  * [both] is reached from the kernel *and* from [host_side], so it gets
-///    the shared one.  This is the case a plugin cannot express at all by
-///    setting flags: it is a property of the whole program, not of the
-///    declaration.
-///  * [host_only] is reached from neither, and must be left alone.
+///  * [only] and [deep] (through [only]) are reached from the two seeds and
+///    from nothing else, so each gets one copy per seed's prologue and the
+///    original goes.
+///  * [both] is reached from the seeds *and* from [host_side], so it gets the
+///    same two copies and the undecorated original stays for [host_side].
+///  * [down] is recursive, and its copy must call itself rather than the
+///    original, which would otherwise survive.
+///  * [host_only] is reached from neither seed, and must be left alone.
+///  * [opt_out] carries a [CPrologue] of its own, so it is another entry and
+///    is neither copied nor decorated by the closure.
 ///
-/// Section 53.2 adds the fourth node type.  The closure covers *functions*;
-/// a global reached from device code was left undecorated, and nvcc is not
-/// forgiving about one -- "a host variable cannot be directly read in a
-/// device function".  [gk] is device-exclusive and gets the exclusive
-/// string.  There is deliberately no shared global here: that case is error
-/// 383 and lives in [DevGShare], because the shared string cannot be applied
-/// to a variable at all.  [host_g] is the negative: a global the kernel never
-/// reaches must be left alone, exactly as [host_only] is.
+/// The two seeds have *different* prologues and share callees, which is the
+/// case #4711 was about: each shared callee used to get the first seed's
+/// string whatever reached it.
+///
+/// Globals are left alone (section 51.5): a copy of a variable would be a
+/// second variable, and a prologue on one is wrong for a CPU target.  [gk]
+/// is read by both seeds -- with different prologues -- and [host_g] by
+/// host code only; neither gets a prologue, and neither is refused.
 ///
 /// The strings here are not CUDA's, deliberately: Custard does not read them,
 /// and a test that used [__device__] would be checking a spelling rather than
@@ -39,18 +44,32 @@ let gk : U32.t = 7ul
 
 let host_g : U32.t = 5ul
 
-let only (n : U32.t) : U32.t = U32.add_mod n 1ul
+let deep (n : U32.t) : U32.t = U32.add_mod n 1ul
+
+let only (n : U32.t) : U32.t = deep n
 
 let both (n : U32.t) : U32.t = U32.mul_mod n 2ul
 
 let host_only (n : U32.t) : U32.t = U32.sub_mod n 1ul
 
-[@@CPrologue "/*ENTRY*/"; custard_c_closure_prologue "/*EXCL*/" "/*SHARED*/"]
-let kernel (n : U32.t) : U32.t = U32.add_mod gk (U32.add_mod (only n) (both n))
+let rec down (n : U32.t) : Tot U32.t (decreases U32.v n) =
+  if U32.eq n 0ul then 0ul else down (U32.sub n 1ul)
+
+[@@CPrologue "/*OPT_OUT*/"]
+let opt_out (n : U32.t) : U32.t = U32.add_mod n 3ul
+
+[@@CPrologue "/*ENTRY*/"; custard_c_closure_prologue "/*EXCL*/"]
+let kernel (n : U32.t) : U32.t =
+  U32.add_mod gk (U32.add_mod (only n) (U32.add_mod (both n) (opt_out n)))
+
+[@@custard_c_closure_prologue "/*target(avx2)*/"]
+let kernel2 (n : U32.t) : U32.t =
+  U32.add_mod gk (U32.add_mod (both n) (U32.add_mod (only n) (down n)))
 
 let host_side (n : U32.t) : U32.t = U32.add_mod host_g (U32.add_mod (both n) (host_only n))
 
 let main () : ML I32.t =
   let a = kernel 3ul in
   let b = host_side 4ul in
-  if U32.eq a 17ul && U32.eq b 16ul then 0l else 1l
+  let c = kernel2 4ul in
+  if U32.eq a 23ul && U32.eq b 16ul && U32.eq c 20ul then 0l else 1l

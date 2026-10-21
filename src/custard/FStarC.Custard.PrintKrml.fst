@@ -1117,6 +1117,14 @@ let krml_flags (fs : list flag) : ML (list K.flag) =
     (* karamel's own [IfDef], for the same reason: the flag only means
        anything to the pass that turns a test of the constant into a [#if]. *)
     | CIfDef -> [K.IfDef]
+    (* Section 51.6.  karamel's [IfDef] spells the condition as the flag's
+       name, and this flag's condition is arbitrary text it has no field
+       for; an [extern] it would read instead is a link error. *)
+    | IfDef _ ->
+      E.raise_error0 E.Error_CustardBadIfDef [
+        text "Custard: [@@custard_c_ifdef] is supported by the direct-to-C \
+              backend only.";
+        text "With karamel, use [@@CIfDef], whose condition is the name." ]
     | _ -> [])
 
 let with_typars (env:kenv) (ps : list string) : ML kenv =
@@ -1489,8 +1497,7 @@ let print_split (fs : list (string & program)) : ML (list Krml.file) =
     [(m, ds)])
 
 let write_files (fn:string) (fs : list Krml.file) : ML unit =
-  let bin : Krml.binary_format = (Krml.current_version, fs) in
-  BU.save_value_to_file fn bin
+  FStarC.Custard.KrmlJson.write_file fn (Krml.current_version, fs)
 
 let write_program (fn:string) (p:program) : ML unit =
   write_files fn (print_program p)

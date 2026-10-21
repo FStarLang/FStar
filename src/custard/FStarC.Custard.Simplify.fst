@@ -1827,109 +1827,178 @@ let dce (prog:program) : ML program =
    The set that needs marking is the transitive callees of a term the plugin
    has just built, which the plugin cannot enumerate and Custard can.
 
-   Three sets, over the *live* program:
+   Section 51.5.  The callees are *cloned* rather than marked in place.
 
-   - [seeds], the declarations carrying [ClosurePrologue];
-   - [device], what those reach, seeds excluded;
-   - [host], what the ordinary roots reach *without descending through* a
-     declaration that is itself an entry -- one carrying a [Prologue] or a
-     [ClosurePrologue].  A kernel's body is device code however the kernel is
-     named, so walking into it would put the whole device closure in [host]
-     and every helper would come out shared.
+   Marking in place was designed for CUDA, where adding [__device__] to a
+   function only narrows who may call it, and a second string,
+   [__device__ __host__], covered a helper the rest of the program called
+   too.  The same attribute then came to carry CPU [target(...)] attributes
+   on code calling intrinsics, and there marking in place is wrong twice
+   over.  A [target("avx2")] on a helper some caller reaches *without* a
+   runtime CPU check lets the compiler use AVX2 in code that runs on any
+   machine; and with several targets in one program a shared helper can carry
+   only one of them, so it was given the first seed's string whatever
+   reached it (FStarLang/FStar#4711) -- an illegal instruction waiting to
+   happen, and an inlining barrier between functions whose targets disagree.
 
-   A declaration in [device] and not in [host] gets the exclusive string; one
-   in both gets the shared string.  In CUDA that is [__device__] and
-   [__device__ __host__], and a helper called from a kernel and from host
-   code is miscompiled by the first -- which is the case a plugin has no way
-   to express today, and the reason the flag carries two strings rather than
-   one.
+   So, as CUDA's own [__device__] model has it: every function in the
+   closure of a seed is copied once per distinct prologue, the copy carries
+   the prologue and a name disambiguated by it, and the seed's body and the
+   copies' bodies call the copies.  The originals are untouched, keep serving
+   every other caller, and are left for [dce] when nothing else calls them.
 
-   A declaration that already carries a [Prologue] is left alone: it is
-   another entry with its own regime, and overwriting a plugin's explicit
-   choice with an inferred one is the wrong way round.  Only [DLet]s are
-   marked; a type or an external has no body to compile for a device. *)
+   What is copied: a function -- a [DLet] with binders -- that this program
+   defines.  Not a type or an external, which have no body to compile for a
+   target; not an imported, realized or modelled declaration, whose code
+   comes from somewhere else; not a
+   macro, which has no storage and no attribute; and not a declaration that
+   carries a [Prologue] or a [ClosurePrologue] of its own, which is another
+   entry with its own regime -- the walk stops there, and overwriting a
+   plugin's explicit choice with an inferred one is the wrong way round.
+
+   A global -- a [DLet] with no binders -- is neither copied nor marked.
+   A copy of a variable is a second variable, which changes the meaning of a
+   program that writes to it; and a prologue on one is wrong for CPU targets,
+   where gcc ignores [target(...)] on a variable with a warning.  Section
+   53.2 used to mark one, and refused one host code also read (error 383),
+   which a constant table shared by a scalar and a vector path always is.
+   CUDA does need [__device__] or [__constant__] on a table device code
+   reads, but leaving it off fails loudly -- nvcc reports the identifier as
+   undefined in device code -- and the fix is an explicit [CPrologue] on the
+   variable.
+
+   Section 51.6.  A seed may also carry a [ClosureGuard g], a preprocessor
+   condition: a [target("avx2")] function does not even compile on an ARM
+   compiler.  The seed and its copies are given [Guard g], which the C
+   printer turns into [#if g ... #endif], and copies are made per (prologue,
+   guard) pair, since a copy one guard leaves out cannot serve a seed under
+   another.  The originals stay unguarded: they are portable code. *)
+
+(* The part of a prologue that says what it is for, as an identifier:
+   [__attribute__((target("avx2")))] becomes [avx2] and [__device__] becomes
+   [device].  Only for a reader; uniqueness is {!propagate_prologues}'s job. *)
+let prologue_suffix (s:string) : ML string =
+  let ok (c:FStarC.BaseTypes.char) : ML bool =
+    let i = FStarC.Util.int_of_char c in
+    (i >= 97 && i <= 122) || (i >= 65 && i <= 90) || (i >= 48 && i <= 57) in
+  let words, cur =
+    String.list_of_string s |> List.fold_left (fun (ws, cur) c ->
+      if ok c then (ws, c :: cur)
+      else if Nil? cur then (ws, cur)
+      else (String.string_of_list (List.rev cur) :: ws, [])) ([], []) in
+  let words = if Nil? cur then words
+              else String.string_of_list (List.rev cur) :: words in
+  let words = List.rev words |> List.filter (fun w ->
+                not (List.mem w ["attribute"; "target"])) in
+  match words with
+  | [] -> "clone"
+  | _ -> String.concat "_" words
+
 let propagate_prologues (prog:program) : ML program =
-  let own = ctor_owners prog in
-  let resolve (n:string) : ML string =
-    match HashTable.try_find own n with Some o -> o | None -> n in
   let defs : HashTable.t string decl = HashTable.create 50 in
   prog |> List.iter (fun d -> HashTable.add defs (string_of_name (name_of_decl d)) d);
   let is_entry (d:decl) : ML bool =
-    decl_flags d |> List.existsb (fun f -> Prologue? f || ClosurePrologue? f) in
-  let reach (stop_at_entry:bool) (seeds:list string) : ML (HashTable.t string bool) =
-    let seen : HashTable.t string bool = HashTable.create 50 in
-    let rec visit (n:string) : ML unit =
-      let n = resolve n in
-      if None? (HashTable.try_find seen n) then begin
-        HashTable.add seen n true;
+    decl_flags d |> List.existsb (fun f ->
+      Prologue? f || ClosurePrologue? f || ClosureGuard? f) in
+  let first (l:dlet) (pick:flag -> option string) : ML (option string) =
+    match l.dl_flags |> List.collect (fun f ->
+            match pick f with Some s -> [s] | None -> []) with
+    | s :: _ -> Some s
+    | [] -> None in
+  let seed_guard (d:decl) : ML (option string) =
+    match d with
+    | DLet l -> first l (fun f -> match f with ClosureGuard s -> Some s | _ -> None)
+    | _ -> None in
+  (* A copy is made per (prologue, guard): the key, and what it decorates. *)
+  let seed_prologue (d:decl) : ML (option (string & list flag)) =
+    match d with
+    | DLet l ->
+      (match first l (fun f -> match f with ClosurePrologue s -> Some s | _ -> None) with
+       | Some p ->
+         (match seed_guard d with
+          | Some g -> Some (p ^ "\u0001" ^ g, [Prologue p; Guard g])
+          | None -> Some (p, [Prologue p]))
+       | None -> None)
+    | _ -> None in
+  (* The seed's own guard, before anything else, so that the early exit
+     below cannot skip it. *)
+  let prog = prog |> List.map (fun d ->
+    match d, seed_guard d with
+    | DLet l, Some g -> DLet { l with dl_flags = Guard g :: l.dl_flags }
+    | d, _ -> d) in
+  let copyable (d:decl) : ML bool =
+    match d with
+    | DLet l -> Cons? l.dl_binders && not (is_entry d) && None? (imported_unit d) &&
+                not (l.dl_flags |> List.existsb (fun f ->
+                       CMacro? f || Realized? f || Modelled? f))
+    | _ -> false in
+  if not (prog |> List.existsb (fun d -> Some? (seed_prologue d))) then prog else begin
+    (* One suffix per distinct prologue, and one name per copy, neither of
+       which may collide with anything else in the program. *)
+    let suffixes : HashTable.t string string = HashTable.create 8 in
+    let suffix_taken : HashTable.t string bool = HashTable.create 8 in
+    let suffix_of (p:string) (deco:list flag) : ML string =
+      match HashTable.try_find suffixes p with
+      | Some s -> s
+      | None ->
+        let base = match deco with
+                   | Prologue q :: _ -> prologue_suffix q
+                   | _ -> prologue_suffix p in
+        let rec pick (i:int) : ML string =
+          let s = if i = 0 then base else base ^ show i in
+          if Some? (HashTable.try_find suffix_taken s) then pick (i + 1) else s in
+        let s = pick 0 in
+        HashTable.add suffix_taken s true;
+        HashTable.add suffixes p s;
+        s in
+    let names_taken : HashTable.t string bool = HashTable.create 50 in
+    prog |> List.iter (fun d ->
+      HashTable.add names_taken (string_of_name (name_of_decl d)) true);
+    let fresh_name (n:name) (sfx:string) : ML name =
+      let base = match n.spec with Some s -> s ^ "_" ^ sfx | None -> sfx in
+      let rec pick (i:int) : ML name =
+        let m = { n with spec = Some (if i = 0 then base else base ^ show i) } in
+        if Some? (HashTable.try_find names_taken (string_of_name m))
+        then pick (i + 1)
+        else (HashTable.add names_taken (string_of_name m) true; m) in
+      pick 0 in
+    (* (prologue, original) -> the copy's name; and the copies, by original. *)
+    let copies : HashTable.t string name = HashTable.create 50 in
+    let made : HashTable.t string (list decl) = HashTable.create 50 in
+    let rec copy_of (p:string) (deco:list flag) (n:string) : ML (option name) =
+      let key = p ^ "\u0000" ^ n in
+      match HashTable.try_find copies key with
+      | Some m -> Some m
+      | None ->
         match HashTable.try_find defs n with
-        | Some d ->
-          if stop_at_entry && is_entry d then ()
-          else decl_deps d |> List.iter visit
-        | None -> ()
-      end in
-    seeds |> List.iter visit;
-    seen in
-  let seeds = prog |> List.collect (fun d ->
-    if decl_flags d |> List.existsb ClosurePrologue?
-    then [string_of_name (name_of_decl d)] else []) in
-  if Nil? seeds then prog else begin
-    (* The seeds' own callees, which is the closure minus the seeds. *)
-    let device = reach false (seeds |> List.collect (fun n ->
-      match HashTable.try_find defs n with
-      | Some d -> decl_deps d
-      | None -> [])) in
-    let host = reach true (prog |> List.collect (fun d ->
-      if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)
-         && not (is_entry d)
-      then [string_of_name (name_of_decl d)] else [])) in
-    (* One seed's strings are as good as another's: two seeds disagreeing
-       about what their shared callees should say is a plugin bug, and
-       picking the first is at least deterministic in program order. *)
-    let strings =
-      match prog |> List.collect (fun d ->
-              decl_flags d |> List.collect (fun f ->
-                match f with ClosurePrologue (a, b) -> [(a, b)] | _ -> [])) with
-      | (a, b) :: _ -> (a, b)
-      | [] -> ("", "") in
-    let excl, shared = strings in
-    (* Section 53.2.  A global is a [DLet] with no binders, and the two-string
-       API does not extend to one.  The exclusive string is fine -- CUDA's
-       [__device__] applies to a variable -- but the shared string is not: a
-       qualifier meaning "reachable from both" is a statement about a
-       *function*, and CUDA's answer for a shared variable is [__managed__],
-       which is unified memory and a runtime cost rather than a decoration.
-       [__host__] on a variable is dropped silently, so emitting the shared
-       string there would give a device-only variable that compiles with a
-       warning and reads the wrong memory at runtime -- the worst of the
-       outcomes available.  Custard reads neither string and so cannot tell;
-       it refuses rather than guessing. *)
-    let shared_global (l:dlet) : ML unit =
-      E.raise_error0 E.Error_CustardSharedGlobal [
-        text ("Custard: the global " ^ string_of_name l.dl_name ^
-              " is reached from device code and from host code.");
-        text "It is a variable and not a function, so the second string of custard_c_closure_prologue cannot be applied to it: a qualifier meaning \"reachable from both\" describes a function, and a target that has an answer for variables (CUDA's __managed__) spells it as a storage class with a runtime cost, which is not a decoration Custard may add on its own.";
-        text "Applying it anyway would be worse than refusing: on CUDA the host qualifier on a variable is dropped silently, so the result compiles with a warning and is wrong at runtime.";
-        text "Either make it a function of unit, so that the closure can decorate it like any other callee, or keep it out of the device closure." ] in
-    prog |> List.map (fun d ->
-      match d with
-      | DLet l ->
-        let n = string_of_name l.dl_name in
-        if List.mem n seeds then d
-        else if Some? (HashTable.try_find device n)
-                && not (l.dl_flags |> List.existsb Prologue?)
-        then begin
-          let s =
-            if Some? (HashTable.try_find host n)
-            then begin
-              if Nil? l.dl_binders then shared_global l;
-              shared
-            end
-            else excl in
-          DLet { l with dl_flags = Prologue s :: l.dl_flags }
-        end
-        else d
-      | d -> d)
+        | Some (DLet l) when copyable (DLet l) ->
+          let m = fresh_name l.dl_name (suffix_of p deco) in
+          (* Before the body, so that recursion finds it. *)
+          HashTable.add copies key m;
+          let body = redirect p deco l.dl_body in
+          let flags = l.dl_flags |> List.filter (fun f ->
+                        not (Root? f || Entrypoint? f || Private? f || Rec? f)) in
+          let c = DLet { l with dl_name = m; dl_body = body;
+                                dl_flags = deco @ (Private :: flags) } in
+          let prev = match HashTable.try_find made n with Some cs -> cs | None -> [] in
+          HashTable.add made n (prev @ [c]);
+          Some m
+        | _ -> None
+    and redirect (p:string) (deco:list flag) (x:expr) : ML expr =
+      match x.e with
+      | EQual (n, tys) ->
+        (match copy_of p deco (string_of_name n) with
+         | Some m -> { x with e = EQual (m, tys) }
+         | None -> x)
+      | _ -> map_children (redirect p deco) x in
+    let prog = prog |> List.map (fun d ->
+      match d, seed_prologue d with
+      | DLet l, Some (p, deco) -> DLet { l with dl_body = redirect p deco l.dl_body }
+      | d, _ -> d) in
+    prog |> List.collect (fun d ->
+      d :: (match HashTable.try_find made (string_of_name (name_of_decl d)) with
+            | Some cs -> cs
+            | None -> []))
   end
 
 (* Section 36.1.  A reference to a declaration that is not in the program.
@@ -3540,11 +3609,21 @@ let coerce_prog (prog:program) : ML program =
          rejects the second. *)
       let hint (b:binder) : ML (option cty) =
         if TAny? b.b_ty then Some TAny else trust b.b_ty in
+      (* An expected [TAny] parameter does not override a binder whose own
+         type is trusted: the lambda is then coerced as a whole (the [check]
+         around this node sees its type disagree), and the backends that
+         print the binder -- Cherry -- print that type, so the body has to
+         agree with it.  Taking [TAny] here instead coerced each use of the
+         binder out of [any] that was never put into it. *)
+      let param (b:binder) (p:cty) : ML (option cty) =
+        match p, trust b.b_ty with
+        | TAny, Some t -> Some t
+        | _ -> Some p in
       let ps, res =
         (match exp with
          | Some t ->
            (match peel_arrows (List.length bs) t with
-            | Some (ps, res) -> (ps |> List.map Some, Some res)
+            | Some (ps, res) -> (List.map2 param bs ps, Some res)
             | None -> (bs |> List.map hint, None))
          | None -> (bs |> List.map hint, None)) in
       let env = List.fold_left (fun env ((b:binder), t) -> extend env b.b_name t)
@@ -4047,8 +4126,10 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   let prog = pass "check_resolved" check_resolved prog in
   (* After [dce], because a prologue on a declaration nothing reaches is
      noise, and because the call graph this reads is the one [dce] just
-     computed.  Before nothing in particular: it changes flags and no term. *)
+     computed.  It copies the functions a seed reaches (section 51.5), so
+     [dce] runs again to drop an original that only the seeds called. *)
   let prog = pass "propagate_prologues" propagate_prologues prog in
+  let prog = pass "dce_prologues" dce prog in
   let prog = pass "scc" scc prog in
   let prog = pass "records" (records vd) prog in
   (* After [records], which is what gives a collapsed record's body a ground

@@ -407,7 +407,11 @@ let eta_ctors (t:tbl) (prog:program) : ML program =
       (match HashTable.try_find fields (key cn) with
        | Some fs when List.length es < List.length fs ->
          let bs = drop (List.length es) fs
-                  |> List.map (fun (f, c) -> { b_name = fresh (); b_ty = c }) in
+                  (* A source field may carry section 5.7's [TInline]
+                     marker, which belongs to the field and not to a binder
+                     of the same type: [Simplify.inline_fields] only removes
+                     it from constructor fields. *)
+                  |> List.map (fun (f, c) -> { b_name = fresh (); b_ty = uninline c }) in
          let args = bs |> List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) in
          (* [x.ty] is the datatype: `Extract` types an [ECtor] by its
             constructor's result, however many arguments it was given. *)

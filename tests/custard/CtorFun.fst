@@ -42,7 +42,19 @@ let unboth (b : both) : U32.t = match b with | Both x y -> U32.add_mod x y
 
 let app3 (f : U32.t -> both) (x : U32.t) : U32.t = unboth (f x)
 
+/// A constructor whose one field is a pair, used as a function.  Section 5.7
+/// stores the pair's components in the constructor, but the function's
+/// parameter is still the pair: the eta-expansion must not take the field's
+/// inlining marker into the binder's type.  [FStarC.Syntax.VisitM] writes
+/// [Decreases_wf <$> ...] with [| Decreases_wf of term & term].
+type pairc = | P2 of U32.t & U32.t | P0
+
+let unpair (p : pairc) : U32.t = match p with | P2 (x, y) -> U32.add_mod x y | P0 -> 0ul
+
+let app4 (f : U32.t & U32.t -> pairc) (x : U32.t) : U32.t = unpair (f (x, x))
+
 let main () : ML unit =
+  print_string (U32.to_string (app4 P2 6ul));
   print_string (U32.to_string (app W 1ul));
   print_string (U32.to_string (app2 A 2ul));
   print_string (U32.to_string (app2 B 3ul));

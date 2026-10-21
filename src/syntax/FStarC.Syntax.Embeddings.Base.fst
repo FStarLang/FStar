@@ -295,3 +295,9 @@ let extracted_embed (e: embedding 'a) (x: 'a) : ML term =
 
 let extracted_unembed (e: embedding 'a) (t: term) : ML (option 'a) =
   try_unembed t id_norm_cb
+
+(* Irreducible, so that Custard sees the name and never this body. *)
+irreducible
+let plugin_embedding (#a:Type0) : embedding a =
+  let msg = "plugin_embedding is only available in code extracted by Custard" in
+  mk_emb (fun _ _ _ _ -> failwith msg) (fun _ _ -> failwith msg) (S.lid_as_fv PC.term_lid None)

@@ -444,6 +444,14 @@ let rec mentions_any (t:cty) : ML bool =
   | TBuf c | TRef (_, c) | TInline c -> mentions_any c
   | _ -> false
 
+let rec mentions_tvar (t:cty) : ML bool =
+  match t with
+  | TVar _ -> true
+  | TArrow (a, _, b) -> mentions_tvar a || mentions_tvar b
+  | TApp (_, ts) | TTuple ts -> List.existsb mentions_tvar ts
+  | TBuf c | TRef (_, c) | TInline c -> mentions_tvar c
+  | _ -> false
+
 let co_counter : ref int = mk_ref 0
 let co_fresh () : ML string =
   co_counter := !co_counter + 1;
@@ -458,16 +466,19 @@ let uniform_arrow (t:cty) : ML cty =
   let ps, _ = arrow_parts t in
   List.fold_right (fun ((_:cty), (ef:eff)) r -> TArrow (TAny, ef, r)) ps TAny
 
+(* A definition used as a value is a closure of its signature's type,
+   whatever it was typed at. *)
+let at_signature (a:expr) : ML expr =
+  match a.e with
+  | EQual (n, _) ->
+    (match HashTable.try_find !fn_tbl (string_of_name n) with
+     | Some (bs, r) ->
+       { a with ty = List.fold_right (fun (b:binder) r -> TArrow (b.b_ty, E_Impure, r)) bs r }
+     | None -> a)
+  | _ -> a
+
 let rec coerce_any (a:expr) (t:cty) : ML expr =
-  (* A definition used as a value is a closure of its signature's type,
-     whatever it was typed at. *)
-  let a = match a.e with
-          | EQual (n, _) ->
-            (match HashTable.try_find !fn_tbl (string_of_name n) with
-             | Some (bs, r) ->
-               { a with ty = List.fold_right (fun (b:binder) r -> TArrow (b.b_ty, E_Impure, r)) bs r }
-             | None -> a)
-          | _ -> a in
+  let a = at_signature a in
   if a.ty = t then a else
   match a.e with
   | EOp ({ po_op = Dyn "mk" }, [x]) when x.ty = t -> x
@@ -504,6 +515,25 @@ let rec coerce_any (a:expr) (t:cty) : ML expr =
       let lam = mk (EFun (bs, call)) t E_Pure in
       mk (ELet (f, a.ty, a, lam)) t a.eff
     end else
+    if List.length ss > List.length ts then begin
+      (* The source takes more arguments than the target: what the target
+         returns after its own is a closure over the rest -- a curried
+         constructor such as [Mktuple2] mapped into a monad, say, whose result
+         type is an arrow that the dictionary passed at run time sees as any. *)
+      let f = co_fresh () in
+      let fv = mk (EVar f) a.ty E_Pure in
+      let n = List.length ts in
+      let ss1, ss2 = List.splitAt n ss in
+      let bs1 = ts |> List.map (fun (ty, _) -> { b_name = co_fresh (); b_ty = ty }) in
+      let bs2 = ss2 |> List.map (fun (ty, _) -> { b_name = co_fresh (); b_ty = ty }) in
+      let args1 = List.map2 (fun (b:binder) ((s:cty), _) ->
+                    coerce_any (mk (EVar b.b_name) b.b_ty E_Pure) s) bs1 ss1 in
+      let args2 = bs2 |> List.map (fun (b:binder) -> mk (EVar b.b_name) b.b_ty E_Pure) in
+      let rest_ty = List.fold_right (fun ((x:cty), (ef:eff)) r -> TArrow (x, ef, r)) ss2 sr in
+      let inner = mk (EFun (bs2, mk (EApp (fv, args1 @ args2)) sr E_Impure)) rest_ty E_Pure in
+      let lam = mk (EFun (bs1, coerce_any inner tr)) t E_Pure in
+      mk (ELet (f, a.ty, a, lam)) t a.eff
+    end else
     if List.length ss <> List.length ts then mk (ECoerce (a, t)) t a.eff else
     let f = co_fresh () in
     let fv = mk (EVar f) a.ty E_Pure in
@@ -517,18 +547,36 @@ let rec coerce_any (a:expr) (t:cty) : ML expr =
 
 (* A pattern variable's uses are typed at what the branch reads it as; one
    bound from a field of type any is retyped any, so that its coercion out of
-   any is not mistaken for a no-op. *)
+   any is not mistaken for a no-op.  Conversely a use typed any of one bound
+   from a concrete field is that variable put into any: a pattern variable of
+   a generated projector has no sort, so extraction types it any, while the
+   pattern binds it at the field's type. *)
 let rec retype_vars (env:list (string & cty)) (e:expr) : ML expr =
   match e.e with
   | EVar x ->
     (match List.tryFind (fun (y, _) -> y = x) env with
-     | Some (_, t) -> { e with ty = t }
-     | None -> e)
+     | Some (_, t) when mentions_any t -> { e with ty = t }
+     | Some (_, t) when e.ty = TAny -> mk (ECoerce ({ e with ty = t }, TAny)) TAny e.eff
+     | _ -> e)
+  (* A binder shadows. *)
+  | ELet (x, t, a, b) ->
+    let env' = List.filter (fun (y, _) -> y <> x) env in
+    { e with e = ELet (x, t, retype_vars env a, retype_vars env' b) }
+  | EFun (bs, b) ->
+    let env' = List.filter (fun (y, _) -> not (List.existsb (fun (c:binder) -> c.b_name = y) bs)) env in
+    { e with e = EFun (bs, retype_vars env' b) }
+  | EMatch (sc, brs) ->
+    let sub (br:branch) : ML branch =
+      let p, g, b = br in
+      let vs = pat_vars p in
+      let env' = List.filter (fun (y, _) -> not (List.mem y vs)) env in
+      (p, (match g with Some g -> Some (retype_vars env' g) | None -> None), retype_vars env' b) in
+    { e with e = EMatch (retype_vars env sc, List.map sub brs) }
   | _ -> map_children (retype_vars env) e
 
 let retype_branch (st:cty) (br:branch) : ML branch =
   let p, g, b = br in
-  let env = pat_binds_opt p st |> List.filter (fun (_, t) -> mentions_any t) in
+  let env = pat_binds_opt p st in
   if Nil? env then br
   else (p, (match g with Some g -> Some (retype_vars env g) | None -> None), retype_vars env b)
 
@@ -548,6 +596,17 @@ let rec lower_any (e:expr) : ML expr =
       match t with
       | TArrow (_, _, b) -> peel (n - 1) b
       | _ -> None in
+    (* The head may have been coerced below, to the arrow extraction typed
+       this call at: its parameters are then what the arguments must be.  A
+       definition's are its signature's, whatever its name was typed at (a
+       partial application's name may be typed at what remains). *)
+    let ps, _ = arrow_parts (at_signature hd).ty in
+    let args =
+      if List.length ps < List.length args then args
+      else List.map2 (fun (a:expr) ((p:cty), _) ->
+             if a.ty <> p && (mentions_any a.ty || mentions_any p) && not (mentions_tvar p)
+             then coerce_any a p else a) args (fst (List.splitAt (List.length args) ps)) in
+    let e = { e with e = EApp (hd, args) } in
     (match peel (List.length args) hd.ty with
      | None -> e
      | Some r ->
@@ -557,6 +616,17 @@ let rec lower_any (e:expr) : ML expr =
           consumer to coerce if it wants any. *)
        else if e.ty = TAny then { e with ty = r }
        else e)
+  (* A match typed any whose every arm puts a value of one concrete type into
+     any puts the match into any instead, once: what takes it out again at
+     that type then cancels against it. *)
+  | EMatch (sc, brs) when e.ty = TAny && Some? (common_mk brs) ->
+    let t = Some?.v (common_mk brs) in
+    let unmk (b:expr) : expr =
+      match b.e with
+      | EOp ({ po_op = Dyn "mk" }, [x]) -> x
+      | _ -> { b with ty = t } in
+    let m = { e with e = EMatch (sc, List.map (fun (p, g, b) -> (p, g, unmk b)) brs); ty = t } in
+    mk (EOp ({ po_op = Dyn "mk"; po_ty = None }, [m])) TAny e.eff
   (* Arms typed otherwise than the conditional they belong to, through any,
      are coerced to it: when the conditional is typed through any, or when
      an arm is -- a nested conditional typed any under one that is not. *)
@@ -566,6 +636,22 @@ let rec lower_any (e:expr) : ML expr =
     when mentions_any e.ty || List.existsb (fun (_, _, (b:expr)) -> mentions_any b.ty) brs ->
     { e with e = EMatch (sc, List.map (fun (p, g, b) -> (p, g, arm_to e.ty b)) brs) }
   | _ -> e
+
+(* The concrete type every arm puts into any, when they all do (an arm that
+   does not return does not count). *)
+and common_mk (brs:list branch) : option cty =
+  let rec go (acc:option cty) (brs:list branch) : option cty =
+    match brs with
+    | [] -> acc
+    | (_, _, b) :: rest ->
+      match b.e with
+      | EAbort _ | EUnreachable _ | ERaise _ -> go acc rest
+      | EOp ({ po_op = Dyn "mk" }, [x]) when not (mentions_any x.ty) ->
+        (match acc with
+         | None -> go (Some x.ty) rest
+         | Some t -> if t = x.ty then go acc rest else None)
+      | _ -> None in
+  go None brs
 
 and arm_to (t:cty) (a:expr) : ML expr =
   match a.e with
@@ -901,6 +987,10 @@ let runtime_externals : list (string & string & list bool) = [
   "FStar.String.make",       "cherry_str_make", [];
   "FStar.Char.u32_of_char",  "cherry_u32_of_char", [];
   "FStar.Char.char_of_u32",  "cherry_char_of_u32", [];
+  "FStar.Char.int_of_char",  "cherry_int_of_char", [];
+  "FStar.Char.char_of_int",  "cherry_char_of_int", [];
+  "FStar.Char.lowercase",    "cherry_char_lowercase", [];
+  "FStar.Char.uppercase",    "cherry_char_uppercase", [];
   (* The byte-level primitives of FStar.Pprint-c.cherry.fst. *)
   "FStar.Pprint.byte_size",  "cherry_str_byte_size", [];
   "FStar.Pprint.byte_at",    "cherry_str_byte_at", [];
@@ -962,9 +1052,9 @@ let infer_raises (p:program) : ML unit =
     let changed = mk_ref false in
     p |> List.iter (fun d ->
       match d with
-      (* A total definition raises nothing, whatever it calls. *)
-      | DLet l when not (is_pure l.dl_eff) &&
-                    not (HashTable.mem tbl (string_of_name l.dl_name)) && raises l.dl_body ->
+      (* Whatever its effect: a definition that raises (a [failwith], see
+         [failure_of], in [Ex]) or calls one that does. *)
+      | DLet l when not (HashTable.mem tbl (string_of_name l.dl_name)) && raises l.dl_body ->
         HashTable.add tbl (string_of_name l.dl_name) true; changed := true
       | _ -> ());
     if !changed then settle () in
@@ -1420,16 +1510,40 @@ let failure_of (f:name) : option name =
   then Some { f with id = "Failure"; spec = None }
   else None
 
+let is_effect_fn (f:name) (id:string) : bool =
+  f.id = id && (f.ns = ["FStar"; "All"] || f.ns = ["FStarC"; "Effect"])
+
+(* The runtime's [exit], which does not return: [exit n] at any type is a call
+   of it followed by a [raise] that only gives the expression its type. *)
+let cherry_exit_name : name = { ns = ["FStarC"; "Effect"]; id = "cherry_exit"; spec = None }
+
 let raise_failures (p:program) : ML program =
   let used : ref (list (name & cty)) = mk_ref [] in
+  let exit_ty : ref (option cty) = mk_ref None in
+  let use (x:name) (t:cty) : ML unit =
+    if not (List.existsb (fun (y, _) -> string_of_name y = string_of_name x) !used) then
+      used := (x, t) :: !used in
   let rec go (e:expr) : ML expr =
     match e.e with
     | EApp ({ e = EQual (f, _) }, [s]) when Some? (failure_of f) ->
       let x = Some?.v (failure_of f) in
       let s = go s in
-      if not (List.existsb (fun (y, _) -> string_of_name y = string_of_name x) !used) then
-        used := (x, s.ty) :: !used;
+      use x s.ty;
       mk (ERaise (mk (ECtor (x, [s])) TExn E_Pure)) e.ty E_Impure
+    (* [raise_notrace] differs from [raise] only in OCaml's backtraces. *)
+    | EApp ({ e = EQual (f, _) }, [x]) when is_effect_fn f "raise_notrace" ->
+      mk (ERaise (go x)) e.ty E_Impure
+    | EApp ({ e = EQual (f, _) }, [n]) when is_effect_fn f "exit" ->
+      let n = go n in
+      exit_ty := Some n.ty;
+      let failure = { ns = ["FStarC"; "Effect"]; id = "Failure"; spec = None } in
+      let str = TApp ({ ns = ["Prims"]; id = "string"; spec = None }, []) in
+      use failure str;
+      let fty = TArrow (n.ty, E_Impure, TUnit) in
+      let call = mk (EApp (mk (EQual (cherry_exit_name, [])) fty E_Pure, [n])) TUnit E_Impure in
+      let msg = mk (EConst (CString "exit")) str E_Pure in
+      mk (ESeq (call, mk (ERaise (mk (ECtor (failure, [msg])) TExn E_Pure)) e.ty E_Impure))
+        e.ty E_Impure
     | _ -> map_children go e in
   let p = p |> List.map (fun d ->
     match d with
@@ -1440,7 +1554,13 @@ let raise_failures (p:program) : ML program =
       | DExn y -> string_of_name y.de_name = string_of_name x
       | _ -> false) in
   let missing = !used |> List.filter (fun (x, _) -> not (declared x)) in
-  (missing |> List.map (fun (x, t) -> DExn { de_name = x; de_args = [t]; de_flags = [] })) @ p
+  let exit_decl =
+    match !exit_ty with
+    | None -> []
+    | Some t ->
+      [DExternal { dx_name = cherry_exit_name; dx_typars = []; dx_ty = TArrow (t, E_Impure, TUnit);
+                   dx_target = Some "cherry_exit"; dx_header = Some "cherry.h"; dx_flags = [] }] in
+  (missing |> List.map (fun (x, t) -> DExn { de_name = x; de_args = [t]; de_flags = [] })) @ exit_decl @ p
 
 (* A recursive record is boxed, and is boxed the way a recursive variant is:
    as a variant of one constructor, [Mk_] and the type's name. *)

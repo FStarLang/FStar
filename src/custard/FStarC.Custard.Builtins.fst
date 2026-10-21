@@ -1493,18 +1493,14 @@ let cherry_realized_modules : list (list string) = [
   ["FStarC"; "Int"; "Extra"];
   ["FStarC"; "Json"];
   ["FStarC"; "List"];
-  ["FStarC"; "PIMap"];
-  ["FStarC"; "PSMap"];
   ["FStarC"; "Platform"; "Base"];
   ["FStarC"; "Plugins"; "Base"];
   ["FStarC"; "Pprint"];
-  ["FStarC"; "Range"];
   ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
   ["FStarC"; "Tactics"; "Native"];
   ["FStarC"; "Time"];
   ["FStarC"; "Timing"];
-  ["FStarC"; "Unionfind"];
   ["FStarC"; "Util"];
 ]
 
@@ -1548,17 +1544,32 @@ let is_type_only_realized_module (ns : list string) : ML bool =
 (* Realized modules whose OCaml realization is only an optimization of the F*
    source, which is complete.  Cherry has no OCaml to link, so it compiles them
    from source rather than leaving the C runtime to reimplement them.
-   [FStar.Pprint]'s source for Cherry is its own implementation,
-   [FStar.Pprint-c.cherry.fst], which target selection picks. *)
+   The sources for Cherry of [FStar.Pprint] and [FStar.String] are their own
+   implementations, [FStar.Pprint-c.cherry.fst] and
+   [FStar.String-c.cherry.fst], which target selection picks. *)
 let cherry_source_modules : list (list string) = [
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
   ["FStar"; "Pprint"];
+  ["FStar"; "String"];
+  ["FStarC"; "Array"];
   ["FStarC"; "BaseTypes"];
+  ["FStarC"; "Filepath"];
+  ["FStarC"; "Format"];
+  ["FStarC"; "Getopt"];
   ["FStarC"; "Hash"];
+  ["FStarC"; "Json"];
+  ["FStarC"; "List"];
+  ["FStarC"; "Platform"; "Base"];
+  ["FStarC"; "Plugins"; "Base"];
   ["FStarC"; "Pprint"];
+  ["FStarC"; "SmallInt"];
+  ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
+  ["FStarC"; "Time"];
+  ["FStarC"; "Timing"];
+  ["FStarC"; "Util"];
 ]
 
 let is_cherry_source_module (ns : list string) : ML bool =
