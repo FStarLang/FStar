@@ -713,7 +713,7 @@ let catch_errors_and_ignore_rest (f:unit -> ML 'a) : ML (list issue & option 'a)
  *     since 3 appears 1 time in l1, but 2 times in l2. *)
 let find_multiset_discrepancy (l1 : list int) (l2 : list int) : ML (option (int & int & int)) =
     let sort = List.sortWith (fun x y -> x - y) in
-    let rec collect (l : list 'a) : list ('a & int) =
+    let rec collect (l : list int) : list (int & int) =
         match l with
         | [] -> []
         | hd :: tl ->

@@ -165,6 +165,9 @@ let building : ref (list Ident.lident) = mk_ref []
 let find_generated (l:Ident.lident) : ML (option gen_emb) =
   List.find (fun (g:gen_emb) -> Ident.lid_equals g.ge_lid l) !generated
 
+(* The key a generated embedding is emitted and exported under. *)
+let emb_key (l:Ident.lident) : ML string = "regemb-emb:" ^ Ident.string_of_lid l
+
 let emb_base (s:string) : ML Ident.lident =
   Ident.lid_of_str ("FStarC.Syntax.Embeddings.Base." ^ s)
 
@@ -436,6 +439,15 @@ and embedding_head (st:Extract.state) (k:kind) (t:term) : ML (option Ident.liden
    that a type that mentions itself -- which is most of them -- terminates. *)
 and ensure_generated (st:Extract.state) (l:Ident.lident) : ML unit =
   if Some? (find_generated l) then () else
+  (* Section 13.7.  A linked unit that generated this embedding exports it,
+     and this unit uses that one rather than generating a second. *)
+  match Extract.import_key st (emb_key l) with
+  | Some nm ->
+    generated := { ge_lid  = l;
+                   ge_ph   = S.new_bv None (embedding_typ (S.fvar l None));
+                   ge_emb  = nm;
+                   ge_knot = nm } :: !generated
+  | None ->
   match TcEnv.lookup_sigelt (Extract.tcenv st) l with
   | Some ({sigel = Sig_inductive_typ {params; mutuals}}) ->
     if Cons? params then
@@ -475,7 +487,7 @@ and generate_one (st:Extract.state) (g:gen_emb) : ML unit =
             dl_binders = [{ b_name = "_thunk"; b_ty = TUnit }];
             dl_ret = ety; dl_eff = E_Impure; dl_body = body;
             dl_flags = [Comment ("Embedding for " ^ Ident.string_of_lid g.ge_lid)] });
-  Extract.emit st ("regemb-emb:" ^ Ident.string_of_lid g.ge_lid)
+  Extract.emit_exported st (emb_key g.ge_lid)
     (DLet { dl_name = g.ge_emb; dl_typars = []; dl_binders = []; dl_ret = ety;
             dl_eff = E_Impure;
             dl_body = CSyn.mk (EApp (CSyn.mk (EQual (g.ge_knot, []))
@@ -817,3 +829,13 @@ let handle_module (st:Extract.state) (roots:list Ident.lident) (md:modul) : ML u
     | Some _ when se.sigquals |> List.existsb (function Projector _ | Discriminator _ -> true
                                                       | _ -> false) -> ()
     | Some arity_opt -> handle_sigelt st arity_opt se)
+
+(* Section 13.7: [plugin_embedding #t]. *)
+let plugin_embedding_expr (st:Extract.state) (t:term) : ML expr =
+  try compile st (embedding_for st SyntaxTerm [] t) with
+  | NoEmbedding msg ->
+    let open FStarC.Errors.Msg in
+    E.raise_error0 E.Error_CustardUnrepresentableValue [
+      text ("Custard: plugin_embedding has no embedding to stand for at type " ^
+            show t ^ ".");
+      text msg ]

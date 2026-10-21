@@ -428,6 +428,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      read-only mode.  The ML extraction does the same thing. *)
   let st = Extract.init deps env in
   Extract.install_chain_reporter st;
+  Extract.set_embedding_hook RegEmb.plugin_embedding_expr;
   let prog = phase "extract" (fun () ->
                UF.with_uf_enabled (fun () ->
                  (* A module named by --custard_entry_module is requested by
