@@ -37,6 +37,15 @@ val rest_pat_for_lid (env : env) (l : lid) : ML (list pattern)
 (* Only called from tactics *)
 val desugar_term:            env -> term -> ML S.term
 
+(* Desugar a term, as a top-level definition body if the bool is true.
+   Also returns the antiquotations found in it. *)
+val desugar_term_maybe_top: bool -> env -> term -> ML (S.term & list (S.bv & S.term))
+
+(* Desugar a computation type, e.g. [Tot t], [ML t] or an effect abbreviation.
+   The bool allows promoting a plain type [t] to [Tot t].  Also returns the
+   precondition of the computation type. *)
+val desugar_comp: Range.t -> bool -> env -> term -> ML (S.comp & S.term)
+
 val desugar_machine_integer: env -> repr:int -> base:FStarC.Const.int_base
                            -> (FStarC.Const.signedness & FStarC.Const.width)
                            -> Range.t -> ML Syntax.term
