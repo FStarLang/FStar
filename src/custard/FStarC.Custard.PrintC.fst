@@ -5402,37 +5402,55 @@ let cherry_closure_helpers () : ML (list string & list string) =
   let on (op:string) (sel:string) (xs:list (string & cty)) : ML string =
     String.concat "" (nonunit xs |> List.collect (fun (x, t) ->
       if is_nonplain_ty t then ["  " ^ rc_call op t (sel ^ x) ^ ";\n"] else [])) in
+  (* Closure cells with the same fields (names, C types and reference
+     counting) share their struct, [drop] and [mark] functions and constructor: the cell's entry
+     point and arity are what tells them apart, and the constructor takes
+     both. *)
+  let layouts : HashTable.t string string = HashTable.create 100 in
+  let layout (fields:list (string & cty)) : ML string =
+    let key = String.concat ";" (fields |> List.map (fun (x, t) -> decl_of t x)) ^
+              "|" ^ on "dec" "" fields ^ "|" ^ on "mark" "" fields in
+    match HashTable.try_find layouts key with
+    | Some s -> s
+    | None ->
+      let s = "cherry_envl_" ^ string_of_int (HashTable.size layouts) in
+      HashTable.add layouts key s;
+      protos := !protos @ ["struct " ^ s ^ " {\n  cherry_closure clo;\n" ^
+        String.concat "" (fields |> List.map (fun (x, t) -> "  " ^ decl_of t x ^ ";\n")) ^ "};\n"];
+      let counted = fields |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
+      let drop, mark =
+        if not counted then "NULL", "NULL" else begin
+          ["dec"; "mark"] |> List.iter (fun op ->
+            fn ("static inline void " ^ s ^ "_" ^ op ^ "(cherry_obj *o" ^
+                (if op = "mark" then ", int m" else "") ^ ")")
+               ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)o;\n" ^ on op "env->" fields));
+          s ^ "_dec", s ^ "_mark"
+        end in
+      fn ("static inline cherry_fn " ^ s ^ "_new(cherry_code cherry_entry, uint32_t cherry_arity" ^
+          String.concat "" (fields |> List.map (fun (x, t) -> ", " ^ decl_of t x)) ^ ")")
+         ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)cherry_alloc(sizeof(struct " ^ s ^
+          "), CHERRY_TAG_CLOSURE);\n" ^
+          "  env->clo.fn = cherry_entry;\n" ^
+          "  env->clo.drop = " ^ drop ^ ";\n" ^
+          "  env->clo.mark = " ^ mark ^ ";\n" ^
+          "  env->clo.arity = cherry_arity;\n" ^
+          String.concat "" (fields |> List.map (fun (x, _) -> "  env->" ^ x ^ " = " ^ x ^ ";\n")) ^
+          "  return (cherry_fn)env;\n");
+      s in
   (* A closure cell holding [fields], built by [ctor] taking them all owned,
      whose entry point [entry] is defined by [body]. *)
-  let closure (s:string) (fields:list (string & cty)) (arity:string)
+  let closure (fields:list (string & cty)) (arity:string)
               (entry:string) (ret:cty) (eparams:list (string & cty)) (body:string)
               (ctor:string) : ML unit =
     let fields = nonunit fields in
-    protos := !protos @ ["struct " ^ s ^ " {\n  cherry_closure clo;\n" ^
-      String.concat "" (fields |> List.map (fun (x, t) -> "  " ^ decl_of t x ^ ";\n")) ^ "};\n"];
+    let s = layout fields in
     fn ("static inline " ^ decl_of ret (entry ^ "(cherry_fn self" ^ params eparams ^ ")"))
        ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)self;\n  (void)env;\n" ^ body);
-    let counted = fields |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
-    let drop, mark =
-      if not counted then "NULL", "NULL" else begin
-        ["dec"; "mark"] |> List.iter (fun op ->
-          fn ("static inline void " ^ s ^ "_" ^ op ^ "(cherry_obj *o" ^
-              (if op = "mark" then ", int m" else "") ^ ")")
-             ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)o;\n" ^ on op "env->" fields));
-        s ^ "_dec", s ^ "_mark"
-      end in
-    fn ("static inline cherry_fn " ^ ctor ^ "(" ^
-        (match fields with
-         | [] -> "void"
-         | _ -> String.concat ", " (fields |> List.map (fun (x, t) -> decl_of t x))) ^ ")")
-       ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)cherry_alloc(sizeof(struct " ^ s ^
-        "), CHERRY_TAG_CLOSURE);\n" ^
-        "  env->clo.fn = (cherry_code)" ^ entry ^ ";\n" ^
-        "  env->clo.drop = " ^ drop ^ ";\n" ^
-        "  env->clo.mark = " ^ mark ^ ";\n" ^
-        "  env->clo.arity = " ^ arity ^ ";\n" ^
-        String.concat "" (fields |> List.map (fun (x, _) -> "  env->" ^ x ^ " = " ^ x ^ ";\n")) ^
-        "  return (cherry_fn)env;\n") in
+    protos := !protos @ [
+      (match fields with
+       | [] -> "#define " ^ ctor ^ "() " ^ s ^ "_new((cherry_code)" ^ entry ^ ", " ^ arity ^ ")\n"
+       | _ -> "#define " ^ ctor ^ "(...) " ^ s ^ "_new((cherry_code)" ^ entry ^ ", " ^ arity ^
+              ", __VA_ARGS__)\n")] in
   (* What marks a [return] of a call with arguments [ts] and result [ret] a
      guaranteed tail call, when it can be one (cherry.md, "Tail calls"). *)
   let mt (ts:list cty) (ret:cty) : ML string =
@@ -5481,8 +5499,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
         protos := !protos @ ["CHERRY_STATIC_CLOSURE(" ^ static_clo_name n ^ ", " ^ entry ^
                              ", " ^ arity ^ ");\n"]
       end else
-        closure ("cherry_env_" ^ c_name n ^ "_" ^ string_of_int k) fields
-                arity entry ret eparams
+        closure fields arity entry ret eparams
                 (on "inc" "env->" fields_owned ^ ret_of call ret void)
                 (pap_name n k)
     | ReqApply (t, k) ->
@@ -5548,8 +5565,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
                  "CHERRY_CLOSURE(env->f)->fn)(" ^
                  String.concat ", " ("env->f" :: List.map (fun x -> "env->" ^ x) (names fields) @
                                      names eparams) ^ ")" in
-      closure ("cherry_papc_env_" ^ arrow_id t ^ "_" ^ string_of_int k ^ "_" ^ string_of_int m)
-              (("f", t) :: fields) (string_of_int left) (papc_name t k m ^ "_entry") rm eparams
+      closure (("f", t) :: fields) (string_of_int left) (papc_name t k m ^ "_entry") rm eparams
               (on "inc" "env->" fields ^ "  " ^
                mt (t :: List.map snd fields @ List.map snd eparams) rm ^ "return " ^ call ^ ";\n")
               (papc_name t k m) in
