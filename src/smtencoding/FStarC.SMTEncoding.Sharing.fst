@@ -23,6 +23,24 @@ let rec hash_list (#a:Type) (f:a -> ML H.hash_code) (xs:list a)
   | [] -> tag 0
   | x::xs -> mix (tag 1) (mix (f x) (hash_list f xs))
 
+(* Intern a list left-to-right while constructing its canonical value and its
+   existing bottom-up list hash in the same traversal.  Reuse each original
+   cons cell when both its head and tail are physically unchanged. *)
+let rec intern_list (#a:Type)
+    (f:a -> ML (a & H.hash_code))
+    (xs:list a)
+  : ML (list a & H.hash_code) =
+  match xs with
+  | [] -> xs, tag 0
+  | x::tl ->
+      let y, hy = f x in
+      let ys, hys = intern_list f tl in
+      let zs =
+        if U.physical_equality x y && U.physical_equality tl ys
+        then xs
+        else y::ys in
+      zs, mix (tag 1) (mix hy hys)
+
 let hash_option (#a:Type) (f:a -> ML H.hash_code) (x:option a)
   : ML H.hash_code =
   match x with
@@ -177,9 +195,6 @@ noeq type hashed_term = {
   ht_term:term
 }
 
-let term_hash (x:hashed_term) = x.ht_hash
-let term_value (x:hashed_term) = x.ht_term
-
 let physical_term (x y:term) : bool = U.physical_equality x y
 
 let equal_term_node (x y:term) : ML bool =
@@ -252,46 +267,74 @@ let rec intern_term (table:term_table) (x:term) : ML hashed_term =
   | BoundV n -> canonical_term table x (mix (tag 3) (H.of_int n))
   | FreeV fv -> canonical_term table x (mix (tag 4) (hash_fv fv))
   | App op args range ->
-      let args = List.map (intern_term table) args in
-      let rebuilt = App op (List.map term_value args) range in
+      let canonical_args, args_hash =
+        intern_list
+          (fun arg ->
+            let arg = intern_term table arg in
+            arg.ht_term, arg.ht_hash)
+          args in
+      let rebuilt =
+        if U.physical_equality args canonical_args
+        then x
+        else App op canonical_args range in
       canonical_term table rebuilt
         (mix (tag 5)
           (mix (hash_op op)
-            (mix (hash_list term_hash args) (hash_range range))))
+            (mix args_hash (hash_range range))))
   | Quant q patterns weight sorts body range ->
-      let patterns =
-        List.map (fun p -> List.map (intern_term table) p) patterns in
-      let body = intern_term table body in
+      let canonical_patterns, patterns_hash =
+        intern_list
+          (fun pattern ->
+            intern_list
+              (fun term ->
+                let term = intern_term table term in
+                term.ht_term, term.ht_hash)
+              pattern)
+          patterns in
+      let canonical_body = intern_term table body in
       let rebuilt =
-        Quant q
-          (List.map (List.map term_value) patterns)
-          weight sorts body.ht_term range in
+        if U.physical_equality patterns canonical_patterns &&
+           U.physical_equality body canonical_body.ht_term
+        then x
+        else
+          Quant q canonical_patterns weight sorts canonical_body.ht_term range in
       canonical_term table rebuilt
         (mix (tag 6)
           (mix (hash_qop q)
-            (mix (hash_list (hash_list term_hash) patterns)
+            (mix patterns_hash
               (mix (hash_option H.of_int weight)
                 (mix (hash_list hash_sort sorts)
-                  (mix body.ht_hash (hash_range range)))))))
+                  (mix canonical_body.ht_hash (hash_range range)))))))
   | Let values body ->
-      let values = List.map (intern_term table) values in
-      let body = intern_term table body in
-      let rebuilt = Let (List.map term_value values) body.ht_term in
+      let canonical_values, values_hash =
+        intern_list
+          (fun value ->
+            let value = intern_term table value in
+            value.ht_term, value.ht_hash)
+          values in
+      let canonical_body = intern_term table body in
+      let rebuilt =
+        if U.physical_equality values canonical_values &&
+           U.physical_equality body canonical_body.ht_term
+        then x
+        else Let canonical_values canonical_body.ht_term in
       canonical_term table rebuilt
-        (mix (tag 7) (mix (hash_list term_hash values) body.ht_hash))
+        (mix (tag 7) (mix values_hash canonical_body.ht_hash))
   | Labeled body message range ->
-      let body = intern_term table body in
-      let rebuilt = Labeled body.ht_term message range in
+      let canonical_body = intern_term table body in
+      let rebuilt =
+        if U.physical_equality body canonical_body.ht_term
+        then x
+        else Labeled canonical_body.ht_term message range in
       canonical_term table rebuilt
-        (mix (tag 8) (mix body.ht_hash (mix (tag 0) (hash_range range))))
+        (mix (tag 8)
+          (mix canonical_body.ht_hash (mix (tag 0) (hash_range range))))
 
 noeq type hashed_decl = {
   hd_hash:H.hash_code;
   hd_decl:decl
 }
 
-let decl_hash (x:hashed_decl) = x.hd_hash
-let decl_value (x:hashed_decl) = x.hd_decl
 let physical_decl (x y:decl) : bool = U.physical_equality x y
 
 let equal_assumption (x y:assumption) : ML bool =
@@ -369,34 +412,51 @@ let rec intern_decl
             (mix (hash_list hash_sort args)
               (mix (hash_sort result) (hash_caption caption)))))
   | DefineFun name args result body caption ->
-      let body = intern_term terms body in
-      let rebuilt = DefineFun name args result body.ht_term caption in
+      let canonical_body = intern_term terms body in
+      let rebuilt =
+        if U.physical_equality body canonical_body.ht_term
+        then x
+        else DefineFun name args result canonical_body.ht_term caption in
       canonical_decl decls rebuilt
         (mix (tag 2)
           (mix (H.of_string name)
             (mix (hash_list hash_sort args)
               (mix (hash_sort result)
-                (mix body.ht_hash (hash_caption caption))))))
+                (mix canonical_body.ht_hash (hash_caption caption))))))
   | Assume a ->
-      let body = intern_term terms a.assumption_term in
+      let canonical_body = intern_term terms a.assumption_term in
       let rebuilt =
-        Assume { a with assumption_term = body.ht_term } in
+        if U.physical_equality a.assumption_term canonical_body.ht_term
+        then x
+        else Assume { a with assumption_term = canonical_body.ht_term } in
       canonical_decl decls rebuilt
         (mix (tag 3)
-          (mix body.ht_hash
+          (mix canonical_body.ht_hash
             (mix (hash_caption a.assumption_caption)
               (mix (H.of_string a.assumption_name)
                    (hash_list hash_fact_db_id a.assumption_fact_ids)))))
   | Caption s -> canonical_decl decls x (mix (tag 4) (H.of_string s))
   | Module name children ->
-      let children = List.map (intern_decl terms decls) children in
-      let rebuilt = Module name (List.map decl_value children) in
+      let canonical_children, children_hash =
+        intern_list
+          (fun child ->
+            let child = intern_decl terms decls child in
+            child.hd_decl, child.hd_hash)
+          children in
+      let rebuilt =
+        if U.physical_equality children canonical_children
+        then x
+        else Module name canonical_children in
       canonical_decl decls rebuilt
         (mix (tag 5)
-          (mix (H.of_string name) (hash_list decl_hash children)))
+          (mix (H.of_string name) children_hash))
   | Eval t ->
-      let t = intern_term terms t in
-      canonical_decl decls (Eval t.ht_term) (mix (tag 6) t.ht_hash)
+      let canonical_t = intern_term terms t in
+      let rebuilt =
+        if U.physical_equality t canonical_t.ht_term
+        then x
+        else Eval canonical_t.ht_term in
+      canonical_decl decls rebuilt (mix (tag 6) canonical_t.ht_hash)
   | Echo s -> canonical_decl decls x (mix (tag 7) (H.of_string s))
   | RetainAssumptions names ->
       canonical_decl decls x
@@ -441,12 +501,20 @@ let intern_elt
     (elts:elt_table)
     (x:decls_elt)
   : ML decls_elt =
-  let children = List.map (intern_decl terms decls) x.decls in
-  let rebuilt = { x with decls = List.map decl_value children } in
+  let canonical_children, children_hash =
+    intern_list
+      (fun child ->
+        let child = intern_decl terms decls child in
+        child.hd_decl, child.hd_hash)
+      x.decls in
+  let rebuilt =
+    if U.physical_equality x.decls canonical_children
+    then x
+    else { x with decls = canonical_children } in
   let h =
     mix (hash_option H.of_string x.sym_name)
       (mix (hash_option H.of_string x.key)
-        (mix (hash_list decl_hash children)
+        (mix children_hash
              (hash_list H.of_string x.a_names))) in
   let key = {
     ek_hash = h;
@@ -512,8 +580,6 @@ noeq type hashed_summary = {
   hs_summary:Pruning.decl_summary
 }
 
-let summary_hash (x:hashed_summary) = x.hs_hash
-let summary_value (x:hashed_summary) = x.hs_summary
 let physical_summary (x y:Pruning.decl_summary) : bool =
   U.physical_equality x y
 
@@ -568,8 +634,12 @@ let intern_summary
         x, mix (tag 3) (hash_list H.of_string names)
     | Pruning.Sum_ignored -> x, tag 4
     | Pruning.Sum_other d ->
-        let d = intern_decl terms decls d in
-        Pruning.Sum_other d.hd_decl, mix (tag 5) d.hd_hash in
+        let canonical_d = intern_decl terms decls d in
+        let rebuilt =
+          if U.physical_equality d canonical_d.hd_decl
+          then x
+          else Pruning.Sum_other canonical_d.hd_decl in
+        rebuilt, mix (tag 5) canonical_d.hd_hash in
   let key = {
     sk_hash = h;
     sk_summary = rebuilt
@@ -612,14 +682,20 @@ let intern_summary_elt
     (elts:summary_elt_table)
     (x:Pruning.elt_summary)
   : ML Pruning.elt_summary =
-  let children =
-    List.map (intern_summary terms decls summaries) x.Pruning.elts_sums in
+  let canonical_children, children_hash =
+    intern_list
+      (fun child ->
+        let child = intern_summary terms decls summaries child in
+        child.hs_summary, child.hs_hash)
+      x.Pruning.elts_sums in
   let rebuilt =
-    { x with Pruning.elts_sums = List.map summary_value children } in
+    if U.physical_equality x.Pruning.elts_sums canonical_children
+    then x
+    else { x with Pruning.elts_sums = canonical_children } in
   let h =
     mix (hash_option H.of_string x.Pruning.elts_key)
       (mix (hash_list H.of_string x.Pruning.elts_a_names)
-           (hash_list summary_hash children)) in
+           children_hash) in
   let key = {
     sek_hash = h;
     sek_elt = rebuilt
