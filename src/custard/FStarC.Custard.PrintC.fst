@@ -4976,13 +4976,25 @@ let record_parents (p:program) : ML unit =
 
 (* The constructors, and [inc]/[dec]/[mark] for every non-plain type.  All
    [static inline]: a unit uses some of them, and C warns about an unused
-   [static] function that is not [inline]. *)
-let cherry_helpers (p:program) : ML (list string & list string) =
+   [static] function that is not [inline].  Split output is the exception
+   ([fn_out]). *)
+let cherry_helpers (p:program) : ML (list string & list string & list (string & string)) =
   let protos : ref (list string) = mk_ref [] in
   let defs : ref (list string) = mk_ref [] in
+  let homed : ref (list (string & string)) = mk_ref [] in
   let fn (proto:string) (body:string) : ML unit =
     protos := !protos @ [proto ^ ";\n"];
     defs := !defs @ [proto ^ " {\n" ^ body ^ "}\n"] in
+  (* A helper reached only through a function pointer or off the hot path.
+     Split output defines it once, in the file of the module [home] of a
+     type this unit declares, and declares it in the files that use it;
+     otherwise it is [static inline] like the rest. *)
+  let fn_out (home:option string) (proto:string) (body:string) : ML unit =
+    match home with
+    | Some m when !split_out ->
+      protos := !protos @ [proto ^ ";\n"];
+      homed := (m, proto ^ " {\n" ^ body ^ "}\n") :: !homed
+    | _ -> fn ("static inline " ^ proto) body in
   (* The statements performing [op] on the counted fields of one value. *)
   let on_fields (op:string) (ind:string) (fs:list (string & cty))
                 (sel:string -> ML string) : ML string =
@@ -4998,6 +5010,7 @@ let cherry_helpers (p:program) : ML (list string & list string) =
                     not (is_runtime_name dt.dt_name) ->
       current := string_of_name dt.dt_name;
       let n = c_name dt.dt_name in
+      let home = if local d then Some (module_of dt.dt_name) else None in
       (match dt.dt_body with
        | TVariant cs when is_boxed dt ->
          cs |> List.iter (fun (c, fs) ->
@@ -5056,17 +5069,17 @@ let cherry_helpers (p:program) : ML (list string & list string) =
            fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
               "  (void)cherry_mark_ref(x, m);\n"
          end else begin
-           fn ("static inline void cherry_free_" ^ n ^ "(cherry_obj *x, int m)")
+           fn_out home ("void cherry_free_" ^ n ^ "(cherry_obj *x, int m)")
               ("  (void)m;\n  for (;;) {\n    " ^ n ^ " next = CHERRY_SCALAR(0);\n" ^
                cases "dec" ^
                "    free(x);\n    if (!cherry_dec_ref(next)) return;\n    x = next;\n  }\n");
-           fn ("static inline void cherry_markf_" ^ n ^ "(cherry_obj *x, int m)")
+           fn_out home ("void cherry_markf_" ^ n ^ "(cherry_obj *x, int m)")
               ("  for (;;) {\n    " ^ n ^ " next = CHERRY_SCALAR(0);\n" ^
                cases "mark" ^
                "    if (!cherry_mark_ref(next, m)) return;\n    x = next;\n  }\n");
            fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
               ("  if (cherry_dec_ref(x)) cherry_defer(x, cherry_free_" ^ n ^ ", 0);\n");
-           fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
+           fn_out home ("void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
               ("  if (cherry_mark_ref(x, m)) cherry_defer(x, cherry_markf_" ^ n ^ ", m);\n")
          end
        | _ ->
@@ -5085,12 +5098,12 @@ let cherry_helpers (p:program) : ML (list string & list string) =
                  "      break;\n"])) ^
               "    default: break;\n  }\n"
             | TAbstract -> "") in
-         ["inc"; "dec"; "mark"] |> List.iter (fun op ->
-           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x" ^
-               (if op = "mark" then ", int m" else "") ^ ")")
-              ((if op = "mark" then "  (void)m;\n" else "") ^ body op)))
+         ["inc"; "dec"] |> List.iter (fun op ->
+           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x)") (body op));
+         fn_out home ("void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
+           ("  (void)m;\n" ^ body "mark"))
     | _ -> ());
-  (!protos, !defs)
+  (!protos, !defs, List.rev !homed)
 
 (* The ML reference cells used while printing, and the operations on them
    (cherry.h): the cell structs and prototypes, and the definitions.  A
@@ -6187,7 +6200,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
   (* Section 107.  After every body has been rendered, which is when the set
      of types actually compared is complete. *)
   let eq_protos, eq_defs = eq_decls () in
-  let rc_protos, rc_defs = cherry_helpers p in
+  let rc_protos, rc_defs, rc_homed = cherry_helpers p in
   let clo_protos, clo_defs = cherry_closure_helpers () in
   let pbuf_protos, pbuf_defs = cherry_pbuf_helpers () in
   let ref_protos, ref_defs = cherry_ref_helpers () in
@@ -6297,6 +6310,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
         | Some m' -> put m' d
         | None -> HashTable.add group_home k m; put m d);
     global_defs |> List.iter (fun (m, d) -> put m d);
+    rc_homed |> List.iter (fun (m, d) -> put m d);
     (* The initializer calls one function per run of consecutive globals of
        a module, defined in that module's file: as a single function it was
        slower to compile than everything else together. *)
