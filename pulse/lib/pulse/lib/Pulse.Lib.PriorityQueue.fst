@@ -642,7 +642,8 @@ let grandparent_up_after_swap_child #t {| total_order t |}
                     Seq.index s child <? Seq.index s (parent_idx child) /\
                     parent_idx child > 0 /\ k < Seq.length s /\
                     (k == left_idx (parent_idx child) \/ k == right_idx (parent_idx child)))
-          (ensures Seq.length (swap_seq s child (parent_idx child)) == Seq.length s /\
+          (ensures parent_idx (parent_idx child) < parent_idx child /\
+                   Seq.length (swap_seq s child (parent_idx child)) == Seq.length s /\
                    Seq.index (swap_seq s child (parent_idx child)) (parent_idx (parent_idx child)) <=?
                    Seq.index (swap_seq s child (parent_idx child)) k)
   = let p = parent_idx child in
