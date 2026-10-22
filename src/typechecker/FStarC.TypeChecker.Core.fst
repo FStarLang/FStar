@@ -3441,7 +3441,9 @@ and let_result_typ (g g':env) (e:term) (eff_def:eff) (x:binder) (u:universe)
       let eq_body = is_tot_or_ghost_eff eff_body in
       if not x_in_t && not eq_body then return t
       else if not x_in_t && not x_in_body then
-        (* E.g., [let tok = f () in v]: its value is [v]. *)
+        (* [body] is pure here ([eq_body], by the test above) and does not
+           mention [x]: it is the value of the [let], if it returns at all,
+           e.g. [let tok = f () in v] has value [v]. *)
         if U.is_unit (U.unrefine (N.unfold_whnf g'.tcenv t)) then return t
         else
           let r = S.new_bv None t in
