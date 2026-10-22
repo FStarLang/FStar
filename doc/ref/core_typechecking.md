@@ -375,7 +375,13 @@ Core used to serve tactics only (`core_check`) and only knew `Tot` and
     an arrow.
   * The definition of a `let` is checked bidirectionally, in one pass
     (`check_let_def`). Without an annotation, its type is synthesized.
-    With one, the annotation is checked to be a type, and then:
+    With one, the definition is checked as follows, and then the annotation
+    is checked to be a type. In that order, the well-formedness conditions
+    that an annotation shares with those inside the definition (e.g.
+    `j < length a` for a local lemma about `index a j` whose body binds
+    another one) are emitted in the scope of the definition's goals, rather
+    than closed over the annotation's binders and then dropped from the
+    body as guard-cache hits (hacl-pulse `Spec.GF128.Poly.bits_inj`).
     * A pure or ghost definition is checked against it, so it is pushed
       into a definition that is a `let`, `match` or `fun`. For example, in
       `let f : t = (lemma (); f0) in e`, `f0` meets `t` under the lemma.

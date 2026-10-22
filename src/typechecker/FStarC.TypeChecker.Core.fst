@@ -3236,8 +3236,8 @@ and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
    the type [lbtyp] at which it is bound (its annotation, or else its own
    type), the universe of [lbtyp], and the type synthesized for [e], if any.
 
-   Without an annotation, the type of [e] is synthesized. With one, the
-   annotation is checked to be a type, and then:
+   Without an annotation, the type of [e] is synthesized. With one, [e] is
+   checked as follows, and then the annotation is checked to be a type:
    * A pure or ghost [e] is checked against it (see [check_against_typ]):
      the obligations of [e] meeting it are then where [e]'s own hypotheses
      are in scope, e.g. in [let f : t = (lemma (); f0) in body], [f0] meets
@@ -3264,7 +3264,6 @@ and check_let_def (g:env) (lb:letbinding)
       return (eff, tdef, u, Some tdef)
     )
     else (
-      let! u = with_context "let type" (Some (CtxTerm lb.lbtyp)) (fun _ -> universe_of g lb.lbtyp) in
       let pure =
         U.is_pure_or_ghost_effect lb.lbeff
         || Ident.lid_equals lb.lbeff PC.effect_Lemma_lid in
@@ -3273,6 +3272,15 @@ and check_let_def (g:env) (lb:letbinding)
           if pure
           then check_against_typ_synth g lb.lbdef lb.lbtyp
           else check_against_typ_by_subtyping g lb.lbdef lb.lbtyp) in
+      (* The annotation is checked after the definition, whose guard then
+         carries the well-formedness conditions the annotations inside it
+         share with this one, e.g. [j < length a] for a local lemma
+         [aux (j:nat{j < 16}) : Lemma (index a j == index b j)] whose body
+         binds another such lemma: they are in scope of the goals of the
+         body. Checked first, the annotation would emit them closed over its
+         own binders, as a separate conjunct, and the identical guards of the
+         body would then be dropped as cache hits (see [guard]). *)
+      let! u = with_context "let type" (Some (CtxTerm lb.lbtyp)) (fun _ -> universe_of g lb.lbtyp) in
       (* When the annotation was pushed into it, [e] has been checked at
          that type: recording it lets the facts about [e] (see [app_facts])
          be computed without synthesizing its type again. *)
