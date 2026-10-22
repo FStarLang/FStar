@@ -19,14 +19,7 @@ module FStarC.BaseTypes
 
 type float = FStar.Float64.t
 type double = FStar.Float64.t
-type byte = FStar.UInt8.t
-type int8 = FStar.Int8.t
-type uint8 = FStar.UInt8.t
-type int16 = FStar.Int16.t
-type uint16 = FStar.UInt16.t
-type int32 = FStar.Int32.t
-type uint32 = FStar.UInt32.t
-type int64 = FStar.Int64.t
-type uint64 = FStar.UInt64.t
 
 let float64_of_float x = x
+
+let float_of_float64 x = x

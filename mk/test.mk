@@ -154,7 +154,8 @@ $(OUTPUT_DIR)/%.fs-out: $(OUTPUT_DIR)/%.fs-exe
 # NO_CHERRY lists the RUN tests a directory excludes.
 CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
 CHERRY_CC ?= $(CC)
-CHERRY_CFLAGS ?= -std=c11 -g -fsanitize=address,undefined -fno-sanitize-recover=undefined
+CHERRY_CXX ?= $(CXX)
+CHERRY_CFLAGS ?= -std=c11 -g -DCHERRY_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined
 
 $(OUTPUT_DIR)/%.cherry.c:
 	$(call msg, "EXTRACT CHERRY", $(basename $(notdir $@)))

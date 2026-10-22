@@ -524,15 +524,6 @@ let string_of_char _ = admit ()
 [@@custard_extern "(fun i -> let hs = Printf.sprintf \"%x\" i in if String.length hs = 1 then \"0\" ^ hs else hs)"]
 let hex_string_of_byte _ = admit ()
 
-[@@custard_extern "(fun bytes -> BatArray.fold_left (fun acc b -> acc ^ (BatUTF8.init 1 (fun _ -> BatUChar.of_int b))) \"\" bytes)"]
-private assume val ocaml_string_of_unicode : A.array byte -> string
-
-[@@custard_extern "(fun s -> let n = BatUTF8.length s in let t = Array.make n 0 in let i = Stdlib.ref 0 in BatUTF8.iter (fun c -> t.(Stdlib.(!) i) <- BatUChar.code c; Stdlib.incr i) s; t)"]
-private assume val ocaml_unicode_of_string : string -> A.array byte
-
-let string_of_bytes b = ocaml_string_of_unicode b
-
-let bytes_of_string s = ocaml_unicode_of_string s
 
 [@@custard_extern "BatBase64.str_encode"]
 let base64_encode _ = admit ()
@@ -694,10 +685,6 @@ let prefix l =
   match List.Tot.rev l with
   | hd :: tl -> List.Tot.rev tl, hd
   | [] -> fail "impossible"
-
-let string_of_unicode b = ocaml_string_of_unicode b
-
-let unicode_of_string s = ocaml_unicode_of_string s
 
 let incr r = r := !r + 1
 

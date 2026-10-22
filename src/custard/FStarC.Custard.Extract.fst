@@ -447,6 +447,9 @@ type state = {
      specialization, so without this a definition with twenty specializations
      would pay for it twenty times. *)
   nfe:     HashTable.t string sigelt;
+  (* The modules whose initializers have been requested, by name; see
+     {!request_inits}. *)
+  inits:   HashTable.t string unit;
 }
 
 (* Section 63.1.  A module speaks the floating-point vocabulary when it
@@ -491,6 +494,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   imports = mk_ref [];
   roots   = HashTable.create 20;
   nfe     = HashTable.create 20;
+  inits   = HashTable.create 100;
 }
 
 (* A name given on --custard_entry, named by --custard_main, or registered by
@@ -523,6 +527,18 @@ let root_binder_of_enclosing (st:state) (v:S.bv) : ML bool =
 let local_inline_steps : list TcEnv.step = [
   TcEnv.AllowUnboundUniverses;
   TcEnv.Beta;
+  (* The redexes may sit inside a local [let rec], and they have to be fired
+     there too.  [Zeta] is on by default, and with it the normalizer ties the
+     knot: it unrolls the [let rec] once at its use and rebuilds every
+     recursive occurrence from the unreduced definition, so a substituted
+     local function stays a closure in the copy that is actually lifted, with
+     runtime type arguments (error 364; [tc_pat]'s [fail], used in its
+     [check_nested_pattern], is the case that found it).  As in
+     [custard_norm_steps], excluding [Zeta] together with
+     [PureSubtermsWithinComputations] selects the branch that normalizes
+     under the [let rec] and puts it back. *)
+  TcEnv.Exclude TcEnv.Zeta;
+  TcEnv.PureSubtermsWithinComputations;
 ]
 
 let custard_norm_steps : list TcEnv.step = [
@@ -623,6 +639,17 @@ let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.docu
    call site asked for it. *)
 let custard_warning (st:state) (code:E.error_code) (msg:list Pprint.document) : ML unit =
   E.log_issue0 code (msg @ request_chain st)
+
+(* Section 13.7.  [plugin_embedding #t] is compiled to the embedding of [t]
+   that [RegEmb] builds, which is the only place that knows how; [RegEmb]
+   depends on this module, so it is reached through a hook the driver sets. *)
+let plugin_embedding_lid : Ident.lident =
+  PC.p2l ["FStarC"; "Syntax"; "Embeddings"; "Base"; "plugin_embedding"]
+
+let embedding_hook : ref (state -> term -> ML expr) =
+  mk_ref (fun (st:state) (_:term) ->
+    custard_error st E.Error_CustardUnrepresentableValue [
+      text "Custard: plugin_embedding is not available in this extraction." ])
 
 (* Every normalization Custard performs runs under a step budget.
 
@@ -936,6 +963,7 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_compile_time_attr,    "custard_compile_time";
   PC.custard_float_attr,           "custard_float";
   PC.custard_boxed_fields_attr,    "custard_boxed_fields";
+  PC.cherry_boxed_attr,            "cherry_boxed";
 ]
 
 (* Attributes that describe one *field* of a constructor. *)
@@ -981,16 +1009,9 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
        | "FStar.Attributes.Comment" -> [Comment str]
        | "FStar.Attributes.CPrologue" -> [Prologue str]
        | "FStar.Attributes.CEpilogue" -> [Epilogue str]
-       | _ -> [])
-    (* Section 51.3.  Two strings, so it does not fit the one-argument shape
-       above: the exclusive prologue and the one for a callee the rest of the
-       program reaches too. *)
-    | Tm_fvar fv, [({ n = Tm_constant (Const_string (a, _)) }, _);
-                   ({ n = Tm_constant (Const_string (b, _)) }, _)] ->
-      let nm = Ident.string_of_lid (S.lid_of_fv fv) in
-      if not (fresh (nm ^ "\u0000" ^ a ^ "\u0000" ^ b)) then [] else
-      (match nm with
-       | "FStar.Attributes.custard_c_closure_prologue" -> [ClosurePrologue (a, b)]
+       | "FStar.Attributes.custard_c_closure_prologue" -> [ClosurePrologue str]
+       | "FStar.Attributes.custard_c_closure_guard" -> [ClosureGuard str]
+       | "FStar.Attributes.custard_c_ifdef" -> [IfDef str]
        | _ -> [])
     | Tm_fvar fv, [] ->
       let nm = Ident.string_of_lid (S.lid_of_fv fv) in
@@ -1125,6 +1146,9 @@ let attr_home (nm:string) : string =
   | "custard_boxed_fields" ->
     "It keeps the fields of a *type's* constructors boxed, so it goes on \
      that type."
+  | "cherry_boxed" ->
+    "It makes a *type* a counted heap cell under Cherry, so it goes on that \
+     type."
   | _ -> ""
 
 let report_attr (nm:string) (site:string) (why:string) : ML unit =
@@ -1585,6 +1609,23 @@ let rec head_ty (st:state) (ty:cty) (fuel:int) : ML cty =
        | Some ty' -> head_ty st ty' (fuel - 1)
        | None -> ty
 
+(* Every abbreviation unfolded, at every depth: two types the target would
+   agree on, [fname] and [string] for [type fname = string], come out equal. *)
+let rec unfold_abbrevs (st:state) (fuel:int) (ty:cty) : ML cty =
+  if fuel <= 0 then ty else
+  let go = unfold_abbrevs st (fuel - 1) in
+  match unfold_abbrev st ty with
+  | Some ty' -> go ty'
+  | None ->
+    match ty with
+    | TArrow (a, e, b) -> TArrow (go a, e, go b)
+    | TTuple cs -> TTuple (List.map go cs)
+    | TBuf c -> TBuf (go c)
+    | TRef (k, c) -> TRef (k, go c)
+    | TInline c -> TInline (go c)
+    | TApp (n, args) -> TApp (n, List.map go args)
+    | _ -> ty
+
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
    parameter, or a local closure -- gets its effect: there is no declaration to
@@ -1669,6 +1710,16 @@ let c_realized_header (l:Ident.lident) : ML (option string) =
   Builtins.c_realization_header
     (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id))
 
+let module_inits (md:S.modul) : ML (list Ident.lident) =
+  md.declarations |> List.collect (fun (se:S.sigelt) ->
+    match se.sigel with
+    | Sig_let {lbs=(_, lbs)} ->
+      lbs |> List.collect (fun lb ->
+        match lb.lbname with
+        | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) -> [S.lid_of_fv fv]
+        | _ -> [])
+    | _ -> [])
+
 let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
   let k = { k with sk_lid = unstub_lid st k.sk_lid } in
@@ -1689,7 +1740,12 @@ let rec request (st:state) (k:spec_key) : ML name =
        rather than loop. *)
     HashTable.add st.names key nm;
     ensure_lid_available st l;
-    match datacon_owner st l with
+    (* Claimed now, requested once this definition is done: an initializer
+       that refers to it must find it emitted, not merely named. *)
+    let m = Ident.nsstr l in
+    let first = None? (HashTable.try_find st.inits m) in
+    if first then HashTable.add st.inits m ();
+    let nm = match datacon_owner st l with
     (* An exception constructor is not part of a declaration of [Prims.exn]:
        [exn] is extensible and has no declaration at all, so the constructor
        *is* the declaration.  Section 8.5. *)
@@ -1719,7 +1775,26 @@ let rec request (st:state) (k:spec_key) : ML name =
       HashTable.add st.emitted key d;
       note_abbrev st d;
       st.order := key :: !st.order;
-      nm)
+      nm in
+    if first then request_inits st m;
+    nm)
+
+(* A top-level [let] whose definiens is *effectful* is a module initializer
+   ([let _ = clear ()] in [FStarC.Options]).  OCaml runs a module's
+   initializers, in order, before those of any module that depends on it, and
+   a definition that refers to a module is extracted after it.  So the first
+   request into a module requests its initializers, once that definition is
+   done, and they come before the requesting definition: [FStarC.SMTEncoding.Encode.prims], computed at
+   start-up, reads options that [FStarC.Options]'s initializer has to set
+   first.  {!run} requests the rest, of the modules nothing refers to. *)
+and request_inits (st:state) (m:string) : ML unit =
+  if m = "" then () else begin
+    match TcEnv.modules (tcenv st) |> List.tryFind (fun (md:S.modul) ->
+            not md.is_interface && Ident.string_of_lid md.name = m) with
+    | None -> ()
+    | Some md -> module_inits md |> List.iter (fun l ->
+        let _ = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in ())
+  end
 
 (* Section 12.4, rule 1.  A request whose key a linked unit already exports is
    answered by a reference to that unit's definition: it is *not* translated,
@@ -1892,6 +1967,13 @@ and functor_instance (st:state) (scrut:term) : ML (option name) =
                | None -> arg in
     let key = "<functor>" ^ Ident.string_of_lid fl ^ "#" ^ key_of_term karg in
     match HashTable.try_find st.names key with
+    | Some nm -> Some nm
+    | None ->
+    (* An instance a linked unit already made is that unit's module: OCaml
+       functor application is generative, so a second instance here would
+       have types incompatible with every upstream type mentioning the first
+       (issue #4689). *)
+    match import st key with
     | Some nm -> Some nm
     | None ->
       if Options.codegen () <> Some Options.OCaml then
@@ -3473,7 +3555,17 @@ and expr_of_term (st:state) (t:term) : ML expr =
           let n = List.length args in
           let e = List.fold_left (fun e a -> join_eff e a.eff)
                                  (join_eff hd.eff (apply_eff st hd.ty n)) args in
-          mk (EApp (hd, args)) (apply_result st hd.ty n) e))
+          (* A lambda-lifted local ({!lifted_ref}) is its declaration
+             partially applied to its captures, and a call to it is a direct
+             call taking the captures first, not a closure built only to be
+             applied (section 5.10). *)
+          let lifted = match (SS.compress hd_term).n with
+                       | Tm_name bv -> Some? (lifted_ref st bv)
+                       | _ -> false in
+          (match hd.e with
+           | EApp (f, caps) when lifted && EQual? f.e ->
+             mk (EApp (f, caps @ args)) (apply_result st hd.ty n) e
+           | _ -> mk (EApp (hd, args)) (apply_result st hd.ty n) e)))
 
   | Tm_let {lbs=(true, lbs); body} -> lift_letrec st lbs body
 
@@ -3492,6 +3584,22 @@ and expr_of_term (st:state) (t:term) : ML expr =
        else
        let erased_lb = TcUtil.must_erase_for_extraction (tcenv st) lb.lbtyp &&
                        U.is_pure_or_ghost_effect lb.lbeff in
+       let def = U.unmeta lb.lbdef in
+       if not erased_lb && Options.codegen_name () = "Cherry" &&
+          Tm_abs? (SS.compress def).n &&
+          (let xs, _, _ = U.abs_formals def in
+           let bs, _ = local_formals st lb.lbtyp (List.length xs) in
+           List.length bs >= List.length xs) then begin
+         (* Section 5.10: on Cherry, a local function that is not inlined is
+            lambda-lifted, just like a local [let rec].  A call to it is then
+            a direct call taking its captures as arguments, which allocates
+            no closure, and in tail position is a tail call; a closure would
+            have to be released after the call returned.  Only when its type
+            shows an arrow for each binder of the definiens: the lifted
+            declaration's signature comes from the type. *)
+         HashTable.add st.letdefs (show bv.index) lb.lbdef;
+         lift_locals st [{ lb with lbname = Inl bv; lbdef = def }] body
+       end else
        let e1 = if erased_lb then unit_expr else expr_of_term st lb.lbdef in
        (* Section 3.2b: remember what the variable stands for, so that a
           [Mono] argument written as [d] is judged by [d]'s definition rather
@@ -3533,12 +3641,19 @@ and expr_of_term (st:state) (t:term) : ML expr =
        value of no common representation, and saying otherwise is a claim the
        rest of the pipeline believes: [narrow_rets] reads a body's type
        straight off this node, so a [d:dir -> arg_type d] whose first branch
-       is a [bool] came out declared [bool]. *)
+       is a [bool] came out declared [bool].  Agreement is up to
+       abbreviations: [if c then r.file_name else refind r.file_name] has a
+       branch of type [file_name] and one of type [string], and calling that
+       [any] made Cherry box both arms into a [string] variable. *)
     let ty =
       match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
                 |> List.filter (fun t -> not (TAny? t)) with
       | [] -> TAny
-      | t :: ts -> if ts |> List.for_all (fun u -> u = t) then t else TAny in
+      | t :: ts ->
+        if ts |> List.for_all (fun u -> u = t) then t else
+        let t' = unfold_abbrevs st 100 t in
+        if ts |> List.for_all (fun u -> unfold_abbrevs st 100 u = t') then t
+        else TAny in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
@@ -3595,7 +3710,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
   | _ -> unit_expr)
 
 (* -------------------------------------------------------------------- *)
-(* Local [let rec] (section 5.10)                                       *)
+(* Local functions and [let rec] (section 5.10)                         *)
 (* -------------------------------------------------------------------- *)
 
 (* A local [let rec] is lambda-lifted to a declaration of its own rather than
@@ -3639,6 +3754,11 @@ and is_type_bv (st:state) (b:S.bv) : ML bool =
 
 and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
   let lbs, body = SS.open_let_rec lbs body in
+  lift_locals st lbs body
+
+(* Lambda-lift the opened local definitions [lbs], which [body] and, for a
+   [let rec], the definitions themselves may refer to. *)
+and lift_locals (st:state) (lbs:list letbinding) (body:term) : ML expr =
   let recbvs = lbs |> List.collect (fun lb ->
                  match lb.lbname with Inl bv -> [bv] | Inr _ -> []) in
   if List.length recbvs <> List.length lbs then
@@ -3674,6 +3794,19 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
                   | None -> [v]) in
         if !hit then expand (fuel - 1) l else l in
     let free = expand 100 free in
+    (* A type variable that only the *type* of a capture mentions is captured
+       too: [Free.names] does not look into the sorts of the variables it
+       finds, and a lifted [fun x -> f sep x] with [sep:'a] and [f:'a -> 'b ->
+       _] otherwise declares [f] at a type variable it does not bind. *)
+    let rec sort_tyvars (fuel:int) (l:list S.bv) : ML (list S.bv) =
+      if fuel <= 0 then l else
+      let extra = l |> List.collect (fun (v:S.bv) ->
+                    elems (Free.names v.sort) |> List.filter (fun (w:S.bv) ->
+                      is_type_bv st w &&
+                      not (List.existsb (fun (u:S.bv) -> S.bv_eq u w) l) &&
+                      not (List.existsb (fun (r:S.bv) -> S.bv_eq r w) recbvs))) in
+      if Nil? extra then l else sort_tyvars (fuel - 1) (l @ dedup extra) in
+    let free = sort_tyvars 100 free in
     let free = dedup free |> List.sortWith (fun (x:S.bv) (y:S.bv) -> x.index - y.index) in
     let tyvars, valvars = List.partition (is_type_bv st) free in
     (* Section 116.  A proof-irrelevant capture is not a capture.  The
@@ -3716,13 +3849,23 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let esp = (!st.cur).spec in
       let ckey = base ^ (match esp with None -> "" | Some s -> "@" ^ s) in
       let n = (match HashTable.try_find st.counts ckey with None -> 0 | Some n -> n) in
+      let mk_nm (n:int) : ML name =
+        { ns = ns; id = base;
+          spec = (match esp, n with
+                  | None,   0 -> None
+                  | None,   n -> Some (show n)
+                  | Some s, 0 -> Some s
+                  | Some s, n -> Some (s ^ "_" ^ show n)) } in
+      (* The scheme is not injective: the second local of an enclosing
+         definition without a suffix and the first of one with suffix [1] both
+         get [1].  Two locals of the same name in two lifted functions of the
+         same name, the two [check_branches] in [Core.do_check], hit it. *)
+      let rec fresh (n:int) : ML int =
+        if HashTable.mem st.emitted ("<local>" ^ mangled_name (mk_nm n))
+        then fresh (n + 1) else n in
+      let n = fresh n in
       HashTable.add st.counts ckey (n + 1);
-      let nm = { ns = ns; id = base;
-                 spec = (match esp, n with
-                         | None,   0 -> None
-                         | None,   n -> Some (show n)
-                         | Some s, 0 -> Some s
-                         | Some s, n -> Some (s ^ "_" ^ show n)) } in
+      let nm = mk_nm n in
       (* Opened exactly once: each [abs_formals] invents *fresh* names for the
          binders it opens, so a second opening would give the body variables
          that no binder here binds. *)
@@ -3824,18 +3967,61 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
     expr_of_term st body
   end
 
+(* Unfold the type abbreviation at the head of [ty], if any.  By hand, since
+   under [--lax] the head often lacks its universe instantiation, which the
+   normalizer insists on; universes do not matter to extraction. *)
+and unfold_typ_abbrev (st:state) (ty:typ) : ML (option typ) =
+  let hd, args = U.head_and_args_full ty in
+  let hd = SS.compress hd in
+  let us = match hd.n with Tm_uinst (_, us) -> us | _ -> [] in
+  match (SS.compress (U.un_uinst hd)).n with
+  | Tm_fvar fv ->
+    (match TcEnv.lookup_definition [TcEnv.Unfold S.delta_constant] (tcenv st)
+             (S.lid_of_fv fv) with
+     | Some (univs, def) ->
+       let us = if List.length us = List.length univs then us
+                else List.map (fun _ -> U_zero) univs in
+       let _, def = TcEnv.inst_tscheme_with (univs, def) us in
+       Some (N.normalize [TcEnv.Beta] (tcenv st) (S.mk_Tm_app def args ty.pos))
+     | None -> None)
+  | _ -> None
+
+(* The arrows of [ty], the type of a local definition whose definiens has [nx]
+   binders.  An abbreviation, [interp : interp_t] or [t0 -> t1 -> result a],
+   may hide arrows that the definiens binds. *)
+and local_formals (st:state) (ty:typ) (nx:int) : ML (binders & comp) =
+  let rec formals (fuel:int) (ty:typ) : ML (binders & comp) =
+    let bs, c = U.arrow_formals_comp ty in
+    if fuel <= 0 || List.length bs >= nx || not (U.is_total_comp c)
+    then bs, c
+    else match unfold_typ_abbrev st (U.comp_result c) with
+         | None -> bs, c
+         | Some r -> let bs', c' = formals (fuel - 1) r in bs @ bs', c' in
+  formals 10 ty
+
 (* The result type and effect of a local definition whose definiens has [xs]
    binders.  As at top level (see [extract_letbinding]), the definiens may have
    more binders than its type has arrows, and each extra one consumes an arrow
    -- and with it the effect that a call site actually runs. *)
 and local_result (st:state) (ty:typ) (xs:binders) : ML (cty & eff) =
-  let bs, c = U.arrow_formals_comp ty in
+  let bs, c = local_formals st ty (List.length xs) in
   (* The type's binders and the definiens' are different names for the same
      things, and the result type may mention them. *)
   let rec realign (bs:binders) (xs:binders) : ML (list subst_elt) =
     match bs, xs with
     | b :: bs, x :: xs -> NT (b.binder_bv, S.bv_to_name x.binder_bv) :: realign bs xs
     | _ -> [] in
+  (* A definiens with fewer binders than its type has arrows, [fun tl -> f
+     (tl, s)] at [tl:_ -> t:term -> ML term], returns a function: the arrows
+     it does not bind are put back into the result.  [arrow_formals_comp]
+     only merges arrows across total results, so applying the definiens to
+     its own binders is pure. *)
+  let bs, c =
+    let nx = List.length xs in
+    if List.length bs > nx
+    then (let bs1, bs2 = List.splitAt nx bs in
+          bs1, S.mk_Total (U.arrow bs2 c))
+    else bs, c in
   let c = SS.subst_comp (realign bs xs) c in
   let rec peel (n:int) (e:eff) (t:cty) : ML (eff & cty) =
     if n <= 0 then (e, t)
@@ -4238,6 +4424,14 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     let ufs = binder_flags st "u:" l Mono.unit_binders in
     mk (ECtor (nm, value_args st (drop_flagged flags ufs) (drop_flagged flags args)))
        (ctor_result_ty st l args) E_Pure
+  else if Ident.lid_equals l plugin_embedding_lid then
+    (* Section 13.7. *)
+    match args with
+    | [(t, _)] -> !embedding_hook st t
+    | _ ->
+      custard_error st E.Error_CustardUnrepresentableValue [
+        text "Custard: plugin_embedding must be applied to exactly its type \
+              argument." ]
   else
     (* Section 133. *)
     match functor_member_app st l args with
@@ -4617,7 +4811,7 @@ and mono_holes (st:state) (l:Ident.lident)
   List.sortWith (fun a b -> a.index - b.index) vs
 
 (* Section 5.11: is this local binding a function that should be substituted
-   at its uses instead of compiled as a closure?
+   at its uses instead of lambda-lifted?
 
    Only functions, and only pure ones.  A local function is the one construct
    that has no top-level identity, so it can be neither specialized nor
@@ -4638,8 +4832,8 @@ and mono_holes (st:state) (l:Ident.lident)
    effects from the IR arrow it builds, not from these markers, so dropping
    them changes nothing about the emitted code.
 
-   A local [let rec] cannot be substituted and is lambda-lifted instead
-   (section 5.10). *)
+   A local [let rec] cannot be substituted and is lambda-lifted, like every
+   local function that is not inlined (section 5.10). *)
 (* Section 5.11.  Only *polymorphic* local functions are inlined, and the
    restriction is not a heuristic -- it is the whole reason the pass exists.
    Inlining is what gives a local function's type arguments a concrete value at
@@ -5083,6 +5277,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                   | None -> with_realized d) in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
+    let d = if is_krml_backend () && is_private_sigelt se then with_private d else d in
     if is_inlinable se && not (is_root st l)
     then with_inline d else d
 
@@ -5270,6 +5465,31 @@ and with_inline (d:decl) : ML decl =
   match d with
   | DLet l when not (l.dl_flags |> List.existsb Rec?) ->
     DLet { l with dl_flags = Inline :: l.dl_flags }
+  | d -> d
+
+(* On the karamel backends, F*'s [private] qualifier and the internal
+   [KrmlPrivate] attribute (see {!is_krml_private}) become karamel's [Private],
+   as they did with the legacy krml extraction: karamel then emits the
+   definition [static] and keeps it out of the header, and drops the flag
+   itself if a definition turns out to be used from another file.  The
+   direct C backends decide storage from [Root] instead (section 24). *)
+and is_krml_backend () : ML bool =
+  match Options.codegen_name () with
+  | "KrmlC" | "KrmlRust" -> true
+  | _ -> false
+
+and is_private_sigelt (se:sigelt) : ML bool =
+  List.contains S.Private se.sigquals ||
+  se.sigattrs |> List.existsb (fun attr ->
+    match (SS.compress attr).n with
+    | Tm_constant (Const_string ("KrmlPrivate", _)) -> true
+    | _ -> false)
+
+and with_private (d:decl) : ML decl =
+  match d with
+  | DLet l -> DLet { l with dl_flags = Private :: l.dl_flags }
+  | DType t -> DType { t with dt_flags = Private :: t.dt_flags }
+  | DExternal x -> DExternal { x with dx_flags = Private :: x.dx_flags }
   | d -> d
 
 (* [@@custard_opaque]: the representation is fixed outside F*, so neither
@@ -6380,9 +6600,9 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
    else has to say so with [@@@custard_inline_field] on the binder.
 
    [@@custard_boxed_fields] on the *type* withdraws the uninvited half: a type
-   whose representation is an ABI -- [FStarC.Extraction.KrmlAst], marshalled
-   to a file karamel reads back -- has to be laid out the way the ML
-   extraction lays it out, tuple field and all (section 5.7).  An explicit
+   whose representation is an ABI -- marshalled to a file another program
+   reads back -- has to be laid out the way the ML extraction lays it out,
+   tuple field and all (section 5.7).  An explicit
    request on a field still fires, since that one is the source's.
 
    The marker rides on the field's *type* so that it survives the passes that
@@ -6412,6 +6632,11 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
   let boxed =
     match se with
     | Some se -> U.has_attribute se.sigattrs PC.custard_boxed_fields_attr
+    | None -> false in
+  (* Cherry: a counted heap cell; the newtype collapse would undo that. *)
+  let cherry_boxed =
+    match se with
+    | Some se -> U.has_attribute se.sigattrs PC.cherry_boxed_attr
     | None -> false in
   (* Only the *type* parameters become parameters of the target type; a value
      index has no counterpart in the target's type language. *)
@@ -6479,7 +6704,8 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     dt_name   = nm;
     dt_params = ty_params;
     dt_body   = TVariant (ctors |> List.map ctor);
-    dt_flags  = (if is_record then [SourceRecord] else []) @ existential;
+    dt_flags  = (if is_record then [SourceRecord] else []) @
+                (if cherry_boxed then [CherryBoxed; NoNewtype] else []) @ existential;
   }
 
 (* -------------------------------------------------------------------- *)
@@ -6846,33 +7072,43 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      is complete, every module it pulled in contributes its initializers, and
      that may pull in more modules, hence the fixpoint.
 
-     Order: an initializer is requested after everything it can call, so it
-     lands at the end of [st.order], and OCaml runs the emitted [let]s in the
-     order they appear.  Across a split, the linker runs each unit's in
+     Order: the first request into a module requests its initializers
+     ({!request_inits}), so they come before anything that refers to the
+     module, as in OCaml; those of a module nothing refers to are requested
+     here, after everything they can call, so they land at the end of
+     [st.order], and OCaml runs the emitted [let]s in the order they appear.  Across a split, the linker runs each unit's in
      dependency order.  What is *not* guaranteed is the order of two
      initializers in unrelated modules; F* gives no meaning to that either. *)
   let seen_inits : HashTable.t string unit = HashTable.create 100 in
   let rec inits (fuel:int) : ML unit =
     if fuel <= 0 then () else
-    let fresh = TcEnv.modules (tcenv st) |> List.collect (fun (md:S.modul) ->
+    (* A module the program knows only by its interface -- one it merely
+       opens, as the compiler's drivers open [FStarC.Hooks] -- still has its
+       implementation linked, and initialized, by OCaml.  So load that
+       implementation, when the dependency graph has one and it was checked,
+       to see its initializers; one realized by hand stays an interface
+       ({!Loader}). *)
+    Prof.timed "inits.load" (fun () ->
+      TcEnv.modules (tcenv st) |> List.iter (fun (md:S.modul) ->
+        let m = Ident.string_of_lid md.name in
+        if md.is_interface && not (Loader.module_is_loaded st.deps (tcenv st) m)
+           && Loader.impl_is_checked st.deps m
+        then st.env := Loader.ensure_loaded st.deps (tcenv st) m));
+    let mods = TcEnv.modules (tcenv st) in
+    let fresh = mods |> List.collect (fun (md:S.modul) ->
       let m = Ident.string_of_lid md.name in
+      if md.is_interface && mods |> List.existsb (fun (md':S.modul) ->
+           not md'.is_interface && Ident.lid_equals md'.name md.name)
+      then [] else
       match HashTable.try_find seen_inits m with
       | Some () -> []
       | None -> HashTable.add seen_inits m (); [md]) in
     if Nil? fresh then () else begin
       Prof.timed "inits" (fun () ->
        fresh |> List.iter (fun (md:S.modul) ->
-        md.declarations |> List.iter (fun (se:S.sigelt) ->
-          match se.sigel with
-          | Sig_let {lbs=(_, lbs)} ->
-            lbs |> List.iter (fun lb ->
-              match lb.lbname with
-              | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) ->
-                (* An initializer may erase to nothing at all, which is fine
-                   and is not the user naming a missing entry point. *)
-                mark' true Root (S.lid_of_fv fv)
-              | _ -> ())
-          | _ -> ())));
+        (* An initializer may erase to nothing at all, which is fine and is
+           not the user naming a missing entry point. *)
+        module_inits md |> List.iter (mark' true Root)));
       (* Section 13: the same fixpoint carries the generated declarations,
          because generating one is itself a source of requests and so of newly
          loaded modules -- a plugin registration refers to the interpretation
@@ -6908,6 +7144,17 @@ let emit (st:state) (key:string) (d:decl) : ML unit =
 
 let emitted (st:state) (key:string) : ML bool =
   Some? (HashTable.try_find st.emitted key)
+
+let emit_exported (st:state) (key:string) (d:decl) : ML unit =
+  if not (emitted st key) then begin
+    emit st key d;
+    HashTable.add st.names key (name_of_decl d)
+  end
+
+let import_key (st:state) (key:string) : ML (option name) = import st key
+
+let set_embedding_hook (f:state -> term -> ML expr) : ML unit =
+  embedding_hook := f
 
 let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.imports
 

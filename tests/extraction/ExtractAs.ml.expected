@@ -4,6 +4,12 @@
 let extractAs_fail_unless (b : bool) : string =
   (if b then "ok" else (failwith "Prims.magic"))
 
+let extractAs_loopid (x : Prims.int) : Prims.int =
+  x
+
+let extractAs_two : Prims.int =
+  (Prims.of_int (2))
+
 let extractAs_frob (y : Prims.int) : Prims.int =
   (Prims.op_Plus y (Prims.of_int (10)))
 
@@ -15,10 +21,4 @@ let extractAs_bar (z : Prims.int) : Prims.int =
 
 let extractAs_uu___1 : string =
   (extractAs_fail_unless ((=) (extractAs_bar Prims.int_one) (Prims.of_int (11))))
-
-let extractAs_loopid (x : Prims.int) : Prims.int =
-  x
-
-let extractAs_two : Prims.int =
-  (Prims.of_int (2))
 

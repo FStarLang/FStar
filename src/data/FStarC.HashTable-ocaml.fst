@@ -1,6 +1,6 @@
 module FStarC.HashTable
 
-(* Mutable hash tables over any key type with [deq] and [hashable] instances.
+(* The OCaml implementation of FStarC.HashTable.
 
    Each key type gets its own instance of OCaml's [Hashtbl.Make], applied to
    the key's [(=?)] and [hash] (doc/ref/custard.md, section 133).  The table

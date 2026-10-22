@@ -110,8 +110,6 @@ val int32_of_int:   int -> ML int32 //potentially failing int32 coercion
 val string_of_float: float -> Tot string
 val string_of_char:  char -> Tot string
 val hex_string_of_byte:  byte -> Tot string
-val string_of_bytes: array byte -> Tot string
-val bytes_of_string: string -> Tot (array byte)
 val base64_encode: string -> ML string
 val base64_decode: string -> ML string
 val starts_with: long:string -> short:string -> Tot bool
@@ -158,8 +156,6 @@ val nth_tail: int -> list 'a -> list 'a
 val prefix_until: ('a -> ML bool) -> list 'a -> ML (option (list 'a & 'a & list 'a))
 val prefix: list 'a -> Tot (list 'a & 'a)
 
-val string_of_unicode: array byte -> Tot string
-val unicode_of_string: string -> Tot (array byte)
 val incr: ref int -> ML unit
 val decr: ref int -> ML unit
 val geq: int -> int -> Tot bool

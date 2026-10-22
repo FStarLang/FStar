@@ -1106,6 +1106,9 @@ let try_lookup_datacon env (lid:lident) : ML _ =
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
+let try_lookup_sigelt env (l:lident) : ML (option (sigelt & bool)) =
+  HashTable.try_find (sigmap env) (string_of_lid l)
+
 let find_all_datacons env (lid:lident) : ML _ =
   //
   // AR: TODO: What's happening here? The function name is find_all_datacons, but

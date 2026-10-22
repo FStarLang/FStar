@@ -324,7 +324,7 @@ and pat_to_string x : ML string =
                 (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
     | Pat_dot_term topt ->
       if Options.print_bound_var_types()
-      then Format.fmt1 ".%s" (if topt = None then "_" else topt |> Option.must |> term_to_string)
+      then Format.fmt1 ".%s" (if None? topt then "_" else topt |> Option.must |> term_to_string)
       else "._"
     | Pat_var x ->
       if Options.print_bound_var_types()
