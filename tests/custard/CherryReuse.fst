@@ -40,6 +40,14 @@ let rec cat (t: tree) : string =
 let rec tails (l: list string) : list string =
   match l with [] -> [] | _ :: t -> "-" :: tails t
 
+(* The matched cell is still needed at the start of the branch, and dies
+   only on one arm of a conditional further in (the shape of
+   [FStarC.FlatSet.add]); that arm reuses it. *)
+let rec add_new (x: string) (l: list string) : list string =
+  match l with
+  | [] -> [x]
+  | y :: t -> let found = x = y in if found then l else y :: add_new x t
+
 let rec join (l: list string) : string = match l with [] -> "" | x :: t -> x ^ join t
 
 let main () : U32.t =
@@ -52,10 +60,14 @@ let main () : U32.t =
   let t1 = shrink t in                         (* t shared *)
   let t2 = shrink (shrink t1) in               (* unique *)
   let ts = tails ["u"; "v"] in
+  let a1 = add_new "e" l in                    (* l shared *)
+  let a2 = add_new "q" (add_new "p" ["m"; "n"]) in (* unique *)
+  let a3 = add_new "m" a2 in                   (* found: returned as is *)
   let ok =
     join l = "abbcddd" && join r = "dddcbba" && join f = "xz" &&
     (match n1 with [1; 2; 1; 3] -> true | _ -> false) &&
     (match n2 with [2; 1] -> true | _ -> false) &&
     size t1 = 4 && cat t1 = "dcba" && size t2 = 4 && cat t = "abcd" &&
-    cat t2 = "dcba" && join ts = "--" in
+    cat t2 = "dcba" && join ts = "--" &&
+    join a1 = "abbcddde" && join a2 = "mnpq" && join a3 = "mnpq" in
   if ok then 0ul else 1ul

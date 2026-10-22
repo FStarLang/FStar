@@ -226,6 +226,21 @@ static inline bool cherry_int_both_small(cherry_int a, cherry_int b) {
   return ((uintptr_t)a & (uintptr_t)b & 1u) != 0;
 }
 
+/* An integer literal too large to be a small integer on a 32-bit target: a
+   persistent cell (a reference count of zero) in static storage, built at
+   compile time with the layout of [cherry_bigint] (cherry.c), so that evaluating the
+   literal allocates nothing.  [CHERRY_INT_WIDE] is a literal that is small
+   where small integers have 63 bits, and that cell elsewhere: values stay
+   canonical either way. */
+#define CHERRY_INT_LIT(name, neg, len, ...)                                 \
+  static CHERRY_UNUSED struct { cherry_obj hdr; uint32_t n; uint32_t l; uint32_t d[len]; } \
+    name = { { 0, CHERRY_TAG_BIGINT }, neg, len, { __VA_ARGS__ } }
+#if INTPTR_MAX > INT32_MAX
+#define CHERRY_INT_WIDE(v, name) CHERRY_INT_SMALL(v)
+#else
+#define CHERRY_INT_WIDE(v, name) ((cherry_int)&(name))
+#endif
+
 cherry_int cherry_big_add(cherry_int a, cherry_int b);
 cherry_int cherry_big_sub(cherry_int a, cherry_int b);
 cherry_int cherry_big_mul(cherry_int a, cherry_int b);
@@ -233,11 +248,8 @@ cherry_int cherry_big_ediv(cherry_int a, cherry_int b);
 cherry_int cherry_big_erem(cherry_int a, cherry_int b);
 cherry_int cherry_big_neg(cherry_int a);
 int cherry_big_cmp(cherry_int a, cherry_int b);
-/* A literal too large for CHERRY_INT_SMALL on every platform. */
+/* The integer written in decimal in [s], with an optional leading '-'. */
 cherry_int cherry_int_of_decimal(const char *s);
-/* Whether [a] is the integer literal [s] (a constant pattern too large to
-   be a small integer), without keeping the literal. */
-bool cherry_int_eq_decimal(cherry_int a, const char *s);
 /* Conversions to and from the machine integers; [to] wraps modulo 2^64. */
 cherry_int cherry_int_of_i64(int64_t v);
 cherry_int cherry_int_of_u64(uint64_t v);
@@ -300,6 +312,8 @@ static inline cherry_int cherry_int_mod(cherry_int a, cherry_int b) {
     if (r < 0) r = y > 0 ? r + y : r - y;
     return CHERRY_INT_SMALL(r);
   }
+  /* A small integer has the smaller magnitude: it is its own remainder. */
+  if (cherry_is_scalar(a) && cherry_int_val(a) >= 0) return a;
   return cherry_big_erem(a, b);
 }
 

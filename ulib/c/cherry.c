@@ -95,6 +95,8 @@ void cherry_free_closure(cherry_obj *f, int mode) {
   free(f);
 }
 
+/* A big integer cell: sign and magnitude, in 32-bit limbs, least
+   significant first.  CHERRY_INT_LIT (cherry.h) builds one statically. */
 typedef struct cherry_bigint {
   cherry_obj hdr;
   uint32_t neg;
@@ -353,12 +355,22 @@ static void big_edivmod(cherry_int x, cherry_int y, cherry_int *qo, cherry_int *
 }
 
 cherry_int cherry_big_ediv(cherry_int a, cherry_int b) {
+  /* A small dividend has the smaller magnitude: the quotient is 0, or the
+     one of -1 and 1 that makes the remainder non-negative. */
+  if (cherry_is_scalar(a) && !cherry_is_scalar(b)) {
+    if (cherry_int_val(a) >= 0) return CHERRY_INT_SMALL(0);
+    return CHERRY_INT_SMALL(((const cherry_bigint *)b)->neg ? 1 : -1);
+  }
   cherry_int q;
   big_edivmod(a, b, &q, NULL);
   return q;
 }
 
 cherry_int cherry_big_erem(cherry_int a, cherry_int b) {
+  /* A small dividend over a big divisor: the quotient is 0 or +-1 (see
+     cherry_big_ediv), so the remainder is [a] or [a + |b|]. */
+  if (cherry_is_scalar(a) && !cherry_is_scalar(b) && cherry_int_val(a) < 0)
+    return ((const cherry_bigint *)b)->neg ? cherry_int_sub(a, b) : cherry_int_add(a, b);
   cherry_int r;
   big_edivmod(a, b, NULL, &r);
   return r;
@@ -401,13 +413,6 @@ cherry_int cherry_int_of_decimal(const char *s) {
   }
   cherry_int r = big_from(neg, d, len);
   free(d);
-  return r;
-}
-
-bool cherry_int_eq_decimal(cherry_int a, const char *s) {
-  cherry_int b = cherry_int_of_decimal(s);
-  bool r = cherry_int_eq(a, b);
-  cherry_dec(b);
   return r;
 }
 
@@ -698,19 +703,20 @@ uint64_t cherry_int_to_u64(cherry_int x) {
 
 int64_t cherry_int_to_i64(cherry_int x) { return (int64_t)cherry_int_to_u64(x); }
 
+static cherry_int of_mag64(bool neg, uint64_t m) {
+  uint32_t d[2] = { (uint32_t)m, (uint32_t)(m >> 32) };
+  return big_from(neg, d, d[1] != 0 ? 2 : 1);
+}
+
 cherry_int cherry_int_of_i64(int64_t v) {
   if (cherry_int_fits((intptr_t)v) && (int64_t)(intptr_t)v == v)
     return CHERRY_INT_SMALL((intptr_t)v);
-  char buf[32];
-  snprintf(buf, sizeof buf, "%" PRId64, v);
-  return cherry_int_of_decimal(buf);
+  return of_mag64(v < 0, v < 0 ? (uint64_t)0 - (uint64_t)v : (uint64_t)v);
 }
 
 cherry_int cherry_int_of_u64(uint64_t v) {
   if (v <= (uint64_t)CHERRY_INT_MAX) return CHERRY_INT_SMALL((intptr_t)v);
-  char buf[32];
-  snprintf(buf, sizeof buf, "%" PRIu64, v);
-  return cherry_int_of_decimal(buf);
+  return of_mag64(false, v);
 }
 
 #ifdef __SIZEOF_INT128__

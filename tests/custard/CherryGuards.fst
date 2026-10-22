@@ -40,5 +40,28 @@ let refutable_guards () : ML bool =
   first_pos (hide [1; 2]) = Some 1 && first_pos (hide [0; 2]) = Some 2 &&
   first_pos (hide []) = None && first_pos (hide [0; 0]) = Some 0
 
+(* Guarded exception handlers, as in FStarC.Errors.catch_errors_aux: a
+   failing guard falls through to the later handlers, and an exception no
+   handler takes is raised again. *)
+exception Code of int
+exception Other
+
+let thrower (k: int) : ML int =
+  if k = 0 then 0 else if k < 4 then raise (Code k) else raise Other
+
+let handled (k: int) : ML int =
+  try thrower k with
+  | Code n when n = 1 -> 10
+  | Code n when n = 2 -> 20
+
+let outer (k: int) : ML int =
+  try handled k with
+  | Code _ -> 30
+  | Other -> 40
+
+let try_guards () : ML bool =
+  outer (hide 0) = 0 && outer (hide 1) = 10 && outer (hide 2) = 20 &&
+  outer (hide 3) = 30 && outer (hide 4) = 40
+
 let main () : ML U32.t =
-  if guards () && refutable_guards () then 0ul else 1ul
+  if guards () && refutable_guards () && try_guards () then 0ul else 1ul
