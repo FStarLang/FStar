@@ -104,6 +104,9 @@ type must_tot = bool
  *
  * May have been computed by composing other "edges"
  *)
+(* [env] is large and passed everywhere: boxed under Cherry, so that passing
+   it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type edge = {
   msource : lident;
   mtarget : lident;

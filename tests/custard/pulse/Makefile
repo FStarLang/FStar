@@ -731,6 +731,8 @@ $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 
 CHERRY_DIR = $(OUTPUT_DIR)/cherry
 CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+CHERRY_CC ?= $(CC)
+CHERRY_CXX ?= $(CXX)
 
 $(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CHERRY", $(basename $(notdir $@)))
@@ -741,10 +743,10 @@ $(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 
 $(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc
 	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  -x c $< $(CHERRY_INC)/cherry.c -o $@
-	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	$(Q)$(CHERRY_CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  -fsyntax-only -x c++ $<
 
 $(CHERRY_DIR)/%.chran: $(CHERRY_DIR)/%.chexe

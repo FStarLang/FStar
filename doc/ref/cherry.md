@@ -54,6 +54,7 @@ Borrow inference runs per monomorphized instance, over the strongly connected co
    - it may be reset/reused (in-place updates of strings, immutable arrays, constructor cells);
    - it is passed to an owned parameter;
    - it is passed to an owned parameter in a tail call. This preserves the tail call, which would otherwise be followed by a dec.
+   - its function is used as a closure (a value or a partial application) and the closure is applied to it. The closure's entry point takes it owned, so this keeps the entry point's call a tail call (see Tail calls).
 3. Storing a parameter into a constructor, closure, or partial application marks it owned, as in Lean: the stored value is usually consumed, so an owned parameter saves an inc.
 
 Mutual recursion cannot span F* modules, so inference proceeds in module dependency order. The inferred conventions are exported in the module's custard interface (Loader/imports) so that callers in other modules agree with them.
@@ -126,14 +127,40 @@ The prototype implements this as follows:
 - A closure whose remaining parameters are all units (a thunk, or a partial application that leaves only units) gets the arity `CHERRY_ARITY_UNITS`, not 0. Applying it to no further arguments returns it unchanged if the type says that more arrows follow, and runs it otherwise. With arity 0, a partial application `f x` of `f x ()` would run `f` early.
 - As on OCaml, closures are polymorphic, so erased binders stay in a lambda as unit parameters (`heap_closures` in Extract). Otherwise the same closure would have different arities at different types.
 - A self tail call in a definition becomes a jump to its start (`goto custard_tail`), so tail-recursive loops run in constant stack. The jump assigns only the parameters whose argument changes, so a parameter that the body reads only as an unchanged argument to such a call is voided like an unused one (test: `TailKept`).
+- Other tail calls are guaranteed tail calls where possible; see Tail calls.
 - A closure call borrows the closure and takes the arguments owned; a partial application takes its arguments owned.
 - A global of function type holds a closure (persistent, see Globals), so a call through it is a closure call. This includes the exception test after it: whether the global's initializer raises says nothing about whether the closure does.
 
+### Tail calls
+
+ML code loops by recursion, and relies on every call in tail position running in constant stack: mutual recursion, recursion through a closure, and continuation-passing style. OCaml guarantees this, and C does not. Cherry guarantees it in two ways.
+
+**Jumps.** These work with every C compiler.
+- A self tail call assigns the parameters and jumps back to the top of the function (`goto custard_tail`).
+- Definitions that call each other in tail position form a *tail group*: a strongly connected component of the graph of saturated tail calls between top-level definitions with the same C result type. Each group is printed as one C function, `f__tail(int custard_entry)`. Its locals are every member's parameters. It starts with a `switch` on the member to enter, and each member's body follows under a label `custard_tail_i`. A tail call to a member assigns that member's parameters and jumps to its label.
+- Each member stays a C function with its own signature, so a call from outside the group, a function pointer or a closure is unchanged. It stores its arguments in the group's thread-local argument buffer `f__tail_args` and calls `f__tail(i)`, which reads them before doing anything else.
+- A definition that allocates on the stack, or has a `Guard`, prologue, epilogue or `inline`, is not merged.
+
+Every cycle of first-order tail calls is inside one group, so a chain of tail calls that leaves a group never returns to it: only boundedly many frames stay on the stack.
+
+**`musttail`.** A tail call through a closure cannot be a jump, because the callee is not known. These calls, and every other remaining call in tail position, are marked `CHERRY_MUSTTAIL`, which `cherry.h` defines as GCC's `__attribute__((musttail))`:
+- in a definition, a saturated call of another definition outside the group, and a closure call through `cherry_apply_T_k`;
+- in a group member, the call of the group's function;
+- in the generated helpers, the exact-arity call of `cherry_apply_T_k`, and the call in a closure's entry point.
+
+In a function returning `void`, the call is `CHERRY_TAILCALL_VOID(f(...))`, a `return` of the `void` call, which ISO C allows only as an extension.
+
+GCC honours `musttail` at every optimization level, but at `-O0` only when the call needs no stack the caller does not have and its result is not copied after it. So a call is marked only when every argument and the result fit in registers: at most two 8-byte words each, at most six in all, by a conservative estimate (`reg_words` in PrintC). The result type must also be the caller's. Calls are not marked in a definition that allocates on the stack, or to externs, which may be macros. A large record argument is what usually prevents the mark; `[@@cherry_boxed]` (see Inductive types) fixes that.
+
+The caller must not release anything after the call. Borrow inference ensures this for arguments (see Borrow inference). A closure's entry point still increments the captured values before the call, and the call is not marked if the function borrows any of the entry point's arguments; this happens only when the convention is fixed.
+
+**Compiler requirement.** Cherry needs GCC 15 or later on x86-64 or AArch64; `cherry.h` stops with `#error` on any other compiler. Clang's `musttail` requires the caller and callee to have identical prototypes, which these calls rarely do. Defining `CHERRY_ALLOW_UNGUARANTEED_TAILCALLS` builds anyway: `CHERRY_MUSTTAIL` is then empty and `CHERRY_TAILCALL_VOID(c)` is `c`, so tail calls through closures may use stack, while the jumps above still run in constant stack. `CHERRY_MUSTTAIL` and `CHERRY_TAILCALL_VOID` can also be predefined. The test Makefiles compile Cherry output with `$(CHERRY_CC)` (and `$(CHERRY_CXX)` for the C++ check), which default to `$(CC)` and `$(CXX)`; CI sets them to `gcc-15` and `g++-15`. Test: `tests/custard/MutualTail`, run in a 1 MB stack.
+
 ## Inductive types
 
-Inductive types can be tagged as custard_boxed. Then they are allocated on the heap so that they fit in a pointer. Constructors without fields (None, Nil, etc.) are stored directly as scalars without a heap allocation (e.g. `(n << 1) | 1`, like Lean). The other constructors are stored in heap cells, which have different sizes depending on the fields.
+Inductive types can be boxed. Then they are allocated on the heap so that they fit in a pointer. Constructors without fields (None, Nil, etc.) are stored directly as scalars without a heap allocation (e.g. `(n << 1) | 1`, like Lean). The other constructors are stored in heap cells, which have different sizes depending on the fields.
 The constructor number is always stored in the heap cell header. Storing it in the pointer tag as well is an optional fast path (there are only 3 low tag bits, and the high bits are not available on 32-bit or with 5-level paging), e.g. for types with few constructors.
-Recursive types are automatically custard_boxed.
+Recursive types are boxed automatically. Other types are unboxed (C structs passed by value), unless the source asks otherwise: `[@@cherry_boxed]` on a type declaration (a record, a variant, or a mutual bundle, where it applies to every type in the bundle) boxes it too (`CherryBoxed` flag, which also prevents the newtype collapse). This is for a large record that is passed around much more often than it is built, such as the compiler's `Cfg.cfg` and `Env.env`: passing it is then passing a pointer and incrementing one count, instead of copying every field and incrementing the count of each. It also lets a tail call that passes it be a guaranteed tail call (see Tail calls). Other backends ignore the attribute. Test: `tests/custard/CherryBoxedAttr`.
 Custard turns every single-constructor type into a record. A recursive record (e.g. `type tree = Node : int -> forest -> tree`) is boxed as a variant with the single constructor `Mk_tree`, so it shares the code path of other boxed types. Projections out of it read the cell's field.
 
 Structural equality (`=` at a type with decidable equality) borrows both operands and is generated per type, as in the C backend. For a boxed type, `T__eq` first checks for the same pointer (which also covers equal scalars), then compares tags and the fields of the cell. The last field of the cell's own type is compared by looping rather than by a recursive call, so two long lists compare in constant stack; other recursive fields, such as the left subtree of a tree, still recurse. Integers and strings compare by value through the runtime.

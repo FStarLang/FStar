@@ -461,12 +461,31 @@ let arities : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 (* Whether the definition currently being printed returns [void]. *)
 let void_ret : ref bool = mk_ref false
 
-(* Cherry: self tail calls become a jump back to the top of the function, as
-   OCaml's would, since ML code loops by recursion and C does not promise to
-   eliminate the call.  [tail_self] holds the definition's kept parameters
-   when the transformation is allowed, and [tail_used] whether it happened. *)
-let tail_self : ref (option (string & list binder)) = mk_ref None
-let tail_used : ref bool = mk_ref false
+(* Cherry: tail calls that become a jump, as OCaml's would, since ML code
+   loops by recursion and C does not promise to eliminate the call
+   (cherry.md, "Tail calls").  Each entry is a definition the C function
+   being printed can jump to -- itself, and the other members of its tail
+   group ({!tail_groups}) -- with the label to jump to and the C variables
+   its kept parameters live in.  [tail_used] lists the labels jumped to. *)
+let tail_targets : ref (list (string & string & list (binder & string))) = mk_ref []
+(* Cherry: whether the other tail calls of the definition being printed may
+   be marked [CHERRY_MUSTTAIL] -- not when it allocates on the stack, since an
+   argument could point into the frame the call discards. *)
+let musttail_ok : ref bool = mk_ref false
+let tail_used : ref (list string) = mk_ref []
+
+(* Cherry: a set of definitions that call each other in tail position, and
+   are printed as one C function so that those calls are jumps
+   (cherry.md, "Tail calls").  [tg_fn] is that function, taking the index of
+   the member to start in; each member stays a C function of its own, which
+   stores its arguments in [tg_args] and calls [tg_fn]. *)
+type tail_group = {
+  tg_fn: string;
+  tg_args: string;
+  tg_members: list dlet;
+}
+(* Each member's name, to its index in its group and the group. *)
+let tail_groups : ref (HashTable.t string (int & tail_group)) = mk_ref (HashTable.create 0)
 (* The parameters some self tail call passes unchanged.  Such a call writes
    nothing to them, so a parameter whose only use is that one is unused as far
    as C can tell, and gets voided like one the body never mentions. *)
@@ -935,6 +954,80 @@ let content_eq (t:cty) (a b:string) : ML (option string) =
    literal wants.  Building the two together is what lets a returned pointer
    ([uint32_t *f(void)]) and a stored function ([size_t ( *hashf)(size_t)]) come
    out right without special cases at each use. *)
+(* Cherry: an upper bound on the number of 8-byte registers a value of type
+   [t] occupies when passed or returned, or [None] when it may not fit in two
+   and so may be passed or returned in memory.  Over-counting is safe: this
+   only decides whether a tail call can be marked [musttail] (cherry.md, "Tail
+   calls"), and a call that is not marked is merely an ordinary call. *)
+let rec reg_words (fuel:int) (t:cty) : ML (option int) =
+  let sum (ts:list cty) : ML (option int) =
+    List.fold_left (fun acc t ->
+      match acc, reg_words (fuel - 1) t with
+      | Some a, Some b -> Some (a + b)
+      | _ -> None) (Some 0) ts in
+  let small (r:option int) : option int =
+    match r with Some n when n <= 2 -> Some n | _ -> None in
+  if fuel <= 0 then None else
+  match t with
+  | TUnit | TFloat _ | TArrow _ | TRef _ | TBuf _ | TExn -> Some 1
+  | TInt (_, W128) -> Some 2
+  | TInt _ -> Some 1
+  | TAny -> Some 2
+  | TTuple ts -> small (sum ts)
+  | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t"; spec = None }, [_]) -> Some 1
+  | TApp (n, _) when is_boxed_name n -> Some 1
+  | TApp (n, []) when Some? (builtin_type n) -> Some 1
+  | TApp (n, []) ->
+    (match find_type n with
+     | Some d when is_enum d -> Some 1
+     | Some { dt_body = TAbbrev c } -> reg_words (fuel - 1) c
+     | Some { dt_body = TRecord fs } -> small (sum (List.map snd fs))
+     | Some ({ dt_body = TVariant [(_, fs)] }) -> small (sum (List.map snd fs))
+     | Some { dt_body = TVariant cs } ->
+       small (List.fold_left (fun acc (_, fs) ->
+                match acc, sum (List.map snd fs) with
+                | Some a, Some b -> Some (if a >= 1 + b then a else 1 + b)
+                | _ -> None) (Some 1) cs)
+     | _ -> None)
+  | _ -> None
+
+(* Whether values of type [t] are C scalars (integers and pointers) rather
+   than structs. *)
+let rec scalar_ty (fuel:int) (t:cty) : ML bool =
+  if fuel <= 0 then false else
+  match t with
+  | TUnit | TFloat _ | TArrow _ | TRef _ | TBuf _ | TExn -> true
+  | TInt (_, W128) -> false
+  | TInt _ -> true
+  | TApp ({ ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t"; spec = None }, [_]) -> true
+  | TApp (n, _) when is_boxed_name n -> true
+  | TApp (n, []) when Some? (builtin_type n) -> true
+  | TApp (n, []) ->
+    (match find_type n with
+     | Some d when is_enum d -> true
+     | Some { dt_body = TAbbrev c } -> scalar_ty (fuel - 1) c
+     | _ -> false)
+  | _ -> false
+
+(* Whether a call taking arguments of types [args] and returning [ret] can be
+   a guaranteed tail call wherever its signature matches the caller's: every
+   argument in registers, so the callee needs no stack slots the caller lacks,
+   and the result in registers, since one returned in memory is copied after
+   the call.  The result must moreover be a scalar: GCC 15 cannot keep the
+   mark on a call returning a struct in a function that is then inlined into
+   another marked call, and reports an error at [-O2].  Six is the integer registers of the x86-64 System V convention,
+   the smallest of the targets [CHERRY_MUSTTAIL] is enabled on. *)
+let musttail_sig_ok (args:list cty) (ret:option cty) : ML bool =
+  (match ret with
+   | None -> true
+   | Some r -> scalar_ty 8 r) &&
+  (match List.fold_left (fun acc t ->
+           match acc, reg_words 8 t with
+           | Some a, Some b when b <= 2 -> Some (a + b)
+           | _ -> None) (Some 0) args with
+   | Some n -> n <= 6
+   | None -> false)
+
 let rec decl_of (t:cty) (x:string) : ML string =
   match t with
   (* Every ML reference is the one runtime type; the cells differ, and the
@@ -1080,6 +1173,59 @@ and base_ty (t:cty) : ML string =
 
 (* The abstract declarator: a type as a cast or a compound literal spells it. *)
 let ty (t:cty) : ML string = decl_of t ""
+
+(* Cherry: how the C of a call in tail position of the definition being
+   printed starts -- the name of the function it calls, or for a closure the
+   prefix of every apply helper -- when the call can be a guaranteed tail call: a definition,
+   given all its arguments, or a closure through its apply helper, whose C
+   signature passes everything in registers and returns what the caller
+   returns.  [None] for anything else, which stays an ordinary call. *)
+let musttail_head (hd:expr) (args:list expr) (ret:cty) : ML (option string) =
+  if not !musttail_ok then None else
+  let caller_ret = match !cur_ret with Some t -> decl_of t "" | None -> "" in
+  let nonunit (ts:list cty) = List.filter (fun t -> not (TUnit? t)) ts in
+  if is_closure_app hd args then
+    (match hd.e with
+     | EQual (n, _) when Some? (fn_sig n) -> None
+     | _ ->
+       if !void_ret || TUnit? ret || decl_of ret "" <> caller_ret then None
+       else if musttail_sig_ok (TArrow (TUnit, E_Pure, TUnit) ::
+                                nonunit (List.map (fun (a:expr) -> a.ty) args)) (Some ret)
+       then Some "cherry_apply_"
+       else None)
+  else
+    match hd.e with
+    | EQual (n, _) ->
+      let f = string_of_name n in
+      if Some? (HashTable.try_find !externs f) then None else
+      (match fn_sig n with
+       | None -> None
+       | Some (bs, fret) ->
+         let tys = List.map (fun (b:binder) -> b.b_ty) bs in
+         let tys = match HashTable.try_find !keeps f with
+                   | Some flags -> filter_by flags tys
+                   | None -> nonunit tys in
+         let void = Some? (HashTable.try_find !void_fns f) in
+         if void <> !void_ret then None
+         else if not void && decl_of fret "" <> caller_ret then None
+         else if musttail_sig_ok tys (if void then None else Some fret)
+         then Some (c_name n ^ "(")
+         else None)
+    | _ -> None
+
+(* Cherry: the target of a call in tail position that is a jump rather than a
+   call ({!tail_targets}): one the definition being printed can jump to,
+   given all its kept arguments. *)
+let tail_target (n:name) (args:list expr)
+  : ML (option (string & string & list (binder & string))) =
+  let f = string_of_name n in
+  match !tail_targets |> List.tryFind (fun (g, _, _) -> g = f) with
+  | Some (_, label, bs) ->
+    let args = match HashTable.try_find !keeps f with
+               | Some flags -> filter_by flags args
+               | None -> args in
+    if List.length args = List.length bs then Some (f, label, bs) else None
+  | None -> None
 
 (* -------------------------------------------------------------------- *)
 (* Structural equality (section 107)                                    *)
@@ -1963,6 +2109,7 @@ let reset_program_state () : ML unit =
   boxed_tbl := HashTable.create 0;
   nonplain_tbl := HashTable.create 0;
   taken_names := HashTable.create 50;
+  tail_groups := HashTable.create 0;
   scope := [];
   declared := HashTable.create 0;
   ctr := 0
@@ -2880,34 +3027,28 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | ESeq (e1, e2) -> emit ind D_Ignore e1 ^ emit ind d e2
 
   | EApp ({ e = EQual (n, _) }, args)
-      when D_Return? d &&
-           (match !tail_self with
-            | Some (f, bs) ->
-              f = string_of_name n &&
-              List.length (match HashTable.try_find !keeps f with
-                           | Some flags -> filter_by flags args
-                           | None -> args) = List.length bs
-            | None -> false) ->
-    let bs = snd (Some?.v !tail_self) in
-    let f = fst (Some?.v !tail_self) in
+      when D_Return? d && Some? (tail_target n args) ->
+    let (f, label, bs) = Some?.v (tail_target n args) in
     let args = match HashTable.try_find !keeps f with
                | Some flags -> filter_by flags args
                | None -> args in
     let out = mk_ref "" in
-    let vals = List.map2 (fun (b:binder) (a:expr) -> (b, c_rvalue out ind b.b_ty a)) bs args in
+    let vals = List.map2 (fun ((b:binder), (x:string)) (a:expr) ->
+                 (b, x, c_rvalue out ind b.b_ty a)) bs args in
     (* Every argument is read before any parameter is written. *)
-    let moves = vals |> List.filter (fun ((b:binder), v) -> v <> lookup_var b.b_name) in
-    vals |> List.iter (fun ((b:binder), v) ->
-      if v = lookup_var b.b_name then tail_kept := v :: !tail_kept);
-    let tmps = moves |> List.map (fun ((b:binder), v) ->
+    let moves = vals |> List.filter (fun (_, x, v) -> v <> x) in
+    vals |> List.iter (fun (_, x, v) ->
+      if v = x then tail_kept := v :: !tail_kept);
+    let tmps = moves |> List.map (fun ((b:binder), x, v) ->
       let t = fresh "tail" in
-      (b, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
-    tail_used := true;
+      (x, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
+    if not (List.existsb (fun l -> l = label) !tail_used) then
+      tail_used := label :: !tail_used;
     !out ^ ind ^ "{\n" ^
     String.concat "" (tmps |> List.map (fun (_, _, s) -> s)) ^
-    String.concat "" (tmps |> List.map (fun ((b:binder), t, _) ->
-      ind ^ "  " ^ lookup_var b.b_name ^ " = " ^ t ^ ";\n")) ^
-    ind ^ "  goto custard_tail;\n" ^ ind ^ "}\n"
+    String.concat "" (tmps |> List.map (fun (x, t, _) ->
+      ind ^ "  " ^ x ^ " = " ^ t ^ ";\n")) ^
+    ind ^ "  goto " ^ label ^ ";\n" ^ ind ^ "}\n"
 
   (* Section 51.6.  A test of a [@@custard_c_ifdef] flag is a test the
      preprocessor makes.  Each arm keeps a block of its own, as it would
@@ -3093,6 +3234,30 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        rejects. *)
     !out ^ ind ^ "memmove(" ^ dstv ^ " + " ^ div ^ ", " ^ srcv ^ " + " ^ siv ^
     ", " ^ group lenv ^ " * sizeof(" ^ elt ^ "));\n" ^ unit_result ind d
+
+  (* Cherry: any other call in tail position is a guaranteed tail call when
+     the target can make it one (cherry.md, "Tail calls"), so that mutual
+     recursion, and recursion through a closure, run in constant stack as
+     they do in OCaml. *)
+  | EApp (hd, args) when D_Return? d && Some? (musttail_head hd args e.ty) ->
+    let head = Some?.v (musttail_head hd args e.ty) in
+    let out = mk_ref "" in
+    let s = c_rvalue out ind e.ty e in
+    if !void_ret then begin
+      (* The [void] call has gone into [out] as the last statement. *)
+      let o = !out in
+      let call_start = ind ^ head in
+      let lines = String.split ['\n'] o in
+      match List.rev lines with
+      | "" :: last :: rest when starts_with last call_start ->
+        let call = String.substring last (String.length ind)
+                     (String.length last - String.length ind - 1) in
+        String.concat "\n" (List.rev rest) ^ (if Nil? rest then "" else "\n") ^
+        ind ^ "CHERRY_TAILCALL_VOID(" ^ call ^ ");\n"
+      | _ -> o ^ finish ind d s
+    end
+    else if starts_with s head then !out ^ ind ^ "CHERRY_MUSTTAIL return " ^ s ^ ";\n"
+    else !out ^ finish ind d s
 
   | _ ->
     let out = mk_ref "" in
@@ -4056,21 +4221,103 @@ let let_decl (l:dlet) : ML string =
   (* C also warns about an unused *parameter*, and a definition's parameters
      have to be named, so the ones the body never mentions are voided
      explicitly. *)
-  tail_used := false;
+  let ok = Options.custard_cherry () && not (stack_allocates l.dl_body) in
+  tail_used := [];
   tail_kept := [];
-  tail_self :=
-    (if Options.custard_cherry () && not (stack_allocates l.dl_body)
-     then Some (string_of_name l.dl_name, kept_binders l)
-     else None);
+  tail_targets :=
+    (if ok then [(string_of_name l.dl_name, "custard_tail",
+                  kept_binders l |> List.map (fun b -> (b, lookup_var b.b_name)))]
+     else []);
+  musttail_ok := ok;
   let body = emit "  " D_Return l.dl_body in
-  tail_self := None;
+  tail_targets := [];
+  musttail_ok := false;
   let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
     let v = lookup_var b.b_name in
     if List.existsb (fun y -> y = b.b_name) used &&
        not (List.mem v !tail_kept) then []
     else ["  (void)" ^ v ^ ";\n"])) in
   signature l ^ " {\n" ^ voids ^
-  (if !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
+  (if Cons? !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
+
+(* Cherry: the C function a tail group is printed as (cherry.md, "Tail
+   calls").  Every member's parameters are its locals, named apart; it starts
+   by loading the ones of the member [custard_entry] names from the group's
+   argument buffer, and each member's body follows under a label, so that a
+   tail call from one member to another assigns the callee's parameters and
+   jumps, as a self tail call does in {!let_decl}.  The buffer is
+   thread-local, and read before anything else runs, so that a member called
+   again while the function runs -- not in tail position, or from another
+   thread -- cannot overwrite arguments that have not been read yet. *)
+let tail_group_decl (g:tail_group) : ML string =
+  let l0 = List.hd g.tg_members in
+  current := string_of_name l0.dl_name;
+  ctr := 0;
+  void_ret := TUnit? l0.dl_ret;
+  cur_ret := Some l0.dl_ret;
+  reset_scope ();
+  (* Each member's own scope, over the one set of declared names. *)
+  let members = g.tg_members |> List.mapi (fun i (l:dlet) ->
+    scope := [];
+    let bs = kept_binders l |> List.map (fun b -> (b, bind_var b.b_name)) in
+    l.dl_binders |> List.iter (fun b ->
+      if TUnit? b.b_ty then bind_alias b.b_name unit_value);
+    (i, l, bs, !scope)) in
+  let label (i:int) = "custard_tail_" ^ string_of_int i in
+  let slot (i:int) (j:int) = g.tg_args ^ ".m" ^ string_of_int i ^ ".a" ^ string_of_int j in
+  let n = List.length members in
+  let decls = members |> List.collect (fun (_, _, bs, _) ->
+    bs |> List.map (fun ((b:binder), x) -> "  " ^ decl_of b.b_ty x ^ ";\n")) in
+  let cases = members |> List.map (fun (i, _, bs, _) ->
+    (if i = n - 1 then "  default:" else "  case " ^ string_of_int i ^ ":") ^
+    String.concat "" (bs |> List.mapi (fun j ((_:binder), x) -> " " ^ x ^ " = " ^ slot i j ^ ";")) ^
+    " goto " ^ label i ^ ";\n") in
+  tail_targets := members |> List.map (fun (i, (l:dlet), bs, _) ->
+    (string_of_name l.dl_name, label i, bs));
+  musttail_ok := true;
+  tail_used := [];
+  tail_kept := [];
+  let bodies = members |> List.map (fun (i, (l:dlet), bs, sc) ->
+    current := string_of_name l.dl_name;
+    scope := sc;
+    let used = vars_of l.dl_body in
+    let body = emit "    " D_Return l.dl_body in
+    let voids = String.concat "" (bs |> List.collect (fun ((b:binder), x) ->
+      if List.existsb (fun y -> y = b.b_name) used &&
+         not (List.mem x !tail_kept) then []
+      else ["    (void)" ^ x ^ ";\n"])) in
+    label i ^ ": {\n" ^ voids ^ body ^
+    (if !void_ret then "    return;\n" else "") ^ "  }\n") in
+  tail_targets := [];
+  musttail_ok := false;
+  let fields = members |> List.collect (fun (i, _, bs, _) ->
+    if Nil? bs then [] else
+    ["  struct {\n" ^
+     String.concat "" (bs |> List.mapi (fun j ((b:binder), _) ->
+       "    " ^ decl_of b.b_ty ("a" ^ string_of_int j) ^ ";\n")) ^
+     "  } m" ^ string_of_int i ^ ";\n"]) in
+  let buf = if Nil? fields then "" else
+            "static CHERRY_THREAD_LOCAL union {\n" ^ String.concat "" fields ^
+            "} " ^ g.tg_args ^ ";\n" in
+  let hd = g.tg_fn ^ "(int custard_entry)" in
+  buf ^ "static " ^ (if !void_ret then "void " ^ hd else decl_of l0.dl_ret hd) ^ " {\n" ^
+  String.concat "" decls ^
+  "  switch (custard_entry) {\n" ^ String.concat "" cases ^ "  }\n" ^
+  String.concat "" bodies ^ "}\n"
+
+(* Cherry: a member of a tail group, which enters the group's function. *)
+let tail_member_decl (i:int) (g:tail_group) (l:dlet) : ML string =
+  current := string_of_name l.dl_name;
+  reset_scope ();
+  let bs = kept_binders l |> List.map (fun b -> bind_var b.b_name) in
+  let stores = bs |> List.mapi (fun j x ->
+    "  " ^ g.tg_args ^ ".m" ^ string_of_int i ^ ".a" ^ string_of_int j ^ " = " ^ x ^ ";\n") in
+  let call = g.tg_fn ^ "(" ^ string_of_int i ^ ")" in
+  signature l ^ " {\n" ^ String.concat "" stores ^
+  (if TUnit? l.dl_ret then "  CHERRY_TAILCALL_VOID(" ^ call ^ ");\n"
+   else if musttail_sig_ok [TInt (FStarC.Const.Signed, W32)] (Some l.dl_ret)
+   then "  CHERRY_MUSTTAIL return " ^ call ^ ";\n"
+   else "  return " ^ call ^ ";\n") ^ "}\n"
 
 (* An external is a symbol someone else defines.  When it comes with a header
    we include the header and say nothing more; otherwise we declare it from
@@ -5186,9 +5433,14 @@ let cherry_closure_helpers () : ML (list string & list string) =
         "  env->clo.arity = " ^ arity ^ ";\n" ^
         String.concat "" (fields |> List.map (fun (x, _) -> "  env->" ^ x ^ " = " ^ x ^ ";\n")) ^
         "  return (cherry_fn)env;\n") in
-  let ret_of (call:string) (ret:cty) (void:bool) : ML string =
+  (* What marks a [return] of a call with arguments [ts] and result [ret] a
+     guaranteed tail call, when it can be one (cherry.md, "Tail calls"). *)
+  let mt (ts:list cty) (ret:cty) : ML string =
+    if musttail_sig_ok (List.filter (fun t -> not (TUnit? t)) ts) (Some ret)
+    then "CHERRY_MUSTTAIL " else "" in
+  let ret_of (call:string) (ts:list cty) (ret:cty) (void:bool) : ML string =
     if void then "  " ^ call ^ ";\n  return " ^ unit_value ^ ";\n"
-    else "  return " ^ call ^ ";\n" in
+    else "  " ^ mt ts ret ^ "return " ^ call ^ ";\n" in
   let gen (r:clo_req) : ML unit =
     match r with
     | ReqPap (n, k, vty) ->
@@ -5220,7 +5472,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
       let fields_owned = List.zip fields own_f |> List.collect (fun (f, o) -> if o then [f] else []) in
       let borrowed_ps = List.zip eparams own_p |> List.collect (fun (x, o) -> if o then [] else [x]) in
       let ret_of (call:string) (ret:cty) (void:bool) : ML string =
-        if Nil? (List.filter (fun (_, t) -> is_nonplain_ty t) borrowed_ps) then ret_of call ret void
+        if Nil? (List.filter (fun (_, t) -> is_nonplain_ty t) borrowed_ps) then ret_of call tys ret void
         else if void then "  " ^ call ^ ";\n" ^ on "dec" "" borrowed_ps ^ "  return " ^ unit_value ^ ";\n"
         else "  " ^ decl_of ret "r" ^ " = " ^ call ^ ";\n" ^ on "dec" "" borrowed_ps ^ "  return r;\n" in
       if k = 0 then begin
@@ -5267,11 +5519,13 @@ let cherry_closure_helpers () : ML (list string & list string) =
         "      cherry_dec_fn(g);\n" ^
         "      return r;\n" ^
         "    }\n") in
-      let exact = "    case " ^ string_of_int kn ^ ": return " ^ call_code rk "f" given ^ ";\n" in
+      let fty = TArrow (TUnit, E_Pure, TUnit) in
+      let exact = "    case " ^ string_of_int kn ^ ": " ^ mt (fty :: List.map snd given) rk ^
+                  "return " ^ call_code rk "f" given ^ ";\n" in
       let units =
         if kn > 0 then ""
         else if Some? (arrow_view rk) then "    case CHERRY_ARITY_UNITS: cherry_inc(f); return f;\n"
-        else "    case CHERRY_ARITY_UNITS: return " ^ call_code rk "f" [] ^ ";\n" in
+        else "    case CHERRY_ARITY_UNITS: " ^ mt [fty] rk ^ "return " ^ call_code rk "f" [] ^ ";\n" in
       (* A closure taking more: what it was given is captured. *)
       let over = range (kn + 1) (kn + nonunit_arrows rk) |> List.map (fun m ->
         if kn = 0 then "    case " ^ string_of_int m ^ ": cherry_inc(f); return f;\n" else begin
@@ -5296,7 +5550,8 @@ let cherry_closure_helpers () : ML (list string & list string) =
                                      names eparams) ^ ")" in
       closure ("cherry_papc_env_" ^ arrow_id t ^ "_" ^ string_of_int k ^ "_" ^ string_of_int m)
               (("f", t) :: fields) (string_of_int left) (papc_name t k m ^ "_entry") rm eparams
-              (on "inc" "env->" fields ^ "  return " ^ call ^ ";\n")
+              (on "inc" "env->" fields ^ "  " ^
+               mt (t :: List.map snd fields @ List.map snd eparams) rm ^ "return " ^ call ^ ";\n")
               (papc_name t k m) in
   let rec drain () : ML unit =
     match !clo_queue with
@@ -5304,6 +5559,91 @@ let cherry_closure_helpers () : ML (list string & list string) =
     | r :: rest -> clo_queue := rest; gen r; drain () in
   drain ();
   (!protos, !defs)
+
+(* Cherry: the definitions called in tail position by [e], as far as
+   {!emit} can see -- the bodies of [let]s and sequences, the arms of
+   conditionals and matches.  Missing one costs a jump, not correctness: the
+   call is then an ordinary one. *)
+let rec tail_callees (e:expr) : ML (list string) =
+  match e.e with
+  | ELet (_, _, _, e2) -> tail_callees e2
+  | ESeq (_, e2) -> tail_callees e2
+  | EIf (_, t, f) -> tail_callees t @ tail_callees f
+  | EMatch (_, brs) -> List.collect (fun ((_, _, b):branch) -> tail_callees b) brs
+  | EApp ({ e = EQual (n, _) }, _) -> [string_of_name n]
+  | _ -> []
+
+(* Cherry: the tail groups of [p] ({!tail_group}).  Two definitions are in
+   one when each reaches the other through calls in tail position, the
+   strongly connected components of that graph -- every cycle of tail calls
+   is inside one, so a chain of tail calls that leaves a group never comes
+   back, and only finitely many calls stay on the stack.  A definition joins
+   only if its body can be printed inside another C function: no stack
+   allocation (see {!stack_allocates}), and none of the per-definition
+   decoration that a shared function would have to share. *)
+let build_tail_groups (p:program) : ML unit =
+  let mergeable (l:dlet) : ML bool =
+    Cons? l.dl_binders && not (stack_allocates l.dl_body) &&
+    not (l.dl_flags |> List.existsb (fun f ->
+           Guard? f || Prologue? f || Epilogue? f || CInline? f)) in
+  let ret_key (l:dlet) : ML string =
+    if TUnit? l.dl_ret then "void" else decl_of l.dl_ret "" in
+  let cands = p |> List.collect (fun d ->
+    match d with
+    | DLet l when local d && mergeable l -> [l]
+    | _ -> []) in
+  let tbl : HashTable.t string (dlet & string) = HashTable.create 50 in
+  cands |> List.iter (fun (l:dlet) ->
+    current := string_of_name l.dl_name;
+    HashTable.add tbl (string_of_name l.dl_name) (l, ret_key l));
+  let succs (l:dlet) (k:string) : ML (list string) =
+    tail_callees l.dl_body |> List.filter (fun g ->
+      g <> string_of_name l.dl_name &&
+      (match HashTable.try_find tbl g with
+       | Some (_, k') -> k' = k
+       | None -> false)) in
+  (* Tarjan's algorithm. *)
+  let index : HashTable.t string int = HashTable.create 50 in
+  let low : HashTable.t string int = HashTable.create 50 in
+  let on_stack : HashTable.t string bool = HashTable.create 50 in
+  let stack : ref (list string) = mk_ref [] in
+  let next = mk_ref 0 in
+  let sccs : ref (list (list string)) = mk_ref [] in
+  let get (t:HashTable.t string int) (v:string) : ML int =
+    match HashTable.try_find t v with Some i -> i | None -> 0 in
+  let rec strong (v:string) : ML unit =
+    HashTable.add index v !next; HashTable.add low v !next; next := !next + 1;
+    stack := v :: !stack; HashTable.add on_stack v true;
+    let (l, k) = Some?.v (HashTable.try_find tbl v) in
+    succs l k |> List.iter (fun w ->
+      if None? (HashTable.try_find index w) then begin
+        strong w;
+        if get low w < get low v then HashTable.add low v (get low w)
+      end else if HashTable.try_find on_stack w = Some true then
+        (if get index w < get low v then HashTable.add low v (get index w)));
+    if get low v = get index v then begin
+      let rec pop (acc:list string) : ML (list string) =
+        match !stack with
+        | w :: rest ->
+          stack := rest; HashTable.add on_stack w false;
+          if w = v then w :: acc else pop (w :: acc)
+        | [] -> acc in
+      sccs := pop [] :: !sccs
+    end in
+  cands |> List.iter (fun (l:dlet) ->
+    let v = string_of_name l.dl_name in
+    if None? (HashTable.try_find index v) then strong v);
+  !sccs |> List.iter (fun (c:list string) ->
+    if List.length c >= 2 then begin
+      let members = cands |> List.filter (fun (l:dlet) ->
+        List.existsb (fun x -> x = string_of_name l.dl_name) c) in
+      let first = c_name (List.hd members).dl_name in
+      let g = { tg_fn = alloc_name (first ^ "__tail");
+                tg_args = alloc_name (first ^ "__tail_args");
+                tg_members = members } in
+      members |> List.iteri (fun i (l:dlet) ->
+        HashTable.add !tail_groups (string_of_name l.dl_name) (i, g))
+    end)
 
 let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string) =
   (* Section 42.2.  An imported declaration is in [p] so that the tables below
@@ -5464,6 +5804,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   check_emitted_names init_name p;
   check_reference_copies p;
   arities := at;
+  if Options.custard_cherry () then build_tail_groups p;
 
   (* Only the standard library, and only the parts that are used unavoidably:
      fixed-width integers, malloc/free/abort, memmove, and bool. *)
@@ -5606,6 +5947,12 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     if not (local d) then [] else
     match d with
     | DLet l when Nil? l.dl_binders -> []
+    | DLet l when Some? (HashTable.try_find !tail_groups (string_of_name l.dl_name)) ->
+      let (i, g) = Some?.v (HashTable.try_find !tail_groups (string_of_name l.dl_name)) in
+      [(if i = 0 then tail_group_decl g else "") ^
+       (* Only the group's function may call a member that nothing
+          outside the group names. *)
+       comment_of l ^ storage l ^ "CHERRY_UNUSED " ^ tail_member_decl i g l]
     | DLet l -> [guarded l (comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
                             let_decl l ^ epilogue_of l)]
     | _ -> []) in
