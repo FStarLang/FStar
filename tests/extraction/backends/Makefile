@@ -305,7 +305,7 @@ $(OUTPUT_DIR)/custard/%.cherry.c: $(CACHE_DIR)/%.fst.checked
 $(OUTPUT_DIR)/cch/%.exe: $(OUTPUT_DIR)/custard/%.cherry.c
 	$(call msg, "CC cherry", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(CC) $(CUSTARD_CFLAGS) -g -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) $(CUSTARD_CFLAGS) -g -fsanitize=address,undefined \
 	    -fno-sanitize-recover=undefined -I$(CHERRY_INC) \
 	    -o $@ $< $(CHERRY_INC)/cherry.c
 
