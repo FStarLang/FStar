@@ -3443,6 +3443,7 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)for p in 'static cherry_int MutualTail_p[io]ng__tail\(int custard_entry\)' \
 	    'static void MutualTail_t[io]ck__tail\(int custard_entry\)' \
 	    'goto custard_tail_[01];' \
+	    'static cherry_int MutualTail_walk(__fallback)?__tail\(int custard_entry\)' \
 	    'CHERRY_MUSTTAIL return cherry_apply_'; do \
 	  grep -qE -- "$$p" $< \
 	    || { echo "ERROR: MutualTail's C output is missing $$p"; exit 1; }; done
@@ -3502,6 +3503,16 @@ all: $(CHERRY_DIR)/CherryInt.chgrep
 
 # Locals of different initializers share one C function.
 CHERRY_TESTS += CherryInitScope
+
+# A local function whose type is an arrow only through a recursive type
+# function is not lambda-lifted, which would read its result type off its
+# type: it stays a closure returning [p].
+CHERRY_TESTS += CherryLiftMatch
+$(CHERRY_DIR)/CherryLiftMatch.chgrep: $(CHERRY_DIR)/CherryLiftMatch.chc
+	$(Q)grep -qE '^static cherry_string CherryLiftMatch_main__[a-z]+\(cherry_int src\)' $< \
+	  || { echo "ERROR: CherryLiftMatch's local has the wrong signature"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryLiftMatch.chgrep
 
 # Issue 4715.  An equality test that reaches a dyn is refused, naming the
 # fields that lead to it, rather than emitting a C [==] on cherry_any.
