@@ -51,6 +51,7 @@ open FStarC.Errors.Msg
 
 module BU     = FStarC.Util
 module HashTable = FStarC.HashTable
+module SI = FStarC.SmallInt
 module E      = FStarC.Errors
 module String = FStarC.String
 module Options = FStarC.Options
@@ -4141,6 +4142,13 @@ let global_decl (l:dlet) : ML string =
   | Some v -> d ^ " = " ^ v ^ ";\n"
   | None -> d ^ ";\n"
 
+(* The declaration of a global that another file defines. *)
+let global_extern (l:dlet) : ML string =
+  current := string_of_name l.dl_name;
+  match array_extern l with
+  | Some d -> d
+  | None -> "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"
+
 (* Section 68.  A parameterless definition whose value C can compute at
    translation time, emitted as a [#define] rather than as a variable.
 
@@ -4460,8 +4468,35 @@ let is_public (l:dlet) : ML bool =
   not (l.dl_flags |> List.existsb Entrypoint?) &&
   not (l.dl_flags |> List.existsb Private?)
 
+(* Cherry with [--custard_split]: the definitions are spread over several C
+   files, so a definition that is not public is not [static] either -- another
+   file may call it.  What has to exist once ([split_data]: the descriptors
+   compared by address) is defined in the first file and declared [extern]
+   for the others.  A [CInline] definition stays [static] and is put in the
+   shared header instead. *)
+let split_out : ref bool = mk_ref false
+
+(* The F* module a definition comes from, generated ones included: a lifted
+   lambda or a specialization keeps its parent's [ns]. *)
+let module_of (n:name) : string = String.concat "." n.ns
+let split_data : ref (list string) = mk_ref []
+
 let storage (l:dlet) : ML string =
-  if is_public l then "" else "static "
+  if is_public l then ""
+  else if !split_out && not (l.dl_flags |> List.existsb CInline?) then ""
+  else "static "
+
+(* A helper that only a descriptor names: in a split output, every part has
+   it and only the first uses it. *)
+let helper_static () : ML string =
+  if !split_out then "static CHERRY_UNUSED " else "static "
+
+(* A descriptor whose address is its identity, [static] in a single file. *)
+let unique_object (decl:string) (init:string) : ML string =
+  if !split_out then begin
+    split_data := !split_data @ [decl ^ " = " ^ init ^ ";\n"];
+    "extern " ^ decl ^ ";\n"
+  end else "static " ^ decl ^ " = " ^ init ^ ";\n"
 
 (* Section 36.3.  Decoration a plugin asked for and Custard does not read.
    [Prologue] goes on the *declaration* as well as the definition: CUDA wants
@@ -5133,19 +5168,20 @@ let cherry_exn_helpers (p:program) : ML (list string & list string) =
     let protos =
       [st ^ " { cherry_exn_hdr hdr;" ^
        String.concat "" (fs |> List.map (fun (f, t) -> " " ^ decl_of t f ^ ";")) ^ " };\n";
-       "static void " ^ cn ^ "_exn_free(cherry_obj *x, int m);\n";
-       "static void " ^ cn ^ "_exn_markf(cherry_obj *x, int m);\n";
-       "static const cherry_exn_info " ^ exn_info n ^ " = { \"" ^ string_of_name n ^
-       "\", " ^ cn ^ "_exn_free, " ^ cn ^ "_exn_markf, " ^
-       (match fs with
-        | (f, TApp ({ ns = ["Prims"]; id = "string" }, [])) :: _ ->
-          "offsetof(" ^ st ^ ", " ^ f ^ ")"
-        | _ -> "0") ^ " };\n";
+       helper_static () ^ "void " ^ cn ^ "_exn_free(cherry_obj *x, int m);\n";
+       helper_static () ^ "void " ^ cn ^ "_exn_markf(cherry_obj *x, int m);\n";
+       unique_object ("const cherry_exn_info " ^ exn_info n)
+         ("{ \"" ^ string_of_name n ^
+          "\", " ^ cn ^ "_exn_free, " ^ cn ^ "_exn_markf, " ^
+          (match fs with
+           | (f, TApp ({ ns = ["Prims"]; id = "string" }, [])) :: _ ->
+             "offsetof(" ^ st ^ ", " ^ f ^ ")"
+           | _ -> "0") ^ " }");
        ctor_sig ^ ";\n"] in
     let defs =
-      ["static void " ^ cn ^ "_exn_free(cherry_obj *x, int m) {\n" ^
+      [helper_static () ^ "void " ^ cn ^ "_exn_free(cherry_obj *x, int m) {\n" ^
        "  " ^ st ^ " *c = (" ^ st ^ " *)x;\n  (void)c; (void)m;\n" ^ on "dec" ^ "  free(x);\n}\n";
-       "static void " ^ cn ^ "_exn_markf(cherry_obj *x, int m) {\n" ^
+       helper_static () ^ "void " ^ cn ^ "_exn_markf(cherry_obj *x, int m) {\n" ^
        "  " ^ st ^ " *c = (" ^ st ^ " *)x;\n  (void)c; (void)m;\n" ^ on "mark" ^ "}\n";
        ctor_sig ^ " {\n" ^
        "  " ^ st ^ " *c = (" ^ st ^ " *)cherry_alloc(sizeof(" ^ st ^ "), CHERRY_TAG_EXN);\n" ^
@@ -5172,21 +5208,21 @@ let cherry_any_helpers () : ML (list string & list string) =
     let unpack = "    " ^ decl_of t "x" ^ ";\n    memcpy(&x, &v, sizeof x);\n" in
     let protos =
       [cell ^ " { cherry_obj h; " ^ decl_of t "v" ^ "; };\n";
-       "static void " ^ p ^ "_inc(uintptr_t v);\n";
-       "static void " ^ p ^ "_dec(uintptr_t v);\n";
-       "static void " ^ p ^ "_mark(uintptr_t v, int m);\n";
-       "static const cherry_rtti " ^ p ^ "_rtti = { \"" ^ ct ^ "\", " ^
-       p ^ "_inc, " ^ p ^ "_dec, " ^ p ^ "_mark };\n";
+       helper_static () ^ "void " ^ p ^ "_inc(uintptr_t v);\n";
+       helper_static () ^ "void " ^ p ^ "_dec(uintptr_t v);\n";
+       helper_static () ^ "void " ^ p ^ "_mark(uintptr_t v, int m);\n";
+       unique_object ("const cherry_rtti " ^ p ^ "_rtti")
+         ("{ \"" ^ ct ^ "\", " ^ p ^ "_inc, " ^ p ^ "_dec, " ^ p ^ "_mark }");
        "static inline cherry_any " ^ p ^ "_mk(" ^ decl_of t "x" ^ ");\n";
        "static inline " ^ decl_of t (p ^ "_get(cherry_any a)") ^ ";\n"] in
     (* A plain value in a box still has the box to free. *)
     let free_body =
-      "static void " ^ p ^ "_free(cherry_obj *o, int m) {\n  (void)m;\n" ^
+      helper_static () ^ "void " ^ p ^ "_free(cherry_obj *o, int m) {\n  (void)m;\n" ^
       (if np then "  " ^ op "dec" ("((" ^ cell ^ " *)o)->v") ^ ";\n" else "") ^
       "  free(o);\n}\n" in
     let defs =
       [free_body;
-       "static void " ^ p ^ "_dec(uintptr_t v) {\n" ^
+       helper_static () ^ "void " ^ p ^ "_dec(uintptr_t v) {\n" ^
        "  if " ^ small ^ " {\n" ^
        (if np then unpack ^ "    " ^ op "dec" "x" ^ ";\n" else "") ^
        "  } else {\n" ^
@@ -5195,15 +5231,15 @@ let cherry_any_helpers () : ML (list string & list string) =
       (* A plain payload too big for the word is still in a counted box,
          which has to be counted and marked even though its contents are
          not. *)
-      ["static void " ^ p ^ "_inc(uintptr_t v) {\n" ^
+      [helper_static () ^ "void " ^ p ^ "_inc(uintptr_t v) {\n" ^
        "  if " ^ small ^ " {\n" ^
        (if np then unpack ^ "    " ^ op "inc" "x" ^ ";\n" else "") ^
        "  } else cherry_inc((cherry_obj *)v);\n}\n"] @
       (if np then
-        ["static void " ^ p ^ "_markf(cherry_obj *o, int m) {\n" ^
+        [helper_static () ^ "void " ^ p ^ "_markf(cherry_obj *o, int m) {\n" ^
          "  " ^ op "mark" ("((" ^ cell ^ " *)o)->v") ^ ";\n}\n"]
        else []) @
-      ["static void " ^ p ^ "_mark(uintptr_t v, int m) {\n" ^
+      [helper_static () ^ "void " ^ p ^ "_mark(uintptr_t v, int m) {\n" ^
        "  if " ^ small ^ " {\n" ^
        (if np then unpack ^ "    " ^ op "mark" "x" ^ ";\n" else "    (void)m;\n") ^
        "  } else {\n    cherry_obj *o = (cherry_obj *)v;\n" ^
@@ -5661,7 +5697,89 @@ let build_tail_groups (p:program) : ML unit =
         HashTable.add !tail_groups (string_of_name l.dl_name) (i, g))
     end)
 
-let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string) =
+(* Split output (cherry.md, "Split output") gives each file only the helpers,
+   prototypes and literals its text refers to, transitively: the whole set is
+   tens of megabytes, which every file would otherwise parse.  Generated C is
+   regular enough to do this on the text.  Every top-level line of an item
+   starts a declaration, whose name is the one after [#define], the first
+   argument of a [MACRO(name, ...)], or else the last identifier before the
+   first [(], [=], [;], [\{] or [\[]. *)
+let is_ident_start (c:SI.t) : bool =
+  let open SI in
+  (of_char 'a' <= c && c <= of_char 'z') ||
+  (of_char 'A' <= c && c <= of_char 'Z') || c = of_char '_'
+let is_digit (c:SI.t) : bool = let open SI in of_char '0' <= c && c <= of_char '9'
+let is_ident_char (c:SI.t) : bool = is_ident_start c || is_digit c
+
+(* The first offset from [i] before [j] whose byte fails [p], else [j]. *)
+let rec skip_while (s:string) (p:SI.t -> bool) (i:SI.t) (j:SI.t) : ML SI.t =
+  if SI.(i < j) && p (String.byte_at s i) then skip_while s p SI.(i + one) j else i
+
+(* The identifiers of [s] from [i] to [j], in order, with their offsets. *)
+let idents_between (s:string) (i:SI.t) (j:SI.t) : ML (list (SI.t & string)) =
+  let rec go (i:SI.t) (acc:list (SI.t & string)) : ML (list (SI.t & string)) =
+    if not SI.(i < j) then List.rev acc else
+    let c = String.byte_at s i in
+    if is_ident_start c then
+      let k = skip_while s is_ident_char i j in
+      go k ((i, String.byte_substring s i k) :: acc)
+    (* a number's suffix ([1u]) is not a name *)
+    else if is_digit c then go (skip_while s is_ident_char i j) acc
+    else go SI.(i + one) acc in
+  go i []
+
+let idents_of (s:string) : ML (list string) =
+  List.map snd (idents_between s SI.zero (String.byte_length s))
+
+(* The names an item declares. *)
+let declared_names (s:string) : ML (list string) =
+  let n = String.byte_length s in
+  let stops = [SI.of_char '('; SI.of_char '='; SI.of_char ';'; SI.of_char '{'; SI.of_char '['] in
+  let rec go (i:SI.t) (acc:list string) : ML (list string) =
+    if not SI.(i < n) then acc else
+    let e = skip_while s (fun c -> c <> SI.of_char '\n') i n in
+    let c = String.byte_at s i in
+    let acc =
+      if c = SI.of_char '#' then
+        (match idents_between s i e with
+         | (_, "define") :: (_, x) :: _ -> x :: acc
+         | _ -> acc)
+      else if is_ident_start c then begin
+        let ids = idents_between s i e in
+        let stop = skip_while s (fun c -> not (List.mem c stops)) i e in
+        let before = List.filter (fun (k, _) -> SI.(k < stop)) ids in
+        match before, ids with
+        | [_], _ :: (_, x) :: _ when String.byte_at s stop = SI.of_char '(' ->
+          (* MACRO(name, ...) *)
+          x :: acc
+        | _ :: _, _ -> snd (List.last before) :: acc
+        | _ -> acc
+      end else acc in
+    go SI.(e + one) acc in
+  go SI.zero []
+
+(* The items, in order, that the text [roots] needs. *)
+let select_items (provides:HashTable.t string (list int)) (uses:int -> ML (list string))
+                 (roots:list string) : ML (list int) =
+  let seen : HashTable.t string bool = HashTable.create 1000 in
+  let chosen : HashTable.t int bool = HashTable.create 1000 in
+  let rec go (work:list string) (out:list int) : ML (list int) =
+    match work with
+    | [] -> out
+    | x :: work ->
+      if HashTable.mem seen x then go work out else begin
+        HashTable.add seen x true;
+        match HashTable.try_find provides x with
+        | None -> go work out
+        | Some ks ->
+          let ks = List.filter (fun k -> not (HashTable.mem chosen k)) ks in
+          ks |> List.iter (fun k -> HashTable.add chosen k true);
+          go (List.collect uses ks @ work) (ks @ out)
+      end in
+  List.sortWith (fun a b -> a - b) (go roots [])
+
+let print_program (base:string) (cu:unit_info) (p:program)
+  : ML (string & string & list (string & string)) =
   (* Section 42.2.  An imported declaration is in [p] so that the tables below
      see its shape, and out of every list that is emitted: the unit that
      compiled it has a header, and that header is included instead.  Writing a
@@ -5670,6 +5788,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   (* Section 121.2.  Every per-program variable this module has, including
      the generated comparisons of section 107, which are one unit's. *)
   reset_program_state ();
+  split_out := Options.custard_cherry () && Options.custard_split ();
+  split_data := [];
   record_parents p;
   (* Section 102.2.  Before the tables, not after them.  The external table
      below stores a *resolved* C name -- an external is the one declaration
@@ -5937,6 +6057,9 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     (* A public one is in the header, which this source includes; repeating it
        here would be a redefinition. *)
     | DLet l when is_macro l -> if is_public l then [] else [guarded l (prologue_of l ^ macro_decl l)]
+    (* Split, every file declares it and the first one defines it. *)
+    | DLet l when Nil? l.dl_binders && !split_out ->
+      if is_public l then [] else [guarded l (prologue_of l ^ global_extern l)]
     | DLet l when Nil? l.dl_binders -> [guarded l (prologue_of l ^ storage l ^ global_decl l)]
     | DLet l when Cons? l.dl_binders ->
       if is_public l then []
@@ -5951,31 +6074,45 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
        the macro would then rewrite that declaration's own name. *)
     | DLet l when is_public l && is_macro l -> [guarded l (prologue_of l ^ macro_decl l)]
     | DLet l when is_public l && Nil? l.dl_binders ->
-      current := string_of_name l.dl_name;
-      (match array_extern l with
-       | Some d -> [guarded l (prologue_of l ^ d)]
-       | None ->
-         [guarded l (prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n")])
+      [guarded l (prologue_of l ^ global_extern l)]
     | DLet l when is_public l -> [guarded l (prologue_of l ^ inline_of l ^ proto_of l)]
     | _ -> []) in
 
+  (* A definition's text, its F* module, and how a split output treats it:
+     [""] for a plain one, ["#inline"] for one that goes in the shared header
+     (a [static inline] one), or else the tail group it belongs to, which is
+     kept in one file, since the group's function and argument buffer are
+     [static]. *)
   let defs = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
     | DLet l when Nil? l.dl_binders -> []
     | DLet l when Some? (HashTable.try_find !tail_groups (string_of_name l.dl_name)) ->
       let (i, g) = Some?.v (HashTable.try_find !tail_groups (string_of_name l.dl_name)) in
-      [(if i = 0 then tail_group_decl g else "") ^
-       (* Only the group's function may call a member that nothing
-          outside the group names. *)
-       comment_of l ^ storage l ^ "CHERRY_UNUSED " ^ tail_member_decl i g l]
-    | DLet l -> [guarded l (comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
-                            let_decl l ^ epilogue_of l)]
+      [(g.tg_fn, module_of l.dl_name,
+        (if i = 0 then tail_group_decl g else "") ^
+        (* Only the group's function may call a member that nothing
+           outside the group names. *)
+        comment_of l ^ storage l ^ "CHERRY_UNUSED " ^ tail_member_decl i g l)]
+    | DLet l -> [((if l.dl_flags |> List.existsb CInline? then "#inline" else ""),
+                  module_of l.dl_name,
+                  guarded l (comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
+                             let_decl l ^ epilogue_of l))]
     | _ -> []) in
+  let global_defs =
+    if not !split_out then [] else
+    p |> List.collect (fun d ->
+      if not (local d) then [] else
+      match d with
+      | DLet l when is_macro l -> []
+      | DLet l when Nil? l.dl_binders ->
+        [(module_of l.dl_name, guarded l (prologue_of l ^ global_decl l))]
+      | _ -> []) in
 
   (* In declaration order, which the SCC pass has already made a topological
      one: a global whose initializer reads another global sees it set. *)
-  let inits = global_inits_of p |> List.mapi (fun i l -> global_init (i = 0) l) in
+  let init_lets = global_inits_of p in
+  let inits = init_lets |> List.mapi (fun i l -> global_init (i = 0) l) in
   (* A program with no globals has nothing to initialize, and an empty
      function that [main] calls anyway is two lines of noise plus a block
      that says nothing.  It is also part of this file's interface, so it is
@@ -6082,28 +6219,27 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   cpp_close in
 
   let lits = !string_lit_defs in
-  let src_body =
-  String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
-  String.concat "" lits ^ (match lits with [] -> "" | _ -> "\n") ^
-  String.concat "" rc_protos ^ (match rc_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" ref_protos ^ (match ref_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" iarr_protos ^ (match iarr_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" exn_protos ^ (match exn_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" any_protos ^ (match any_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" pbuf_protos ^ (match pbuf_protos with [] -> "" | _ -> "\n") ^
-  String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
-  String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
-  String.concat "" clo_protos ^ (match clo_protos with [] -> "" | _ -> "\n") ^
-  String.concat "\n" clo_defs ^ (match clo_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" ref_defs ^ (match ref_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" iarr_defs ^ (match iarr_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" exn_defs ^ (match exn_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" any_defs ^ (match any_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" pbuf_defs ^ (match pbuf_defs with [] -> "" | _ -> "\n") ^
-  String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
-  String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^
+  let fn_defs, inline_defs =
+    let text (_, _, d) = d in
+    if not !split_out then List.map text defs, [] else
+    List.map text (List.filter (fun (k, _, _) -> k <> "#inline") defs),
+    List.map text (List.filter (fun (k, _, _) -> k = "#inline") defs) in
+  (* The pieces of the source before the definitions, each a list of items
+     joined by its separator. *)
+  let support_groups = [
+    "", exts; "", lits; "", rc_protos; "", ref_protos; "", iarr_protos;
+    "", exn_protos; "", any_protos; "", pbuf_protos; "\n", rc_defs; "", protos;
+    "", clo_protos; "\n", clo_defs; "\n", ref_defs; "\n", iarr_defs;
+    "\n", exn_defs; "\n", any_defs; "\n", pbuf_defs; "", eq_protos;
+    "\n", eq_defs; "\n", inline_defs ] in
+  let render_groups (gs:list (string & list string)) : ML string =
+    String.concat "" (gs |> List.map (fun (sep, xs) ->
+      String.concat sep xs ^ (match xs with [] -> "" | _ -> "\n"))) in
+  let support_body = render_groups support_groups in
+  let tail_body =
+    (match inits with [] -> "" | _ -> init_fn) ^
     (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
+  let src_body = support_body ^ String.concat "\n" fn_defs ^ "\n" ^ tail_body in
 
   (* Sections 5.1, 66 and 98.  Each of the two support blocks goes into the
      header if the header needs it, otherwise into the source if the source
@@ -6143,4 +6279,92 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     (if not hdr_narrow && mentions_narrow src_body
      then narrow_support else "") ^
     "\n" ^ src_body in
-  hdr, body
+  if not !split_out then hdr, body, [] else begin
+    (* Split: one file per F* module, so that a change to one module changes
+       its file and no other. *)
+    let files : HashTable.t string (list string) = HashTable.create 100 in
+    let order : ref (list string) = mk_ref [] in
+    let put (m:string) (d:string) : ML unit =
+      match HashTable.try_find files m with
+      | Some l -> HashTable.add files m (d :: l)
+      | None -> order := m :: !order; HashTable.add files m [d] in
+    (* A tail group goes where its first member does. *)
+    let group_home : HashTable.t string string = HashTable.create 50 in
+    defs |> List.iter (fun (k, m, d) ->
+      if k = "#inline" then ()
+      else if k = "" then put m d
+      else match HashTable.try_find group_home k with
+        | Some m' -> put m' d
+        | None -> HashTable.add group_home k m; put m d);
+    global_defs |> List.iter (fun (m, d) -> put m d);
+    (* The initializer calls one function per run of consecutive globals of
+       a module, defined in that module's file: as a single function it was
+       slower to compile than everything else together. *)
+    let runs = List.fold_left2 (fun (acc:list (string & list string)) l i ->
+        let m = module_of l.dl_name in
+        match acc with
+        | (m', is) :: acc' when m' = m -> (m, i :: is) :: acc'
+        | _ -> (m, [i]) :: acc) [] init_lets inits |> List.rev in
+    let seen : HashTable.t string int = HashTable.create 50 in
+    let pieces = runs |> List.map (fun (m, is) ->
+      let k = match HashTable.try_find seen m with Some k -> k + 1 | None -> 1 in
+      HashTable.add seen m k;
+      let nm = init_name ^ "__" ^ sanitize m ^ (if k = 1 then "" else "_" ^ show k) in
+      put m ("void " ^ nm ^ "(void) {\n" ^ String.concat "" (List.rev is) ^ "}\n");
+      nm) in
+    let piece_protos = pieces |> List.map (fun nm -> "void " ^ nm ^ "(void);\n") in
+    let init_fn = match inits with
+      | [] -> ""
+      | _ -> "void " ^ init_name ^ "(void) {\n" ^ init_guard ^
+             String.concat "" (pieces |> List.map (fun nm -> "  " ^ nm ^ "();\n")) ^
+             "}\n" in
+    let tail_body =
+      init_fn ^ (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
+    (* Every item of the support code, numbered in order, indexed by the
+       names it declares. *)
+    let groups = support_groups @ ["", piece_protos] in
+    let numbered, _ = List.fold_left (fun (acc, k) (sep, xs) ->
+        let ys = List.mapi (fun i x -> (k + i, x)) xs in
+        ((sep, ys) :: acc, k + List.length xs)) ([], 0) groups in
+    let numbered = List.rev numbered in
+    let uses : HashTable.t int (list string) = HashTable.create 100000 in
+    let provides : HashTable.t string (list int) = HashTable.create 100000 in
+    numbered |> List.iter (fun (_, ys) -> ys |> List.iter (fun (k, x) ->
+      HashTable.add uses k (idents_of x);
+      declared_names x |> List.iter (fun n ->
+        HashTable.add provides n
+          (k :: (match HashTable.try_find provides n with Some l -> l | None -> [])))));
+    let uses_of k = match HashTable.try_find uses k with Some l -> l | None -> [] in
+    let prelude =
+      banner ^ "#include \"" ^ base ^ ".h\"\n" ^
+      (if not hdr_unit && mentions_unit src_body
+       then "\n" ^ unit_support else "") ^
+      (if not hdr_fspec && mentions_float_special src_body
+       then "\n" ^ float_special_support else "") ^
+      (if not hdr_narrow && mentions_narrow src_body
+       then narrow_support else "") ^
+      "\n" in
+    (* The items of [ys] whose numbers are in [sel], both ascending. *)
+    let rec pick (sel:list int) (ys:list (int & string)) (acc:list string)
+      : Tot (list int & list string) (decreases %[ys; sel]) =
+      match sel, ys with
+      | [], _ | _, [] -> sel, List.rev acc
+      | k :: sel', (j, x) :: ys' ->
+        if k = j then pick sel' ys' (x :: acc)
+        else if k < j then pick sel' ys acc
+        else pick sel ys' acc in
+    let part (text:string) =
+      let sel = select_items provides uses_of (idents_of text) in
+      let _, gs = List.fold_left (fun (sel, gs) (sep, ys) ->
+          let sel, xs = pick sel ys [] in
+          (sel, (sep, xs) :: gs)) (sel, []) numbered in
+      prelude ^ render_groups (List.rev gs) ^ text in
+    (* The [-o] file: what exists once, the initializer and [main]. *)
+    let body0 = part (String.concat "" !split_data ^ "\n" ^ tail_body) in
+    let extras =
+      List.rev !order |> List.map (fun m ->
+        (base ^ "." ^ m ^ ".c",
+         part (String.concat "\n"
+                 (List.rev (match HashTable.try_find files m with Some l -> l | None -> []))))) in
+    hdr, body0, extras
+  end
