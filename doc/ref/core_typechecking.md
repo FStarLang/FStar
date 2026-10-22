@@ -522,11 +522,25 @@ that type says is in scope for everything after it. Core synthesizes the
 type of an application as the head's result type, which says nothing about
 the arguments. Core instead recovers the missing information as **facts**:
 
-* `term_facts g a` is what the (memoized) types of the pure term `a` and of
-  its subterms say about `a`.
-* `app_facts` collects the facts of an application's arguments, of the
-  definitions of the `let`s it is made of, and of its branches, each under
-  the condition that its branch is taken.
+* Facts are computed by `do_check` in the same pass as a term's type, from
+  the facts of its subterms, and are cached with the type (`facts`). They
+  are lazy (`Thunk`), since most are never used. No term is traversed or
+  checked again to compute them.
+* `f_sub` holds the facts about a term's subterms: an application's
+  arguments, the definitions of the `let`s it is made of (with a pure
+  definition substituted for its variable, and the facts mentioning the
+  variable of an effectful one dropped), and its branches, each under the
+  condition that its branch is taken. The facts of the second argument of a
+  short-circuiting operator are stated under the first argument's
+  condition.
+* `f_term` holds what a pure term's type says about it (`term_facts`),
+  together with `f_sub`. A term checked against an expected type (a pushed
+  `let` or `match`) gets its facts from that type, plus its `f_tail`, which
+  stands in for what its unsynthesized type would have said: for example,
+  the `squash p` of `lemma ()` in a branch `(lemma0 (); lemma ())` checked
+  against `unit`.
+* `f_tail` holds the `f_term` of the expression that a term's `let`s end
+  with.
 * Facts are added as hypotheses of the guard at a refinement-subtyping
   witness (`witness_guard`), of the subtyping of an argument whose formal
   depends on earlier arguments (`check_app_arg`), and when a pure `let` is
@@ -565,11 +579,10 @@ synthesized type is computed without checking that type again
 an annotated `let` (an effectful `e1`, or one into which the annotation is
 not pushed), its refinement is added to `x`'s type: the annotation may be
 one that elaboration inferred, which lacks the definition's postcondition.
-When the annotation is pushed into a pure `e1`, `e1` is recorded in the
-cache at the annotation, so that its facts are computed without
-synthesizing its type again. What `e1` establishes beyond its annotation
-then reaches the body as facts: those of `e1` and its subterms, and those
-of the expression that the `let`s of `e1` end with (`let_tail_facts`). For
+When the annotation is pushed into a pure `e1`, what `e1` establishes
+beyond its annotation reaches the body as facts: those of `e1` and its
+subterms, and those of the expression that the `let`s of `e1` end with
+(`f_tail`). For
 example, `eliminate exists x. p x with lemma x` elaborates to
 `let _ : unit = (let x = .. in lemma x) in ..`, where only the type of
 `lemma x` says what it proves

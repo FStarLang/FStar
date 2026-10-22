@@ -187,17 +187,20 @@ that is not pushed into). That type still refines the binder
 annotation is pushed into a pure definition, nothing is synthesized:
 
 * The binder has the annotation as its type.
-* The definition is inserted into the cache at the annotation, so that
-  `term_facts` and `app_facts` find it without a second synthesis.
 * What the definition establishes beyond its annotation reaches the body
-  as facts: those of the definition (`app_facts`, or `term_facts` when the
+  as facts: those of the definition (`f_sub`, or `f_term` when the
   variable is substituted or dropped), and those of the expression its
-  `let`s end with (`let_tail_facts`), whose type the synthesized `tdef`
-  used to carry. Without the latter, `PulseCore.IndirectionTheoryActions`
-  failed: `eliminate exists x. p x with star_equiv ..` elaborates to
+  `let`s end with (`f_tail`), whose type the synthesized `tdef` used to
+  carry. Without the latter, `PulseCore.IndirectionTheoryActions` failed:
+  `eliminate exists x. p x with star_equiv ..` elaborates to
   `let _ : unit = (let x = .. in star_equiv ..) in ..`, and only the type
-  of `star_equiv ..` says what it proves. `let_tail_facts` re-synthesizes
-  only that final expression, so the cost stays linear in the `let` chain.
+  of `star_equiv ..` says what it proves.
+* The facts are computed by `do_check` in the same pass as the types (see
+  `core_typechecking.md` §5). They replace the earlier `app_facts`,
+  `term_facts` and `let_tail_facts`, which traversed a checked term again.
+  Those functions looked up its subterms' types in the cache, and on a
+  miss they checked the subterm again. They also repeated parts of
+  `check_match`.
 
 So the effectful case keeps binder strengthening, which is the only place
 its postcondition lives. The pure case uses facts plus the defining
