@@ -27,8 +27,7 @@ type ext_state =
 let defaults = [
   ("context_pruning", "true");
   ("prune_decls", "true");
-  ("fly_deps", "true");
-  ("smtencoding:share", "true")
+  ("fly_deps", "true")
 ]
 
 let init : ext_state =
