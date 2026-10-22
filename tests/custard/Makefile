@@ -3481,10 +3481,20 @@ $(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryMoveFields.chgrep
 
+# Cherry: a record update changes a unique record in place instead of
+# building a new cell.
+$(CHERRY_DIR)/CherryRecordUpdate.chgrep: $(CHERRY_DIR)/CherryRecordUpdate.chc
+	$(Q)for f in set_name push; do \
+	  sed -n "/^static .* CherryRecordUpdate_$$f(.*{$$/,/^}/p" $< > $@.tmp; \
+	  grep -q 'cherry_unshare_' $@.tmp && ! grep -q 'cherry_new_CherryRecordUpdate_env' $@.tmp \
+	    || { echo "ERROR: CherryRecordUpdate_$$f does not update in place"; exit 1; }; done
+	$(Q)rm -f $@.tmp; touch $@
+all: $(CHERRY_DIR)/CherryRecordUpdate.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
