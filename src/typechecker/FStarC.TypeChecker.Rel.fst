@@ -5676,7 +5676,7 @@ let pick_a_univ_deffered_implicit (out : tagged_implicits)
   : ML (option Env.implicit & tagged_implicits)
   =
   let imps_with_deferred_univs, rest = List.partition
-    (fun (_, status) -> status = Implicit_checking_defers_univ_constraint)
+    (fun (_, status) -> Implicit_checking_defers_univ_constraint? status)
     out in
   match imps_with_deferred_univs with
   | [] -> None, out
@@ -5931,7 +5931,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                  is_tac
                  force_univ_constraints in
                let res = Option.map Listlike.to_list res in
-               if res <> Some []
+               if not (match res with Some [] -> true | _ -> false)
                then failwith "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
                else ()
           else ();

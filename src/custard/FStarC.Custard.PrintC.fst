@@ -467,6 +467,10 @@ let void_ret : ref bool = mk_ref false
    when the transformation is allowed, and [tail_used] whether it happened. *)
 let tail_self : ref (option (string & list binder)) = mk_ref None
 let tail_used : ref bool = mk_ref false
+(* The parameters some self tail call passes unchanged.  Such a call writes
+   nothing to them, so a parameter whose only use is that one is unused as far
+   as C can tell, and gets voided like one the body never mentions. *)
+let tail_kept : ref (list string) = mk_ref []
 
 let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
   match flags, xs with
@@ -1573,6 +1577,31 @@ let string_lit (s:string) : ML string =
       ["CHERRY_STRING_LIT(" ^ n ^ ", \"" ^ escape s ^ "\");\n"];
     n
 
+(* Cherry: an integer literal that is not a small integer on every target is
+   a static persistent cell ([CHERRY_INT_LIT] in cherry.h), one per value, so
+   evaluating it allocates nothing.  One that is small where small integers
+   have 63 bits is [CHERRY_INT_WIDE], which is that small integer there. *)
+let int_lits : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+
+let rec limbs (m:int) : ML (list string) =
+  if m = 0 then [] else (show (m % 4294967296) ^ "u") :: limbs (m / 4294967296)
+
+let int_lit (v:int) : ML string =
+  let n =
+    match HashTable.try_find !int_lits (show v) with
+    | Some n -> n
+    | None ->
+      let n = alloc_name "cherry_intlit" in
+      HashTable.add !int_lits (show v) n;
+      let ds = limbs (if v < 0 then - v else v) in
+      string_lit_defs := !string_lit_defs @
+        ["CHERRY_INT_LIT(" ^ n ^ ", " ^ (if v < 0 then "1" else "0") ^ ", " ^
+         show (List.length ds) ^ ", " ^ String.concat ", " ds ^ ");\n"];
+      n in
+  if v < 4611686018427387904 && v >= - 4611686018427387904
+  then "CHERRY_INT_WIDE(INT64_C(" ^ show v ^ "), " ^ n ^ ")"
+  else "((cherry_int)&" ^ n ^ ")"
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> unit_value
@@ -1594,7 +1623,7 @@ let constant (c:constant) : ML string =
   | CInt (v, _, None) when Options.custard_cherry () ->
     if v < 1073741824 && v > -1073741824
     then "CHERRY_INT_SMALL(" ^ show v ^ ")"
-    else "cherry_int_of_decimal(\"" ^ show v ^ "\")"
+    else int_lit v
   | CString s when Options.custard_cherry () -> "((cherry_string)&" ^ string_lit s ^ ")"
   | CInt (v, b, None) ->
     reject ("the unbounded integer literal " ^ int_lit_to_string v b)
@@ -1930,6 +1959,7 @@ let reset_program_state () : ML unit =
   eq_seen := HashTable.create 20;
   string_lits := HashTable.create 20;
   string_lit_defs := [];
+  int_lits := HashTable.create 20;
   boxed_tbl := HashTable.create 0;
   nonplain_tbl := HashTable.create 0;
   taken_names := HashTable.create 50;
@@ -2867,6 +2897,8 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let vals = List.map2 (fun (b:binder) (a:expr) -> (b, c_rvalue out ind b.b_ty a)) bs args in
     (* Every argument is read before any parameter is written. *)
     let moves = vals |> List.filter (fun ((b:binder), v) -> v <> lookup_var b.b_name) in
+    vals |> List.iter (fun ((b:binder), v) ->
+      if v = lookup_var b.b_name then tail_kept := v :: !tail_kept);
     let tmps = moves |> List.map (fun ((b:binder), v) ->
       let t = fresh "tail" in
       (b, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
@@ -3266,12 +3298,12 @@ and pat_tests (path:string) (t:cty) (p:pat)
   (* Section 44.2.  A string pattern is a test on contents, not on address:
      [pat_tests] is handed the type of the path, so it can see the difference
      without looking at the constant. *)
-  (* A Cherry integer literal that is not a small integer is a cell: the
-     test builds and releases it rather than leaving it to leak. *)
+  (* A Cherry integer literal that is not a small integer is a cell, so the
+     test compares contents. *)
   | PConst (CInt (v, _, None))
     when Options.custard_cherry () &&
          not (v < 1073741824 && v > -1073741824) ->
-    (["cherry_int_eq_decimal(" ^ path ^ ", \"" ^ show v ^ "\")"], [])
+    (["cherry_int_eq(" ^ path ^ ", " ^ int_lit v ^ ")"], [])
   | PConst c when Some? (content_eq t "" "") ->
     (match content_eq t path (constant c) with
      | Some c -> ([c], [])
@@ -3440,13 +3472,26 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      are counters, and letting them run would renumber the variables of the
      branch that is kept ([ns] would come out as [ns_3]).  [scope] is already
      saved by [branch_body]; these two are saved here. *)
+  (* Only a destination that discards the value can receive nothing: one that
+     assigns or returns it always gets a statement.  The trial emission is
+     skipped there, and not only to save the work: the branch kept is
+     emitted again, so trying every match's last branch is exponential in
+     how deeply such matches nest. *)
+  let discards =
+    (match d with
+     | D_Ignore -> true
+     | D_Return -> !void_ret
+     | _ -> false) in
   let emits_nothing (p:pat) (b:expr) : ML bool =
+    discards &&
+    begin
     let saved_ctr = !ctr in
     let saved_declared = HashTable.copy !declared in
     let s = branch_body ind' p b in
     ctr := saved_ctr;
     declared := saved_declared;
-    s = "" in
+    s = ""
+    end in
   let rec trim (rbs:list branch) : ML (list branch) =
     match rbs with
     | (p, _, b) :: rest when emits_nothing p b -> trim rest
@@ -4011,16 +4056,19 @@ let let_decl (l:dlet) : ML string =
   (* C also warns about an unused *parameter*, and a definition's parameters
      have to be named, so the ones the body never mentions are voided
      explicitly. *)
-  let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
-    if List.existsb (fun y -> y = b.b_name) used then []
-    else ["  (void)" ^ lookup_var b.b_name ^ ";\n"])) in
   tail_used := false;
+  tail_kept := [];
   tail_self :=
     (if Options.custard_cherry () && not (stack_allocates l.dl_body)
      then Some (string_of_name l.dl_name, kept_binders l)
      else None);
   let body = emit "  " D_Return l.dl_body in
   tail_self := None;
+  let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
+    let v = lookup_var b.b_name in
+    if List.existsb (fun y -> y = b.b_name) used &&
+       not (List.mem v !tail_kept) then []
+    else ["  (void)" ^ v ^ ";\n"])) in
   signature l ^ " {\n" ^ voids ^
   (if !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
 

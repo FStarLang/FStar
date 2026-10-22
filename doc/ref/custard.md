@@ -1357,14 +1357,28 @@ A top-level `let` whose definiens is *effectful* is a module initializer:
 loop of §3.3 never reaches it, and dropping it does not merely lose code --- it
 silently changes what the program does, since the registration never happens.
 
-So once the closure from the roots is complete, **every module it pulled in
-contributes its initializers**, and that may pull in further modules, so the
+So **the first request into a module also requests its initializers**, and
+once the closure from the roots is complete, every module it pulled in
+contributes its initializers too, and that may pull in further modules, so the
 step is iterated to a fixpoint.  An initializer is requested after everything
-it can call, so it lands at the end of the declaration order and OCaml runs the
-emitted `let`s in the order they are printed; across a split (§12.9) the linker
-runs each file's in dependency order.  What is *not* defined is the relative
-order of two initializers in unrelated modules --- F\* gives that no meaning
-either.
+it can call, and the emitted `let`s run in the order they are printed (OCaml's
+module initialization, `custard_init_globals` in C); across a split (§12.9) the
+linker runs each file's in dependency order.  Requesting a module's
+initializers on first use puts them before every definition outside the module
+that refers to it, as OCaml initializes a module completely before the modules
+that depend on it: `FStarC.SMTEncoding.Encode.prims` is computed at start-up
+from options that `FStarC.Options`' `let _ = clear ()` has to set first, and
+requested at the end that initializer came after it (test: `InitOrder`).
+
+A module the program only `open`s for its effect --- the compiler's drivers
+open `FStarC.Hooks` --- is known to the program by its interface alone, which
+has no initializers.  OCaml still links, and so initializes, its
+implementation, so the fixpoint loads the implementation of every such module
+whose checked file it can find (`Loader.impl_is_checked`; a module realized by
+hand has none) and requests its initializers too (test: `InitOpen`).
+
+What is *not* defined is the relative order of two initializers in unrelated
+modules --- F\* gives that no meaning either.
 
 This is why the note in §7.3's legality table used to say that dead-code
 elimination of a top-level `DLet` is always legal.  It is legal only for a
@@ -1866,6 +1880,15 @@ Two rules fall out of that and are worth naming:
   down to the terms that produce their value, so each of those has already been
   coerced and the node agrees by construction.  Asking a second time is exactly
   how a coercion ends up around the `if` as well as inside each branch.
+  Such a node then *takes* the expected type, since every value it can
+  produce now has it; so does a lambda, whose result type becomes that of its
+  checked body.  Left at the old type, the node disagrees with its parent's
+  view of it, and Cherry, which reads a node's type to decide where a value
+  goes into or comes out of an `any`, unboxes a value that was never boxed.
+  For the same reason a constructor, record, tuple or constant typed `TAny`
+  --- a `Some` out of an inlined polymorphic `return` --- takes a concrete
+  expected type: it is built in place, at whatever type its position wants
+  (tests: `CoerceLamRes`, `CoerceCtor`).
 
 A scrutinee, a projection and a discriminator are the one place the expectation
 is manufactured rather than read off: a value of type `Obj.t` cannot be taken
@@ -6346,6 +6369,17 @@ other two backends, so there the inlining buys nothing and is not worth that.
 > A transformation that only one backend needs belongs behind a test on the
 > backend, not in the shared pipeline.
 
+"At most one" counts the worst branch: the alternatives of a `match`, `if` or
+`try` are not added up.  That is the right count for plain C, which has no
+other way to compile the lambda, but it copies the lambda into every branch
+that calls it, and the lambdas it calls into each copy.  Cherry has heap
+closures, so there the substitution is an optimization and must not copy code:
+under Cherry the lambda is substituted only where it is written once.  The
+local helpers of `FStarC.TypeChecker.Rel.solve_t'` had made it a single C
+function of 200,000 lines with a 1.2MB stack frame; it is 8,500 lines now.
+`tests/custard/LocalFunDup.fst` checks that the helper is called from one
+place.
+
 ### 14.8 Two clones of one type
 
 With `--custard_monomorphize_types`, `option sid_t` and `option U16.t` asked
@@ -6419,6 +6453,15 @@ emission has to leave nothing behind: `fresh` and the name allocator are
 counters, and letting them run renumbered the variables of the branch that was
 *kept* (`ns` came out as `ns_3`).  `scope` was already saved and restored;
 `ctr` and `declared` now are too.
+
+The trial is also only made where a body *can* come out empty: where the
+match's value is discarded (`D_Ignore`, or `D_Return` in a `void` function).
+A value that is assigned or returned always gets a statement.  This matters
+for more than the work saved: the arm that is kept is emitted again, so
+trying the last arm of every match costs twice per level of matches nested
+in each other's last arm, and the compiler's own unit-test driver had nests
+deep enough that printing it did not finish.  `tests/custard/DeepMatch.fst`
+is twenty-eight of them.
 
 Thirty lines of the DICE output went, and the test the fix suggested found one
 more, in the previous section's own work: `custard_init_globals` was emitted

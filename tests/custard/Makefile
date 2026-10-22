@@ -3381,6 +3381,34 @@ FLAGS_DynCurry = --warn_error -367
 CUSTARD_TESTS += DynPartial
 FLAGS_DynPartial = --warn_error -367
 
+# Section 5.4: the coercion pass retypes what it pushes an expectation into --
+# a lambda takes its coerced body's result type, a constructor built at [any]
+# takes the type its position wants -- so that Cherry does not take a value
+# out of an [any] it was never put into.
+CUSTARD_TESTS += CoerceLamRes CoerceCtor
+FLAGS_CoerceLamRes = --warn_error -367
+
+# Matches nested in each other's last branch, too deep for a printer that
+# emits a trailing branch twice per level (PrintC's trial emission in [trim]).
+CUSTARD_TESTS += DeepMatch
+
+# A parameter that only a self tail call reads, passing it unchanged: the loop
+# does not write it, so C sees it unused, and -Werror rejects that unless it is
+# voided.
+CUSTARD_TESTS += TailKept
+
+# Section 4.4.  A module's initializers run before a global of a module that
+# refers to it is computed, though nothing refers to them.
+CUSTARD_TESTS += InitOrder
+
+# Section 4.4.  So do those of a module the program only opens, which is known
+# to the program by its interface alone: the dependency graph has the
+# implementation, and OCaml links (and so initializes) every module in it.
+# Nothing makes the implementation a dependence of the test, so check it here.
+CUSTARD_TESTS += InitOpen
+$(OUTPUT_DIR)/InitOpen.ml $(CHERRY_DIR)/InitOpen.chc: \
+  $(CACHE_DIR)/InitOpenLib.fst.checked
+
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
 C_TESTS += CHeapArity
@@ -3394,6 +3422,23 @@ EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 # Cherry: branches whose types agree only up to an abbreviation are not
 # joined to any.
 CHERRY_TESTS += CherryAnyIf
+
+# Cherry: a monomorphic local function called once in each of several
+# branches stays one closure rather than a copy per branch (Simplify.reduce).
+CUSTARD_TESTS += LocalFunDup
+$(CHERRY_DIR)/LocalFunDup.chonce: $(CHERRY_DIR)/LocalFunDup.chc
+	$(Q)test "$$(grep -c 'LocalFunDup_marker();' $<)" = 1 \
+	  || { echo "ERROR: LocalFunDup's local function was copied"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/LocalFunDup.chonce
+
+# Cherry: a matched cell that dies on one arm of a conditional inside the
+# branch is reused there.
+$(CHERRY_DIR)/CherryReuse.chgrep: $(CHERRY_DIR)/CherryReuse.chc
+	$(Q)sed -n '/^static .* CherryReuse_add_new(.*{$$/,/^}/p' $< | grep -q 'cherry_reuse_' \
+	  || { echo "ERROR: CherryReuse_add_new does not reuse its cell"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryReuse.chgrep
 
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
@@ -3410,6 +3455,17 @@ CHERRY_RUN_CherryIArray = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryExn = -O2
 CHERRY_RUN_CherryExn = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryDyn = -O2
+
+# Cherry: integer literals of 2^30 and more are static cells, never built
+# at run time.
+$(CHERRY_DIR)/CherryInt.chgrep: $(CHERRY_DIR)/CherryInt.chc
+	$(Q)for p in 'CHERRY_INT_LIT(' 'CHERRY_INT_WIDE(INT64_C(4611686018427387903)'; do \
+	  grep -qF -- "$$p" $< \
+	    || { echo "ERROR: CherryInt's C output is missing $$p"; exit 1; }; done
+	$(Q)! grep -q 'cherry_int_of_decimal' $< \
+	  || { echo "ERROR: CherryInt builds a literal at run time"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryInt.chgrep
 
 # Locals of different initializers share one C function.
 CHERRY_TESTS += CherryInitScope
@@ -3719,6 +3775,37 @@ $(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
 	$(Q)touch $@
 
 all: $(TIME_DIR)/CherryTime.chran
+
+INTEXTRA_DIR = $(CHERRY_DIR)/intextra
+INTEXTRA_ABS = $(abspath $(INTEXTRA_DIR))
+# Only the modules the test needs, linked into a directory of their own:
+# including all of src/basic would put its FStar.Errors.Msg.fst, which the
+# typeclass tactics depend on, in place of ulib's.
+INTEXTRA_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.Int.Extra.fsti $(HASH_SRC)/FStarC.Int.Extra-c.cherry.fst
+$(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryIntExtra)
+	$(Q)rm -rf $(INTEXTRA_ABS) && mkdir -p $(INTEXTRA_ABS)/src
+	$(Q)ln -s $(INTEXTRA_SRCS) $(INTEXTRA_ABS)/src/
+	$(Q)cd intextra && for f in $(addprefix $(INTEXTRA_ABS)/src/,$(notdir $(INTEXTRA_SRCS))) \
+	    CherryIntExtra.fst; do \
+	  $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd intextra && $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
+	  --already_cached '*' --odir $(INTEXTRA_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryIntExtra.main \
+	  CherryIntExtra.fst -o $(INTEXTRA_ABS)/CherryIntExtra.c > /dev/null
+	$(call msg, "CC-ASAN", CherryIntExtra)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(INTEXTRA_ABS) -I$(CHERRY_INC) \
+	  -x c $(INTEXTRA_ABS)/CherryIntExtra.c $(CHERRY_INC)/cherry.c \
+	  -o $(INTEXTRA_ABS)/CherryIntExtra.chexe
+	$(call msg, "RUN-ASAN", CherryIntExtra)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(INTEXTRA_ABS)/CherryIntExtra.chexe
+	$(Q)touch $@
+
+all: $(INTEXTRA_DIR)/CherryIntExtra.chran
 
 # Debug mode (cherry.md): each program breaks a fact F* would have proved, in
 # code whose queries are admitted, and must abort with the message below.

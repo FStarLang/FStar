@@ -2033,7 +2033,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         then (
           (* For subtyping, we just check that x0.sort <: t1. But for equality,
           we must show that the refinement on the LHS is constantly true. *)
-          if rel = EQUALITY then (
+          if EQUALITY? rel then (
             let! u0 = universe_of_well_typed_term g x0.sort in
             let g0 = g in
             let g, b0, f0 = open_term g (S.mk_binder x0) f0 in
@@ -2150,7 +2150,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
               (List.zip args0 args1)
           in
           if guard_ok &&
-            (rel=EQUALITY) && 
+            (EQUALITY? rel) && 
             (equatable g t0 || equatable g t1)
           then (
             (* An equation between two applications with abstractions as

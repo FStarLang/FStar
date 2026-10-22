@@ -3869,7 +3869,7 @@ let rec maybe_unfold_aux (env:Env.env) (t:term) : ML (option term) =
   | Tm_uinst _ -> maybe_unfold_head_fv env t
   | _ ->
     let head, args = U.leftmost_head_and_args t in
-    if args = []
+    if Nil? args
     then maybe_unfold_head_fv env head
     else
       match maybe_unfold_aux env head with

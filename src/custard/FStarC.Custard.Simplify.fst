@@ -682,6 +682,16 @@ let rec count (v:string) (x:expr) : ML int =
     | _ -> fold_children (fun acc e -> imin 2 (acc + count v e)) 0 x)
   else 0
 
+(* How many times does [v] occur in [x] as written, alternatives included?
+   Capped at 2.  This is the count that measures code size, where [count]
+   measures work: substituting something used once in each of n branches
+   copies it n times. *)
+let rec occurrences (v:string) (x:expr) : ML int =
+  if occurs v x then (match x.e with
+    | EVar _ -> 1
+    | _ -> fold_children (fun acc e -> imin 2 (acc + occurrences v e)) 0 x)
+  else 0
+
 (* Duplicating an argument is only sound when evaluating it is unobservable,
    and only desirable when it is trivial; otherwise it gets a [let], which the
    simplifier will drop again if the parameter turns out to be unused. *)
@@ -1004,7 +1014,14 @@ let rec reduce (x:expr) : ML expr =
      precise as the body's own -- on the OCaml path that turned a [ref] into
      [any], and an [any] prints as an array rather than as a [ref].  C has no
      closures at all, so there the inlining is not an optimization but the
-     only way the program compiles. *)
+     only way the program compiles.
+
+     Cherry has heap closures, so there it *is* an optimization, and one that
+     must not copy code: [count] takes the worst branch, so a helper called
+     once in each arm of a [match] would be copied into every arm, and the
+     helpers it calls into each copy.  In [FStarC.TypeChecker.Rel.solve_t']
+     that made a single C function of 200,000 lines with a 1.2MB stack frame.
+     Under Cherry the lambda is substituted only where it is written once. *)
   | ELet (v, ty, e1, e2) ->
     let e1 = reduce e1 in
     (* The body first: the rewrites below ask questions about how [v] is used,
@@ -1015,7 +1032,9 @@ let rec reduce (x:expr) : ML expr =
        propagated yet. *)
     let e2 = reduce e2 in
     if Options.codegen_c ()
-       && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
+       && EFun? e1.e && called_only v e2
+       && (if Options.custard_cherry () then occurrences v e2 <= 1
+           else count v e2 <= 1) then
       let sm : subst = HashTable.create 5 in
       HashTable.add sm v e1;
       reduce (sub sm e2)
@@ -3523,7 +3542,9 @@ let coerce_prog (prog:program) : ML program =
     | _ -> mk (ECoerce (x, t)) t x.eff in
   let rec check (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let x = go env exp x in
-    if Some? exp && pushes_down x then x else
+    (* Every result position of such a node now has the expected type, so the
+       node has it too.  A lifted lambda's result type is its body's. *)
+    if Some? exp && pushes_down x then { x with ty = Some?.v exp } else
     match exp, infer env x with
     | Some e, Some t -> if cty_mismatch t e then coerce x e else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
@@ -3537,7 +3558,17 @@ let coerce_prog (prog:program) : ML program =
        argument rather than taking Custard's word for it -- then has two
        incompatible types for one expression.  A node whose type is itself
        [TAny] says nothing and is left alone. *)
-    | Some e, None -> if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e else x
+    | Some e, None ->
+      if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e
+      (* A value built in place and typed [TAny] -- a constructor out of an
+         inlined polymorphic [return], say -- is built at whatever type its
+         position wants; left at [TAny] under a parent that now has that type
+         (see above), Cherry would take it out of an [any] it was never put
+         into. *)
+      else if TAny? x.ty && not (has_any e) &&
+              (match x.e with ECtor _ | ERecord _ | ETuple _ | EConst _ -> true | _ -> false)
+      then { x with ty = e }
+      else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
@@ -3628,7 +3659,24 @@ let coerce_prog (prog:program) : ML program =
          | None -> (bs |> List.map hint, None)) in
       let env = List.fold_left (fun env ((b:binder), t) -> extend env b.b_name t)
                                env (List.zip bs ps) in
-      same (EFun (bs, check env res body))
+      (* The lambda returns what its body does once checked: the body may
+         have been coerced to the expected result.  Left at its old result
+         type, the lambda disagrees with the expectation and is coerced as a
+         whole as well, and Cherry's adapter then takes the body's [any] out
+         at the old type it was never at. *)
+      let rec with_res (n:int) (t:cty) (r:cty) : option cty =
+        if n = 0 then Some r else
+        match t with
+        | TArrow (a, f, b) ->
+          (match with_res (n - 1) b r with
+           | Some b -> Some (TArrow (a, f, b))
+           | None -> None)
+        | _ -> None in
+      let body = check env res body in
+      let ty = (match with_res (List.length bs) x.ty body.ty with
+                | Some t -> t
+                | None -> x.ty) in
+      { x with e = EFun (bs, body); ty = ty }
     | EApp (h, es) ->
       (match infer env h with
        | Some t ->
