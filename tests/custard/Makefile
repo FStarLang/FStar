@@ -1505,11 +1505,11 @@ CHERRY_DEBUG ?= -DCHERRY_DEBUG
 
 $(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc $$(CEXTRA_$$*)
 	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined $(CHERRY_CFLAGS_$*) \
 	  -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  -x c $< $(CHERRY_INC)/cherry.c $(CEXTRA_$*) -o $@
-	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	$(Q)$(CHERRY_CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  -fsyntax-only -x c++ $<
 
 $(CHERRY_DIR)/%.chran: $(CHERRY_DIR)/%.chexe
@@ -3406,6 +3406,27 @@ FLAGS_DynPartial = --warn_error -367
 CUSTARD_TESTS += CoerceLamRes CoerceCtor
 FLAGS_CoerceLamRes = --warn_error -367
 
+# Matches nested in each other's last branch, too deep for a printer that
+# emits a trailing branch twice per level (PrintC's trial emission in [trim]).
+CUSTARD_TESTS += DeepMatch
+
+# A parameter that only a self tail call reads, passing it unchanged: the loop
+# does not write it, so C sees it unused, and -Werror rejects that unless it is
+# voided.
+CUSTARD_TESTS += TailKept
+
+# Section 4.4.  A module's initializers run before a global of a module that
+# refers to it is computed, though nothing refers to them.
+CUSTARD_TESTS += InitOrder
+
+# Section 4.4.  So do those of a module the program only opens, which is known
+# to the program by its interface alone: the dependency graph has the
+# implementation, and OCaml links (and so initializes) every module in it.
+# Nothing makes the implementation a dependence of the test, so check it here.
+CUSTARD_TESTS += InitOpen
+$(OUTPUT_DIR)/InitOpen.ml $(CHERRY_DIR)/InitOpen.chc: \
+  $(CACHE_DIR)/InitOpenLib.fst.checked
+
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
 C_TESTS += CHeapArity
@@ -3429,6 +3450,48 @@ $(CHERRY_DIR)/LocalFunDup.chonce: $(CHERRY_DIR)/LocalFunDup.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/LocalFunDup.chonce
 
+# Cherry: tail calls other than self calls -- between functions of different
+# signatures, in a function returning unit, and through a closure -- run in
+# constant stack, so a million iterations fit in a 1 MB stack.  Mutually
+# tail-recursive definitions are one C function, which jumps between them;
+# the closure call is CHERRY_MUSTTAIL.
+CUSTARD_TESTS += MutualTail
+CHERRY_RUN_MutualTail = ulimit -s 1024 &&
+$(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
+	$(Q)for p in 'static cherry_int MutualTail_p[io]ng__tail\(int custard_entry\)' \
+	    'static void MutualTail_t[io]ck__tail\(int custard_entry\)' \
+	    'goto custard_tail_[01];' \
+	    'static cherry_int MutualTail_walk(__fallback)?__tail\(int custard_entry\)' \
+	    'CHERRY_MUSTTAIL return cherry_apply_'; do \
+	  grep -qE -- "$$p" $< \
+	    || { echo "ERROR: MutualTail's C output is missing $$p"; exit 1; }; done
+	$(Q)$(CHERRY_CC) -std=c11 -O2 -Wall -Wextra -Werror -Wno-free-nonheap-object \
+	  -I$(CHERRY_DIR) -I$(CHERRY_INC) -c -x c $< -o $(basename $@).o
+	$(Q)touch $@
+all: $(CHERRY_DIR)/MutualTail.chgrep
+
+# Cherry: [@@cherry_boxed] boxes a non-recursive record, mutual bundle or
+# variant, and a call passing one is a guaranteed tail call.
+CUSTARD_TESTS += CherryBoxedAttr
+CHERRY_RUN_CherryBoxedAttr = ulimit -s 1024 &&
+$(CHERRY_DIR)/CherryBoxedAttr.chgrep: $(CHERRY_DIR)/CherryBoxedAttr.chc
+	$(Q)for p in 'typedef cherry_obj *CherryBoxedAttr_outer;' \
+	    'typedef cherry_obj *CherryBoxedAttr_inner;' \
+	    'typedef cherry_obj *CherryBoxedAttr_shape;' \
+	    'CHERRY_MUSTTAIL return CherryBoxedAttr_walk('; do \
+	  grep -qF -- "$$p" $< $(basename $<).h \
+	    || { echo "ERROR: CherryBoxedAttr's C output is missing $$p"; exit 1; }; done
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryBoxedAttr.chgrep
+
+# Cherry: a matched cell that dies on one arm of a conditional inside the
+# branch is reused there.
+$(CHERRY_DIR)/CherryReuse.chgrep: $(CHERRY_DIR)/CherryReuse.chc
+	$(Q)sed -n '/^static .* CherryReuse_add_new(.*{$$/,/^}/p' $< | grep -q 'cherry_reuse_' \
+	  || { echo "ERROR: CherryReuse_add_new does not reuse its cell"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryReuse.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
@@ -3445,8 +3508,29 @@ CHERRY_CFLAGS_CherryExn = -O2
 CHERRY_RUN_CherryExn = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryDyn = -O2
 
+# Cherry: integer literals of 2^30 and more are static cells, never built
+# at run time.
+$(CHERRY_DIR)/CherryInt.chgrep: $(CHERRY_DIR)/CherryInt.chc
+	$(Q)for p in 'CHERRY_INT_LIT(' 'CHERRY_INT_WIDE(INT64_C(4611686018427387903)'; do \
+	  grep -qF -- "$$p" $< \
+	    || { echo "ERROR: CherryInt's C output is missing $$p"; exit 1; }; done
+	$(Q)! grep -q 'cherry_int_of_decimal' $< \
+	  || { echo "ERROR: CherryInt builds a literal at run time"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryInt.chgrep
+
 # Locals of different initializers share one C function.
 CHERRY_TESTS += CherryInitScope
+
+# A local function whose type is an arrow only through a recursive type
+# function is not lambda-lifted, which would read its result type off its
+# type: it stays a closure returning [p].
+CHERRY_TESTS += CherryLiftMatch
+$(CHERRY_DIR)/CherryLiftMatch.chgrep: $(CHERRY_DIR)/CherryLiftMatch.chc
+	$(Q)grep -qE '^static cherry_string CherryLiftMatch_main__[a-z]+\(cherry_int src\)' $< \
+	  || { echo "ERROR: CherryLiftMatch's local has the wrong signature"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryLiftMatch.chgrep
 
 # Issue 4715.  An equality test that reaches a dyn is refused, naming the
 # fields that lead to it, rather than emitting a C [==] on cherry_any.
@@ -3482,12 +3566,12 @@ $(CHERRY_DIR)/CherrySepApp.c: $(CACHE_DIR)/CherrySepApp.fst.checked \
 
 $(CHERRY_DIR)/CherrySepApp.chran: $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/CherrySepApp.c
 	$(call msg, "CC-ASAN", CherrySepApp)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -O2 $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g -O2 $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/CherrySepApp.c $(CHERRY_INC)/cherry.c \
 	  -o $(CHERRY_DIR)/CherrySepApp.chexe
 	$(Q)for f in CherrySepLib CherrySepApp; do \
-	  $(CXX) -std=c++17 -Wall -Werror -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  $(CHERRY_CXX) -std=c++17 -Wall -Werror -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	    -fsyntax-only -x c++ $(CHERRY_DIR)/$$f.c || exit 1; done
 	$(call msg, "RUN-ASAN", CherrySepApp)
 	$(Q)ASAN_OPTIONS=detect_leaks=1 $(CHERRY_DIR)/CherrySepApp.chexe
@@ -3656,7 +3740,7 @@ CHERRY_OCAML_SKIP = Externs KeyNames FunctorHashtbl FunctorClass Reify \
 
 $(CHERRY_DIR)/%.chdiff: $(CHERRY_DIR)/%.chexe %.out.expected
 	$(call msg, "DIFF-ASAN", $(basename $(notdir $@)))
-	$(Q)ASAN_OPTIONS=detect_leaks=1 $< > $(CHERRY_DIR)/$*.chout
+	$(Q)$(CHERRY_RUN_$*) ASAN_OPTIONS=detect_leaks=1 $< > $(CHERRY_DIR)/$*.chout
 	$(Q)diff -u $*.out.expected $(CHERRY_DIR)/$*.chout
 	$(Q)touch $@
 
@@ -3684,7 +3768,7 @@ $(HASH_DIR)/CherryHash.chran: hash/CherryHash.fst \
 	  --custard_monomorphize_types true --custard_main CherryHash.main \
 	  CherryHash.fst -o $(HASH_ABS)/CherryHash.c > /dev/null
 	$(call msg, "CC-ASAN", CherryHash)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(HASH_ABS) -I$(CHERRY_INC) \
 	  -x c $(HASH_ABS)/CherryHash.c $(CHERRY_INC)/cherry.c \
 	  -o $(HASH_ABS)/CherryHash.chexe
@@ -3711,7 +3795,7 @@ $(TIMING_DIR)/CherryTiming.chran: timing/CherryTiming.fst \
 	  --custard_monomorphize_types true --custard_main CherryTiming.main \
 	  CherryTiming.fst -o $(TIMING_ABS)/CherryTiming.c > /dev/null
 	$(call msg, "CC-ASAN", CherryTiming)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(TIMING_ABS) -I$(CHERRY_INC) \
 	  -x c $(TIMING_ABS)/CherryTiming.c $(CHERRY_INC)/cherry.c \
 	  -o $(TIMING_ABS)/CherryTiming.chexe
@@ -3744,7 +3828,7 @@ $(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
 	  --custard_monomorphize_types true --custard_main CherryTime.main \
 	  CherryTime.fst -o $(TIME_ABS)/CherryTime.c > /dev/null
 	$(call msg, "CC-ASAN", CherryTime)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(TIME_ABS) -I$(CHERRY_INC) \
 	  -x c $(TIME_ABS)/CherryTime.c $(CHERRY_INC)/cherry.c \
 	  -o $(TIME_ABS)/CherryTime.chexe
@@ -3775,7 +3859,7 @@ $(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRC
 	  --custard_monomorphize_types true --custard_main CherryIntExtra.main \
 	  CherryIntExtra.fst -o $(INTEXTRA_ABS)/CherryIntExtra.c > /dev/null
 	$(call msg, "CC-ASAN", CherryIntExtra)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(INTEXTRA_ABS) -I$(CHERRY_INC) \
 	  -x c $(INTEXTRA_ABS)/CherryIntExtra.c $(CHERRY_INC)/cherry.c \
 	  -o $(INTEXTRA_ABS)/CherryIntExtra.chexe
@@ -3808,10 +3892,10 @@ $(DEBUG_DIR)/%.chran: debug/%.fst $(FSTAR_EXE)
 	  --custard_monomorphize_types true --custard_main $*.main \
 	  $*.fst -o $(DEBUG_ABS)/$*/$*.c > /dev/null
 	$(call msg, "CC", $*)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(DEBUG_ABS)/$* -I$(CHERRY_INC) \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -I$(DEBUG_ABS)/$* -I$(CHERRY_INC) \
 	  -x c $(DEBUG_ABS)/$*/$*.c $(CHERRY_INC)/cherry.c -o $(DEBUG_ABS)/$*/$*.release
 	$(call msg, "CC-ASAN", $*)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -DCHERRY_DEBUG -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g -DCHERRY_DEBUG -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(DEBUG_ABS)/$* -I$(CHERRY_INC) \
 	  -x c $(DEBUG_ABS)/$*/$*.c $(CHERRY_INC)/cherry.c -o $(DEBUG_ABS)/$*/$*.chexe
 	$(call msg, "RUN-ASAN", $*)
@@ -3840,7 +3924,7 @@ $(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
 	  --custard_monomorphize_types true --custard_main CherrySmallInt.main \
 	  CherrySmallInt.fst -o $(SMALLINT_ABS)/CherrySmallInt.c > /dev/null
 	$(call msg, "CC-ASAN", CherrySmallInt)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(SMALLINT_ABS) -I$(CHERRY_INC) \
 	  -x c $(SMALLINT_ABS)/CherrySmallInt.c $(CHERRY_INC)/cherry.c \
 	  -o $(SMALLINT_ABS)/CherrySmallInt.chexe
@@ -3870,7 +3954,7 @@ $(FSTARCLIST_DIR)/CherryFStarCList.chran: fstarclist/CherryFStarCList.fst \
 	  --custard_monomorphize_types true --custard_main CherryFStarCList.main \
 	  CherryFStarCList.fst -o $(FSTARCLIST_ABS)/CherryFStarCList.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCList)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCLIST_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCLIST_ABS)/CherryFStarCList.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCLIST_ABS)/CherryFStarCList.chexe
@@ -3900,7 +3984,7 @@ $(FSTARCSTRING_DIR)/CherryFStarCString.chran: fstarcstring/CherryFStarCString.fs
 	  --custard_monomorphize_types true --custard_main CherryFStarCString.main \
 	  CherryFStarCString.fst -o $(FSTARCSTRING_ABS)/CherryFStarCString.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCString)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCSTRING_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCSTRING_ABS)/CherryFStarCString.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCSTRING_ABS)/CherryFStarCString.chexe
@@ -3935,7 +4019,7 @@ $(FSTARCUTIL_DIR)/CherryFStarCUtil.chran: fstarcutil/CherryFStarCUtil.fst \
 	  --custard_monomorphize_types true --custard_main CherryFStarCUtil.main \
 	  CherryFStarCUtil.fst -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCUtil)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCUTIL_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCUTIL_ABS)/CherryFStarCUtil.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.chexe
@@ -3968,7 +4052,7 @@ $(FSTARCBASIC_DIR)/CherryFStarCBasic.chran: fstarcbasic/CherryFStarCBasic.fst \
 	  --custard_monomorphize_types true --custard_main CherryFStarCBasic.main \
 	  CherryFStarCBasic.fst -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCBasic)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCBASIC_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCBASIC_ABS)/CherryFStarCBasic.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.chexe
@@ -4003,7 +4087,7 @@ $(FSTARCJSON_DIR)/CherryFStarCJson.chran: fstarcjson/CherryFStarCJson.fst \
 	  --custard_monomorphize_types true --custard_main CherryFStarCJson.main \
 	  CherryFStarCJson.fst -o $(FSTARCJSON_ABS)/CherryFStarCJson.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCJson)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCJSON_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCJSON_ABS)/CherryFStarCJson.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCJSON_ABS)/CherryFStarCJson.chexe
@@ -4045,7 +4129,7 @@ $(FSTARCHT_DIR)/CherryFStarCHashTable.chran: fstarchashtable/CherryFStarCHashTab
 	  --custard_monomorphize_types true --custard_main CherryFStarCHashTable.main \
 	  CherryFStarCHashTable.fst -o $(FSTARCHT_ABS)/CherryFStarCHashTable.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCHashTable)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(FSTARCHT_ABS) -I$(CHERRY_INC) \
 	  -x c $(FSTARCHT_ABS)/CherryFStarCHashTable.c $(CHERRY_INC)/cherry.c \
 	  -o $(FSTARCHT_ABS)/CherryFStarCHashTable.chexe
@@ -4076,7 +4160,7 @@ $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
 	  --custard_monomorphize_types true --custard_main CherryArray.main \
 	  CherryArray.fst -o $(ARRAY_ABS)/CherryArray.c > /dev/null
 	$(call msg, "CC-ASAN", CherryArray)
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(ARRAY_ABS) -I$(CHERRY_INC) \
 	  -x c $(ARRAY_ABS)/CherryArray.c $(CHERRY_INC)/cherry.c \
 	  -o $(ARRAY_ABS)/CherryArray.chexe

@@ -274,7 +274,7 @@ Notes:
   only when the two widths are equal.  The two were one node until §17.2; see
   there for the miscompilation that cost.
 - **No local `letrec`.**  `ELet` is non-recursive; local recursive functions
-  and local closures that need to be recursive are lambda-lifted to top-level
+  (and, on Cherry, the other local functions too) are lambda-lifted to top-level
   decls during phase 2 (which is easy: the extraction loop already creates
   top-level decls on demand, so lifting is just "request a specialization of a
   fresh name").  This is what breaks the `decl`/`expr` mutual recursion.
@@ -887,7 +887,7 @@ Processing one item `(lid, margs) ↦ nm`:
    normal form, and `request (g, margs')`.  The two failure modes — partial
    application, and a `Poly` argument in a `Mono` position — are rejected here
    with the diagnostics of §3.2.
-4. **Lambda-lift** local recursive functions and emit them as extra decls.
+4. **Lambda-lift** local recursive functions (on Cherry, all local functions) and emit them as extra decls.
 5. **Emit** the `DLet` and record it.
 
 Types are handled by the same loop: `TApp (ind, args)` requests a
@@ -1357,14 +1357,28 @@ A top-level `let` whose definiens is *effectful* is a module initializer:
 loop of §3.3 never reaches it, and dropping it does not merely lose code --- it
 silently changes what the program does, since the registration never happens.
 
-So once the closure from the roots is complete, **every module it pulled in
-contributes its initializers**, and that may pull in further modules, so the
+So **the first request into a module also requests its initializers**, and
+once the closure from the roots is complete, every module it pulled in
+contributes its initializers too, and that may pull in further modules, so the
 step is iterated to a fixpoint.  An initializer is requested after everything
-it can call, so it lands at the end of the declaration order and OCaml runs the
-emitted `let`s in the order they are printed; across a split (§12.9) the linker
-runs each file's in dependency order.  What is *not* defined is the relative
-order of two initializers in unrelated modules --- F\* gives that no meaning
-either.
+it can call, and the emitted `let`s run in the order they are printed (OCaml's
+module initialization, `custard_init_globals` in C); across a split (§12.9) the
+linker runs each file's in dependency order.  Requesting a module's
+initializers on first use puts them before every definition outside the module
+that refers to it, as OCaml initializes a module completely before the modules
+that depend on it: `FStarC.SMTEncoding.Encode.prims` is computed at start-up
+from options that `FStarC.Options`' `let _ = clear ()` has to set first, and
+requested at the end that initializer came after it (test: `InitOrder`).
+
+A module the program only `open`s for its effect --- the compiler's drivers
+open `FStarC.Hooks` --- is known to the program by its interface alone, which
+has no initializers.  OCaml still links, and so initializes, its
+implementation, so the fixpoint loads the implementation of every such module
+whose checked file it can find (`Loader.impl_is_checked`; a module realized by
+hand has none) and requests its initializers too (test: `InitOpen`).
+
+What is *not* defined is the relative order of two initializers in unrelated
+modules --- F\* gives that no meaning either.
 
 This is why the note in §7.3's legality table used to say that dead-code
 elimination of a top-level `DLet` is always legal.  It is legal only for a
@@ -2259,7 +2273,8 @@ regression is `tests/custard/MonoState.fst`.
 ### 5.10 Local `let rec`
 
 A local `let rec` is lambda-lifted to a top-level `DLet` rather than given an
-IR node of its own.
+IR node of its own.  On Cherry, so is a non-recursive local function, unless
+§5.11 inlines it.
 
 The IR's `ELet` is documented non-recursive, and adding an `ELetRec` would mean
 teaching every traversal about it.  There are ~57 `ELet` sites across a dozen
@@ -2293,10 +2308,28 @@ Occurrences of a lifted name in the body of the enclosing definition become
 `EQual (nm, tyargs)` applied to the captures.  The partial application is pure:
 the binders the user actually wrote are always still missing.
 
+A non-recursive local function is lifted for the sake of its calls.  As a
+closure, every call to it was an indirect call, and on Cherry the closure was
+allocated and then released after the last call returned, so no call to it
+could be a tail call.  `Normalize.norm`'s `fallback`, which calls `norm` back
+in tail position, made the unit tests' stack grow with the length of the term.
+Lifted, a full application is a direct call that passes the captures as
+arguments; only a use as a value still builds a closure, the partial
+application above.  `tests/custard/MutualTail.fst`'s `walk` checks the tail call.
+
+Only on Cherry: OCaml's closures are cheap and its tail calls guaranteed, and
+the C backends rely on a local function staying a value that later passes can
+inline (`pulse/test/InlineArrayLen` sizes an array by one).  And only when the
+local's type shows an arrow for each binder of its definiens, since the lifted
+declaration's signature is read off the type.  In
+`tests/bug-reports/closed/Bug1714`, `f : t true = fun src -> ...` with `t` a
+recursive type function, which unfolding abbreviations does not see through,
+stays a closure; lifted, it had result type `int -> p`.
+
 ### 5.11 Polymorphic local functions are inlined
 
 A non-recursive local `let` whose definition is a lambda **that binds at least
-one type** is substituted at its uses rather than compiled as a closure.
+one type** is substituted at its uses rather than lambda-lifted (§5.10).
 
 A local function is the one construct with no top-level identity: it cannot be
 specialized, because specialization is keyed on a `lid`, and it cannot be
@@ -2366,7 +2399,7 @@ duplication.
 
 `tests/custard/LocalPoly.fst` pins both halves: the polymorphic helper is gone
 from the output and specialized per type, and the four nested monomorphic
-helpers are still there, once each.
+helpers are still there, once each (lambda-lifted on Cherry, §5.10).
 
 A local `let rec` cannot be substituted and is lambda-lifted instead (§5.10).
 
@@ -6439,6 +6472,15 @@ emission has to leave nothing behind: `fresh` and the name allocator are
 counters, and letting them run renumbered the variables of the branch that was
 *kept* (`ns` came out as `ns_3`).  `scope` was already saved and restored;
 `ctr` and `declared` now are too.
+
+The trial is also only made where a body *can* come out empty: where the
+match's value is discarded (`D_Ignore`, or `D_Return` in a `void` function).
+A value that is assigned or returned always gets a statement.  This matters
+for more than the work saved: the arm that is kept is emitted again, so
+trying the last arm of every match costs twice per level of matches nested
+in each other's last arm, and the compiler's own unit-test driver had nests
+deep enough that printing it did not finish.  `tests/custard/DeepMatch.fst`
+is twenty-eight of them.
 
 Thirty lines of the DICE output went, and the test the fix suggested found one
 more, in the previous section's own work: `custard_init_globals` was emitted

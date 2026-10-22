@@ -98,7 +98,8 @@ let boxed_types (p:program) : ML (list string) =
     match d with
     | DType dt when (TVariant? dt.dt_body || TRecord? dt.dt_body) ->
       let k = string_of_name dt.dt_name in
-      if field_types dt.dt_body |> List.existsb (reaches tbl k) then [k] else []
+      if has_flag dt.dt_flags CherryBoxed ||
+         field_types dt.dt_body |> List.existsb (reaches tbl k) then [k] else []
     | _ -> [])
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
@@ -668,11 +669,25 @@ and arm_to (t:cty) (a:expr) : ML expr =
    [match x with pre | _ -> if (match x with p -> g | _ -> false)
                              then (match x with p -> b) else (match x with rest)].
    The earlier branches [pre] have no guard and come first, so they keep
-   their priority; [x] is a variable, so matching it again is cheap. *)
-let rec unguard (e:expr) : ML expr =
-  let e = map_children unguard e in
+   their priority; [x] is a variable, so matching it again is cheap.
+
+   A [try]'s handlers are a match on the exception, which the reference
+   counting pass only builds later, so a guarded handler is made a match here:
+   [try s with brs] is [try s with x -> (match x with brs | _ -> raise x)],
+   whose guards are then removed as above. *)
+let has_guard (brs:list branch) : ML bool = List.existsb (fun (_, g, _) -> Some? g) brs
+
+let rec unguard (e:expr) : ML expr = unguard_node (map_children unguard e)
+
+and unguard_node (e:expr) : ML expr =
   match e.e with
-  | EMatch (sc, brs) when List.existsb (fun (_, g, _) -> Some? g) brs ->
+  | ETry (s, brs) when has_guard brs ->
+    let x = co_fresh () in
+    let xv = mk (EVar x) TExn E_Pure in
+    let again = mk (ERaise xv) e.ty E_Impure in
+    let h = unguard_node (mk (EMatch (xv, brs @ [(PWild, None, again)])) e.ty E_Impure) in
+    { e with e = ETry (s, [(PVar x, None, h)]) }
+  | EMatch (sc, brs) when has_guard brs ->
     let rec go (scv:expr) (brs:list branch) : ML expr =
       let rec split (pre:list branch) (brs:list branch) =
         match brs with
@@ -748,21 +763,11 @@ let incs (o:owned) (e:expr) : ML expr =
 let let_ (x:string) (t:cty) (e1 e2:expr) : expr =
   mk (ELet (x, t, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
 
-(* An integer literal too large to be a small integer on a 32-bit target is
-   a cell, allocated where it is evaluated. *)
-let small_int_bound : int = 1073741824
-
-let is_big_literal (c:constant) : bool =
-  match c with
-  | CInt (v, _, None) -> v >= small_int_bound || v <= - small_int_bound
-  | _ -> false
-
 (* An operand that can stay where it is: a variable, or something whose
    evaluation neither involves a counted value nor does anything. *)
 let is_atom (a:expr) : ML bool =
   match a.e with
-  | EConst c -> not (is_big_literal c)
-  | EVar _ | EQual _ -> true
+  | EConst _ | EVar _ | EQual _ -> true
   | _ -> not (touches a) && is_pure a.eff
 
 (* The calling convention of each definition (cherry.md, "Borrow
@@ -792,7 +797,9 @@ let call_owns (hd:expr) (args:list expr) : ML (option (list bool)) =
    is usually consumed there, and an owned parameter saves the increment).
    A tail call passing an owned value to a borrowed parameter makes that
    parameter owned instead, which keeps the call a tail call: otherwise the
-   value would be released after it.  The fields of a borrowed scrutinee are
+   value would be released after it -- and for the same reason a definition
+   used as a closure takes the parameters the closure is applied to owned.
+   The fields of a borrowed scrutinee are
    borrowed.  Iterated to a fixpoint over the whole program. *)
 let same_boxed (a b:cty) : ML bool =
   match a, b with
@@ -813,6 +820,23 @@ let rec builds (t:cty) (e:expr) : ML bool =
   | EOp (_, es) | ETuple es -> any es
   | ERecord (_, fs) -> any (List.map snd fs)
   | EProj (a, _, _) | EDiscrim (a, _) | ECast (a, _) | ECoerce (a, _) -> builds t a
+  | _ -> false
+
+(* Whether [y] dies somewhere in [e] before a cell of the boxed type [t] is
+   built: either [e] no longer needs [y] and builds one, or a later part of it,
+   or an arm of a conditional in it, does.  These are the places where the
+   reference counting pass releases [y] just before the rest of the code, and
+   where [reuse_at_death] can reuse it instead. *)
+let rec dies_building (y:string) (t:cty) (e:expr) : ML bool =
+  if not (List.mem y (fv e)) then builds t e else
+  match e.e with
+  | ELet (z, _, a, b) ->
+    if List.mem y (without [z] (fv b)) then dies_building y t b else dies_building y t a
+  | ESeq (a, b) ->
+    if List.mem y (fv b) then dies_building y t b else dies_building y t a
+  | EIf (_, a, b) -> dies_building y t a || dies_building y t b
+  | EMatch (_, brs) -> brs |> List.existsb (fun (p, _, b) ->
+                         not (List.mem y (pat_vars p)) && dies_building y t b)
   | _ -> false
 
 let rec set_nth (i:int) (x:bool) (l:list bool) : ML (list bool) =
@@ -854,6 +878,12 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
     | Some fl when i < List.length fl && not (List.nth fl i) ->
       HashTable.add tbl f (set_nth i true fl); changed := true
     | _ -> () in
+  (* A closure of [f] given [k] of its [n] arguments calls [f] from its entry
+     point, in tail position, with the rest -- which the entry point is given
+     owned, so taking them owned keeps that call a tail call (cherry.md, "Tail
+     calls") instead of one followed by their release. *)
+  let rec own_from (f:string) (k n:int) : ML unit =
+    if k < n then (own f k; own_from f (k + 1) n) in
   let visit (l:dlet) : ML unit =
     let me = string_of_name l.dl_name in
     let params = l.dl_binders |> List.mapi (fun i b -> (b.b_name, i)) in
@@ -894,7 +924,10 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
                        | EVar y -> if is_owned_var bf y then own gs i
                        | EQual _ -> ()
                        | _ -> own gs i))
-                else List.iter own_arg args
+                else begin
+                  List.iter own_arg args;
+                  own_from gs (List.length args) (List.length bs)
+                end
               | _ ->
                 (* A global holding a closure. *)
                 if HashTable.mem !global_tbl gs then List.iter own_arg args)
@@ -916,15 +949,15 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       | EIf (c, t, f) -> go false c; go tail t; go tail f
       | EMatch (sc, brs) ->
         go false sc;
-        (* A parameter matched in a branch that no longer needs it and
-           builds a cell of its type is owned, so that the cell can be
-           reused. *)
+        (* A parameter matched in a branch that stops needing it, there
+           or further in, and then builds a cell of its type is owned, so
+           that the cell can be reused. *)
         (match sc.e with
          | EVar y when Some? (param_ix y) && HashTable.mem !boxed_tbl
                          (match sc.ty with TApp (n, []) -> string_of_name n | _ -> "") ->
            if brs |> List.existsb (fun (p, _, b) ->
                 (match p with PCtor (_, _ :: _) -> true | _ -> false) &&
-                not (List.mem y (fv b)) && builds sc.ty b)
+                dies_building y sc.ty b)
            then own_arg sc
          | _ -> ());
         let borrowed_sc = (match sc.e with
@@ -951,6 +984,11 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       | EFun (_, b) -> go false b
       | ETry (a, brs) -> go false a; brs |> List.iter (fun (_, _, b) -> go false b)
       | ERaise a -> go false a
+      (* A definition used as a value is a closure too. *)
+      | EQual (g, _) ->
+        (match HashTable.try_find !fn_tbl (string_of_name g) with
+         | Some (bs, _) -> own_from (string_of_name g) 0 (List.length bs)
+         | None -> ())
       | _ -> () in
     go' [] true l.dl_body in
   let rec loop (fuel:int) : ML unit =
@@ -1112,6 +1150,53 @@ let rec reuse_in (w:string) (wt:cty) (old:name) (e:expr) : ML (option expr) =
                                match r with
                                | Some b' -> (p, g, b')
                                | None -> (p, g, free_tok b)));
+                  eff = E_Impure }
+  | _ -> None
+
+(* [e], with reference counting already made explicit, in a branch of a
+   match on the owned cell [x] (of constructor [old]) that still needs [x] at
+   its start: where [x] is released just before code that builds a cell of
+   its type, the release becomes a reset whose token that code reuses (Lean
+   places the reset where the variable dies in the same way).  The fields the
+   branch uses were counted at its start, so the reset keeps none of them.
+   [None] when there is no such place. *)
+let rec reuse_at_death (x:string) (wt:cty) (old:name) (ps:list pat) (e:expr) : ML (option expr) =
+  let go = reuse_at_death x wt old ps in
+  match e.e with
+  | ESeq ({ e = EOp ({ po_op = RcDec }, [{ e = EVar y }]) }, rest) when y = x ->
+    let w = fresh () in
+    (match reuse_in w wt old rest with
+     | Some rest' ->
+       let kept = List.map (fun _ -> false) ps in
+       let reset = mk (EOp ({ po_op = Reset (old, kept); po_ty = None }, [var x wt])) wt E_Impure in
+       Some (let_ w wt reset rest')
+     | None -> None)
+  | ESeq (a, b) ->
+    (match go b with
+     | Some b' -> Some { e with e = ESeq (a, b'); eff = E_Impure }
+     | None ->
+       match go a with
+       | Some a' -> Some { e with e = ESeq (a', b); eff = E_Impure }
+       | None -> None)
+  | ELet (y, t, a, b) ->
+    (match go b with
+     | Some b' -> Some { e with e = ELet (y, t, a, b'); eff = E_Impure }
+     | None ->
+       match go a with
+       | Some a' -> Some { e with e = ELet (y, t, a', b); eff = E_Impure }
+       | None -> None)
+  | EIf (c, t, f) ->
+    (match go t, go f with
+     | None, None -> None
+     | t', f' ->
+       Some { e with e = EIf (c, (match t' with Some t -> t | None -> t),
+                                 (match f' with Some f -> f | None -> f));
+                     eff = E_Impure })
+  | EMatch (sc, brs) ->
+    let rs = brs |> List.map (fun (p, g, b) -> (p, g, b, go b)) in
+    if rs |> List.for_all (fun (_, _, _, r) -> None? r) then None else
+    Some { e with e = EMatch (sc, rs |> List.map (fun (p, g, b, r) ->
+                               (p, g, (match r with Some b' -> b' | None -> b))));
                   eff = E_Impure }
   | _ -> None
 
@@ -1464,6 +1549,16 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
                       (match st with TApp (n, []) -> string_of_name n | _ -> "") -> []
                   | _ -> dead_x) in
     let body = rc (keep @ fields) b in
+    let boxed_st = HashTable.mem !boxed_tbl (match st with
+                                             | TApp (n, []) -> string_of_name n
+                                             | _ -> "") in
+    let body =
+      (match p with
+       | PCtor (c, ps) when Nil? dead_x && Cons? ps && boxed_st && List.mem x live ->
+         (match reuse_at_death x st c ps body with
+          | Some body' -> body'
+          | None -> body)
+       | _ -> body) in
     let plain () : ML branch = (p, g, decs dead_other (incs fields (decs dead_x body))) in
     (* The scrutinee dies here: a cell this branch builds can reuse its memory
        (cherry.md, "Heap cell reuse").  Each field is bound by a variable or
