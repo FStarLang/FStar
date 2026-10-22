@@ -98,7 +98,8 @@ let boxed_types (p:program) : ML (list string) =
     match d with
     | DType dt when (TVariant? dt.dt_body || TRecord? dt.dt_body) ->
       let k = string_of_name dt.dt_name in
-      if field_types dt.dt_body |> List.existsb (reaches tbl k) then [k] else []
+      if has_flag dt.dt_flags CherryBoxed ||
+         field_types dt.dt_body |> List.existsb (reaches tbl k) then [k] else []
     | _ -> [])
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)

@@ -3451,6 +3451,20 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/MutualTail.chgrep
 
+# Cherry: [@@cherry_boxed] boxes a non-recursive record, mutual bundle or
+# variant, and a call passing one is a guaranteed tail call.
+CUSTARD_TESTS += CherryBoxedAttr
+CHERRY_RUN_CherryBoxedAttr = ulimit -s 1024 &&
+$(CHERRY_DIR)/CherryBoxedAttr.chgrep: $(CHERRY_DIR)/CherryBoxedAttr.chc
+	$(Q)for p in 'typedef cherry_obj *CherryBoxedAttr_outer;' \
+	    'typedef cherry_obj *CherryBoxedAttr_inner;' \
+	    'typedef cherry_obj *CherryBoxedAttr_shape;' \
+	    'CHERRY_MUSTTAIL return CherryBoxedAttr_walk('; do \
+	  grep -qF -- "$$p" $< $(basename $<).h \
+	    || { echo "ERROR: CherryBoxedAttr's C output is missing $$p"; exit 1; }; done
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryBoxedAttr.chgrep
+
 # Cherry: a matched cell that dies on one arm of a conditional inside the
 # branch is reused there.
 $(CHERRY_DIR)/CherryReuse.chgrep: $(CHERRY_DIR)/CherryReuse.chc
