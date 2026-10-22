@@ -796,7 +796,9 @@ let call_owns (hd:expr) (args:list expr) : ML (option (list bool)) =
    is usually consumed there, and an owned parameter saves the increment).
    A tail call passing an owned value to a borrowed parameter makes that
    parameter owned instead, which keeps the call a tail call: otherwise the
-   value would be released after it.  The fields of a borrowed scrutinee are
+   value would be released after it -- and for the same reason a definition
+   used as a closure takes the parameters the closure is applied to owned.
+   The fields of a borrowed scrutinee are
    borrowed.  Iterated to a fixpoint over the whole program. *)
 let same_boxed (a b:cty) : ML bool =
   match a, b with
@@ -875,6 +877,12 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
     | Some fl when i < List.length fl && not (List.nth fl i) ->
       HashTable.add tbl f (set_nth i true fl); changed := true
     | _ -> () in
+  (* A closure of [f] given [k] of its [n] arguments calls [f] from its entry
+     point, in tail position, with the rest -- which the entry point is given
+     owned, so taking them owned keeps that call a tail call (cherry.md, "Tail
+     calls") instead of one followed by their release. *)
+  let rec own_from (f:string) (k n:int) : ML unit =
+    if k < n then (own f k; own_from f (k + 1) n) in
   let visit (l:dlet) : ML unit =
     let me = string_of_name l.dl_name in
     let params = l.dl_binders |> List.mapi (fun i b -> (b.b_name, i)) in
@@ -915,7 +923,10 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
                        | EVar y -> if is_owned_var bf y then own gs i
                        | EQual _ -> ()
                        | _ -> own gs i))
-                else List.iter own_arg args
+                else begin
+                  List.iter own_arg args;
+                  own_from gs (List.length args) (List.length bs)
+                end
               | _ ->
                 (* A global holding a closure. *)
                 if HashTable.mem !global_tbl gs then List.iter own_arg args)
@@ -972,6 +983,11 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       | EFun (_, b) -> go false b
       | ETry (a, brs) -> go false a; brs |> List.iter (fun (_, _, b) -> go false b)
       | ERaise a -> go false a
+      (* A definition used as a value is a closure too. *)
+      | EQual (g, _) ->
+        (match HashTable.try_find !fn_tbl (string_of_name g) with
+         | Some (bs, _) -> own_from (string_of_name g) 0 (List.length bs)
+         | None -> ())
       | _ -> () in
     go' [] true l.dl_body in
   let rec loop (fuel:int) : ML unit =

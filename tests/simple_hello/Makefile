@@ -36,11 +36,12 @@ Hello.%.test: Hello.%
 	$(FSTAR_EXE) --ocamlc $< -o $@
 
 CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+CHERRY_CC ?= $(CC)
 %.c: %.fst.checked
 	$(FSTAR_EXE) --codegen Cherry --custard_main $* $< -o $@
 
 %.cherry: %.c
-	$(CC) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c -o $@
+	$(CHERRY_CC) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c -o $@
 
 clean:
 	rm -f *.ml *.c *.h *.exe *.byte *.cherry *.cm* *.o *.checked
