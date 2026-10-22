@@ -447,6 +447,9 @@ type state = {
      specialization, so without this a definition with twenty specializations
      would pay for it twenty times. *)
   nfe:     HashTable.t string sigelt;
+  (* The modules whose initializers have been requested, by name; see
+     {!request_inits}. *)
+  inits:   HashTable.t string unit;
 }
 
 (* Section 63.1.  A module speaks the floating-point vocabulary when it
@@ -491,6 +494,7 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   imports = mk_ref [];
   roots   = HashTable.create 20;
   nfe     = HashTable.create 20;
+  inits   = HashTable.create 100;
 }
 
 (* A name given on --custard_entry, named by --custard_main, or registered by
@@ -1702,6 +1706,16 @@ let c_realized_header (l:Ident.lident) : ML (option string) =
   Builtins.c_realization_header
     (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id))
 
+let module_inits (md:S.modul) : ML (list Ident.lident) =
+  md.declarations |> List.collect (fun (se:S.sigelt) ->
+    match se.sigel with
+    | Sig_let {lbs=(_, lbs)} ->
+      lbs |> List.collect (fun lb ->
+        match lb.lbname with
+        | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) -> [S.lid_of_fv fv]
+        | _ -> [])
+    | _ -> [])
+
 let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
   let k = { k with sk_lid = unstub_lid st k.sk_lid } in
@@ -1722,7 +1736,12 @@ let rec request (st:state) (k:spec_key) : ML name =
        rather than loop. *)
     HashTable.add st.names key nm;
     ensure_lid_available st l;
-    match datacon_owner st l with
+    (* Claimed now, requested once this definition is done: an initializer
+       that refers to it must find it emitted, not merely named. *)
+    let m = Ident.nsstr l in
+    let first = None? (HashTable.try_find st.inits m) in
+    if first then HashTable.add st.inits m ();
+    let nm = match datacon_owner st l with
     (* An exception constructor is not part of a declaration of [Prims.exn]:
        [exn] is extensible and has no declaration at all, so the constructor
        *is* the declaration.  Section 8.5. *)
@@ -1752,7 +1771,26 @@ let rec request (st:state) (k:spec_key) : ML name =
       HashTable.add st.emitted key d;
       note_abbrev st d;
       st.order := key :: !st.order;
-      nm)
+      nm in
+    if first then request_inits st m;
+    nm)
+
+(* A top-level [let] whose definiens is *effectful* is a module initializer
+   ([let _ = clear ()] in [FStarC.Options]).  OCaml runs a module's
+   initializers, in order, before those of any module that depends on it, and
+   a definition that refers to a module is extracted after it.  So the first
+   request into a module requests its initializers, once that definition is
+   done, and they come before the requesting definition: [FStarC.SMTEncoding.Encode.prims], computed at
+   start-up, reads options that [FStarC.Options]'s initializer has to set
+   first.  {!run} requests the rest, of the modules nothing refers to. *)
+and request_inits (st:state) (m:string) : ML unit =
+  if m = "" then () else begin
+    match TcEnv.modules (tcenv st) |> List.tryFind (fun (md:S.modul) ->
+            not md.is_interface && Ident.string_of_lid md.name = m) with
+    | None -> ()
+    | Some md -> module_inits md |> List.iter (fun l ->
+        let _ = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in ())
+  end
 
 (* Section 12.4, rule 1.  A request whose key a linked unit already exports is
    answered by a reference to that unit's definition: it is *not* translated,
@@ -6927,33 +6965,43 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      is complete, every module it pulled in contributes its initializers, and
      that may pull in more modules, hence the fixpoint.
 
-     Order: an initializer is requested after everything it can call, so it
-     lands at the end of [st.order], and OCaml runs the emitted [let]s in the
-     order they appear.  Across a split, the linker runs each unit's in
+     Order: the first request into a module requests its initializers
+     ({!request_inits}), so they come before anything that refers to the
+     module, as in OCaml; those of a module nothing refers to are requested
+     here, after everything they can call, so they land at the end of
+     [st.order], and OCaml runs the emitted [let]s in the order they appear.  Across a split, the linker runs each unit's in
      dependency order.  What is *not* guaranteed is the order of two
      initializers in unrelated modules; F* gives no meaning to that either. *)
   let seen_inits : HashTable.t string unit = HashTable.create 100 in
   let rec inits (fuel:int) : ML unit =
     if fuel <= 0 then () else
-    let fresh = TcEnv.modules (tcenv st) |> List.collect (fun (md:S.modul) ->
+    (* A module the program knows only by its interface -- one it merely
+       opens, as the compiler's drivers open [FStarC.Hooks] -- still has its
+       implementation linked, and initialized, by OCaml.  So load that
+       implementation, when the dependency graph has one and it was checked,
+       to see its initializers; one realized by hand stays an interface
+       ({!Loader}). *)
+    Prof.timed "inits.load" (fun () ->
+      TcEnv.modules (tcenv st) |> List.iter (fun (md:S.modul) ->
+        let m = Ident.string_of_lid md.name in
+        if md.is_interface && not (Loader.module_is_loaded st.deps (tcenv st) m)
+           && Loader.impl_is_checked st.deps m
+        then st.env := Loader.ensure_loaded st.deps (tcenv st) m));
+    let mods = TcEnv.modules (tcenv st) in
+    let fresh = mods |> List.collect (fun (md:S.modul) ->
       let m = Ident.string_of_lid md.name in
+      if md.is_interface && mods |> List.existsb (fun (md':S.modul) ->
+           not md'.is_interface && Ident.lid_equals md'.name md.name)
+      then [] else
       match HashTable.try_find seen_inits m with
       | Some () -> []
       | None -> HashTable.add seen_inits m (); [md]) in
     if Nil? fresh then () else begin
       Prof.timed "inits" (fun () ->
        fresh |> List.iter (fun (md:S.modul) ->
-        md.declarations |> List.iter (fun (se:S.sigelt) ->
-          match se.sigel with
-          | Sig_let {lbs=(_, lbs)} ->
-            lbs |> List.iter (fun lb ->
-              match lb.lbname with
-              | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) ->
-                (* An initializer may erase to nothing at all, which is fine
-                   and is not the user naming a missing entry point. *)
-                mark' true Root (S.lid_of_fv fv)
-              | _ -> ())
-          | _ -> ())));
+        (* An initializer may erase to nothing at all, which is fine and is
+           not the user naming a missing entry point. *)
+        module_inits md |> List.iter (mark' true Root)));
       (* Section 13: the same fixpoint carries the generated declarations,
          because generating one is itself a source of requests and so of newly
          loaded modules -- a plugin registration refers to the interpretation
