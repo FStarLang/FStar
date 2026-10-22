@@ -575,6 +575,15 @@ CGREP_CastSubscript += "(uint32_t *)(cast_subscript_macro_ref"
 CGREP_CastSubscript += "))[0] = 11;" "))[1] = 29;"
 $(OUTPUT_DIR)/CastSubscript.dcexe $(OUTPUT_DIR)/CastSubscript.dcxx: CastSubscript_stubs.h
 
+# Native function pointers, including commented callees. Cherry does not yet
+# support comments around closure-valued operands.
+all: $(OUTPUT_DIR)/Postfix.dcran
+CGREP_Postfix = "v.data[0]" "v.data[0] = 9;" "Postfix_get_data(v)[0]" "v.apply(via_alias)"
+CGREP_Postfix += "/* buffer */ v.data /* end */[0]" "/* callee */ v.apply /* end */(via_alias)"
+CNOGREP_Postfix = "(v.data)[" "(Postfix_get_data(v))[" "(v.apply)("
+CGREP_PulseFnPtrRet += "PulseFnPtrRet_mk_unit()(x)"
+CNOGREP_PulseFnPtrRet += "(PulseFnPtrRet_mk_unit())("
+
 # Section 61.2.  Two negation sites, broken for two different reasons.
 # EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
 C_TESTS += ExtFlag

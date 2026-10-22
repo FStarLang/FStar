@@ -702,7 +702,8 @@ CGREP_CFunPtr   = "bool CFunPtr_mk_lambda__lam(uint64_t" \
                   ".impl_validate = CFunPtr_mk_lambda__lam" \
                   ".impl_validate = CFunPtr_is_even" \
                   "CFunPtr_quarter__lam"
-CNOGREP_CFunPtr = "(*)("
+CGREP_CFunPtr += "i.impl_validate(i.contents)" "i.impl_parse(i.contents)" "f(f(x))"
+CNOGREP_CFunPtr = "(*)(" "(i.impl_validate)(" "(i.impl_parse)(" "(f)("
 
 # CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
 # output-quality invariants of section 6: a unit parameter is a thunk, which C
