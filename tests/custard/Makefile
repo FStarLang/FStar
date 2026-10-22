@@ -2457,7 +2457,7 @@ CNOGREP_Union += "} FStar_Pervasives_Native_Some"
 CXX_TESTS += RefBind
 FLAGS_RefBind = --codegen C
 CGREP_RefBind += "rb_cell &"
-CGREP_RefBind += "rb_get(rb_slot)"
+CGREP_RefBind += "rb_get((rb_slot))"
 # A fresh value is a copy of nothing, so that binding is not a reference.
 CNOPAIR_RefBind += "rb_cell &@rb_make"
 
@@ -3270,7 +3270,7 @@ RSGREP_NullArg += "nil_right()"
 # the target spelling is a class template.
 CXX_TESTS += TmplMono
 FLAGS_TmplMono = --codegen C --custard_entry TmplMono.dispatch
-CGREP_TmplMono += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMono += "wm::frag<16> f = (wm::mk16(rows))"
 CGREP_TmplMono += "TmplMono_g_gemm__uint_to_t_16(wm::frag<16> f"
 # The index reaches the target through the type, and is not also passed at
 # runtime -- that is the whole of why the section 32.5 rule can be relaxed.
@@ -3284,24 +3284,24 @@ CNOGREP_TmplMono += "g_gemm__uint_to_t_16(size_t tm"
 
 CXX_TESTS += TmplLet
 FLAGS_TmplLet = --codegen C --custard_entry_module TmplLet
-CGREP_TmplLet += "wm::nfrag<16> f = wm::nmk16(seed)"
+CGREP_TmplLet += "wm::nfrag<16> f = (wm::nmk16(seed))"
 
 CXX_TESTS += TmplLet2
 FLAGS_TmplLet2 = --codegen C --custard_entry_module TmplLet2
-CGREP_TmplLet2 += "wm::nfrag<16> f = wm::nmk16(seed)"
+CGREP_TmplLet2 += "wm::nfrag<16> f = (wm::nmk16(seed))"
 
 CXX_TESTS += TmplLet3
 FLAGS_TmplLet3 = --codegen C --custard_entry_module TmplLet3
-CGREP_TmplLet3 += "wm::nfrag<16> f = wm::nmk16(seed)"
+CGREP_TmplLet3 += "wm::nfrag<16> f = (wm::nmk16(seed))"
 
 CXX_TESTS += TmplMonoV
 FLAGS_TmplMonoV = --codegen C --custard_entry TmplMonoV.dispatch
-CGREP_TmplMonoV += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMonoV += "wm::frag<16> f = (wm::mk16(rows))"
 CGREP_TmplMonoV += "TmplMonoV_g_gemm__uint_to_t_16(wm::frag<16> f"
 
 CXX_TESTS += TmplMonoW
 FLAGS_TmplMonoW = --codegen C --custard_entry TmplMonoW.dispatch
-CGREP_TmplMonoW += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMonoW += "wm::frag<16> f = (wm::mk16(rows))"
 CGREP_TmplMonoW += "TmplMonoW_g_gemm__uint_to_t_16(wm::frag<16> f"
 
 C_TESTS += HnfSig

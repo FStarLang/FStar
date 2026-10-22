@@ -577,7 +577,8 @@ $(OUTPUT_DIR)/CastSubscript.dcexe $(OUTPUT_DIR)/CastSubscript.dcxx: CastSubscrip
 
 # Native function pointers, including commented callees. Cherry does not yet
 # support comments around closure-valued operands.
-all: $(OUTPUT_DIR)/Postfix.dcran
+C_TESTS += Postfix
+CHERRY_C_SKIP += Postfix
 CGREP_Postfix = "v.data[0]" "v.data[0] = 9;" "Postfix_get_data(v)[0]" "v.apply(via_alias)"
 CGREP_Postfix += "/* buffer */ v.data /* end */[0]" "/* callee */ v.apply /* end */(via_alias)"
 CNOGREP_Postfix = "(v.data)[" "(Postfix_get_data(v))[" "(v.apply)("
@@ -852,7 +853,8 @@ ifneq ($(shell command -v rustc 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
-# Every direct-C test goes through Cherry too.
-all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, $(CHERRY_TESTS) $(C_TESTS)))
+# Direct-C tests go through Cherry unless they need an unsupported feature.
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, \
+       $(CHERRY_TESTS) $(filter-out $(CHERRY_C_SKIP), $(C_TESTS))))
 endif
 endif
