@@ -88,9 +88,9 @@ definitions taken from the core F* module ``Prims``.
 False
 .....
 
-The type ``False`` has no elements. Since there are no terms that
-satisfy ``e : False``, the type ``False`` is the type of unprovable
-propositions.
+The type ``False`` (or ``⊥`` [#unicode]_) has no elements. Since there
+are no terms that satisfy ``e : False``, the type ``False`` is the
+type of unprovable propositions.
 
 Unit
 ....
@@ -141,9 +141,9 @@ precedence.
 * ``%``: Euclidean modulus (infix)
 * ``*``: Multiplication (infix)
 * ``<`` : Less than (infix)
-* ``<=``: Less than or equal (infix)
+* ``<=`` or ``≤``: Less than or equal (infix)
 * ``>`` : Greater than (infix)
-* ``>=``: Greater than or equal (infix)
+* ``>=`` or ``≥``: Greater than or equal (infix)
 
 .. note::
    
@@ -312,7 +312,7 @@ Lambda terms
 The term ``fun (x:int) -> x + 1`` defines a function,
 a lambda term, which adds 1 to its integer-typed parameter ``x``. You
 can also let F* infer the type of the parameter and write ``fun x ->
-x + 1`` instead.
+x + 1`` instead, or, even more compactly, ``λ x → x + 1``.
 
 .. _Part1_ch1_named_function:
 
@@ -717,3 +717,13 @@ What other types can you give to it?
        :language: fstar
        :start-after: SNIPPET_START: fibonacci_answers
        :end-before: SNIPPET_END: fibonacci_answers
+
+
+.. rubric:: Footnotes
+
+.. [#unicode] Many of F*'s primitives and syntactic elements can be
+   alternatively written as Unicode symbols corresponding to typical
+   mathematical notation. This is less commonly done than in some
+   other proof-oriented languages; for example, the standard library
+   hardly ever makes use of it. We'll nonetheless generally mention
+   these representations for the sake of completeness.
