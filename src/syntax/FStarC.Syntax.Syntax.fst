@@ -338,7 +338,6 @@ let hash_meta_source_info (m:meta_source_info) : H.hash_code =
   | Masked_effect -> hc 1061
   | Meta_smt_pat -> hc 1063
   | Machine_integer (s, w) -> H.mix (hc 1069) (hash_sw s w)
-  | Tactic_synthesized -> hc 1087
 
 let hash_meta (m:metadata) : ML H.hash_code =
   match m with

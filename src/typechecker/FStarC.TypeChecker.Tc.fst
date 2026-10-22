@@ -394,13 +394,18 @@ let check_quals_eq (r:Range.t) (l:lident) (qopt : list qualifier) (val_q : list 
           else empty;
         ]
 
-let strip_tactic_synthesized (e:term) : ML term =
+(* A [synth_by_tactic] at a proof goal, once Core has run its tactic (see
+   [TcTerm.tc_synth]), is a proof, which we record as [()]. *)
+let erase_synthesized_proofs (env:Env.env) (e:term) : ML term =
   e |> FStarC.Syntax.Visit.visit_term false (fun t ->
     match t.n with
-    | Tm_meta {tm; meta=Meta_desugared Tactic_synthesized} ->
-      (match (SS.compress tm).n with
-       | Tm_ascribed {tm} -> tm
-       | _ -> tm)
+    | Tm_app _ ->
+      (match U.head_and_args_full t with
+       | hd, [(typ, Some ({ aqual_implicit = true })); (_, None)]
+           when U.is_synth_by_tactic hd
+             && Some? (VCUtil.synth_proof_goal env typ) ->
+         { U.exp_unit with pos = t.pos }
+       | _ -> t)
     | _ -> t)
 
 (* The type checking rule for Sig_let (lbs, lids) *)
@@ -793,11 +798,8 @@ let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
     in
     Errors.stop_if_err ();
     let r =
-      (* The [Tactic_synthesized] markers only tell Core what to trust. The
-         definition is recorded with the tactics' results in place, e.g. for
-         [def_of]. *)
       let strip (e:term) : ML term =
-        if mem PC.synth_lid (Free.fvars e_src) then strip_tactic_synthesized e else e
+        if mem PC.synth_lid (Free.fvars e_src) then erase_synthesized_proofs env' e else e
       in
       if env'.admit
       then (

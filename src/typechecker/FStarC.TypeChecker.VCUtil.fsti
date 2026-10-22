@@ -32,6 +32,13 @@ val label : list Pprint.document -> Range.t -> typ -> ML typ
    including [squash p]. *)
 val is_unit_like (t:term) : ML bool
 
+(* [synth_proof_goal env t] is [Some p] when the inhabitants of [t] are
+   all [()], so that a proof of [p] is all that [t] asks for: [t] is
+   [squash p], [u:unit{p}], or a proposition [p] such as [a == b]. A
+   [synth_by_tactic] at such a type is not run by the elaborator: Core
+   asks its tactic to prove [p] instead. *)
+val synth_proof_goal (env:Env.env) (t:typ) : ML (option typ)
+
 (* A match whose scrutinee is stuck for the SMT solver: neither a
    constructor application nor a literal. *)
 val is_stuck_match (e:term) : ML bool

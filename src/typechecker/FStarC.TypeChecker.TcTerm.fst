@@ -667,17 +667,6 @@ and tc_maybe_toplevel_term env (e:term) : ML (term                  (* type-chec
     let e = mk (Tm_meta {tm=e; meta=Meta_desugared Sequence}) top.pos in
     e, c, g
 
-  | Tm_meta {tm=asc; meta=Meta_desugared Tactic_synthesized}
-      when (match (SS.compress asc).n with Tm_ascribed {asc=(Inl _, None, _)} -> true | _ -> false) ->
-    (* A tactic's result, as elaborated by [tc_synth]: it is trusted to have
-       type [typ], as when the tactic runs. *)
-    let Tm_ascribed {tm=e; asc=(Inl typ, _, _)} = (SS.compress asc).n in
-    let env0, _ = Env.clear_expected_typ env in
-    let typ, _, g1 = tc_term (Env.set_expected_typ env0 (fst <| U.type_u ())) typ in
-    let e = mk (Tm_meta {tm=mk (Tm_ascribed {tm=e; asc=(Inl typ, None, false); eff_opt=None}) e.pos;
-                         meta=Meta_desugared Tactic_synthesized}) top.pos in
-    value_check_expected_typ env e (Inl typ) g1
-
   | Tm_meta {tm=e; meta=Meta_monadic _}
   | Tm_meta {tm=e; meta=Meta_monadic_lift _} ->
     (* KM : This case should not happen when typechecking once but is it really *)
@@ -1602,12 +1591,21 @@ and tc_synth head env args rng : ML _ =
     in
 
     // Check the result type
-    let typ, _, g1 = tc_term (Env.set_expected_typ env (fst <| U.type_u ())) typ in
+    let k, u = U.type_u () in
+    let typ, _, g1 = tc_term (Env.set_expected_typ env k) typ in
     Rel.force_trivial_guard env g1;
 
     // Check the tactic
     let tau, _, g2 = tc_tactic t_unit t_unit env tau in
     Rel.force_trivial_guard env g2;
+
+    match VCUtil.synth_proof_goal env typ with
+    | Some _ ->
+      (* A proof: the tactic is not run here, but by Core, on the goal it
+         computes for it (see [Core.check]). *)
+      let head = S.mk_Tm_uinst (U.un_uinst head) [u] in
+      S.mk_Tm_app head [S.iarg typ; S.as_arg tau] rng, mk_Total typ, mzero
+    | None ->
 
     (* Elaboration runs with [admit] set, but the tactic runs laxly only in a
        lax module (see [TcUtil.synth_mode]): e.g. [exact] checks its
@@ -1623,11 +1621,8 @@ and tc_synth head env args rng : ML _ =
     // Should never trigger, meta-F* will check it before.
     TcUtil.check_uvars tau.pos t;
 
-    (* As here, Core trusts that the tactic's result has type [typ]. *)
-    let t =
-      mk (Tm_meta {tm=mk (Tm_ascribed {tm=t; asc=(Inl typ, None, false); eff_opt=None}) t.pos;
-                   meta=Meta_desugared Tactic_synthesized}) t.pos
-    in
+    (* The tactic's result is not trusted: Core checks it where it is used,
+       as any other term. *)
     t, mk_Total typ, mzero
 
 and tc_tactic (a:typ) (b:typ) (env:Env.env) (tau:term) : ML (term & comp & guard_t) =
