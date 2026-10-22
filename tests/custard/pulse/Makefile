@@ -476,6 +476,7 @@ EGREP_PulseGlobalArrayLocal += "Bind it to a top-level definition"
 # does not reach.  The test runs, so the comments have to be in places a C
 # compiler accepts as well as places a reader wants them.
 C_TESTS += PulseComment
+OCAML_TESTS += PulseComment
 CGREP_PulseComment += "/* doubling */"
 CGREP_PulseComment += "/* the running total */"
 CGREP_PulseComment += "/* one step */"
@@ -488,6 +489,8 @@ CGREP_PulseComment += "/* inner after */ /* outer after */"
 # A comment on a value nothing reads is still a comment.
 CGREP_PulseComment += "/* kept */"
 CGREP_PulseComment += "/* even unread */"
+CGREP_PulseComment += "/* discarded load */" "/* load done */"
+CGREP_PulseComment += "/* discarded effect */" "/* effect done */"
 # No trace of the library the two functions come from: both are rules.
 CNOGREP_PulseComment += "Pulse_Lib_Comment"
 

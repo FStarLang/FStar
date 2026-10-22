@@ -13,6 +13,40 @@ open Pulse.Lib.Comment
 module SZ  = FStar.SizeT
 module U32 = FStar.UInt32
 module I32 = FStar.Int32
+module A = Pulse.Lib.Array
+
+fn discarded_load (a: A.array U32.t)
+  requires A.pts_to a #1.0R 's ** pure (Seq.length 's == 1)
+  ensures A.pts_to a #1.0R 's
+{
+  A.pts_to_len a;
+  let first = a.(0sz);
+  let middle = U32.add_mod first 1ul;
+  let unused = comment_gen "discarded load" (U32.add_mod middle 2ul) "load done";
+}
+
+fn bump (r: ref U32.t)
+  requires pts_to r 'n
+  returns v: U32.t
+  ensures pts_to r (U32.add_mod 'n 1ul) ** pure (v == U32.add_mod 'n 1ul)
+{
+  let v = U32.add_mod !r 1ul;
+  r := v;
+  v
+}
+
+inline_for_extraction
+fn loaded_value (a: A.array U32.t) (r: ref U32.t)
+  requires A.pts_to a #1.0R 's ** pts_to r 'n ** pure (Seq.length 's == 1)
+  returns v: U32.t
+  ensures A.pts_to a #1.0R 's ** pts_to r (U32.add_mod 'n 1ul)
+{
+  let n = bump r;
+  A.pts_to_len a;
+  let first = a.(0sz);
+  let middle = U32.add_mod first n;
+  U32.add_mod middle 2ul
+}
 
 fn twice (x: U32.t)
   returns y: U32.t
@@ -44,6 +78,13 @@ fn count_to (n: SZ.t)
 
 fn main () returns c: I32.t
 {
+  let a = A.alloc 7ul 1sz;
+  discarded_load a;
+  let mut r = 0ul;
+  let unused_load = loaded_value a r;
+  A.free a;
+  let unused_effect = comment_gen "discarded effect" (bump r) "effect done";
+  let n = !r;
   (* A comment around a call result, and one nested inside another. *)
   let t = comment_gen "outer before"
             (comment_gen "inner before" (count_to 4sz) "inner after")
@@ -51,5 +92,5 @@ fn main () returns c: I32.t
   (* Nothing reads this one.  The comment survives anyway. *)
   let unused = comment_gen "kept" 0ul "even unread";
   let d = twice t;
-  if (U32.eq t 4ul && U32.eq d 8ul) { 0l } else { 1l }
+  if (U32.eq n 2ul && U32.eq t 4ul && U32.eq d 8ul) { 0l } else { 1l }
 }

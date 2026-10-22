@@ -556,11 +556,29 @@ let is_programmer_name (v:string) : ML bool =
   let b = base_name v in
   not (b = "" || b = "_" || (String.length b >= 4 && String.substring b 0 4 = "uu__"))
 
+(* Discard before floating an initializer's lets, so their liveness reflects
+   the discarded result. Comments retain their text, not a droppable operand. *)
+let rec discard_value (e:expr) : ML expr =
+  match e.e with
+  | ELet (v, ty, e1, e2) ->
+    let e2 = discard_value e2 in
+    { e with e = ELet (v, ty, e1, e2); ty = e2.ty }
+  | ESeq (e1, e2) ->
+    let e2 = discard_value e2 in
+    { e with e = ESeq (e1, e2); ty = e2.ty }
+  | EOp (op, [body])
+      when (match op.po_op with Commented _ -> true | _ -> false) && is_droppable body ->
+    { e with e = EOp (op, [unit_expr]); ty = TUnit }
+  | _ when is_droppable e -> unit_expr
+  | _ -> e
+
 let rec simpl (x:expr) : ML expr =
   match x.e with
   | ELet (v, ty, e1, e2) ->
-    let e1 = simpl e1 in
     let e2 = simpl e2 in
+    let used = occurs v e2 in
+    let keep = used || (keeps_unused_named_lets () && is_programmer_name v) in
+    let e1 = simpl (if keep then e1 else discard_value e1) in
     float_lets x e1 (fun e1 ->
     (* [let x = e in x] is just [e], whatever [e]'s effect: nothing moves. *)
     if (match e2.e with EVar w -> w = v | _ -> false) then e1
@@ -588,7 +606,7 @@ let rec simpl (x:expr) : ML expr =
        source happened to bind the literal. *)
     else if Some? (propagable_const e1) then
       subst_const v ty (Some?.v (propagable_const e1)) e2
-    else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
+    else if used then { x with e = ELet (v, ty, e1, e2) }
     (* Section 7.3: an unused binding may only be deleted if evaluating it is
        unobservable; otherwise it becomes a statement, which keeps its effect
        and its position.  Section 99: the question here is deletion and not
@@ -604,7 +622,7 @@ let rec simpl (x:expr) : ML expr =
     else { x with e = ESeq (e1, e2) })
 
   | ESeq (e1, e2) ->
-    let e1 = simpl e1 in
+    let e1 = simpl (discard_value e1) in
     let e2 = simpl e2 in
     float_lets x e1 (fun e1 ->
       (* Section 99.  The same question, and the same answer: a sequenced term
