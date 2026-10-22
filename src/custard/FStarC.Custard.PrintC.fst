@@ -461,16 +461,35 @@ let arities : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 (* Whether the definition currently being printed returns [void]. *)
 let void_ret : ref bool = mk_ref false
 
-(* Cherry: self tail calls become a jump back to the top of the function, as
-   OCaml's would, since ML code loops by recursion and C does not promise to
-   eliminate the call.  [tail_self] holds the definition's kept parameters
-   when the transformation is allowed, and [tail_used] whether it happened. *)
-let tail_self : ref (option (string & list binder)) = mk_ref None
+(* Cherry: tail calls that become a jump, as OCaml's would, since ML code
+   loops by recursion and C does not promise to eliminate the call
+   (cherry.md, "Tail calls").  Each entry is a definition the C function
+   being printed can jump to -- itself, and the other members of its tail
+   group ({!tail_groups}) -- with the label to jump to and the C variables
+   its kept parameters live in.  [tail_used] lists the labels jumped to. *)
+let tail_targets : ref (list (string & string & list (binder & string))) = mk_ref []
 (* Cherry: whether the other tail calls of the definition being printed may
    be marked [CHERRY_MUSTTAIL] -- not when it allocates on the stack, since an
    argument could point into the frame the call discards. *)
 let musttail_ok : ref bool = mk_ref false
-let tail_used : ref bool = mk_ref false
+let tail_used : ref (list string) = mk_ref []
+
+(* Cherry: a set of definitions that call each other in tail position, and
+   are printed as one C function so that those calls are jumps
+   (cherry.md, "Tail calls").  [tg_fn] is that function, taking the index of
+   the member to start in; each member stays a C function of its own, which
+   stores its arguments in [tg_args] and calls [tg_fn]. *)
+type tail_group = {
+  tg_fn: string;
+  tg_args: string;
+  tg_members: list dlet;
+}
+(* Each member's name, to its index in its group and the group. *)
+let tail_groups : ref (HashTable.t string (int & tail_group)) = mk_ref (HashTable.create 0)
+(* The parameters some self tail call passes unchanged.  Such a call writes
+   nothing to them, so a parameter whose only use is that one is unused as far
+   as C can tell, and gets voided like one the body never mentions. *)
+let tail_kept : ref (list string) = mk_ref []
 
 let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
   match flags, xs with
@@ -1194,6 +1213,20 @@ let musttail_head (hd:expr) (args:list expr) (ret:cty) : ML (option string) =
          else None)
     | _ -> None
 
+(* Cherry: the target of a call in tail position that is a jump rather than a
+   call ({!tail_targets}): one the definition being printed can jump to,
+   given all its kept arguments. *)
+let tail_target (n:name) (args:list expr)
+  : ML (option (string & string & list (binder & string))) =
+  let f = string_of_name n in
+  match !tail_targets |> List.tryFind (fun (g, _, _) -> g = f) with
+  | Some (_, label, bs) ->
+    let args = match HashTable.try_find !keeps f with
+               | Some flags -> filter_by flags args
+               | None -> args in
+    if List.length args = List.length bs then Some (f, label, bs) else None
+  | None -> None
+
 (* -------------------------------------------------------------------- *)
 (* Structural equality (section 107)                                    *)
 (* -------------------------------------------------------------------- *)
@@ -1690,6 +1723,31 @@ let string_lit (s:string) : ML string =
       ["CHERRY_STRING_LIT(" ^ n ^ ", \"" ^ escape s ^ "\");\n"];
     n
 
+(* Cherry: an integer literal that is not a small integer on every target is
+   a static persistent cell ([CHERRY_INT_LIT] in cherry.h), one per value, so
+   evaluating it allocates nothing.  One that is small where small integers
+   have 63 bits is [CHERRY_INT_WIDE], which is that small integer there. *)
+let int_lits : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
+
+let rec limbs (m:int) : ML (list string) =
+  if m = 0 then [] else (show (m % 4294967296) ^ "u") :: limbs (m / 4294967296)
+
+let int_lit (v:int) : ML string =
+  let n =
+    match HashTable.try_find !int_lits (show v) with
+    | Some n -> n
+    | None ->
+      let n = alloc_name "cherry_intlit" in
+      HashTable.add !int_lits (show v) n;
+      let ds = limbs (if v < 0 then - v else v) in
+      string_lit_defs := !string_lit_defs @
+        ["CHERRY_INT_LIT(" ^ n ^ ", " ^ (if v < 0 then "1" else "0") ^ ", " ^
+         show (List.length ds) ^ ", " ^ String.concat ", " ds ^ ");\n"];
+      n in
+  if v < 4611686018427387904 && v >= - 4611686018427387904
+  then "CHERRY_INT_WIDE(INT64_C(" ^ show v ^ "), " ^ n ^ ")"
+  else "((cherry_int)&" ^ n ^ ")"
+
 let constant (c:constant) : ML string =
   match c with
   | CUnit -> unit_value
@@ -1711,7 +1769,7 @@ let constant (c:constant) : ML string =
   | CInt (v, _, None) when Options.custard_cherry () ->
     if v < 1073741824 && v > -1073741824
     then "CHERRY_INT_SMALL(" ^ show v ^ ")"
-    else "cherry_int_of_decimal(\"" ^ show v ^ "\")"
+    else int_lit v
   | CString s when Options.custard_cherry () -> "((cherry_string)&" ^ string_lit s ^ ")"
   | CInt (v, b, None) ->
     reject ("the unbounded integer literal " ^ int_lit_to_string v b)
@@ -2047,9 +2105,11 @@ let reset_program_state () : ML unit =
   eq_seen := HashTable.create 20;
   string_lits := HashTable.create 20;
   string_lit_defs := [];
+  int_lits := HashTable.create 20;
   boxed_tbl := HashTable.create 0;
   nonplain_tbl := HashTable.create 0;
   taken_names := HashTable.create 50;
+  tail_groups := HashTable.create 0;
   scope := [];
   declared := HashTable.create 0;
   ctr := 0
@@ -2967,32 +3027,28 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | ESeq (e1, e2) -> emit ind D_Ignore e1 ^ emit ind d e2
 
   | EApp ({ e = EQual (n, _) }, args)
-      when D_Return? d &&
-           (match !tail_self with
-            | Some (f, bs) ->
-              f = string_of_name n &&
-              List.length (match HashTable.try_find !keeps f with
-                           | Some flags -> filter_by flags args
-                           | None -> args) = List.length bs
-            | None -> false) ->
-    let bs = snd (Some?.v !tail_self) in
-    let f = fst (Some?.v !tail_self) in
+      when D_Return? d && Some? (tail_target n args) ->
+    let (f, label, bs) = Some?.v (tail_target n args) in
     let args = match HashTable.try_find !keeps f with
                | Some flags -> filter_by flags args
                | None -> args in
     let out = mk_ref "" in
-    let vals = List.map2 (fun (b:binder) (a:expr) -> (b, c_rvalue out ind b.b_ty a)) bs args in
+    let vals = List.map2 (fun ((b:binder), (x:string)) (a:expr) ->
+                 (b, x, c_rvalue out ind b.b_ty a)) bs args in
     (* Every argument is read before any parameter is written. *)
-    let moves = vals |> List.filter (fun ((b:binder), v) -> v <> lookup_var b.b_name) in
-    let tmps = moves |> List.map (fun ((b:binder), v) ->
+    let moves = vals |> List.filter (fun (_, x, v) -> v <> x) in
+    vals |> List.iter (fun (_, x, v) ->
+      if v = x then tail_kept := v :: !tail_kept);
+    let tmps = moves |> List.map (fun ((b:binder), x, v) ->
       let t = fresh "tail" in
-      (b, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
-    tail_used := true;
+      (x, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
+    if not (List.existsb (fun l -> l = label) !tail_used) then
+      tail_used := label :: !tail_used;
     !out ^ ind ^ "{\n" ^
     String.concat "" (tmps |> List.map (fun (_, _, s) -> s)) ^
-    String.concat "" (tmps |> List.map (fun ((b:binder), t, _) ->
-      ind ^ "  " ^ lookup_var b.b_name ^ " = " ^ t ^ ";\n")) ^
-    ind ^ "  goto custard_tail;\n" ^ ind ^ "}\n"
+    String.concat "" (tmps |> List.map (fun (x, t, _) ->
+      ind ^ "  " ^ x ^ " = " ^ t ^ ";\n")) ^
+    ind ^ "  goto " ^ label ^ ";\n" ^ ind ^ "}\n"
 
   (* Section 51.6.  A test of a [@@custard_c_ifdef] flag is a test the
      preprocessor makes.  Each arm keeps a block of its own, as it would
@@ -3407,12 +3463,12 @@ and pat_tests (path:string) (t:cty) (p:pat)
   (* Section 44.2.  A string pattern is a test on contents, not on address:
      [pat_tests] is handed the type of the path, so it can see the difference
      without looking at the constant. *)
-  (* A Cherry integer literal that is not a small integer is a cell: the
-     test builds and releases it rather than leaving it to leak. *)
+  (* A Cherry integer literal that is not a small integer is a cell, so the
+     test compares contents. *)
   | PConst (CInt (v, _, None))
     when Options.custard_cherry () &&
          not (v < 1073741824 && v > -1073741824) ->
-    (["cherry_int_eq_decimal(" ^ path ^ ", \"" ^ show v ^ "\")"], [])
+    (["cherry_int_eq(" ^ path ^ ", " ^ int_lit v ^ ")"], [])
   | PConst c when Some? (content_eq t "" "") ->
     (match content_eq t path (constant c) with
      | Some c -> ([c], [])
@@ -3581,13 +3637,26 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      are counters, and letting them run would renumber the variables of the
      branch that is kept ([ns] would come out as [ns_3]).  [scope] is already
      saved by [branch_body]; these two are saved here. *)
+  (* Only a destination that discards the value can receive nothing: one that
+     assigns or returns it always gets a statement.  The trial emission is
+     skipped there, and not only to save the work: the branch kept is
+     emitted again, so trying every match's last branch is exponential in
+     how deeply such matches nest. *)
+  let discards =
+    (match d with
+     | D_Ignore -> true
+     | D_Return -> !void_ret
+     | _ -> false) in
   let emits_nothing (p:pat) (b:expr) : ML bool =
+    discards &&
+    begin
     let saved_ctr = !ctr in
     let saved_declared = HashTable.copy !declared in
     let s = branch_body ind' p b in
     ctr := saved_ctr;
     declared := saved_declared;
-    s = "" in
+    s = ""
+    end in
   let rec trim (rbs:list branch) : ML (list branch) =
     match rbs with
     | (p, _, b) :: rest when emits_nothing p b -> trim rest
@@ -4152,20 +4221,103 @@ let let_decl (l:dlet) : ML string =
   (* C also warns about an unused *parameter*, and a definition's parameters
      have to be named, so the ones the body never mentions are voided
      explicitly. *)
-  let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
-    if List.existsb (fun y -> y = b.b_name) used then []
-    else ["  (void)" ^ lookup_var b.b_name ^ ";\n"])) in
-  tail_used := false;
-  tail_self :=
-    (if Options.custard_cherry () && not (stack_allocates l.dl_body)
-     then Some (string_of_name l.dl_name, kept_binders l)
-     else None);
-  musttail_ok := Options.custard_cherry () && not (stack_allocates l.dl_body);
+  let ok = Options.custard_cherry () && not (stack_allocates l.dl_body) in
+  tail_used := [];
+  tail_kept := [];
+  tail_targets :=
+    (if ok then [(string_of_name l.dl_name, "custard_tail",
+                  kept_binders l |> List.map (fun b -> (b, lookup_var b.b_name)))]
+     else []);
+  musttail_ok := ok;
   let body = emit "  " D_Return l.dl_body in
-  tail_self := None;
+  tail_targets := [];
   musttail_ok := false;
+  let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
+    let v = lookup_var b.b_name in
+    if List.existsb (fun y -> y = b.b_name) used &&
+       not (List.mem v !tail_kept) then []
+    else ["  (void)" ^ v ^ ";\n"])) in
   signature l ^ " {\n" ^ voids ^
-  (if !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
+  (if Cons? !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
+
+(* Cherry: the C function a tail group is printed as (cherry.md, "Tail
+   calls").  Every member's parameters are its locals, named apart; it starts
+   by loading the ones of the member [custard_entry] names from the group's
+   argument buffer, and each member's body follows under a label, so that a
+   tail call from one member to another assigns the callee's parameters and
+   jumps, as a self tail call does in {!let_decl}.  The buffer is
+   thread-local, and read before anything else runs, so that a member called
+   again while the function runs -- not in tail position, or from another
+   thread -- cannot overwrite arguments that have not been read yet. *)
+let tail_group_decl (g:tail_group) : ML string =
+  let l0 = List.hd g.tg_members in
+  current := string_of_name l0.dl_name;
+  ctr := 0;
+  void_ret := TUnit? l0.dl_ret;
+  cur_ret := Some l0.dl_ret;
+  reset_scope ();
+  (* Each member's own scope, over the one set of declared names. *)
+  let members = g.tg_members |> List.mapi (fun i (l:dlet) ->
+    scope := [];
+    let bs = kept_binders l |> List.map (fun b -> (b, bind_var b.b_name)) in
+    l.dl_binders |> List.iter (fun b ->
+      if TUnit? b.b_ty then bind_alias b.b_name unit_value);
+    (i, l, bs, !scope)) in
+  let label (i:int) = "custard_tail_" ^ string_of_int i in
+  let slot (i:int) (j:int) = g.tg_args ^ ".m" ^ string_of_int i ^ ".a" ^ string_of_int j in
+  let n = List.length members in
+  let decls = members |> List.collect (fun (_, _, bs, _) ->
+    bs |> List.map (fun ((b:binder), x) -> "  " ^ decl_of b.b_ty x ^ ";\n")) in
+  let cases = members |> List.map (fun (i, _, bs, _) ->
+    (if i = n - 1 then "  default:" else "  case " ^ string_of_int i ^ ":") ^
+    String.concat "" (bs |> List.mapi (fun j ((_:binder), x) -> " " ^ x ^ " = " ^ slot i j ^ ";")) ^
+    " goto " ^ label i ^ ";\n") in
+  tail_targets := members |> List.map (fun (i, (l:dlet), bs, _) ->
+    (string_of_name l.dl_name, label i, bs));
+  musttail_ok := true;
+  tail_used := [];
+  tail_kept := [];
+  let bodies = members |> List.map (fun (i, (l:dlet), bs, sc) ->
+    current := string_of_name l.dl_name;
+    scope := sc;
+    let used = vars_of l.dl_body in
+    let body = emit "    " D_Return l.dl_body in
+    let voids = String.concat "" (bs |> List.collect (fun ((b:binder), x) ->
+      if List.existsb (fun y -> y = b.b_name) used &&
+         not (List.mem x !tail_kept) then []
+      else ["    (void)" ^ x ^ ";\n"])) in
+    label i ^ ": {\n" ^ voids ^ body ^
+    (if !void_ret then "    return;\n" else "") ^ "  }\n") in
+  tail_targets := [];
+  musttail_ok := false;
+  let fields = members |> List.collect (fun (i, _, bs, _) ->
+    if Nil? bs then [] else
+    ["  struct {\n" ^
+     String.concat "" (bs |> List.mapi (fun j ((b:binder), _) ->
+       "    " ^ decl_of b.b_ty ("a" ^ string_of_int j) ^ ";\n")) ^
+     "  } m" ^ string_of_int i ^ ";\n"]) in
+  let buf = if Nil? fields then "" else
+            "static CHERRY_THREAD_LOCAL union {\n" ^ String.concat "" fields ^
+            "} " ^ g.tg_args ^ ";\n" in
+  let hd = g.tg_fn ^ "(int custard_entry)" in
+  buf ^ "static " ^ (if !void_ret then "void " ^ hd else decl_of l0.dl_ret hd) ^ " {\n" ^
+  String.concat "" decls ^
+  "  switch (custard_entry) {\n" ^ String.concat "" cases ^ "  }\n" ^
+  String.concat "" bodies ^ "}\n"
+
+(* Cherry: a member of a tail group, which enters the group's function. *)
+let tail_member_decl (i:int) (g:tail_group) (l:dlet) : ML string =
+  current := string_of_name l.dl_name;
+  reset_scope ();
+  let bs = kept_binders l |> List.map (fun b -> bind_var b.b_name) in
+  let stores = bs |> List.mapi (fun j x ->
+    "  " ^ g.tg_args ^ ".m" ^ string_of_int i ^ ".a" ^ string_of_int j ^ " = " ^ x ^ ";\n") in
+  let call = g.tg_fn ^ "(" ^ string_of_int i ^ ")" in
+  signature l ^ " {\n" ^ String.concat "" stores ^
+  (if TUnit? l.dl_ret then "  CHERRY_TAILCALL_VOID(" ^ call ^ ");\n"
+   else if musttail_sig_ok [TInt (FStarC.Const.Signed, W32)] (Some l.dl_ret)
+   then "  CHERRY_MUSTTAIL return " ^ call ^ ";\n"
+   else "  return " ^ call ^ ";\n") ^ "}\n"
 
 (* An external is a symbol someone else defines.  When it comes with a header
    we include the header and say nothing more; otherwise we declare it from
@@ -5408,6 +5560,91 @@ let cherry_closure_helpers () : ML (list string & list string) =
   drain ();
   (!protos, !defs)
 
+(* Cherry: the definitions called in tail position by [e], as far as
+   {!emit} can see -- the bodies of [let]s and sequences, the arms of
+   conditionals and matches.  Missing one costs a jump, not correctness: the
+   call is then an ordinary one. *)
+let rec tail_callees (e:expr) : ML (list string) =
+  match e.e with
+  | ELet (_, _, _, e2) -> tail_callees e2
+  | ESeq (_, e2) -> tail_callees e2
+  | EIf (_, t, f) -> tail_callees t @ tail_callees f
+  | EMatch (_, brs) -> List.collect (fun ((_, _, b):branch) -> tail_callees b) brs
+  | EApp ({ e = EQual (n, _) }, _) -> [string_of_name n]
+  | _ -> []
+
+(* Cherry: the tail groups of [p] ({!tail_group}).  Two definitions are in
+   one when each reaches the other through calls in tail position, the
+   strongly connected components of that graph -- every cycle of tail calls
+   is inside one, so a chain of tail calls that leaves a group never comes
+   back, and only finitely many calls stay on the stack.  A definition joins
+   only if its body can be printed inside another C function: no stack
+   allocation (see {!stack_allocates}), and none of the per-definition
+   decoration that a shared function would have to share. *)
+let build_tail_groups (p:program) : ML unit =
+  let mergeable (l:dlet) : ML bool =
+    Cons? l.dl_binders && not (stack_allocates l.dl_body) &&
+    not (l.dl_flags |> List.existsb (fun f ->
+           Guard? f || Prologue? f || Epilogue? f || CInline? f)) in
+  let ret_key (l:dlet) : ML string =
+    if TUnit? l.dl_ret then "void" else decl_of l.dl_ret "" in
+  let cands = p |> List.collect (fun d ->
+    match d with
+    | DLet l when local d && mergeable l -> [l]
+    | _ -> []) in
+  let tbl : HashTable.t string (dlet & string) = HashTable.create 50 in
+  cands |> List.iter (fun (l:dlet) ->
+    current := string_of_name l.dl_name;
+    HashTable.add tbl (string_of_name l.dl_name) (l, ret_key l));
+  let succs (l:dlet) (k:string) : ML (list string) =
+    tail_callees l.dl_body |> List.filter (fun g ->
+      g <> string_of_name l.dl_name &&
+      (match HashTable.try_find tbl g with
+       | Some (_, k') -> k' = k
+       | None -> false)) in
+  (* Tarjan's algorithm. *)
+  let index : HashTable.t string int = HashTable.create 50 in
+  let low : HashTable.t string int = HashTable.create 50 in
+  let on_stack : HashTable.t string bool = HashTable.create 50 in
+  let stack : ref (list string) = mk_ref [] in
+  let next = mk_ref 0 in
+  let sccs : ref (list (list string)) = mk_ref [] in
+  let get (t:HashTable.t string int) (v:string) : ML int =
+    match HashTable.try_find t v with Some i -> i | None -> 0 in
+  let rec strong (v:string) : ML unit =
+    HashTable.add index v !next; HashTable.add low v !next; next := !next + 1;
+    stack := v :: !stack; HashTable.add on_stack v true;
+    let (l, k) = Some?.v (HashTable.try_find tbl v) in
+    succs l k |> List.iter (fun w ->
+      if None? (HashTable.try_find index w) then begin
+        strong w;
+        if get low w < get low v then HashTable.add low v (get low w)
+      end else if HashTable.try_find on_stack w = Some true then
+        (if get index w < get low v then HashTable.add low v (get index w)));
+    if get low v = get index v then begin
+      let rec pop (acc:list string) : ML (list string) =
+        match !stack with
+        | w :: rest ->
+          stack := rest; HashTable.add on_stack w false;
+          if w = v then w :: acc else pop (w :: acc)
+        | [] -> acc in
+      sccs := pop [] :: !sccs
+    end in
+  cands |> List.iter (fun (l:dlet) ->
+    let v = string_of_name l.dl_name in
+    if None? (HashTable.try_find index v) then strong v);
+  !sccs |> List.iter (fun (c:list string) ->
+    if List.length c >= 2 then begin
+      let members = cands |> List.filter (fun (l:dlet) ->
+        List.existsb (fun x -> x = string_of_name l.dl_name) c) in
+      let first = c_name (List.hd members).dl_name in
+      let g = { tg_fn = alloc_name (first ^ "__tail");
+                tg_args = alloc_name (first ^ "__tail_args");
+                tg_members = members } in
+      members |> List.iteri (fun i (l:dlet) ->
+        HashTable.add !tail_groups (string_of_name l.dl_name) (i, g))
+    end)
+
 let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string) =
   (* Section 42.2.  An imported declaration is in [p] so that the tables below
      see its shape, and out of every list that is emitted: the unit that
@@ -5567,6 +5804,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   check_emitted_names init_name p;
   check_reference_copies p;
   arities := at;
+  if Options.custard_cherry () then build_tail_groups p;
 
   (* Only the standard library, and only the parts that are used unavoidably:
      fixed-width integers, malloc/free/abort, memmove, and bool. *)
@@ -5709,6 +5947,12 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     if not (local d) then [] else
     match d with
     | DLet l when Nil? l.dl_binders -> []
+    | DLet l when Some? (HashTable.try_find !tail_groups (string_of_name l.dl_name)) ->
+      let (i, g) = Some?.v (HashTable.try_find !tail_groups (string_of_name l.dl_name)) in
+      [(if i = 0 then tail_group_decl g else "") ^
+       (* Only the group's function may call a member that nothing
+          outside the group names. *)
+       comment_of l ^ storage l ^ "CHERRY_UNUSED " ^ tail_member_decl i g l]
     | DLet l -> [guarded l (comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
                             let_decl l ^ epilogue_of l)]
     | _ -> []) in
