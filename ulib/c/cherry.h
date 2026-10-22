@@ -39,13 +39,16 @@ static inline uint32_t cherry_tag(const cherry_obj *o) {
 
 /* Guaranteed tail calls (cherry.md, "Tail calls").  ML code loops by
    recursion, through other functions and closures as well as itself, and
-   needs every call in tail position to run in constant stack.  The code
-   generator marks such a call only when its arguments and result are passed
-   in registers, which is what GCC needs to honour the mark at every
-   optimization level.  Clang requires the caller's and callee's prototypes
-   to match exactly, which these calls rarely do, so there the mark is empty
-   and the call an ordinary one -- as it is on any other compiler.  Define
-   CHERRY_MUSTTAIL (and CHERRY_TAILCALL_VOID) to override the choice. */
+   needs every call in tail position to run in constant stack.  Calls between
+   definitions that call each other are jumps; the rest, which include every
+   tail call through a closure, are marked, and the code generator marks a
+   call only when its arguments and result are passed in registers, which is
+   what GCC needs to honour the mark at every optimization level.  Clang
+   requires the caller's and callee's prototypes to match exactly, which
+   these calls rarely do, so only GCC 15 or later will do.  Define
+   CHERRY_ALLOW_UNGUARANTEED_TAILCALLS to build with another compiler anyway,
+   with the mark empty and the calls ordinary ones, or define CHERRY_MUSTTAIL
+   (and CHERRY_TAILCALL_VOID) to override the choice. */
 #ifndef CHERRY_MUSTTAIL
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 15 && \
     (defined(__x86_64__) || defined(__aarch64__)) && !defined(_WIN32)
@@ -63,12 +66,22 @@ static inline uint32_t cherry_tag(const cherry_obj *o) {
     __attribute__((musttail)) return call; \
     _Pragma("GCC diagnostic pop") \
   } while (0)
-#else
+#elif defined(CHERRY_ALLOW_UNGUARANTEED_TAILCALLS)
 #define CHERRY_MUSTTAIL
+#else
+#error "Cherry needs GCC 15 or later on x86-64 or AArch64 for guaranteed tail calls (cherry.md, \"Tail calls\"); define CHERRY_ALLOW_UNGUARANTEED_TAILCALLS to build anyway"
 #endif
 #endif
 #ifndef CHERRY_TAILCALL_VOID
 #define CHERRY_TAILCALL_VOID(call) call
+#endif
+
+/* The argument buffer of a group of functions that tail-call each other
+   (cherry.md, "Tail calls"). */
+#ifdef __cplusplus
+#define CHERRY_THREAD_LOCAL thread_local
+#else
+#define CHERRY_THREAD_LOCAL _Thread_local
 #endif
 
 /* Debug mode (cherry.md, "Debug mode").  The generated code relies on facts

@@ -133,17 +133,28 @@ The prototype implements this as follows:
 
 ### Tail calls
 
-ML code loops by recursion, and relies on every call in tail position running in constant stack: mutual recursion, recursion through a closure, and continuation-passing style. OCaml guarantees this, and C does not. Self tail calls become jumps (above). Every other call in tail position is marked `CHERRY_MUSTTAIL`, which `cherry.h` defines as GCC's `__attribute__((musttail))` (GCC 15 or later, on x86-64 and AArch64):
-- in a definition, a saturated call of another definition, and a closure call through `cherry_apply_T_k`;
+ML code loops by recursion, and relies on every call in tail position running in constant stack: mutual recursion, recursion through a closure, and continuation-passing style. OCaml guarantees this, and C does not. Cherry guarantees it in two ways.
+
+**Jumps.** These work with every C compiler.
+- A self tail call assigns the parameters and jumps back to the top of the function (`goto custard_tail`).
+- Definitions that call each other in tail position form a *tail group*: a strongly connected component of the graph of saturated tail calls between top-level definitions with the same C result type. Each group is printed as one C function, `f__tail(int custard_entry)`. Its locals are every member's parameters. It starts with a `switch` on the member to enter, and each member's body follows under a label `custard_tail_i`. A tail call to a member assigns that member's parameters and jumps to its label.
+- Each member stays a C function with its own signature, so a call from outside the group, a function pointer or a closure is unchanged. It stores its arguments in the group's thread-local argument buffer `f__tail_args` and calls `f__tail(i)`, which reads them before doing anything else.
+- A definition that allocates on the stack, or has a `Guard`, prologue, epilogue or `inline`, is not merged.
+
+Every cycle of first-order tail calls is inside one group, so a chain of tail calls that leaves a group never returns to it: only boundedly many frames stay on the stack.
+
+**`musttail`.** A tail call through a closure cannot be a jump, because the callee is not known. These calls, and every other remaining call in tail position, are marked `CHERRY_MUSTTAIL`, which `cherry.h` defines as GCC's `__attribute__((musttail))`:
+- in a definition, a saturated call of another definition outside the group, and a closure call through `cherry_apply_T_k`;
+- in a group member, the call of the group's function;
 - in the generated helpers, the exact-arity call of `cherry_apply_T_k`, and the call in a closure's entry point.
 
 In a function returning `void`, the call is `CHERRY_TAILCALL_VOID(f(...))`, a `return` of the `void` call, which ISO C allows only as an extension.
 
-GCC honours `musttail` at every optimization level, but at `-O0` only when the call needs no stack the caller does not have and its result is not copied after it. So a call is marked only when every argument and the result fit in registers: at most two 8-byte words each, at most six in all, by a conservative estimate (`reg_words` in PrintC). The result type must also be the caller's. Calls are not marked in a definition that allocates on the stack, or to externs, which may be macros. An unmarked tail call is an ordinary call, which GCC usually turns into a jump at `-O2` anyway.
+GCC honours `musttail` at every optimization level, but at `-O0` only when the call needs no stack the caller does not have and its result is not copied after it. So a call is marked only when every argument and the result fit in registers: at most two 8-byte words each, at most six in all, by a conservative estimate (`reg_words` in PrintC). The result type must also be the caller's. Calls are not marked in a definition that allocates on the stack, or to externs, which may be macros. A large record argument is what usually prevents the mark; `[@@cherry_boxed]` (see Inductive types) fixes that.
 
 The caller must not release anything after the call. Borrow inference ensures this for arguments (see Borrow inference). A closure's entry point still increments the captured values before the call, and the call is not marked if the function borrows any of the entry point's arguments; this happens only when the convention is fixed.
 
-Clang's `musttail` requires the caller and callee to have identical prototypes, which these calls rarely do. On clang and other compilers, `CHERRY_MUSTTAIL` is empty and `CHERRY_TAILCALL_VOID(c)` is `c`. Both can be predefined to override the choice. Test: `tests/custard/MutualTail`, run in a 1 MB stack; with a compiler that does not honour the mark (GCC before 15), it is built at `-O2` instead of `-O0`, which then turns the calls into jumps unasked.
+**Compiler requirement.** Cherry needs GCC 15 or later on x86-64 or AArch64; `cherry.h` stops with `#error` on any other compiler. Clang's `musttail` requires the caller and callee to have identical prototypes, which these calls rarely do. Defining `CHERRY_ALLOW_UNGUARANTEED_TAILCALLS` builds anyway: `CHERRY_MUSTTAIL` is then empty and `CHERRY_TAILCALL_VOID(c)` is `c`, so tail calls through closures may use stack, while the jumps above still run in constant stack. `CHERRY_MUSTTAIL` and `CHERRY_TAILCALL_VOID` can also be predefined. The test Makefiles compile Cherry output with `$(CHERRY_CC)` (and `$(CHERRY_CXX)` for the C++ check), which default to `$(CC)` and `$(CXX)`; CI sets them to `gcc-15` and `g++-15`. Test: `tests/custard/MutualTail`, run in a 1 MB stack.
 
 ## Inductive types
 
