@@ -582,6 +582,8 @@ let cell_field (v:string) (d:dtype) (cn:name) (f:string) : ML string =
   "((" ^ cell_struct d cn ^ " *)" ^ v ^ ")->" ^ c_var f
 let cell_new (d:dtype) (cn:name) : ML string =
   "cherry_new_" ^ c_name d.dt_name ^ "_" ^ arm_name cn
+let cell_unshare (d:dtype) (cn:name) : ML string =
+  "cherry_unshare_" ^ c_name d.dt_name ^ "_" ^ arm_name cn
 
 (* The generated function performing [op] -- [inc], [dec] or [mark] -- on a
    value of the non-plain type [t].  Taking a reference to a cell is the same
@@ -2150,6 +2152,7 @@ let is_stmt (e:expr) : bool =
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = ResetFree }, _)
+  | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnExit }, _) -> true
   | EOp ({ po_op = PBuf f }, _) -> f <> "read" && f <> "alloc"
   | _ -> false
@@ -2243,6 +2246,7 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
+  | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
   | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
@@ -3113,14 +3117,34 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   (* Section 51.6.  A test of a [@@custard_c_ifdef] flag is a test the
      preprocessor makes.  Each arm keeps a block of its own, as it would
      under a C [if], so that a name it declares cannot collide with one the
-     code after it declares. *)
+     code after it declares.
+
+     Only one arm survives the preprocessor, so a parameter or local that the
+     other arm alone reads is unused in this build, and [-Wunused-parameter]
+     / [-Wunused-variable] fire on it.  Each arm therefore voids the names in
+     scope that the other arm reads and it does not. *)
   | EIf ({ e = EQual (n, _) }, t, f)
       when Some? (HashTable.try_find !ifdefs (string_of_name n)) ->
     let cond = Some?.v (HashTable.try_find !ifdefs (string_of_name n)) in
+    let vt = vars_of t in
+    let vf = vars_of f in
+    let voids (mine:list string) (other:list string) : ML string =
+      let xs = other |> List.fold_left (fun acc x ->
+        if List.mem x mine || List.mem x acc ||
+           not (List.existsb (fun (y, _) -> y = x) !scope)
+        then acc else x :: acc) [] |> List.rev in
+      String.concat "" (xs |> List.collect (fun x ->
+        let s = lookup_var x in
+        let ident = List.for_all (fun c -> BU.is_letter_or_digit c || c = '_')
+                                 (String.list_of_string s) in
+        if s = unit_value then []
+        else [ind' ^ "(void)" ^ (if ident then s else group s) ^ ";\n"])) in
+    let tv = voids vt vf in
+    let fv = voids vf vt in
     let arm (body:string) : string =
       if body = "" then "" else ind ^ "{\n" ^ body ^ ind ^ "}\n" in
-    let tt = arm (emit ind' d t) in
-    let ft = arm (emit ind' d f) in
+    let tt = arm (tv ^ emit ind' d t) in
+    let ft = arm (fv ^ emit ind' d f) in
     ind ^ "#if " ^ cond ^ "\n" ^ tt ^
     (if ft = "" then "" else ind ^ "#else\n" ^ ft) ^
     ind ^ "#endif\n"
@@ -3233,6 +3257,24 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let out = mk_ref "" in
     let v = c_expr out ind w in
     !out ^ ind ^ "free(" ^ v ^ ");\n" ^ unit_result ind d
+
+  (* Cherry: a record update (cherry.md, "Record updates"). *)
+  | EOp ({ po_op = Update (cn, is) }, a :: vs) ->
+    (match find_ctor cn with
+     | Some (dt, fs) ->
+       let out = mk_ref "" in
+       let x = c_expr out ind a in
+       let vals = vs |> List.map (fun (v:expr) -> c_rvalue out ind v.ty v) in
+       let u = fresh "u" in
+       let sets = List.zip is vals |> List.map (fun (i, v) ->
+         let (f, t) = List.nth fs i in
+         let fld = cell_field u dt cn f in
+         (if is_nonplain_ty t then ind ^ rc_call "dec" t fld ^ ";\n" else "") ^
+         ind ^ fld ^ " = " ^ v ^ ";\n") in
+       !out ^
+       ind ^ decl_of e.ty u ^ " = " ^ cell_unshare dt cn ^ "(" ^ x ^ ");\n" ^
+       String.concat "" sets ^ finish ind d u
+     | None -> failwith "Cherry: update of an unknown constructor")
 
   (* Exceptions (cherry.md, "Exceptions"). *)
   | EOp ({ po_op = ExnRaise }, [a]) ->
@@ -4584,7 +4626,7 @@ let comment_of (l:dlet) : ML string =
    producer's modules from the `.cui` makes the two agree by construction,
    and does so without asking the consumer to repeat a flag that describes
    somebody else's output. *)
-let build_renames (extra:list string) (p:program) : ML unit =
+let build_renames (check:bool) (extra:list string) (p:program) : ML unit =
   let mods = Options.custard_c_no_prefix () @ extra in
   renames := HashTable.create 0;
   if Nil? mods then () else begin
@@ -4646,15 +4688,15 @@ let build_renames (extra:list string) (p:program) : ML unit =
           let tgt = escape_kw (sanitize dn.id) in
           let src = string_of_name dn in
           (match HashTable.try_find claimed tgt with
-           | Some other ->
+           | Some other when check ->
              E.raise_error0 E.Error_CustardExportCollision [
                text ("Custard: --custard_c_no_prefix would name both " ^
                      other ^ " and " ^ src ^ " `" ^ tgt ^
                      "' in the generated C.");
                text "Two definitions cannot share one external name."; ]
-           | None -> ());
+           | _ -> ());
           (match HashTable.try_find taken tgt with
-           | Some other when other <> src ->
+           | Some other when check && other <> src ->
              E.raise_error0 E.Error_CustardExportCollision [
                text ("Custard: --custard_c_no_prefix would name " ^ src ^
                      " `" ^ tgt ^ "', which is already the name of " ^
@@ -4669,7 +4711,7 @@ module."; ]
     (* A module named but contributing nothing is almost always a typo or a
        forgotten --custard_entry_module, and silence there costs a round. *)
     mods |> List.iter (fun m ->
-      if None? (HashTable.try_find used_mod m) then
+      if check && None? (HashTable.try_find used_mod m) then
         E.log_issue0 E.Warning_CustardNoPublicDefinitions [
           text ("Custard: --custard_c_no_prefix " ^ m ^ " renamed nothing.");
           text "The option applies to types, to assume vals, and to \
@@ -4677,6 +4719,14 @@ definitions with external linkage.  Name the module with \
 --custard_entry_module, or its definitions with --custard_entry, so that \
 they are part of this unit's interface."; ])
   end
+
+let foreign_targets (cu:unit_info) (p:program) : ML (list (string & string)) =
+  reset_program_state ();
+  (* Binding adoption can change these names; validate only the final program. *)
+  build_renames false cu.cu_no_prefix p;
+  p |> List.collect (function
+    | DExternal x -> [(string_of_name x.dx_name, emitted_name (DExternal x))]
+    | _ -> [])
 
 (* Two program names that C spells the same way.  [sanitize] is not
    injective -- [mk_comp'] and [mk_comp_] are both [mk_comp_] -- and no choice
@@ -5012,6 +5062,16 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
   let fn (proto:string) (body:string) : ML unit =
     protos := !protos @ [proto ^ ";\n"];
     defs := !defs @ [proto ^ " {\n" ^ body ^ "}\n"] in
+  (* The constructors some record update builds ([Update]). *)
+  let updated : HashTable.t string bool = HashTable.create 16 in
+  let rec scan (e:expr) : ML unit =
+    (match e.e with
+     | EOp ({ po_op = Update (cn, _) }, _) ->
+       if not (HashTable.mem updated (string_of_name cn))
+       then HashTable.add updated (string_of_name cn) true
+     | _ -> ());
+    iter_children scan e in
+  p |> List.iter (fun d -> match d with DLet l -> scan l.dl_body | _ -> ());
   (* A helper reached only through a function pointer or off the hot path.
      Split output defines it once, in the file of the module [home] of a
      type this unit declares, and declares it in the files that use it;
@@ -5064,7 +5124,25 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
                  "  }\n" ^
                  String.concat "" (fs |> List.mapi (fun i (f, _) ->
                    "  c->" ^ c_var f ^ " = a" ^ string_of_int i ^ ";\n")) ^
-                 "  return (" ^ n ^ ")c;\n")
+                 "  return (" ^ n ^ ")c;\n");
+             (* A cell of [c] that this thread alone holds, for a record
+                update to change: [x] itself if it is unique, and otherwise a
+                copy, with its fields counted, which takes [x]'s place.  The
+                copy is out of line, so that each update is only the test. *)
+             if HashTable.mem updated (string_of_name c) then begin
+               let copy = "cherry_copy_" ^ n ^ "_" ^ arm_name c in
+               fn (helper_static () ^ n ^ " " ^ copy ^ "(" ^ n ^ " x)")
+                  ("  " ^ cell ^ " *o = (" ^ cell ^ " *)x;\n" ^
+                   "  " ^ cell ^ " *c = (" ^ cell ^ " *)cherry_alloc(sizeof(" ^ cell ^ "), " ^
+                   c_tag c ^ ");\n" ^
+                   String.concat "" (fs |> List.map (fun (f, _) ->
+                     "  c->" ^ c_var f ^ " = o->" ^ c_var f ^ ";\n")) ^
+                   on_fields "inc" "  " fs (fun f -> "c->" ^ c_var f) ^
+                   "  " ^ rc_call "dec" (TApp (dt.dt_name, [])) "x" ^ ";\n" ^
+                   "  return (" ^ n ^ ")c;\n");
+               fn ("static inline " ^ n ^ " " ^ cell_unshare dt c ^ "(" ^ n ^ " x)")
+                  ("  return cherry_is_unique(x) ? x : " ^ copy ^ "(x);\n")
+             end
            end);
          (* The visit of a cell's fields (cherry.h, [cherry_defer]): [op] on
             each counted field, except the last one of this very type, which
@@ -5838,7 +5916,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
      resolves through [c_name], which reads {!renames}.  Filling it first and
      renaming afterwards left the table holding the name the option had just
      replaced.  Nothing in here reads a table, so the move costs nothing. *)
-  build_renames cu.cu_no_prefix p;
+  build_renames true cu.cu_no_prefix p;
   rename_clashes init_name p;
   (* Section 116.  After the renames and before anything is printed, because
      the first generated name may be allocated as early as the first body.

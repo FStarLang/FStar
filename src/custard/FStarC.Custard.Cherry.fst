@@ -1029,8 +1029,9 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       | EOp ({ po_op = BufWrite }, [_; _; v]) ->
         own_arg v;
         (match e.e with EOp (_, es) -> List.iter (go false) es | _ -> ())
-      | EOp (_, es) -> List.iter (go false) es
+      | EOp ({ po_op = Update _ }, es)
       | ECtor (_, es) | ETuple es -> List.iter own_arg es; List.iter (go false) es
+      | EOp (_, es) -> List.iter (go false) es
       | ERecord (_, fs) -> fs |> List.iter (fun (_, x) -> own_arg x; go false x)
       | EProj (a, _, _) when tail && is_np e.ty && EVar? a.e && unboxed_record a.ty ->
         own_arg a
@@ -1462,6 +1463,11 @@ and rc_live (o:owned) (e:expr) : ML expr =
      | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })
      | None -> call o (Some (pbuf_owns (PBuf?._0 op.po_op))) args { e with eff = E_Impure })
   | EOp ({ po_op = ExnTake }, []) -> call o (Some []) [] { e with eff = E_Impure }
+  (* A record update takes the record and the new values. *)
+  | EOp (op, args) when Update? op.po_op ->
+    (match bind_first args with
+     | Some (x, a, args') -> rc_live o (let_ x a.ty a { e with e = EOp (op, args') })
+     | None -> call o None args { e with eff = E_Impure })
   | EOp (_, _) when is_np e.ty ->
     unsupported "a primitive operation returning a reference-counted value"
   | EOp (op, args) ->
@@ -1815,6 +1821,42 @@ let derecord (bx:HashTable.t string bool) (p:program) : ML program =
     | DLet l -> DLet { l with dl_body = go l.dl_body }
     | d -> d)
 
+(* Record updates (cherry.md, "Record updates").  F* spells [{ x with f = v }]
+   out as the constructor applied to [v] and to [x]'s other fields, read off
+   [x].  When at least as many of a boxed constructor's arguments are the
+   field at their own position of one variable [x] of the same type as are
+   not, the constructor becomes an [Update] of [x], which changes [x] in
+   place when it is unique instead of building a cell and counting every
+   field it keeps. *)
+let record_updates (p:program) : ML program =
+  let rec go (e:expr) : ML expr =
+    let e = map_children go e in
+    match e.e with
+    | ECtor (cn, args) when Cons? args ->
+      (match HashTable.try_find !ctor_tbl (string_of_name cn) with
+       | Some fs when List.length fs = List.length args && same_boxed e.ty e.ty ->
+         let src (f:string) (a:expr) : option string =
+           match a.e with
+           | EProj ({ e = EVar x; ty = t }, _, g) when g = f && same_boxed t e.ty -> Some x
+           | _ -> None in
+         let srcs = List.map2 (fun (f, _) a -> src f a) fs args in
+         (match List.tryFind Some? srcs with
+          | Some (Some x) ->
+            let kept = srcs |> List.map (fun s -> s = Some x) in
+            let nk = List.length (List.filter (fun k -> k) kept) in
+            if 2 * nk < List.length kept then e else
+            let changed = List.zip (List.zip kept args) (List.mapi (fun i _ -> i) args)
+                          |> List.filter (fun ((k, _), _) -> not k) in
+            { e with e = EOp ({ po_op = Update (cn, List.map snd changed); po_ty = None },
+                              mk (EVar x) e.ty E_Pure :: List.map (fun ((_, a), _) -> a) changed) }
+          | _ -> e)
+       | _ -> e)
+    | _ -> e in
+  p |> List.map (fun d ->
+    match d with
+    | DLet l -> DLet { l with dl_body = go l.dl_body }
+    | d -> d)
+
 (* A type variable monomorphization left standing -- a method polymorphic in
    its own right, say -- is a value whose type nobody here knows, and Cherry
    has a type for that: [any], as OCaml's uniform representation would. *)
@@ -1894,6 +1936,7 @@ let run (p:program) : ML program =
       HashTable.add xt (string_of_name x.dx_name) owns
     | _ -> ());
   ctor_tbl := ct; record_tbl := rt; extern_tbl := xt;
+  let p = record_updates p in
   let ft = HashTable.create 50 in
   p |> List.iter (fun d ->
     match d with

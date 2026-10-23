@@ -230,6 +230,10 @@ On a microbenchmark (repeatedly mapping over a list of 10^6 elements), reuse is 
 
 Not done yet: reuse of boxed records, reusing a cell for a constructor of another type of the same size, and reuse without a match (Lean's reuse of a dead variable that was not matched on).
 
+## Record updates
+
+F\* spells `{ x with f = v }` out as the record's constructor applied to `v` and to the other fields of `x`, read off `x`. Building that afresh allocates a cell and counts every field it keeps: 57 of them for the type checker's environment. So when at least as many of a boxed constructor's arguments are the field at their own position of one variable `x` of the same type as are not, the Cherry pass turns the constructor into an update of `x`. The update takes `x` and the new values. If `x` is unique (rc = 1), it is changed in place: each replaced field is released and the new value stored. Otherwise `x` is copied (out of line, with the copy's fields counted), `x` is released, and the copy is changed in the same way. Borrow inference treats the update like a constructor, so a parameter that is updated is owned (rule 3), and so may be unique. Test: `CherryRecordUpdate`.
+
 ## Separate compilation
 
 Cherry supports `--custard_unit`/`--custard_link` like the C backend. A unit's header exposes the cell structs and constructor tags of its types. Every helper Cherry generates (inc/dec/mark/free, constructors, reuse, equality, exception and any helpers) is `static`, so a consumer generates its own copy for each imported type it uses rather than importing one. All copies agree because they are generated from the same layout. Calling conventions across the boundary are the inferred ones, recorded in the unit's `.cui` (see "Borrow inference"), and a consumer assumes every imported impure function may raise.

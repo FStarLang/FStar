@@ -15,6 +15,10 @@ open FStar.Attributes
 ///
 /// [always] is a flag whose condition holds, so that the [then] branch of a
 /// preprocessor [if] is shown to run too.
+///
+/// [pick]'s [x], and the local [z], are read only in the arm this test
+/// compiles out, so the arm it keeps voids them (issue 4758): -Werror is the
+/// assertion.
 
 [@@custard_c_ifdef "defined(CUSTARD_TEST_NO_SUCH_ARCH)"]
 assume val fancy_arch : bool
@@ -30,7 +34,11 @@ let helper (n : U32.t) : U32.t = deep n
    custard_c_closure_guard "defined(CUSTARD_TEST_NO_SUCH_ARCH)"]
 let fancy (n : U32.t) : U32.t = U32.add_mod (helper n) 100ul
 
+let pick (x y : U32.t) : U32.t =
+  let z = U32.mul_mod y y in
+  if fancy_arch then U32.add_mod x z else 0ul
+
 let main () : ML I32.t =
-  let a = if fancy_arch then fancy 1ul else helper 1ul in
+  let a = if fancy_arch then fancy 1ul else helper (U32.add_mod 1ul (pick 3ul 4ul)) in
   let b = if always then U32.add_mod a 10ul else 0ul in
   if U32.eq b 12ul then 0l else 1l

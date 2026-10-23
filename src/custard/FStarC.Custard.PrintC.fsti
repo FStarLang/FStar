@@ -53,6 +53,9 @@ val init_globals_name : unit_info -> program -> ML (option string)
     (section 42.1). *)
 val is_public : dlet -> ML bool
 
+(** Resolve foreign C targets using the same naming rules as the printer. *)
+val foreign_targets : unit_info -> program -> ML (list (string & string))
+
 (** The whole program as one self-contained C11 translation unit (section 6,
     M8): a header and a source, in that order.  The first argument is the stem
     of the output file, which the source includes and the include guard is

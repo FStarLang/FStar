@@ -427,6 +427,13 @@ type op =
   | Reset of name & list bool
   | Reuse of name & name
   | ResetFree
+  (** Cherry: a record update (cherry.md, "Record updates").
+      [Update (c, is) (x :: vs)] takes the owned cell [x], built with
+      constructor [c], and the values [vs], and returns a cell of [c] with
+      the fields at the positions [is] (ascending) replaced by [vs] and the
+      others as in [x]: [x] itself if it is unique, which loses the fields
+      it replaces, and otherwise a copy, with its fields counted. *)
+  | Update of name & list int
   (** Cherry: an operation on an immutable array ([FStar.ImmutableArray.Base.t],
       which Cherry represents as a counted cell), named as in that module:
       [of_list], [to_list], [length], [index], [upd] or [push]. *)

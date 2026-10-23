@@ -1217,6 +1217,29 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
      | _ -> (bs, body, ret, ef))
   | _ -> (bs, body, ret, ef)
 
+(* The declarations this run links against rather than compiles, as the units
+   that compiled them emitted them.  No pass here decides anything about them
+   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
+   over in a [verdicts] -- but the passes that ask how many constructors a type
+   has, what its fields are called, or what a function's declared argument
+   types are, still have to be able to see them.  The last of those is not
+   optional: a coercion is inserted where a declared type meets a value, and a
+   call to an imported function whose signature is invisible is a boundary
+   that silently disappears.  A [ref] rather than an argument threaded through
+   a dozen functions, for the same reason
+   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
+   program.  Set by {!run}. *)
+let imported_types : ref (list decl) = mk_ref []
+
+(* The program as the *declaration*-inspecting passes should see it.  An
+   imported declaration is visible to a question about a declaration and
+   invisible to everything else: it is not rewritten, not re-decided, and not
+   emitted. *)
+let with_imports (prog:program) : ML program =
+  match !imported_types with
+  | [] -> prog
+  | ds -> ds @ prog
+
 (* -------------------------------------------------------------------- *)
 (* Eta expansion                                                        *)
 (* -------------------------------------------------------------------- *)
@@ -1501,7 +1524,10 @@ let eta_expand_decls (prog:program) : ML program =
                                | DLet l -> n + List.length l.dl_binders
                                | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
-    let tbl = decl_arity p in
+    (* With the imports: a wrapper [eta_reduce] shortened to [f out] is
+       expanded back by reading [f]'s arity, and a linked [f] has its
+       declaration only there (#4771). *)
+    let tbl = decl_arity (with_imports p) in
     let uses = use_arity p in
     let p' = p |> List.map (fun d ->
       match d with
@@ -1573,7 +1599,7 @@ let eta_rename_decls (prog:program) : ML program =
                                          then n + 1 else n) n l.dl_binders
       | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
-    let bnames = decl_binder_names p in
+    let bnames = decl_binder_names (with_imports p) in
     let p' = p |> List.map (fun d ->
       match d with
       | DLet l -> DLet (eta_rename_decl bnames l)
@@ -2337,29 +2363,6 @@ type ctor_info = {
   ci_realized: bool;             (* realized, and a variant there (section 8.2) *)
   ci_exn: bool;                  (* a [DExn] constructor: its type is [exn] *)
 }
-
-(* The declarations this run links against rather than compiles, as the units
-   that compiled them emitted them.  No pass here decides anything about them
-   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
-   over in a [verdicts] -- but the passes that ask how many constructors a type
-   has, what its fields are called, or what a function's declared argument
-   types are, still have to be able to see them.  The last of those is not
-   optional: a coercion is inserted where a declared type meets a value, and a
-   call to an imported function whose signature is invisible is a boundary
-   that silently disappears.  A [ref] rather than an argument threaded through
-   a dozen functions, for the same reason
-   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
-   program.  Set by {!run}. *)
-let imported_types : ref (list decl) = mk_ref []
-
-(* The program as the *declaration*-inspecting passes should see it.  An
-   imported declaration is visible to a question about a declaration and
-   invisible to everything else: it is not rewritten, not re-decided, and not
-   emitted. *)
-let with_imports (prog:program) : ML program =
-  match !imported_types with
-  | [] -> prog
-  | ds -> ds @ prog
 
 let ctor_infos (prog:program) : ML (HashTable.t string ctor_info) =
   let m : HashTable.t string ctor_info = HashTable.create 50 in

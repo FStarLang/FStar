@@ -1597,6 +1597,15 @@ NOGREP_SepApp += "type sepLib_named"
 GREP_SepApp  += "SepLib.sepLib_describe"
 GREP_SepApp  += "SepLib.SepLib_Rect"
 
+$(OUTPUT_DIR)/foreignbindings.ran: foreignbindings.py $(wildcard foreign-bindings/*) $(FSTAR_EXE)
+	$(call msg, "FOREIGN-BINDINGS", CUIs)
+	@mkdir -p $(OUTPUT_DIR)/foreignbindings
+	$(Q)python3 foreignbindings.py --fstar '$(FSTAR)' \
+	  --out $(OUTPUT_DIR)/foreignbindings --cc '$(CC)' --cxx '$(CXX)'
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/foreignbindings.ran
+
 # Section 42: separate compilation for C.  The same shape as SepLib/SepApp
 # above and a different set of assertions, because C is where the questions
 # were: what a unit offers (42.1), what a downstream unit may not define twice
@@ -1682,6 +1691,44 @@ $(OUTPUT_DIR)/NoPrefApp.ran: $(OUTPUT_DIR)/NoPrefLib.c $(OUTPUT_DIR)/NoPrefApp.c
 	$(Q)touch $@
 
 all: $(OUTPUT_DIR)/NoPrefApp.ran
+
+# #4771.  A wrapper that forwards its own parameters to a linked function is
+# eta-reduced to a partial application, and has to be expanded back using the
+# arity the linked unit's interface records.  Before the fix both wrappers
+# were rejected with Error 368 ("the partial application of ...").
+$(OUTPUT_DIR)/TailLinkLib.cui: $(CACHE_DIR)/TailLinkLib.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", TailLinkLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true --custard_unit TailLinkLib \
+	  --custard_entry TailLinkLib.add --custard_entry TailLinkLib.between \
+	  --odir $(OUTPUT_DIR) TailLinkLib.fst
+
+$(OUTPUT_DIR)/TailLinkLib.c: $(OUTPUT_DIR)/TailLinkLib.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/TailLinkApp.c: $(CACHE_DIR)/TailLinkApp.fst.checked \
+                             $(OUTPUT_DIR)/TailLinkLib.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", TailLinkApp)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/TailLinkLib.cui \
+	  --custard_main TailLinkApp.main TailLinkApp.fst -o $@
+	$(Q)grep -qF -- "TailLinkLib_add(a, b)" $@ \
+	  || { echo "ERROR: TailLinkApp.add2 does not forward both arguments"; exit 1; }
+	$(Q)grep -qF -- "TailLinkLib_between(lo, x, hi)" $@ \
+	  || { echo "ERROR: TailLinkApp.in_range does not forward all arguments"; exit 1; }
+
+$(OUTPUT_DIR)/TailLinkApp.ran: $(OUTPUT_DIR)/TailLinkLib.c $(OUTPUT_DIR)/TailLinkApp.c
+	$(call msg, "CC", TailLinkApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  $(OUTPUT_DIR)/TailLinkLib.c $(OUTPUT_DIR)/TailLinkApp.c \
+	  -o $(OUTPUT_DIR)/TailLinkApp.exe
+	$(call msg, "RUN-C", TailLinkApp)
+	$(Q)$(OUTPUT_DIR)/TailLinkApp.exe
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/TailLinkApp.ran
 
 # Section 116.  Three units, the middle one's global computed from the first
 # one's.  The generated [main] has to call the initializers in --custard_link
@@ -2966,7 +3013,8 @@ CNOPAIR_DevClosure += "/*EXCL*/@static uint32_t DevClosure_gk" \
 # C compiler is the assertion that nothing escaped the guard.
 C_TESTS += DevGuard
 CGREP_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)" "\#else" "\#if 1" \
-                  "DevGuard_helper__error_copy_escaped_its_guard("
+                  "DevGuard_helper__error_copy_escaped_its_guard(" \
+                  "    (void)x;" "    (void)z;"
 CPAIR_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)@\#error seed escaped"
 # A flag used as anything but the whole condition of an [if].
 REJECT_TESTS += DevGuardBad
@@ -3500,6 +3548,15 @@ $(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryMoveFields.chgrep
 
+# Cherry: a record update changes a unique record in place instead of
+# building a new cell.
+$(CHERRY_DIR)/CherryRecordUpdate.chgrep: $(CHERRY_DIR)/CherryRecordUpdate.chc
+	$(Q)for f in set_name push; do \
+	  sed -n "/^static .* CherryRecordUpdate_$$f(.*{$$/,/^}/p" $< > $@.tmp; \
+	  grep -q 'cherry_unshare_' $@.tmp && ! grep -q 'cherry_new_CherryRecordUpdate_env' $@.tmp \
+	    || { echo "ERROR: CherryRecordUpdate_$$f does not update in place"; exit 1; }; done
+	$(Q)rm -f $@.tmp; touch $@
+all: $(CHERRY_DIR)/CherryRecordUpdate.chgrep
 # Cherry: a partial application raises nothing, so it is not tested.
 $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	$(Q)! sed -n '/^static .* CherryPap_make(.*{$$/,/^}/p' $< | grep -q 'CHERRY_EXN_PENDING' \
@@ -3520,7 +3577,7 @@ all: $(CHERRY_DIR)/CherryInlineHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryPap CherryInlineHO
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
