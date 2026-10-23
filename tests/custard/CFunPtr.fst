@@ -54,6 +54,11 @@ let mk_lambda (x : U64.t) : iter_t =
 let run (i : iter_t) : U64.t =
   if i.impl_validate i.contents then i.impl_parse i.contents else 0uL
 
+let run_alias (i : iter_t) : U64.t =
+  match i with
+  | { contents = x; impl_validate = validate; impl_parse = parse } ->
+    if validate x then parse x else 0uL
+
 (* A lambda in an argument position rather than a field, passed to a function
    that stores it.  Same lifting, different route to the backend. *)
 let apply_twice (f : U64.t -> U64.t) (x : U64.t) : U64.t = f (f x)
@@ -65,5 +70,7 @@ let main () : FStar.All.ML I32.t =
   let b = run (mk_lambda 8uL) in
   let c = run (mk_lambda 7uL) in
   let d = quarter 12uL in
-  if U64.eq a 4uL && U64.eq b 4uL && U64.eq c 0uL && U64.eq d 3uL
+  let e = run_alias (mk_lambda 8uL) in
+  if U64.eq a 4uL && U64.eq b 4uL && U64.eq c 0uL && U64.eq d 3uL &&
+     U64.eq e 4uL
   then 0l else 1l

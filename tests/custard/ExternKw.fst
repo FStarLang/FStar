@@ -26,9 +26,14 @@ assume new type tok : Type0
    FStar.Attributes.custard_c_header "ExternKw_stubs.h"]
 assume val kw_float : tok
 
+[@@FStar.Attributes.custard_extern "KW_FLOAT";
+   FStar.Attributes.custard_c_header "ExternKw_stubs.h"]
+assume val kw_float_fn (_:unit) : tok
+
 [@@FStar.Attributes.custard_extern "KW_SIZEOF";
    FStar.Attributes.custard_c_header "ExternKw_stubs.h"]
 assume val kw_sizeof : tok -> U64.t
 
 let main () : ML U32.t =
-  if kw_sizeof kw_float = 4uL then 0ul else 1ul
+  if kw_sizeof kw_float = 4uL && kw_sizeof (kw_float_fn ()) = 4uL
+  then 0ul else 1ul
