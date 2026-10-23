@@ -620,10 +620,11 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                    Format.print_string ("(* After Cherry *)\n" ^ program_to_string all ^ "\n");
                  all
                | None -> List.map fst imports @ prog) in
-    let hdr, src = C.print_program stem cu all in
-    BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)
-                     (stem ^ ".h")) hdr;
-    BU.write_file ofile src
+    let hdr, src, extras = C.print_program stem cu all in
+    let dir = FStarC.Filepath.dirname ofile in
+    BU.write_file (FStarC.Filepath.join_paths dir (stem ^ ".h")) hdr;
+    BU.write_file ofile src;
+    extras |> List.iter (fun (f, s) -> BU.write_file (FStarC.Filepath.join_paths dir f) s)
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
   (* Section 122.  One flat module, plus the two files that make the output
      directory build on its own: the support library and the project. *)

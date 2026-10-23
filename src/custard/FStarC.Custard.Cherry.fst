@@ -197,12 +197,24 @@ let is_pbuf (t:cty) : ML bool =
 (* The definitions that may return with an exception pending. *)
 let raise_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
+(* A partial application of a definition: it builds a closure and runs
+   nothing, so raises nothing whatever the definition does.  (An
+   over-application has been split by then, see [lift].) *)
+let is_pap (node:expr) : ML bool =
+  match node.e with
+  | EApp ({ e = EQual (f, _) }, args) ->
+    (match HashTable.try_find !fn_tbl (string_of_name f) with
+     | Some (bs, _) -> List.length args < List.length bs
+     | None -> false)
+  | _ -> false
+
 (* May this node, once its operands are atoms, return with an exception
    pending?  A closure call may if it has an effect: its target is unknown.
    So is a call through a global, which holds a closure: its initializer
    raising nothing says nothing about the closure. *)
 let may_raise (node:expr) : ML bool =
   match node.e with
+  | EApp _ when is_pap node -> false
   | EApp ({ e = EQual (f, _) }, _)
     when not (HashTable.mem !global_tbl (string_of_name f)) ->
     HashTable.mem !raise_tbl (string_of_name f)
@@ -1118,6 +1130,7 @@ let infer_raises (p:program) : ML unit =
   let rec raises (e:expr) : ML bool =
     match e.e with
     | ERaise _ | ETry _ -> true
+    | EApp (_, args) when is_pap e -> List.existsb raises args
     | EApp (hd, args) -> may_raise_in tbl e hd || List.existsb raises args
     | _ -> exists_child raises e
   and may_raise_in (tbl:HashTable.t string bool) (e hd:expr) : ML bool =

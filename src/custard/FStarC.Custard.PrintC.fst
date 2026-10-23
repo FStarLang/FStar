@@ -51,6 +51,7 @@ open FStarC.Errors.Msg
 
 module BU     = FStarC.Util
 module HashTable = FStarC.HashTable
+module SI = FStarC.SmallInt
 module E      = FStarC.Errors
 module String = FStarC.String
 module Options = FStarC.Options
@@ -1981,6 +1982,27 @@ type dest =
   | D_Assign of string
   | D_Ignore
 
+(* Binding strength of the emitted C, not of the source IR. Binary operators
+   keep their existing enclosing parentheses in this first ladder. *)
+type c_precedence =
+  | CPostfix
+  | CUnary
+  | COpaque
+
+type c_expression = {
+  c_text: string;
+  c_prec: c_precedence
+}
+
+let c_postfix (s:string) : c_expression = { c_text = s; c_prec = CPostfix }
+let c_unary (s:string) : c_expression = { c_text = s; c_prec = CUnary }
+let c_opaque (s:string) : c_expression = { c_text = s; c_prec = COpaque }
+
+let postfix_text (d:c_expression) : string =
+  match d.c_prec with
+  | CPostfix -> d.c_text
+  | CUnary | COpaque -> "(" ^ d.c_text ^ ")"
+
 (* C's block scoping and the IR's do not line up: an [ELet] scopes its variable
    over its body only, while the statements this backend emits for a chain of
    them all land in one C block, and a loop's condition lands in the same block
@@ -1992,11 +2014,11 @@ type dest =
    enclosing *function* has already used it, in which case it takes a
    subscript.  So the generated C reads like the source, and a subscript in it
    means something real. *)
-(* Each entry is the C name a variable resolves to, and whether that name is a
+(* Each entry is the C expression a variable resolves to, and whether it is a
    one-cell stack allocation the backend has collapsed into a variable (see
    [ELet] below): a use that wants the cell reads or assigns it, a use that
    wants the pointer takes its address. *)
-let scope : ref (list (string & (string & bool))) = mk_ref []
+let scope : ref (list (string & (c_expression & bool))) = mk_ref []
 let declared : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 let reset_scope () : ML unit =
@@ -2009,7 +2031,7 @@ let bind_gen (x:string) (cell:bool) : ML string =
     if Some? (HashTable.try_find !declared cand) then pick (i + 1) else cand in
   let nm = pick 0 in
   HashTable.add !declared nm true;
-  scope := (x, (nm, cell)) :: !scope;
+  scope := (x, (c_postfix nm, cell)) :: !scope;
   nm
 
 (* A pattern binding does not need a variable of its own: the value it names is
@@ -2021,7 +2043,7 @@ let bind_var (x:string) : ML string = bind_gen x false
 (* A one-cell stack allocation, collapsed into an ordinary variable. *)
 let bind_cell (x:string) : ML string = bind_gen x true
 
-let bind_alias (x:string) (path:string) : ML unit =
+let bind_alias (x:string) (path:c_expression) : ML unit =
   scope := (x, (path, false)) :: !scope
 
 (* Section 19.3.  A name that no binder in the enclosing function introduced
@@ -2035,13 +2057,15 @@ let bind_alias (x:string) (path:string) : ML unit =
    Every binder reaches [bind_var], [bind_cell] or [bind_alias] before its
    scope is printed, and [reset_scope] runs per definition, so a miss here is
    real.  Top-level names are [EQual] and never come through this. *)
-let lookup_var (x:string) : ML string =
+let lookup_var_doc (x:string) : ML c_expression =
   match !scope |> List.tryFind (fun (y, _) -> y = x) with
   | Some (_, (nm, _)) -> nm
   | None ->
     reject_ir ("the unbound variable " ^ x)
       ["No binder in this definition introduces it.";
        "This is a compiler bug: please report it, with the definition named above."]
+
+let lookup_var (x:string) : ML string = (lookup_var_doc x).c_text
 
 let is_cell (x:string) : ML bool =
   match !scope |> List.tryFind (fun (y, _) -> y = x) with
@@ -2323,21 +2347,40 @@ let rec zip_fields (fs : list (string & cty)) (vs : list string) : list (string 
   | (f, _) :: fs, v :: vs -> (f, v) :: zip_fields fs vs
   | _ -> []
 
+(* An abstract type with no C representation can carry raw macro tokens, such
+   as [float] in a type-taking macro.  Those are not runtime expressions. *)
+let rec is_foreign_token (t:cty) : ML bool =
+  match t with
+  | TApp (n, _) when None? (builtin_type n) ->
+    (match find_type n with
+     | Some d when List.existsb Extern? d.dt_flags -> false
+     | Some { dt_body = TAbstract } -> true
+     | Some { dt_body = TAbbrev t } -> is_foreign_token t
+     | _ -> false)
+  | _ -> false
+
 let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
+  (c_expr_doc out ind e).c_text
+
+and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
   if is_stmt e then hoist out ind e
   else match e.e with
-  | EConst c -> constant c
+  | EConst c ->
+    (match c with
+     | CFloat _ -> c_opaque (constant c)
+     | _ -> c_postfix (constant c))
   (* Every other use of a collapsed cell wants the pointer -- passing it to a
      function expecting a [ref], say -- and C can produce one on demand. *)
-  | EVar x -> if is_cell x then "&" ^ lookup_var x else lookup_var x
+  | EVar x ->
+    if is_cell x then c_unary ("&" ^ lookup_var x) else lookup_var_doc x
   | EAny ->
     (* What an uninitialized stack slot holds.  A zero of the right type is a
        legal value of it and is what C would give a static. *)
-    "(" ^ ty e.ty ^ "){0}"
+    c_postfix ("(" ^ ty e.ty ^ "){0}")
   (* A definition as a value is its static closure. *)
   | EQual (n, _) when Options.custard_cherry () && Some? (fn_sig n) ->
     clo_request (ReqPap (n, 0, e.ty));
-    "((cherry_fn)&" ^ static_clo_name n ^ ")"
+    c_postfix ("((cherry_fn)&" ^ static_clo_name n ^ ")")
   | EQual (n, _) when Some? (HashTable.try_find !ifdefs (string_of_name n)) ->
     E.raise_error0 E.Error_CustardBadIfDef [
       text ("Custard: " ^ string_of_name n ^ " is a [@@custard_c_ifdef] flag, \
@@ -2348,8 +2391,9 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
             branches." ]
   | EQual (n, _) ->
     (match HashTable.try_find !externs (string_of_name n) with
-     | Some t -> t
-     | None -> c_name n)
+     (* A foreign name may expand to an expression rather than one C token. *)
+     | Some t -> if is_foreign_token e.ty then c_opaque t else c_postfix (group t)
+     | None -> c_postfix (c_name n))
   | EApp (hd, args) when is_closure_app hd args ->
     let k = List.length args in
     let eargs = args in
@@ -2358,7 +2402,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     (match hd.e with
      | EQual (n, _) when Some? (fn_sig n) ->
        clo_request (ReqPap (n, k, e.ty));
-       pap_name n k ^ "(" ^ String.concat ", " args ^ ")"
+       c_postfix (pap_name n k ^ "(" ^ String.concat ", " args ^ ")")
      | _ ->
        let f = c_expr out ind hd in
        let ht =
@@ -2380,7 +2424,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
          | x :: rest, None -> if TUnit? x then consume t rest else List.length xs in
        let k = consume ht (List.map (fun (a:expr) -> a.ty) eargs) in
        clo_request (ReqApply (ht, k));
-       apply_name ht k ^ "(" ^ String.concat ", " (f :: args) ^ ")")
+       c_postfix (apply_name ht k ^ "(" ^ String.concat ", " (f :: args) ^ ")"))
   | EApp (hd, args) ->
     (* Drop the arguments that correspond to dropped parameters.  ANF has made
        every operand pure, so nothing is lost by not evaluating them. *)
@@ -2441,7 +2485,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
         (match HashTable.try_find !externs (string_of_name n) with
          | Some t -> t
          | None -> c_name n)
-      | _ -> c_expr out ind hd in
+      | _ -> postfix_text (c_expr_doc out ind hd) in
     let call = head ^ "(" ^
                String.concat ", "
                  (args |> List.map (fun (a:expr) ->
@@ -2466,14 +2510,20 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     let call =
       match hd.e with
       | EQual (n, _) when Some? (HashTable.try_find !externs (string_of_name n))
-                          && (TBuf? e.ty || TRef? e.ty) ->
-        "(" ^ ty e.ty ^ ")" ^ call
-      | _ -> call in
+                          && None? (HashTable.try_find !void_fns (string_of_name n)) ->
+        (* Group the expansion, not the head: function-like macros must still
+           be invoked, and a pointer cast must cover their whole result. *)
+        if is_foreign_token e.ty then c_opaque call else
+        let call = "(" ^ call ^ ")" in
+        if TBuf? e.ty || TRef? e.ty
+        then c_unary ("(" ^ ty e.ty ^ ")" ^ call)
+        else c_postfix call
+      | _ -> c_postfix call in
     (* A [void] call is a statement, not an operand.  It runs here and stands
        for the unit value, which is what the caller was going to do with it. *)
     (match hd.e with
      | EQual (n, _) when Some? (HashTable.try_find !void_fns (string_of_name n)) ->
-       out := !out ^ ind ^ call ^ ";\n"; unit_value
+       out := !out ^ ind ^ call.c_text ^ ";\n"; c_postfix unit_value
      | _ -> call)
   (* Both nodes are a C cast, but for opposite reasons: a conversion is what
      the cast *does*, and a coercion is a reinterpretation the C type system
@@ -2482,65 +2532,66 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      operand's own cast is subsumed by this one. *)
   | ECast (e1, t) ->
     (match e1.ty, t with
-     | TInt a, TInt b when a = b -> c_expr out ind e1
+     | TInt a, TInt b when a = b -> c_expr_doc out ind e1
      (* Cherry: [Prims.int] is a tagged pointer, not a number. *)
      (* Through the 64-bit conversions, or the 128-bit ones for a 128-bit
         integer, which would otherwise be truncated. *)
      | _, TInt (sg, w) when Options.custard_cherry () && is_int_ty e1.ty ->
        let bits = if w = W128 then "128(" else "64(" in
-       "(" ^ ty t ^ ")cherry_int_to_" ^ (if Signed? sg then "i" else "u") ^ bits ^
-       c_expr out ind e1 ^ ")"
+       c_unary ("(" ^ ty t ^ ")cherry_int_to_" ^ (if Signed? sg then "i" else "u") ^ bits ^
+       c_expr out ind e1 ^ ")")
      | TInt (sg, w), _ when Options.custard_cherry () && is_int_ty t ->
        let bits = if w = W128 then "128" else "64" in
-       (if Signed? sg then "cherry_int_of_i" ^ bits ^ "((" ^ (if w = W128 then "cherry_i128" else "int64_t") ^ ")"
+       c_postfix ((if Signed? sg then "cherry_int_of_i" ^ bits ^ "((" ^ (if w = W128 then "cherry_i128" else "int64_t") ^ ")"
         else "cherry_int_of_u" ^ bits ^ "((" ^ (if w = W128 then "cherry_u128" else "uint64_t") ^ ")") ^
-       c_rvalue out ind e1.ty e1 ^ ")"
+       c_rvalue out ind e1.ty e1 ^ ")")
      (* Section 66.  A struct is not castable, so a conversion at a narrow
         width is a call.  Both directions, and between the two narrow formats
         via [float], which is exact for either of them and so rounds once --
         the only rounding is the final encode. *)
      | _, TFloat fw when narrow_ty fw ->
-       narrow_pfx fw ^ (match e1.ty with
+       c_opaque (narrow_pfx fw ^ (match e1.ty with
                         | TInt (_, _) -> "of_i64((int64_t)"
                         | TFloat Float64 -> "of_f64("
                         | _ -> "of_f32(") ^
-       c_rvalue out ind e1.ty e1 ^ ")"
+       c_rvalue out ind e1.ty e1 ^ ")")
      | TFloat fw, _ when narrow_ty fw ->
-       "(" ^ ty t ^ ")" ^ narrow_pfx fw ^ "to_f32(" ^ c_expr out ind e1 ^ ")"
-     | _ -> "(" ^ ty t ^ ")" ^ c_rvalue out ind e1.ty e1)
+       c_unary ("(" ^ ty t ^ ")" ^ narrow_pfx fw ^ "to_f32(" ^ c_expr out ind e1 ^ ")")
+     | _ -> c_unary ("(" ^ ty t ^ ")" ^ c_rvalue out ind e1.ty e1))
   | ECoerce (e1, t) ->
-    if e1.ty = t then c_expr out ind e1
+    if e1.ty = t then c_expr_doc out ind e1
     (* Under Cherry a [TAny] is a [dyn], whose value carries its type
        information: only [Dyn] nodes make or read one, and a cast cannot. *)
     else if Options.custard_cherry () && (mentions_any e1.ty || mentions_any t)
     then reject ("a coercion from " ^ show e1.ty ^ " to " ^ show t)
            ["Under Cherry the unknown representation is FStar.Dyn.dyn, \
              which only mkdyn and undyn convert to and from."]
-    else "(" ^ ty t ^ ")" ^ c_expr out ind e1
-  | EProj (e1, _, f) -> proj (c_expr out ind e1) e1.ty f
+    else c_unary ("(" ^ ty t ^ ")" ^ c_expr out ind e1)
+  | EProj (e1, _, f) ->
+    c_postfix (proj (postfix_text (c_expr_doc out ind e1)) e1.ty f)
   | EDiscrim (e1, cn) ->
     (match find_ctor cn with
-     | Some (d, _) -> if single_ctor d then "true"
-                      else "(" ^ tag_of (c_expr out ind e1) d ^ " == " ^ c_tag cn ^ ")"
+     | Some (d, _) -> c_postfix (if single_ctor d then "true"
+                      else "(" ^ tag_of (postfix_text (c_expr_doc out ind e1)) d ^ " == " ^ c_tag cn ^ ")")
      | None -> reject ("the constructor " ^ string_of_name cn)
                  ["It belongs to no type declaration in the program."])
-  | ECtor (cn, args) -> ctor_lit out ind e.ty cn args
+  | ECtor (cn, args) -> c_postfix (ctor_lit out ind e.ty cn args)
   | ERecord (_, fs) ->
-    "(" ^ ty e.ty ^ "){ " ^
+    c_postfix ("(" ^ ty e.ty ^ "){ " ^
     String.concat ", " (fs |> List.map (fun (f, v) ->
-      "." ^ c_var f ^ " = " ^ c_rvalue out ind v.ty v)) ^ " }"
+      "." ^ c_var f ^ " = " ^ c_rvalue out ind v.ty v)) ^ " }")
   | EOp ({ po_op = RefNew }, [v]) ->
     let v' = c_rvalue out ind v.ty v in
-    rc_fn "new" e.ty ^ "(" ^ v' ^ ")"
+    c_postfix (rc_fn "new" e.ty ^ "(" ^ v' ^ ")")
   | EOp ({ po_op = RefGet }, [r]) ->
-    rc_fn "get" r.ty ^ "(" ^ c_expr out ind r ^ ")"
-  | EOp ({ po_op = ExnPending }, []) -> "CHERRY_EXN_PENDING()"
-  | EOp ({ po_op = ExnTake }, []) -> "cherry_exn_take()"
+    c_postfix (rc_fn "get" r.ty ^ "(" ^ c_expr out ind r ^ ")")
+  | EOp ({ po_op = ExnPending }, []) -> c_opaque "CHERRY_EXN_PENDING()"
+  | EOp ({ po_op = ExnTake }, []) -> c_postfix "cherry_exn_take()"
   | EOp ({ po_op = Dyn f }, [a]) ->
     let t = if f = "mk" then a.ty else e.ty in
-    any_prefix t ^ "_" ^ f ^ "(" ^ c_rvalue out ind a.ty a ^ ")"
+    c_postfix (any_prefix t ^ "_" ^ f ^ "(" ^ c_rvalue out ind a.ty a ^ ")")
   | EOp ({ po_op = PBuf f }, args) ->
-    pbuf_call out ind f args
+    c_postfix (pbuf_call out ind f args)
   | EOp ({ po_op = IArr f }, args) ->
     let elt (t:cty) : ML cty =
       match t with
@@ -2548,14 +2599,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
       | _ -> failwith "Cherry: an immutable array operation on something else" in
     let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
     let call (p:string) : string = p ^ "_" ^ f ^ "(" ^ String.concat ", " vals ^ ")" in
-    (match f, args with
+    c_postfix (match f, args with
      | "length", _ -> "cherry_iarray_length(" ^ String.concat ", " vals ^ ")"
      | "of_list", [l] -> let v = elt e.ty in iarr_list v l.ty; call (iarr_prefix v)
      | "to_list", [a] -> let v = elt a.ty in iarr_list v e.ty; call (iarr_prefix v)
      | _, a :: _ -> call (iarr_prefix (elt a.ty))
      | _ -> failwith "Cherry: an immutable array operation without operands")
   | EOp ({ po_op = Reuse (old, cn) }, w :: args) ->
-    (match find_ctor old, find_ctor cn with
+    c_postfix (match find_ctor old, find_ctor cn with
      | Some (d0, _), Some (d, _) ->
        let w' = c_expr out ind w in
        let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
@@ -2563,13 +2614,11 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
        String.concat ", " (w' :: ("sizeof(" ^ cell_struct d0 old ^ ")") :: vals) ^ ")"
      | _ -> failwith "Cherry: reuse of an unknown constructor")
   | EOp ({ po_op = BufRead }, [b; i]) ->
-    (match b.e with
-     | EVar y when is_cell y -> lookup_var y
-     | _ -> c_expr out ind b ^ "[" ^ c_rvalue out ind i.ty i ^ "]")
+    c_subscript out ind b i
   | EOp ({ po_op = BufSub }, [b; i]) ->
-    "(" ^ c_expr out ind b ^ " + " ^ c_rvalue out ind i.ty i ^ ")"
-  | EOp ({ po_op = BufNull }, []) -> "(" ^ ty e.ty ^ ")NULL"
-  | EOp ({ po_op = BufIsNull }, [b]) -> "(" ^ c_expr out ind b ^ " == NULL)"
+    c_postfix ("(" ^ c_expr out ind b ^ " + " ^ c_rvalue out ind i.ty i ^ ")")
+  | EOp ({ po_op = BufNull }, []) -> c_unary ("(" ^ ty e.ty ^ ")NULL")
+  | EOp ({ po_op = BufIsNull }, [b]) -> c_postfix ("(" ^ c_expr out ind b ^ " == NULL)")
   (* Section 71.  The object a [BufLit] declared is [const], so a pointer to
      it is a [const T *] and the array type Pulse gives back is a [T *].
      Writing through the result would be undefined, and what rules that out
@@ -2581,16 +2630,17 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      qualifier, and a C++ consumer -- section 70.2 puts one in reach -- makes
      that a hard error. *)
   | EOp ({ po_op = BufUnconst }, [b]) ->
-    "(" ^ ty e.ty ^ ")" ^ c_expr out ind b
+    c_unary ("(" ^ ty e.ty ^ ")" ^ c_expr out ind b)
   (* Section 120.  A comment around an expression.  The standalone form has
      no expression to wrap, and a [()] is not one either: it is emitted for
      its effect into [out] and the value is the unit constant, exactly as an
      impure unit-typed node in an expression position is anywhere else. *)
   | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
     out := !out ^ ind ^ "/* " ^ before ^ " */\n";
-    unit_value
+    c_postfix unit_value
   | EOp ({ po_op = Commented (before, after) }, [b]) ->
-    "/* " ^ before ^ " */ " ^ c_rvalue out ind e.ty b ^ " /* " ^ after ^ " */"
+    let body = c_rvalue_doc out ind e.ty b in
+    { body with c_text = "/* " ^ before ^ " */ " ^ body.c_text ^ " /* " ^ after ^ " */" }
   (* Section 71.  A braced initializer is not an expression in C: it may only
      appear where an object is being declared, which for Custard means the
      body of a global.  {!global_decl} takes it there, so reaching here means
@@ -2607,14 +2657,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      declared by the <string.h> the header already includes. *)
   | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && is_string_ty a.ty &&
                          not (Options.custard_cherry ()) ->
-    "(strcmp(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ ") " ^
-    (if Eq? o.po_op then "==" else "!=") ^ " 0)"
+    c_postfix ("(strcmp(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ ") " ^
+    (if Eq? o.po_op then "==" else "!=") ^ " 0)")
   (* Cherry: the runtime compares by contents. *)
   | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) &&
                          Some? (content_eq a.ty "" "") ->
     let c = (match content_eq a.ty (c_expr out ind a) (c_expr out ind b) with
              | Some c -> c | None -> "") in
-    "(" ^ (if Neq? o.po_op then "!(" ^ c ^ ")" else c) ^ ")"
+    c_postfix ("(" ^ (if Neq? o.po_op then "!(" ^ c ^ ")" else c) ^ ")")
   (* Section 107.  The same question at every other type C cannot compare
      with [==]: a struct, which is what a record, a tuple and every inductive
      with a payload are here.  Only for the polymorphic [=]: an operator at a
@@ -2623,8 +2673,8 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   | EOp (o, [a; b]) when (Eq? o.po_op || Neq? o.po_op) && None? o.po_ty &&
                          Some? (eq_fn_of a.ty) ->
     let g = (match eq_fn_of a.ty with Some g -> g | None -> "") in
-    "(" ^ (if Neq? o.po_op then "!" else "") ^
-    g ^ "(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ "))"
+    c_postfix ("(" ^ (if Neq? o.po_op then "!" else "") ^
+    g ^ "(" ^ c_expr out ind a ^ ", " ^ c_expr out ind b ^ "))")
   (* Section 59.3.  A binary operator's two operands have the same IR type,
      so a literal operand's cast is telling C what the *other* operand
      already says: if that type outranks [int] the literal converts to it
@@ -2640,8 +2690,8 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
      struct.  No {!truncate}: that is about C's integer promotions, and these
      are neither integers nor promoted. *)
   | EOp (o, [a; b]) when Some? (narrow_call o) ->
-    Some?.v (narrow_call o) ^ "(" ^ c_rvalue out ind a.ty a ^ ", " ^
-                                    c_rvalue out ind b.ty b ^ ")"
+    c_opaque (Some?.v (narrow_call o) ^ "(" ^ c_rvalue out ind a.ty a ^ ", " ^
+                                    c_rvalue out ind b.ty b ^ ")")
   (* Section 115.  [&&] and [||] do not evaluate their right operand unless
      the left one fails to decide, and that is not a convenience: F* code
      relies on it, as [x <> 0 && 100 / x > 5] does.  Every other operand
@@ -2666,7 +2716,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
     let bout = mk_ref "" in
     let bv = c_expr bout (ind ^ "  ") b in
     if !bout = "" then
-      "(" ^ av ^ " " ^ Some?.v (infix_op o) ^ " " ^ bv ^ ")"
+      c_postfix ("(" ^ av ^ " " ^ Some?.v (infix_op o) ^ " " ^ bv ^ ")")
     else begin
       let x = fresh "sc" in
       out := !out ^ ind ^ decl_of e.ty x ^ " = " ^ av ^ ";\n" ^
@@ -2674,7 +2724,7 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
              !bout ^
              ind ^ "  " ^ x ^ " = " ^ bv ^ ";\n" ^
              ind ^ "}\n";
-      x
+      c_postfix x
     end
   | EOp (o, [a; b]) when Some? (infix_op o) ->
     (* Section 61.1.  A shift is the exception, and it is the one binary
@@ -2704,14 +2754,14 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
       match widen_operands o with
       | Some c -> c ^ group s
       | None -> s in
-    truncate o ("(" ^ wrap av ^ " " ^ Some?.v (infix_op o) ^ " " ^ wrap bv ^ ")")
+    c_postfix (truncate o ("(" ^ wrap av ^ " " ^ Some?.v (infix_op o) ^ " " ^ wrap bv ^ ")"))
   (* Section 61.2.  Through {!group}, like the [!] of a condition: this site
      printed its operand bare, so a macro extern was unparenthesized here
      whatever {!is_atom} said.  That half is older than section 59 -- the two
      [!] sites simply disagreed, and only the condition one was written to
      the rule that {!negate}'s comment states. *)
   | EOp (o, [a]) when Some? (prefix_op o) ->
-    truncate o ("(" ^ Some?.v (prefix_op o) ^ group (c_expr out ind a) ^ ")")
+    c_postfix (truncate o ("(" ^ Some?.v (prefix_op o) ^ group (c_expr out ind a) ^ ")"))
   | EOp (o, args) ->
     reject ("an operator applied to " ^ show (List.length args) ^ " arguments") []
   (* Section 19.12.  A *closed* lambda has been lifted to a top-level function
@@ -2738,8 +2788,8 @@ let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
 (* Statement-shaped, and needed as a value: give it a name.  This is what makes
    [let x = if ... ] and an allocation work in an operand position; ANF has
    already removed most of the reasons for it to trigger. *)
-and hoist (out:ref string) (ind:string) (e:expr) : ML string =
-  if TUnit? e.ty then (out := !out ^ emit ind D_Ignore e; unit_value) else
+and hoist (out:ref string) (ind:string) (e:expr) : ML c_expression =
+  if TUnit? e.ty then (out := !out ^ emit ind D_Ignore e; c_postfix unit_value) else
   let x = fresh "t" in
   let body = emit ind (D_Assign x) e in
   (* If the whole thing came out as a single assignment to the temporary, and
@@ -2749,9 +2799,9 @@ and hoist (out:ref string) (ind:string) (e:expr) : ML string =
      the projection it was. *)
   match String.split ['\n'] body with
   | [l; ""] when is_pure e && starts_with l (ind ^ x ^ " = ") ->
-    String.substring l (String.length ind + String.length x + 3)
-                     (String.length l - String.length ind - String.length x - 4)
-  | _ -> out := !out ^ ind ^ decl_of e.ty x ^ ";\n" ^ body; x
+    c_opaque (String.substring l (String.length ind + String.length x + 3)
+                     (String.length l - String.length ind - String.length x - 4))
+  | _ -> out := !out ^ ind ^ decl_of e.ty x ^ ";\n" ^ body; c_postfix x
 
 (* The C spelling of field [f] of a value of type [t].  A single-constructor
    variant is a plain struct, so its fields are reached directly; a record's
@@ -2808,12 +2858,22 @@ and tag_of (v:string) (d:dtype) : ML string =
    {!converted_int} explains is redundant.  Everything else goes through
    {!c_expr} unchanged. *)
 and c_rvalue (out:ref string) (ind:string) (target:cty) (e:expr) : ML string =
+  (c_rvalue_doc out ind target e).c_text
+
+and c_rvalue_doc (out:ref string) (ind:string) (target:cty) (e:expr) : ML c_expression =
   match e.e with
   | EConst c ->
     (match converted_int target e.ty c with
-     | Some s -> s
-     | None -> c_expr out ind e)
-  | _ -> c_expr out ind e
+     | Some s -> c_opaque s
+     | None -> c_expr_doc out ind e)
+  | _ -> c_expr_doc out ind e
+
+and c_subscript (out:ref string) (ind:string) (b:expr) (i:expr) : ML c_expression =
+  match b.e with
+  | EVar y when is_cell y -> lookup_var_doc y
+  | _ ->
+    let base = postfix_text (c_expr_doc out ind b) in
+    c_postfix (base ^ "[" ^ c_rvalue out ind i.ty i ^ "]")
 
 (* Cherry: a call of a Pulse container helper ([PBuf]).  The first operand
    is the container, except in an allocation. *)
@@ -2866,13 +2926,13 @@ and finish (ind:string) (d:dest) (s:string) : ML string =
      function the value can simply be dropped and control fall off the end --
      which is where it was going anyway. *)
   | D_Return when !void_ret ->
-    if s = unit_value then "" else ind ^ "(void)(" ^ s ^ ");\n"
+    if s = unit_value then "" else ind ^ "(void)" ^ group s ^ ";\n"
   | D_Return -> ind ^ "return " ^ s ^ ";\n"
   | D_Assign x -> ind ^ x ^ " = " ^ s ^ ";\n"
   (* The value is computed for its effect; the cast silences the warning that
      it is unused.  A unit constant computes nothing, so it needs neither. *)
   | D_Ignore ->
-    if s = unit_value then "" else ind ^ "(void)(" ^ s ^ ");\n"
+    if s = unit_value then "" else ind ^ "(void)" ^ group s ^ ";\n"
 
 and emit (ind:string) (d:dest) (e:expr) : ML string =
   let ind' = ind ^ "  " in
@@ -2886,7 +2946,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | ELet (x, TUnit, e1, e2) ->
     let saved = !scope in
     let s1 = emit ind D_Ignore e1 in
-    bind_alias x unit_value;
+    bind_alias x (c_postfix unit_value);
     let s2 = emit ind d e2 in
     scope := saved;
     s1 ^ s2
@@ -2905,7 +2965,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | ELet (x, _, { e = EOp ({ po_op = BufRead }, [{ e = EVar y }; _]) }, e2)
       when is_cell y && not (mutates y e2) ->
     let saved = !scope in
-    bind_alias x (lookup_var y);
+    bind_alias x (lookup_var_doc y);
     let s2 = emit ind d e2 in
     scope := saved;
     s2
@@ -2920,7 +2980,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      behind with no users at all, which C refuses. *)
   | ELet (x, _, e1, e2) when is_stable e1 ->
     let out = mk_ref "" in
-    let path = c_expr out ind e1 in
+    let path = c_expr_doc out ind e1 in
     let saved = !scope in
     bind_alias x path;
     let s2 = emit ind d e2 in
@@ -3085,9 +3145,9 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        exactly this behind. *)
     !out ^
     (if tt = "" && ft = "" then ""
-     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind false ft
-     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind (ft <> "") tt ^
-          (if ft = "" then "" else ind ^ "else" ^ brace ind false ft))
+     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind ft
+     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind tt ^
+          (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
 
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
 
@@ -3219,10 +3279,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
 
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
     let out = mk_ref "" in
-    let lhs =
-      match b.e with
-      | EVar y when is_cell y -> lookup_var y
-      | _ -> c_expr out ind b ^ "[" ^ c_rvalue out ind i.ty i ^ "]" in
+    let lhs = (c_subscript out ind b i).c_text in
     (* Section 59.  An assignment to a cell of the element type. *)
     let v = c_rvalue out ind v.ty v in
     !out ^ ind ^ lhs ^ " = " ^ v ^ ";\n" ^ unit_result ind d
@@ -3477,8 +3534,8 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
    that reaches the sub-value the pattern is matching.  Compiling to an
    if/else chain rather than a [switch] is what lets a nested pattern, a
    constant pattern and a variable pattern all be handled by one mechanism. *)
-and pat_tests (path:string) (t:cty) (p:pat)
-    : ML (list string & list (string & string)) =
+and pat_tests (path:c_expression) (t:cty) (p:pat)
+    : ML (list string & list (string & c_expression)) =
   match p with
   | PWild -> ([], [])
   | PVar x -> ([], [(x, path)])
@@ -3490,9 +3547,9 @@ and pat_tests (path:string) (t:cty) (p:pat)
   | PConst (CInt (v, _, None))
     when Options.custard_cherry () &&
          not (v < 1073741824 && v > -1073741824) ->
-    (["cherry_int_eq(" ^ path ^ ", " ^ int_lit v ^ ")"], [])
+    (["cherry_int_eq(" ^ path.c_text ^ ", " ^ int_lit v ^ ")"], [])
   | PConst c when Some? (content_eq t "" "") ->
-    (match content_eq t path (constant c) with
+    (match content_eq t path.c_text (constant c) with
      | Some c -> ([c], [])
      | None -> ([], []))
   (* Section 59.3.  The path carries the type -- [t] is it, and a path is
@@ -3500,8 +3557,8 @@ and pat_tests (path:string) (t:cty) (p:pat)
      of a comparison and the cast repeats what the scrutinee already says. *)
   | PConst c ->
     (match converted_int t t c with
-     | Some v -> ([path ^ " == " ^ v], [])
-     | None -> ([path ^ " == " ^ constant c], []))
+     | Some v -> ([path.c_text ^ " == " ^ v], [])
+     | None -> ([path.c_text ^ " == " ^ constant c], []))
   | PTuple _ ->
     reject "an anonymous tuple pattern"
       ["Tuples reach the backend as FStar.Pervasives.Native.MktupleN."]
@@ -3517,35 +3574,36 @@ and pat_tests (path:string) (t:cty) (p:pat)
          let ft = (match fields |> List.tryFind (fun (g, _) -> g = f) with
                    | Some (_, ft) -> ft
                    | None -> TAny) in
-         let t1, b1 = pat_tests (path ^ "." ^ c_var f) ft q in
+         let t1, b1 = pat_tests (c_postfix (postfix_text path ^ "." ^ c_var f)) ft q in
          (ts @ t1, bs @ b1)) ([], [])
      | _ -> reject ("the record type " ^ string_of_name tn)
               ["It belongs to no record declaration in the program."])
   | PCtor (cn, ps) when Some? (find_exn cn) ->
     let fields = Some?.v (find_exn cn) in
     let rec go (fs : list (string & cty)) (ps : list pat)
-             : ML (list string & list (string & string)) =
+             : ML (list string & list (string & c_expression)) =
       match fs, ps with
       | (f, ft) :: fs, p :: ps ->
-        let t1, b1 = pat_tests (exn_field path cn f) ft p in
+        let t1, b1 = pat_tests (c_postfix (exn_field (postfix_text path) cn f)) ft p in
         let t2, b2 = go fs ps in
         (t1 @ t2, b1 @ b2)
       | _ -> ([], []) in
     let ts, bs = go fields ps in
-    (("cherry_exn_is(" ^ path ^ ", &" ^ exn_info cn ^ ")") :: ts, bs)
+    (("cherry_exn_is(" ^ path.c_text ^ ", &" ^ exn_info cn ^ ")") :: ts, bs)
   | PCtor (cn, ps) ->
     (match find_ctor cn with
      | None -> reject ("the constructor " ^ string_of_name cn)
                  ["It belongs to no type declaration in the program."]
      | Some (d, fields) ->
        let tests = if single_ctor d then []
-                   else [tag_of path d ^ " == " ^ c_tag cn] in
-       let sub (f:string) : ML string =
-         if is_boxed d then cell_field path d cn f
-         else if single_ctor d then path ^ "." ^ c_var f
-         else path ^ arm_sel cn fields f in
+                   else [tag_of (postfix_text path) d ^ " == " ^ c_tag cn] in
+       let sub (f:string) : ML c_expression =
+         let base = postfix_text path in
+         c_postfix (if is_boxed d then cell_field base d cn f
+         else if single_ctor d then base ^ "." ^ c_var f
+         else base ^ arm_sel cn fields f) in
        let rec go (fs : list (string & cty)) (ps : list pat)
-                : ML (list string & list (string & string)) =
+                : ML (list string & list (string & c_expression)) =
          match fs, ps with
          | (f, ft) :: fs, p :: ps ->
            let t1, b1 = pat_tests (sub f) ft p in
@@ -3555,40 +3613,10 @@ and pat_tests (path:string) (t:cty) (p:pat)
        let t2, b2 = go fields ps in
        (tests @ t2, b2))
 
-and drop_indent (l:string) : ML string =
-  if String.length l > 0 && String.substring l 0 1 = " "
-  then drop_indent (String.substring l 1 (String.length l - 1))
-  else l
-
-(* The body of an [if] or an [else], which the caller has emitted at [ind ^
-   "  "].  A single statement does not need a block, and one statement per
-   line is an invariant of this printer, so a body with one newline in it is
-   one statement.
-
-   [followed] says that the caller writes an [else] straight after this body,
-   and then a single statement is not enough: C's [else] binds to the nearest
-   unmatched [if], so an unbraced [if (b) c;] in the [then] arm captures it
-   and the arm that was meant to run when the *outer* test failed runs when
-   the inner one did.  That is section 6's dangling [else], it is silent --
-   the C is well formed and means something else -- and it is why a body that
-   can capture is braced even though it is one statement. *)
-and brace (ind:string) (followed:bool) (body:string) : ML string =
-  let lines = String.split ['\n'] body in
-  match lines with
-  | [""] -> " { }\n"
-  | [l; ""] -> if followed && dangles l
-               then " {\n" ^ body ^ ind ^ "}\n"
-               else " " ^ drop_indent l ^ "\n"
-  | _ -> " {\n" ^ body ^ ind ^ "}\n"
-
-(* Can this one statement capture an [else] written after it?  Only an [if]
-   with no [else] of its own can, and on one line that is a statement that
-   opens with [if (] and does not close with a brace: [if (p == NULL) {
-   abort(); }] is written whole and has nothing left to capture. *)
-and dangles (l:string) : ML bool =
-  let l = drop_indent l in
-  let n = String.length l in
-  starts_with l "if (" && not (n > 0 && String.substring l (n - 1) 1 = "}")
+(* A foreign statement macro can hide an unmatched [if] or several statements
+   on one printed line.  Always brace conditional arms, including match arms. *)
+and brace (ind:string) (body:string) : ML string =
+  if body = "" then " { }\n" else " {\n" ^ body ^ ind ^ "}\n"
 
 and starts_with (s:string) (pre:string) : ML bool =
   String.length s >= String.length pre &&
@@ -3600,7 +3628,8 @@ and guard_rejected (#a:Type) () : ML a =
 
 and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string =
   let out = mk_ref "" in
-  let sv = c_expr out ind scrut in
+  let sd = c_expr_doc out ind scrut in
+  let sv = sd.c_text in
   (* Branches whose body only aborts are gone by now (section 5.6); what is
      left is an empty match, which cannot be entered. *)
   if Nil? brs then
@@ -3618,13 +3647,14 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      indirection. *)
   let direct = is_stable scrut in
   let x = if direct then sv else fresh "s" in
+  let xd = if direct then sd else c_postfix x in
   let ind' = ind ^ "  " in
   (* The bindings of a branch are aliases, not declarations (see
      [bind_alias]), so a branch body is emitted with them in scope and the
      scope is restored afterwards. *)
   let branch_body (bi:string) (p:pat) (b:expr) : ML string =
     let saved = !scope in
-    let _, binds = pat_tests x scrut.ty p in
+    let _, binds = pat_tests xd scrut.ty p in
     (* Cherry: the fields a branch uses are read out of the scrutinee before
        the body runs, since the body may release it (cherry.md). *)
     let pre =
@@ -3636,7 +3666,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
           match List.tryFind (fun (w, _) -> w = v) tys with
           | Some (_, t) ->
             let nm = bind_var v in
-            [bi ^ decl_of t nm ^ " = " ^ path ^ ";\n"]
+            [bi ^ decl_of t nm ^ " = " ^ path.c_text ^ ";\n"]
           | None -> bind_alias v path; [])
       else (binds |> List.iter (fun (v, path) -> bind_alias v path); []) in
     let body = emit bi d b in
@@ -3695,7 +3725,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
      which is what a [let] over an irrefutable pattern turns into. *)
   let looked_at =
     kept |> List.existsb (fun (p, _, _) ->
-      let ts, bs = pat_tests x scrut.ty p in
+      let ts, bs = pat_tests xd scrut.ty p in
       Cons? ts || Cons? bs) in
   if not looked_at then
     (match kept with
@@ -3717,7 +3747,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
         bi ^ "CHERRY_ASSUME(" ^ String.concat " && " chk ^ ", " ^
         debug_what "incomplete match" ^ ");\n" in
       if first then check ind ^ branch_body ind p b
-      else ind ^ "else" ^ brace ind false (check ind' ^ branch_body ind' p b) in
+      else ind ^ "else" ^ brace ind (check ind' ^ branch_body ind' p b) in
     match brs with
     | [] -> ""
     (* F* has already checked that the match is exhaustive, so the last branch
@@ -3728,21 +3758,19 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
        the last branch of the match any more. *)
     | [(p, g, b)] when not all_tested ->
       if Some? g then guard_rejected ();
-      let tests, _ = pat_tests x scrut.ty p in
+      let tests, _ = pat_tests xd scrut.ty p in
       last tests p b
     | (p, g, b) :: rest ->
       if Some? g then guard_rejected ();
-      let tests, _ = pat_tests x scrut.ty p in
+      let tests, _ = pat_tests xd scrut.ty p in
       (* Irrefutable, so it is the last branch that can run; anything after it
          is dead and C would warn about it. *)
       if Nil? tests then last [] p b
       else
-        (* The next arm is written as [else ...], so this one is [followed]
-           exactly when there is a next arm. *)
         let after = go false rest in
         (if first then ind else ind ^ "else ") ^
         "if (" ^ String.concat " && " tests ^ ")" ^
-        brace ind (after <> "") (branch_body ind' p b) ^
+        brace ind (branch_body ind' p b) ^
         after in
   head ^ go true kept
 
@@ -4163,6 +4191,13 @@ let global_decl (l:dlet) : ML string =
   | Some v -> d ^ " = " ^ v ^ ";\n"
   | None -> d ^ ";\n"
 
+(* The declaration of a global that another file defines. *)
+let global_extern (l:dlet) : ML string =
+  current := string_of_name l.dl_name;
+  match array_extern l with
+  | Some d -> d
+  | None -> "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n"
+
 (* Section 68.  A parameterless definition whose value C can compute at
    translation time, emitted as a [#define] rather than as a variable.
 
@@ -4234,7 +4269,7 @@ let let_decl (l:dlet) : ML string =
      it wants the only value of that type; binding the name to the constant
      lets the body stand unchanged while the signature loses the parameter. *)
   l.dl_binders |> List.iter (fun b ->
-    if TUnit? b.b_ty then bind_alias b.b_name unit_value);
+    if TUnit? b.b_ty then bind_alias b.b_name (c_postfix unit_value));
   if Nil? l.dl_binders then
     reject ("the top-level value " ^ string_of_name l.dl_name)
       ["C has no way to initialize a global from a computation.";
@@ -4283,7 +4318,7 @@ let tail_group_decl (g:tail_group) : ML string =
     scope := [];
     let bs = kept_binders l |> List.map (fun b -> (b, bind_var b.b_name)) in
     l.dl_binders |> List.iter (fun b ->
-      if TUnit? b.b_ty then bind_alias b.b_name unit_value);
+      if TUnit? b.b_ty then bind_alias b.b_name (c_postfix unit_value));
     (i, l, bs, !scope)) in
   let label (i:int) = "custard_tail_" ^ string_of_int i in
   let slot (i:int) (j:int) = g.tg_args ^ ".m" ^ string_of_int i ^ ".a" ^ string_of_int j in
@@ -4482,8 +4517,35 @@ let is_public (l:dlet) : ML bool =
   not (l.dl_flags |> List.existsb Entrypoint?) &&
   not (l.dl_flags |> List.existsb Private?)
 
+(* Cherry with [--custard_split]: the definitions are spread over several C
+   files, so a definition that is not public is not [static] either -- another
+   file may call it.  What has to exist once ([split_data]: the descriptors
+   compared by address) is defined in the first file and declared [extern]
+   for the others.  A [CInline] definition stays [static] and is put in the
+   shared header instead. *)
+let split_out : ref bool = mk_ref false
+
+(* The F* module a definition comes from, generated ones included: a lifted
+   lambda or a specialization keeps its parent's [ns]. *)
+let module_of (n:name) : string = String.concat "." n.ns
+let split_data : ref (list string) = mk_ref []
+
 let storage (l:dlet) : ML string =
-  if is_public l then "" else "static "
+  if is_public l then ""
+  else if !split_out && not (l.dl_flags |> List.existsb CInline?) then ""
+  else "static "
+
+(* A helper that only a descriptor names: in a split output, every part has
+   it and only the first uses it. *)
+let helper_static () : ML string =
+  if !split_out then "static CHERRY_UNUSED " else "static "
+
+(* A descriptor whose address is its identity, [static] in a single file. *)
+let unique_object (decl:string) (init:string) : ML string =
+  if !split_out then begin
+    split_data := !split_data @ [decl ^ " = " ^ init ^ ";\n"];
+    "extern " ^ decl ^ ";\n"
+  end else "static " ^ decl ^ " = " ^ init ^ ";\n"
 
 (* Section 36.3.  Decoration a plugin asked for and Custard does not read.
    [Prologue] goes on the *declaration* as well as the definition: CUDA wants
@@ -4963,10 +5025,12 @@ let record_parents (p:program) : ML unit =
 
 (* The constructors, and [inc]/[dec]/[mark] for every non-plain type.  All
    [static inline]: a unit uses some of them, and C warns about an unused
-   [static] function that is not [inline]. *)
-let cherry_helpers (p:program) : ML (list string & list string) =
+   [static] function that is not [inline].  Split output is the exception
+   ([fn_out]). *)
+let cherry_helpers (p:program) : ML (list string & list string & list (string & string)) =
   let protos : ref (list string) = mk_ref [] in
   let defs : ref (list string) = mk_ref [] in
+  let homed : ref (list (string & string)) = mk_ref [] in
   let fn (proto:string) (body:string) : ML unit =
     protos := !protos @ [proto ^ ";\n"];
     defs := !defs @ [proto ^ " {\n" ^ body ^ "}\n"] in
@@ -4980,6 +5044,16 @@ let cherry_helpers (p:program) : ML (list string & list string) =
      | _ -> ());
     iter_children scan e in
   p |> List.iter (fun d -> match d with DLet l -> scan l.dl_body | _ -> ());
+  (* A helper reached only through a function pointer or off the hot path.
+     Split output defines it once, in the file of the module [home] of a
+     type this unit declares, and declares it in the files that use it;
+     otherwise it is [static inline] like the rest. *)
+  let fn_out (home:option string) (proto:string) (body:string) : ML unit =
+    match home with
+    | Some m when !split_out ->
+      protos := !protos @ [proto ^ ";\n"];
+      homed := (m, proto ^ " {\n" ^ body ^ "}\n") :: !homed
+    | _ -> fn ("static inline " ^ proto) body in
   (* The statements performing [op] on the counted fields of one value. *)
   let on_fields (op:string) (ind:string) (fs:list (string & cty))
                 (sel:string -> ML string) : ML string =
@@ -4995,6 +5069,7 @@ let cherry_helpers (p:program) : ML (list string & list string) =
                     not (is_runtime_name dt.dt_name) ->
       current := string_of_name dt.dt_name;
       let n = c_name dt.dt_name in
+      let home = if local d then Some (module_of dt.dt_name) else None in
       (match dt.dt_body with
        | TVariant cs when is_boxed dt ->
          cs |> List.iter (fun (c, fs) ->
@@ -5028,7 +5103,7 @@ let cherry_helpers (p:program) : ML (list string & list string) =
                 copy is out of line, so that each update is only the test. *)
              if HashTable.mem updated (string_of_name c) then begin
                let copy = "cherry_copy_" ^ n ^ "_" ^ arm_name c in
-               fn ("static " ^ n ^ " " ^ copy ^ "(" ^ n ^ " x)")
+               fn (helper_static () ^ n ^ " " ^ copy ^ "(" ^ n ^ " x)")
                   ("  " ^ cell ^ " *o = (" ^ cell ^ " *)x;\n" ^
                    "  " ^ cell ^ " *c = (" ^ cell ^ " *)cherry_alloc(sizeof(" ^ cell ^ "), " ^
                    c_tag c ^ ");\n" ^
@@ -5071,17 +5146,17 @@ let cherry_helpers (p:program) : ML (list string & list string) =
            fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
               "  (void)cherry_mark_ref(x, m);\n"
          end else begin
-           fn ("static inline void cherry_free_" ^ n ^ "(cherry_obj *x, int m)")
+           fn_out home ("void cherry_free_" ^ n ^ "(cherry_obj *x, int m)")
               ("  (void)m;\n  for (;;) {\n    " ^ n ^ " next = CHERRY_SCALAR(0);\n" ^
                cases "dec" ^
                "    free(x);\n    if (!cherry_dec_ref(next)) return;\n    x = next;\n  }\n");
-           fn ("static inline void cherry_markf_" ^ n ^ "(cherry_obj *x, int m)")
+           fn_out home ("void cherry_markf_" ^ n ^ "(cherry_obj *x, int m)")
               ("  for (;;) {\n    " ^ n ^ " next = CHERRY_SCALAR(0);\n" ^
                cases "mark" ^
                "    if (!cherry_mark_ref(next, m)) return;\n    x = next;\n  }\n");
            fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
               ("  if (cherry_dec_ref(x)) cherry_defer(x, cherry_free_" ^ n ^ ", 0);\n");
-           fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
+           fn_out home ("void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
               ("  if (cherry_mark_ref(x, m)) cherry_defer(x, cherry_markf_" ^ n ^ ", m);\n")
          end
        | _ ->
@@ -5100,12 +5175,12 @@ let cherry_helpers (p:program) : ML (list string & list string) =
                  "      break;\n"])) ^
               "    default: break;\n  }\n"
             | TAbstract -> "") in
-         ["inc"; "dec"; "mark"] |> List.iter (fun op ->
-           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x" ^
-               (if op = "mark" then ", int m" else "") ^ ")")
-              ((if op = "mark" then "  (void)m;\n" else "") ^ body op)))
+         ["inc"; "dec"] |> List.iter (fun op ->
+           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x)") (body op));
+         fn_out home ("void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
+           ("  (void)m;\n" ^ body "mark"))
     | _ -> ());
-  (!protos, !defs)
+  (!protos, !defs, List.rev !homed)
 
 (* The ML reference cells used while printing, and the operations on them
    (cherry.h): the cell structs and prototypes, and the definitions.  A
@@ -5183,19 +5258,20 @@ let cherry_exn_helpers (p:program) : ML (list string & list string) =
     let protos =
       [st ^ " { cherry_exn_hdr hdr;" ^
        String.concat "" (fs |> List.map (fun (f, t) -> " " ^ decl_of t f ^ ";")) ^ " };\n";
-       "static void " ^ cn ^ "_exn_free(cherry_obj *x, int m);\n";
-       "static void " ^ cn ^ "_exn_markf(cherry_obj *x, int m);\n";
-       "static const cherry_exn_info " ^ exn_info n ^ " = { \"" ^ string_of_name n ^
-       "\", " ^ cn ^ "_exn_free, " ^ cn ^ "_exn_markf, " ^
-       (match fs with
-        | (f, TApp ({ ns = ["Prims"]; id = "string" }, [])) :: _ ->
-          "offsetof(" ^ st ^ ", " ^ f ^ ")"
-        | _ -> "0") ^ " };\n";
+       helper_static () ^ "void " ^ cn ^ "_exn_free(cherry_obj *x, int m);\n";
+       helper_static () ^ "void " ^ cn ^ "_exn_markf(cherry_obj *x, int m);\n";
+       unique_object ("const cherry_exn_info " ^ exn_info n)
+         ("{ \"" ^ string_of_name n ^
+          "\", " ^ cn ^ "_exn_free, " ^ cn ^ "_exn_markf, " ^
+          (match fs with
+           | (f, TApp ({ ns = ["Prims"]; id = "string" }, [])) :: _ ->
+             "offsetof(" ^ st ^ ", " ^ f ^ ")"
+           | _ -> "0") ^ " }");
        ctor_sig ^ ";\n"] in
     let defs =
-      ["static void " ^ cn ^ "_exn_free(cherry_obj *x, int m) {\n" ^
+      [helper_static () ^ "void " ^ cn ^ "_exn_free(cherry_obj *x, int m) {\n" ^
        "  " ^ st ^ " *c = (" ^ st ^ " *)x;\n  (void)c; (void)m;\n" ^ on "dec" ^ "  free(x);\n}\n";
-       "static void " ^ cn ^ "_exn_markf(cherry_obj *x, int m) {\n" ^
+       helper_static () ^ "void " ^ cn ^ "_exn_markf(cherry_obj *x, int m) {\n" ^
        "  " ^ st ^ " *c = (" ^ st ^ " *)x;\n  (void)c; (void)m;\n" ^ on "mark" ^ "}\n";
        ctor_sig ^ " {\n" ^
        "  " ^ st ^ " *c = (" ^ st ^ " *)cherry_alloc(sizeof(" ^ st ^ "), CHERRY_TAG_EXN);\n" ^
@@ -5222,21 +5298,21 @@ let cherry_any_helpers () : ML (list string & list string) =
     let unpack = "    " ^ decl_of t "x" ^ ";\n    memcpy(&x, &v, sizeof x);\n" in
     let protos =
       [cell ^ " { cherry_obj h; " ^ decl_of t "v" ^ "; };\n";
-       "static void " ^ p ^ "_inc(uintptr_t v);\n";
-       "static void " ^ p ^ "_dec(uintptr_t v);\n";
-       "static void " ^ p ^ "_mark(uintptr_t v, int m);\n";
-       "static const cherry_rtti " ^ p ^ "_rtti = { \"" ^ ct ^ "\", " ^
-       p ^ "_inc, " ^ p ^ "_dec, " ^ p ^ "_mark };\n";
+       helper_static () ^ "void " ^ p ^ "_inc(uintptr_t v);\n";
+       helper_static () ^ "void " ^ p ^ "_dec(uintptr_t v);\n";
+       helper_static () ^ "void " ^ p ^ "_mark(uintptr_t v, int m);\n";
+       unique_object ("const cherry_rtti " ^ p ^ "_rtti")
+         ("{ \"" ^ ct ^ "\", " ^ p ^ "_inc, " ^ p ^ "_dec, " ^ p ^ "_mark }");
        "static inline cherry_any " ^ p ^ "_mk(" ^ decl_of t "x" ^ ");\n";
        "static inline " ^ decl_of t (p ^ "_get(cherry_any a)") ^ ";\n"] in
     (* A plain value in a box still has the box to free. *)
     let free_body =
-      "static void " ^ p ^ "_free(cherry_obj *o, int m) {\n  (void)m;\n" ^
+      helper_static () ^ "void " ^ p ^ "_free(cherry_obj *o, int m) {\n  (void)m;\n" ^
       (if np then "  " ^ op "dec" ("((" ^ cell ^ " *)o)->v") ^ ";\n" else "") ^
       "  free(o);\n}\n" in
     let defs =
       [free_body;
-       "static void " ^ p ^ "_dec(uintptr_t v) {\n" ^
+       helper_static () ^ "void " ^ p ^ "_dec(uintptr_t v) {\n" ^
        "  if " ^ small ^ " {\n" ^
        (if np then unpack ^ "    " ^ op "dec" "x" ^ ";\n" else "") ^
        "  } else {\n" ^
@@ -5245,15 +5321,15 @@ let cherry_any_helpers () : ML (list string & list string) =
       (* A plain payload too big for the word is still in a counted box,
          which has to be counted and marked even though its contents are
          not. *)
-      ["static void " ^ p ^ "_inc(uintptr_t v) {\n" ^
+      [helper_static () ^ "void " ^ p ^ "_inc(uintptr_t v) {\n" ^
        "  if " ^ small ^ " {\n" ^
        (if np then unpack ^ "    " ^ op "inc" "x" ^ ";\n" else "") ^
        "  } else cherry_inc((cherry_obj *)v);\n}\n"] @
       (if np then
-        ["static void " ^ p ^ "_markf(cherry_obj *o, int m) {\n" ^
+        [helper_static () ^ "void " ^ p ^ "_markf(cherry_obj *o, int m) {\n" ^
          "  " ^ op "mark" ("((" ^ cell ^ " *)o)->v") ^ ";\n}\n"]
        else []) @
-      ["static void " ^ p ^ "_mark(uintptr_t v, int m) {\n" ^
+      [helper_static () ^ "void " ^ p ^ "_mark(uintptr_t v, int m) {\n" ^
        "  if " ^ small ^ " {\n" ^
        (if np then unpack ^ "    " ^ op "mark" "x" ^ ";\n" else "    (void)m;\n") ^
        "  } else {\n    cherry_obj *o = (cherry_obj *)v;\n" ^
@@ -5711,7 +5787,89 @@ let build_tail_groups (p:program) : ML unit =
         HashTable.add !tail_groups (string_of_name l.dl_name) (i, g))
     end)
 
-let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string) =
+(* Split output (cherry.md, "Split output") gives each file only the helpers,
+   prototypes and literals its text refers to, transitively: the whole set is
+   tens of megabytes, which every file would otherwise parse.  Generated C is
+   regular enough to do this on the text.  Every top-level line of an item
+   starts a declaration, whose name is the one after [#define], the first
+   argument of a [MACRO(name, ...)], or else the last identifier before the
+   first [(], [=], [;], [\{] or [\[]. *)
+let is_ident_start (c:SI.t) : bool =
+  let open SI in
+  (of_char 'a' <= c && c <= of_char 'z') ||
+  (of_char 'A' <= c && c <= of_char 'Z') || c = of_char '_'
+let is_digit (c:SI.t) : bool = let open SI in of_char '0' <= c && c <= of_char '9'
+let is_ident_char (c:SI.t) : bool = is_ident_start c || is_digit c
+
+(* The first offset from [i] before [j] whose byte fails [p], else [j]. *)
+let rec skip_while (s:string) (p:SI.t -> bool) (i:SI.t) (j:SI.t) : ML SI.t =
+  if SI.(i < j) && p (String.byte_at s i) then skip_while s p SI.(i + one) j else i
+
+(* The identifiers of [s] from [i] to [j], in order, with their offsets. *)
+let idents_between (s:string) (i:SI.t) (j:SI.t) : ML (list (SI.t & string)) =
+  let rec go (i:SI.t) (acc:list (SI.t & string)) : ML (list (SI.t & string)) =
+    if not SI.(i < j) then List.rev acc else
+    let c = String.byte_at s i in
+    if is_ident_start c then
+      let k = skip_while s is_ident_char i j in
+      go k ((i, String.byte_substring s i k) :: acc)
+    (* a number's suffix ([1u]) is not a name *)
+    else if is_digit c then go (skip_while s is_ident_char i j) acc
+    else go SI.(i + one) acc in
+  go i []
+
+let idents_of (s:string) : ML (list string) =
+  List.map snd (idents_between s SI.zero (String.byte_length s))
+
+(* The names an item declares. *)
+let declared_names (s:string) : ML (list string) =
+  let n = String.byte_length s in
+  let stops = [SI.of_char '('; SI.of_char '='; SI.of_char ';'; SI.of_char '{'; SI.of_char '['] in
+  let rec go (i:SI.t) (acc:list string) : ML (list string) =
+    if not SI.(i < n) then acc else
+    let e = skip_while s (fun c -> c <> SI.of_char '\n') i n in
+    let c = String.byte_at s i in
+    let acc =
+      if c = SI.of_char '#' then
+        (match idents_between s i e with
+         | (_, "define") :: (_, x) :: _ -> x :: acc
+         | _ -> acc)
+      else if is_ident_start c then begin
+        let ids = idents_between s i e in
+        let stop = skip_while s (fun c -> not (List.mem c stops)) i e in
+        let before = List.filter (fun (k, _) -> SI.(k < stop)) ids in
+        match before, ids with
+        | [_], _ :: (_, x) :: _ when String.byte_at s stop = SI.of_char '(' ->
+          (* MACRO(name, ...) *)
+          x :: acc
+        | _ :: _, _ -> snd (List.last before) :: acc
+        | _ -> acc
+      end else acc in
+    go SI.(e + one) acc in
+  go SI.zero []
+
+(* The items, in order, that the text [roots] needs. *)
+let select_items (provides:HashTable.t string (list int)) (uses:int -> ML (list string))
+                 (roots:list string) : ML (list int) =
+  let seen : HashTable.t string bool = HashTable.create 1000 in
+  let chosen : HashTable.t int bool = HashTable.create 1000 in
+  let rec go (work:list string) (out:list int) : ML (list int) =
+    match work with
+    | [] -> out
+    | x :: work ->
+      if HashTable.mem seen x then go work out else begin
+        HashTable.add seen x true;
+        match HashTable.try_find provides x with
+        | None -> go work out
+        | Some ks ->
+          let ks = List.filter (fun k -> not (HashTable.mem chosen k)) ks in
+          ks |> List.iter (fun k -> HashTable.add chosen k true);
+          go (List.collect uses ks @ work) (ks @ out)
+      end in
+  List.sortWith (fun a b -> a - b) (go roots [])
+
+let print_program (base:string) (cu:unit_info) (p:program)
+  : ML (string & string & list (string & string)) =
   (* Section 42.2.  An imported declaration is in [p] so that the tables below
      see its shape, and out of every list that is emitted: the unit that
      compiled it has a header, and that header is included instead.  Writing a
@@ -5720,6 +5878,8 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   (* Section 121.2.  Every per-program variable this module has, including
      the generated comparisons of section 107, which are one unit's. *)
   reset_program_state ();
+  split_out := Options.custard_cherry () && Options.custard_split ();
+  split_data := [];
   record_parents p;
   (* Section 102.2.  Before the tables, not after them.  The external table
      below stores a *resolved* C name -- an external is the one declaration
@@ -5987,6 +6147,9 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     (* A public one is in the header, which this source includes; repeating it
        here would be a redefinition. *)
     | DLet l when is_macro l -> if is_public l then [] else [guarded l (prologue_of l ^ macro_decl l)]
+    (* Split, every file declares it and the first one defines it. *)
+    | DLet l when Nil? l.dl_binders && !split_out ->
+      if is_public l then [] else [guarded l (prologue_of l ^ global_extern l)]
     | DLet l when Nil? l.dl_binders -> [guarded l (prologue_of l ^ storage l ^ global_decl l)]
     | DLet l when Cons? l.dl_binders ->
       if is_public l then []
@@ -6001,31 +6164,45 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
        the macro would then rewrite that declaration's own name. *)
     | DLet l when is_public l && is_macro l -> [guarded l (prologue_of l ^ macro_decl l)]
     | DLet l when is_public l && Nil? l.dl_binders ->
-      current := string_of_name l.dl_name;
-      (match array_extern l with
-       | Some d -> [guarded l (prologue_of l ^ d)]
-       | None ->
-         [guarded l (prologue_of l ^ "extern " ^ decl_of l.dl_ret (c_name l.dl_name) ^ ";\n")])
+      [guarded l (prologue_of l ^ global_extern l)]
     | DLet l when is_public l -> [guarded l (prologue_of l ^ inline_of l ^ proto_of l)]
     | _ -> []) in
 
+  (* A definition's text, its F* module, and how a split output treats it:
+     [""] for a plain one, ["#inline"] for one that goes in the shared header
+     (a [static inline] one), or else the tail group it belongs to, which is
+     kept in one file, since the group's function and argument buffer are
+     [static]. *)
   let defs = p |> List.collect (fun d ->
     if not (local d) then [] else
     match d with
     | DLet l when Nil? l.dl_binders -> []
     | DLet l when Some? (HashTable.try_find !tail_groups (string_of_name l.dl_name)) ->
       let (i, g) = Some?.v (HashTable.try_find !tail_groups (string_of_name l.dl_name)) in
-      [(if i = 0 then tail_group_decl g else "") ^
-       (* Only the group's function may call a member that nothing
-          outside the group names. *)
-       comment_of l ^ storage l ^ "CHERRY_UNUSED " ^ tail_member_decl i g l]
-    | DLet l -> [guarded l (comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
-                            let_decl l ^ epilogue_of l)]
+      [(g.tg_fn, module_of l.dl_name,
+        (if i = 0 then tail_group_decl g else "") ^
+        (* Only the group's function may call a member that nothing
+           outside the group names. *)
+        comment_of l ^ storage l ^ "CHERRY_UNUSED " ^ tail_member_decl i g l)]
+    | DLet l -> [((if l.dl_flags |> List.existsb CInline? then "#inline" else ""),
+                  module_of l.dl_name,
+                  guarded l (comment_of l ^ prologue_of l ^ storage l ^ inline_of l ^
+                             let_decl l ^ epilogue_of l))]
     | _ -> []) in
+  let global_defs =
+    if not !split_out then [] else
+    p |> List.collect (fun d ->
+      if not (local d) then [] else
+      match d with
+      | DLet l when is_macro l -> []
+      | DLet l when Nil? l.dl_binders ->
+        [(module_of l.dl_name, guarded l (prologue_of l ^ global_decl l))]
+      | _ -> []) in
 
   (* In declaration order, which the SCC pass has already made a topological
      one: a global whose initializer reads another global sees it set. *)
-  let inits = global_inits_of p |> List.mapi (fun i l -> global_init (i = 0) l) in
+  let init_lets = global_inits_of p in
+  let inits = init_lets |> List.mapi (fun i l -> global_init (i = 0) l) in
   (* A program with no globals has nothing to initialize, and an empty
      function that [main] calls anyway is two lines of noise plus a block
      that says nothing.  It is also part of this file's interface, so it is
@@ -6100,7 +6277,7 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   (* Section 107.  After every body has been rendered, which is when the set
      of types actually compared is complete. *)
   let eq_protos, eq_defs = eq_decls () in
-  let rc_protos, rc_defs = cherry_helpers p in
+  let rc_protos, rc_defs, rc_homed = cherry_helpers p in
   let clo_protos, clo_defs = cherry_closure_helpers () in
   let pbuf_protos, pbuf_defs = cherry_pbuf_helpers () in
   let ref_protos, ref_defs = cherry_ref_helpers () in
@@ -6132,28 +6309,27 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
   cpp_close in
 
   let lits = !string_lit_defs in
-  let src_body =
-  String.concat "" exts ^ (match exts with [] -> "" | _ -> "\n") ^
-  String.concat "" lits ^ (match lits with [] -> "" | _ -> "\n") ^
-  String.concat "" rc_protos ^ (match rc_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" ref_protos ^ (match ref_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" iarr_protos ^ (match iarr_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" exn_protos ^ (match exn_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" any_protos ^ (match any_protos with [] -> "" | _ -> "\n") ^
-  String.concat "" pbuf_protos ^ (match pbuf_protos with [] -> "" | _ -> "\n") ^
-  String.concat "\n" rc_defs ^ (match rc_defs with [] -> "" | _ -> "\n") ^
-  String.concat "" protos ^ (match protos with [] -> "" | _ -> "\n") ^
-  String.concat "" clo_protos ^ (match clo_protos with [] -> "" | _ -> "\n") ^
-  String.concat "\n" clo_defs ^ (match clo_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" ref_defs ^ (match ref_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" iarr_defs ^ (match iarr_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" exn_defs ^ (match exn_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" any_defs ^ (match any_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" pbuf_defs ^ (match pbuf_defs with [] -> "" | _ -> "\n") ^
-  String.concat "" eq_protos ^ (match eq_protos with [] -> "" | _ -> "\n") ^
-  String.concat "\n" eq_defs ^ (match eq_defs with [] -> "" | _ -> "\n") ^
-  String.concat "\n" defs ^ "\n" ^ (match inits with [] -> "" | _ -> init_fn) ^
+  let fn_defs, inline_defs =
+    let text (_, _, d) = d in
+    if not !split_out then List.map text defs, [] else
+    List.map text (List.filter (fun (k, _, _) -> k <> "#inline") defs),
+    List.map text (List.filter (fun (k, _, _) -> k = "#inline") defs) in
+  (* The pieces of the source before the definitions, each a list of items
+     joined by its separator. *)
+  let support_groups = [
+    "", exts; "", lits; "", rc_protos; "", ref_protos; "", iarr_protos;
+    "", exn_protos; "", any_protos; "", pbuf_protos; "\n", rc_defs; "", protos;
+    "", clo_protos; "\n", clo_defs; "\n", ref_defs; "\n", iarr_defs;
+    "\n", exn_defs; "\n", any_defs; "\n", pbuf_defs; "", eq_protos;
+    "\n", eq_defs; "\n", inline_defs ] in
+  let render_groups (gs:list (string & list string)) : ML string =
+    String.concat "" (gs |> List.map (fun (sep, xs) ->
+      String.concat sep xs ^ (match xs with [] -> "" | _ -> "\n"))) in
+  let support_body = render_groups support_groups in
+  let tail_body =
+    (match inits with [] -> "" | _ -> init_fn) ^
     (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
+  let src_body = support_body ^ String.concat "\n" fn_defs ^ "\n" ^ tail_body in
 
   (* Sections 5.1, 66 and 98.  Each of the two support blocks goes into the
      header if the header needs it, otherwise into the source if the source
@@ -6193,4 +6369,93 @@ let print_program (base:string) (cu:unit_info) (p:program) : ML (string & string
     (if not hdr_narrow && mentions_narrow src_body
      then narrow_support else "") ^
     "\n" ^ src_body in
-  hdr, body
+  if not !split_out then hdr, body, [] else begin
+    (* Split: one file per F* module, so that a change to one module changes
+       its file and no other. *)
+    let files : HashTable.t string (list string) = HashTable.create 100 in
+    let order : ref (list string) = mk_ref [] in
+    let put (m:string) (d:string) : ML unit =
+      match HashTable.try_find files m with
+      | Some l -> HashTable.add files m (d :: l)
+      | None -> order := m :: !order; HashTable.add files m [d] in
+    (* A tail group goes where its first member does. *)
+    let group_home : HashTable.t string string = HashTable.create 50 in
+    defs |> List.iter (fun (k, m, d) ->
+      if k = "#inline" then ()
+      else if k = "" then put m d
+      else match HashTable.try_find group_home k with
+        | Some m' -> put m' d
+        | None -> HashTable.add group_home k m; put m d);
+    global_defs |> List.iter (fun (m, d) -> put m d);
+    rc_homed |> List.iter (fun (m, d) -> put m d);
+    (* The initializer calls one function per run of consecutive globals of
+       a module, defined in that module's file: as a single function it was
+       slower to compile than everything else together. *)
+    let runs = List.fold_left2 (fun (acc:list (string & list string)) l i ->
+        let m = module_of l.dl_name in
+        match acc with
+        | (m', is) :: acc' when m' = m -> (m, i :: is) :: acc'
+        | _ -> (m, [i]) :: acc) [] init_lets inits |> List.rev in
+    let seen : HashTable.t string int = HashTable.create 50 in
+    let pieces = runs |> List.map (fun (m, is) ->
+      let k = match HashTable.try_find seen m with Some k -> k + 1 | None -> 1 in
+      HashTable.add seen m k;
+      let nm = init_name ^ "__" ^ sanitize m ^ (if k = 1 then "" else "_" ^ show k) in
+      put m ("void " ^ nm ^ "(void) {\n" ^ String.concat "" (List.rev is) ^ "}\n");
+      nm) in
+    let piece_protos = pieces |> List.map (fun nm -> "void " ^ nm ^ "(void);\n") in
+    let init_fn = match inits with
+      | [] -> ""
+      | _ -> "void " ^ init_name ^ "(void) {\n" ^ init_guard ^
+             String.concat "" (pieces |> List.map (fun nm -> "  " ^ nm ^ "();\n")) ^
+             "}\n" in
+    let tail_body =
+      init_fn ^ (match mains with [] -> "" | _ -> "\n" ^ String.concat "\n" mains) in
+    (* Every item of the support code, numbered in order, indexed by the
+       names it declares. *)
+    let groups = support_groups @ ["", piece_protos] in
+    let numbered, _ = List.fold_left (fun (acc, k) (sep, xs) ->
+        let ys = List.mapi (fun i x -> (k + i, x)) xs in
+        ((sep, ys) :: acc, k + List.length xs)) ([], 0) groups in
+    let numbered = List.rev numbered in
+    let uses : HashTable.t int (list string) = HashTable.create 100000 in
+    let provides : HashTable.t string (list int) = HashTable.create 100000 in
+    numbered |> List.iter (fun (_, ys) -> ys |> List.iter (fun (k, x) ->
+      HashTable.add uses k (idents_of x);
+      declared_names x |> List.iter (fun n ->
+        HashTable.add provides n
+          (k :: (match HashTable.try_find provides n with Some l -> l | None -> [])))));
+    let uses_of k = match HashTable.try_find uses k with Some l -> l | None -> [] in
+    let prelude =
+      banner ^ "#include \"" ^ base ^ ".h\"\n" ^
+      (if not hdr_unit && mentions_unit src_body
+       then "\n" ^ unit_support else "") ^
+      (if not hdr_fspec && mentions_float_special src_body
+       then "\n" ^ float_special_support else "") ^
+      (if not hdr_narrow && mentions_narrow src_body
+       then narrow_support else "") ^
+      "\n" in
+    (* The items of [ys] whose numbers are in [sel], both ascending. *)
+    let rec pick (sel:list int) (ys:list (int & string)) (acc:list string)
+      : Tot (list int & list string) (decreases %[ys; sel]) =
+      match sel, ys with
+      | [], _ | _, [] -> sel, List.rev acc
+      | k :: sel', (j, x) :: ys' ->
+        if k = j then pick sel' ys' (x :: acc)
+        else if k < j then pick sel' ys acc
+        else pick sel ys' acc in
+    let part (text:string) =
+      let sel = select_items provides uses_of (idents_of text) in
+      let _, gs = List.fold_left (fun (sel, gs) (sep, ys) ->
+          let sel, xs = pick sel ys [] in
+          (sel, (sep, xs) :: gs)) (sel, []) numbered in
+      prelude ^ render_groups (List.rev gs) ^ text in
+    (* The [-o] file: what exists once, the initializer and [main]. *)
+    let body0 = part (String.concat "" !split_data ^ "\n" ^ tail_body) in
+    let extras =
+      List.rev !order |> List.map (fun m ->
+        (base ^ "." ^ m ^ ".c",
+         part (String.concat "\n"
+                 (List.rev (match HashTable.try_find files m with Some l -> l | None -> []))))) in
+    hdr, body0, extras
+  end

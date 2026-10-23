@@ -454,6 +454,16 @@ EGREP_FSPun = "which .NET cannot express"
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
 C_TESTS += KrmlBasic CExtern IndexedSquash CDeadLet CFunPtr
+C_TESTS += CExternGrouping
+FLAGS_CExternGrouping = --custard_entry_module CExternGrouping
+CGREP_CExternGrouping = "(CG_NUMBER) * 3" "(CG_FALSE) && (CG_FLAG)" \
+                        "(uint8_t)(CG_WIDE)" "(CG_BOX).value" \
+                        "= (CG_BOX_FN());" "= (CG_VARIANT);" \
+                        "cg_identity((CG_COMMA))" "(void)(cg_tick());"
+C_TESTS += CExternStmt
+FLAGS_CExternStmt = --custard_entry_module CExternStmt
+CGREP_CExternStmt = "if (a) {" "else if (x == CEXTERNSTMT_B) {"
+CNOGREP_CExternStmt = "if (a) CS_" "else CS_"
 C_TESTS += Rotate
 KRML_TESTS += Rotate
 # The mask is the whole point of the rule, so the C is pinned as well as run:
@@ -641,8 +651,8 @@ FLAGS_CExtern   = --custard_extern_type 'CExtern.tag=cextern_tag_t@CExtern_stubs
 CGREP_CExtern   = "include \"CExtern_stubs.h" \
                   "cextern_handle_t b_h;" \
                   "void custard_init_globals(void)" \
-                  "CExtern_gt = cextern_mk_tag();" \
-                  "if (c.tag == CEXTERN_BUMP) cextern_bump(" \
+                  "CExtern_gt = (cextern_mk_tag());" \
+                  "if (c.tag == CEXTERN_BUMP)" "cextern_bump(" \
                   "uint32_t CExtern_base = 7;" \
                   "uint8_t CExtern_low = (uint8_t)300;" \
                   "cextern_make(((uint32_t)41U))"
@@ -692,7 +702,8 @@ CGREP_CFunPtr   = "bool CFunPtr_mk_lambda__lam(uint64_t" \
                   ".impl_validate = CFunPtr_mk_lambda__lam" \
                   ".impl_validate = CFunPtr_is_even" \
                   "CFunPtr_quarter__lam"
-CNOGREP_CFunPtr = "(*)("
+CGREP_CFunPtr += "i.impl_validate(i.contents)" "i.impl_parse(i.contents)" "f(f(x))"
+CNOGREP_CFunPtr = "(*)(" "(i.impl_validate)(" "(i.impl_parse)(" "(f)("
 
 # CGREP_<name>/CNOGREP_<name> assert on the generated .c.  These are the
 # output-quality invariants of section 6: a unit parameter is a thunk, which C
@@ -701,8 +712,10 @@ CNOGREP_CFunPtr = "(*)("
 # Section 59: [n == 0], not [n == ((uint32_t)0U)] -- [n] carries the type,
 # so the literal's cast was saying what the other operand already said.
 CGREP_KrmlBasic   = "int32_t KrmlBasic_main(void)" \
-                    "if (s.tag == KRMLBASIC_SQUARE) return (s.val.Square" \
-                    "if (n == 0) return acc;"
+                    "if (s.tag == KRMLBASIC_SQUARE) {" \
+                    "if (n == 0) {"
+CPAIR_KrmlBasic   = "if (s.tag == KRMLBASIC_SQUARE) {@return (s.val.Square" \
+                    "if (n == 0) {@return acc;"
 CNOGREP_KrmlBasic = "custard_unit tmp" "(void)(((custard_unit)0))" "abort"
 
 # Each of these is extracted with --custard_entry and *no* --custard_main, as a
@@ -1420,6 +1433,9 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 # command-line argument: editing the hand-written half must rebuild.  It is
 # harmless for the rules below, whose prerequisites contain no [$].
 .SECONDEXPANSION:
+
+$(OUTPUT_DIR)/CExternGrouping.dcexe $(OUTPUT_DIR)/CExternGrouping.dcxx: CExternGrouping_stubs.h
+$(OUTPUT_DIR)/CExternStmt.dcexe $(OUTPUT_DIR)/CExternStmt.dcxx: CExternStmt_stubs.h
 
 # [CEXTRA_Name] names hand-written C to link beside the generated unit.
 # Every other test that reaches C from outside F* does it with a header of
@@ -2148,7 +2164,7 @@ CGREP_FloatOptIn += "bool ok10 = ((float)16777217LL < 1000000000.0f);"
 # definition's own attributes beats the builtin table.
 CGREP_FloatOptIn += "((0.0f + 1.0f) == 1.0f)"
 CGREP_FloatOptIn += "\#include \"float.h\""
-CGREP_FloatOptIn += "(1.0f < FLT_MAX)"
+CGREP_FloatOptIn += "(1.0f < (FLT_MAX))"
 # The whole point: the library's names do not survive as calls.  Before the
 # attribute existed every one of these was an undefined FloatLib_* symbol.
 CNOGREP_FloatOptIn += "FloatLib"
@@ -2208,7 +2224,9 @@ CNOGREP_Narrow += "CUSTARD_F16_LIT(15872U) + CUSTARD_F16_LIT(16512U)"
 # fragment type as auto -- and this pins that the value path agrees.
 C_TESTS += ExternKw
 CGREP_ExternKw += "KW_SIZEOF(float)"
+CGREP_ExternKw += "KW_SIZEOF(KW_FLOAT())"
 CNOGREP_ExternKw += "float_"
+$(OUTPUT_DIR)/ExternKw.dcexe $(OUTPUT_DIR)/ExternKw.dcxx: ExternKw_stubs.h
 
 # Sections 66 and 98.  The 16-bit vocabulary reaches the generated header
 # through [@@custard_c_header], so those includes have to be emitted above the
@@ -2439,7 +2457,7 @@ CNOGREP_Union += "} FStar_Pervasives_Native_Some"
 CXX_TESTS += RefBind
 FLAGS_RefBind = --codegen C
 CGREP_RefBind += "rb_cell &"
-CGREP_RefBind += "rb_get(rb_slot)"
+CGREP_RefBind += "rb_get((rb_slot))"
 # A fresh value is a copy of nothing, so that binding is not a reference.
 CNOPAIR_RefBind += "rb_cell &@rb_make"
 
@@ -2538,7 +2556,7 @@ C_TESTS += PolyExtern
 CEXTRA_PolyExtern = PolyExtern_stubs.c
 CGREP_PolyExtern += "extern uint32_t PolyExtern_identity__t(uint32_t);"
 CGREP_PolyExtern += "extern PolyExtern_pair PolyExtern_identity__pair(PolyExtern_pair);"
-CGREP_PolyExtern += "uint32_t x = PolyExtern_identity__t("
+CGREP_PolyExtern += "uint32_t x = (PolyExtern_identity__t("
 # No leftover type parameter: the variable was substituted away, not passed.
 CNOGREP_PolyExtern += "void *"
 
@@ -2553,8 +2571,8 @@ C_TESTS += Half
 CGREP_Half += "include \"Half_stubs.h"
 CGREP_Half += "__half p_h;"
 CGREP_Half += "__nv_bfloat16 p_b;"
-CGREP_Half += "Half_twice__half(__hadd, p.p_h)"
-CGREP_Half += "Half_twice__bfloat16(__hadd_bf, p.p_b)"
+CGREP_Half += "Half_twice__half((__hadd), p.p_h)"
+CGREP_Half += "Half_twice__bfloat16((__hadd_bf), p.p_b)"
 CGREP_Half += "static __half Half_twice__half(__half"
 CNOGREP_Half += "Half_half"
 CNOGREP_Half += "Half_bfloat16"
@@ -2641,8 +2659,8 @@ KRML_TESTS += PatStrKrml
 # wmma::mma_sync into wmma__mma_sync -- a name that does not exist.  The type
 # path had always been verbatim, which is why the type beside the call worked.
 C_TESTS += TensorC
-CGREP_TensorC += "tc_auto_ref a = TC_NS(mk_a)()"
-CGREP_TensorC += "return TC_NS(sum)(a, c);"
+CGREP_TensorC += "tc_auto_ref a = (TC_NS(mk_a)())"
+CGREP_TensorC += "return (TC_NS(sum)(a, c));"
 CNOGREP_TensorC += "TC_NS_"
 CNOGREP_TensorC += "tc_auto_ref_"
 # The decoration goes on the definition *and* on the prototype, and exactly
@@ -2778,7 +2796,8 @@ FSNOGREP_TyvarQuote += "'t'"
 C_TESTS += MatchFun
 # The arms are beta-reduced where they stand, so the emitted function is two
 # returns and holds no function value at all.
-CGREP_MatchFun += "if (c == MATCHFUN_A) return (m + n);"
+CGREP_MatchFun += "if (c == MATCHFUN_A) {"
+CPAIR_MatchFun += "if (c == MATCHFUN_A) {@return (m + n);"
 CNOGREP_MatchFun += "(*"
 
 # Section 77.5.  [--custard_no_unfold] keeps an abbreviation of an applied
@@ -3251,7 +3270,7 @@ RSGREP_NullArg += "nil_right()"
 # the target spelling is a class template.
 CXX_TESTS += TmplMono
 FLAGS_TmplMono = --codegen C --custard_entry TmplMono.dispatch
-CGREP_TmplMono += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMono += "wm::frag<16> f = (wm::mk16(rows))"
 CGREP_TmplMono += "TmplMono_g_gemm__uint_to_t_16(wm::frag<16> f"
 # The index reaches the target through the type, and is not also passed at
 # runtime -- that is the whole of why the section 32.5 rule can be relaxed.
@@ -3265,24 +3284,24 @@ CNOGREP_TmplMono += "g_gemm__uint_to_t_16(size_t tm"
 
 CXX_TESTS += TmplLet
 FLAGS_TmplLet = --codegen C --custard_entry_module TmplLet
-CGREP_TmplLet += "wm::nfrag<16> f = wm::nmk16(seed)"
+CGREP_TmplLet += "wm::nfrag<16> f = (wm::nmk16(seed))"
 
 CXX_TESTS += TmplLet2
 FLAGS_TmplLet2 = --codegen C --custard_entry_module TmplLet2
-CGREP_TmplLet2 += "wm::nfrag<16> f = wm::nmk16(seed)"
+CGREP_TmplLet2 += "wm::nfrag<16> f = (wm::nmk16(seed))"
 
 CXX_TESTS += TmplLet3
 FLAGS_TmplLet3 = --codegen C --custard_entry_module TmplLet3
-CGREP_TmplLet3 += "wm::nfrag<16> f = wm::nmk16(seed)"
+CGREP_TmplLet3 += "wm::nfrag<16> f = (wm::nmk16(seed))"
 
 CXX_TESTS += TmplMonoV
 FLAGS_TmplMonoV = --codegen C --custard_entry TmplMonoV.dispatch
-CGREP_TmplMonoV += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMonoV += "wm::frag<16> f = (wm::mk16(rows))"
 CGREP_TmplMonoV += "TmplMonoV_g_gemm__uint_to_t_16(wm::frag<16> f"
 
 CXX_TESTS += TmplMonoW
 FLAGS_TmplMonoW = --codegen C --custard_entry TmplMonoW.dispatch
-CGREP_TmplMonoW += "wm::frag<16> f = wm::mk16(rows)"
+CGREP_TmplMonoW += "wm::frag<16> f = (wm::mk16(rows))"
 CGREP_TmplMonoW += "TmplMonoW_g_gemm__uint_to_t_16(wm::frag<16> f"
 
 C_TESTS += HnfSig
@@ -3490,11 +3509,17 @@ $(CHERRY_DIR)/CherryRecordUpdate.chgrep: $(CHERRY_DIR)/CherryRecordUpdate.chc
 	    || { echo "ERROR: CherryRecordUpdate_$$f does not update in place"; exit 1; }; done
 	$(Q)rm -f $@.tmp; touch $@
 all: $(CHERRY_DIR)/CherryRecordUpdate.chgrep
+# Cherry: a partial application raises nothing, so it is not tested.
+$(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
+	$(Q)! sed -n '/^static .* CherryPap_make(.*{$$/,/^}/p' $< | grep -q 'CHERRY_EXN_PENDING' \
+	  || { echo "ERROR: CherryPap_make tests a partial application for an exception"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryPap.chgrep
 
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
@@ -3577,6 +3602,30 @@ $(CHERRY_DIR)/CherrySepApp.chran: $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/Che
 	$(Q)touch $@
 
 all: $(CHERRY_DIR)/CherrySepApp.chran
+
+# Cherry with [--custard_split] (cherry.md, "Split output"): one file per
+# F* module, so that calls, globals, exception matches, dyn reads and the
+# initializer cross files.  A tail group stays in one file.
+CHERRY_SPLIT_TESTS = Exceptions AnyException DynPartial MutualTail InitOrder HeapClosures
+CHERRY_SPLIT_DIR = $(OUTPUT_DIR)/cherry-split
+
+$(CHERRY_SPLIT_DIR)/%.chsplit: $(CACHE_DIR)/%.fst.checked %.out.expected $(FSTAR_EXE)
+	$(call msg, "CHERRY-SPLIT", $*)
+	$(Q)rm -rf $(CHERRY_SPLIT_DIR)/$* && mkdir -p $(CHERRY_SPLIT_DIR)/$*
+	$(FSTAR) $(WARN_ANY) $(FLAGS_$*) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_split \
+	  --custard_main $*.main $*.fst -o $(CHERRY_SPLIT_DIR)/$*/$*.c
+	$(Q)test -f $(CHERRY_SPLIT_DIR)/$*/$*.$*.c \
+	  || { echo "ERROR: $*'s C output was not split"; exit 1; }
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(CHERRY_SPLIT_DIR)/$* -I$(CHERRY_INC) \
+	  $(CHERRY_SPLIT_DIR)/$*/*.c $(CHERRY_INC)/cherry.c -o $(CHERRY_SPLIT_DIR)/$*/$*.chexe
+	$(Q)$(CHERRY_RUN_$*) ASAN_OPTIONS=detect_leaks=1 $(CHERRY_SPLIT_DIR)/$*/$*.chexe \
+	  > $(CHERRY_SPLIT_DIR)/$*/$*.chout
+	$(Q)diff -u $*.out.expected $(CHERRY_SPLIT_DIR)/$*/$*.chout
+	$(Q)touch $@
+
+all: $(addprefix $(CHERRY_SPLIT_DIR)/, $(addsuffix .chsplit, $(CHERRY_SPLIT_TESTS)))
 
 # Every direct-C test goes through Cherry too, except the ones Cherry does not
 # cover yet.  This one hands a Prims.string to hand-written C expecting a
@@ -4245,4 +4294,3 @@ GREP_Realized     = "FStar_Pervasives.Mkdtuple3" \
 # No record recovery, no projection, and the erased GTot call is gone.
 # No record recovery, no projection, no erased GTot call -- and no [Obj.t].
 NOGREP_Realized   = "u__1" "gmagic" "Obj.t"
-

@@ -55,11 +55,17 @@ static FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_option_uintsize Pulse_
   bool _break = false;
   while (true) {
     bool _ct1;
-    if (_break) _ct1 = false;
-    else _ct1 = (off <= ht.sz);
+    if (_break) {
+      _ct1 = false;
+    }
+    else {
+      _ct1 = (off <= ht.sz);
+    }
     if (!(_ct1)) { break; }
     size_t voff = off;
-    if (voff == ht.sz) _break = true;
+    if (voff == ht.sz) {
+      _break = true;
+    }
     bool _break1 = _break;
     if (!(_break1)) {
       size_t sum = (cidx + voff);
@@ -102,8 +108,12 @@ static FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_bool Pulse_Lib_HashTab
   bool _break = false;
   while (true) {
     bool _ct1;
-    if (_break) _ct1 = false;
-    else _ct1 = true;
+    if (_break) {
+      _ct1 = false;
+    }
+    else {
+      _ct1 = true;
+    }
     if (!(_ct1)) { break; }
     size_t voff = off;
     size_t sum = (cidx + voff);
@@ -169,7 +179,9 @@ void Example_Hashtable_insert_lookup_and_replace(void) {
     FStar_Pervasives_Native_tuple2__ht_t_uintsize_data_data _letpattern2 = Pulse_Lib_HashTable_replace__t_data(_letpattern1._1, _letpattern1._2.val.Some, 1, (Example_Hashtable_data){ .left = false, .right = true });
     Pulse_Lib_HashTable_dealloc__t_data(_letpattern2._1);
   }
-  else Pulse_Lib_HashTable_dealloc__t_data(_letpattern1._1);
+  else {
+    Pulse_Lib_HashTable_dealloc__t_data(_letpattern1._1);
+  }
 }
 
 

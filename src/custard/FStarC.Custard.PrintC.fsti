@@ -66,4 +66,7 @@ val is_public : dlet -> ML bool
 
     Only the [Root] declarations appear in the header; everything else is
     [static] (section 24). *)
-val print_program : string -> unit_info -> program -> ML (string & string)
+(* With Cherry and [--custard_split], also the further files to write next to
+   the source: one [stem.M.c] per F* module [M]. *)
+val print_program : string -> unit_info -> program
+  -> ML (string & string & list (string & string))

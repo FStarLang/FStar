@@ -6,8 +6,12 @@ void Break_simple_break(void) {
   bool _break = false;
   while (true) {
     bool _ct1;
-    if (_break) _ct1 = false;
-    else _ct1 = k;
+    if (_break) {
+      _ct1 = false;
+    }
+    else {
+      _ct1 = k;
+    }
     if (!(_ct1)) { break; }
     _break = true;
   }
@@ -19,18 +23,30 @@ void Break_break_continue_and_return(uint8_t which) {
   bool _break = false;
   while (true) {
     bool _ct1;
-    if (_break) _ct1 = false;
+    if (_break) {
+      _ct1 = false;
+    }
     else {
-      if (_return) _ct1 = false;
-      else _ct1 = (i < 1000);
+      if (_return) {
+        _ct1 = false;
+      }
+      else {
+        _ct1 = (i < 1000);
+      }
     }
     if (!(_ct1)) { break; }
     bool _continue = false;
-    if (which == 0) _break = true;
+    if (which == 0) {
+      _break = true;
+    }
     if (!(_break)) {
-      if (which == 1) _continue = true;
+      if (which == 1) {
+        _continue = true;
+      }
       if (!(_continue)) {
-        if (which == 2) _return = true;
+        if (which == 2) {
+          _return = true;
+        }
         if (!(_return)) {
           uint32_t __anf0 = i;
           i = (__anf0 + 1);
@@ -45,12 +61,18 @@ size_t Break_find_zero_with_break(int32_t *a, size_t sz) {
   bool _break = false;
   while (true) {
     bool _ct1;
-    if (_break) _ct1 = false;
-    else _ct1 = (i < sz);
+    if (_break) {
+      _ct1 = false;
+    }
+    else {
+      _ct1 = (i < sz);
+    }
     if (!(_ct1)) { break; }
     size_t __anf0 = i;
     int32_t __anf1 = a[__anf0];
-    if (__anf1 == 0) _break = true;
+    if (__anf1 == 0) {
+      _break = true;
+    }
     if (!(_break)) {
       size_t __anf01 = i;
       i = (__anf01 + 1);
