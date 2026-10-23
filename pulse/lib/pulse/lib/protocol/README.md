@@ -57,5 +57,12 @@ Then:
 * compile and link `Pulse_Lib_TCP_runtime.c`, `pulse_tcp_sockets.c` and
   `Pulse_Lib_Memmove_runtime.c` from `share/pulse/runtime`.
 
+With Custard's direct-to-C backend (`--codegen C`) instead, declare the
+abstract types with their header
+(`--custard_extern_type Pulse.Lib.TCP.channel@Pulse_Lib_TCP_runtime.h`, and
+likewise for `listener`) and compile `Pulse_Lib_TCP_runtime.c` with
+`-DPULSE_RUNTIME_CUSTARD_C`, which selects that backend's layout for the
+`option` values the runtime returns.
+
 The `c.Makefile`s of the examples in `share/pulse/examples/protocol` show the
 whole pipeline.

@@ -2,10 +2,16 @@
 
    Pulse.Lib.TCP declares an abstract channel/listener API over byte streams.
    This file and Pulse_Lib_TCP_runtime.c implement it over POSIX sockets (see
-   pulse_tcp_sockets.{c,h}).  When extracting with KaRaMeL, pass
-   `-library Pulse.Lib.TCP -add-include '"Pulse_Lib_TCP_runtime.h"'` so that
-   the generated Pulse_Lib_TCP.h picks up the type definitions below, and link
-   Pulse_Lib_TCP_runtime.c and pulse_tcp_sockets.c. */
+   pulse_tcp_sockets.{c,h}).  Link Pulse_Lib_TCP_runtime.c and
+   pulse_tcp_sockets.c, and:
+   - when extracting through KaRaMeL (--codegen KrmlC), pass
+     `-library Pulse.Lib.TCP -add-include '"Pulse_Lib_TCP_runtime.h"'` so that
+     the generated Pulse_Lib_TCP.h picks up the type definitions below;
+   - when extracting with Custard's direct-to-C backend (--codegen C), pass
+     `--custard_extern_type Pulse.Lib.TCP.channel@Pulse_Lib_TCP_runtime.h`
+     (and likewise for Pulse.Lib.TCP.listener), and compile
+     Pulse_Lib_TCP_runtime.c with -DPULSE_RUNTIME_CUSTARD_C so that the
+     options it returns use that backend's layout. */
 
 #ifndef PULSE_LIB_TCP_RUNTIME_H
 #define PULSE_LIB_TCP_RUNTIME_H
