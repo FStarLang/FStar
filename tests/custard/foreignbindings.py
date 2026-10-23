@@ -56,6 +56,7 @@ def main():
         cache = directory / "cache"
         cache.mkdir(exist_ok=True)
         base = shlex.split(args.fstar) + [
+            "--message_format", "human",
             "--cache_dir", str(cache), "--odir", str(out),
             "--cache_checked_modules",
         ]
