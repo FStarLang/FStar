@@ -78,9 +78,16 @@ type header = {
   uh_init:    option string;
 }
 
+(** A non-owning binding, never an answer to an implementation lookup. *)
+type foreign_binding = {
+  uf_key: string;
+  uf_decl: dexternal;
+}
+
 type iface = {
   ui_header:  header;
   ui_entries: list entry;
+  ui_foreign: list foreign_binding;
 }
 
 (** Bumped whenever the IR or this format changes shape.  A `.cui` written by a
@@ -103,6 +110,13 @@ val is_type_key : string -> ML bool
 
 val write_iface : string -> iface -> ML unit
 
+(** Strip ownership/reachability flags before publishing a binding. *)
+val foreign_flags : list flag -> ML (list flag)
+
+(** Check a consumer's signature and explicit choices, then adopt the binding. *)
+val apply_foreign : string -> foreign_binding -> dexternal ->
+                    option string -> bool -> list flag -> ML dexternal
+
 (** Read and validate.  Raises a Custard error naming the file if the version,
     the backend or a layout option disagrees with this run. *)
 val read_iface : string -> ML iface
@@ -124,6 +138,9 @@ val load_links : list string -> ML links
 
 (** The unit an entry came from, and the entry, or [None] for a miss. *)
 val lookup : links -> string -> ML (option (string & entry))
+
+(** A separate lookup: a hit does not mean the symbol has been implemented. *)
+val lookup_foreign : links -> string -> ML (option (string & foreign_binding))
 
 val is_empty : links -> ML bool
 

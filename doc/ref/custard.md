@@ -4180,9 +4180,39 @@ of `PulseSyntaxExtension.ASTBuilder.fsti` with no `.fst`, so `parse_pulse` is
 an external there and a real definition in the `syntax_extension` unit.
 Exporting it told `syntax_extension` the symbol was already compiled, and that
 unit then skipped the very definition it was there to contribute; the link came
-out with a reference and nothing to resolve it against.  A downstream unit
-derives an external's signature from the source anyway, exactly as the upstream
-one did, so nothing is lost.
+out with a reference and nothing to resolve it against.
+
+Instead, an external contributes a **non-owning foreign binding**, in a
+separate table keyed by the same canonical specialization key. It records the
+post-layout signature and calling convention, target name, supplying header,
+and declaration attributes, but never answers an implementation lookup.
+For direct C, the target is the exact C spelling, including producer-only
+`--custard_c_no_prefix` settings. Ownership and reachability flags are not
+propagated.
+
+This is automatic with `--custard_unit` and `--custard_link`; there is no new
+enable option. The consumer still extracts the source. Only when that leaves
+an external hole does it adopt the linked binding, after checking its own
+post-layout signature (modulo type-parameter names) and calling convention.
+Explicit source targets, headers, declaration attributes, and direct-C
+no-prefix requests must agree with the binding; absent choices inherit it.
+Conflicting linked bindings are rejected in either link order, while
+identical bindings from multiple units are allowed. A local F* implementation
+or an implementation exported by another CUI takes precedence: foreign
+metadata cannot suppress its extraction or ownership lookup.
+
+An external reached by a downstream unit is published again with its adopted
+binding, so further consumers inherit the same contract. This does not
+re-export owned definitions or remove the requirement to supply the complete
+owned-unit dependency closure. Foreign **types** remain ordinary type entries
+carrying their external representation, not value-binding records. Extraction
+without CUIs is unchanged apart from preserving C decoration attributes on
+explicit `custard_extern` values, just as on ordinary assumed values.
+
+The CUI format is now 21; older interfaces must be rebuilt.
+`tests/custard/foreignbindings.py` exercises C/C++ consumers, values and
+specialized functions, chained binding propagation, producer-only naming,
+conflicts, and local and separately compiled real implementations.
 
 Everything else is exported unconditionally, and §12.5 explains why that is
 both possible and necessary.
