@@ -1683,6 +1683,44 @@ $(OUTPUT_DIR)/NoPrefApp.ran: $(OUTPUT_DIR)/NoPrefLib.c $(OUTPUT_DIR)/NoPrefApp.c
 
 all: $(OUTPUT_DIR)/NoPrefApp.ran
 
+# #4771.  A wrapper that forwards its own parameters to a linked function is
+# eta-reduced to a partial application, and has to be expanded back using the
+# arity the linked unit's interface records.  Before the fix both wrappers
+# were rejected with Error 368 ("the partial application of ...").
+$(OUTPUT_DIR)/TailLinkLib.cui: $(CACHE_DIR)/TailLinkLib.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", TailLinkLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true --custard_unit TailLinkLib \
+	  --custard_entry TailLinkLib.add --custard_entry TailLinkLib.between \
+	  --odir $(OUTPUT_DIR) TailLinkLib.fst
+
+$(OUTPUT_DIR)/TailLinkLib.c: $(OUTPUT_DIR)/TailLinkLib.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/TailLinkApp.c: $(CACHE_DIR)/TailLinkApp.fst.checked \
+                             $(OUTPUT_DIR)/TailLinkLib.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", TailLinkApp)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/TailLinkLib.cui \
+	  --custard_main TailLinkApp.main TailLinkApp.fst -o $@
+	$(Q)grep -qF -- "TailLinkLib_add(a, b)" $@ \
+	  || { echo "ERROR: TailLinkApp.add2 does not forward both arguments"; exit 1; }
+	$(Q)grep -qF -- "TailLinkLib_between(lo, x, hi)" $@ \
+	  || { echo "ERROR: TailLinkApp.in_range does not forward all arguments"; exit 1; }
+
+$(OUTPUT_DIR)/TailLinkApp.ran: $(OUTPUT_DIR)/TailLinkLib.c $(OUTPUT_DIR)/TailLinkApp.c
+	$(call msg, "CC", TailLinkApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  $(OUTPUT_DIR)/TailLinkLib.c $(OUTPUT_DIR)/TailLinkApp.c \
+	  -o $(OUTPUT_DIR)/TailLinkApp.exe
+	$(call msg, "RUN-C", TailLinkApp)
+	$(Q)$(OUTPUT_DIR)/TailLinkApp.exe
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/TailLinkApp.ran
+
 # Section 116.  Three units, the middle one's global computed from the first
 # one's.  The generated [main] has to call the initializers in --custard_link
 # order, and the run is what says so: with the order reversed InitMiddle_stored
