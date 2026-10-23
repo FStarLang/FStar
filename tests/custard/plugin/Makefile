@@ -267,8 +267,13 @@ $(FL_DIR)/CustardFunctorLink.ml: $(CACHE_DIR)/CustardFunctorLink.fst.checked
 	$(Q)rm -rf $(FL_DIR) && mkdir -p $(FL_DIR)
 	$(Q)$(FSTAR) --codegen OCaml --custard_split --custard_unit $(FL_UNIT) \
 	  --custard_link $(FSTAR_LIBDIR)/fstarc/fstarc.cui \
-	  --custard_entry_module CustardFunctorLink --odir $(FL_DIR) \
-	  CustardFunctorLink.fst
+	  --custard_entry_module CustardFunctorLink --custard_dump_cui --odir $(FL_DIR) \
+	  CustardFunctorLink.fst > $(FL_DIR)/extract.log 2>&1 \
+	  || { cat $(FL_DIR)/extract.log; exit 1; }
+	$(Q)if grep -qF 'foreign binding <functor-member>' $(FL_DIR)/extract.log; then \
+	  echo "ERROR: a functor member was published as a foreign binding"; \
+	  cat $(FL_DIR)/extract.log; exit 1; \
+	fi
 
 $(FL_DIR)/CustardFunctorLink.cmxs: $(FL_DIR)/CustardFunctorLink.ml
 	$(call msg, "FUNCTORLINK", CustardFunctorLink)

@@ -382,8 +382,10 @@ let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
         Unit.uh_init    = init;
       };
       Unit.ui_entries = unit_entries (Extract.exported_keys st) homes prog infos;
+      (* Functor members resolve through their instance, not a source binding. *)
       Unit.ui_foreign = prog |> List.collect (function
-        | DExternal x when None? (imported_unit (DExternal x)) ->
+        | DExternal x when None? (imported_unit (DExternal x)) &&
+                           not (List.existsb Member? x.dx_flags) ->
           (match HashTable.try_find keys (string_of_name x.dx_name) with
            | Some k ->
              let target = match HashTable.try_find names (string_of_name x.dx_name) with

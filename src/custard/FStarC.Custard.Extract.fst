@@ -7194,7 +7194,7 @@ let apply_foreign_bindings (st:state) (targets:list (string & string)) (prog:pro
   targets |> List.iter (fun (n, c) -> HashTable.add names n c);
   prog |> List.map (fun d ->
     match d with
-    | DExternal x ->
+    | DExternal x when not (List.existsb Member? x.dx_flags) ->
       (match HashTable.try_find keys (string_of_name x.dx_name) with
        | None -> d
        | Some key ->
