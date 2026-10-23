@@ -967,6 +967,7 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_float_attr,           "custard_float";
   PC.custard_boxed_fields_attr,    "custard_boxed_fields";
   PC.cherry_boxed_attr,            "cherry_boxed";
+  PC.custard_inline_attr,          "custard_inline";
 ]
 
 (* Attributes that describe one *field* of a constructor. *)
@@ -1149,6 +1150,9 @@ let attr_home (nm:string) : string =
   | "custard_boxed_fields" ->
     "It keeps the fields of a *type's* constructors boxed, so it goes on \
      that type."
+  | "custard_inline" ->
+    "It asks for every call of a *definition* to be inlined, so it goes on \
+     that definition."
   | "cherry_boxed" ->
     "It makes a *type* a counted heap cell under Cherry, so it goes on that \
      type."
@@ -5477,6 +5481,7 @@ and is_inlinable (se:sigelt) : ML bool =
      it in statement position. *)
   || (se.sigquals |> List.existsb (fun q -> q = S.Inline_for_extraction)
       && Some? (List.tryPick ExtractAs.is_extract_as_attr se.sigattrs))
+  || U.has_attribute se.sigattrs PC.custard_inline_attr
 
 and with_inline (d:decl) : ML decl =
   match d with

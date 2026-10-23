@@ -448,6 +448,7 @@ let set_verification_options o =
   ] in
   List.iter (fun k -> set_option k (psmap_try_find o k |> Some?.v)) verifopts
 
+[@@FStar.Attributes.custard_inline]
 let lookup_opt s (c: option_val -> ML 'a) : ML 'a =
   c (get_option s)
 

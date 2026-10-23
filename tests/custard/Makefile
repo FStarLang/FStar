@@ -3564,10 +3564,20 @@ $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryPap.chgrep
 
+# Cherry: [@@custard_inline] combinators are inlined, so a lambda given to
+# one is no closure, and an eta-reduced one becomes a direct call.
+$(CHERRY_DIR)/CherryInlineHO.chgrep: $(CHERRY_DIR)/CherryInlineHO.chc
+	$(Q)! sed -n '/^static .* CherryInlineHO_add(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_\|CherryInlineHO_apply_plus_one' \
+	  || { echo "ERROR: CherryInlineHO_add builds or applies a closure"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryInlineHO_has_above(.*{$$/,/^}/p' $< | grep -q 'cherry_apply_\|CherryInlineHO_some' \
+	  || { echo "ERROR: CherryInlineHO_has_above does not call existsb directly"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryInlineHO.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2

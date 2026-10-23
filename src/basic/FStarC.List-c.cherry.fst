@@ -75,6 +75,7 @@ let iteri f l = iteri_from f 0 l
 private let rec map_acc (#a #b:Type) (f:a -> ML b) (l:list a) (acc:list b) : ML (list b) =
   match l with [] -> rev acc | x :: t -> let y = f x in map_acc f t (y :: acc)
 
+[@@FStar.Attributes.custard_inline]
 let map f l = map_acc f l []
 
 private let rec mapi_acc (#a #b:Type) (f:int -> a -> ML b) (l:list a) (i:int) (acc:list b)
@@ -83,12 +84,14 @@ private let rec mapi_acc (#a #b:Type) (f:int -> a -> ML b) (l:list a) (i:int) (a
 
 let mapi_init f l i = mapi_acc f l i []
 
+[@@FStar.Attributes.custard_inline]
 let mapi f l = mapi_acc f l 0 []
 
 private let rec collect_acc (#a #b:Type) (f:a -> ML (list b)) (l:list a) (acc:list b)
   : ML (list b) =
   match l with [] -> rev acc | x :: t -> let ys = f x in collect_acc f t (rev_acc ys acc)
 
+[@@FStar.Attributes.custard_inline]
 let concatMap f l = collect_acc f l []
 
 private let rec map2_acc (#a #b #c:Type) (f:a -> b -> ML c) (l1:list a) (l2:list b) (acc:list c)
@@ -98,6 +101,7 @@ private let rec map2_acc (#a #b #c:Type) (f:a -> b -> ML c) (l1:list a) (l2:list
   | x :: t1, y :: t2 -> let z = f x y in map2_acc f t1 t2 (z :: acc)
   | _, _ -> failwith "map2: list lengths differ"
 
+[@@FStar.Attributes.custard_inline]
 let map2 f l1 l2 = map2_acc f l1 l2 []
 
 private let rec map3_acc (#a #b #c #d:Type) (f:a -> b -> c -> ML d)
@@ -117,6 +121,7 @@ let rec fold_left2 f s l1 l2 =
   | x :: t1, y :: t2 -> fold_left2 f (f s x y) t1 t2
   | _, _ -> failwith "fold_left2: list lengths differ"
 
+[@@FStar.Attributes.custard_inline]
 let fold_right f l b = fold_left (fun b x -> f x b) b (rev l)
 
 let fold_right2 f l1 l2 c =
@@ -142,6 +147,7 @@ let rec last_opt l =
 
 let rec existsb f l = match l with [] -> false | x :: t -> f x || existsb f t
 
+[@@FStar.Attributes.custard_inline]
 let existsML f l = existsb f l
 
 let rec find f l = match l with [] -> None | x :: t -> if f x then Some x else find f t
@@ -149,6 +155,7 @@ let rec find f l = match l with [] -> None | x :: t -> if f x then Some x else f
 private let rec filter_acc (#a:Type) (f:a -> ML bool) (l:list a) (acc:list a) : ML (list a) =
   match l with [] -> rev acc | x :: t -> if f x then filter_acc f t (x :: acc) else filter_acc f t acc
 
+[@@FStar.Attributes.custard_inline]
 let filter f l = filter_acc f l []
 
 let rec for_all f l = match l with [] -> true | x :: t -> f x && for_all f t
@@ -159,8 +166,10 @@ let rec forall2 f l1 l2 =
   | x :: t1, y :: t2 -> f x y && forall2 f t1 t2
   | _, _ -> failwith "forall2: list lengths differ"
 
+[@@FStar.Attributes.custard_inline]
 let collect f l = collect_acc f l []
 
+[@@FStar.Attributes.custard_inline]
 let tryFind f l = find f l
 
 let rec tryPick f l =
@@ -182,6 +191,7 @@ private let rec partition_acc (#a:Type) (f:a -> ML bool) (l:list a) (yes no:list
   | [] -> (rev yes, rev no)
   | x :: t -> if f x then partition_acc f t (x :: yes) no else partition_acc f t yes (x :: no)
 
+[@@FStar.Attributes.custard_inline]
 let partition f l = partition_acc f l [] []
 
 private let rec split_at_acc (#a:Type) (n:int) (l:list a) (acc:list a)
@@ -254,6 +264,7 @@ let concat ls = flatten_acc ls []
 
 let unzip l = unzip_acc l [] []
 
+[@@FStar.Attributes.custard_inline]
 let filter_map f l = choose_acc f l []
 
 private let rec count_acc (#a:eqtype) (x:a) (l:list a) (n:nat) : Tot nat (decreases l) =

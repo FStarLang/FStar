@@ -605,6 +605,15 @@ val cherry_borrowed : unit
     backends. *)
 val cherry_boxed : unit
 
+(** Custard: inline every call of this definition after extraction, in
+    Custard's IR (doc/ref/cherry.md, "Functions").  Meant for small
+    combinators that take a function, such as [finally] or an option monad's
+    [bind]: inlined, a lambda passed to them meets the call of its parameter
+    and is beta-reduced, where Cherry would otherwise allocate a closure for
+    it.  Unlike [inline_for_extraction], the ML extraction ignores it.  No
+    effect on recursive definitions. *)
+val custard_inline : unit
+
 (** Custard: keep every field of this type's constructors boxed, that is, lay
     the type out the way the ML extraction does.  It turns off the automatic
     inlining of tuple fields that [custard_inline_field] describes, so
