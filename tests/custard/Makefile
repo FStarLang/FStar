@@ -3013,7 +3013,8 @@ CNOPAIR_DevClosure += "/*EXCL*/@static uint32_t DevClosure_gk" \
 # C compiler is the assertion that nothing escaped the guard.
 C_TESTS += DevGuard
 CGREP_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)" "\#else" "\#if 1" \
-                  "DevGuard_helper__error_copy_escaped_its_guard("
+                  "DevGuard_helper__error_copy_escaped_its_guard(" \
+                  "    (void)x;" "    (void)z;"
 CPAIR_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)@\#error seed escaped"
 # A flag used as anything but the whole condition of an [if].
 REJECT_TESTS += DevGuardBad
