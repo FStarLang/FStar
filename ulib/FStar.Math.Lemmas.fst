@@ -214,12 +214,19 @@ let lt_multiple_is_equal a b x n =
   assert (0 * n == 0);
   bounded_multiple_is_zero x n
 
+(* Proved in an empty context: in the calc below, the facts about [/] and
+   [%] in scope made this linear step brittle. *)
+private
+let lemma_mod_plus_aux (a k n q1 q2:int)
+  : Lemma (((a + k*n) - n*q1) - (a - n*q2) == n*k + n*q2 - n*q1)
+  = ()
+
 let lemma_mod_plus (a:int) (k:int) (n:pos) =
   calc (==) {
     (a+k*n)%n - a%n;
     == { lemma_div_mod a n; lemma_div_mod (a+k*n) n }
     ((a + k*n) - n*((a + k*n)/n)) - (a - n*(a/n));
-    == {}
+    == { lemma_mod_plus_aux a k n ((a + k*n)/n) (a/n) }
     n*k + n*(a/n) - n*((a + k*n)/n);
     == { distributivity_add_right n k (a/n);
          distributivity_sub_right n (k + a/n) ((a + k*n)/n) }
@@ -228,6 +235,12 @@ let lemma_mod_plus (a:int) (k:int) (n:pos) =
   lt_multiple_is_equal ((a+k*n)%n) (a%n) (k + a/n - (a+k*n)/n) n;
   ()
 
+(* As [lemma_mod_plus_aux]. *)
+private
+let lemma_div_plus_aux (a b r1 r2:int)
+  : Lemma ((a + b - r1) - (a - r2) == b - r1 + r2)
+  = ()
+
 let lemma_div_plus (a:int) (k:int) (n:pos) =
   calc (==) {
     n * ((a+k*n)/n - a/n);
@@ -235,7 +248,7 @@ let lemma_div_plus (a:int) (k:int) (n:pos) =
     n * ((a+k*n)/n) - n*(a/n);
     == { lemma_div_mod (a+k*n) n; lemma_div_mod a n }
     (a + k*n - (a+k*n)%n) - (a - a%n);
-    == {}
+    == { lemma_div_plus_aux a (k*n) ((a+k*n)%n) (a%n) }
     k*n - (a+k*n)%n + a%n;
     == { lemma_mod_plus a k n }
     k*n;
@@ -641,8 +654,8 @@ let pow2_multiplication_division_lemma_2 a b c =
 
 let pow2_multiplication_modulo_lemma_1 a b c =
   pow2_plus (c - b) b;
+  assert (pow2 c == pow2 (c - b) * pow2 b);
   paren_mul_right a (pow2 (c - b)) (pow2 b);
-  paren_mul_left a (pow2 (c - b)) (pow2 b);
   multiple_modulo_lemma (a * pow2 (c - b)) (pow2 b)
 
 let pow2_multiplication_modulo_lemma_2 a b c =
@@ -709,6 +722,6 @@ let modulo_sub_lemma a b c =
     (b%c  + (a-b)%c) % c;
     == { modulo_distributivity b (a-b) c }
     (b+(a-b)) % c;
-    == {}
+    == { assert (b+(a-b) == a) }
     a % c;
   }

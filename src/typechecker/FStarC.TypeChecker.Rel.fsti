@@ -45,13 +45,26 @@ val prob_to_string: env -> prob -> ML string
 val base_and_refinement_maybe_delta : bool -> env -> term -> ML (term & option (bv & term))
 val base_and_refinement       : env -> term -> ML (term & option (bv & term))
 val unrefine   : env -> typ -> ML typ
-val may_relate_with_logical_guard (env:env) (is_equality:bool) (head:typ) : ML bool
+val may_relate_by_smt (env:env) (is_equality:bool) (head:typ) : ML bool
+(* Restrict the unsolved metavariables of a type that leaves the scope of
+   the given variables so that they cannot depend on them. *)
+val restrict_escaping_uvars : env -> list bv -> term -> ML guard_t
 val head_matches_delta (env:env) (logical:bool) (smt_ok:bool) (t1 t2:typ) : ML (match_result & option (typ & typ))
 val flex_prob_closing         : env -> binders -> prob -> ML bool
 val simplify_vc               : full_norm_allowed:bool -> env -> term -> ML term (* the inner simplification of simplify_guard. *)
 val simplify_guard            : env -> guard_t -> ML guard_t
 val print_pending_implicits: guard_t -> ML string
 val guard_to_string           : env -> guard_t -> ML string
+(* Rel is an elaborator: it solves unification variables, but it computes
+   no logical guard.  The guards it returns are trivial, carrying only
+   deferred problems, universe constraints and implicits.  Where relating two
+   terms needs a proof (e.g. [x:int{x > 0} <: nat], or [f x == g x] for
+   distinct [f] and [g]), Rel succeeds when [smt_ok] (the default, except in
+   the [_nosmt] functions) or when verification is disabled ([env.admit]),
+   relying on Core, which re-checks every term Rel helps elaborate, to generate
+   that proof obligation.  Without SMT, Rel only succeeds if the obligation
+   simplifies to [True].  So, a client that does not have its terms re-checked
+   by Core must use the [_nosmt] functions. *)
 val try_teq    : smt_ok:bool -> env -> typ -> typ -> ML (option guard_t)
 val teq        : env -> typ -> typ -> ML guard_t
 val subtype_fail: env -> term -> typ -> typ -> ML unit
@@ -74,8 +87,7 @@ val discharge_guard           : env -> guard_t -> ML guard_t
 val discharge_guard_no_smt    : env -> guard_t -> ML guard_t
 val teq_nosmt        : env -> typ -> typ -> ML (option guard_t)
 val subtype_nosmt       : env -> typ -> typ -> ML (option guard_t)
-val get_subtyping_predicate: env -> typ -> typ -> ML (option guard_t)
-val get_subtyping_prop: env -> typ -> typ -> ML (option guard_t)
+val try_subtype : env -> typ -> typ -> ML (option guard_t)
 (* Solve the implicits whose type has a single inhabitant (e.g. unit,
    squash); returns the implicits and whether any was solved. *)
 val try_solve_single_valued_implicits : env -> is_tac:bool -> Env.implicits -> ML (Env.implicits & bool)

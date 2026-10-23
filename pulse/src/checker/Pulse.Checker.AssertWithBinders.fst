@@ -47,7 +47,7 @@ let rec open_binders_with_uvars (g:env) (bs:list binder) (v:term) (body:st_term)
   match bs with
   | [] -> (| List.rev us, v, body |)
   | {binder_ty; binder_ppname}::bs ->
-    let binder_ty, _ = PC.tc_type_phase1 g binder_ty in
+    let binder_ty, _ = PC.tc_type_elab g binder_ty in
     let u = RU.new_implicit_var ("value for with-variable " ^ show binder_ppname)
       binder_ppname.range (elab_env g) binder_ty false in
     let ss = [ RT.DT 0 u ] in
@@ -504,7 +504,7 @@ let check
     let ctxt = Pulse.Checker.ImpureSpec.({ctxt_now = pre; ctxt_old = None}) in
     let v =
       if elaborated then
-        fst (PC.tc_term_phase1_with_type g v tm_slprop)
+        fst (PC.tc_term_elab_with_type g v tm_slprop)
       else
         ImpureSpec.purify_spec g ctxt v in
     let (| g1, pre', k_frame |) = Prover.prove st.range g pre v false in
@@ -528,7 +528,7 @@ let check
 
     let v = purify_term g { ctxt_now = pre; ctxt_old = None } v in
     let v =
-      let v, t, _ = PC.tc_term_phase1 g v in
+      let v, t, _ = PC.tc_term_elab g v in
       add_rem_uvs g t v in
 
     let lhs, rhs =

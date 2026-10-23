@@ -3,6 +3,9 @@
   - Could not prove termination of this recursive call
   - The SMT solver could not prove the query.
   - Failed to prove: m << m \/ l << l
+  - In context:
+      m: Prims.int
+      l: Prims.int
   - See also NegativeTests.Termination.fst(18,12-21,29)
 
 * Info at NegativeTests.Termination.fst(28,26-28,35):
@@ -11,6 +14,8 @@
   - The SMT solver could not prove the query.
   - Failed to prove: n << n \/ count - 1 << count
   - In context:
+      n: Prims.int
+      count: Prims.int
       ~(count = 0)
       uu___: Prims.int
       count == _
@@ -24,6 +29,8 @@
       m - 1 << m \/
       m - 1 === m /\ NegativeTests.Termination.ackermann_bad m (n - 1) << n
   - In context:
+      m: Prims.int
+      n: Prims.int
       ~(m = 0 = true)
       uu___: Prims.bool
       m = 0 == _
@@ -40,6 +47,8 @@
   - The SMT solver could not prove the query.
   - Failed to prove: m << m \/ n - 1 << n
   - In context:
+      m: Prims.int
+      n: Prims.int
       ~(m = 0 = true)
       uu___: Prims.bool
       m = 0 == _
@@ -55,6 +64,8 @@
   - The SMT solver could not prove the query.
   - Failed to prove: m - 1 << m \/ m - 1 === m /\ 1 << n
   - In context:
+      m: Prims.int
+      n: Prims.int
       ~(m = 0 = true)
       uu___: Prims.bool
       m = 0 == _
@@ -68,6 +79,8 @@
   - The SMT solver could not prove the query.
   - Failed to prove: l << l
   - In context:
+      'a: Type
+      l: Prims.list 'a
       ~(Nil? l) /\ Cons? l
       uu___: 'a
       tl: Prims.list 'a
@@ -80,6 +93,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: x << v
   - In context:
+      v: Prims.nat
       ~(v = 0 = true)
       uu___: Prims.bool
       v = 0 == _
@@ -94,6 +108,7 @@
   - Failed to prove:
       NegativeTests.Termination.S (NegativeTests.Termination.S n') << n
   - In context:
+      n: NegativeTests.Termination.snat
       ~(O? n) /\ ~(S? n && O? n._0) /\ S? n && S? n._0
       n': NegativeTests.Termination.snat
       n == NegativeTests.Termination.S (NegativeTests.Termination.S n')
@@ -108,6 +123,8 @@
       NegativeTests.Termination.S (NegativeTests.Termination.S n') === n /\
       m << m
   - In context:
+      n: NegativeTests.Termination.snat
+      m: NegativeTests.Termination.snat
       ~(O? n) /\ ~(S? n && O? n._0) /\ S? n && S? n._0
       n': NegativeTests.Termination.snat
       n == NegativeTests.Termination.S (NegativeTests.Termination.S n')
@@ -131,6 +148,8 @@
       NegativeTests.Termination.S n' << n \/
       NegativeTests.Termination.S n' === n /\ m' << m
   - In context:
+      n: NegativeTests.Termination.snat
+      m: NegativeTests.Termination.snat
       ~(O? n) /\ S? n
       n': NegativeTests.Termination.snat
       m': NegativeTests.Termination.snat
@@ -143,6 +162,7 @@
   - The SMT solver could not prove the query.
   - Failed to prove: NegativeTests.Termination.S n' << n
   - In context:
+      n: NegativeTests.Termination.snat
       ~(O? n && true) /\ S? n && true
       n': NegativeTests.Termination.snat
       (n, 42) == (NegativeTests.Termination.S n', 42)

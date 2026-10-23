@@ -264,7 +264,16 @@ let binomial_theorem_aux a b n i =
     binomial n i * pow a (n - i) * pow b i;
   }
 
-#push-options "--fuel 2 --z3rlimit_factor 4"
+(* Proved separately, in an empty context: inside [binomial_theorem] the
+   nonlinear hypotheses of the preceding calc steps make this simple step
+   brittle. *)
+val binomial_theorem_ends (a b:int) (n:nat) (s:int) : Lemma
+  (pow a n + (s + pow b n) ==
+   binomial n 0 * pow a (n - 0) * pow b 0 + (s + binomial n n * pow a (n - n) * pow b n))
+let binomial_theorem_ends a b n s =
+  binomial_0 n; binomial_n n
+
+#push-options "--fuel 2 --z3rlimit_factor 8"
 
 val binomial_theorem (a b:int) (n:nat) : Lemma
   (pow (a + b) n == sum 0 n (fun i -> binomial n i * pow a (n - i) * pow b i))
@@ -336,7 +345,7 @@ let rec binomial_theorem a b n =
       pow a n + pow b n + sum 1 (n - 1) (fun i -> binomial n i * pow a (n - i) * pow b i);
       == { }
       pow a n + (sum 1 (n - 1) (fun i -> binomial n i * pow a (n - i) * pow b i) + pow b n);
-      == { binomial_0 n; binomial_n n }
+      == { binomial_theorem_ends a b n (sum 1 (n - 1) (fun i -> binomial n i * pow a (n - i) * pow b i)) }
       binomial n 0 * pow a (n - 0) * pow b 0 +
       (sum 1 (n - 1) (fun i -> binomial n i * pow a (n - i) * pow b i) +
       binomial n n * pow a (n - n) * pow b n);
@@ -516,7 +525,7 @@ let fermat_alt p a =
     ((pow (a % p) (p - 1) % p) * (a % p)) % p;
     == { lemma_mod_mul_distr_l (pow (a % p) (p - 1)) (a % p) p }
     (pow (a % p) (p - 1) * (a % p)) % p;
-    == { }
+    == { assert (pow (a % p) p == (a % p) * pow (a % p) (p - 1)) }
     pow (a % p) p % p;
     == { fermat p (a % p) }
     (a % p) % p;

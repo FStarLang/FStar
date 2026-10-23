@@ -387,6 +387,12 @@ If you are writing code that constructs a `comp`, use `PC.primitive_*_lid`.
 
 ## 6. The typechecker
 
+The simplified effect system also makes it possible for
+`FStarC.TypeChecker.Core` to be the only generator of verification
+conditions: TcTerm elaborates every declaration once, without proving
+anything, and Core checks the elaboration. This is described in
+[core_typechecking.md](core_typechecking.md).
+
 ### 6.1 Getting a variable out of a type
 
 When `bind` eliminates a binder, facts about that binder that were recorded in
@@ -594,11 +600,9 @@ refactor.
   Core now falls back to the definition's inferred type when the annotation is
   absent, which is sound: an unannotated `let`'s type *is* its definition's
   type, and the subtyping check it would otherwise perform is reflexive. The
-  hole is intentional and confined to `lb.lbtyp`: `TcTerm.check_inner_let` keeps
-  `lbtyp = tun` when the source had no annotation, because phase 1 discards
-  specifications and phase 2 reads `lbtyp` back as if it were a source
-  annotation — recording phase 1's coarser type would throw away the
-  postcondition. Reached in practice only through Pulse.
+  hole is confined to `lb.lbtyp`. `TcTerm.check_inner_let` now records the
+  inferred type of every unannotated `let`, so this is reached in practice
+  only through Pulse.
 * **A `let rec` whose result is a function kept its `ensures`.** An `ensures` is
   a refinement on the result type, so a definition returning a function is
   annotated with a *refinement of an arrow*. `Syntax.Util.arrow_formals_comp`
@@ -1242,7 +1246,7 @@ expects, so pass the lemma directly.
 | Symptom | Remedy |
 |---|---|
 | A precondition failure is localized to a let-bound alias rather than to the call. | — (accepted) |
-| An implicit solved from a `Pure`/`Ghost` result picks up its refinement (`SZ.v n == cap` demands `fits cap`). | Ascribe: `(SZ.v n <: nat) == cap`, or give the implicit explicitly. `Prims.eq2` already carries `[@@@unrefine]`; promoting it from `--ext __unrefine` to the default is a proposed follow-up. |
+| An implicit solved from a `Pure`/`Ghost` result picks up its refinement (`SZ.v n == cap` demands `fits cap`). | Fixed for implicits marked `[@@@unrefine]` (`Prims.eq2`, `op_Equality`, `op_disEquality`): they now drop the refinement written on the result type, so `f () = y` is at `int`, and `SZ.v n == cap` at `nat` ([#4586](https://github.com/FStarLang/FStar/issues/4586)). Abbreviations such as `nat` are kept unless `--ext __unrefine` is given; `--ext __unrefine=off` disables both. For other implicits, ascribe: `(SZ.v n <: nat) == cap`, or give the implicit explicitly. |
 | `Ghost.hide (cbor_map_sub m s)` infers `Ghost.hide`'s implicit at the *refined* result, giving `erased (m:cbor_map{...})`. | `Ghost.hide #cbor_map (...)`. |
 | A point-free definition more general than its interface fails (arity gap). | Usually fixed by eta-expansion in subtyping; when the surplus binders are not implicit, or the comp is not pure/ghost, write it out: `(fun a b -> a + b)` for `( + )`. |
 | An implicit is pinned by a *later* argument before an earlier constraint is processed (`solve_flex_rigid_meet` fires with one bound in hand). | Instantiate the implicit explicitly at the call site. |
@@ -1453,8 +1457,8 @@ master this branch merged, so the whole delta belonged to this work.
 #### Diagnosis
 
 `--profile TestBV --profile_component '*' --profile_group_by_decl` attributed
-all of it to two declarations, and within each to phase 1 rather than to the
-solver:
+all of it to two declarations, and within each to elaboration rather than to
+the solver:
 
 ```
 TestBV.test6  Tc.tc_sig_let-tc-phase1                6243 ms

@@ -303,7 +303,6 @@ let initial_env deps
     use_eq_strict=false;
     is_iface=false;
     admit=false;
-    phase1=false;
     nocoerce=false;
     failhard=false;
     flychecking=false;
@@ -864,16 +863,6 @@ let datacons_of_typ env lid : ML _ =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_inductive_typ {ds=dcs} }, _), _) -> true, dcs
     | _ -> false, []
-
-(* No specification composed by the type-checker will ever be looked at: phase 1
-   of two-phase type-checking only elaborates the term and throws its types
-   away, and under [--admit_smt_queries] no verification condition is ever
-   discharged.
-
-   Deliberately *not* conditioned on [--lax]: the type we infer for a
-   definition must not depend on whether we are verifying it. *)
-let discard_specs env : ML bool =
-  env.phase1 || Options.admit_smt_queries ()
 
 (* The logical content of a binder's type, to be restated wherever the binder
    is eliminated by substitution.  On top of the refinement formula we also
@@ -1950,13 +1939,6 @@ let abstract_guard_n bs g : ML _ =
     | NonTrivial f ->
         let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
         ({ g with guard_f = NonTrivial f' })
-
-let abstract_guard b g : ML _ =
-    abstract_guard_n [b] g
-
-let apply_guard g e : ML guard_t = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| S.mk_Tm_app f [as_arg e] f.pos}
 
 let map_guard g map = match g.guard_f with
   | Trivial -> g

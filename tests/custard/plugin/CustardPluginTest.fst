@@ -34,3 +34,14 @@ let _ = assert (CustardPlugin.pswap 3 true == (true, 3))
    CustardPluginAux is a --custard_entry of its own. *)
 let _ = assert (CustardPluginAux.aux 3 == 300)
           by (norm [primops]; trefl ())
+
+(* The Tac short-circuit plugins: irreducible, so only the native code can run
+   them, and each case pins down which operand decides the result. *)
+let _ = assert True by (
+  guard (CustardPlugin.sc_right true true (`unit));
+  guard (CustardPlugin.sc_right false false (`int));
+  guard (not (CustardPlugin.sc_right false false (`unit)));
+  guard (not (CustardPlugin.sc_right false true (`int)));
+  guard (CustardPlugin.sc_left (`unit) false);
+  guard (not (CustardPlugin.sc_left (`unit) true));
+  guard (not (CustardPlugin.sc_left (`int) false)))

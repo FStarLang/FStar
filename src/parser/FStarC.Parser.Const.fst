@@ -559,6 +559,7 @@ let tac_opaque_attr = pconst "tac_opaque"
 let mk_class_lid   = fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let tcresolve_lid  = fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
 let tcclass_lid = fstar_tactics_lid' ["Typeclasses"; "tcclass"]
+let tcfundeps_lid = fstar_tactics_lid' ["Typeclasses"; "fundeps"]
 let tcmethod_lid = fstar_tactics_lid' ["Typeclasses"; "tcmethod"]
 let tcinstance_lid = fstar_tactics_lid' ["Typeclasses"; "tcinstance"]
 let no_method_lid = fstar_tactics_lid' ["Typeclasses"; "no_method"]

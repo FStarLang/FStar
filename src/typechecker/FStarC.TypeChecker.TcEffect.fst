@@ -58,7 +58,8 @@ open FStarC.Syntax.Print
 (* Open the universe variables of a combinator scheme, or, if it has not been
    generalized yet (the common case: the surface syntax just mentions a name),
    invent [n] fresh ones.  Note that [tc_eff_decl] may run twice on the same
-   declaration (two-phase checking), so we must be able to handle both. *)
+   declaration (once to elaborate it, with [admit] set, and again on the
+   elaboration, whose terms Core checks), so we must be able to handle both. *)
 let open_comb (r:Range.t) (n:int) (mname:lident) (name:string) (ts:S.tscheme) : ML (list univ_name & term) =
   let us, t = ts in
   if Nil? us
@@ -77,9 +78,15 @@ let repr_app (repr_ts:S.tscheme) (u:univ_name) (a:term) (r:Range.t) : ML term =
   let _, repr = Env.inst_tscheme_with repr_ts [U_name u] in
   S.mk_Tm_app repr [S.as_arg a] r
 
+(* When Core checks it (see [CoreCheck]), [t] is already elaborated, and is
+   recorded as is. *)
 let check_comb env (us:list univ_name) (expected:term) (t:term) : ML S.tscheme =
   let env = Env.push_univ_vars env us in
-  let t = tc_check_trivial_guard env t expected in
+  let t =
+    CoreCheck.check_or_elaborate env
+      (fun () -> CoreCheck.check_term env "this effect combinator" t expected true; t)
+      (fun () -> tc_check_trivial_guard env t expected)
+  in
   us, SS.close_univ_vars us t
 
 (* The [total] qualifier promises that computations in the effect terminate.
@@ -116,7 +123,12 @@ let repr_universe env (repr_ts:S.tscheme) (r:Range.t) : ML S.tscheme =
   let env = Env.push_univ_vars env us in
   let bv_a = S.new_bv (Some r) (u_type r u_a) in
   let env = Env.push_bv env bv_a in
-  let u = universe_of env (repr_app repr_ts u_a (S.bv_to_name bv_a) r) in
+  let t = repr_app repr_ts u_a (S.bv_to_name bv_a) r in
+  let u =
+    CoreCheck.check_or_elaborate env
+      (fun () -> CoreCheck.universe_of env "the representation of this effect" t)
+      (fun () -> universe_of env t)
+  in
   [u_a], SS.close_univ_vars [u_a] (S.mk (Tm_type u) r)
 
 let tc_eff_decl env (ed:S.eff_decl) (quals:list S.qualifier) (_attrs:list S.attribute) : ML S.eff_decl =
