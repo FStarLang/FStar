@@ -190,6 +190,7 @@ let printer_of   (e:embedding 'a) = e.print
 let set_type ty  (e:embedding 'a) = { e with typ = (fun () -> ty) }
 
 let embed        {| e:embedding 'a |} = e.em
+[@@FStar.Attributes.custard_inline]
 let try_unembed  {| e:embedding 'a |} t n =
   (* Unembed always receives a term without the meta_monadics above,
   and also already compressed. *)
@@ -275,6 +276,7 @@ let lazy_unembed (pa:printer 'a) (et:emb_typ) (x:term) (ta:term) (f:term -> ML (
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
 
+[@@FStar.Attributes.custard_inline]
 let (let?) o f = Option.bind o f
 
 let mk_extracted_embedding (name: string) (u: string & list term -> option 'a) (e: 'a -> ML term) : ML (embedding 'a) =

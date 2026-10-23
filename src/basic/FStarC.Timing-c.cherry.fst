@@ -32,11 +32,13 @@ let diff_ms t1 t2 = (U64.v t2 - U64.v t1) / 1000000
 
 let diff_ns t1 t2 = U64.v t2 - U64.v t1
 
+[@@FStar.Attributes.custard_inline]
 let record_ns f =
   let start = now_ns () in
   let res = f () in
   res, diff_ns start (now_ns ())
 
+[@@FStar.Attributes.custard_inline]
 let record_ms f =
   let start = now_ns () in
   let res = f () in
