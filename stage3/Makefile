@@ -103,3 +103,7 @@ endif
 	echo 'pulse'          >> $(PREFIX)/lib/fstar/pulse/fstar.include
 	echo 'pulse.checked'  >> $(PREFIX)/lib/fstar/pulse/fstar.include
 	echo 'pulse'          >> $(PREFIX)/lib/fstar/fstar.include
+	@# C realizations of the extern Pulse library modules (Pulse.Lib.TCP, ...)
+	mkdir -p $(PREFIX)/share/pulse
+	rm -rf $(PREFIX)/share/pulse/runtime
+	$(INSTALL_DIR) $(FSTAR_ROOT)/pulse/share/pulse/runtime $(PREFIX)/share/pulse/runtime
