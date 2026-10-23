@@ -314,7 +314,9 @@ let close_match_returns_ascription (mra : (binder * ((FStarC_Reflection_Types.te
   (match mra with
     | (nb, (ct, topt, use_eq)) -> (let b = (close_binder nb) in
       let ct1 = (match ct with
-          | (FStar_Pervasives.Inl (t)) -> (FStar_Pervasives.Inl ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (close_term nb t))))
+          | (FStar_Pervasives.Inl (t)) -> (FStar_Pervasives.Inl ((match (close_term nb t) with
+              | (u__1, u__2) -> u__2
+            )))
           | (FStar_Pervasives.Inr (c)) -> (let tmp = (close_comp nb c) in
             (match tmp with
               | (tmp1, c1) -> (FStar_Pervasives.Inr (c1))
@@ -322,7 +324,9 @@ let close_match_returns_ascription (mra : (binder * ((FStarC_Reflection_Types.te
         ) in
       let topt1 = (match topt with
           | None -> None
-          | (Some (t)) -> (Some ((Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd (close_term nb t))))
+          | (Some (t)) -> (Some ((match (close_term nb t) with
+              | (u__1, u__2) -> u__2
+            )))
         ) in
       (b, (ct1, topt1, use_eq)))
   )

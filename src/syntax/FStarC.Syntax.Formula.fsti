@@ -33,3 +33,9 @@ type connective =
 instance val showable_connective : showable connective
 
 val destruct_typ_as_formula (f:term) : ML (option connective)
+
+(* [destruct_forall_continuation t] is what [destruct_typ_as_formula]
+   returns for [forall (xs:ts). t] after the binders [xs]: the [l_Forall]
+   chain at the head of [t] (possibly empty), opened, its patterns and its
+   body. *)
+val destruct_forall_continuation (t:term) : ML (binders & qpats & typ)

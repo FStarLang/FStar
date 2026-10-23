@@ -108,16 +108,6 @@ let fStarC_Class_Show_show__tuple4_bool_bool_bool_bool (tmp : (bool * bool * boo
       (Prims.strcat "(" tmp11))
   )
 
-let fStarC_Class_Show_show__tuple2_list_string_string (tmp : ((string) list * string)) : string =
-  (match tmp with
-    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__list_string x1) in
-      let tmp2 = (fStarC_Class_Show_show__string x2) in
-      let tmp3 = (Prims.strcat tmp2 ")") in
-      let tmp4 = (Prims.strcat ", " tmp3) in
-      let tmp5 = (Prims.strcat tmp1 tmp4) in
-      (Prims.strcat "(" tmp5))
-  )
-
 let fStarC_Class_Show_show__sys (tmp : FStarC_Platform_Base.sys) : string =
   (match tmp with
     | FStarC_Platform_Base.Unix -> "Unix"
@@ -202,9 +192,16 @@ let fStarC_Class_Show_show__list_tuple2_string_string (tmp : ((string * string))
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
-let fStarC_Class_Show_show__time_of_day (tmp : FStarC_Time.time_of_day) : string =
-  (FStarC_Time.string_of_time_of_day tmp)
+let fStarC_Class_Show_show__tuple2_list_string_string (tmp : ((string) list * string)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__list_string x1) in
+      let tmp2 = (fStarC_Class_Show_show__string x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
 
-let fStarC_Class_Show_show__hash_code (tmp : FStarC_Hash.hash_code) : string =
-  (FStarC_Hash.string_of_hash_code tmp)
+let fStarC_Class_Show_show__ocaml_float (tmp : float) : string =
+  (string_of_float tmp)
 

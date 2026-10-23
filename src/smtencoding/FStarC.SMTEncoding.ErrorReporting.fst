@@ -134,11 +134,12 @@ let rec collect_conjuncts (q:S.term) : ML (list S.term) =
       collect_conjuncts p1 @ collect_conjuncts p2
     | _ -> [q]
 
-let split_goals use_env_msg  //when present, provides an alternate error message,
+let split_goals_under use_env_msg  //when present, provides an alternate error message,
                              //usually "could not check implicit argument",
                              //        "could not prove post-condition"
                              //or something like that
                (env:env_t)
+               (gamma_bs:S.binders) //open binders, to be universally quantified over q
                (q:S.term)    //the query
              : ML (goal_tree & decls_t)
              =
@@ -258,30 +259,7 @@ let split_goals use_env_msg  //when present, provides an alternate error message
              decls1@decls2@decls3, ok1 && ok2)
 
         | Some (QAll (bs, _pats, body)) ->
-          (* Skolemize: each bound variable becomes a fresh constant, declared
-             and given its typing hypothesis.  Note the constants are FreeV,
-             which prints exactly like a constant but keeps the hash-consed
-             encodings of refinements parameterized over them. *)
-          let vars, guards, env', decls, names =
-            bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
-              let x = (b <: S.binder).binder_bv in
-              let fv = mk_fv (fresh_name "@sk_", Term_sort) in
-              let env' = push_term_var env x (mkFreeV fv) in
-              let g, decls' = encode_term_pred None (norm env x.sort) env (mkFreeV fv) in
-              fv::vars, g::guards, env', decls@decls', x::names)
-              ([], [], env, [], [])
-          in
-          let vars, guards, names = List.rev vars, List.rev guards, List.rev names in
-          let t, decls', ok = aux env' default_msg ropt body in
-          let ds = (vars |> List.map (fun fv -> DeclFun (fv_name fv) [] (fv_sort fv) None))
-                 @ (guards |> List.filter (function App TrueOp [] _ -> false | _ -> true) |> List.map hyp) in
-          gctx ds (names |> List.map (fun (x:S.bv) ->
-                     (* A precondition is a [squash]-typed binder.  Report it as
-                        the hypothesis it stands for rather than as a variable of
-                        an uninformative type. *)
-                     match U.un_squash x.sort with
-                     | Some p -> CHyp p
-                     | None -> CVar x)) t, decls@decls', ok
+          split_forall env default_msg ropt bs body
 
         | _ ->
         match (SS.compress q).n with
@@ -325,6 +303,77 @@ let split_goals use_env_msg  //when present, provides an alternate error message
         | _ ->
           let t, decls = mk_leaf env default_msg ropt q in
           t, decls, true
+
+    and split_forall (env:env_t)
+                     (default_msg : Errors.error_message)
+                     (ropt:option Range.t)
+                     (bs:S.binders)
+                     (body:S.term)
+     : ML (goal_tree & decls_t & bool)
+     =
+          (* Skolemize: each bound variable becomes a fresh constant, declared
+             and given its typing hypothesis.  Note the constants are FreeV,
+             which prints exactly like a constant but keeps the hash-consed
+             encodings of refinements parameterized over them. *)
+          let vars, guards, env', decls, names =
+            bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
+              let x = (b <: S.binder).binder_bv in
+              let fv = mk_fv (fresh_name "@sk_", Term_sort) in
+              let env' = push_term_var env x (mkFreeV fv) in
+              let g, decls' = encode_term_pred None (norm env x.sort) env (mkFreeV fv) in
+              fv::vars, g::guards, env', decls@decls', x::names)
+              ([], [], env, [], [])
+          in
+          let vars, guards, names = List.rev vars, List.rev guards, List.rev names in
+          let t, decls', ok = aux env' default_msg ropt body in
+          let ds = (vars |> List.map (fun fv -> DeclFun (fv_name fv) [] (fv_sort fv) None))
+                 @ (guards |> List.filter (function App TrueOp [] _ -> false | _ -> true) |> List.map hyp) in
+          gctx ds (names |> List.map (fun (x:S.bv) ->
+                     (* A precondition is a [squash]-typed binder.  Report it as
+                        the hypothesis it stands for rather than as a variable of
+                        an uninformative type. *)
+                     match U.un_squash x.sort with
+                     | Some p -> CHyp p
+                     | None -> CVar x)) t, decls@decls', ok
     in
-    let t, decls, _ = aux env (Errors.mkmsg "Assertion failed") None q in
+    let msg = Errors.mkmsg "Assertion failed" in
+    (* Closes [q] over [bs] and opens it again with fresh binders, as
+       [SS.open_term (SS.close_binders bs) (SS.close bs q)] would, but in time
+       linear in [length bs]: those shift their whole substitution at each
+       binder. Binder [i] closes to the bound variable [n-1-i] whatever the
+       depth, which is sound since the terms have no loose bound variables. Both
+       substitutions are kept most recent binder first, so that, as in the
+       nested [forall]s, the last binder with a given index wins. *)
+    let reopen (bs:S.binders) (q:S.term) : ML (S.binders & S.term) =
+      let n = List.length bs in
+      let ren closing opening (t:S.term) = SS.subst opening (SS.subst closing t) in
+      let rec go i closing opening (bs:S.binders) (out:S.binders) : ML (S.binders & S.term) =
+        match bs with
+        | [] -> List.rev out, ren closing opening q
+        | b::bs ->
+          let x' = { S.freshen_bv b.binder_bv with sort = ren closing opening b.binder_bv.sort } in
+          let imp = SS.subst_bqual opening (SS.subst_bqual closing b.binder_qual) in
+          let attrs = List.map (ren closing opening) b.binder_attrs in
+          let b' = S.mk_binder_with_attrs x' imp b.binder_positivity attrs in
+          go (i + 1) (S.NM (b.binder_bv, n - 1 - i) :: closing) (S.DB (n - 1 - i, x') :: opening) bs (b' :: out)
+      in
+      go 0 [] [] bs []
+    in
+    (* [forall gamma_bs. q], without building it: closing [q] over hundreds of
+       local binders, one [l_Forall] at a time, only for [aux] to open them
+       again, pushes ever longer delayed substitutions through every level of
+       the chain. The goals and declarations are the ones [aux] produces for
+       the closed formula. Like that formula, we close and reopen [q]: closing
+       matches variables by index only, so it also catches occurrences of a
+       binder under another name, which the encoding's environment would not. *)
+    let t, decls, _ =
+      match List.filter (fun b -> not (S.is_null_binder b)) gamma_bs with
+      | [] -> aux env msg None q
+      | gamma_bs ->
+        let gamma_bs, q = reopen gamma_bs q in
+        let bs, _pats, body = destruct_forall_continuation q in
+        split_forall env msg None (gamma_bs @ bs) body
+    in
     t, decls
+
+let split_goals use_env_msg env q = split_goals_under use_env_msg env [] q

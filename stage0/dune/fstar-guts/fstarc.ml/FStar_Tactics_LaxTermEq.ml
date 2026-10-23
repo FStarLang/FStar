@@ -112,9 +112,17 @@ and pat_eq (p1 : FStarC_Reflection_V2_Data.pattern) (p2 : FStarC_Reflection_V2_D
   )
 
 and br_eq (br1 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (br2 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let x = (pat_eq (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst br2) ps) in
+  (Obj.magic ((fun ps -> (let x = (pat_eq (match br1 with
+      | (u__1, u__2) -> u__1
+    ) (match br2 with
+      | (u__1, u__2) -> u__1
+    ) ps) in
   let x1 = (not x) in
-  (if x1 then false else ((term_eq (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br1) (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd br2)) ps))))))
+  (if x1 then false else ((term_eq (match br1 with
+    | (u__1, u__2) -> u__2
+  ) (match br2 with
+    | (u__1, u__2) -> u__2
+  )) ps))))))
 
 and term_eq (t1 : FStarC_Reflection_Types.term) (t2 : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress t1 ps) in
@@ -192,9 +200,13 @@ let rec univ_eq (u1 : FStarC_Reflection_Types.universe) (u2 : FStarC_Reflection_
     | ((FStarC_Reflection_V2_Data.Uv_Max (us1)), (FStarC_Reflection_V2_Data.Uv_Max (us2))) -> ((list_eq univ_eq us1 us2) ps)
     | ((FStarC_Reflection_V2_Data.Uv_BVar (v1)), (FStarC_Reflection_V2_Data.Uv_BVar (v2))) -> ((=) v1 v2)
     | ((FStarC_Reflection_V2_Data.Uv_Name (id1)), (FStarC_Reflection_V2_Data.Uv_Name (id2))) -> (let tmp = (FStarC_Reflection_V2_Builtins.inspect_ident id1) in
-      let tmp1 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp) in
+      let tmp1 = (match tmp with
+          | (u__1, u__2) -> u__1
+        ) in
       let tmp2 = (FStarC_Reflection_V2_Builtins.inspect_ident id2) in
-      let tmp3 = (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst tmp2) in
+      let tmp3 = (match tmp2 with
+          | (u__1, u__2) -> u__1
+        ) in
       ((=) tmp1 tmp3))
     | ((FStarC_Reflection_V2_Data.Uv_Unif (u11)), (FStarC_Reflection_V2_Data.Uv_Unif (u21))) -> false
     | (FStarC_Reflection_V2_Data.Uv_Unk, FStarC_Reflection_V2_Data.Uv_Unk) -> false

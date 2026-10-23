@@ -53,4 +53,6 @@ val exit : int -> ML 'a (ensures fun _ -> False)
 val try_with : (unit -> ML 'a) -> (exn -> ML 'a) -> ML 'a
 
 exception Failure of string
-val failwith : s:string -> ML 'a (ensures fun _ -> False)
+(** In [Exn], like [FStar.Exn.raise], so that it can be used in [Ex] code
+    as well as (by lifting) in [ML] code. *)
+val failwith : s:string -> Exn 'a (ensures fun _ -> False)

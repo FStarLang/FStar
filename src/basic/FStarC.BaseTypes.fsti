@@ -22,12 +22,17 @@ module FStarC.BaseTypes
 type char = FStar.Char.char
 type float
 type double
-type byte
-type int8
-type uint8
-type int16
-type uint16
-type int32
-type uint32
-type int64
-type uint64
+type byte = FStar.UInt8.t
+type int8 = FStar.Int8.t
+type uint8 = FStar.UInt8.t
+type int16 = FStar.Int16.t
+type uint16 = FStar.UInt16.t
+type int32 = FStar.Int32.t
+type uint32 = FStar.UInt32.t
+type int64 = FStar.Int64.t
+type uint64 = FStar.UInt64.t
+
+(* A [float] is an IEEE double, as is [FStar.Float64.t]; FStar.Pprint's
+   renderer takes the latter. *)
+val float64_of_float : float -> FStar.Float64.t
+val float_of_float64 : FStar.Float64.t -> float

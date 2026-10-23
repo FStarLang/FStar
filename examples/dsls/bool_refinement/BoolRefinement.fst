@@ -1397,7 +1397,7 @@ let sub_typing_weakening #f (sg sg':src_env)
 
       | _ -> admit ())
 
-#push-options "--query_stats --fuel 2 --ifuel 2"
+#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
 #restart-solver
 let rec src_typing_weakening #f (sg sg':src_env) 
                              (x:var { None? (lookup sg x) && None? (lookup sg' x) })
@@ -1525,7 +1525,7 @@ let mk_refine (e:R.term)
 let var_arg (x:var) : R.argv =
   R.pack_ln (R.Tv_Var (R.pack_namedv (RT.make_namedv x))), R.Q_Explicit
 
-#push-options "--fuel 8 --ifuel 2"
+#push-options "--fuel 3 --ifuel 1"
 let apply_refinement_closed (e:src_exp { ln e && closed e })
                             (x:var)
   : Lemma (RT.open_term_spec' (denote_term (r_b2t (apply (elab_exp e) (bv_as_arg bv0)))) x

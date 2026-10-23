@@ -107,13 +107,9 @@ val float_of_int64: int64 -> Tot float
 val float_of_string: string -> Tot float
 val int_of_int32: int32 -> Tot int
 val int32_of_int:   int -> ML int32 //potentially failing int32 coercion
-val show64: int64 -> Tot string
-val show32: int32 -> Tot string
 val string_of_float: float -> Tot string
 val string_of_char:  char -> Tot string
 val hex_string_of_byte:  byte -> Tot string
-val string_of_bytes: array byte -> Tot string
-val bytes_of_string: string -> Tot (array byte)
 val base64_encode: string -> ML string
 val base64_decode: string -> ML string
 val starts_with: long:string -> short:string -> Tot bool
@@ -141,7 +137,6 @@ val remove_dups: ('a -> 'a -> ML bool) -> list 'a -> ML (list 'a)
 
 val add_unique: ('a -> 'a -> ML bool) -> 'a -> list 'a -> ML (list 'a)
 val try_find: ('a -> ML bool) -> list 'a -> ML (option 'a)
-val try_find_i: (int -> 'a -> ML bool) -> list 'a -> ML (option (int & 'a))
 val find_map: list 'a -> ('a -> ML (option 'b)) -> ML (option 'b)
 val try_find_index: ('a -> ML bool) -> list 'a -> ML (option int)
 val fold_map: ('a -> 'b -> ML ('a & 'c)) -> 'a -> list 'b -> ML ('a & list 'c)
@@ -161,8 +156,6 @@ val nth_tail: int -> list 'a -> list 'a
 val prefix_until: ('a -> ML bool) -> list 'a -> ML (option (list 'a & 'a & list 'a))
 val prefix: list 'a -> Tot (list 'a & 'a)
 
-val string_of_unicode: array byte -> Tot string
-val unicode_of_string: string -> Tot (array byte)
 val incr: ref int -> ML unit
 val decr: ref int -> ML unit
 val geq: int -> int -> Tot bool
@@ -185,38 +178,6 @@ val is_digit: char -> bool
 val is_letter_or_digit: char -> bool
 val is_punctuation: char -> bool
 val is_symbol: char -> bool
-
-(* serialization of compiled modules *)
-type oWriter = {
-    write_byte: byte -> ML unit;
-    write_bool: bool -> ML unit;
-    write_int: int -> ML unit;
-    write_int32: int32 -> ML unit;
-    write_int64: int64 -> ML unit;
-    write_char: char -> ML unit;
-    write_double: double -> ML unit;
-    write_bytearray: array byte -> ML unit;
-    write_string: string -> ML unit;
-
-    close: unit -> ML unit
-}
-
-type oReader = {
-    read_byte: unit -> ML byte;
-    read_bool: unit -> ML bool;
-    read_int: unit -> ML int;
-    read_int32: unit -> ML int32;
-    read_int64: unit -> ML int64;
-    read_char: unit -> ML char;
-    read_double: unit -> ML double;
-    read_bytearray: unit -> ML (array byte);
-    read_string: unit -> ML string;
-
-    close: unit -> ML unit
-}
-
-val get_owriter: string -> ML oWriter
-val get_oreader: string -> ML oReader
 
 val monitor_enter: 'a -> ML unit
 val monitor_exit:  'a -> ML unit

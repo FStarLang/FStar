@@ -32,3 +32,12 @@ type native_primitive_step =
       tactic: itac}
 
 val list_all            : unit -> ML (list native_primitive_step)
+
+type nbe_itac =
+  FStarC.TypeChecker.NBETerm.nbe_cbs -> universes ->
+  FStarC.TypeChecker.NBETerm.args -> option FStarC.TypeChecker.NBETerm.t
+
+(* Nothing in F* calls these: the registration code that Custard generates
+   for [@@plugin] definitions does (see FStarC.Custard.RegEmb). *)
+val register_plugin : string -> int -> itac -> nbe_itac -> ML unit
+val register_tactic : string -> int -> itac -> ML unit

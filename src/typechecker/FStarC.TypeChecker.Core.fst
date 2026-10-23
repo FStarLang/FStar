@@ -963,6 +963,24 @@ let boolean_negation_simp b =
   then None
   else Some (U.mk_boolean_negation b)
 
+(* A match whose scrutinee has type bool (up to refinement) and whose
+   branches include both constant patterns `true` and `false` (without
+   when clauses) is exhaustive, so its residual path condition is false
+   and needs no SMT query. Pulse's elaborated `if`s produce many of these. *)
+let match_covers_bool (g:env) (t_sc:typ) (brs:list branch) : ML bool =
+  let has b =
+    List.existsb
+      (fun (p, w, _) ->
+        None? w &&
+        (match p.v with
+         | Pat_constant (FStarC.Const.Const_bool b') -> b = b'
+         | _ -> false))
+      brs
+  in
+  has true && has false &&
+  U.is_fvar PC.bool_lid
+    (t_sc |> N.normalize_refinement N.whnf_steps g.tcenv |> U.unrefine)
+
 let combine_path_and_branch_condition (path_condition:term)
                                       (branch_condition:option term)
                                       (branch_equality:term)
@@ -1221,7 +1239,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         then (
           (* For subtyping, we just check that x0.sort <: t1. But for equality,
           we must show that the refinement on the LHS is constantly true. *)
-          if rel = EQUALITY then (
+          if EQUALITY? rel then (
             let! u0 = universe_of_well_typed_term g x0.sort in
             let g0 = g in
             let g, b0, f0 = open_term g (S.mk_binder x0) f0 in
@@ -1304,7 +1322,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
               (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
           in
           if guard_ok &&
-            (rel=EQUALITY) && 
+            (EQUALITY? rel) && 
             (equatable g t0 || equatable g t1)
           then (
             handle_with 
@@ -1712,6 +1730,7 @@ and do_check (g:env) (e:term)
 
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
+    let all_branches = branches in
     let! u_sc = universe_of_well_typed_term g t_sc in
     let rec check_branches path_condition
                            branch_typ_opt
@@ -1726,6 +1745,9 @@ and do_check (g:env) (e:term)
            | Some et ->
              match boolean_negation_simp path_condition with
              | None ->
+               return et
+
+             | Some _ when match_covers_bool g t_sc all_branches ->
                return et
 
              | Some neg_path ->
@@ -1791,6 +1813,7 @@ and do_check (g:env) (e:term)
 
   | Tm_match {scrutinee=sc; ret_opt=Some (as_x, (Inl returns_ty, None, eq)); brs=branches; rc_opt} ->
     let! eff_sc, t_sc = check "scrutinee" g sc in
+    let all_branches = branches in
     let! u_sc = universe_of_well_typed_term g t_sc in
     let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
     let g_as_x, as_x, returns_ty = open_term g as_x returns_ty in
@@ -1805,6 +1828,9 @@ and do_check (g:env) (e:term)
         | [] ->
           (match boolean_negation_simp path_condition with
            | None ->
+             return acc_eff
+
+           | Some _ when match_covers_bool g t_sc all_branches ->
              return acc_eff
 
            | Some neg_path ->

@@ -160,7 +160,7 @@ let rec by_value_vars (tbl:HashTable.t string (list bool)) (c:cty) : ML (list st
         if by_value then by_value_vars tbl a else [])
            |> List.flatten
   | TInline c -> by_value_vars tbl c
-  | TBuf _ | TRef _ | TArrow _ -> []
+  | TBuf _ | TRef (_, _) | TArrow _ -> []
   | _ -> []
 
 let by_value_param_table (p:program) : ML (HashTable.t string (list bool)) =
@@ -204,7 +204,7 @@ let rec by_value_names (tbl:HashTable.t string (list bool)) (c:cty) : ML (list s
         if by_value then by_value_names tbl a else [])
                                 |> List.flatten)
   | TInline c -> by_value_names tbl c
-  | TBuf _ | TRef _ | TArrow _ -> []
+  | TBuf _ | TRef (_, _) | TArrow _ -> []
   | _ -> []
 
 let rec_type_table (p:program) : ML (HashTable.t string bool) =
@@ -337,7 +337,11 @@ let dead_abbrevs : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
    agree with the file rather than adding a second rule.  Only declarations
    Custard actually emits a body for are in the table: an external or a
    modelled type resolves to a definition someone else wrote, and renaming it
-   would be renaming away from that definition rather than towards it. *)
+   would be renaming away from that definition rather than towards it.
+
+   Moved by lowercasing the namespace: [Prims.list] becomes [prims.list],
+   printed [prims_list].  An F* module name is capitalized, so no F* module
+   can be called that, and neither can karamel's own [Prims]. *)
 let shadowed : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 let lident_of_name (n:name) : ML K.lident =
@@ -350,7 +354,7 @@ let lident_of_name (n:name) : ML K.lident =
            | None -> id
            | Some s -> id ^ "__" ^ s in
   let ns = if Some true = HashTable.try_find !shadowed (string_of_name n)
-           then "Custard" :: ns else ns in
+           then List.map String.lowercase ns else ns in
   (ns, id)
 
 (* The external types of the program being printed, by mangled name, mapped to
@@ -557,6 +561,9 @@ let krml_op (o:op) : ML K.op =
      it never reaches the operator table. *)
   | Commented _ ->
     failwith "Custard: a comment is not a karamel operator"
+  | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _ | Dyn _ | PBuf _
+  | ExnRaise | ExnPending | ExnTake | ExnExit ->
+    failwith "Custard: reference counting is not a karamel operator"
 
 (* -------------------------------------------------------------------- *)
 (* Types                                                                *)
@@ -632,8 +639,14 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   | TArrow (a, _, b) -> K.TArrow (krml_typ env a, krml_typ env b)
   | TTuple ts -> K.TTuple (ts |> List.map (krml_typ env))
   (* karamel has no separate reference type: a [ref] is a one-element buffer,
-     which is exactly what the operations on it already say. *)
-  | TBuf t | TRef t -> K.TBuf (krml_typ env t)
+     which is exactly what the operations on it already say.  But nothing
+     would free an ML reference's buffer. *)
+  | TRef (RGc, _) ->
+    krml_reject_with "a garbage-collected reference (FStar.All.ref or \
+                      FStarC.Effect.ref)"
+      "Nothing would free it: use a Pulse reference, which is freed \
+       explicitly, or --codegen Cherry, which counts references."
+  | TBuf t | TRef (_, t) -> K.TBuf (krml_typ env t)
   (* Section 49.1.  Removed by [Simplify.inline_fields]; see the same case in
      [PrintC.decl_of]. *)
   | TInline _ ->
@@ -860,11 +873,11 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
 
        Freshened against the enclosing scope because [find] resolves a
        reference by the *first* matching name: [Rename] gives a local its bare
-       source spelling, so a program with its own [discarded] in scope would
+       source spelling, so a program with its own [uu__discarded] in scope would
        otherwise have every reference to it captured by this binder. *)
-    let x = fresh_local env "discarded" in
+    let x = fresh_local env "uu__discarded" in
     let t = match e1.ty with
-            | TBuf _ | TRef _ -> krml_typ env e1.ty
+            | TBuf _ | TRef (_, _) -> krml_typ env e1.ty
             | _ -> K.TAny in
     let b = { K.name = x; K.typ = t; K.mut = false; K.meta = [] } in
     K.ELet (b, krml_expr env e1, krml_expr (extend env x) e2)
@@ -904,14 +917,14 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.EBufCreate ((match l with LStack -> K.Stack | LHeap -> K.ManuallyManaged),
                   krml_expr env init, krml_expr env len)
   | EOp ({ po_op = BufRead }, [b; i]) ->
-    K.EBufRead (krml_expr env b, krml_expr env i)
+    K.EBufRead (krml_expr env b, krml_index env b i)
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
-    K.EBufWrite (krml_expr env b, krml_expr env i, krml_expr env v)
+    K.EBufWrite (krml_expr env b, krml_index env b i, krml_expr env v)
   | EOp ({ po_op = BufSub }, [b; i]) ->
-    K.EBufSub (krml_expr env b, krml_expr env i)
+    K.EBufSub (krml_expr env b, krml_index env b i)
   | EOp ({ po_op = BufFree }, [b]) -> K.EBufFree (krml_expr env b)
   | EOp ({ po_op = BufNull }, []) ->
-    K.EBufNull (match e.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny)
+    K.EBufNull (match e.ty with TBuf t | TRef (_, t) -> krml_typ env t | _ -> K.TAny)
   | EOp ({ po_op = BufIsNull }, [b]) ->
     (* karamel has no [is_null], so compare against a null of the same type.
        Equality on pointers is the *polymorphic* one, and karamel types that
@@ -919,7 +932,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
        the [Eq]/[Neq] case below does.  Left as a bare [EOp (Eq, Bool)] the
        checker reads the width as the operand type, decides the arguments
        should be booleans, and drops the whole declaration as not Low\*. *)
-    let t = match b.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny in
+    let t = match b.ty with TBuf t | TRef (_, t) -> krml_typ env t | _ -> K.TAny in
     let pt = K.TBuf t in
     K.EApp (K.ETypApp (K.EOp (K.Eq, K.Bool), [pt]),
             [krml_expr env b; K.EBufNull t])
@@ -1063,6 +1076,20 @@ and krml_branch (env:kenv) (br:branch) : ML K.branch =
 and repeat_unit (n:int) : ML (list unit) =
   if n <= 0 then [] else () :: repeat_unit (n - 1)
 
+(* A reference holds one value, not a run, so its read, write and address are
+   all at index 0.  karamel prints [b[EZeroForDeref]] as [*b] (and
+   [&b[EZeroForDeref]] as [b]), which is how C spells an access through a
+   pointer to one value; a literal 0 would print as [b[0U]], which is how it
+   spells the first element of an array. *)
+and krml_index (env:kenv) (b:expr) (i:expr) : ML K.expr =
+  match b.ty, i.e with
+  | TRef (_, _), EConst (CInt (0, _, w)) ->
+    (* karamel only accepts [UInt32] and [SizeT] indices. *)
+    K.EZeroForDeref (match w with
+                     | Some (Unsigned, WSizet) -> K.SizeT
+                     | _ -> K.UInt32)
+  | _ -> krml_expr env i
+
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
@@ -1090,6 +1117,14 @@ let krml_flags (fs : list flag) : ML (list K.flag) =
     (* karamel's own [IfDef], for the same reason: the flag only means
        anything to the pass that turns a test of the constant into a [#if]. *)
     | CIfDef -> [K.IfDef]
+    (* Section 51.6.  karamel's [IfDef] spells the condition as the flag's
+       name, and this flag's condition is arbitrary text it has no field
+       for; an [extern] it would read instead is a link error. *)
+    | IfDef _ ->
+      E.raise_error0 E.Error_CustardBadIfDef [
+        text "Custard: [@@custard_c_ifdef] is supported by the direct-to-C \
+              backend only.";
+        text "With karamel, use [@@CIfDef], whose condition is the name." ]
     | _ -> [])
 
 let with_typars (env:kenv) (ps : list string) : ML kenv =
@@ -1462,8 +1497,7 @@ let print_split (fs : list (string & program)) : ML (list Krml.file) =
     [(m, ds)])
 
 let write_files (fn:string) (fs : list Krml.file) : ML unit =
-  let bin : Krml.binary_format = (Krml.current_version, fs) in
-  BU.save_value_to_file fn bin
+  FStarC.Custard.KrmlJson.write_file fn (Krml.current_version, fs)
 
 let write_program (fn:string) (p:program) : ML unit =
   write_files fn (print_program p)

@@ -138,7 +138,7 @@ and atom_eq (a1 : atom) (a2 : atom) : ML bool =
 and args_eq (as1 : args) (as2 : args) : ML bool =
   match as1, as2 with
   | [], [] -> true
-  | (x, qx) :: xs, (y, qy) :: ys -> term_eq x y && qx = qy && args_eq xs ys
+  | (x, qx) :: xs, (y, qy) :: ys -> term_eq x y && U.eq_aqual qx qy && args_eq xs ys
   | _, _ -> false
 
 let rec eq_t env (t1 : t) (t2 : t) : ML TEQ.eq_result =

@@ -44,6 +44,12 @@ val candidate_files : Dep.deps -> string -> ML (list string)
     interface would never load anything. *)
 val module_is_loaded : Dep.deps -> TcEnv.env -> string -> ML bool
 
+(** [impl_is_checked deps m] is true when [m] has an implementation in the
+    dependency graph and a checked file for it can be found.  An
+    implementation nothing asked for need not have been checked, and under
+    [--already_cached] asking for its checked file is an error. *)
+val impl_is_checked : Dep.deps -> string -> ML bool
+
 (** [ensure_loaded deps env m] returns an environment in which [m]'s
     definitions are visible, loading [m]'s checked file if needed.  Fails if
     the module cannot be found or its checked file cannot be read. *)

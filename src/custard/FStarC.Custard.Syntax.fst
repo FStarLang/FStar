@@ -283,7 +283,7 @@ let rec subst_cty (s:list (string & cty)) (c:cty) : ML cty =
   | TArrow (a, e, b) -> TArrow (subst_cty s a, e, subst_cty s b)
   | TTuple cs -> TTuple (cs |> List.map (subst_cty s))
   | TBuf c -> TBuf (subst_cty s c)
-  | TRef c -> TRef (subst_cty s c)
+  | TRef (k, c) -> TRef (k, subst_cty s c)
   | TInline c -> TInline (subst_cty s c)
   | TApp (n, args) -> TApp (n, args |> List.map (subst_cty s))
   | c -> c
@@ -324,7 +324,7 @@ let rec type_names_of_cty (c : cty) : ML (list string) =
   match c with
   | TArrow (a, _, b) -> type_names_of_cty a @ type_names_of_cty b
   | TTuple cs -> cs |> List.collect type_names_of_cty
-  | TBuf c | TRef c | TInline c -> type_names_of_cty c
+  | TBuf c | TRef (_, c) | TInline c -> type_names_of_cty c
   | TApp (n, args) -> string_of_name n :: (args |> List.collect type_names_of_cty)
   | _ -> []
 
@@ -446,7 +446,13 @@ let rec is_droppable (e:expr) : ML bool =
   | EApp _ | EFun _ | EWhile _ | EAbort _ | EUnreachable _ | ERaise _ | ETry _ -> false
   | EOp ({ po_op = BufRead }, es) -> all es
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
-  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _) -> false
+  | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _)
+  | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
+  | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
+  | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
+  | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
+  | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
+  | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
   | EOp (_, es) -> all es
   (* Everything else is deletable exactly when all of it is.  A branch's
      guard and body are children, and its pattern binds nothing that
@@ -504,7 +510,15 @@ let op_to_string (o:prim_op) : string =
    | BufFree -> "free" | BufNull -> "null" | BufIsNull -> "is_null"
    | BufBlit -> "blit"
    | BufLit -> "lit" | BufUnconst -> "unconst"
-   | Commented _ -> "comment") ^
+   | Commented _ -> "comment"
+   | RcInc -> "rc_inc" | RcDec -> "rc_dec"
+   | RefNew -> "ref_new" | RefGet -> "ref_get" | RefSet -> "ref_set"
+   | Reset _ -> "reset" | Reuse _ -> "reuse" | ResetFree -> "reset_free"
+   | IArr f -> "iarray_" ^ f
+   | Dyn f -> "dyn_" ^ f
+   | PBuf f -> "pbuf_" ^ f
+   | ExnRaise -> "exn_raise" | ExnPending -> "exn_pending"
+   | ExnTake -> "exn_take" | ExnExit -> "exn_exit") ^
   (match o.po_ty with
    | None -> ""
    | Some (PInt sw) -> width_to_string sw
@@ -565,8 +579,9 @@ let rec cty_to_doc' (prec:int) (t:cty) : ML document =
              sep_by (comma ^^ space) (List.map (cty_to_doc' 0) args) ^^ rangle)
   | TBuf t ->
     parens_if (prec >= 2) <| group (text "buf" ^/^ cty_to_doc' 2 t)
-  | TRef t ->
-    parens_if (prec >= 2) <| group (text "ref" ^/^ cty_to_doc' 2 t)
+  | TRef (k, t) ->
+    parens_if (prec >= 2) <|
+      group (text (if RGc? k then "gcref" else "ref") ^/^ cty_to_doc' 2 t)
   | TInline t ->
     parens_if (prec >= 2) <| group (text "inline" ^/^ cty_to_doc' 2 t)
   | TTuple ts ->
@@ -714,8 +729,10 @@ let flag_to_doc (f:flag) : ML document =
   | Comment s -> text ("(* " ^ s ^ " *)")
   | Prologue s -> text ("prologue " ^ s)
   | Epilogue s -> text ("epilogue " ^ s)
-  | ClosurePrologue (a, b) ->
-    text ("closure_prologue " ^ a ^ " / " ^ b)
+  | ClosurePrologue s -> text ("closure_prologue " ^ s)
+  | ClosureGuard s -> text ("closure_guard " ^ s)
+  | Guard s -> text ("guard " ^ s)
+  | IfDef s -> text ("ifdef " ^ s)
   | CMacro -> text "c_macro"
   | CIfDef -> text "c_ifdef"
   | CReference -> text "c_reference"
@@ -727,6 +744,7 @@ let flag_to_doc (f:flag) : ML document =
     text ("extern" ^ (match n with Some n -> " " ^ n | None -> "") ^
                      (match h with Some h -> " <" ^ h ^ ">" | None -> ""))
   | SourceRecord -> text "source-record"
+  | CherryBoxed -> text "cherry-boxed"
   | Existential (c, f) -> text ("existential[" ^ c ^ "." ^ f ^ "]")
   | Modelled -> text "modelled"
   | Imported (u, h) ->
@@ -734,6 +752,11 @@ let flag_to_doc (f:flag) : ML document =
   | Member (m, f) -> text ("member[" ^ string_of_name m ^ "." ^ f ^ "]")
   | CallArity fs ->
     text ("arity[" ^ String.concat "" (List.map (fun b -> if b then "-" else "+") fs) ^ "]")
+  | CherryMode fs ->
+    text ("cherry_mode[" ^ String.concat "" (List.map (fun b ->
+            match b with Some true -> "o" | Some false -> "b" | None -> "?") fs) ^ "]")
+  | CherryConv fs ->
+    text ("cherry_conv[" ^ String.concat "" (List.map (fun b -> if b then "o" else "b") fs) ^ "]")
 
 let flags_to_doc (fs : list flag) : ML document =
   match fs with

@@ -492,13 +492,50 @@ val custard_float (width: int) : unit
     transitive callees, which is a reachability question about the whole
     program.
 
-    So Custard computes it.  Every definition reachable from this one -- not
-    this one, and not one carrying a [CPrologue] of its own -- receives a
-    prologue: [exclusive] when the only route to it is through a definition
-    marked this way, and [shared] when the rest of the program reaches it as
-    well.  For CUDA those are ["__device__"] and ["__device__ __host__"], and
-    a helper called from both a kernel and host code needs the second. *)
-val custard_c_closure_prologue (exclusive: string) (shared: string) : unit
+    So Custard computes it.  Every function reachable from this one -- not
+    this one, and not one carrying a [CPrologue] of its own -- is *cloned*:
+    the copy gets [prologue] and a name disambiguated by it, and the calls
+    from this definition and from the copies go to the copies.  The original
+    stays undecorated for every other caller, and is dropped if nothing else
+    calls it.  Definitions with different prologues get different copies.
+
+    For CUDA the prologue is ["__device__"].  For CPU-specific code it is a
+    [target(...)] attribute, and cloning is what makes that safe: an
+    attribute like [target("avx2")] is never added to a function that is
+    reachable without a runtime CPU check.
+
+    Globals (definitions with no arguments) are neither copied nor given the
+    prologue.  For CUDA, mark a table device code reads explicitly, e.g.
+    [[@@CPrologue "__device__"]]; nvcc rejects the program if you forget. *)
+val custard_c_closure_prologue (prologue: string) : unit
+
+(** Custard, C only: compile this definition, and the copies
+    [custard_c_closure_prologue] makes of the functions it reaches, only when
+    the preprocessor condition [cond] holds -- each prototype and definition
+    is wrapped in [#if cond ... #endif] (see doc/ref/custard.md, section
+    51.6).  A [target(...)] attribute is an error on a compiler for another
+    architecture, so code for one ISA is written
+    [[@@CPrologue "__attribute__((target(\"avx2\")))";
+       custard_c_closure_prologue "__attribute__((target(\"avx2\")))";
+       custard_c_closure_guard "defined(__x86_64__)"]].
+
+    The definition itself is guarded as well as its closure, since it calls
+    the guarded copies.  Callers must not reach it unguarded: test a
+    [custard_c_ifdef] flag with the same condition around the call (and
+    around the runtime CPU check, which is architecture specific too).
+    Custard does not check this. *)
+val custard_c_closure_guard (cond: string) : unit
+
+(** Custard, C only: on an [assume val] of type [bool], a C preprocessor
+    condition (see doc/ref/custard.md, section 51.6).  [if x then e1 else e2]
+    compiles to [#if cond / e1 / #else / e2 / #endif]; the condition of the
+    [if] must be the flag itself, and any other use of it is error 398.  F*
+    knows nothing about its value, so both branches are verified.
+
+    Unlike [CIfDef], the C text is given explicitly rather than derived from
+    the name, so it can be any [#if] expression, e.g.
+    [defined(__x86_64__) || defined(_M_X64)]. *)
+val custard_c_ifdef (cond: string) : unit
 
 (** Custard: written on a [tcclass], this says that its instances are ordinary
     runtime values rather than compile-time dictionaries, so an argument of
@@ -548,6 +585,26 @@ val custard_opaque : unit
     [noeq type wrap = | W : [@@@custard_inline_field] p:pair -> wrap] *)
 val custard_inline_field : unit
 
+(** Cherry (cherry.md, "Calling convention"): the function takes this
+    parameter owned, consuming one reference to it, whatever borrow
+    inference would have chosen.  Written on the parameter's binder:
+    [let push ([@@@cherry_owned] l: list int) = ...] *)
+val cherry_owned : unit
+
+(** Cherry: the function borrows this parameter: its caller keeps the
+    reference, and the function takes one of its own only where it stores
+    the value.  Overrides borrow inference, like [cherry_owned]. *)
+val cherry_borrowed : unit
+
+(** Cherry (cherry.md, "Boxed types"): represent this type as a
+    reference-counted heap cell, as a recursive type is, rather than as a C
+    struct passed by value.  For a large record that is passed around a lot
+    and rarely built: a copy of it is a pointer and a count, rather than
+    every field and the count of each.  Written on the type:
+    [[@@cherry_boxed] noeq type cfg = { ... }].  No effect on other
+    backends. *)
+val cherry_boxed : unit
+
 (** Custard: keep every field of this type's constructors boxed, that is, lay
     the type out the way the ML extraction does.  It turns off the automatic
     inlining of tuple fields that [custard_inline_field] describes, so
@@ -555,10 +612,10 @@ val custard_inline_field : unit
     doc/ref/custard.md, section 5.7).
 
     This is for a type whose representation is an ABI rather than a private
-    choice: [FStarC.Extraction.KrmlAst] is marshalled to a file that karamel
-    reads back into its own [InputAst], whose OCaml declarations mirror the ML
-    extraction's output field for field.  For anything else the indirection is
-    a cost with nothing on the other side of it, and the default is right.
+    choice: a type marshalled to a file that an OCaml program reads back into
+    declarations mirroring the ML extraction's output field for field.  For
+    anything else the indirection is a cost with nothing on the other side of
+    it, and the default is right.
 
     An explicit [@@@custard_inline_field] on a field still fires: the
     attribute withdraws what Custard does uninvited, not what the source

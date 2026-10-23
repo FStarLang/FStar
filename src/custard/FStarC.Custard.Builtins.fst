@@ -69,7 +69,7 @@ let register_rule (l:Ident.lident) (r:rule) : ML unit =
    anyone has to write -- it is what they do today. *)
 let int128_enabled () : ML bool =
   let b = Options.codegen_name () in
-  (b = "C" || b = "FSharp") && Options.custard_int128 ()
+  (b = "C" || b = "Cherry" || b = "FSharp") && Options.custard_int128 ()
 
 let machine_int_of_module (ns : list string) : ML (option (signedness & iwidth)) =
   match ns with
@@ -723,7 +723,7 @@ let comment_text (which:string) (role:string) (x:expr) : ML string =
 
 let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   let buf tys (_ : list expr) : ML cty = TBuf (elt_of tys) in
-  let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
+  let rf tys (_ : list expr) : ML cty = TRef (RManual, elt_of tys) in
   let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
   let bool_ty (_ : list cty) (_ : list expr) : ML cty = TApp (bool_name, []) in
   (* The element type of a buffer we are given rather than creating: the
@@ -731,14 +731,14 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   let elt_of_arg (_ : list cty) (args : list expr) : ML cty =
     match args with
     | { ty = TBuf t } :: _ -> t
-    | { ty = TRef t } :: _ -> t
+    | { ty = TRef (_, t) } :: _ -> t
     | _ -> TAny in
   (* [to_array_mask] and [array_at] view a reference as a one-element run.
      The two are the same pointer in C, but not the same OCaml value, so the
      node has to say which one it is. *)
   let as_buf (_ : list cty) (args : list expr) : ML cty =
     match args with
-    | { ty = TRef t } :: _ -> TBuf t
+    | { ty = TRef (_, t) } :: _ -> TBuf t
     | a :: _ -> a.ty
     | _ -> TAny in
   let self (_ : list cty) (args : list expr) : ML cty =
@@ -757,7 +757,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
      array (section 8.4). *)
   | ["Pulse"; "Lib"; "Reference"], "ref"
   | ["Pulse"; "Lib"; "Box"], "box" ->
-    Some (Rule_type (fun tys -> TRef (elt_of tys)))
+    Some (Rule_type (fun tys -> TRef (RManual, elt_of tys)))
 
   (* A reference is a one-element stack allocation. *)
   | ["Pulse"; "Lib"; "Reference"], "alloc" ->
@@ -768,7 +768,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
       let t = elt_of tys in
       mk (EOp ({ po_op = BufCreate LStack; po_ty = None },
                [mk EAny t E_Pure; size_lit 1]))
-         (TRef t) E_Impure))
+         (TRef (RManual, t)) E_Impure))
   | ["Pulse"; "Lib"; "Reference"], "free" -> Some (unit_rule 1)
   | ["Pulse"; "Lib"; "Reference"], "read"
   | ["Pulse"; "Lib"; "Reference"], "op_Bang" ->
@@ -895,7 +895,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   | ["Pulse"; "Lib"; "Reference"], "null"
   | ["Pulse"; "Lib"; "Box"], "null" ->
     Some (Rule_prim (0, fun tys _ ->
-      mk (EOp ({ po_op = BufNull; po_ty = None }, [])) (TRef (elt_of tys)) E_Pure))
+      mk (EOp ({ po_op = BufNull; po_ty = None }, [])) (TRef (RManual, elt_of tys)) E_Pure))
   | ["Pulse"; "Lib"; "Array"; "Core"], "null"
   | ["Pulse"; "Lib"; "ArrayPtr"], "null" ->
     Some (Rule_prim (0, fun tys _ ->
@@ -987,10 +987,11 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
 (* [FStar.All] is the ulib reference API and [FStarC.Effect] the compiler's
    own; they are the same API under two names, and neither has a [free],
    because both are realized by OCaml's [ref].  So a reference here is a
-   [TRef] holding a *heap* cell: the OCaml backend prints [TRef] as [t ref]
-   and [BufCreate] into one as [ref x] (PrintOCaml.fst:359), which is exactly
-   right, while the C backend would emit a [malloc] that nothing frees --
-   correct, but a leak, and section 8.4 says so.
+   [TRef (RGc, t)] holding a *heap* cell: the OCaml backend prints [TRef] as
+   [t ref] and [BufCreate] into one as [ref x], which is exactly right.  The
+   C and karamel backends have no collector, so they reject an [RGc]
+   reference rather than emit a [malloc] that nothing frees; Cherry counts
+   it (cherry.md, "References").
 
    [read]/[write] index at 0 for the same reason [Pulse.Lib.Reference] does:
    the IR has one memory-access node, and a reference is the one-element case
@@ -1016,9 +1017,12 @@ let exn_rule (id:string) : ML (option rule) =
     | _ -> mk (EApp (f, [unit_expr])) TAny E_Impure in
   match id with
   | "raise" ->
-    Some (Rule_prim (1, fun _ args ->
+    (* At the type F* instantiated it at: a lambda whose body is a [raise]
+       takes its result type from it. *)
+    Some (Rule_prim (1, fun tys args ->
+      let t = (match tys with [t] -> t | _ -> TAny) in
       match args with
-      | [e] -> mk (ERaise e) TAny E_Impure
+      | [e] -> mk (ERaise e) t E_Impure
       | _ -> failwith "Custard: raise applied to the wrong number of arguments"))
   | "try_with" ->
     Some (Rule_prim (2, fun _ args ->
@@ -1058,16 +1062,21 @@ let exn_rule (id:string) : ML (option rule) =
   | "exit" -> Some (Rule_extern { x_name = None; x_header = None })
   | _ -> None
 
+(* A garbage-collected reference is a [TRef (RGc, t)] on every backend: OCaml
+   and F# print it as their own [ref], Cherry as a counted cell (cherry.md),
+   and the C and karamel backends, which have no collector, reject it. *)
+let ml_ref_ty (t:cty) : cty = TRef (RGc, t)
+
 let ref_rule (id:string) : ML (option rule) =
-  let rf tys (_ : list expr) : ML cty = TRef (elt_of tys) in
+  let rf tys (_ : list expr) : ML cty = ml_ref_ty (elt_of tys) in
   let unit_ty (_ : list cty) (_ : list expr) : ML cty = TUnit in
   let elt_of_arg (_ : list cty) (args : list expr) : ML cty =
     match args with
-    | { ty = TRef t } :: _ -> t
+    | { ty = TRef (_, t) } :: _ -> t
     | { ty = TBuf t } :: _ -> t
     | _ -> TAny in
   match id with
-  | "ref" -> Some (Rule_type (fun tys -> TRef (elt_of tys)))
+  | "ref" -> Some (Rule_type (fun tys -> ml_ref_ty (elt_of tys)))
   | "alloc" | "mk_ref" ->
     Some (buf_prim 1 (BufCreate LHeap) E_Impure rf
             (fun args -> args @ [size_lit 1]))
@@ -1231,6 +1240,18 @@ let stub_aliases : list (string & string) = [
   "FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop";
 ]
 
+(* Issue #4692.  [FStarC.NormSteps] is not a stub but a copy: the compiler
+   refers to [FStar.NormSteps], which {!no_fstar_stubs} names
+   [FStarC.NormSteps], so the compiler unit exports the type and its values
+   under the ulib keys.  A [--with_fstarc] plugin that writes [FStarC.NormSteps]
+   asks for the same declarations under the other key, and a miss compiles a
+   second, incompatible [norm_step].  {!Extract.unstub_lid} uses this to ask
+   with the key the compiler used. *)
+let fstarc_mirror_of (ns : list string) : option (list string) =
+  match ns with
+  | "FStarC" :: "NormSteps" :: rest -> Some ("FStar" :: "NormSteps" :: rest)
+  | _ -> None
+
 (* [FStar.Bytes.bytes] is [struct { uint32_t length; const char *data; }] in
    krmllib's [compat.h], which every karamel-generated program includes; the
    direct-to-C backend has to ask for it by name. *)
@@ -1275,12 +1296,10 @@ let extern_type_of_lid (l:Ident.lident) : ML (option extern) =
    too, so that {!is_interface_only_module} cannot tell.  A module with only an
    interface needs no entry here. *)
 let realized_modules : list (list string) = [
+  (* No hand-written file: {!dyn_rule} implements every name. *)
   ["FStar"; "Dyn"];
-  ["FStar"; "Exn"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
-  ["FStar"; "Option"];
-  ["FStar"; "Parse"];
   ["FStar"; "Pervasives"];
   ["FStar"; "Pervasives"; "Native"];
   (* The machine integers.  [machine_int_rule] above already turns every
@@ -1303,7 +1322,6 @@ let realized_modules : list (list string) = [
      [FStarC] name has no interface of its own on the include path. *)
   ["FStarC"; "Reflection"; "Types"];
   ["FStarC"; "Tactics"; "Unseal"];
-  ["FStarC"; "Tactics"; "V2"; "Builtins"];
   ["Prims"];
   (* Section 128.  Pulse's lock, which must never be compiled from its F*
      source: [Pulse.Lib.Primitives.cas] is a *specification* -- a read
@@ -1443,22 +1461,62 @@ let is_interface_only_module (ns : list string) : ML bool =
   (match !realized_deps with
    | None -> false
    | Some d ->
-     let key = String.lowercase (String.concat "." ns) in
-     Some? (FStarC.Parser.Dep.interface_of d key) &&
-     None? (FStarC.Parser.Dep.implementation_of d key))
+     let lid = FStarC.Ident.lid_of_path ns FStarC.Range.dummyRange in
+     let tgt = Options.codegen_target () in
+     FStarC.Parser.Dep.module_has_interface d tgt lid &&
+     not (FStarC.Parser.Dep.deps_has_implementation d tgt lid))
+
+(* Cherry realizes modules by hand too (ulib/c/cherry.c), but not every
+   interface-only one: Pulse's ([Pulse.Lib.Core], ...) stay externals with no
+   header of their own.  So rather than {!is_interface_only_module}, Cherry
+   lists its realized interface-only modules. *)
+let cherry_realized_modules : list (list string) = [
+  ["FStar"; "All"];
+  ["FStar"; "Bytes"];
+  ["FStar"; "Char"];
+  ["FStar"; "Exception"];
+  ["FStar"; "IO"];
+  ["FStar"; "ImmutableArray"];
+  ["FStar"; "ImmutableArray"; "Base"];
+  ["FStar"; "Issue"];
+  ["FStar"; "Parse"];
+  ["FStar"; "Pprint"];
+  ["FStar"; "Sealed"];
+  ["FStar"; "String"];
+  ["FStarC"; "Array"];
+  ["FStarC"; "BaseTypes"];
+  ["FStarC"; "Effect"];
+  ["FStarC"; "Filepath"];
+  ["FStarC"; "Format"];
+  ["FStarC"; "Getopt"];
+  ["FStarC"; "Hash"];
+  ["FStarC"; "Int"; "Extra"];
+  ["FStarC"; "Json"];
+  ["FStarC"; "List"];
+  ["FStarC"; "Platform"; "Base"];
+  ["FStarC"; "Plugins"; "Base"];
+  ["FStarC"; "Pprint"];
+  ["FStarC"; "String"];
+  ["FStarC"; "StringBuffer"];
+  ["FStarC"; "Time"];
+  ["FStarC"; "Timing"];
+  ["FStarC"; "Util"];
+]
 
 let is_realized_module (ns : list string) : ML bool =
   realized_modules |> List.existsb (fun m -> m = ns)
   || is_krml_model ns
   || is_interface_only_module ns
+  || (Options.custard_cherry () &&
+      cherry_realized_modules |> List.existsb (fun m -> m = ns))
 
 
 (* A realization *replaces* the F* module, values included: where there is a
    hand-written [.ml] the F* definitions are a model, and a model that
    disagrees with the realization is exactly the sort of thing extraction
    must not silently pick between.  [FStar.Dyn] is the case that makes it
-   concrete -- [dyn] is [unit -> Dv value_type_bundle] in F* and [Obj.t] in
-   [FStar_Dyn.ml], so [undyn]'s body forces a thunk that is not one -- but the
+   concrete -- [dyn] is [unit -> Dv value_type_bundle] in F* and [TAny] under
+   {!dyn_rule}, so [undyn]'s body forces a thunk that is not one -- but the
    rule is not about that one module: if a realization does not implement the
    whole interface, that is a bug in the realization, and the OCaml linker
    says so.
@@ -1481,6 +1539,41 @@ let type_only_realized_modules : list (list string) = [
 
 let is_type_only_realized_module (ns : list string) : ML bool =
   type_only_realized_modules |> List.existsb (fun m -> m = ns)
+
+(* Realized modules whose OCaml realization is only an optimization of the F*
+   source, which is complete.  Cherry has no OCaml to link, so it compiles them
+   from source rather than leaving the C runtime to reimplement them.
+   The sources for Cherry of [FStar.Pprint] and [FStar.String] are their own
+   implementations, [FStar.Pprint-c.cherry.fst] and
+   [FStar.String-c.cherry.fst], which target selection picks. *)
+let cherry_source_modules : list (list string) = [
+  ["FStar"; "List"];
+  ["FStar"; "List"; "Tot"; "Base"];
+  ["FStar"; "Option"];
+  ["FStar"; "Pprint"];
+  ["FStar"; "String"];
+  ["FStarC"; "Array"];
+  ["FStarC"; "BaseTypes"];
+  ["FStarC"; "Filepath"];
+  ["FStarC"; "Format"];
+  ["FStarC"; "Getopt"];
+  ["FStarC"; "Hash"];
+  ["FStarC"; "Int"; "Extra"];
+  ["FStarC"; "Json"];
+  ["FStarC"; "List"];
+  ["FStarC"; "Platform"; "Base"];
+  ["FStarC"; "Plugins"; "Base"];
+  ["FStarC"; "Pprint"];
+  ["FStarC"; "SmallInt"];
+  ["FStarC"; "String"];
+  ["FStarC"; "StringBuffer"];
+  ["FStarC"; "Time"];
+  ["FStarC"; "Timing"];
+  ["FStarC"; "Util"];
+]
+
+let is_cherry_source_module (ns : list string) : ML bool =
+  cherry_source_modules |> List.existsb (fun m -> m = ns)
 
 (* Section 128.2.  A realization is hand-written *OCaml* (section 8.2), so a
    realized module's types keep their F* shape on the C backends: [Prims.list]
@@ -1563,6 +1656,49 @@ let list_coercion_rule (id:string) : ML (option rule) =
       | _ -> failwith ("Custard: " ^ id ^ " applied to the wrong arity")))
   | _ -> None
 
+(* Under Cherry (cherry.md, "Arrays") an immutable array is a counted cell
+   updated in place when unique.  Its type keeps its own name,
+   [FStar.ImmutableArray.Base.t], and its operations are [IArr] nodes. *)
+let iarray_name : name = { ns = ["FStar"; "ImmutableArray"; "Base"]; id = "t"; spec = None }
+
+let iarray_rule (id:string) : ML (option rule) =
+  let prims (id:string) (ts:list cty) : cty = TApp ({ ns = ["Prims"]; id = id; spec = None }, ts) in
+  let arr tys (_ : list expr) : ML cty = TApp (iarray_name, [elt_of tys]) in
+  let prim (n:int) (ret : list cty -> list expr -> ML cty) : option rule =
+    Some (buf_prim n (IArr id) E_Pure ret (fun args -> args)) in
+  match id with
+  | "t" -> Some (Rule_type (fun tys -> TApp (iarray_name, [elt_of tys])))
+  | "of_list" -> prim 1 arr
+  | "upd" -> prim 3 arr
+  | "push" -> prim 2 arr
+  | "to_list" -> prim 1 (fun tys _ -> prims "list" [elt_of tys])
+  | "length" -> prim 1 (fun _ _ -> prims "int" [])
+  | "index" -> prim 2 (fun tys _ -> elt_of tys)
+  | _ -> None
+
+(* [FStar.Dyn.dyn] is [TAny] on every backend: [Obj.t] on OCaml, [obj] on
+   F#.  There [mkdyn] and [undyn] are coercions ([Obj.magic], [box]/[unbox]).
+   [FStar.Dyn] stays in {!realized_modules} so that its F* model is never
+   compiled.  Under Cherry
+   (cherry.md, "The any type") a [TAny] is a value with the type information
+   that releases it, so [mkdyn] and [undyn] are [Dyn] nodes at the value's
+   type. *)
+
+let dyn_rule (id:string) : ML (option rule) =
+  let prim (f:string) (ret : cty -> cty) : option rule =
+    Some (Rule_prim (1, fun tys args ->
+      let t = ret (elt_of tys) in
+      if Options.custard_cherry ()
+      then mk (EOp ({ po_op = Dyn f; po_ty = None }, args)) t E_Pure
+      else match args with
+           | [a] -> mk (ECoerce (a, t)) t a.eff
+           | _ -> failwith "FStar.Dyn applied to the wrong number of arguments")) in
+  match id with
+  | "dyn" -> Some (Rule_type (fun _ -> TAny))
+  | "mkdyn" -> prim "mk" (fun _ -> TAny)
+  | "undyn" -> prim "get" (fun t -> t)
+  | _ -> None
+
 let builtin_rule (l:Ident.lident) : ML rule =
   let r =
     match HashTable.try_find table (Ident.string_of_lid l) with
@@ -1603,10 +1739,19 @@ let builtin_rule (l:Ident.lident) : ML rule =
            else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
                    Some? (list_coercion_rule id)
            then list_coercion_rule id
+           else if Options.custard_cherry () &&
+                   (ns = ["FStar"; "ImmutableArray"; "Base"] ||
+                    ns = ["FStar"; "ImmutableArray"]) &&
+                   Some? (iarray_rule id)
+           then iarray_rule id
+           else if ns = ["FStar"; "Dyn"] && Some? (dyn_rule id)
+           then dyn_rule id
            (* A rule for one name beats the module-wide [Rule_realized], as
               for every family above. *)
            else if Some? (pulse_rule ns id) then pulse_rule ns id
-           else if is_realized_module ns then Some Rule_realized
+           else if is_realized_module ns &&
+                   not (Options.custard_cherry () && is_cherry_source_module ns)
+           then Some Rule_realized
            else None)
       | [] -> None
   in

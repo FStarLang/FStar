@@ -12,8 +12,9 @@ runtime result is compared against what F\* proves statically.
 | `custard-c`         | `--codegen C` + `cc`                                  |
 | `custard-krml-c`    | `--codegen KrmlC` + `krml` + `cc`                     |
 | `custard-krml-rust` | `--codegen KrmlRust` + `krml -backend rust` + `rustc` |
+| `custard-cherry`    | `--codegen Cherry` + `cc` (ASan, UBSan)               |
 
-All four go through Custard (`doc/ref/custard.md`). The suite was written for
+All five go through Custard (`doc/ref/custard.md`). The suite was written for
 the legacy extraction pipeline, which also had `ocaml`, `c` and `rust`
 columns; those are gone with it, but `FINDINGS.md` keeps their analysis.
 
@@ -159,6 +160,7 @@ make                     # everything
 make custard-ocaml       # only the OCaml column
 make custard-krml-c custard-krml-rust   # only the Karamel columns
 make custard-c           # only the direct-to-C column
+make custard-cherry      # only the reference-counted C column (doc/ref/cherry.md)
 make ExtIntSigned.custard-c   # a single cell of the matrix
 V=1 make ...             # show the commands
 KRML_TIMEOUT=300 make    # two known bugs make krml loop; every krml call is

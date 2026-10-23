@@ -9,7 +9,7 @@ open FStarC.Class.Hashable
 
 (* Each hash code maps to a bucket of the entries with that hash code, so
 collisions are kept apart rather than overwriting each other. *)
-let hashmap (k v : Type) : Tot Type0 =
+let hashmap (k v : Type0) : Tot Type0 =
   PIMap.t (list (k & v))
 
 let empty (#k #v : _) : hashmap k v
@@ -79,7 +79,7 @@ let fold (#k #v : _)
 : ML 'a
 = PIMap.fold m (fun _ b a -> List.fold_left (fun a (k,v) -> f k v a) a b) init
 
-let cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> ML b) =
+let cached_fun (#a #b : Type0) {| hashable a |} {| deq a |} (f : a -> ML b) =
   let cache = mk_ref (empty #a #b) in
   let f_cached =
     fun x ->

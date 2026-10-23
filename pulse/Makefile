@@ -31,15 +31,15 @@ all: lib-core      # also check implentation files in core
 .PHONY: .force
 .force:
 
-## Checking and extracting the plugin. The plugin is extracted with the
-## stage2 compiler (see mk/fstar-tree.mk).
-checker.src: .force
+## Verifying the checker, and extracting the plugin (checker and syntax
+## extension together). Both use the stage2 compiler (see mk/fstar-tree.mk).
+checker.verify: .force
 	$(MAKE) -f mk/checker.mk FSTAR_EXE=$(FSTAR2_EXE)
 
-syntax_extension.src: checker.src .force
-	$(MAKE) -f mk/syntax_extension.mk FSTAR_EXE=$(FSTAR2_EXE)
+plugin.extract: .force
+	$(MAKE) -f mk/plugin.mk FSTAR_EXE=$(FSTAR2_EXE)
 
-plugin.src: checker.src syntax_extension.src
+plugin.src: checker.verify plugin.extract
 
 ## Building the plugin with dune
 plugin.build: plugin.src .force
@@ -97,7 +97,7 @@ do-install: plugin lib-pulse
 .PHONY: clean
 clean:
 	$(MAKE) -f mk/checker.mk clean
-	$(MAKE) -f mk/syntax_extension.mk clean
+	$(MAKE) -f mk/plugin.mk clean
 	$(MAKE) -f mk/lib-pulse.mk clean
 	$(MAKE) -f mk/lib-core.mk clean
 	$(MAKE) -f mk/lib-common.mk clean

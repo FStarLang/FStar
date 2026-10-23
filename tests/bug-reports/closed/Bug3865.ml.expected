@@ -3,10 +3,10 @@
 
 type 't bug3865_myty = ('t -> 't)
 
-let bug3865_intpak (x : Prims.int) : Prims.int =
-  (Prims.op_Plus x Prims.int_one)
-
 let bug3865_use : unit =
   (let x = (Prims.op_Plus (Prims.of_int (123)) Prims.int_one) in
-  (FStar_IO.print_string (Prims.strcat (Prims.string_of_int x) "\n")))
+  ((fun s -> Stdlib.print_string s; Stdlib.flush Stdlib.stdout) (Prims.strcat (Prims.string_of_int x) "\n")))
+
+let bug3865_intpak (x : Prims.int) : Prims.int =
+  (Prims.op_Plus x Prims.int_one)
 

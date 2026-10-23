@@ -497,6 +497,26 @@ let arrow_formals_unfold (env:TcEnv.env) (t:typ) : ML (binders & comp) =
   Prof.timed "Mono.arrow_formals_unfold" (fun () ->
     arrow_formals_unfold_aux max_arrow_unfold env t)
 
+let arrow_formals_unfold_folded (env:TcEnv.env) (t:typ)
+  : ML (binders & comp & int & comp) =
+  Prof.timed "Mono.arrow_formals_unfold" (fun () ->
+    let bs, c = U.arrow_formals_comp t in
+    let n = List.length bs in
+    if not (U.is_total_comp c) then bs, c, n, c
+    else
+      let env' = TcEnv.push_binders env bs in
+      let r = norm_bounded env' "an arrow spine"
+                [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                 TcEnv.Beta; TcEnv.Weak; TcEnv.HNF;
+                 TcEnv.UnfoldUntil delta_constant]
+                (U.comp_result c) in
+      let r = strip r in
+      match r.n with
+      | Tm_arrow _ ->
+        let bs', c' = arrow_formals_unfold_aux (max_arrow_unfold - 1) env' r in
+        bs @ bs', c', n, c
+      | _ -> bs, c, n, c)
+
 (* Whether [arrow_formals_unfold]'s count is the whole of what a call can
    supply.  It walks the same spine with the same fuel, and asks one more
    thing where that one stops: is there any way for the codomain to be a
@@ -576,6 +596,21 @@ let retained_binders (env:TcEnv.env) (t:typ) : ML binders =
    otherwise be [TAny]. *)
 let retained_sorts (env:TcEnv.env) (t:typ) : ML (list typ) =
   retained_binders env t |> List.map (fun (b:binder) -> b.binder_bv.sort)
+
+(* The same sorts, with the leading binders instantiated by the arguments a
+   partial application supplies (type arguments included, before erasure).
+   An eta-expanded polymorphic primitive otherwise types its binders at the
+   declaration's type variables: [List.Tot.map FStar.ImmutableArray.to_list]
+   had a parameter of type [t 'a]. *)
+let retained_sorts_inst (env:TcEnv.env) (t:typ) (args:list term) : ML (list typ) =
+  let bs, c = arrow_formals_unfold env t in
+  let flags = keep_thunk env bs c (bs |> List.map (is_erased_binder env)) in
+  let k = min (List.length args) (List.length bs) in
+  let subst = List.map2 (fun (b:binder) a -> NT (b.binder_bv, a))
+                        (fst (List.splitAt k bs)) (fst (List.splitAt k args)) in
+  List.zip bs flags
+  |> List.filter (fun (_, dropped) -> not dropped)
+  |> List.map (fun ((b:binder), _) -> SS.subst subst b.binder_bv.sort)
 
 (* Section 96.  The same binders' [ppname]s, so that an eta-expanded primitive
    says what the declaration said rather than [eta], [eta1].  Filtered by the

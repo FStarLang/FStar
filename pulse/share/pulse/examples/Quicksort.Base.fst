@@ -42,7 +42,6 @@ let between_bounds (s: Seq.seq int) (lb rb: int)
 let sorted (s: Seq.seq int)
   = forall (i j: nat). i <= j /\ j < Seq.length s ==> Seq.index s i <= Seq.index s j
 
-#push-options "--retry 10"
 let lemma_sorted_append
   (s1 s2 : Seq.seq int)
   (l1 r1 l2 r2 : int)
@@ -59,7 +58,11 @@ let lemma_sorted_append
     with (
       if j < n1 then ()
       else if i < n1 then ()
-      else ()
+      else (
+        (* sorted s2 quantifies over nats; Z3 won't instantiate it at i - n1 by itself *)
+        eliminate forall (i j: nat). i <= j /\ j < Seq.length s2 ==> Seq.index s2 i <= Seq.index s2 j
+        with (i - n1) (j - n1)
+      )
     );
     introduce forall (k: int). 0 <= k /\ k < Seq.length s ==> l1 <= Seq.index s k /\ Seq.index s k <= r2
     with introduce _ ==> _
@@ -74,7 +77,6 @@ let lemma_sorted_append_squash
               r1 <= l2))
     : squash (sorted (Seq.append s1 s2) /\ between_bounds (Seq.append s1 s2) l1 r2)
   = lemma_sorted_append s1 s2 l1 r1 l2 r2
-#pop-options
 
 let to_nat (x: int{x >= 0}): nat = x
 (** Permutation reasoning **)

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+shopt -s nullglob
+
 PREFIX="$1"
 mkdir -p "$PREFIX"
 PREFIX="$(realpath "$PREFIX")"
@@ -19,7 +21,7 @@ inst1 () {
 	cp "$1" "$TGT"
 }
 
-for dir in z3-4.8.5 z3-4.13.3 z3-4.15.3; do
+for dir in z3-4.8.5 z3-4.13.3 z3-4.15.3 z3-5.3.0; do
   inst1 ./$dir/bin/z3
   inst1 ./$dir/LICENSE.txt
   for dll in ./$dir/bin/*dll; do

@@ -18,14 +18,12 @@ module Pulse.Extract.CompilerLib
 
 module R = FStar.Reflection.V2
 
-type term = R.term
-type binder = R.binder
-val unit_tm : term
-val unit_ty : term
-val mk_return (t:term) : Dv term
-val mk_meta_monadic : term -> Dv term
-val mk_pure_let (b:binder) (head body:term) : Dv term
-val mk_let (b:binder) (head body:term) : Dv term
-val mk_if (b then_ else_:term) : Dv term
+val unit_tm : R.term
+val unit_ty : R.term
+val mk_return (t:R.term) : Dv R.term
+val mk_meta_monadic : R.term -> Dv R.term
+val mk_pure_let (b:R.binder) (head body:R.term) : Dv R.term
+val mk_let (b:R.binder) (head body:R.term) : Dv R.term
+val mk_if (b then_ else_:R.term) : Dv R.term
 
-val mk_extracted_as_attr (impl: term) : Dv term
+val mk_extracted_as_attr (impl: R.term) : Dv R.term

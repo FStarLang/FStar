@@ -68,7 +68,7 @@ endif
 # the prerequisite, so that $< in the recipes below is M's checked file;
 # a client can still override the recipe for a given target.
 define extraction_targets
-$(OUTPUT_DIR)/$(subst .,_,$(1)).ml $(OUTPUT_DIR)/$(subst .,_,$(1)).fs $(OUTPUT_DIR)/$(subst .,_,$(1)).krml: $(CACHE_DIR)/$(1).fst.checked
+$(OUTPUT_DIR)/$(subst .,_,$(1)).ml $(OUTPUT_DIR)/$(subst .,_,$(1)).fs $(OUTPUT_DIR)/$(subst .,_,$(1)).krml $(OUTPUT_DIR)/$(1).cherry.c: $(CACHE_DIR)/$(1).fst.checked
 endef
 $(foreach f,$(filter %.fst,$(FSTAR_FILES)),$(eval $(call extraction_targets,$(basename $(notdir $(f))))))
 
@@ -148,6 +148,31 @@ $(OUTPUT_DIR)/%.fs-out: $(OUTPUT_DIR)/%.fs-exe
 	$(call msg, "RUN (F#)", $(basename $(notdir $<)))
 	./$< > $@
 
+# Cherry (doc/ref/cherry.md): every RUN test is also compiled with
+# --codegen Cherry and run under ASan and UBSan, with leak checking, and its
+# output must be the OCaml executable's.  NOCHERRY=1 skips this, and
+# NO_CHERRY lists the RUN tests a directory excludes.
+CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+CHERRY_CC ?= $(CC)
+CHERRY_CXX ?= $(CXX)
+CHERRY_CFLAGS ?= -std=c11 -g -DCHERRY_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined
+
+$(OUTPUT_DIR)/%.cherry.c:
+	$(call msg, "EXTRACT CHERRY", $(basename $(notdir $@)))
+	$(FSTAR) --codegen Cherry --custard_monomorphize_types true \
+	  --custard_main $(subst .fst.checked,,$(notdir $<)) $< -o $@
+
+$(OUTPUT_DIR)/%.cherry-exe: $(OUTPUT_DIR)/%.cherry.c
+	$(call msg, "CC CHERRY", $*)
+	$(CHERRY_CC) $(CHERRY_CFLAGS) -I$(CHERRY_INC) -I$(OUTPUT_DIR) \
+	  $< $(CHERRY_INC)/cherry.c -o $@
+
+$(OUTPUT_DIR)/%.cherry-out: $(OUTPUT_DIR)/%.cherry-exe $(OUTPUT_DIR)/%.out
+	$(call msg, "RUN (Cherry)", $*)
+	ASAN_OPTIONS=detect_leaks=1 ./$< > $@.tmp
+	cmp $@.tmp $(OUTPUT_DIR)/$*.out
+	mv $@.tmp $@
+
 ### Checking expected output for any kind of file (error output, ml, etc)
 $(OUTPUT_DIR)/%.diff: $(OUTPUT_DIR)/% %.expected
 	$(call msg, "DIFF", $<)
@@ -216,11 +241,13 @@ clean: __clean
 # client's identically-named override -- both survive and make picks this
 # one -- which is the trap §49.6 of doc/ref/custard.md describes.  It is
 # order-only so that $< is still the root's checked file.
+RUN_CHERRY := $(filter-out $(NO_CHERRY),$(RUN))
 CUSTARD_EXTRACT_TARGETS := \
   $(patsubst %.fst,$(OUTPUT_DIR)/%.ml,$(EXTRACT) $(BUILD) $(RUN)) \
   $(patsubst %.fst,$(OUTPUT_DIR)/%.fs,$(RUN_FSHARP)) \
   $(patsubst %.ml.expected,$(OUTPUT_DIR)/%.ml,$(wildcard *.ml.expected)) \
-  $(patsubst %.fs.expected,$(OUTPUT_DIR)/%.fs,$(wildcard *.fs.expected))
+  $(patsubst %.fs.expected,$(OUTPUT_DIR)/%.fs,$(wildcard *.fs.expected)) \
+  $(patsubst %.fst,$(OUTPUT_DIR)/%.cherry.c,$(RUN_CHERRY))
 $(sort $(CUSTARD_EXTRACT_TARGETS)): | $(ALL_CHECKED_FILES)
 
 __extract: $(patsubst %.fst,$(OUTPUT_DIR)/%.ml,$(EXTRACT))
@@ -240,6 +267,12 @@ __run: $(patsubst %.fst,$(OUTPUT_DIR)/%.fs-out,$(RUN_FSHARP))
 run: __run
 ifeq ($(NORUN),)
 all: __run
+endif
+
+__run_cherry: $(patsubst %.fst,$(OUTPUT_DIR)/%.cherry-out,$(RUN_CHERRY))
+run-cherry: __run_cherry
+ifeq ($(NORUN)$(NOCHERRY),)
+all: __run_cherry
 endif
 
 __diff: $(patsubst %.expected,$(OUTPUT_DIR)/%.diff,$(wildcard *.expected))

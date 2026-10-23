@@ -14,10 +14,10 @@
    limitations under the License.
 *)
 
-(** The karamel AST, copy-pasted from karamel's [Ast.ml], together with its
-    pretty-printers and the versioned binary format that
+(** The karamel AST, copy-pasted from karamel's [InputAst.ml], together with
+    its pretty-printers.  {!FStarC.Custard.KrmlJson} is the [.krml] format
     {!FStarC.Custard.PrintKrml} writes.  Any change here has to be mirrored
-    in karamel and reflected in [current_version]. *)
+    in karamel and in [KrmlJson], and reflected in [current_version]. *)
 module FStarC.Custard.KrmlAst
 
 open FStarC
@@ -30,13 +30,6 @@ open FStarC.Pprint
 
 (* COPY-PASTED ****************************************************************)
 
-(* This AST is written to a file with [save_value_to_file] and read back by
-   karamel's [InputAst], whose OCaml declarations mirror what OCaml
-   extraction emits for these ones -- so the layout here is an ABI, not a
-   private choice.  Custard would otherwise inline the tuple field of every
-   constructor below (doc/ref/custard.md, section 5.7), and a compiler built
-   by Custard would write files that karamel reads as garbage. *)
-[@@FStar.Attributes.custard_boxed_fields]
 type decl =
   | DGlobal of list flag & lident & int & typ & expr
   | DFunction of option cc & list flag & int & typ & lident & list binder & expr
@@ -128,6 +121,7 @@ and expr =
   | EBufNull of typ
   | EBufDiff of expr & expr
   | ESizeof of typ
+  | EZeroForDeref of width
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -382,6 +376,7 @@ and expr_to_doc (e:expr) : ML document =
   | EBufNull x -> ctor "EBufNull" [pp x]
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
   | ESizeof t -> ctor "ESizeof" [pp t]
+  | EZeroForDeref w -> ctor "EZeroForDeref" [pp w]
 
 and pp_branch (b:branch) : ML document =
   let (p, e) = b in
@@ -397,11 +392,11 @@ instance showable_branch : showable branch = showable_from_pretty
 
 type version = int
 (* Version of the AST type, for binary compatibility with karamel. *)
-let current_version: version = 32
+let current_version: version = 33
 
 type program = list decl
 type file = string & program
 
-(** Versioned binary writing/reading of ASTs.
-    Serialization/parsing is with output_value/input_value. *)
+(** The contents of a [.krml] file, written and read by
+    {!FStarC.Custard.KrmlJson}. *)
 type binary_format = version & list file

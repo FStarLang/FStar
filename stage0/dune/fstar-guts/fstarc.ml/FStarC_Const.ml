@@ -20,7 +20,7 @@ type sconst =
   | Const_bool of bool
   | Const_int of Prims.int * FStar_IntegerLiteral.int_base
   | Const_machine_int of Prims.int * FStar_IntegerLiteral.int_base * signedness * width
-  | Const_char of FStar_Char.char
+  | Const_char of int
   | Const_real of FStar_RealLiteral.real_literal_repr
   | Const_string of string * FStarC_Range_Type.range
   | Const_range_of
@@ -88,8 +88,8 @@ let within_bounds (value : Prims.int) (signedness : signedness) (width : width) 
   ))
 
 let parse_int_literal (s : string) : (Prims.int * FStar_IntegerLiteral.int_base) =
-  (let s' = (if (FStarC_Util.starts_with s "-") then (FStarC_Util.substring_from s Prims.int_one) else s) in
+  (let s' = (if (FStarC_Util.starts_with s "-") then ((fun s i -> BatString.tail s (Z.to_int i)) s Prims.int_one) else s) in
   let b = (if ((FStarC_Util.starts_with s' "0x") || (FStarC_Util.starts_with s' "0X")) then FStar_IntegerLiteral.Hex else (if ((FStarC_Util.starts_with s' "0o") || (FStarC_Util.starts_with s' "0O")) then FStar_IntegerLiteral.Oct else (if ((FStarC_Util.starts_with s' "0b") || (FStarC_Util.starts_with s' "0B")) then FStar_IntegerLiteral.Bin else FStar_IntegerLiteral.Dec))) in
-  let tmp = (FStarC_Util.int_of_string s) in
+  let tmp = (Z.of_string s) in
   (tmp, b))
 

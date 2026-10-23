@@ -56,6 +56,9 @@ CUSTARD_TESTS += RetArity
 CUSTARD_TESTS += Realized
 CUSTARD_TESTS += Patlift
 CUSTARD_TESTS += EraseAbbrev
+# An empty match becomes an [EUnreachable]; OCaml cannot spell one.
+CUSTARD_TESTS += EmptyMatch
+GREP_EmptyMatch += "empty match"
 
 # Section 31.4: [FStar.Attributes.rename_let] on a local [let] must reach the
 # emitted name.  The rename is applied to the [bv] rather than to the [ELet],
@@ -206,7 +209,7 @@ GREP_MonoTypes   += "| Prims_Nil__int ->"
 # only do if the key printer distinguishes them.  The run itself is the real
 # assertion (the output is "abAB", not "abab"); this checks the shape.
 GREP_KeyNames = "keyNames_apply__tweak" "keyNames_apply__tweak_1" \
-                "FStar_String.lowercase" "FStar_String.uppercase"
+                "BatString.lowercase_ascii" "BatString.uppercase_ascii"
 
 # Section 8.4: a garbage-collected reference is an OCaml 'ref', not a
 # one-element array, and it is never freed.
@@ -373,6 +376,8 @@ KRML_TESTS += KrmlPrims
 FS_TESTS += KrmlBasic Hello Literals LitBase LitStr Floats Exceptions Refs
 FS_TESTS += Recursion Mymon AnyCond AnyException UnitPtr Typeclass
 FS_TESTS += MachineInts Unroll ShortCircuit Union Wide128 Rotate
+# F# cannot spell an empty match either.
+FS_TESTS += EmptyMatch
 
 # Sections 122.14 and 135.  The unit-argument rule, from the side that only a
 # typed target can see: [j] takes a [unit] and a [UInt32.t], and the IR drops
@@ -448,7 +453,7 @@ EGREP_FSPun = "which .NET cannot express"
 # compiler with the warnings on and run; the program must exit 0.  The direct
 # backend has no polymorphism to fall back on, so it always runs with type
 # monomorphization (section 5.0.1).
-C_TESTS += KrmlBasic CExtern CRecType IndexedSquash CByValue CDeadLet CFunPtr
+C_TESTS += KrmlBasic CExtern IndexedSquash CDeadLet CFunPtr
 C_TESTS += Rotate
 KRML_TESTS += Rotate
 # The mask is the whole point of the rule, so the C is pinned as well as run:
@@ -472,13 +477,6 @@ C_TESTS += RefStrip
 C_TESTS += CEtaChain
 CGREP_CEtaChain = "CEtaChain_g(bool" "CEtaChain_call_g(bool" "CEtaChain_h(bool"
 CNOGREP_CEtaChain = "(*CEtaChain_g)" "(*CEtaChain_call_g("
-
-# Section 57.1: an extern returning a pointer.  A C macro over untyped memory
-# hands back [void *], which C converts silently and C++ rejects, so the
-# call site has to carry the cast.  The load-bearing check is the CXX step
-# of the [%.dc] rule below, not the grep; the grep just pins the shape.
-C_TESTS += ExtPtr
-CGREP_ExtPtr = "(uint8_t *)extptr_base"
 
 # Section 60.3.  A reviewer's probe for section 57.2's [Weak; HNF].  All
 # three binders are arities whose head is *not* immediately present -- an
@@ -507,14 +505,15 @@ CNOGREP_KindStar = "void *"
 # checks its own answers, so .dcran is the real assertion; before the fix
 # this program returned 1 with no compiler diagnostic at all.
 C_TESTS += ShiftLit
+
+# Two static definitions that C spells the same way: the second is renamed to
+# the first free suffix, which skips a name the program already uses.
+C_TESTS += NameClash
+CGREP_NameClash = "NameClash_step_(uint32_t x)" "NameClash_step__1(uint32_t x)" \
+                  "NameClash_step__2(uint32_t x)"
 CGREP_ShiftLit = "((uint64_t)40ULL) << n" "return (40 + n);"
 CNOGREP_ShiftLit = "return (40 << n);"
 
-# Section 61.2.  Two negation sites, broken for two different reasons.
-# EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
-C_TESTS += ExtFlag
-CGREP_ExtFlag = "if (!(EXT_FLAG)) return 0;" "if (!(EXT_FLAG)) r[0] = 0;"
-CNOGREP_ExtFlag = "!EXT_FLAG"
 # Section 26.  CVarArity's callee is an arrow-typed global *variable* -- the
 # lowering section 25.3 keeps deliberately -- so the grep asserts that the
 # variable is still a variable and that its caller nonetheless takes both
@@ -629,7 +628,10 @@ CNOGREP_TyFun = "void *"
 # independent model (CborBoundary.model.py).  CborBoundary.md documents the
 # corpus, and pulse/CborBoundarySlice.fst is the same checker over a slice,
 # which this directory cannot host because stage1 and stage2 have no Pulse.
-C_TESTS += CborBoundary
+# Its input is a list linked through ML references, which are
+# garbage-collected and which only Cherry can count, so it runs through
+# Cherry alone; pulse/CborBoundarySlice runs the same corpus through C.
+CHERRY_TESTS += CborBoundary
 
 # Section 14.5 and 14.6: a type the target declares, said both ways, and a
 # global whose initializer is a computation -- against one that is a constant
@@ -664,25 +666,6 @@ CNOGREP_CExtern = "typedef cextern_handle_t" "CExtern_handle" "CExtern_tag" \
 # representation at all.  This is EverParse's whole parse/serialize idiom.
 CGREP_IndexedSquash   = "IndexedSquash_payload _2;"
 CNOGREP_IndexedSquash = "void *"
-
-# Section 17.3: recursion through a pointer.  Every struct is tagged and every
-# tag is forward-declared, so a field may name a type that is defined later --
-# which a self-referential type always does.
-CGREP_CRecType   = "typedef struct CRecType_tree_s CRecType_tree;" \
-                   "typedef struct CRecType_node_s CRecType_node;" \
-                   "struct CRecType_node_s {" \
-                   "CRecType_tree *left;"
-# No struct typedef is anonymous any more, and the recursive types are not
-# rejected as infinite: the recursion goes through a pointer.
-CNOGREP_CRecType = "typedef struct {" "} CRecType_tree;" "} CRecType_node;"
-
-# Section 18.4: a field held by value needs a complete type, so the struct
-# definitions are topologically sorted over the by-value edges -- which are
-# acyclic even when the group as a whole is cyclic through a pointer.  The
-# real assertion is that this compiles: without the sort, [arr] holds a
-# [slice__raw] that is still incomplete at that point, which is an error.
-CGREP_CByValue   = "CByValue_slice__raw a_ptr;" "CByValue_raw *s_base;"
-CNOGREP_CByValue = "typedef struct {"
 
 # Section 19.5: a pattern that names fields the body never reads leaves a
 # declaration with an initializer and no use, which -Werror=unused-variable
@@ -1486,6 +1469,39 @@ $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 	$(Q)$<
 	$(Q)touch $@
 
+# A directory of its own: a unit's header is named after the module, and the
+# direct-C leg writes one of the same name for the same test.
+CHERRY_DIR = $(OUTPUT_DIR)/cherry
+
+$(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CHERRY", $(basename $(notdir $@)))
+	@mkdir -p $(CHERRY_DIR)
+	$(FSTAR) $(WARN_ANY) $(FLAGS_$*) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+
+# The runtime (cherry.h and the slow paths in cherry.c) is not generated; it
+# is the one F* installs, found the way a user would find it.
+CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+
+# Debug mode (cherry.md): every fact the generated code takes from F* --
+# exhaustive matches, projectors, array bounds -- is checked at run time.
+# CHERRY_DEBUG= builds the tests the way a release build is.
+CHERRY_DEBUG ?= -DCHERRY_DEBUG
+
+$(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc $$(CEXTRA_$$*)
+	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined $(CHERRY_CFLAGS_$*) \
+	  -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  -x c $< $(CHERRY_INC)/cherry.c $(CEXTRA_$*) -o $@
+	$(Q)$(CHERRY_CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  -fsyntax-only -x c++ $<
+
+$(CHERRY_DIR)/%.chran: $(CHERRY_DIR)/%.chexe
+	$(call msg, "RUN-ASAN", $(basename $(notdir $@)))
+	$(Q)$(CHERRY_RUN_$*) ASAN_OPTIONS=detect_leaks=1 $<
+	$(Q)touch $@
+
 $(OUTPUT_DIR)/%.cran: $(OUTPUT_DIR)/%.cexe
 	$(call msg, "RUN-C", $(basename $(notdir $@)))
 	$(Q)$<
@@ -2230,17 +2246,6 @@ CHNOGREP_Narrow += "CUSTARD_FLOAT16_DEFINED"
 CGREP_Narrow += "\#ifndef CUSTARD_FLOAT16_DEFINED"
 CHNOGREP_NarrowG += "CUSTARD_FLOAT16_DEFINED"
 
-# Section 123.  [custard_unit] is emitted where it is used and nowhere else.
-# It is genuinely still reachable -- a [ref unit] is a [custard_unit *] --
-# but for a whole program it is usually reachable nowhere, which is why it
-# was boilerplate in every header and a use in none of them.
-C_TESTS += CUnitTy CUnitRef
-CHGREP_CUnitTy += "typedef uint8_t custard_unit;"
-CGREP_CUnitTy += "custard_unit *cell;"
-CHNOGREP_CUnitRef += "custard_unit"
-CGREP_CUnitRef += "typedef uint8_t custard_unit;"
-CGREP_CUnitRef += "CUnitRef_get(custard_unit *r)"
-
 # Section 123.  And the ordinary case: a program that uses neither gets
 # neither, which is every program in this suite bar the three above.
 CHNOGREP_KrmlBasic += "custard_unit" "CUSTARD_FLOAT16_DEFINED"
@@ -2681,6 +2686,13 @@ CUSTARD_TESTS += FloatsML
 GREP_FloatsML += "( +\. )"
 NOGREP_FloatsML += "FStar_Float64"
 
+# FStar.Pprint: PPrint on OCaml, ulib/FStar.Pprint-c.cherry.fst on Cherry.
+CUSTARD_TESTS += PrettyDoc
+
+# FStar.String: Batteries' UTF-8 functions on OCaml,
+# ulib/FStar.String-c.cherry.fst on Cherry.
+CUSTARD_TESTS += StringLib
+
 # Section 38.  OCaml's float is binary64 and there is no binary32 to round to,
 # so a single-precision program is refused rather than computed at the wrong
 # precision.
@@ -2893,41 +2905,54 @@ C_TESTS    += FragCfg
 CGREP_FragCfg += "fc_mma("
 CNOGREP_FragCfg += "FragCfg_frag"
 
-# Section 51.3.  A prologue that follows the call graph.  Three callees, one
-# per reachability class: [only] is kernel-only and gets the exclusive
-# string, [both] is reached from the kernel and from host code and gets the
-# shared one, [host_only] is reached from neither and must be untouched.  The
-# strings are not CUDA's on purpose -- Custard does not read them, and a test
-# spelling __device__ would be checking a spelling.
+# Section 51.3.  A prologue that follows the call graph, and section 51.5:
+# the callees are copied once per distinct prologue, and only the copies are
+# decorated.  [only] and [deep] are reached from the two seeds alone, so the
+# originals go; [both] is reached from host code too, so its original stays,
+# undecorated; [host_only] is reached from neither seed and [opt_out] has a
+# prologue of its own, so neither is copied.  The strings are not CUDA's on
+# purpose -- Custard does not read them, and a test spelling __device__ would
+# be checking a spelling.
 C_TESTS += DevClosure
-CGREP_DevClosure += "/*ENTRY*/" "/*EXCL*/" "/*SHARED*/"
+CGREP_DevClosure += "/*ENTRY*/" "/*EXCL*/" "/*target(avx2)*/" \
+                    "DevClosure_both(" "DevClosure_host_only("
+# An original that only the seeds called is gone; nothing else is copied.
+CNOGREP_DevClosure += "DevClosure_only(" "DevClosure_deep(" "DevClosure_down(" \
+                      "DevClosure_opt_out__" "DevClosure_host_only__"
 # Which function got which prologue is the whole test, and a prologue sits on
 # the line before the definition it decorates, so the assertions are on pairs
 # of lines rather than on lines.  CPAIR_<t> is `A@B', asserting that some A is
 # immediately followed by a B; CNOPAIR_<t> asserts that none is.
-CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only" \
-                      "/*SHARED*/@DevClosure_both" \
-                      "/*ENTRY*/@DevClosure_kernel"
-CNOPAIR_DevClosure += "/*SHARED*/@DevClosure_only" \
-                      "/*EXCL*/@DevClosure_both" \
+CPAIR_DevClosure   += "/*EXCL*/@DevClosure_only__EXCL(" \
+                      "/*EXCL*/@DevClosure_deep__EXCL(" \
+                      "/*EXCL*/@DevClosure_both__EXCL(" \
+                      "/*target(avx2)*/@DevClosure_only__avx2(" \
+                      "/*target(avx2)*/@DevClosure_deep__avx2(" \
+                      "/*target(avx2)*/@DevClosure_both__avx2(" \
+                      "/*target(avx2)*/@DevClosure_down__avx2(" \
+                      "/*OPT_OUT*/@DevClosure_opt_out(" \
+                      "/*ENTRY*/@DevClosure_kernel("
+CNOPAIR_DevClosure += "/*EXCL*/@DevClosure_both(" \
+                      "/*target(avx2)*/@DevClosure_both(" \
                       "/*EXCL*/@DevClosure_host_only" \
-                      "/*SHARED*/@DevClosure_host_only" \
+                      "/*target(avx2)*/@DevClosure_host_only" \
                       "/*EXCL*/@static uint32_t DevClosure_host_g"
-# Section 53.2.  The fourth node type: a *global* in the device closure.  The
-# closure covers functions, and a global reached from device code used to get
-# nothing -- one node type over from the case that was tested.
-CPAIR_DevClosure   += "/*EXCL*/@static uint32_t DevClosure_gk"
+# Section 51.5.  A global is neither copied nor marked, even when seeds
+# with different prologues both read it.
+CNOPAIR_DevClosure += "/*EXCL*/@static uint32_t DevClosure_gk" \
+                      "/*target(avx2)*/@static uint32_t DevClosure_gk"
 
-# Section 53.2.  The other half, which cannot be marked at all: a global that
-# device *and* host code read.  The shared string describes a function, and
-# applying it to a variable on CUDA compiles with a warning and is wrong at
-# runtime, so Custard refuses instead of guessing.
-REJECT_TESTS += DevGShare
-CODE_DevGShare := 383
-FLAGS_DevGShare := --codegen C --custard_monomorphize_types true
-EGREP_DevGShare += "the global DevGShare.g is reached from device code"
-EGREP_DevGShare += "__managed__"
-NOEGREP_DevGShare += "please report"
+# Section 51.6.  The seed and its copies are wrapped in [#if], the caller
+# tests a [custard_c_ifdef] flag, and every prologue is an [#error], so the
+# C compiler is the assertion that nothing escaped the guard.
+C_TESTS += DevGuard
+CGREP_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)" "\#else" "\#if 1" \
+                  "DevGuard_helper__error_copy_escaped_its_guard("
+CPAIR_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)@\#error seed escaped"
+# A flag used as anything but the whole condition of an [if].
+REJECT_TESTS += DevGuardBad
+CODE_DevGuardBad = 398
+FLAGS_DevGuardBad := --codegen C
 
 # Section 53.3.  One C symbol, two prototypes.  Warning 367's own advice used
 # to end here, and following it alone gives a file that does not compile; the
@@ -2937,7 +2962,8 @@ NOEGREP_DevGShare += "please report"
 # declared foreign -- which no C compiler and no linker objects to.
 REJECT_TESTS += ExtOwn
 CODE_ExtOwn := 374
-FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run
+# [helper] is public: a static one would just be renamed (NameClash).
+FLAGS_ExtOwn := --codegen C --custard_entry ExtOwn.run --custard_entry ExtOwn.helper
 EGREP_ExtOwn += "both named \`ExtOwn_helper'"
 EGREP_ExtOwn += "custard_extern"
 
@@ -3032,7 +3058,7 @@ RSNOGREP_RustTup += "pub struct __uint32_t_uint32_t"
 # spells theirs: an api module on the left of the [=], a pattern on the right.
 RUSTSPLIT_TESTS += RustSplit
 # The [*] goes on the *lower* bundle, which is EverParse's own arrangement
-# read the other way up: the shared declarations -- [Custard.Prims], the
+# read the other way up: the shared declarations -- [prims], the
 # specializations Custard makes of library functions -- have to end up in a
 # file both halves may refer to, and putting them above the module that uses
 # them is what makes the two files circular.  karamel says so, in as many
@@ -3286,19 +3312,6 @@ CGREP_SzWidth32 += "return (uint32_t)n;"
 # The narrowed run must not mention size_t anywhere, in either file.
 CNOGREP_SzWidth32 += "size_t"
 
-# Section 6.  The dangling [else].  Both arms of each pair are one statement,
-# so both would be written unbraced, and an unbraced [if] with no [else] in a
-# [then] arm captures the [else] that follows it.  [-Wall -Werror] catches the
-# shape -- gcc and clang both have [-Wdangling-else] -- but the load-bearing
-# check is that the program *runs*: [f false true] must return 2 and [g G
-# false] must return 2, and under the capture the first falls through to 0 and
-# the second takes the [B] arm.
-C_TESTS += CDangle
-FLAGS_CDangle = --codegen C --custard_entry_module CDangle
-CGREP_CDangle += "if (a) {"
-CGREP_CDangle += "else if (x == CDANGLE_G)"
-CNOGREP_CDangle += "if (a) if ("
-
 # Section 129.  A copy binding between a tuple's constructor and the match
 # that consumes it.  F* elaborates [let (a, (b, ())) = p] into [let
 # _letpattern = p in match _letpattern with ...] whenever the scrutinee is
@@ -3357,6 +3370,45 @@ NOGREP_BoxedFields += "BoxedFields_Bar of bool \* string"
 # arrow behind more abbreviations than the old fuel of eight.
 CUSTARD_TESTS += HeapClosures
 
+# A curried constructor through a monad dictionary passed at run time, at the
+# identity monad (FStarC.Syntax.VisitM's [Mktuple2 <$> f b <*> g a]).  Under
+# Cherry the closure goes into [any] taking one argument and comes out taking
+# two, a continuation's binder of arrow type is not [any] because the
+# continuation is, and an argument meets a head coerced to the arrow the call
+# was typed at.
+CUSTARD_TESTS += DynCurry
+FLAGS_DynCurry = --warn_error -367
+CUSTARD_TESTS += DynPartial
+FLAGS_DynPartial = --warn_error -367
+
+# Section 5.4: the coercion pass retypes what it pushes an expectation into --
+# a lambda takes its coerced body's result type, a constructor built at [any]
+# takes the type its position wants -- so that Cherry does not take a value
+# out of an [any] it was never put into.
+CUSTARD_TESTS += CoerceLamRes CoerceCtor
+FLAGS_CoerceLamRes = --warn_error -367
+
+# Matches nested in each other's last branch, too deep for a printer that
+# emits a trailing branch twice per level (PrintC's trial emission in [trim]).
+CUSTARD_TESTS += DeepMatch
+
+# A parameter that only a self tail call reads, passing it unchanged: the loop
+# does not write it, so C sees it unused, and -Werror rejects that unless it is
+# voided.
+CUSTARD_TESTS += TailKept
+
+# Section 4.4.  A module's initializers run before a global of a module that
+# refers to it is computed, though nothing refers to them.
+CUSTARD_TESTS += InitOrder
+
+# Section 4.4.  So do those of a module the program only opens, which is known
+# to the program by its interface alone: the dependency graph has the
+# implementation, and OCaml links (and so initializes) every module in it.
+# Nothing makes the implementation a dependence of the test, so check it here.
+CUSTARD_TESTS += InitOpen
+$(OUTPUT_DIR)/InitOpen.ml $(CHERRY_DIR)/InitOpen.chc: \
+  $(CACHE_DIR)/InitOpenLib.fst.checked
+
 # Section 135.1 on C, which keeps dropping erased binders everywhere: the deep
 # abbreviation is unfolded to the end, so definition and call agree.
 C_TESTS += CHeapArity
@@ -3367,10 +3419,188 @@ REJECT_TESTS += ArrowUnfoldLimit
 CODE_ArrowUnfoldLimit := 365
 EGREP_ArrowUnfoldLimit += "gave up unfolding an arrow type after 1000 layers"
 
+# Cherry: branches whose types agree only up to an abbreviation are not
+# joined to any.
+CHERRY_TESTS += CherryAnyIf
+
+# Cherry: a monomorphic local function called once in each of several
+# branches stays one closure rather than a copy per branch (Simplify.reduce).
+CUSTARD_TESTS += LocalFunDup
+$(CHERRY_DIR)/LocalFunDup.chonce: $(CHERRY_DIR)/LocalFunDup.chc
+	$(Q)test "$$(grep -c 'LocalFunDup_marker();' $<)" = 1 \
+	  || { echo "ERROR: LocalFunDup's local function was copied"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/LocalFunDup.chonce
+
+# Cherry: tail calls other than self calls -- between functions of different
+# signatures, in a function returning unit, and through a closure -- run in
+# constant stack, so a million iterations fit in a 1 MB stack.  Mutually
+# tail-recursive definitions are one C function, which jumps between them;
+# the closure call is CHERRY_MUSTTAIL.
+CUSTARD_TESTS += MutualTail
+CHERRY_RUN_MutualTail = ulimit -s 1024 &&
+$(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
+	$(Q)for p in 'static cherry_int MutualTail_p[io]ng__tail\(int custard_entry\)' \
+	    'static void MutualTail_t[io]ck__tail\(int custard_entry\)' \
+	    'goto custard_tail_[01];' \
+	    'static cherry_int MutualTail_walk(__fallback)?__tail\(int custard_entry\)' \
+	    'CHERRY_MUSTTAIL return cherry_apply_'; do \
+	  grep -qE -- "$$p" $< \
+	    || { echo "ERROR: MutualTail's C output is missing $$p"; exit 1; }; done
+	$(Q)$(CHERRY_CC) -std=c11 -O2 -Wall -Wextra -Werror -Wno-free-nonheap-object \
+	  -I$(CHERRY_DIR) -I$(CHERRY_INC) -c -x c $< -o $(basename $@).o
+	$(Q)touch $@
+all: $(CHERRY_DIR)/MutualTail.chgrep
+
+# Cherry: [@@cherry_boxed] boxes a non-recursive record, mutual bundle or
+# variant, and a call passing one is a guaranteed tail call.
+CUSTARD_TESTS += CherryBoxedAttr
+CHERRY_RUN_CherryBoxedAttr = ulimit -s 1024 &&
+$(CHERRY_DIR)/CherryBoxedAttr.chgrep: $(CHERRY_DIR)/CherryBoxedAttr.chc
+	$(Q)for p in 'typedef cherry_obj *CherryBoxedAttr_outer;' \
+	    'typedef cherry_obj *CherryBoxedAttr_inner;' \
+	    'typedef cherry_obj *CherryBoxedAttr_shape;' \
+	    'CHERRY_MUSTTAIL return CherryBoxedAttr_walk('; do \
+	  grep -qF -- "$$p" $< $(basename $<).h \
+	    || { echo "ERROR: CherryBoxedAttr's C output is missing $$p"; exit 1; }; done
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryBoxedAttr.chgrep
+
+# Cherry: a matched cell that dies on one arm of a conditional inside the
+# branch is reused there.
+$(CHERRY_DIR)/CherryReuse.chgrep: $(CHERRY_DIR)/CherryReuse.chc
+	$(Q)sed -n '/^static .* CherryReuse_add_new(.*{$$/,/^}/p' $< | grep -q 'cherry_reuse_' \
+	  || { echo "ERROR: CherryReuse_add_new does not reuse its cell"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryReuse.chgrep
+
+# Cherry: a match that owns a dying unboxed value moves its fields out.
+$(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
+	$(Q)! sed -n '/^static .* CherryMoveFields_\(swap\|first\)(.*{$$/,/^}/p' $< | grep -q 'cherry_inc' \
+	  || { echo "ERROR: CherryMoveFields counts the fields it takes"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryMoveFields.chgrep
+
+# The Cherry backend (cherry.md): C with reference-counted heap cells for the
+# recursive datatypes.  The run is under AddressSanitizer, whose leak checker
+# is the assertion that every cell allocated is freed exactly once.
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields
+
+# Freeing, marking and comparing deep values with a 1 MB stack.
+CHERRY_CFLAGS_CherryDeep = -O2
+CHERRY_RUN_CherryDeep = ulimit -s 1024 &&
+CHERRY_CFLAGS_CherryEq = -O2
+CHERRY_RUN_CherryEq = ulimit -s 1024 &&
+CHERRY_CFLAGS_CherryIArray = -O2
+CHERRY_RUN_CherryIArray = ulimit -s 1024 &&
+CHERRY_CFLAGS_CherryExn = -O2
+CHERRY_RUN_CherryExn = ulimit -s 1024 &&
+CHERRY_CFLAGS_CherryDyn = -O2
+
+# Cherry: integer literals of 2^30 and more are static cells, never built
+# at run time.
+$(CHERRY_DIR)/CherryInt.chgrep: $(CHERRY_DIR)/CherryInt.chc
+	$(Q)for p in 'CHERRY_INT_LIT(' 'CHERRY_INT_WIDE(INT64_C(4611686018427387903)'; do \
+	  grep -qF -- "$$p" $< \
+	    || { echo "ERROR: CherryInt's C output is missing $$p"; exit 1; }; done
+	$(Q)! grep -q 'cherry_int_of_decimal' $< \
+	  || { echo "ERROR: CherryInt builds a literal at run time"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryInt.chgrep
+
+# Locals of different initializers share one C function.
+CHERRY_TESTS += CherryInitScope
+
+# A local function whose type is an arrow only through a recursive type
+# function is not lambda-lifted, which would read its result type off its
+# type: it stays a closure returning [p].
+CHERRY_TESTS += CherryLiftMatch
+$(CHERRY_DIR)/CherryLiftMatch.chgrep: $(CHERRY_DIR)/CherryLiftMatch.chc
+	$(Q)grep -qE '^static cherry_string CherryLiftMatch_main__[a-z]+\(cherry_int src\)' $< \
+	  || { echo "ERROR: CherryLiftMatch's local has the wrong signature"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryLiftMatch.chgrep
+
+# Issue 4715.  An equality test that reaches a dyn is refused, naming the
+# fields that lead to it, rather than emitting a C [==] on cherry_any.
+REJECT_TESTS += CherryDynEq
+FLAGS_CherryDynEq  = --codegen Cherry --custard_monomorphize_types true
+CODE_CherryDynEq   = 368
+EGREP_CherryDynEq += "an equality test at FStar.Dyn.dyn, in CherryDynEq.main"
+EGREP_CherryDynEq += "field c of constructor W of"
+EGREP_CherryDynEq += "then field d of CherryDynEq.cell"
+
+# Separate compilation under Cherry: a library unit and an application linked
+# against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
+# helpers for the library's types, and its own copy of each exception's and
+# each dynamic type's information, which the runtime identifies by name.
+$(CHERRY_DIR)/CherrySepLib.cui: $(CACHE_DIR)/CherrySepLib.fst.checked $(FSTAR_EXE)
+	$(call msg, "CHERRY-UNIT", CherrySepLib)
+	@mkdir -p $(CHERRY_DIR)
+	$(FSTAR) $(WARN_ANY) --warn_error -377 --codegen Cherry \
+	  --custard_monomorphize_types true --custard_unit CherrySepLib \
+	  $(foreach e,mk g gd boom wrap map protect adder cell arr same count append keep peek,--custard_entry CherrySepLib.$(e)) \
+	  --odir $(CHERRY_DIR) CherrySepLib.fst
+
+$(CHERRY_DIR)/CherrySepLib.c: $(CHERRY_DIR)/CherrySepLib.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(CHERRY_DIR)/CherrySepApp.c: $(CACHE_DIR)/CherrySepApp.fst.checked \
+                              $(CHERRY_DIR)/CherrySepLib.cui $(FSTAR_EXE)
+	$(call msg, "CHERRY-LINK", CherrySepApp)
+	$(FSTAR) $(WARN_ANY) --warn_error -377 --codegen Cherry \
+	  --custard_monomorphize_types true \
+	  --custard_link $(CHERRY_DIR)/CherrySepLib.cui \
+	  --custard_main CherrySepApp.main CherrySepApp.fst -o $@
+
+$(CHERRY_DIR)/CherrySepApp.chran: $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/CherrySepApp.c
+	$(call msg, "CC-ASAN", CherrySepApp)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g -O2 $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/CherrySepApp.c $(CHERRY_INC)/cherry.c \
+	  -o $(CHERRY_DIR)/CherrySepApp.chexe
+	$(Q)for f in CherrySepLib CherrySepApp; do \
+	  $(CHERRY_CXX) -std=c++17 -Wall -Werror -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	    -fsyntax-only -x c++ $(CHERRY_DIR)/$$f.c || exit 1; done
+	$(call msg, "RUN-ASAN", CherrySepApp)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(CHERRY_DIR)/CherrySepApp.chexe
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherrySepApp.chran
+
+# Cherry with [--custard_split] (cherry.md, "Split output"): one file per
+# F* module, so that calls, globals, exception matches, dyn reads and the
+# initializer cross files.  A tail group stays in one file.
+CHERRY_SPLIT_TESTS = Exceptions AnyException DynPartial MutualTail InitOrder HeapClosures
+CHERRY_SPLIT_DIR = $(OUTPUT_DIR)/cherry-split
+
+$(CHERRY_SPLIT_DIR)/%.chsplit: $(CACHE_DIR)/%.fst.checked %.out.expected $(FSTAR_EXE)
+	$(call msg, "CHERRY-SPLIT", $*)
+	$(Q)rm -rf $(CHERRY_SPLIT_DIR)/$* && mkdir -p $(CHERRY_SPLIT_DIR)/$*
+	$(FSTAR) $(WARN_ANY) $(FLAGS_$*) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_split \
+	  --custard_main $*.main $*.fst -o $(CHERRY_SPLIT_DIR)/$*/$*.c
+	$(Q)test -f $(CHERRY_SPLIT_DIR)/$*/$*.$*.c \
+	  || { echo "ERROR: $*'s C output was not split"; exit 1; }
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(CHERRY_SPLIT_DIR)/$* -I$(CHERRY_INC) \
+	  $(CHERRY_SPLIT_DIR)/$*/*.c $(CHERRY_INC)/cherry.c -o $(CHERRY_SPLIT_DIR)/$*/$*.chexe
+	$(Q)$(CHERRY_RUN_$*) ASAN_OPTIONS=detect_leaks=1 $(CHERRY_SPLIT_DIR)/$*/$*.chexe \
+	  > $(CHERRY_SPLIT_DIR)/$*/$*.chout
+	$(Q)diff -u $*.out.expected $(CHERRY_SPLIT_DIR)/$*/$*.chout
+	$(Q)touch $@
+
+all: $(addprefix $(CHERRY_SPLIT_DIR)/, $(addsuffix .chsplit, $(CHERRY_SPLIT_TESTS)))
+
+# Every direct-C test goes through Cherry too, except the ones Cherry does not
+# cover yet.  This one hands a Prims.string to hand-written C expecting a
+# [const char *]:
+CHERRY_C_SKIP += PatStr
+
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
-                  $(C_TESTS) $(CXX_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
+                  $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \
                   $(RUSTSPLIT_TESTS) $(FS_TESTS) $(FSREJECT_TESTS) \
-                  SepApp SepAppC SplitHi SplitLo FsSplitHi FsSplitLo
+                  SepApp SepAppC CherrySepLib CherrySepApp SplitHi SplitLo FsSplitHi FsSplitLo
 
 # Section 35.3.  A setting whose name matches no registered test.
 #
@@ -3509,6 +3739,449 @@ all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .roots, $(ROOT_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcran, $(C_TESTS)))
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .dcxxran, $(CXX_TESTS)))
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, $(CHERRY_TESTS)))
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, \
+       $(filter-out $(CHERRY_C_SKIP), $(C_TESTS))))
+
+# The tests run on OCaml run on Cherry too, against the same expected output.
+# Skipped: what only OCaml has -- functors (FunctorHashtbl, FunctorClass),
+# realizations written for OCaml (Externs, KeyNames, BytesFS, ExnName), reify
+# (Reify), an impure effect whose box is a function (Effects), and a
+# constructor matched out of any at an instance only its uses say (AnyPat).
+CHERRY_OCAML_SKIP = Externs KeyNames FunctorHashtbl FunctorClass Reify \
+  BytesFS ExnName Effects AnyPat
+
+$(CHERRY_DIR)/%.chdiff: $(CHERRY_DIR)/%.chexe %.out.expected
+	$(call msg, "DIFF-ASAN", $(basename $(notdir $@)))
+	$(Q)$(CHERRY_RUN_$*) ASAN_OPTIONS=detect_leaks=1 $< > $(CHERRY_DIR)/$*.chout
+	$(Q)diff -u $*.out.expected $(CHERRY_DIR)/$*.chout
+	$(Q)touch $@
+
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chdiff, \
+       $(filter-out $(CHERRY_OCAML_SKIP), $(CUSTARD_TESTS))))
+
+# FStarC.Hash-c.cherry.fst.  The test uses a compiler module, so it lives in
+# hash/ (out of this directory's dependency scan) and is checked into a cache
+# of its own.
+HASH_SRC = $(abspath $(FSTAR_ROOT)/src/basic)
+HASH_DIR = $(CHERRY_DIR)/hash
+HASH_ABS = $(abspath $(HASH_DIR))
+$(HASH_DIR)/CherryHash.chran: hash/CherryHash.fst \
+    $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryHash)
+	$(Q)rm -rf $(HASH_ABS) && mkdir -p $(HASH_ABS)
+	$(Q)cd hash && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst \
+	    CherryHash.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd hash && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
+	  --already_cached '*' --odir $(HASH_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryHash.main \
+	  CherryHash.fst -o $(HASH_ABS)/CherryHash.c > /dev/null
+	$(call msg, "CC-ASAN", CherryHash)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(HASH_ABS) -I$(CHERRY_INC) \
+	  -x c $(HASH_ABS)/CherryHash.c $(CHERRY_INC)/cherry.c \
+	  -o $(HASH_ABS)/CherryHash.chexe
+	$(call msg, "RUN-ASAN", CherryHash)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(HASH_ABS)/CherryHash.chexe
+	$(Q)touch $@
+
+all: $(HASH_DIR)/CherryHash.chran
+
+TIMING_DIR = $(CHERRY_DIR)/timing
+TIMING_ABS = $(abspath $(TIMING_DIR))
+$(TIMING_DIR)/CherryTiming.chran: timing/CherryTiming.fst \
+    $(HASH_SRC)/FStarC.Timing.fsti $(HASH_SRC)/FStarC.Timing-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryTiming)
+	$(Q)rm -rf $(TIMING_ABS) && mkdir -p $(TIMING_ABS)
+	$(Q)cd timing && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.Timing.fsti $(HASH_SRC)/FStarC.Timing-c.cherry.fst \
+	    CherryTiming.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(TIMING_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd timing && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(TIMING_ABS) \
+	  --already_cached '*' --odir $(TIMING_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryTiming.main \
+	  CherryTiming.fst -o $(TIMING_ABS)/CherryTiming.c > /dev/null
+	$(call msg, "CC-ASAN", CherryTiming)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(TIMING_ABS) -I$(CHERRY_INC) \
+	  -x c $(TIMING_ABS)/CherryTiming.c $(CHERRY_INC)/cherry.c \
+	  -o $(TIMING_ABS)/CherryTiming.chexe
+	$(call msg, "RUN-ASAN", CherryTiming)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(TIMING_ABS)/CherryTiming.chexe
+	$(Q)touch $@
+
+all: $(TIMING_DIR)/CherryTiming.chran
+
+TIME_DIR = $(CHERRY_DIR)/time
+TIME_ABS = $(abspath $(TIME_DIR))
+# Only the modules the test needs, linked into a directory of their own:
+# including all of src/basic would put its FStar.Errors.Msg.fst, which the
+# typeclass tactics depend on, in place of ulib's.
+TIME_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(abspath $(FSTAR_ROOT)/src/class)/FStarC.Class.Show.fsti \
+  $(abspath $(FSTAR_ROOT)/src/class)/FStarC.Class.Show.fst \
+  $(HASH_SRC)/FStarC.Time.fsti $(HASH_SRC)/FStarC.Time-c.cherry.fst
+$(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryTime)
+	$(Q)rm -rf $(TIME_ABS) && mkdir -p $(TIME_ABS)/src
+	$(Q)ln -s $(TIME_SRCS) $(TIME_ABS)/src/
+	$(Q)cd time && for f in $(addprefix $(TIME_ABS)/src/,$(notdir $(TIME_SRCS))) \
+	    CherryTime.fst; do \
+	  $(FSTAR_EXE) --include $(TIME_ABS)/src --cache_dir $(TIME_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd time && $(FSTAR_EXE) --include $(TIME_ABS)/src --cache_dir $(TIME_ABS) \
+	  --already_cached '*' --odir $(TIME_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryTime.main \
+	  CherryTime.fst -o $(TIME_ABS)/CherryTime.c > /dev/null
+	$(call msg, "CC-ASAN", CherryTime)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(TIME_ABS) -I$(CHERRY_INC) \
+	  -x c $(TIME_ABS)/CherryTime.c $(CHERRY_INC)/cherry.c \
+	  -o $(TIME_ABS)/CherryTime.chexe
+	$(call msg, "RUN-ASAN", CherryTime)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(TIME_ABS)/CherryTime.chexe
+	$(Q)touch $@
+
+all: $(TIME_DIR)/CherryTime.chran
+
+INTEXTRA_DIR = $(CHERRY_DIR)/intextra
+INTEXTRA_ABS = $(abspath $(INTEXTRA_DIR))
+# Only the modules the test needs, linked into a directory of their own:
+# including all of src/basic would put its FStar.Errors.Msg.fst, which the
+# typeclass tactics depend on, in place of ulib's.
+INTEXTRA_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.Int.Extra.fsti $(HASH_SRC)/FStarC.Int.Extra-c.cherry.fst
+$(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryIntExtra)
+	$(Q)rm -rf $(INTEXTRA_ABS) && mkdir -p $(INTEXTRA_ABS)/src
+	$(Q)ln -s $(INTEXTRA_SRCS) $(INTEXTRA_ABS)/src/
+	$(Q)cd intextra && for f in $(addprefix $(INTEXTRA_ABS)/src/,$(notdir $(INTEXTRA_SRCS))) \
+	    CherryIntExtra.fst; do \
+	  $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd intextra && $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
+	  --already_cached '*' --odir $(INTEXTRA_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryIntExtra.main \
+	  CherryIntExtra.fst -o $(INTEXTRA_ABS)/CherryIntExtra.c > /dev/null
+	$(call msg, "CC-ASAN", CherryIntExtra)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(INTEXTRA_ABS) -I$(CHERRY_INC) \
+	  -x c $(INTEXTRA_ABS)/CherryIntExtra.c $(CHERRY_INC)/cherry.c \
+	  -o $(INTEXTRA_ABS)/CherryIntExtra.chexe
+	$(call msg, "RUN-ASAN", CherryIntExtra)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(INTEXTRA_ABS)/CherryIntExtra.chexe
+	$(Q)touch $@
+
+all: $(INTEXTRA_DIR)/CherryIntExtra.chran
+
+# Debug mode (cherry.md): each program breaks a fact F* would have proved, in
+# code whose queries are admitted, and must abort with the message below.
+# It is also compiled without -DCHERRY_DEBUG, to check that the release
+# build compiles cleanly, but not run, as what it does then is undefined (and
+# not optimized, which would let GCC diagnose that).
+DEBUG_DIR = $(CHERRY_DIR)/debug
+DEBUG_ABS = $(abspath $(DEBUG_DIR))
+DEBUG_TESTS = DebugMatch DebugProj DebugBoxed DebugIArray DebugUnreachable
+DEBUG_MSG_DebugMatch = incomplete match in DebugMatch.get
+DEBUG_MSG_DebugProj = incomplete match in DebugProj.main
+DEBUG_MSG_DebugBoxed = incomplete match in DebugBoxed.main
+DEBUG_MSG_DebugIArray = ImmutableArray.index: index out of bounds
+DEBUG_MSG_DebugUnreachable = unreachable code (FStar.Pervasives.false_elim) in DebugUnreachable.impossible
+$(DEBUG_DIR)/%.chran: debug/%.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", $*)
+	$(Q)rm -rf $(DEBUG_ABS)/$* && mkdir -p $(DEBUG_ABS)/$*
+	$(Q)cd debug && $(FSTAR_EXE) --admit_smt_queries true --cache_dir $(DEBUG_ABS)/$* \
+	  --cache_checked_modules --already_cached 'Prims FStar' $*.fst > /dev/null
+	$(Q)cd debug && $(FSTAR_EXE) --cache_dir $(DEBUG_ABS)/$* \
+	  --already_cached '*' --odir $(DEBUG_ABS)/$* --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main $*.main \
+	  $*.fst -o $(DEBUG_ABS)/$*/$*.c > /dev/null
+	$(call msg, "CC", $*)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -I$(DEBUG_ABS)/$* -I$(CHERRY_INC) \
+	  -x c $(DEBUG_ABS)/$*/$*.c $(CHERRY_INC)/cherry.c -o $(DEBUG_ABS)/$*/$*.release
+	$(call msg, "CC-ASAN", $*)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g -DCHERRY_DEBUG -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(DEBUG_ABS)/$* -I$(CHERRY_INC) \
+	  -x c $(DEBUG_ABS)/$*/$*.c $(CHERRY_INC)/cherry.c -o $(DEBUG_ABS)/$*/$*.chexe
+	$(call msg, "RUN-ASAN", $*)
+	$(Q)if $(DEBUG_ABS)/$*/$*.chexe 2> $(DEBUG_ABS)/$*/$*.err; then \
+	  echo "$*: ran to completion in debug mode"; exit 1; fi
+	$(Q)grep -qF -- "Cherry debug check failed: $(DEBUG_MSG_$*)" $(DEBUG_ABS)/$*/$*.err \
+	  || { cat $(DEBUG_ABS)/$*/$*.err; exit 1; }
+	$(Q)touch $@
+
+all: $(addprefix $(DEBUG_DIR)/, $(addsuffix .chran, $(DEBUG_TESTS)))
+
+SMALLINT_DIR = $(CHERRY_DIR)/smallint
+SMALLINT_ABS = $(abspath $(SMALLINT_DIR))
+$(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
+    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherrySmallInt)
+	$(Q)rm -rf $(SMALLINT_ABS) && mkdir -p $(SMALLINT_ABS)
+	$(Q)cd smallint && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+	    CherrySmallInt.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(SMALLINT_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd smallint && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(SMALLINT_ABS) \
+	  --already_cached '*' --odir $(SMALLINT_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherrySmallInt.main \
+	  CherrySmallInt.fst -o $(SMALLINT_ABS)/CherrySmallInt.c > /dev/null
+	$(call msg, "CC-ASAN", CherrySmallInt)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(SMALLINT_ABS) -I$(CHERRY_INC) \
+	  -x c $(SMALLINT_ABS)/CherrySmallInt.c $(CHERRY_INC)/cherry.c \
+	  -o $(SMALLINT_ABS)/CherrySmallInt.chexe
+	$(call msg, "RUN-ASAN", CherrySmallInt)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(SMALLINT_ABS)/CherrySmallInt.chexe
+	$(Q)touch $@
+
+all: $(SMALLINT_DIR)/CherrySmallInt.chran
+
+FSTARCLIST_DIR = $(CHERRY_DIR)/fstarclist
+FSTARCLIST_ABS = $(abspath $(FSTARCLIST_DIR))
+FSTARCLIST_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.List.fsti $(HASH_SRC)/FStarC.List-c.cherry.fst
+# The small stack checks that every function runs in constant stack.
+$(FSTARCLIST_DIR)/CherryFStarCList.chran: fstarclist/CherryFStarCList.fst \
+    $(FSTARCLIST_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCList)
+	$(Q)rm -rf $(FSTARCLIST_ABS) && mkdir -p $(FSTARCLIST_ABS)/src
+	$(Q)ln -s $(FSTARCLIST_SRCS) $(FSTARCLIST_ABS)/src/
+	$(Q)cd fstarclist && for f in $(addprefix $(FSTARCLIST_ABS)/src/,$(notdir $(FSTARCLIST_SRCS))) \
+	    CherryFStarCList.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCLIST_ABS)/src --cache_dir $(FSTARCLIST_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarclist && $(FSTAR_EXE) --include $(FSTARCLIST_ABS)/src --cache_dir $(FSTARCLIST_ABS) \
+	  --already_cached '*' --odir $(FSTARCLIST_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCList.main \
+	  CherryFStarCList.fst -o $(FSTARCLIST_ABS)/CherryFStarCList.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCList)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCLIST_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCLIST_ABS)/CherryFStarCList.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCLIST_ABS)/CherryFStarCList.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCList)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCLIST_ABS)/CherryFStarCList.chexe
+	$(Q)touch $@
+
+all: $(FSTARCLIST_DIR)/CherryFStarCList.chran
+
+FSTARCSTRING_DIR = $(CHERRY_DIR)/fstarcstring
+FSTARCSTRING_ABS = $(abspath $(FSTARCSTRING_DIR))
+FSTARCSTRING_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst
+$(FSTARCSTRING_DIR)/CherryFStarCString.chran: fstarcstring/CherryFStarCString.fst \
+    $(FSTARCSTRING_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCString)
+	$(Q)rm -rf $(FSTARCSTRING_ABS) && mkdir -p $(FSTARCSTRING_ABS)/src
+	$(Q)ln -s $(FSTARCSTRING_SRCS) $(FSTARCSTRING_ABS)/src/
+	$(Q)cd fstarcstring && for f in $(addprefix $(FSTARCSTRING_ABS)/src/,$(notdir $(FSTARCSTRING_SRCS))) \
+	    CherryFStarCString.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCSTRING_ABS)/src --cache_dir $(FSTARCSTRING_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcstring && $(FSTAR_EXE) --include $(FSTARCSTRING_ABS)/src --cache_dir $(FSTARCSTRING_ABS) \
+	  --already_cached '*' --odir $(FSTARCSTRING_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCString.main \
+	  CherryFStarCString.fst -o $(FSTARCSTRING_ABS)/CherryFStarCString.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCString)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCSTRING_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCSTRING_ABS)/CherryFStarCString.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCSTRING_ABS)/CherryFStarCString.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCString)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCSTRING_ABS)/CherryFStarCString.chexe
+	$(Q)touch $@
+
+all: $(FSTARCSTRING_DIR)/CherryFStarCString.chran
+
+FSTARCUTIL_DIR = $(CHERRY_DIR)/fstarcutil
+FSTARCUTIL_ABS = $(abspath $(FSTARCUTIL_DIR))
+FSTARCUTIL_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst \
+  $(HASH_SRC)/FStarC.List.fsti $(HASH_SRC)/FStarC.List-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst \
+  $(HASH_SRC)/FStarC.BaseTypes.fsti $(HASH_SRC)/FStarC.BaseTypes-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Json.fsti $(HASH_SRC)/FStarC.Format.fsti \
+  $(HASH_SRC)/FStarC.Util.fsti $(HASH_SRC)/FStarC.Util-c.cherry.fst
+$(FSTARCUTIL_DIR)/CherryFStarCUtil.chran: fstarcutil/CherryFStarCUtil.fst \
+    $(FSTARCUTIL_SRCS) $(FSTAR_EXE) $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h
+	$(call msg, "CHERRY", CherryFStarCUtil)
+	$(Q)rm -rf $(FSTARCUTIL_ABS) && mkdir -p $(FSTARCUTIL_ABS)/src $(FSTARCUTIL_ABS)/tmp
+	$(Q)ln -s $(FSTARCUTIL_SRCS) $(FSTARCUTIL_ABS)/src/
+	$(Q)cd fstarcutil && for f in $(addprefix $(FSTARCUTIL_ABS)/src/,$(notdir $(FSTARCUTIL_SRCS))) \
+	    CherryFStarCUtil.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCUTIL_ABS)/src --cache_dir $(FSTARCUTIL_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcutil && $(FSTAR_EXE) --include $(FSTARCUTIL_ABS)/src --cache_dir $(FSTARCUTIL_ABS) \
+	  --already_cached '*' --odir $(FSTARCUTIL_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCUtil.main \
+	  CherryFStarCUtil.fst -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCUtil)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCUTIL_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCUTIL_ABS)/CherryFStarCUtil.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCUtil)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 CHERRY_UTIL_TMP=$(FSTARCUTIL_ABS)/tmp \
+	  $(FSTARCUTIL_ABS)/CherryFStarCUtil.chexe arg1
+	$(Q)touch $@
+
+all: $(FSTARCUTIL_DIR)/CherryFStarCUtil.chran
+
+FSTARCBASIC_DIR = $(CHERRY_DIR)/fstarcbasic
+FSTARCBASIC_ABS = $(abspath $(FSTARCBASIC_DIR))
+FSTARCBASIC_SRCS = $(FSTARCUTIL_SRCS) $(HASH_SRC)/FStarC.Format-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Filepath.fsti $(HASH_SRC)/FStarC.Filepath-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Getopt.fsti $(HASH_SRC)/FStarC.Getopt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Platform.Base.fsti $(HASH_SRC)/FStarC.Platform.Base-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Plugins.Base.fsti $(HASH_SRC)/FStarC.Plugins.Base-c.cherry.fst
+$(FSTARCBASIC_DIR)/CherryFStarCBasic.chran: fstarcbasic/CherryFStarCBasic.fst \
+    $(FSTARCBASIC_SRCS) $(FSTAR_EXE) $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h
+	$(call msg, "CHERRY", CherryFStarCBasic)
+	$(Q)rm -rf $(FSTARCBASIC_ABS) && mkdir -p $(FSTARCBASIC_ABS)/src $(FSTARCBASIC_ABS)/tmp
+	$(Q)ln -s $(FSTARCBASIC_SRCS) $(FSTARCBASIC_ABS)/src/
+	$(Q)cd fstarcbasic && for f in $(addprefix $(FSTARCBASIC_ABS)/src/,$(notdir $(FSTARCBASIC_SRCS))) \
+	    CherryFStarCBasic.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCBASIC_ABS)/src --cache_dir $(FSTARCBASIC_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcbasic && $(FSTAR_EXE) --include $(FSTARCBASIC_ABS)/src --cache_dir $(FSTARCBASIC_ABS) \
+	  --already_cached '*' --odir $(FSTARCBASIC_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCBasic.main \
+	  CherryFStarCBasic.fst -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCBasic)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCBASIC_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCBASIC_ABS)/CherryFStarCBasic.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCBasic)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 CHERRY_UTIL_TMP=$(FSTARCBASIC_ABS)/tmp \
+	  $(FSTARCBASIC_ABS)/CherryFStarCBasic.chexe --flag -v 7 rest \
+	  > $(FSTARCBASIC_ABS)/stdout.txt 2> $(FSTARCBASIC_ABS)/stderr.txt \
+	  || { cat $(FSTARCBASIC_ABS)/stdout.txt $(FSTARCBASIC_ABS)/stderr.txt; exit 1; }
+	$(Q)printf 'hello world\nraw\ndone\n' | cmp - $(FSTARCBASIC_ABS)/stdout.txt
+	$(Q)printf 'warn w\nerr\n' | cmp - $(FSTARCBASIC_ABS)/stderr.txt
+	$(Q)touch $@
+
+all: $(FSTARCBASIC_DIR)/CherryFStarCBasic.chran
+
+# FStarC.Json-c.cherry.fst, against what Yojson.Basic gives for the same inputs.
+FSTARCJSON_DIR = $(CHERRY_DIR)/fstarcjson
+FSTARCJSON_ABS = $(abspath $(FSTARCJSON_DIR))
+FSTARCJSON_SRCS = $(FSTARCSTRING_SRCS) \
+  $(HASH_SRC)/FStarC.Json.fsti $(HASH_SRC)/FStarC.Json-c.cherry.fst
+$(FSTARCJSON_DIR)/CherryFStarCJson.chran: fstarcjson/CherryFStarCJson.fst \
+    fstarcjson/CherryFStarCJson.expected $(FSTARCJSON_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryFStarCJson)
+	$(Q)rm -rf $(FSTARCJSON_ABS) && mkdir -p $(FSTARCJSON_ABS)/src
+	$(Q)ln -s $(FSTARCJSON_SRCS) $(FSTARCJSON_ABS)/src/
+	$(Q)cd fstarcjson && for f in $(addprefix $(FSTARCJSON_ABS)/src/,$(notdir $(FSTARCJSON_SRCS))) \
+	    CherryFStarCJson.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCJSON_ABS)/src --cache_dir $(FSTARCJSON_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarcjson && $(FSTAR_EXE) --include $(FSTARCJSON_ABS)/src --cache_dir $(FSTARCJSON_ABS) \
+	  --already_cached '*' --odir $(FSTARCJSON_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCJson.main \
+	  CherryFStarCJson.fst -o $(FSTARCJSON_ABS)/CherryFStarCJson.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCJson)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCJSON_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCJSON_ABS)/CherryFStarCJson.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCJSON_ABS)/CherryFStarCJson.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCJson)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCJSON_ABS)/CherryFStarCJson.chexe \
+	  > $(FSTARCJSON_ABS)/stdout.txt
+	$(Q)diff -u fstarcjson/CherryFStarCJson.expected $(FSTARCJSON_ABS)/stdout.txt
+	$(Q)touch $@
+
+all: $(FSTARCJSON_DIR)/CherryFStarCJson.chran
+
+# FStarC.HashTable-c.cherry.fst, against what OCaml's Hashtbl.Make prints for
+# the same operations (see the test's header).
+FSTARCHT_DIR = $(CHERRY_DIR)/fstarchashtable
+FSTARCHT_ABS = $(abspath $(FSTARCHT_DIR))
+CLASS_SRC = $(abspath $(FSTAR_ROOT)/src/class)
+DATA_SRC = $(abspath $(FSTAR_ROOT)/src/data)
+FSTARCHT_SRCS = $(FSTARCBASIC_SRCS) \
+  $(HASH_SRC)/FStarC.Hash.fsti $(HASH_SRC)/FStarC.Hash-c.cherry.fst \
+  $(HASH_SRC)/FStarC.Order.fsti $(HASH_SRC)/FStarC.Order.fst \
+  $(CLASS_SRC)/FStarC.Class.Deq.fsti $(CLASS_SRC)/FStarC.Class.Deq.fst \
+  $(CLASS_SRC)/FStarC.Class.Show.fsti $(CLASS_SRC)/FStarC.Class.Show.fst \
+  $(CLASS_SRC)/FStarC.Class.Ord.fsti $(CLASS_SRC)/FStarC.Class.Ord.fst \
+  $(CLASS_SRC)/FStarC.Class.Hashable.fsti $(CLASS_SRC)/FStarC.Class.Hashable.fst \
+  $(DATA_SRC)/FStarC.HashTable.fsti $(DATA_SRC)/FStarC.HashTable-c.cherry.fst
+$(FSTARCHT_DIR)/CherryFStarCHashTable.chran: fstarchashtable/CherryFStarCHashTable.fst \
+    fstarchashtable/CherryFStarCHashTable.expected $(FSTARCHT_SRCS) $(FSTAR_EXE) \
+    $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h
+	$(call msg, "CHERRY", CherryFStarCHashTable)
+	$(Q)rm -rf $(FSTARCHT_ABS) && mkdir -p $(FSTARCHT_ABS)/src
+	$(Q)ln -s $(FSTARCHT_SRCS) $(FSTARCHT_ABS)/src/
+	$(Q)cd fstarchashtable && for f in $(addprefix $(FSTARCHT_ABS)/src/,$(notdir $(FSTARCHT_SRCS))) \
+	    CherryFStarCHashTable.fst; do \
+	  $(FSTAR_EXE) --include $(FSTARCHT_ABS)/src --cache_dir $(FSTARCHT_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' --lax $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd fstarchashtable && $(FSTAR_EXE) --include $(FSTARCHT_ABS)/src --cache_dir $(FSTARCHT_ABS) \
+	  --already_cached '*' --odir $(FSTARCHT_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryFStarCHashTable.main \
+	  CherryFStarCHashTable.fst -o $(FSTARCHT_ABS)/CherryFStarCHashTable.c > /dev/null
+	$(call msg, "CC-ASAN", CherryFStarCHashTable)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(FSTARCHT_ABS) -I$(CHERRY_INC) \
+	  -x c $(FSTARCHT_ABS)/CherryFStarCHashTable.c $(CHERRY_INC)/cherry.c \
+	  -o $(FSTARCHT_ABS)/CherryFStarCHashTable.chexe
+	$(call msg, "RUN-ASAN", CherryFStarCHashTable)
+	$(Q)ulimit -s 1024 && ASAN_OPTIONS=detect_leaks=1 $(FSTARCHT_ABS)/CherryFStarCHashTable.chexe \
+	  > $(FSTARCHT_ABS)/stdout.txt
+	$(Q)diff -u fstarchashtable/CherryFStarCHashTable.expected $(FSTARCHT_ABS)/stdout.txt
+	$(Q)touch $@
+
+all: $(FSTARCHT_DIR)/CherryFStarCHashTable.chran
+
+ARRAY_DIR = $(CHERRY_DIR)/array
+ARRAY_ABS = $(abspath $(ARRAY_DIR))
+$(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
+    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+    $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryArray)
+	$(Q)rm -rf $(ARRAY_ABS) && mkdir -p $(ARRAY_ABS)
+	$(Q)cd array && for f in $(HASH_SRC)/FStarC.Effect.fsti \
+	    $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+	    $(HASH_SRC)/FStarC.Array.fsti $(HASH_SRC)/FStarC.Array-c.cherry.fst \
+	    CherryArray.fst; do \
+	  $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(ARRAY_ABS) \
+	    --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd array && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(ARRAY_ABS) \
+	  --already_cached '*' --odir $(ARRAY_ABS) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main CherryArray.main \
+	  CherryArray.fst -o $(ARRAY_ABS)/CherryArray.c > /dev/null
+	$(call msg, "CC-ASAN", CherryArray)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(ARRAY_ABS) -I$(CHERRY_INC) \
+	  -x c $(ARRAY_ABS)/CherryArray.c $(CHERRY_INC)/cherry.c \
+	  -o $(ARRAY_ABS)/CherryArray.chexe
+	$(call msg, "RUN-ASAN", CherryArray)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(ARRAY_ABS)/CherryArray.chexe
+	$(Q)touch $@
+
+all: $(ARRAY_DIR)/CherryArray.chran
 
 # Section 122.  Extraction to F# is always testable; compiling the result
 # needs the .NET 10 SDK, and a consumer who has not got one should see this

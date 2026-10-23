@@ -113,3 +113,9 @@ val extracted_unembed :
   embedding 'a ->
   term ->
   ML (option 'a)
+
+(* The embedding Custard uses for [a]: the one it generates for a [@@plugin]
+   inductive, possibly in a linked unit, or one built from those and the
+   built-in embeddings (doc/ref/custard.md section 13.7).  Custard compiles
+   each use to that embedding; anywhere else this fails when used. *)
+val plugin_embedding (#a:Type0) : embedding a

@@ -347,7 +347,7 @@ and equal_flag (c:bool) f1 f2
   | SMTPAT p1, SMTPAT p2 ->
     equal_term_c c p1 p2
 
-  | _ -> f1 = f2
+  | _ -> false
 
 and equal_decreases_order (c:bool) d1 d2
   : ML bool
@@ -510,9 +510,9 @@ instance deq_term : deq term = {
 }
 
 module H = FStarC.HashMap
-let term_map (a:Type) = H.hashmap term a
-let term_map_empty (#a:Type) : ML (term_map a) = H.empty #term #a
-let term_map_add (#a:Type) (t:term) (v:a) (m:term_map a) : ML (term_map a) = H.add t v m
-let term_map_lookup (#a:Type) (t:term) (m:term_map a) : ML (option a) = H.lookup t m
-let term_map_mem (#a:Type) (t:term) (m:term_map a) : ML bool = H.mem t m
+let term_map (a:Type0) = H.hashmap term a
+let term_map_empty (#a:Type0) : ML (term_map a) = H.empty #term #a
+let term_map_add (#a:Type0) (t:term) (v:a) (m:term_map a) : ML (term_map a) = H.add t v m
+let term_map_lookup (#a:Type0) (t:term) (m:term_map a) : ML (option a) = H.lookup t m
+let term_map_mem (#a:Type0) (t:term) (m:term_map a) : ML bool = H.mem t m
 let term_map_fold #a #b (f:term -> a -> b -> ML b) (m:term_map a) (i:b) : ML b = H.fold f m i

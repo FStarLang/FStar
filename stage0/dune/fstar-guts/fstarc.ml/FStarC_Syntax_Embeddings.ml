@@ -35,7 +35,7 @@ let e_string : (string) FStarC_Syntax_Embeddings_Base.embedding =
     ))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_string) (fun x -> (Prims.strcat "\"" (Prims.strcat x "\""))) (fun tmp -> emb_t_string)))
 
-let e_document : (FStar_Pprint.document) FStarC_Syntax_Embeddings_Base.embedding =
+let e_document : (PPrint.document) FStarC_Syntax_Embeddings_Base.embedding =
   (let tmp = (FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.document_lid None) in
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_doc tmp))
 
@@ -146,8 +146,8 @@ let e_list (ea : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) : (('u___a) l
     let tmp2 = (tmp1 :: []) in
     let tmp3 = ((FStarC_Ident.string_of_lid FStarC_Parser_Const.list_lid), tmp2) in
     (FStarC_Syntax_Syntax.ET_app ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))) in
-  let printer = (fun l -> (let tmp = (FStarC_List.map (FStarC_Syntax_Embeddings_Base.printer_of ea) l) in
-    let tmp1 = (FStarC_String.concat "; " tmp) in
+  let printer = (fun l -> (let tmp = (BatList.map (FStarC_Syntax_Embeddings_Base.printer_of ea) l) in
+    let tmp1 = (BatString.concat "; " tmp) in
     let tmp2 = (Prims.strcat tmp1 "]") in
     (Prims.strcat "[" tmp2))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full (e_list__em ea typ emb_t_list_a printer) (e_list__un ea typ emb_t_list_a printer) typ printer emb_t_list_a))
@@ -162,7 +162,7 @@ let e_int : (Prims.int) FStarC_Syntax_Embeddings_Base.embedding =
     )))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> ty) FStarC_Class_Show.fStarC_Class_Show_show__int (fun tmp -> emb_t_int)))
 
-let e_char : (FStar_Char.char) FStarC_Syntax_Embeddings_Base.embedding =
+let e_char : (int) FStarC_Syntax_Embeddings_Base.embedding =
   (let em = (fun c rng u__shadow u__norm -> (let t = (FStarC_Syntax_Util.exp_char c) in
     { FStarC_Syntax_Syntax.n = (t).FStarC_Syntax_Syntax.n;
       pos = rng;
@@ -173,7 +173,7 @@ let e_char : (FStar_Char.char) FStarC_Syntax_Embeddings_Base.embedding =
       | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_char (c)))) -> (Some (c))
       | tmp2 -> None
     ))) in
-  (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_char) FStarC_Util.string_of_char (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.char_lid), [])))))
+  (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_char) (fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.char_lid), [])))))
 
 let e_range : (FStarC_Range_Type.range) FStarC_Syntax_Embeddings_Base.embedding =
   (let em = (fun r rng u__shadow u__norm -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_range (r)))) rng)) in
@@ -340,7 +340,7 @@ let e_sealed (ea : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) : ('u___a) 
     ))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un typ printer emb_ty_a))
 
-let e_issue : (FStarC_Errors.issue) FStarC_Syntax_Embeddings_Base.embedding =
+let e_issue : (FStarC_Errors_Issue.issue) FStarC_Syntax_Embeddings_Base.embedding =
   (let tmp = (FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.issue_lid None) in
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_issue tmp))
 
@@ -656,9 +656,13 @@ let e_tuple2 (ea : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (eb : ('u__
     let tmp4 = (FStarC_Syntax_Syntax.iarg tmp3) in
     let tmp5 = (FStarC_Syntax_Embeddings_Base.type_of eb) in
     let tmp6 = (FStarC_Syntax_Syntax.iarg tmp5) in
-    let tmp7 = (FStarC_Syntax_Embeddings_Base.embed ea (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_fst x) rng shadow_a norm) in
+    let tmp7 = (FStarC_Syntax_Embeddings_Base.embed ea (match x with
+        | (u__1, u__2) -> u__1
+      ) rng shadow_a norm) in
     let tmp8 = (FStarC_Syntax_Syntax.as_arg tmp7) in
-    let tmp9 = (FStarC_Syntax_Embeddings_Base.embed eb (Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_snd x) rng shadow_b norm) in
+    let tmp9 = (FStarC_Syntax_Embeddings_Base.embed eb (match x with
+        | (u__1, u__2) -> u__2
+      ) rng shadow_b norm) in
     let tmp10 = (FStarC_Syntax_Syntax.as_arg tmp9) in
     let tmp11 = (tmp10 :: []) in
     let tmp12 = (tmp8 :: tmp11) in

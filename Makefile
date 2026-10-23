@@ -555,7 +555,14 @@ _unit-tests: need_fstar_exe karamel .force
 _examples: need_fstar_exe karamel .force
 	+$(MAKE) -C examples all
 
+# Every interface in ulib and pulse/lib must have an implementation (an .fst,
+# or a -model.fst), see .scripts/check_fsti_impls.py.
+check-fsti-impls: .force
+	$(call bold_msg, "CHECK", "INTERFACES HAVE IMPLEMENTATIONS")
+	.scripts/check_fsti_impls.py
+
 ci: .force
+	+$(MAKE) check-fsti-impls
 	+$(MAKE) 2
 	+$(MAKE) test fsharp-test boot-diff test-2-bare stage2-unit-tests
 
@@ -670,7 +677,7 @@ clean-3: .force
 	rm -rf stage3/ulib.ml
 	rm -rf stage3/ulib.pluginml
 	rm -rf pulse/build/checker.checked pulse/build/checker.ml
-	rm -rf pulse/build/syntax_extension.checked pulse/build/syntax_extension.ml
+	rm -rf pulse/build/plugin.checked pulse/build/plugin.ml
 	rm -rf pulse/build/lib.pulse.checked pulse/build/lib.pulse.ml
 	rm -rf pulse/build/lib.core.checked pulse/build/lib.core.ml
 	rm -rf pulse/build/lib.common.checked pulse/build/lib.common.ml
@@ -729,6 +736,7 @@ help:
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
 	echo "  distclean          remove every generated file"
 	echo "  unit-tests         run the smaller unit test suite (implied by test)"
+	echo "  check-fsti-impls   check that every .fsti in ulib and pulse/lib has an .fst or -model.fst (implied by ci)"
 	echo "  save               copy a trimmed stage2 into stage0_new (essentially snapshotting a package-src-2)"
 	echo "  bump-stage0        like save, but replace existing stage0 and reset to a default state"
 	echo

@@ -17,7 +17,8 @@ FSTAR_ROOT ?= ../../..
 # plugin.test rule below instead.
 FSTAR_FILES := CustardPlugin.fst CustardPluginAux.fst CustardRulePlugin.fst \
                CustardRuleTest.fst CustardRuleArity.fst CustardRuleBare.fst \
-               CustardRuleOverArity.fst
+               CustardRuleOverArity.fst CustardNormSteps.fst \
+               CustardFunctorLink.fst CustardEmbA.fst CustardEmbB.fst
 
 # CustardRulePlugin registers a rule, so its *source* names FStarC.Custard's
 # own types: unlike an ordinary plugin, this one has to be checked with the
@@ -203,3 +204,136 @@ $(OUTPUT_DIR)/CustardRuleOverArity.diag: $(OUTPUT_DIR)/CustardPlugin.cmxs \
 all: $(OUTPUT_DIR)/CustardRuleArity.diag
 all: $(OUTPUT_DIR)/CustardRuleBare.diag
 all: $(OUTPUT_DIR)/CustardRuleOverArity.diag
+
+# ------------------------------------------------------- norm steps, split
+
+# Issue 4692.  A --with_fstarc unit split against the compiler's .cui.  Both
+# spellings of a norm step have to resolve to the compiler's FStarC_NormSteps
+# rather than to a copy, and the library modules this unit compiles itself
+# (FStar.Order.le, FStar.Set) must be in files named after the unit:
+# fstar.exe already contains the Pulse plugin's, and dynlink refuses a second
+# module of a name already loaded.
+NS_DIR  := $(OUTPUT_DIR)/normsteps
+NS_UNIT := CustardNormStepsUnit
+NS_HELPER := $(NS_UNIT)_FStar_Order
+NS_SET    := $(NS_UNIT)_FStar_Set
+
+$(NS_DIR)/CustardNormSteps.ml: $(CACHE_DIR)/CustardNormSteps.fst.checked
+	$(call msg, "EXTRACT SPLIT", CustardNormSteps)
+	$(Q)rm -rf $(NS_DIR) && mkdir -p $(NS_DIR)
+	$(Q)$(FSTAR) --codegen OCaml --custard_split --custard_unit $(NS_UNIT) \
+	  --custard_link $(FSTAR_LIBDIR)/fstarc/fstarc.cui \
+	  --custard_entry_module CustardNormSteps --odir $(NS_DIR) \
+	  CustardNormSteps.fst
+
+$(NS_DIR)/CustardNormSteps.cmxs: $(NS_DIR)/CustardNormSteps.ml
+	$(call msg, "NORMSTEPS", CustardNormSteps)
+	$(Q)ls $(NS_DIR) | grep -q NormSteps_ \
+	  && { echo "ERROR: a copy of the norm steps was emitted"; ls $(NS_DIR); exit 1; } || true
+	$(Q)grep -q 'norm_step =' $< \
+	  && { echo "ERROR: norm_step was redeclared"; exit 1; } || true
+	$(Q)grep -qF 'FStarC_NormSteps.weak' $< \
+	  || { echo "ERROR: FStar.NormSteps.weak is not the compiler's"; exit 1; }
+	$(Q)grep -qF 'FStarC_NormSteps.Weak' $< \
+	  || { echo "ERROR: FStarC.NormSteps.Weak is not the compiler's"; exit 1; }
+	$(Q)test -f $(NS_DIR)/$(NS_HELPER).ml -a -f $(NS_DIR)/$(NS_SET).ml \
+	  -a ! -f $(NS_DIR)/FStar_Set.ml \
+	  || { echo "ERROR: a library module is not named after the unit"; ls $(NS_DIR); exit 1; }
+	$(Q)cd $(NS_DIR) && $(FSTAR_EXE) --ocamlenv ocamlfind ocamlopt -shared \
+	  -package fstar.compiler -o CustardNormSteps.cmxs \
+	  $(NS_HELPER).ml $(NS_SET).ml CustardNormSteps.ml
+
+$(NS_DIR)/loaded: $(NS_DIR)/CustardNormSteps.cmxs
+	$(Q)$(FSTAR) --load_cmxs $(abspath $(NS_DIR))/CustardNormSteps \
+	  CustardRuleBare.fst > $(NS_DIR)/load.log 2>&1 \
+	  || { echo "ERROR: the split plugin did not load"; cat $(NS_DIR)/load.log; exit 1; }
+	$(Q)grep -qF 'CustardNormSteps: 6 le mem' $(NS_DIR)/load.log \
+	  || { echo "ERROR: the split plugin did not run"; cat $(NS_DIR)/load.log; exit 1; }
+	touch $@
+
+all: $(NS_DIR)/loaded
+
+# ------------------------------------------------------ functors, split
+
+# Issue 4689.  A --with_fstarc unit that compiles its own copy of compiler
+# code using [FStarC.HashTable] must use the compiler's instance of the
+# [Hashtbl.Make] functor: OCaml functor application is generative, so a
+# second instance has a type incompatible with the compiler's records.
+FL_DIR  := $(OUTPUT_DIR)/functorlink
+FL_UNIT := CustardFunctorLinkUnit
+
+$(FL_DIR)/CustardFunctorLink.ml: $(CACHE_DIR)/CustardFunctorLink.fst.checked
+	$(call msg, "EXTRACT SPLIT", CustardFunctorLink)
+	$(Q)rm -rf $(FL_DIR) && mkdir -p $(FL_DIR)
+	$(Q)$(FSTAR) --codegen OCaml --custard_split --custard_unit $(FL_UNIT) \
+	  --custard_link $(FSTAR_LIBDIR)/fstarc/fstarc.cui \
+	  --custard_entry_module CustardFunctorLink --odir $(FL_DIR) \
+	  CustardFunctorLink.fst
+
+$(FL_DIR)/CustardFunctorLink.cmxs: $(FL_DIR)/CustardFunctorLink.ml
+	$(call msg, "FUNCTORLINK", CustardFunctorLink)
+	$(Q)grep -q 'Hashtbl.Make' $(FL_DIR)/*.ml \
+	  && { echo "ERROR: a second Hashtbl.Make instance was emitted"; exit 1; } || true
+	$(Q)cd $(FL_DIR) && $(FSTAR_EXE) --ocamlenv ocamlfind ocamlopt -shared \
+	  -package fstar.compiler -o CustardFunctorLink.cmxs \
+	  $$(ls $(FL_UNIT)_*.ml 2>/dev/null) CustardFunctorLink.ml
+
+$(FL_DIR)/loaded: $(FL_DIR)/CustardFunctorLink.cmxs
+	$(Q)$(FSTAR) --load_cmxs $(abspath $(FL_DIR))/CustardFunctorLink \
+	  CustardRuleBare.fst > $(FL_DIR)/load.log 2>&1 \
+	  || { echo "ERROR: the split plugin did not load"; cat $(FL_DIR)/load.log; exit 1; }
+	$(Q)grep -qF 'CustardFunctorLink: loaded' $(FL_DIR)/load.log \
+	  || { echo "ERROR: the split plugin did not run"; cat $(FL_DIR)/load.log; exit 1; }
+	touch $@
+
+all: $(FL_DIR)/loaded
+
+# ------------------------------------------------- embeddings across units
+
+# Issue 4689, section 13.7.  CustardEmbA generates the embedding of its
+# [@@plugin] type and exports it; CustardEmbB, linked against it, must use
+# that one rather than generate a second, and [plugin_embedding] names it
+# from F*.  The test checks that both native steps run.
+EMB_DIR := $(OUTPUT_DIR)/emb
+EMB_A   := CustardEmbAUnit
+EMB_B   := CustardEmbBUnit
+EMB_FLAGS = --codegen OCaml --custard_split --odir $(EMB_DIR) \
+	    --custard_link $(FSTAR_LIBDIR)/fstarc/fstarc.cui
+
+$(EMB_DIR)/CustardEmbA.cmxs: $(CACHE_DIR)/CustardEmbA.fst.checked
+	$(call msg, "EXTRACT SPLIT", CustardEmbA)
+	$(Q)rm -rf $(EMB_DIR) && mkdir -p $(EMB_DIR)
+	$(Q)$(FSTAR) $(EMB_FLAGS) --custard_unit $(EMB_A) \
+	  --custard_entry CustardEmbA --custard_entry_module CustardEmbA \
+	  CustardEmbA.fst
+	$(Q)cd $(EMB_DIR) && $(FSTAR_EXE) --ocamlenv ocamlfind ocamlopt -shared \
+	  -package fstar.compiler -o CustardEmbA.cmxs \
+	  $$(ls $(EMB_A)_*.ml 2>/dev/null) CustardEmbA.ml
+
+$(EMB_DIR)/CustardEmbB.cmxs: $(EMB_DIR)/CustardEmbA.cmxs $(CACHE_DIR)/CustardEmbB.fst.checked
+	$(call msg, "EXTRACT SPLIT", CustardEmbB)
+	$(Q)$(FSTAR) $(EMB_FLAGS) --custard_unit $(EMB_B) \
+	  --custard_link $(EMB_DIR)/$(EMB_A).cui \
+	  --custard_entry CustardEmbB --custard_entry_module CustardEmbB \
+	  CustardEmbB.fst
+	$(Q)grep -q 'e_color' $(EMB_DIR)/CustardEmbA.ml \
+	  || { echo "ERROR: CustardEmbA did not generate its embedding"; exit 1; }
+	$(Q)grep -q 'knot_e_color' $(EMB_DIR)/CustardEmbB.ml $$(ls $(EMB_DIR)/$(EMB_B)_*.ml 2>/dev/null) \
+	  && { echo "ERROR: CustardEmbB generated a second embedding"; exit 1; } || true
+	$(Q)grep -q '^  CustardEmbA.e_color$$' $(EMB_DIR)/CustardEmbB.ml \
+	  || { echo "ERROR: plugin_embedding did not name CustardEmbA.e_color"; exit 1; }
+	$(Q)cd $(EMB_DIR) && $(FSTAR_EXE) --ocamlenv ocamlfind ocamlopt -shared \
+	  -package fstar.compiler -o CustardEmbB.cmxs \
+	  $$(ls $(EMB_B)_*.ml 2>/dev/null) CustardEmbB.ml
+
+$(EMB_DIR)/test: $(EMB_DIR)/CustardEmbB.cmxs CustardEmbTest.fst
+	$(call msg, "CHECK NATIVE", CustardEmbTest)
+	$(Q)$(FSTAR) --load_cmxs $(abspath $(EMB_DIR))/CustardEmbA \
+	  --load_cmxs $(abspath $(EMB_DIR))/CustardEmbB \
+	  CustardEmbTest.fst > $(EMB_DIR)/test.log 2>&1 \
+	  || { echo "ERROR: the native check failed"; cat $(EMB_DIR)/test.log; exit 1; }
+	$(Q)grep -qF 'CustardEmbB: CustardEmbA.Red :: CustardEmbA.Blue 3 :: [] ok' $(EMB_DIR)/test.log \
+	  || { echo "ERROR: plugin_embedding did not embed"; cat $(EMB_DIR)/test.log; exit 1; }
+	touch $@
+
+all: $(EMB_DIR)/test

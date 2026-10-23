@@ -502,6 +502,18 @@ let z3_options (ver:string) : ML string =
     ]
     end
   in
+
+  (* Z3 4.15.4 made the Grobner basis computation of the nonlinear arithmetic
+     solver expand terms by default (smt.arith.nl.grobner_expand_terms). On F*
+     queries this frequently blows up: e.g. proving
+       (a + b) * (c + d) == a * c + a * d + b * c + b * d
+     goes from ~24k rlimit units to ~15M. Restore the previous behavior. *)
+  let opts = opts @ begin
+    if M.version_ge ver "4.15.4" then [
+      "(set-option :smt.arith.nl.grobner_expand_terms false)";
+    ] else []
+    end
+  in
   String.concat "\n" opts ^ "\n"
  
 let context_profile (theory:list decl) : ML unit =

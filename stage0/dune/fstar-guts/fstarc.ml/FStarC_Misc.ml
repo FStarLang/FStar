@@ -2,8 +2,8 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let compare_version (v1 : string) (v2 : string) : FStarC_Order.order =
-  (let cs1 = (FStarC_List.map FStarC_Util.int_of_string (FStarC_String.split (46 :: []) v1)) in
-  let cs2 = (FStarC_List.map FStarC_Util.int_of_string (FStarC_String.split (46 :: []) v2)) in
+  (let cs1 = (BatList.map Z.of_string (FStarC_String.split (46 :: []) v1)) in
+  let cs2 = (BatList.map Z.of_string (FStarC_String.split (46 :: []) v2)) in
   (FStarC_Order.compare_list cs1 cs2 FStarC_Order.compare_int))
 
 let version_ge (v1 : string) (v2 : string) : bool =
