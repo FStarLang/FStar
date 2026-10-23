@@ -100,12 +100,12 @@ int pulse_tcp_listen(const char *bind_host, uint16_t port) {
    one, a client that opens a connection and then goes quiet -- a browser
    pre-connect, or an HTTP/1.1 keep-alive connection parked between requests --
    pins the accepting process inside read() forever.  Override with
-   COMMON_TCP_ACCEPT_TIMEOUT_SECS (0 disables the timeout). */
-#define COMMON_TCP_ACCEPT_TIMEOUT_SECS 15
+   PULSE_TCP_ACCEPT_TIMEOUT_SECS (0 disables the timeout). */
+#define PULSE_TCP_ACCEPT_TIMEOUT_SECS 15
 
 static void pulse_tcp_arm_accept_timeout(int fd) {
-  long secs = COMMON_TCP_ACCEPT_TIMEOUT_SECS;
-  const char *env = getenv("COMMON_TCP_ACCEPT_TIMEOUT_SECS");
+  long secs = PULSE_TCP_ACCEPT_TIMEOUT_SECS;
+  const char *env = getenv("PULSE_TCP_ACCEPT_TIMEOUT_SECS");
   if (env != NULL && *env != '\0') {
     long v = atol(env);
     if (v >= 0) secs = v;
