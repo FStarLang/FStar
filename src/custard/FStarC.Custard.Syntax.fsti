@@ -820,6 +820,10 @@ type flag =
       backend, from its borrow inference, so that a unit linked against it
       calls them the way they were compiled.  A definition imported without
       it is taken to own every parameter. *)
+  | CName of string
+  (** The exact direct-C spelling requested by a global [rename_let].
+      Logical identities and linkage are unchanged.  Kept in compiled units
+      so that consumers use the producer's spelling. *)
 
 type tydef =
   | TAbbrev  of cty

@@ -101,7 +101,13 @@ val no_inline_let : unit
     This is useful, particularly in conjunction with partial
     evaluation, to ensure that names reflect their usage context.
 
-    See tests/micro-benchmarks/Renaming*.fst *)
+    Custard's direct-to-C backend also accepts this attribute on global
+    declarations to request an exact C identifier, without changing linkage
+    or the declaration's F* identity. The name must not collide with another
+    emitted declaration. Other backends retain their global naming rules.
+
+    See tests/micro-benchmarks/Renaming*.fst and
+    tests/custard/GlobalRename.fst. *)
 val rename_let (new_name: string) : Tot unit
 
 (** The [plugin] attribute is used in conjunction with native
