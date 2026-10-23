@@ -3568,6 +3568,30 @@ $(CHERRY_DIR)/CherrySepApp.chran: $(CHERRY_DIR)/CherrySepLib.c $(CHERRY_DIR)/Che
 
 all: $(CHERRY_DIR)/CherrySepApp.chran
 
+# Cherry with [--custard_split] (cherry.md, "Split output"): one file per
+# F* module, so that calls, globals, exception matches, dyn reads and the
+# initializer cross files.  A tail group stays in one file.
+CHERRY_SPLIT_TESTS = Exceptions AnyException DynPartial MutualTail InitOrder HeapClosures
+CHERRY_SPLIT_DIR = $(OUTPUT_DIR)/cherry-split
+
+$(CHERRY_SPLIT_DIR)/%.chsplit: $(CACHE_DIR)/%.fst.checked %.out.expected $(FSTAR_EXE)
+	$(call msg, "CHERRY-SPLIT", $*)
+	$(Q)rm -rf $(CHERRY_SPLIT_DIR)/$* && mkdir -p $(CHERRY_SPLIT_DIR)/$*
+	$(FSTAR) $(WARN_ANY) $(FLAGS_$*) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_split \
+	  --custard_main $*.main $*.fst -o $(CHERRY_SPLIT_DIR)/$*/$*.c
+	$(Q)test -f $(CHERRY_SPLIT_DIR)/$*/$*.$*.c \
+	  || { echo "ERROR: $*'s C output was not split"; exit 1; }
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(CHERRY_SPLIT_DIR)/$* -I$(CHERRY_INC) \
+	  $(CHERRY_SPLIT_DIR)/$*/*.c $(CHERRY_INC)/cherry.c -o $(CHERRY_SPLIT_DIR)/$*/$*.chexe
+	$(Q)$(CHERRY_RUN_$*) ASAN_OPTIONS=detect_leaks=1 $(CHERRY_SPLIT_DIR)/$*/$*.chexe \
+	  > $(CHERRY_SPLIT_DIR)/$*/$*.chout
+	$(Q)diff -u $*.out.expected $(CHERRY_SPLIT_DIR)/$*/$*.chout
+	$(Q)touch $@
+
+all: $(addprefix $(CHERRY_SPLIT_DIR)/, $(addsuffix .chsplit, $(CHERRY_SPLIT_TESTS)))
+
 # Every direct-C test goes through Cherry too, except the ones Cherry does not
 # cover yet.  This one hands a Prims.string to hand-written C expecting a
 # [const char *]:

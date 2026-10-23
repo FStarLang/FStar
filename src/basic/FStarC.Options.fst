@@ -1007,7 +1007,10 @@ it does the same and additionally lists the files, in compile order, in the \
 generated project. For the karamel backends it \
 splits the single .krml into one karamel module per F* module, which is what \
 karamel's -bundle and -no-prefix select on, and is required to reproduce a \
-specified crate layout on the Rust path.");
+specified crate layout on the Rust path. For --codegen Cherry it instead \
+writes the single C program as one file per F* module (FILE.M.c for the \
+-o file FILE.c) plus FILE.c itself, so that a C compiler can build them in \
+parallel.");
 
   ( noshort,
     "custard_unit",
