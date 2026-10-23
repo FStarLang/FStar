@@ -3117,14 +3117,34 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   (* Section 51.6.  A test of a [@@custard_c_ifdef] flag is a test the
      preprocessor makes.  Each arm keeps a block of its own, as it would
      under a C [if], so that a name it declares cannot collide with one the
-     code after it declares. *)
+     code after it declares.
+
+     Only one arm survives the preprocessor, so a parameter or local that the
+     other arm alone reads is unused in this build, and [-Wunused-parameter]
+     / [-Wunused-variable] fire on it.  Each arm therefore voids the names in
+     scope that the other arm reads and it does not. *)
   | EIf ({ e = EQual (n, _) }, t, f)
       when Some? (HashTable.try_find !ifdefs (string_of_name n)) ->
     let cond = Some?.v (HashTable.try_find !ifdefs (string_of_name n)) in
+    let vt = vars_of t in
+    let vf = vars_of f in
+    let voids (mine:list string) (other:list string) : ML string =
+      let xs = other |> List.fold_left (fun acc x ->
+        if List.mem x mine || List.mem x acc ||
+           not (List.existsb (fun (y, _) -> y = x) !scope)
+        then acc else x :: acc) [] |> List.rev in
+      String.concat "" (xs |> List.collect (fun x ->
+        let s = lookup_var x in
+        let ident = List.for_all (fun c -> BU.is_letter_or_digit c || c = '_')
+                                 (String.list_of_string s) in
+        if s = unit_value then []
+        else [ind' ^ "(void)" ^ (if ident then s else group s) ^ ";\n"])) in
+    let tv = voids vt vf in
+    let fv = voids vf vt in
     let arm (body:string) : string =
       if body = "" then "" else ind ^ "{\n" ^ body ^ ind ^ "}\n" in
-    let tt = arm (emit ind' d t) in
-    let ft = arm (emit ind' d f) in
+    let tt = arm (tv ^ emit ind' d t) in
+    let ft = arm (fv ^ emit ind' d f) in
     ind ^ "#if " ^ cond ^ "\n" ^ tt ^
     (if ft = "" then "" else ind ^ "#else\n" ^ ft) ^
     ind ^ "#endif\n"
