@@ -747,7 +747,8 @@ type flag =
       also monomorphizes [slice uint8] and would otherwise emit a second,
       conflicting [typedef] for it.
 
-      Set by [--custard_no_unfold]; see section 77 of doc/ref/custard.md. *)
+      Set by [--custard_no_unfold] or [@@custard_no_unfold]; see section 77
+      of doc/ref/custard.md. *)
   | Extern of option string & option string
   (** The type is defined outside F*: an abstract [val t : Type0] carrying
       [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration
@@ -820,6 +821,10 @@ type flag =
       backend, from its borrow inference, so that a unit linked against it
       calls them the way they were compiled.  A definition imported without
       it is taken to own every parameter. *)
+  | CName of string
+  (** The exact direct-C spelling requested by a global [rename_let].
+      Logical identities and linkage are unchanged.  Kept in compiled units
+      so that consumers use the producer's spelling. *)
 
 type tydef =
   | TAbbrev  of cty

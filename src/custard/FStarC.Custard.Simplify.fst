@@ -1105,8 +1105,35 @@ let reduce_decls (prog:program) : ML program =
 
 (* [Inline] declarations are substituted at their fully applied uses.  A use
    that is *not* fully applied keeps the declaration alive, so it is emitted
-   after all; that is rare enough not to be worth eta-expanding. *)
-let rec inline_expr (tbl : HashTable.t string (list binder & expr)) (used : HashTable.t string bool) (x:expr)
+   after all; that is rare enough not to be worth eta-expanding, except
+   under Cherry where one of the arguments is a lambda (below). *)
+(* The type variables of a polymorphic definition, replaced by the type
+   arguments of a call to it.  The monomorphizing backends have none left by
+   now; the ML ones print some operations by the type of their operand, as
+   [!r] for a [BufRead] on a reference, so an inlined body has to say what its
+   variables are at the call. *)
+let rec subst_expr_ty (s:list (string & cty)) (x:expr) : ML expr =
+  let x = map_children (subst_expr_ty s) x in
+  let f = subst_cty s in
+  let fb (b:binder) : ML binder = { b with b_ty = f b.b_ty } in
+  let e = match x.e with
+    | EQual (n, tys) -> EQual (n, List.map f tys)
+    | ELet (v, ty, a, b) -> ELet (v, f ty, a, b)
+    | EFun (bs, b) -> EFun (List.map fb bs, b)
+    | ECoerce (a, t) -> ECoerce (a, f t)
+    | ECast (a, t) -> ECast (a, f t)
+    | e -> e in
+  { x with e = e; ty = f x.ty }
+
+let instantiate (typars:list string) (tys:list cty) (bs:list binder) (body:expr)
+  : ML (list binder & expr) =
+  if Nil? typars || List.length typars <> List.length tys then (bs, body)
+  else
+    let s = List.zip typars tys in
+    (bs |> List.map (fun (b:binder) -> { b with b_ty = subst_cty s b.b_ty }),
+     subst_expr_ty s body)
+
+let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)) (used : HashTable.t string bool) (x:expr)
   : ML expr =
   (* [used] records the [Inline] declarations that had to be kept after all,
      either because a use was not fully applied or because it came before the
@@ -1115,21 +1142,41 @@ let rec inline_expr (tbl : HashTable.t string (list binder & expr)) (used : Hash
   match x.e with
   | EApp ({e = EQual (n, tys)}, args) ->
     let args = args |> List.map g in
-    (match HashTable.try_find tbl (string_of_name n) with
+    let lookup () : ML (option (list binder & expr)) =
+      match HashTable.try_find tbl (string_of_name n) with
+      | Some (ps, bs, body) -> Some (instantiate ps tys bs body)
+      | None -> None in
+    (match lookup () with
      (* Over-application is common and must be handled: F* stores the
         projector of an arrow-typed field as a one-binder function returning a
         function, so every use of it is applied to one argument too many. *)
      | Some (bs, body) when List.length bs <= List.length args ->
        let given, extra = List.splitAt (List.length bs) args in
        let r = inline_call bs body given (if Nil? extra then x else { x with ty = body.ty }) in
-       (match extra with
-        | [] -> r
+       (match extra, r.e with
+        | [], _ -> r
+        (* An eta-reduced body, [for_some f = existsb f]: the surplus
+           arguments complete its application rather than applying the
+           closure it would build.  Cherry splits an over-application by
+           the callee's arity again; the other backends would see one. *)
+        | _, EApp (h, a) when Options.custard_cherry () -> { x with e = EApp (h, a @ extra) }
         | _ -> { x with e = EApp (r, extra) })
+     (* Cherry, [@@custard_inline] on a combinator.  [eta_reduce] has made
+        many a caller [add k = apply f], so the lambda only meets its call if
+        the partial application becomes [fun x -> body], whose binders
+        [eta_expand] moves back into the caller's parameters.  It is a
+        closure either way, and one rather than two (the lambda's and the
+        partial application's) when it stays one. *)
+     | Some (bs, body) when Options.custard_cherry () && Cons? args
+                         && args |> List.existsb (fun (a:expr) -> EFun? a.e) ->
+       let given, rest = List.splitAt (List.length args) bs in
+       let lam = { x with e = EFun (rest, body) } in
+       inline_call given lam args x
      | _ -> HashTable.add used (string_of_name n) true;
             { x with e = EApp ({ x with e = EQual (n, tys) }, args) })
-  | EQual (n, _) ->
+  | EQual (n, tys) ->
     (match HashTable.try_find tbl (string_of_name n) with
-     | Some ([], body) -> inline_call [] body [] x
+     | Some (ps, [], body) -> inline_call [] (snd (instantiate ps tys [] body)) [] x
      | _ -> HashTable.add used (string_of_name n) true; x)
   | _ -> map_children g x
 
@@ -1705,7 +1752,7 @@ let is_identity (dl:dlet) : ML bool =
    | _ -> false)
 
 let inline_decls (prog:program) : ML program =
-  let tbl : HashTable.t string (list binder & expr) = HashTable.create 50 in
+  let tbl : HashTable.t string (list string & list binder & expr) = HashTable.create 50 in
   let used : HashTable.t string bool = HashTable.create 50 in
   let inl : HashTable.t string dlet = HashTable.create 50 in
   prog |> List.iter (fun d ->
@@ -1723,7 +1770,7 @@ let inline_decls (prog:program) : ML program =
         decl_deps (DLet dl) |> List.iter fill;
         let body = inline_expr tbl used dl.dl_body in
         HashTable.add bodies n body;
-        HashTable.add tbl n (dl.dl_binders, body)
+        HashTable.add tbl n (dl.dl_typars, dl.dl_binders, body)
       | None -> ()
     end in
   prog |> List.iter (fun d ->

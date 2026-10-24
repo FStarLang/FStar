@@ -2391,6 +2391,7 @@ let splice_attrs ()  : ML (tac (list attribute)) =
    internally. *)
 type refl_guard_and_tok_t = env & Core.guard_and_tok_t
 
+[@@FStar.Attributes.custard_inline]
 let dbg_refl (g:env) (msg:unit -> ML string) : ML unit =
   if !dbg_ReflTc
   then Format.print_string (msg ())

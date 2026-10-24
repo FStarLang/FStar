@@ -962,11 +962,13 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_extern_attr,          "custard_extern";
   PC.custard_c_header_attr,        "custard_c_header";
   PC.custard_opaque_attr,          "custard_opaque";
+  PC.custard_no_unfold_attr,       "custard_no_unfold";
   PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
   PC.custard_compile_time_attr,    "custard_compile_time";
   PC.custard_float_attr,           "custard_float";
   PC.custard_boxed_fields_attr,    "custard_boxed_fields";
   PC.cherry_boxed_attr,            "cherry_boxed";
+  PC.custard_inline_attr,          "custard_inline";
 ]
 
 (* Attributes that describe one *field* of a constructor. *)
@@ -1133,6 +1135,9 @@ let attr_home (nm:string) : string =
      beside the [@@custard_extern] it configures."
   | "custard_opaque" ->
     "It fixes a *type's* representation elsewhere, so it goes on the type."
+  | "custard_no_unfold" ->
+    "It preserves a type abbreviation during extraction, so it goes on \
+     the abbreviation's declaration."
   | "custard_no_monomorphize" ->
     "It says that a type class is not a compile-time dictionary, so it goes \
      on the class."
@@ -1149,6 +1154,9 @@ let attr_home (nm:string) : string =
   | "custard_boxed_fields" ->
     "It keeps the fields of a *type's* constructors boxed, so it goes on \
      that type."
+  | "custard_inline" ->
+    "It asks for every call of a *definition* to be inlined, so it goes on \
+     that definition."
   | "cherry_boxed" ->
     "It makes a *type* a counted heap cell under Cherry, so it goes on that \
      type."
@@ -1244,6 +1252,23 @@ let check_decl_attrs (l:Ident.lident) (se:sigelt) : ML unit =
           [@@custard_extern] asks for, and this declaration has no \
           [@@custard_extern].";
   attributed_binders se l |> List.iter (check_binder_attrs "the parameter" owner)
+
+let no_unfold_reported : HashTable.t string bool = HashTable.create 8
+
+let with_no_unfold_attribute (l:Ident.lident) (se:sigelt) (d:decl) : ML decl =
+  if not (has_attr PC.custard_no_unfold_attr (source_attrs se l)) then d else
+  match d with
+  | DType t when TAbbrev? t.dt_body ->
+    DType { t with dt_flags = NoUnfold :: t.dt_flags }
+  | _ ->
+    let key = Ident.string_of_lid l in
+    if not (Some? (HashTable.try_find no_unfold_reported key)) then begin
+      HashTable.add no_unfold_reported key true;
+      report_attr "custard_no_unfold" ("the declaration " ^ key)
+        "This declaration is not a type abbreviation, so there is no \
+         abbreviation to preserve."
+    end;
+    d
 
 (* Every consultation of a declaration's type goes through here.  Looking a
    lid up in an environment that has not loaded its module yet does not fail
@@ -1346,20 +1371,35 @@ let name_of_bv (b:bv) : ML string =
    runs.  Anything else is ill-formed, and warning about it rather than
    silently keeping the source spelling is the point -- a [rename_let] whose
    argument did not reduce is a mistake the author wants to hear about. *)
-let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
+let rename_let_name (rng:Range.range) (lbattrs:list term) : ML (option string) =
   match U.get_attribute PC.rename_let_attr lbattrs with
   | None -> None
   | Some [(str, _)] ->
     (match (SS.compress str).n with
      | Tm_constant (Const_string (s, _)) when s <> "" -> Some s
      | _ ->
-       E.log_issue top E.Warning_UnrecognizedAttribute
+       E.log_issue rng E.Warning_UnrecognizedAttribute
          "Ignoring ill-formed application of `rename_let`";
        None)
   | Some _ ->
-    E.log_issue top E.Warning_UnrecognizedAttribute
+    E.log_issue rng E.Warning_UnrecognizedAttribute
       "Ignoring ill-formed application of `rename_let`";
     None
+
+let with_global_rename (l:Ident.lident) (se:sigelt) (d:decl) : ML decl =
+  if Options.codegen_name () <> "C" && Options.codegen_name () <> "Cherry"
+  then d else
+  match rename_let_name se.sigrng (source_attrs se l) with
+  | None -> d
+  | Some s ->
+    match d with
+    | DLet v -> DLet { v with dl_flags = CName s :: v.dl_flags }
+    | DType t -> DType { t with dt_flags = CName s :: t.dt_flags }
+    | DExternal x -> DExternal { x with dx_flags = CName s :: x.dx_flags }
+    | _ ->
+      E.log_issue se E.Warning_UnrecognizedAttribute
+        "Ignoring `rename_let` on a declaration without a direct-C name";
+      d
 
 (* The name a local [let] binder is given: its source spelling, unless
    [rename_let] asked for another one.  Renaming the [bv] itself, rather than
@@ -1377,7 +1417,7 @@ let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
 let rename_let_bv (top:term) (b:bv) (body:term) (lbattrs:list term)
   : ML (bv & term) =
   let s =
-    let renamed = rename_let_name top lbattrs in
+    let renamed = rename_let_name top.pos lbattrs in
     let base = match renamed with
                | Some s -> s
                | None -> Ident.string_of_id b.ppname in
@@ -5199,7 +5239,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
              [m.create], and pass the application itself only to binders \
              that are specialized away (section 133)." ]
    | _ -> ());
-  match rule with
+  let d = (match rule with
   | Some (Builtins.Rule_extern x) when (match se with
                                         | Some { sigel = Sig_declare_typ {t} } ->
                                           is_type_sig st t
@@ -5295,8 +5335,12 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
     let d = if is_krml_backend () && is_private_sigelt se then with_private d else d in
+    let d = with_no_unfold_attribute l se d in
     if is_inlinable se && not (is_root st l)
-    then with_inline d else d
+    then with_inline d else d) in
+  match se with
+  | Some se -> with_global_rename l se d
+  | None -> d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
    for extraction.  This is how Pulse hands us its programs: the F* definition
@@ -5477,6 +5521,7 @@ and is_inlinable (se:sigelt) : ML bool =
      it in statement position. *)
   || (se.sigquals |> List.existsb (fun q -> q = S.Inline_for_extraction)
       && Some? (List.tryPick ExtractAs.is_extract_as_attr se.sigattrs))
+  || U.has_attribute se.sigattrs PC.custard_inline_attr
 
 and with_inline (d:decl) : ML decl =
   match d with
@@ -6447,11 +6492,37 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      what this said until a [ghost fn] parameter found the difference: an
      erased *value* binder put back the same way kept its function type, its
      callers passed the erased [()], and the C compiler --- not Custard ---
-     was the first thing to object. *)
-  let binders = bs |> List.map (fun b ->
+     was the first thing to object.
+
+     Issue 4783.  But "its callers pass [()]" has to be asked of the same
+     type the callers ask it of, which is the *declared* one
+     ({!call_unit_flags}), not the specialized sort in hand here.  A
+     [fallback: nat -> a] specialized at [a := unit] is erased as a
+     [nat -> unit], yet every call site -- the recursive one in the body
+     included -- passes the closure.  Typing the parameter [unit] then hid a
+     counted value behind a unit type, and Cherry emitted [cherry_inc] of
+     the [()] that the C printer put in its place.  So where the declared
+     type classifies the binder, its unit flag decides.  Binder [i] of [bs]
+     past the holes is the [(i - n_holes)]th declared position that
+     [specialize] did not substitute away. *)
+  let ub = binder_flags st "u:" l Mono.unit_binders in
+  let n_ub = List.length ub in
+  let mono_idx = List.map fst margs in
+  let rec declared_idx (k:int) (j:int) : ML int =
+    if List.mem j mono_idx then declared_idx k (j + 1)
+    else if k = 0 then j
+    else declared_idx (k - 1) (j + 1) in
+  let kept_idx =
+    List.zip (List.mapi (fun i _ -> i) flags) flags
+    |> List.collect (fun (i, dropped) -> if dropped then [] else [i]) in
+  let binders = List.map2 (fun (b:S.binder) (i:int) ->
+    let j = if i < n_holes then -1 else declared_idx (i - n_holes) 0 in
+    let erased =
+      if j >= 0 && j < n_ub
+      then List.nth ub j
+      else Mono.is_erased_binder (tcenv st) b in
     { b_name = name_of_bv b.binder_bv;
-      b_ty = if Mono.is_erased_binder (tcenv st) b then TUnit
-             else ty_of_typ st b.binder_bv.sort }) in
+      b_ty = if erased then TUnit else ty_of_typ st b.binder_bv.sort }) bs kept_idx in
   (* Section 81.  The arity a caller has to meet, which is the one the
      diagnostics count and is not [specialize]'s "abstracted" number whenever
      the body's own lambdas outlive [cut]. *)

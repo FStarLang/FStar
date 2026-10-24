@@ -739,6 +739,7 @@ let flag_to_doc (f:flag) : ML document =
   | CIfDef -> text "c_ifdef"
   | CReference -> text "c_reference"
   | CInline -> text "c_inline"
+  | CName s -> text ("c_name " ^ s)
   | Deriving s -> text ("deriving " ^ s)
   | Realized -> text "realized"
   | NoUnfold -> text "no_unfold"

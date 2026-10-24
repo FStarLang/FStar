@@ -49,6 +49,16 @@ ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f (#v: erased _)
       (forall (i: nat). i < Seq.length s ==>
         Seq.index s i == Some (Seq.index v i)))
 
+(* Automatically applied by the prover, e.g. to release an initialized
+   local array whose scope ends with `pts_to_uninit_post`. *)
+[@@pulse_intro]
+ghost fn forget_init u#a (#t: Type u#a) (arr: array t) #f (#v: erased (Seq.seq t))
+  requires arr |-> Frac f v
+  ensures pts_to_mask arr #f (FStar.Seq.Properties.map_seq Some (reveal v)) (fun _ -> True)
+  ensures pure (Seq.length (FStar.Seq.Properties.map_seq Some (reveal v)) == Seq.length v /\
+    (forall (i: nat). i < Seq.length v ==>
+      Seq.index (FStar.Seq.Properties.map_seq Some (reveal v)) i == Some (Seq.index v i)))
+
 ghost fn from_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask
   requires pts_to_mask arr #f v mask
   requires pure (forall (i: nat). i < Seq.length v ==> mask i /\ Some? (Seq.index v i))
@@ -164,7 +174,7 @@ fn with_local u#a
                                     (pts_to arr (Seq.create (SZ.v len) init) **
                                      (pure (is_full_array arr) **
                                       pure (length arr == SZ.v len))))
-                                   (fun r -> post r ** (exists* v. pts_to arr v)))
+                                   (fun r -> post r ** pts_to_uninit_post arr))
   requires pre
   returns r: ret_t
   ensures post r

@@ -68,6 +68,10 @@ GREP_EmptyMatch += "empty match"
 CUSTARD_TESTS += RenameLet
 GREP_RenameLet   = "let renamedA = " "let dupName = " "let dupName1 = "
 NOGREP_RenameLet = "let a = " "let b = " "let c = "
+# Global rename_let is direct-C metadata, not an OCaml name change.
+CUSTARD_TESTS += GlobalRenameOCaml
+GREP_GlobalRenameOCaml = "let globalRenameIface_step" "let globalRenameOCaml_increment"
+NOGREP_GlobalRenameOCaml = "InterfaceStep" "COnlyName"
 GREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) (x : Prims.int) (y : Prims.int) : Prims.int"
 # The failure this guards against is [add4] keeping its abbreviated codomain
 # as an arrow instead of taking its binders: [let add4 (n : Prims.int) : ...].
@@ -778,6 +782,77 @@ NOEGREP_TyFun4 = "Error 365"
 # target type language: it lands on TAny, which --custard_warn_any reports and
 # WARN_ANY escalates.  This is the positive test for section 5.6.
 REJECT_TESTS += WarnAny
+# Global rename_let names are exact, including private helpers, macros,
+# interfaces and specializations; no-prefix must not overwrite them.
+C_TESTS += GlobalRename
+FLAGS_GlobalRename += --custard_entry GlobalRename.add
+FLAGS_GlobalRename += --custard_entry GlobalRename.make
+FLAGS_GlobalRename += --custard_entry GlobalRename.stored
+FLAGS_GlobalRename += --custard_entry GlobalRename.limit
+FLAGS_GlobalRename += --custard_c_no_prefix GlobalRename
+CEXTRA_GlobalRename = GlobalRename_stubs.c
+CGREP_GlobalRename += "static uint32_t privateWorker("
+CGREP_GlobalRename += "static uint32_t CountDown("
+CGREP_GlobalRename += "static int32_t run_test("
+CGREP_GlobalRename += "InterfaceStep("
+CGREP_GlobalRename += "uint32_t privateWorker_1)"
+CHGREP_GlobalRename += "typedef struct ApiPair_s"
+CHGREP_GlobalRename += "uint32_t ApiAdd(ApiPair"
+CHGREP_GlobalRename += "extern uint32_t api_global;"
+CHGREP_GlobalRename += "\#define mixedCaseLimit"
+CGREP_GlobalRename += "uint32_t ExternalStep("
+CHNOGREP_GlobalRename += "privateWorker"
+CNOGREP_GlobalRename += "GlobalRename_add" "GlobalRename_stored"
+CNOGREP_GlobalRename += "GlobalRename_helper" "GlobalRename_countdown"
+CNOGREP_GlobalRename += "GlobalRenameIface_step" "MIXEDCASELIMIT"
+
+C_TESTS += GlobalRenameNoPrefix
+FLAGS_GlobalRenameNoPrefix += --custard_entry GlobalRenameNoPrefix.f --custard_entry ColA.f
+FLAGS_GlobalRenameNoPrefix += --custard_c_no_prefix GlobalRenameNoPrefix --custard_c_no_prefix ColA
+CGREP_GlobalRenameNoPrefix += "uint32_t different_f(" "uint32_t f("
+
+REJECT_TESTS += GlobalRenameCollision GlobalRenameSpecCollision
+CODE_GlobalRenameCollision = 374
+FLAGS_GlobalRenameCollision = --codegen C
+EGREP_GlobalRenameCollision = "same_name" "Two declarations cannot share one C name"
+CODE_GlobalRenameSpecCollision = 374
+FLAGS_GlobalRenameSpecCollision = --codegen C --custard_monomorphize_types true
+EGREP_GlobalRenameSpecCollision = "one_instance" "Two declarations cannot share one C name"
+
+REJECT_TESTS += GlobalRenameInvalid GlobalRenameDigit GlobalRenameKeyword
+CODE_GlobalRenameInvalid = 374
+FLAGS_GlobalRenameInvalid = --codegen C
+EGREP_GlobalRenameInvalid = "available C/C++ identifier"
+CODE_GlobalRenameDigit = 374
+FLAGS_GlobalRenameDigit = --codegen C
+EGREP_GlobalRenameDigit = "available C/C++ identifier"
+CODE_GlobalRenameKeyword = 374
+FLAGS_GlobalRenameKeyword = --codegen C
+EGREP_GlobalRenameKeyword = "available C/C++ identifier"
+
+REJECT_TESTS += GlobalRenameEmpty GlobalRenameExtern GlobalRenameImported
+CODE_GlobalRenameEmpty = 278
+FLAGS_GlobalRenameEmpty = --codegen C --warn_error @278
+EGREP_GlobalRenameEmpty = 'Ignoring ill-formed application of `rename_let`'
+CODE_GlobalRenameExtern = 374
+FLAGS_GlobalRenameExtern = --codegen C
+EGREP_GlobalRenameExtern = "custard_extern" "already specifies"
+CODE_GlobalRenameImported = 374
+FLAGS_GlobalRenameImported = --codegen C --custard_monomorphize_types true \
+  --custard_link $(OUTPUT_DIR)/GlobalRenameIface.cui
+EGREP_GlobalRenameImported = "InterfaceStep" "Two declarations cannot share one C name"
+
+REJECT_TESTS += GlobalRenameMain GlobalRenameTag GlobalRenameCppKeyword
+CODE_GlobalRenameMain = 374
+FLAGS_GlobalRenameMain = --codegen C
+EGREP_GlobalRenameMain = "available C/C++ identifier"
+CODE_GlobalRenameCppKeyword = 374
+FLAGS_GlobalRenameCppKeyword = --codegen C
+EGREP_GlobalRenameCppKeyword = "available C/C++ identifier"
+CODE_GlobalRenameTag = 374
+FLAGS_GlobalRenameTag = --codegen C --custard_entry_module GlobalRenameTag
+EGREP_GlobalRenameTag = "GLOBALRENAMETAG_TAG" "Two declarations cannot share one C name"
+
 # Section 6: the direct-to-C backend has no representation for an unbounded
 # Prims.int, and none for a closure.  Both must be diagnosed, not mistranslated.
 # Sections 31.2 and 31.3.  Round 35 twice reported error 368 as unactionable:
@@ -1735,6 +1810,56 @@ $(OUTPUT_DIR)/TailLinkApp.ran: $(OUTPUT_DIR)/TailLinkLib.c $(OUTPUT_DIR)/TailLin
 	$(Q)touch $@
 
 all: $(OUTPUT_DIR)/TailLinkApp.ran
+
+$(CACHE_DIR)/GlobalRenameApp.fst.checked: $(CACHE_DIR)/GlobalRenameIface.fst.checked
+$(CACHE_DIR)/GlobalRenameOCaml.fst.checked: $(CACHE_DIR)/GlobalRenameIface.fst.checked
+$(CACHE_DIR)/GlobalRename.fst.checked: $(CACHE_DIR)/GlobalRenameIface.fst.checked
+$(OUTPUT_DIR)/GlobalRenameImported.rejected: $(OUTPUT_DIR)/GlobalRenameIface.cui
+
+$(OUTPUT_DIR)/GlobalRenameIface.cui: $(CACHE_DIR)/GlobalRenameIface.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", GlobalRenameIface)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true --custard_unit GlobalRenameIface \
+	  --custard_entry GlobalRenameIface.step --odir $(OUTPUT_DIR) GlobalRenameIface.fst
+	$(Q)grep -qF "uint32_t InterfaceStep(" $(OUTPUT_DIR)/GlobalRenameIface.h
+
+$(OUTPUT_DIR)/GlobalRenameIface.c: $(OUTPUT_DIR)/GlobalRenameIface.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/GlobalRenameApp.c: $(CACHE_DIR)/GlobalRenameApp.fst.checked \
+                               $(OUTPUT_DIR)/GlobalRenameIface.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", GlobalRenameApp)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/GlobalRenameIface.cui \
+	  --custard_main GlobalRenameApp.main GlobalRenameApp.fst -o $@
+	$(Q)grep -qF "InterfaceStep(41)" $@
+	$(Q)! grep -qF "GlobalRenameIface_step" $@
+
+$(OUTPUT_DIR)/GlobalRenameApp.ran: $(OUTPUT_DIR)/GlobalRenameIface.c $(OUTPUT_DIR)/GlobalRenameApp.c
+	$(call msg, "CC", GlobalRenameApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  $(OUTPUT_DIR)/GlobalRenameIface.c $(OUTPUT_DIR)/GlobalRenameApp.c \
+	  -o $(OUTPUT_DIR)/GlobalRenameApp.exe
+	$(call msg, "RUN-C", GlobalRenameApp)
+	$(Q)$(OUTPUT_DIR)/GlobalRenameApp.exe
+	$(Q)touch $@
+
+# Compile the generated source as C and its consumer as C++, so the header's
+# exact names and C linkage are checked by the linker, not just by greps.
+$(OUTPUT_DIR)/GlobalRename.cxxran: $(OUTPUT_DIR)/GlobalRename.dc GlobalRename_stubs.c
+	$(call msg, "CC/CXX", GlobalRename)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  -c $< -o $(OUTPUT_DIR)/GlobalRename.o
+	$(Q)$(CXX) -std=c++17 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c++ \
+	  -c GlobalRename_stubs.c -o $(OUTPUT_DIR)/GlobalRename_stubs.o
+	$(Q)$(CXX) $(OUTPUT_DIR)/GlobalRename.o $(OUTPUT_DIR)/GlobalRename_stubs.o \
+	  -o $(OUTPUT_DIR)/GlobalRename_cxx.exe
+	$(Q)$(OUTPUT_DIR)/GlobalRename_cxx.exe
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/GlobalRenameApp.ran $(OUTPUT_DIR)/GlobalRename.cxxran
 
 # Section 116.  Three units, the middle one's global computed from the first
 # one's.  The generated [main] has to call the initializers in --custard_link
@@ -2863,6 +2988,40 @@ GREP_NoUnfold += "type noUnfold_byte_pair = (FStar_UInt8.t) noUnfold_pair"
 GREP_NoUnfold += "let noUnfold_swap (p : noUnfold_byte_pair) : noUnfold_byte_pair"
 NOGREP_NoUnfold += "noUnfold_flag_pair"
 
+C_TESTS += CNoUnfold
+FLAGS_CNoUnfold = --custard_entry CNoUnfold.swap \
+                 --custard_entry CNoUnfold.swapf \
+                 --custard_entry CNoUnfold.increment \
+                 --custard_entry CNoUnfold.apply \
+                 --custard_entry CNoUnfold.swap_named \
+                 --custard_entry CNoUnfold.cli_identity \
+                 --custard_entry CNoUnfoldIface.identity \
+                 --custard_no_unfold CNoUnfold.cli_word
+CHGREP_CNoUnfold += "typedef uint32_t CNoUnfold_word;"
+CHGREP_CNoUnfold += "typedef CNoUnfold_word (*CNoUnfold_callback)(CNoUnfold_word);"
+CHGREP_CNoUnfold += "CNoUnfold_byte_pair CNoUnfold_swap(CNoUnfold_byte_pair p);"
+CHGREP_CNoUnfold += "CNoUnfold_word CNoUnfold_apply(CNoUnfold_callback f, CNoUnfold_word eta);"
+CHGREP_CNoUnfold += "typedef uint16_t CNoUnfold_cli_word;"
+CHGREP_CNoUnfold += "CNoUnfold_cli_word CNoUnfold_cli_identity(CNoUnfold_cli_word x);"
+CHGREP_CNoUnfold += "typedef uint32_t CNoUnfoldIface_word;"
+CHGREP_CNoUnfold += "CNoUnfoldIface_word CNoUnfoldIface_identity(CNoUnfoldIface_word x);"
+CHGREP_CNoUnfold += "typedef CNoUnfold_pair__uint32 CNoUnfold_named_pair__uint32;"
+CHGREP_CNoUnfold += "CNoUnfold_named_pair__uint32 CNoUnfold_swap_named(CNoUnfold_named_pair__uint32 p);"
+CNOGREP_CNoUnfold += "CNoUnfold_flag_pair" "CNoUnfold_unused_word"
+
+$(OUTPUT_DIR)/CNoUnfold.dc: $(CACHE_DIR)/CNoUnfoldIface.fst.checked
+
+REJECT_TESTS += NoUnfoldAttrValue NoUnfoldAttrBinder NoUnfoldAttrType
+FLAGS_NoUnfoldAttrValue = --codegen C --warn_error @371
+CODE_NoUnfoldAttrValue = 371
+EGREP_NoUnfoldAttrValue = "not a type abbreviation"
+FLAGS_NoUnfoldAttrBinder = --codegen C --warn_error @371
+CODE_NoUnfoldAttrBinder = 371
+EGREP_NoUnfoldAttrBinder = "on the parameter x"
+FLAGS_NoUnfoldAttrType = --codegen C --warn_error @371
+CODE_NoUnfoldAttrType = 371
+EGREP_NoUnfoldAttrType = "not a type abbreviation"
+
 CUSTARD_TESTS += ErasableEff
 # --custard_main alone would root only what [main] reaches, and what this test
 # is about is precisely the definitions that reach nothing because they were
@@ -3570,10 +3729,20 @@ $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryPap.chgrep
 
+# Cherry: [@@custard_inline] combinators are inlined, so a lambda given to
+# one is no closure, and an eta-reduced one becomes a direct call.
+$(CHERRY_DIR)/CherryInlineHO.chgrep: $(CHERRY_DIR)/CherryInlineHO.chc
+	$(Q)! sed -n '/^static .* CherryInlineHO_add(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_\|CherryInlineHO_apply_plus_one' \
+	  || { echo "ERROR: CherryInlineHO_add builds or applies a closure"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryInlineHO_has_above(.*{$$/,/^}/p' $< | grep -q 'cherry_apply_\|CherryInlineHO_some' \
+	  || { echo "ERROR: CherryInlineHO_has_above does not call existsb directly"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryInlineHO.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryErasedClosure
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2

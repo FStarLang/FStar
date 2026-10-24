@@ -353,10 +353,9 @@ let extern_target (d:decl) : ML (option string) =
    seeding, the collision check and the external's own prototype all read this
    function instead, and a new kind of spelling has one place to change.
 
-   [build_renames] is deliberately not one of its callers: it runs *before*
-   {!renames} exists and needs the name as it stands, which is what its own
-   [escape_kw (sanitize (mangled_name n))] says.  The one name this cannot
-   answer for is the generated initializer, which is minted from the unit and
+   [build_renames] first installs explicit names, then consults [c_name]
+   while applying prefix removal.  The one name this cannot answer for is
+   the generated initializer, which is minted from the unit and
    not from any declaration; [init_name] is its single source in the same
    sense, and both seeding sites pass it explicitly. *)
 let emitted_name (d:decl) : ML string =
@@ -2016,7 +2015,8 @@ let postfix_text (d:c_expression) : string =
    the backend keeps its own scope: a name is emitted as written unless the
    enclosing *function* has already used it, in which case it takes a
    subscript.  So the generated C reads like the source, and a subscript in it
-   means something real. *)
+   means something real.  Global names are reserved too: a parameter must
+   not shadow a function that [rename_let] has given that same spelling. *)
 (* Each entry is the C expression a variable resolves to, and whether it is a
    one-cell stack allocation the backend has collapsed into a variable (see
    [ELet] below): a use that wants the cell reads or assigns it, a use that
@@ -2031,7 +2031,9 @@ let bind_gen (x:string) (cell:bool) : ML string =
   let base = c_var x in
   let rec pick (i:int) : ML string =
     let cand = if i = 0 then base else base ^ "_" ^ show i in
-    if Some? (HashTable.try_find !declared cand) then pick (i + 1) else cand in
+    if Some? (HashTable.try_find !declared cand) ||
+       Some? (HashTable.try_find !taken_names cand)
+    then pick (i + 1) else cand in
   let nm = pick 0 in
   HashTable.add !declared nm true;
   scope := (x, (c_postfix nm, cell)) :: !scope;
@@ -4421,6 +4423,8 @@ let rec ret_cty (t:cty) : ML cty =
    the symbol comes from, so the absence of one is the real mistake here. *)
 let is_c_identifier (s:string) : ML bool =
   s <> "" &&
+  not (let n = FStar.Char.int_of_char (String.get s 0) in
+       n >= 0x30 && n <= 0x39) &&
   (String.list_of_string s |> List.for_all (fun c ->
      let n = FStar.Char.int_of_char c in
      (n >= 0x41 && n <= 0x5a) || (n >= 0x61 && n <= 0x7a) ||
@@ -4602,6 +4606,22 @@ let comment_of (l:dlet) : ML string =
   String.concat "" (l.dl_flags |> List.collect
     (function Comment c -> ["/* " ^ c ^ " */\n"] | _ -> []))
 
+let requested_c_name (d:decl) : ML (option string) =
+  decl_flags d |> List.tryPick (function CName s -> Some s | _ -> None)
+
+let reserved_c_name (s:string) : ML bool =
+  List.existsb (fun k -> k = s) (c_keywords @ [
+    "_Alignas"; "_Alignof"; "_Atomic"; "_Generic"; "_Noreturn";
+    "_Static_assert"; "_Thread_local";
+    "alignas"; "alignof"; "and"; "and_eq"; "asm"; "bitand"; "bitor";
+    "catch"; "char16_t"; "char32_t"; "class"; "compl"; "constexpr";
+    "const_cast"; "decltype"; "delete"; "dynamic_cast"; "explicit";
+    "export"; "friend"; "mutable"; "namespace"; "new"; "noexcept"; "not";
+    "not_eq"; "nullptr"; "operator"; "or"; "or_eq"; "private"; "protected";
+    "public"; "reinterpret_cast"; "static_assert"; "static_cast"; "template";
+    "this"; "thread_local"; "throw"; "try"; "typeid"; "typename"; "using";
+    "virtual"; "wchar_t"; "xor"; "xor_eq" ])
+
 (* Section 32.4.  Build the [--custard_c_no_prefix] map.
 
    The set this may touch is exactly {!is_public}: a definition with external
@@ -4633,6 +4653,30 @@ let comment_of (l:dlet) : ML string =
 let build_renames (check:bool) (extra:list string) (p:program) : ML unit =
   let mods = Options.custard_c_no_prefix () @ extra in
   renames := HashTable.create 0;
+  p |> List.iter (fun d ->
+    match requested_c_name d with
+    | None -> ()
+    | Some s ->
+      let src = string_of_name (name_of_decl d) in
+      if not (is_c_identifier s) || reserved_c_name s then
+        E.raise_error0 E.Error_CustardExportCollision [
+          text ("Custard: rename_let on " ^ src ^ " requests `" ^ s ^
+                "', which is not an available C/C++ identifier.");
+          text "Choose a non-reserved name using ASCII letters, digits and \
+                underscores, not starting with a digit." ];
+      let target = match d with
+                   | DType t -> t.dt_flags |> List.tryPick
+                       (function Extern (Some s, _) when s <> "" -> Some s
+                               | _ -> None)
+                   | _ -> extern_target d in
+      (match target with
+       | Some t when t <> s ->
+         E.raise_error0 E.Error_CustardExportCollision [
+           text ("Custard: rename_let requests `" ^ s ^ "' for " ^ src ^
+                 ", but custard_extern already specifies `" ^ t ^ "'.");
+           text "Use the same name, or remove one of the attributes." ]
+       | _ -> ());
+      HashTable.add !renames src s);
   if Nil? mods then () else begin
     (* Every C name in the unit as it stands, so that a rename cannot land on
        one.  Types and constructors included: they have no linkage, but a
@@ -4643,7 +4687,7 @@ let build_renames (check:bool) (extra:list string) (p:program) : ML unit =
       let n = name_of_decl d in
       HashTable.add taken (match extern_target d with
                       | Some t -> t
-                      | None -> escape_kw (sanitize (mangled_name n)))
+                      | None -> c_name n)
                      (string_of_name n));
     let claimed : HashTable.t string string = HashTable.create 20 in
     let used_mod : HashTable.t string bool = HashTable.create 5 in
@@ -4689,8 +4733,10 @@ let build_renames (check:bool) (extra:list string) (p:program) : ML unit =
         let m = String.concat "." dn.ns in
         if List.existsb (fun x -> x = m) mods then begin
           HashTable.add used_mod m true;
-          let tgt = escape_kw (sanitize dn.id) in
           let src = string_of_name dn in
+          let tgt = match HashTable.try_find !renames src with
+                    | Some s -> s
+                    | None -> escape_kw (sanitize dn.id) in
           (match HashTable.try_find claimed tgt with
            | Some other when check ->
              E.raise_error0 E.Error_CustardExportCollision [
@@ -4752,7 +4798,7 @@ let header_names (cu:unit_info) : ML (list (string & string)) =
 
 let rename_clashes (init_name:string) (reserved:list (string & string)) (p:program) : ML unit =
   let movable (d:decl) : ML bool =
-    local d && None? (extern_target d) &&
+    local d && None? (extern_target d) && None? (requested_c_name d) &&
     (match d with
      | DLet l -> not (is_public l) && not (is_macro l)
      | _ -> false) in
@@ -4826,7 +4872,7 @@ let build_macros (p:program) : ML unit =
   macros := HashTable.create 0;
   let ms = p |> List.collect (fun d ->
     match d with
-    | DLet l when is_macro l -> [l.dl_name]
+    | DLet l when is_macro l -> [(l.dl_name, requested_c_name d)]
     | _ -> []) in
   if Nil? ms then () else begin
     (* Every other C name in the unit, so that a macro landing on one is
@@ -4834,11 +4880,13 @@ let build_macros (p:program) : ML unit =
     let taken : HashTable.t string string = HashTable.create 50 in
     p |> List.iter (fun d ->
       let n = name_of_decl d in
-      if List.existsb (fun m -> string_of_name m = string_of_name n) ms
+      if List.existsb (fun (m, _) -> string_of_name m = string_of_name n) ms
       then ()
       else HashTable.add taken (c_name n) (string_of_name n));
-    ms |> List.iter (fun n ->
-      let m = String.uppercase (c_name n) in
+    ms |> List.iter (fun (n, requested) ->
+      let m = match requested with
+              | Some s -> s
+              | None -> String.uppercase (c_name n) in
       let clash =
         match HashTable.try_find taken m with
         | Some o -> Some o
@@ -4848,8 +4896,9 @@ let build_macros (p:program) : ML unit =
         E.raise_error0 E.Error_CustardExportCollision [
           text ("Custard: the macro for " ^ string_of_name n ^ " is " ^ m ^
                 ", which is already the C name of " ^ o ^ ".");
-          text "A [@@ CMacro ] definition is spelled in upper case, following \
-                karamel, and the preprocessor rewrites that token everywhere \
+          text "A [@@ CMacro ] definition is spelled in upper case unless \
+                rename_let specifies its name, and the preprocessor rewrites \
+                that token everywhere \
                 in the translation unit -- including in the other \
                 declaration, which would then be unspellable.";
           text "Rename one of the two, or drop the attribute." ]
@@ -5018,9 +5067,12 @@ let check_emitted_names (init_name:string) (reserved:list (string & string)) (p:
   if Cons? (global_inits_of p) then
     claim init_name "the generated initializer" false;
   p |> List.iter (fun d ->
-    if not (local d) then () else
     let n = name_of_decl d in
-    claim (emitted_name d) (string_of_name n) (Some? (extern_target d)))
+    claim (emitted_name d) (string_of_name n) (Some? (extern_target d));
+    match d with
+    | DType { dt_body = TVariant cs } ->
+      cs |> List.iter (fun (c, _) -> claim (c_tag c) (string_of_name c) false)
+    | _ -> ())
 
 (* [base] is the stem of the output file: the source includes [base.h], and
    the include guard is derived from it.  Returns the header and the source,

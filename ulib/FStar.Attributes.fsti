@@ -101,7 +101,13 @@ val no_inline_let : unit
     This is useful, particularly in conjunction with partial
     evaluation, to ensure that names reflect their usage context.
 
-    See tests/micro-benchmarks/Renaming*.fst *)
+    Custard's direct-to-C backend also accepts this attribute on global
+    declarations to request an exact C identifier, without changing linkage
+    or the declaration's F* identity. The name must not collide with another
+    emitted declaration. Other backends retain their global naming rules.
+
+    See tests/micro-benchmarks/Renaming*.fst and
+    tests/custard/GlobalRename.fst. *)
 val rename_let (new_name: string) : Tot unit
 
 (** The [plugin] attribute is used in conjunction with native
@@ -575,6 +581,12 @@ val custard_compile_time : unit
     erases it nor collapses it as a newtype (see doc/ref/custard.md, 5.2). *)
 val custard_opaque : unit
 
+(** Custard: preserve this type abbreviation and its uses during extraction,
+    rather than replacing it by its body. Equivalent to naming the type with
+    [--custard_no_unfold]. This does not make the type abstract, prevent
+    verification-time unfolding, or keep an unreachable declaration alive. *)
+val custard_no_unfold : unit
+
 (** Custard: store this constructor field's contents directly in the
     constructor rather than behind a pointer to it.  The field's type must be a
     record (or a one-constructor inductive); its fields take the place of this
@@ -604,6 +616,15 @@ val cherry_borrowed : unit
     [[@@cherry_boxed] noeq type cfg = { ... }].  No effect on other
     backends. *)
 val cherry_boxed : unit
+
+(** Custard: inline every call of this definition after extraction, in
+    Custard's IR (doc/ref/cherry.md, "Functions").  Meant for small
+    combinators that take a function, such as [finally] or an option monad's
+    [bind]: inlined, a lambda passed to them meets the call of its parameter
+    and is beta-reduced, where Cherry would otherwise allocate a closure for
+    it.  Unlike [inline_for_extraction], the ML extraction ignores it.  No
+    effect on recursive definitions. *)
+val custard_inline : unit
 
 (** Custard: keep every field of this type's constructors boxed, that is, lay
     the type out the way the ML extraction does.  It turns off the automatic

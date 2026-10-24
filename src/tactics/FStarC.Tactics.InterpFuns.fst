@@ -44,6 +44,7 @@ let unembed (e:embedding 'a) t n : ML (option 'a) = FStarC.Syntax.Embeddings.une
 
 let interp_ctx (s:string) (f:unit -> ML 'a) : ML 'a = Errors.with_ctx ("While running primitive " ^ s) f
 
+[@@FStar.Attributes.custard_inline]
 let run_wrap (label : string) (t : tac 'a) ps : ML 'a =
   interp_ctx label (fun () -> t ps)
 
