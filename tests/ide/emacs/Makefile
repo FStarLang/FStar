@@ -33,3 +33,17 @@ $(OUTPUT_DIR)/Harness.%.ideout: Harness.%.in $(CACHE_DIR)/Harness.fst.checked
 $(OUTPUT_DIR)/OvlIde.%.ideout: OvlIde.%.in $(CACHE_DIR)/OvlIdeInt.fst.checked $(CACHE_DIR)/OvlIdeBool.fst.checked
 	$(call msg, "OUT_IDE", $<)
 	$(FSTAR) --ide --silent "$(realpath OvlIde.fst)" < "$<" | $(JSON_CLEANUP) "$@"
+
+HIERARCHICAL_DIR := $(abspath hierarchical)
+
+$(CACHE_DIR)/A.B.C.fst.checked: $(HIERARCHICAL_DIR)/A/B/C.fst
+	$(call msg, "CHECK", $(notdir $<))
+	$(FSTAR) --include "$(HIERARCHICAL_DIR)" -c $< -o $@
+
+# Exercise path resolution, not just the logical filenames in ranges. Keep
+# directory components in the snapshot so a basename-only response fails.
+$(OUTPUT_DIR)/Hierarchical.%.ideout: Hierarchical.%.in $(CACHE_DIR)/A.B.C.fst.checked
+	$(call msg, "OUT_IDE", $<)
+	$(FSTAR) --ext fstar:no_absolute_paths=false --include "$(HIERARCHICAL_DIR)" \
+	  --ide --silent "$(HIERARCHICAL_DIR)/Client/Lookup.fst" < "$<" \
+	  | $(JSON_CLEANUP) "$@" "$(HIERARCHICAL_DIR)"

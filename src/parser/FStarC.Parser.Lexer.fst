@@ -424,6 +424,7 @@ type lstate = {
   buf       : string;
   len       : t;
   fname     : string;
+  range_fname : string;
   cur       : ref t;
   lnum      : ref t;
   bol       : ref t; (* the offset of the beginning of the current line *)
@@ -480,7 +481,7 @@ let new_line (st:lstate) : ML unit =
   st.cache_off := !st.cur;
   st.cache_col := zero
 
-let mk_range (st:lstate) (p1 p2:R.pos) : R.range = R.mk_range st.fname p1 p2
+let mk_range (st:lstate) (p1 p2:R.pos) : R.range = R.mk_range st.range_fname p1 p2
 
 let add_comment (st:lstate) (s:string) (r:R.range) : ML unit =
   st.comments := (s, r) :: !st.comments;
@@ -1093,6 +1094,7 @@ let lex_all (fname:string) (contents:string) (line col:int)
     buf = contents;
     len = S.byte_length contents;
     fname = fname;
+    range_fname = Find.source_file_name fname;
     cur = mk_ref zero;
     lnum = mk_ref (of_int line);
     bol = mk_ref zero;

@@ -53,7 +53,7 @@ let max i j = if i < j then j else i
 type rng = {
   file_name:file_name;
   (* ^ Note: this must be a basename, without any directory components. The
-  interface should protect this fact. *)
+  parser uses module-qualified names such as A.B.C.fst for A/B/C.fst. *)
   start_pos:pos;
   end_pos:pos;
 }

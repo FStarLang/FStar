@@ -77,6 +77,13 @@ val full_include_path () : ML (list string)
 (* Directories providing modules, normalized into absolute paths. *)
 val module_include_paths_normalized () : ML (list module_include_path)
 
+(* A source path relative to its longest applicable include root. *)
+val relative_source_path (filename : string) : ML (option string)
+
+(* The relocatable filename stored in source ranges: A.B.C.fst for A/B/C.fst
+under a recursive include root, or the basename for a flat source file. *)
+val source_file_name (filename : string) : ML string
+
 (* Try to find a file in the include path with a given basename. *)
 val find_file (basename : string) : ML (option string)
 
@@ -103,5 +110,5 @@ FStarC.Options and doc/ref/custard.md, section 13.6. *)
 val locate_fstarc_cui () : ML (option string)
 
 (* Try to find a file from a path we might have read in a checked file.
-Essentially find_file(basename f). *)
+Module-qualified filenames also resolve to hierarchical source paths. *)
 val refind_file (f:string) : ML string

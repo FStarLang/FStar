@@ -35,6 +35,7 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
 let _full_include : ref (option (list string)) = mk_ref None
 let _module_include_paths_normalized : ref (option (list module_include_path)) = mk_ref None
 let find_file_cache : HashTable.t string (option string) = HashTable.create 100
+let refind_file_cache : HashTable.t string string = HashTable.create 100
 
 (* Bumped every time the include path (or anything else affecting file
 resolution) changes. Clients that cache results derived from the include path
@@ -43,6 +44,7 @@ let _epoch : ref int = mk_ref 0
 
 let clear () : ML unit =
   HashTable.clear find_file_cache;
+  HashTable.clear refind_file_cache;
   _full_include := None;
   _module_include_paths_normalized := None;
   _epoch := !_epoch + 1;
@@ -224,6 +226,30 @@ let module_include_paths_normalized () : ML (list module_include_path) =
     _module_include_paths_normalized := Some paths;
     paths
 
+let relative_source_path (filename:string) : ML (option string) =
+  let filename = Filepath.normalize_file_path filename in
+  let best =
+    module_include_paths_normalized ()
+    |> List.fold_left (fun best path ->
+      if BU.starts_with filename (path.dir ^ "/")
+         && (match path.kind with
+             | Flat -> Filepath.dirname filename = path.dir
+             | Recursive -> true)
+         && (match best with
+             | Some dir -> String.length path.dir > String.length dir
+             | None -> true)
+      then Some path.dir
+      else best) None
+  in
+  best |> Option.map (fun dir ->
+    BU.substring_from filename (String.length dir + 1))
+
+let source_file_name (filename:string) : ML string =
+  match relative_source_path filename with
+  | None -> Filepath.basename filename
+  | Some relative ->
+    BU.replace_char (BU.replace_char relative '\\' '.') '/' '.'
+
 let do_find (paths : list string) (filename : string) : ML (option string) =
   // Stats.record "Find.do_find" fun () ->
   if Filepath.is_path_absolute filename then
@@ -293,18 +319,31 @@ let locate_fstarc_cui () : ML (option string) =
   if Filepath.file_exists f then Some f else None
 
 
-(* When reading checked files, we could obtain ranges where the
-filepath does not make sense any more. For instance if we check
-`a/A.fst`, and then go into `a/` and check `B.fst`, the ranges
-in `A.fst.checked` will still refer to `a/A.fst`, which is not
-a valid path. To palliate this, we
-  1) just take the basename (ignore the path completely); and
-  2) try to find this file in our include path.
+(* Ranges store module-qualified filenames rather than machine-specific
+paths. Resolve them under the current include roots, including mixed layouts
+such as A/B.C.fst. Never split off the file extension. *)
+let rec find_hierarchical_source (dir:string) (parts:list string) : ML (option string) =
+  let filename = String.concat "." parts in
+  match do_find [dir] filename with
+  | Some path -> Some path
+  | None ->
+    match parts with
+    | part :: name :: ext :: rest ->
+      let subdir = Filepath.join_paths dir part in
+      if Filepath.is_directory subdir
+      then find_hierarchical_source subdir (name :: ext :: rest)
+      else None
+    | _ -> None
 
-This function is called by error reporting (both batch and IDE). *)
-let refind_file (f:string) : ML string =
-  try
-    match find_file (Filepath.basename f) with
-    | None -> f // Couldn't find file; just return the original path
-    | Some abs -> abs
-  with _ -> f
+let refind_file =
+  cached_fun refind_file_cache fun f ->
+    let filename = Filepath.basename f in
+    let found =
+      BU.find_map (List.rev (module_include_paths ())) (fun path ->
+        match path.kind with
+        | Flat -> do_find [path.dir] filename
+        | Recursive -> find_hierarchical_source path.dir (BU.split filename "."))
+    in
+    match found with
+    | None -> f
+    | Some path -> Filepath.normalize_file_path path
