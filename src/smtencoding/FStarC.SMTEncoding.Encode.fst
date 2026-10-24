@@ -2365,7 +2365,19 @@ let encode_modul_aux (give_to_z3:bool) tcenv modul =
       List.rev g', env
     in
     let decls, env = encode_signature ({env with warn=false}) modul.declarations in
-    let index = Pruning.summarize_elts decls in
+    let decls =
+      Profiling.profile
+        (fun () -> FStarC.SMTEncoding.Sharing.intern_decls decls)
+        (Some (string_of_lid modul.name))
+        "FStarC.SMTEncoding.Sharing.intern_decls"
+    in
+    let index =
+      let index = Pruning.summarize_elts decls in
+      Profiling.profile
+        (fun () -> FStarC.SMTEncoding.Sharing.intern_index index)
+        (Some (string_of_lid modul.name))
+        "FStarC.SMTEncoding.Sharing.intern_index"
+    in
     if give_to_z3 then give_index_to_z3_and_set_env env name index (fun _ -> decls);
     if Debug.medium () then Format.print1 "Done encoding externals for %s\n" name;
     { me_index = index;
