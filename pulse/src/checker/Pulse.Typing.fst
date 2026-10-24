@@ -499,9 +499,7 @@ let mk_seq (u:universe) (a:term) : term =
   tm_pureapp t None a
 
 let withlocal_array_post (a:term) (arr:term) (init: option term) : term =
-  match init with
-  | Some _ -> tm_exists_sl u0 (as_binder (mk_seq u0 a)) (mk_array_pts_to a arr (null_bvar 0))
-  | None -> mk_array_pts_to_uninit_post a arr
+  mk_array_pts_to_uninit_post a arr
 
 let comp_withlocal_array_body_post (post:term) (a:term) (arr:term) (init: option term) : term =
   tm_star post (withlocal_array_post a arr init)
