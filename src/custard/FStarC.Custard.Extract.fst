@@ -6695,6 +6695,10 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     match se with
     | Some se -> U.has_attribute se.sigattrs PC.custard_boxed_fields_attr
     | None -> false in
+  let is_class =
+    match se with
+    | Some se -> U.has_attribute se.sigattrs PC.tcclass_lid
+    | None -> false in
   (* Cherry: a counted heap cell; the newtype collapse would undo that. *)
   let cherry_boxed =
     match se with
@@ -6725,6 +6729,11 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
        obvious thing to try is to write it on the field -- and silence is
        indistinguishable from having fixed it. *)
     bs |> List.iter (fun (b:S.binder) ->
+      (* A field of a class is the exception: [mk_class] copies the field's
+         attributes onto the method it generates, which is a declaration. *)
+      let b = if is_class then { b with binder_attrs = b.binder_attrs |> List.filter
+                                   (fun a -> not (has_attr PC.custard_inline_attr [a])) }
+              else b in
       check_binder_attrs "the field" (Ident.string_of_lid c) b;
       if U.has_attribute b.binder_attrs PC.monomorphize_attr
       then E.log_issue0 E.Warning_CustardIneffectiveAttribute [
