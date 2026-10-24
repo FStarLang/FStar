@@ -1763,6 +1763,9 @@ let module_inits (md:S.modul) : ML (list Ident.lident) =
         | _ -> [])
     | _ -> [])
 
+(* {!instantiate_letrec} gives up. *)
+exception LetrecNotInstantiable
+
 let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
   let k = { k with sk_lid = unstub_lid st k.sk_lid } in
@@ -3809,7 +3812,119 @@ and is_type_bv (st:state) (b:S.bv) : ML bool =
 
 and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
   let lbs, body = SS.open_let_rec lbs body in
-  lift_locals st lbs body
+  if Options.custard_cherry () && Options.custard_monomorphize_types () then
+    match instantiate_letrec st lbs body with
+    | Some ([], body) -> expr_of_term st body
+    | Some (lbs, body) -> lift_locals st lbs body
+    | None -> lift_locals st lbs body
+  else lift_locals st lbs body
+
+(* Section 5.10a.  A local [let rec] that binds types of its own is copied once
+   per instantiation it is used at, and each copy is lifted on its own.
+
+   Lifted as one declaration it would be polymorphic, and with type
+   monomorphization there is nothing left for that to mean: its body would
+   build [list@'a] while its caller passes a [list@goal], two layouts that C
+   cannot tell apart.  Instantiating it at the term level, before anything is
+   extracted, gives every copy concrete types, so the calls it makes into
+   specializing definitions are concrete too.
+
+   The instantiations are the type arguments of the uses in [body], and then
+   of the recursive calls in each copy -- the same, unless the recursion is
+   polymorphic, in which case the worklist finds the new ones.  It is bounded,
+   since polymorphic recursion need not reach a fixed point.
+
+   [None] leaves the nest to {!lift_locals} as it is: no member binds a type,
+   the members disagree on how many, or a use does not apply the name to its
+   type arguments. *)
+and instantiate_letrec (st:state) (lbs:list letbinding) (body:term)
+  : ML (option (list letbinding & term)) =
+  let recbvs = lbs |> List.collect (fun lb ->
+                 match lb.lbname with Inl bv -> [bv] | Inr _ -> []) in
+  let ntys (lb:letbinding) : ML int =
+    let xs, _, _ = U.abs_formals lb.lbdef in
+    let rec lead (xs:binders) : ML int =
+      match xs with
+      | x :: xs when is_type_bv st x.binder_bv -> 1 + lead xs
+      | _ -> 0 in
+    lead xs in
+  let ks = lbs |> List.map ntys in
+  match ks with
+  | [] -> None
+  | k :: _ ->
+  if k = 0 || List.length recbvs <> List.length lbs
+     || not (ks |> List.for_all (fun k' -> k' = k)) then None else
+  let insts : ref (list (list term & list S.bv)) = mk_ref [] in
+  let todo : ref (list (list term & list S.bv)) = mk_ref [] in
+  let max_insts = 16 in
+  let inst (tys:list term) : ML (list S.bv) =
+    match !insts |> List.tryFind (fun (tys', _) ->
+            List.forall2 (fun t t' -> U.term_eq t t') tys tys') with
+    | Some (_, bvs) -> bvs
+    | None ->
+      if List.length !insts >= max_insts then
+        custard_error st E.Error_CustardTypeVarInstantiation [
+          text ("Custard: the local recursive function " ^
+                Ident.string_of_id (List.hd recbvs).ppname ^ " is used at more than " ^
+                show max_insts ^ " type instantiations.");
+          text "On Cherry a local function that binds types is copied once per instantiation, so polymorphic recursion cannot be compiled.";
+          text "Make the recursion monomorphic, or move the function to the top level."];
+      let bvs = List.map2 (fun (bv:S.bv) (lb:letbinding) ->
+                  let bs, c = U.arrow_formals_comp lb.lbtyp in
+                  if List.length bs <= k then raise LetrecNotInstantiable;
+                  let tbs, bs = List.splitAt k bs in
+                  let sub = List.map2 (fun (b:S.binder) t -> NT (b.binder_bv, t)) tbs tys in
+                  S.gen_bv (Ident.string_of_id bv.ppname) (Some (Ident.range_of_id bv.ppname))
+                           (SS.subst sub (U.arrow bs c))) recbvs lbs in
+      insts := (tys, bvs) :: !insts;
+      todo := (tys, bvs) :: !todo;
+      bvs in
+  let rec index_of (x:S.bv) (i:int) (l:list S.bv) : option int =
+    match l with
+    | [] -> None
+    | y :: l -> if S.bv_eq x y then Some i else index_of x (i + 1) l in
+  let rewrite (t:term) : ML term =
+    let t = FStarC.Syntax.Visit.visit_term false (fun t ->
+      match (SS.compress t).n with
+      | Tm_app _ ->
+        let hd, args = U.head_and_args_full t in
+        (match (SS.compress hd).n with
+         | Tm_name x ->
+           (match index_of x 0 recbvs with
+            | Some i when List.length args >= k ->
+              let tys, rest = List.splitAt k args in
+              let x' = S.bv_to_name (List.nth (inst (List.map fst tys)) i) in
+              if Nil? rest then x' else S.mk_Tm_app x' rest t.pos
+            | _ -> t)
+         | _ -> t)
+      | _ -> t) t in
+    if elems (Free.names t) |> List.existsb (fun (v:S.bv) ->
+         Some? (index_of v 0 recbvs))
+    then raise LetrecNotInstantiable
+    else t in
+  try
+    let body = rewrite body in
+    let out : ref (list letbinding) = mk_ref [] in
+    let rec go () : ML unit =
+      match !todo with
+      | [] -> ()
+      | (tys, bvs) :: rest ->
+        todo := rest;
+        List.iter2 (fun (bv':S.bv) (lb:letbinding) ->
+          let xs, dbody, rc = U.abs_formals lb.lbdef in
+          let txs, xs = List.splitAt k xs in
+          let sub = List.map2 (fun (b:S.binder) t -> NT (b.binder_bv, t)) txs tys in
+          let def = U.abs (SS.subst_binders sub xs) (SS.subst sub dbody)
+                          (match rc with
+                           | Some rc -> Some (SS.subst_residual_comp sub rc)
+                           | None -> None) in
+          out := { lb with lbname = Inl bv'; lbtyp = bv'.sort; lbdef = rewrite def }
+                 :: !out) bvs lbs;
+        go () in
+    go ();
+    Some (List.rev !out, body)
+  with
+  | LetrecNotInstantiable -> None
 
 (* Lambda-lift the opened local definitions [lbs], which [body] and, for a
    [let rec], the definitions themselves may refer to. *)
