@@ -6152,7 +6152,8 @@ let print_program (base:string) (cu:unit_info) (p:program)
       (match extern_decl x with
        | Some s ->
          let nm = emitted_name (DExternal x) in
-         [(nm, string_of_name x.dx_name, s)]
+         [(nm, string_of_name x.dx_name, s,
+           List.existsb DeclareInCHeader? x.dx_flags)]
        | None -> [])
     | DExn _ when Options.custard_cherry () -> []
     | DExn _ ->
@@ -6173,7 +6174,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
      is emitted at all, and the header's own declaration is the only one. *)
   let () =
     let seen : HashTable.t string (string & string) = HashTable.create 20 in
-    exts_named |> List.iter (fun (nm, src, s) ->
+    exts_named |> List.iter (fun (nm, src, s, _) ->
       match HashTable.try_find seen nm with
       | Some (src', s') when s' <> s ->
         E.raise_error0 E.Error_CustardExternConflict
@@ -6186,7 +6187,10 @@ let print_program (base:string) (cu:unit_info) (p:program)
             text "Otherwise give each type vector its own [@@custard_extern] target name."])
       | _ -> HashTable.add seen nm (src, s)) in
 
-  let exts = dedup (exts_named |> List.map (fun (_, _, s) -> s)) in
+  let header_exts = dedup (exts_named |> List.collect (fun (_, _, s, h) ->
+    if h then [s] else [])) in
+  let exts = dedup (exts_named |> List.collect (fun (_, _, s, h) ->
+    if h || List.mem s header_exts then [] else [s])) in
 
   (* Every struct's name exists before any type is defined, so that a type
      that reaches itself, or another one later in the file, through a pointer
@@ -6384,6 +6388,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
   cpp_open ^
   String.concat "" fwds ^ (match fwds with [] -> "" | _ -> "\n") ^
   String.concat "" tys ^ (match tys with [] -> "" | _ -> "\n") ^
+  String.concat "" header_exts ^ (match header_exts with [] -> "" | _ -> "\n") ^
   String.concat "" pub_decls ^ (match pub_decls with [] -> "" | _ -> "\n") ^
   init_proto ^ (match inits with [] -> "" | _ -> "\n") ^
   cpp_close in
