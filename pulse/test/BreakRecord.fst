@@ -129,3 +129,51 @@ divergent fn function_field_argument (p:predicate_record U64.t)
     break;
   }
 }
+
+type equal_pair = p:pair{p.a == p.b}
+
+(* The refinement is under the existential witness's erasure. Inference
+   must retain it even though neither projected field has a dependent type. *)
+divergent fn refined_witness (x y:ref U64.t)
+  requires exists* (v:equal_pair). pts_to x v.a ** pts_to y v.b
+  ensures exists* a b. pts_to x a ** pts_to y b ** pure (a == b)
+{
+  while (!x = 0uL)
+    invariant exists* (v:equal_pair). pts_to x v.a ** pts_to y v.b
+    ensures true
+  {
+    break;
+  }
+}
+
+noeq type dependent_pair = { a:U64.t; b:U64.t; pf:squash (a == b) }
+
+(* An unprojected proof field still constrains the projected fields. *)
+divergent fn dependent_witness (x y:ref U64.t)
+  requires exists* (v:dependent_pair). pts_to x v.a ** pts_to y v.b
+  ensures exists* a b. pts_to x a ** pts_to y b ** pure (a == b)
+{
+  while (!x = 0uL)
+    invariant exists* (v:dependent_pair). pts_to x v.a ** pts_to y v.b
+    ensures true
+  {
+    break;
+  }
+}
+
+noeq type nested_pair = { inner:pair }
+
+(* Closing the fresh [inner] witness needs the environment from the outer
+   expansion in order to split its own projected fields. *)
+divergent fn nested_write_then_break (x y:ref U64.t)
+  requires exists* (v:nested_pair). pts_to x v.inner.a ** pts_to y v.inner.b
+  ensures exists* a b. pts_to x a ** pts_to y b
+{
+  while (!x = 0uL)
+    invariant exists* (v:nested_pair). pts_to x v.inner.a ** pts_to y v.inner.b
+    ensures true
+  {
+    x := 1uL;
+    break;
+  }
+}
