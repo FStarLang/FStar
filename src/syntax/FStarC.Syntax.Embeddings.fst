@@ -115,6 +115,7 @@ otherwise since reduction is blocked.)
 exception Embedding_failure
 exception Unembedding_failure
 
+[@@FStar.Attributes.custard_inline]
 let map_shadow (s:shadow_term) (f:term -> ML term) : ML shadow_term =
     Option.map (Thunk.map f) s
 let force_shadow (s:shadow_term) = Option.map Thunk.force s

@@ -112,7 +112,8 @@ let report_human tag c =
 
 let report tag c =
   match FStarC.Options.message_format () with
-  | Human -> report_human tag c
+  | Human
+  | Github -> report_human tag c
   | Json -> report_json tag c
 
 (* Report all profiles and clear all counters *)

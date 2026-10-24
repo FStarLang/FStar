@@ -11,8 +11,12 @@ size_t Goto_find_zero(int32_t *a, size_t sz) {
   size_t i = 0;
   while (true) {
     bool _ct1;
-    if (_return1) _ct1 = false;
-    else _ct1 = (i < sz);
+    if (_return1) {
+      _ct1 = false;
+    }
+    else {
+      _ct1 = (i < sz);
+    }
     if (!(_ct1)) { break; }
     size_t __anf0 = i;
     int32_t __anf1 = a[__anf0];
@@ -25,7 +29,9 @@ size_t Goto_find_zero(int32_t *a, size_t sz) {
       i = (__anf01 + 1);
     }
   }
-  if (!(_return1)) _return = i;
+  if (!(_return1)) {
+    _return = i;
+  }
   return _return;
 }
 
@@ -36,7 +42,9 @@ void Goto_test2_alt(int32_t *r) {
     r[0] = 42;
     _return = true;
   }
-  if (!(_return)) r[0] = 17;
+  if (!(_return)) {
+    r[0] = 17;
+  }
 }
 
 

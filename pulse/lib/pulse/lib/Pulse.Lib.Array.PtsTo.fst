@@ -47,6 +47,27 @@ ghost fn to_mask u#a (#t: Type u#a) (arr: array t) #f (#v: erased _)
   unfold pts_to arr #f v;
 }
 
+let map_seq_some_lemma (#t: Type) (v: Seq.seq t)
+  : Lemma (Seq.length (FStar.Seq.Properties.map_seq Some v) == Seq.length v /\
+      (forall (i: nat). i < Seq.length v ==>
+        Seq.index (FStar.Seq.Properties.map_seq Some v) i == Some (Seq.index v i))) =
+  FStar.Seq.Properties.map_seq_len Some v;
+  introduce forall (i: nat). i < Seq.length v ==>
+      Seq.index (FStar.Seq.Properties.map_seq Some v) i == Some (Seq.index v i)
+    with introduce _ ==> _ with FStar.Seq.Properties.map_seq_index Some v i
+
+ghost fn forget_init u#a (#t: Type u#a) (arr: array t) #f (#v: erased (Seq.seq t))
+  requires arr |-> Frac f v
+  ensures pts_to_mask arr #f (FStar.Seq.Properties.map_seq Some (reveal v)) (fun _ -> True)
+  ensures pure (Seq.length (FStar.Seq.Properties.map_seq Some (reveal v)) == Seq.length v /\
+    (forall (i: nat). i < Seq.length v ==>
+      Seq.index (FStar.Seq.Properties.map_seq Some (reveal v)) i == Some (Seq.index v i)))
+{
+  map_seq_some_lemma (reveal v);
+  to_mask arr;
+  mask_vext arr (FStar.Seq.Properties.map_seq Some (reveal v));
+}
+
 ghost fn from_mask u#a (#t: Type u#a) (arr: array t) #f #v #mask
   requires pts_to_mask arr #f v mask
   requires pure (forall (i: nat). i < Seq.length v ==> mask i /\ Some? (Seq.index v i))
@@ -234,13 +255,15 @@ fn with_local u#a (#a:Type0) (init:a) (len:SZ.t) (#pre:slprop) (ret_t:Type u#a)
                                       (pts_to arr (Seq.create (SZ.v len) init) **
                                       (pure (is_full_array arr) **
                                         pure (length arr == SZ.v len))))
-                                    (fun r -> post r ** (exists* v. pts_to arr v)))
+                                    (fun r -> post r ** pts_to_uninit_post arr))
   requires pre
   returns r: ret_t
   ensures post r
 {
   let arr = alloc init len;
   let r = body arr;
-  free arr;
+  pts_to_mask_len arr;
+  mask_mext arr (fun _ -> True);
+  mask_free arr;
   r
 }

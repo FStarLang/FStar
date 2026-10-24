@@ -161,6 +161,9 @@ val link_inits : state -> ML (list string)
     not of any name Custard invented for it (section 12.3). *)
 val exported_keys : state -> ML (list (string & string))
 
+(** Adopt non-owning bindings only for remaining external holes, after layout. *)
+val apply_foreign_bindings : state -> list (string & string) -> program -> ML program
+
 (** See {!FStarC.Custard.Loader.loaded_digests}. *)
 val loaded_digests : state -> ML (list (string & string))
 

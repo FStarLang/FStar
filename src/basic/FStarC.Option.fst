@@ -17,6 +17,7 @@ module FStarC.Option
 
 open FStarC.Effect
 
+[@@FStar.Attributes.custard_inline]
 let map f = function
   | Some x -> Some (f x)
   | None -> None
@@ -35,6 +36,7 @@ let rec find f xs =
   | [] -> None
   | x::xs -> if f x then Some x else find f xs
 
+[@@FStar.Attributes.custard_inline]
 let bind o f =
   match o with
   | Some x -> f x

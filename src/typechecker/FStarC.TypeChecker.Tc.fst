@@ -251,6 +251,7 @@ let tc_decls_knot : ref (option (Env.env -> list sigelt -> ML (list sigelt & Env
   mk_ref None
 
 let do_two_phases env : ML bool = true
+[@@FStar.Attributes.custard_inline]
 let run_phase1 (f:unit -> ML 'a) : ML 'a =
   FStarC.TypeChecker.Core.clear_memo_table();
   let r = f () in

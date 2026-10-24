@@ -51,6 +51,12 @@ fn use_arg (x: U8.t)
   b.fmeasure x
 }
 
+fn use_direct (x: U8.t)
+  returns n: SZ.t
+{
+  (mk_unit ()).fmeasure x
+}
+
 fn use_pick (x: U8.t)
   returns n: SZ.t
 {
@@ -63,5 +69,7 @@ fn main ()
   let a = use_unit 7uy;
   let b = use_arg 7uy;
   let c = use_pick 9uy;
-  if (SZ.(a =^ 1sz) && SZ.(b =^ 7sz) && SZ.(c =^ 9sz)) { 0sz } else { 1sz }
+  let d = use_direct 7uy;
+  if (SZ.(a =^ 1sz) && SZ.(b =^ 7sz) && SZ.(c =^ 9sz) && SZ.(d =^ 1sz))
+  { 0sz } else { 1sz }
 }

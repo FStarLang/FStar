@@ -4180,9 +4180,39 @@ of `PulseSyntaxExtension.ASTBuilder.fsti` with no `.fst`, so `parse_pulse` is
 an external there and a real definition in the `syntax_extension` unit.
 Exporting it told `syntax_extension` the symbol was already compiled, and that
 unit then skipped the very definition it was there to contribute; the link came
-out with a reference and nothing to resolve it against.  A downstream unit
-derives an external's signature from the source anyway, exactly as the upstream
-one did, so nothing is lost.
+out with a reference and nothing to resolve it against.
+
+Instead, an external contributes a **non-owning foreign binding**, in a
+separate table keyed by the same canonical specialization key. It records the
+post-layout signature and calling convention, target name, supplying header,
+and declaration attributes, but never answers an implementation lookup.
+For direct C, the target is the exact C spelling, including producer-only
+`--custard_c_no_prefix` settings. Ownership and reachability flags are not
+propagated.
+
+This is automatic with `--custard_unit` and `--custard_link`; there is no new
+enable option. The consumer still extracts the source. Only when that leaves
+an external hole does it adopt the linked binding, after checking its own
+post-layout signature (modulo type-parameter names) and calling convention.
+Explicit source targets, headers, declaration attributes, and direct-C
+no-prefix requests must agree with the binding; absent choices inherit it.
+Conflicting linked bindings are rejected in either link order, while
+identical bindings from multiple units are allowed. A local F* implementation
+or an implementation exported by another CUI takes precedence: foreign
+metadata cannot suppress its extraction or ownership lookup.
+
+An external reached by a downstream unit is published again with its adopted
+binding, so further consumers inherit the same contract. This does not
+re-export owned definitions or remove the requirement to supply the complete
+owned-unit dependency closure. Foreign **types** remain ordinary type entries
+carrying their external representation, not value-binding records. Extraction
+without CUIs is unchanged apart from preserving C decoration attributes on
+explicit `custard_extern` values, just as on ordinary assumed values.
+
+The CUI format is now 21; older interfaces must be rebuilt.
+`tests/custard/foreignbindings.py` exercises C/C++ consumers, values and
+specialized functions, chained binding propagation, producer-only naming,
+conflicts, and local and separately compiled real implementations.
 
 Everything else is exported unconditionally, and §12.5 explains why that is
 both possible and necessary.
@@ -9917,6 +9947,32 @@ does the work.  A local is named `uniq (ppname b) b.index`, the `'#'` in
 
 `tests/custard/RenameLet.fst` pins all three: the requested names appear, the
 source spellings do not, and the duplicate is numbered.
+
+On a global declaration, Custard's direct-C backends (`C` and `Cherry`)
+also accept `[@@FStar.Attributes.rename_let "PublicName"]`. This requests
+the **exact C identifier** for a surviving function, global variable, type
+declaration, or assumed external value. Definitions, prototypes, references,
+and compiled-unit consumers use the same name. The F* identity, rooting,
+linkage, inlining and type-abbreviation unfolding rules do not change:
+use `--custard_entry` to export a function, for example. Other backends'
+global naming rules are unchanged.
+
+The argument follows the same literal-string rule as for local bindings;
+an empty or malformed argument produces warning 278. A global C name must
+use ASCII letters, digits and underscores, must not start with a digit, and
+must not be a C11/C++17 keyword or a reserved runtime name such as `main`
+or `NULL`. Invalid identifiers and collisions are error
+374, rather than sanitized names or silently numbered alternatives. This
+also applies to private functions and to multiple surviving specializations
+of a generic declaration: one exact name cannot identify two definitions.
+Give concrete wrappers different names when exporting multiple instances.
+
+An explicit name takes precedence over `--custard_c_no_prefix` and over
+`CMacro`'s usual uppercasing. It must agree with an explicit `custard_extern`
+target; contradictory attributes are error 374. Source attributes on an
+interface and names stored in `.cui` files are honored too.
+`tests/custard/GlobalRename.fst` and `GlobalRenameApp.fst` exercise the C
+boundary and separate compilation.
 
 ## 32 After the attribute
 
@@ -17295,6 +17351,19 @@ abbreviations that should keep unfolding.
 Not backend specific.  Naming a monomorphic instance is as meaningful on the
 OCaml path as on the karamel one, and an abbreviation that is emitted is
 always a legal thing for a target to see.
+
+The source-level equivalent is `[@@FStar.Attributes.custard_no_unfold]`:
+
+```fstar
+[@@FStar.Attributes.custard_no_unfold]
+type byte_pair = pair FStar.UInt8.t
+```
+
+The attribute and command-line option set the same `NoUnfold` flag. The
+attribute belongs on a type abbreviation; using it on a value, a non-alias
+type, or a binder reports warning 371. It preserves extraction-time naming,
+not verification-time opacity, and does not root an otherwise unreachable
+declaration or replace `custard_opaque`'s representation controls.
 
 ## Section 78. Unfolding a spine is not eta-expanding it
 

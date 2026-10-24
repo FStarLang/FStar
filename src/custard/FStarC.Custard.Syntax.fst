@@ -450,6 +450,7 @@ let rec is_droppable (e:expr) : ML bool =
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
+  | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
   | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
@@ -514,6 +515,7 @@ let op_to_string (o:prim_op) : string =
    | RcInc -> "rc_inc" | RcDec -> "rc_dec"
    | RefNew -> "ref_new" | RefGet -> "ref_get" | RefSet -> "ref_set"
    | Reset _ -> "reset" | Reuse _ -> "reuse" | ResetFree -> "reset_free"
+   | Update _ -> "update"
    | IArr f -> "iarray_" ^ f
    | Dyn f -> "dyn_" ^ f
    | PBuf f -> "pbuf_" ^ f
@@ -737,6 +739,7 @@ let flag_to_doc (f:flag) : ML document =
   | CIfDef -> text "c_ifdef"
   | CReference -> text "c_reference"
   | CInline -> text "c_inline"
+  | CName s -> text ("c_name " ^ s)
   | Deriving s -> text ("deriving " ^ s)
   | Realized -> text "realized"
   | NoUnfold -> text "no_unfold"

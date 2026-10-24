@@ -40,6 +40,7 @@ open FStarC.Class.Show
 open FStarC.Class.Tagged
 
 let dbg_Positivity = Debug.get_toggle "Positivity"
+[@@FStar.Attributes.custard_inline]
 let debug_positivity (env:env_t) (msg:unit -> ML string) : ML unit =
   if !dbg_Positivity
   then Format.print_string ("Positivity::" ^ msg () ^ "\n")
