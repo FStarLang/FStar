@@ -760,7 +760,10 @@ let rec maybe_hoist (g:env) (arg:T.argv)
     let g, binders, args = maybe_hoist_args g args in
     if Cons? args 
     then (
-      let st_app = as_stateful_application t head args  in
+      (* Rebuild from the hoisted arguments, not from t: t still contains
+         the nested stateful subterms just bound in binders, which would
+         otherwise be elaborated, and run, once more at each level (#4791). *)
+      let st_app = as_stateful_application (RU.mk_app_flat head args (T.range_of_term t)) head args in
       let g, b, x, t = bind_st_term g st_app in
       let arg = t, q in
       g, binders@[b, x, st_app], arg
