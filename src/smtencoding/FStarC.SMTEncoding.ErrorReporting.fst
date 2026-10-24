@@ -139,7 +139,8 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
                              //        "could not prove post-condition"
                              //or something like that
                (env:env_t)
-               (gamma_bs:S.binders) //open binders, to be universally quantified over q
+               (gamma_bs:list (S.binder & S.term)) //open binders, to be universally quantified over q,
+                                                    //with their sorts normalized by [norm]
                (q:S.term)    //the query
              : ML (goal_tree & decls_t)
              =
@@ -259,7 +260,7 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
              decls1@decls2@decls3, ok1 && ok2)
 
         | Some (QAll (bs, _pats, body)) ->
-          split_forall env default_msg ropt bs body
+          split_forall env default_msg ropt (List.map (fun b -> b, None) bs) body
 
         | _ ->
         match (SS.compress q).n with
@@ -307,7 +308,7 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
     and split_forall (env:env_t)
                      (default_msg : Errors.error_message)
                      (ropt:option Range.t)
-                     (bs:S.binders)
+                     (bs:list (S.binder & option S.term)) //each with its sort, if already normalized
                      (body:S.term)
      : ML (goal_tree & decls_t & bool)
      =
@@ -316,11 +317,12 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
              which prints exactly like a constant but keeps the hash-consed
              encodings of refinements parameterized over them. *)
           let vars, guards, env', decls, names =
-            bs |> List.fold_left (fun (vars, guards, env, decls, names) b ->
+            bs |> List.fold_left (fun (vars, guards, env, decls, names) (b, sort) ->
               let x = (b <: S.binder).binder_bv in
               let fv = mk_fv (fresh_name "@sk_", Term_sort) in
               let env' = push_term_var env x (mkFreeV fv) in
-              let g, decls' = encode_term_pred None (norm env x.sort) env (mkFreeV fv) in
+              let sort = match sort with Some t -> t | None -> norm env x.sort in
+              let g, decls' = encode_term_pred None sort env (mkFreeV fv) in
               fv::vars, g::guards, env', decls@decls', x::names)
               ([], [], env, [], [])
           in
@@ -343,19 +345,23 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
        binder. Binder [i] closes to the bound variable [n-1-i] whatever the
        depth, which is sound since the terms have no loose bound variables. Both
        substitutions are kept most recent binder first, so that, as in the
-       nested [forall]s, the last binder with a given index wins. *)
-    let reopen (bs:S.binders) (q:S.term) : ML (S.binders & S.term) =
+       nested [forall]s, the last binder with a given index wins.  The
+       normalized sort of each binder is renamed in the same way: normalizing
+       commutes with renaming its free variables. *)
+    let reopen (bs:list (S.binder & S.term)) (q:S.term) : ML (list (S.binder & option S.term) & S.term) =
       let n = List.length bs in
       let ren closing opening (t:S.term) = SS.subst opening (SS.subst closing t) in
-      let rec go i closing opening (bs:S.binders) (out:S.binders) : ML (S.binders & S.term) =
+      let rec go i closing opening (bs:list (S.binder & S.term)) (out:list (S.binder & option S.term))
+        : ML (list (S.binder & option S.term) & S.term) =
         match bs with
         | [] -> List.rev out, ren closing opening q
-        | b::bs ->
+        | (b, sort)::bs ->
           let x' = { S.freshen_bv b.binder_bv with sort = ren closing opening b.binder_bv.sort } in
           let imp = SS.subst_bqual opening (SS.subst_bqual closing b.binder_qual) in
           let attrs = List.map (ren closing opening) b.binder_attrs in
           let b' = S.mk_binder_with_attrs x' imp b.binder_positivity attrs in
-          go (i + 1) (S.NM (b.binder_bv, n - 1 - i) :: closing) (S.DB (n - 1 - i, x') :: opening) bs (b' :: out)
+          go (i + 1) (S.NM (b.binder_bv, n - 1 - i) :: closing) (S.DB (n - 1 - i, x') :: opening) bs
+             ((b', Some (ren closing opening sort)) :: out)
       in
       go 0 [] [] bs []
     in
@@ -367,12 +373,12 @@ let split_goals_under use_env_msg  //when present, provides an alternate error m
        matches variables by index only, so it also catches occurrences of a
        binder under another name, which the encoding's environment would not. *)
     let t, decls, _ =
-      match List.filter (fun b -> not (S.is_null_binder b)) gamma_bs with
+      match List.filter (fun (b, _) -> not (S.is_null_binder b)) gamma_bs with
       | [] -> aux env msg None q
       | gamma_bs ->
         let gamma_bs, q = reopen gamma_bs q in
         let bs, _pats, body = destruct_forall_continuation q in
-        split_forall env msg None (gamma_bs @ bs) body
+        split_forall env msg None (gamma_bs @ List.map (fun b -> b, None) bs) body
     in
     t, decls
 
