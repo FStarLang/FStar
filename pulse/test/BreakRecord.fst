@@ -113,3 +113,19 @@ divergent fn no_ensures (x: ref pair)
   };
   join x;
 }
+
+noeq type predicate_record (a:Type0) = { holds: a -> slprop }
+
+(* The argument of a function-valued field is not the record receiver.
+   Inference must preserve [p.holds v], not quantify the whole slprop. *)
+divergent fn function_field_argument (p:predicate_record U64.t)
+  requires exists* v. p.holds v
+  ensures exists* v. p.holds v
+{
+  while (true)
+    invariant exists* v. p.holds v
+    ensures true
+  {
+    break;
+  }
+}

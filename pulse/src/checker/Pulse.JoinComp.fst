@@ -157,8 +157,12 @@ let eta_record_witness (g:env) (y:var) (post:slprop)
       | _ -> None
     in
     match fv, List.Tot.rev args with
-    | Some fv, (arg, R.Q_Explicit)::_ ->
-      if not (is_revealed_var y arg) then t
+    | Some fv, (arg, R.Q_Explicit)::params ->
+      (* A projection has implicit type parameters and one explicit receiver.
+         Further explicit arguments apply a function-valued field. *)
+      if not (is_revealed_var y arg)
+         || not (List.Tot.for_all (fun (_, q) -> match q with | R.Q_Implicit -> true | _ -> false) params)
+      then t
       else begin
         match projector_field g fv with
         | None -> t
