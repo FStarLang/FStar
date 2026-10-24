@@ -474,6 +474,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog, infos, vd =
     phase "layout" (fun () -> Layout.run (imported_type_infos imports) prog) in
+  if Options.custard_monomorphize_types () then Monomorphize.check_tvar_clones infos;
   let targets =
     if Options.codegen_c () && Cons? (Options.custard_links ()) then
       C.foreign_targets { C.no_unit with C.cu_no_prefix = Extract.link_no_prefix st }

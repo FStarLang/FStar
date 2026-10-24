@@ -3782,6 +3782,23 @@ EGREP_CherryDynEq += "an equality test at FStar.Dyn.dyn, in CherryDynEq.main"
 EGREP_CherryDynEq += "field c of constructor W of"
 EGREP_CherryDynEq += "then field d of CherryDynEq.cell"
 
+# A polymorphic method of a runtime dictionary that builds a polymorphic
+# datatype is refused rather than given a layout at a type variable.
+REJECT_TESTS += CherryDynPolyMethod
+FLAGS_CherryDynPolyMethod  = --codegen Cherry --custard_monomorphize_types true
+CODE_CherryDynPolyMethod   = 399
+EGREP_CherryDynPolyMethod += "FStar.Pervasives.Native.option<'a"
+
+# A local [let rec] that binds a type is lifted once per instantiation.
+CHERRY_TESTS += CherryLocalPolyRec
+$(CHERRY_DIR)/CherryLocalPolyRec.chgrep: $(CHERRY_DIR)/CherryLocalPolyRec.chc
+	$(Q)test $$(grep -cE '^static .* CherryLocalPolyRec_keep__filter.*\(.*\{$$' $<) -eq 2 \
+	  || { echo "ERROR: CherryLocalPolyRec's filter' is not lifted once per type"; exit 1; }
+	$(Q)! grep -qE 'list__[a-z]+_[0-9]+\b' $< \
+	  || { echo "ERROR: CherryLocalPolyRec instantiates list at a type variable"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryLocalPolyRec.chgrep
+
 # Separate compilation under Cherry: a library unit and an application linked
 # against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
 # helpers for the library's types, and its own copy of each exception's and
