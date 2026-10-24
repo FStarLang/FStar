@@ -4792,9 +4792,12 @@ let foreign_targets (cu:unit_info) (p:program) : ML (list (string & string)) =
    one of their names, and a clash between two of them is still error 374 in
    {!check_emitted_names}.  Runs after {!build_renames} and before the names
    are seeded into {!taken_names}. *)
+let unit_definition (u:string) (n:string) : string =
+  "definition " ^ n ^ " in unit " ^ u
+
 let header_names (cu:unit_info) : ML (list (string & string)) =
   cu.cu_c_names |> List.collect (fun (u, ns) ->
-    ns |> List.map (fun (n, c) -> ("definition " ^ n ^ " in static-header unit " ^ u, c)))
+    ns |> List.map (fun (n, c) -> (unit_definition u n, c)))
 
 let rename_clashes (init_name:string) (reserved:list (string & string)) (p:program) : ML unit =
   let movable (d:decl) : ML bool =
@@ -5068,7 +5071,10 @@ let check_emitted_names (init_name:string) (reserved:list (string & string)) (p:
     claim init_name "the generated initializer" false;
   p |> List.iter (fun d ->
     let n = name_of_decl d in
-    claim (emitted_name d) (string_of_name n) (Some? (extern_target d));
+    let who = match imported_unit d with
+              | Some u -> unit_definition u (string_of_name n)
+              | None -> string_of_name n in
+    claim (emitted_name d) who (Some? (extern_target d));
     match d with
     | DType { dt_body = TVariant cs } ->
       cs |> List.iter (fun (c, _) -> claim (c_tag c) (string_of_name c) false)

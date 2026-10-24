@@ -130,6 +130,7 @@ reuse_dump = extract("StaticHeaderReuse", ["StaticHeaderReuse.api"],
                     "--custard_link", str(out / "StaticLib.cui"))
 assert "let StaticHeader.helper\n" not in reuse_dump
 assert "let StaticHeaderReuse.helper" in reuse_dump
+assert "C name: StaticHeaderReuse.helper = static_reuse_helper" in reuse_dump
 assert "static uint32_t StaticHeader_helper(" not in (out / "StaticReuse.h").read_text()
 
 # This helper has a different F* name but the same default C name as an
@@ -145,6 +146,10 @@ extract("StaticHeaderReuseApp", [], "--custard_main", "StaticHeaderReuseApp.main
         "--custard_link", str(out / "StaticReuse.cui"),
         "--custard_link", str(out / "StaticCollision.cui"),
         static=False, output="ReuseApp.c")
+reuse_app = (out / "ReuseApp.c").read_text() + (out / "ReuseApp.h").read_text()
+assert "static_reuse_helper(" in reuse_app
+assert not re.search(r"\bstatic\s+(?:inline\s+)?uint32_t\s+static_reuse_helper\(",
+                     reuse_app)
 for compiler, standard in ((cc, "c11"), (cxx, "c++17")):
     run(compiler + ["-std=" + standard] + common +
         ["-x", "c" if standard == "c11" else "c++", str(out / "ReuseApp.c"),
