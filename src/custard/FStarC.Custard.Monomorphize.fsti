@@ -29,3 +29,7 @@ open FStarC.Custard.Syntax
     [TVar] in a function signature has no instantiation to key on and is
     passed through untouched. *)
 val run : program -> ML program
+
+(* Section 5.0.2.  Refuse, on Cherry, a type [run] instantiated at a type
+   variable whose layout is not just that of its one field. *)
+val check_tvar_clones : list (name & type_info) -> ML unit
