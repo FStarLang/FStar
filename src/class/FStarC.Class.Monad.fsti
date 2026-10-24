@@ -9,7 +9,9 @@ class monad (m : Type -> Type) = {
 }
 
 (* Aliases. Need to declare a very precise type for them. *)
+[@@FStar.Attributes.custard_inline]
 let ( let! ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b) = bind
+[@@FStar.Attributes.custard_inline]
 let ( >>=  ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b) = bind
 
 inline_for_extraction

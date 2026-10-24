@@ -33,6 +33,7 @@ let rec eq_list (f: 'a -> 'a -> ML bool) (t1 t2:list 'a)
     | x1::xs1, x2::xs2 -> if f x1 x2 then eq_list f xs1 xs2 else false
     | _ -> false
 
+[@@FStar.Attributes.custard_inline]
 let eq_option (f: 'a -> 'a -> ML bool) (t1 t2:option 'a)
   : ML bool
   = match t1, t2 with

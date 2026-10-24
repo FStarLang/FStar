@@ -130,6 +130,7 @@ The prototype implements this as follows:
 - Other tail calls are guaranteed tail calls where possible; see Tail calls.
 - A closure call borrows the closure and takes the arguments owned; a partial application takes its arguments owned.
 - A global of function type holds a closure (persistent, see Globals), so a call through it is a closure call. This includes the exception test after it: whether the global's initializer raises says nothing about whether the closure does.
+- `[@@custard_inline]` on a definition asks Simplify's `inline` pass to inline its calls, as it does for projectors. It is meant for small combinators that take a function, such as `finally`, `Option.bind`, a monad's `bind` or `Options.lookup_opt`. Inlined, a lambda argument meets the call of its parameter, and `reduce` beta-reduces it, where Cherry would otherwise allocate a closure, an entry function and an environment layout. The ML extraction ignores the attribute, unlike `inline_for_extraction`. Recursive definitions are not inlined. Under Cherry, two cases go further. Because `eta_reduce` runs first, a call often has fewer arguments than the definition has parameters. If one of the arguments is a lambda, such a call is inlined to a lambda over the rest, which `eta_expand` absorbs into the caller's parameters. A body that is itself an application (`for_some f = existsb f`) absorbs any arguments beyond the parameters. Test: `tests/custard/CherryInlineHO.fst`.
 
 ### Tail calls
 

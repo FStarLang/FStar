@@ -2020,6 +2020,7 @@ let rec first_opt (f : 'a -> ML (option 'b)) (xs : list 'a) : ML (option 'b) =
   | [] -> None
   | x::xs -> Option.catch (f x) (fun () -> first_opt f xs)
 
+[@@FStar.Attributes.custard_inline]
 let (let?) = Option.bind
 let bool_guard (b:bool) : ML (option unit) =
   if b then Some () else None
