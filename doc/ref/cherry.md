@@ -266,6 +266,7 @@ Tests:
 - `tests/custard/pulse` runs the Pulse tests through Cherry.
 - `make run-cherry` in `tests/extraction`, `tests/bug-reports/closed`, `examples/printf` and `examples/algorithms` runs every test those directories run on OCaml through Cherry and diffs against the same expected output (`mk/test.mk`; `NO_CHERRY` lists exclusions).
 - `tests/extraction/backends` has a Cherry column.
+- `make stage2-cherry-unit-tests` (part of `make ci`) extracts the compiler's unit tests (`src/tests/FStarC.Tests.Test.fst`) with Cherry from the checked files of `stage2-unit-tests`, compiles them in debug mode at `-O0` with `$(CHERRY_CC)` (`CHERRY_TESTS2_CFLAGS` overrides the flags), and runs them; the output is the OCaml build's.
 - `pulse/test/pool/pulse_task` builds the parallel quicksort on Pulse's task pool (`Pulse.Lib.Task`) with Cherry as well as OCaml (`make run-cherry`, part of `make test`), and runs it under ASan and UBSan with 32 worker threads. Its C realizations are in `c/`. `Pulse_Lib_Core_fork_core` marks the closure shared (`cherry_mark_fn(f, CHERRY_SHARE)`), takes a reference to it for the new thread, and runs it on a detached pthread, which calls it with `cherry_call_thunk` (cherry.h) and then drops it. The spin lock is the C realization of `Pulse.Lib.SpinLock` from the DICE example. Every task closure and result goes through a Pulse box, so it is marked when it is stored and counted atomically from then on.
 
 ## Benchmarks
@@ -300,7 +301,7 @@ The Cherry pass maps the F\* primitives on `Prims.int` and `Prims.string` (arith
 
 ## Known gaps
 
-The prototype runs every test in `tests/custard` and `tests/custard/pulse` through Cherry, but it is not yet a complete backend. The goal for an initial release, running the OCaml extraction tests that exist today, is met except for the skipped tests listed in "Programs and tests". Compiling the F\* compiler itself is a later goal, because it needs C implementations of the modules that are now implemented in OCaml, and porting those is out of scope for now.
+The prototype runs every test in `tests/custard` and `tests/custard/pulse` through Cherry, but it is not yet a complete backend. The goal for an initial release, running the OCaml extraction tests that exist today, is met except for the skipped tests listed in "Programs and tests". The compiler's unit tests (`src/tests`), and the part of the compiler they reach, compile and pass (`make stage2-cherry-unit-tests`); compiling the whole compiler needs C implementations of the remaining modules that are implemented in OCaml.
 
 - **Library implementations.** The C runtime implements only what the tests use (see "Programs and tests"). Every other module with an OCaml implementation (a hand-written `.ml` or a `-ocaml.fst` file; under Cherry, `Builtins.cherry_realized_modules`) has no C counterpart: the rest of `FStar.Char`, and the compiler's `FStarC.*` support modules not yet ported. (`FStar.Pprint`, `FStar.String` and the ported `FStarC.*` modules are implemented in F\*: see "Programs and tests".)
 - **Mutable reference-counted arrays.** `FStarC.Array` (see "Arrays") is designed but not implemented.
@@ -310,4 +311,4 @@ The prototype runs every test in `tests/custard` and `tests/custard/pulse` throu
 - **Globals** are computed at startup and then made persistent, rather than emitted as static cells (see "Globals").
 - **Allocation.** Cherry uses `malloc`/`free` directly. The benchmarks show that the allocator dominates allocation-heavy programs (BinaryTrees is 2.5x slower than OCaml with glibc malloc and 1.1x with mimalloc), so a small-object allocator with per-thread free lists (as in Lean) is probably needed.
 - **Reuse** does not yet cover boxed records, reusing a cell for a constructor of another type of the same size, or reusing a dead variable that was not matched on (see "Heap cell reuse").
-- **Scale.** The largest programs compiled so far are the tests and benchmarks. Nothing the size of a compiler component has been compiled yet.
+- **Scale.** The largest program compiled so far is the compiler's unit-test driver, which includes the parser, typechecker, normalizer and unifier: about 90 MB of C in one file, which GCC takes about two minutes to compile at `-O0` and six at `-O2`.
