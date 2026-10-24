@@ -287,6 +287,7 @@ let initial_env deps
     range=dummyRange;
     curmodule=module_lid;
     gamma= [];
+    gamma_binders=([], Thunk.mkv []);
     gamma_sig = [];
     gamma_cache=new_gamma_cache();
     modules= [];
@@ -1436,7 +1437,19 @@ let bound_vars_of_bindings bs =
         | Binding_univ _ -> [])
 
 let binders_of_bindings bs = bound_vars_of_bindings bs |> List.map Syntax.mk_binder |> List.rev
-let all_binders env = binders_of_bindings env.gamma
+
+(* [all_binders] is called on every new uvar and every new problem, with a
+   gamma that can be long (hundreds of bindings in a big Pulse function), and
+   typically many times with the same gamma.  So [push_local_binding] pairs
+   the gamma it builds with a thunk computing its binders once; it is valid
+   for any env whose gamma is physically that list, e.g. one derived from it
+   by [{env with ...}].  Uvars created in the same scope then also share
+   their [ctx_uvar_binders]. *)
+let all_binders env =
+  let g, bs = env.gamma_binders in
+  if BU.physical_equality g env.gamma
+  then Thunk.force bs
+  else binders_of_bindings env.gamma
 let bound_vars env = bound_vars_of_bindings env.gamma
 
 instance hasBinders_env : hasBinders env = {
@@ -1759,7 +1772,8 @@ let lookup_lift env src tgt : ML (option tscheme) =
   |> Option.map (fun (_, _, ts) -> ts)
 
 let push_local_binding env b =
-  {env with gamma=b::env.gamma}
+  let gamma = b::env.gamma in
+  {env with gamma; gamma_binders=(gamma, Thunk.mk (fun () -> binders_of_bindings gamma))}
 
 let push_bv env x = push_local_binding env (Binding_var x)
 
