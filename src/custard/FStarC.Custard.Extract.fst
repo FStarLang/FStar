@@ -6452,11 +6452,37 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      what this said until a [ghost fn] parameter found the difference: an
      erased *value* binder put back the same way kept its function type, its
      callers passed the erased [()], and the C compiler --- not Custard ---
-     was the first thing to object. *)
-  let binders = bs |> List.map (fun b ->
+     was the first thing to object.
+
+     Issue 4783.  But "its callers pass [()]" has to be asked of the same
+     type the callers ask it of, which is the *declared* one
+     ({!call_unit_flags}), not the specialized sort in hand here.  A
+     [fallback: nat -> a] specialized at [a := unit] is erased as a
+     [nat -> unit], yet every call site -- the recursive one in the body
+     included -- passes the closure.  Typing the parameter [unit] then hid a
+     counted value behind a unit type, and Cherry emitted [cherry_inc] of
+     the [()] that the C printer put in its place.  So where the declared
+     type classifies the binder, its unit flag decides.  Binder [i] of [bs]
+     past the holes is the [(i - n_holes)]th declared position that
+     [specialize] did not substitute away. *)
+  let ub = binder_flags st "u:" l Mono.unit_binders in
+  let n_ub = List.length ub in
+  let mono_idx = List.map fst margs in
+  let rec declared_idx (k:int) (j:int) : ML int =
+    if List.mem j mono_idx then declared_idx k (j + 1)
+    else if k = 0 then j
+    else declared_idx (k - 1) (j + 1) in
+  let kept_idx =
+    List.zip (List.mapi (fun i _ -> i) flags) flags
+    |> List.collect (fun (i, dropped) -> if dropped then [] else [i]) in
+  let binders = List.map2 (fun (b:S.binder) (i:int) ->
+    let j = if i < n_holes then -1 else declared_idx (i - n_holes) 0 in
+    let erased =
+      if j >= 0 && j < n_ub
+      then List.nth ub j
+      else Mono.is_erased_binder (tcenv st) b in
     { b_name = name_of_bv b.binder_bv;
-      b_ty = if Mono.is_erased_binder (tcenv st) b then TUnit
-             else ty_of_typ st b.binder_bv.sort }) in
+      b_ty = if erased then TUnit else ty_of_typ st b.binder_bv.sort }) bs kept_idx in
   (* Section 81.  The arity a caller has to meet, which is the one the
      diagnostics count and is not [specialize]'s "abstracted" number whenever
      the body's own lambdas outlive [cut]. *)
