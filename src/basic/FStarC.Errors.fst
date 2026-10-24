@@ -19,6 +19,7 @@ open FStarC.Json {json}
 module Range = FStarC.Range
 include FStarC.Errors.Codes
 include FStarC.Errors.Msg
+include FStarC.Errors.Issue
 open FStarC.Class.HasRange
 open FStar.String
 open FStarC
@@ -147,18 +148,6 @@ let issue_message (i:issue) : ML (list PP.document) =
   let open FStarC.Pprint in
   i.issue_msg @ [ctx_doc i.issue_ctx]
 
-let string_of_issue_level il =
-    match il with
-    | EInfo -> "Info"
-    | EWarning -> "Warning"
-    | EError -> "Error"
-    | ENotImplemented -> "Feature not yet implemented: "
-let issue_level_of_string =
-  function
-  | "Info" -> EInfo
-  | "Warning" -> EWarning
-  | "Error" -> EError
-  | _ -> ENotImplemented
 
 let optional_def (f : 'a -> ML PP.document) (def : PP.document) (o : option 'a) : ML PP.document =
   match o with
@@ -447,7 +436,7 @@ let t_set_parse_warn_error,
          - Some list error_setting in case it parses and is interpreted successfully
          - None in case it does not parse or is not intepretable
     *)
-    let error_flags : SMap.t (option (list error_setting)) = SMap.create 10 in
+    let error_flags : HashTable.t string (option (list error_setting)) = HashTable.create 10 in
     (* set_error_flags is called by Options.set_options, parse_cmd_line etc,
        upon parsing the options.
        It parses the current warn_error string and sets the result in the
@@ -466,10 +455,10 @@ let t_set_parse_warn_error,
           match r with
           | None -> raise (Invalid_warn_error_setting "Parsing of warn_error string failed")
           | Some r ->
-            SMap.add error_flags we (Some r);
+            HashTable.add error_flags we (Some r);
             Getopt.Success
         with Invalid_warn_error_setting msg ->
-            (SMap.add error_flags we None;
+            (HashTable.add error_flags we None;
              Getopt.Error ("Invalid --warn_error setting: " ^ msg ^ "\n", "warn_error"))
     in
     (* get_error_flags is called when logging an issue to figure out
@@ -482,7 +471,7 @@ let t_set_parse_warn_error,
        parse didn't succeed *)
     let get_error_flags () =
       let we = Options.warn_error () in
-      match SMap.try_find error_flags we with
+      match HashTable.try_find error_flags we with
       | Some (Some w) -> w
       | _ -> default_settings
     in
@@ -637,6 +626,40 @@ let with_ctx_if (b:bool) (s:string) (f : unit -> ML 'a) : ML 'a =
   else
     f ()
 
+let with_ctxs (ss : list string) (f : unit -> ML 'a) : ML 'a =
+  match ss with
+  | [] -> f ()
+  | _ ->
+  List.iter error_context.push (List.rev ss);
+  if Options.trace_error ()
+  then (
+    (* As in with_ctx, do not catch anything: the contexts are only popped
+       on success. *)
+    let r = f () in
+    List.iter (fun _ -> ignore (error_context.pop ())) ss;
+    r
+  ) else (
+    let r = try Inr (f ()) with | ex -> Inl ex in
+    (* Unwind the levels, innermost first, as each with_ctx would: add the
+       context to a Failure, then pop (an exception from pop replaces the
+       pending result). *)
+    let r =
+      List.fold_left (fun r _ ->
+        let r =
+          match r with
+          | Inl (Failure msg) ->
+            Inl (Failure (msg ^ rendermsg [ctx_doc (error_context.get ())]))
+          | r -> r
+        in
+        try ignore (error_context.pop ()); r
+        with | ex -> Inl ex)
+      r ss
+    in
+    match r with
+    | Inr r -> r
+    | Inl e -> raise e
+  )
+
 //
 // returns errors, other issues, result if any
 // restores handler back
@@ -690,7 +713,7 @@ let catch_errors_and_ignore_rest (f:unit -> ML 'a) : ML (list issue & option 'a)
  *     since 3 appears 1 time in l1, but 2 times in l2. *)
 let find_multiset_discrepancy (l1 : list int) (l2 : list int) : ML (option (int & int & int)) =
     let sort = List.sortWith (fun x y -> x - y) in
-    let rec collect (l : list 'a) : list ('a & int) =
+    let rec collect (l : list int) : list (int & int) =
         match l with
         | [] -> []
         | hd :: tl ->

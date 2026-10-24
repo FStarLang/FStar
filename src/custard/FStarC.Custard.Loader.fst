@@ -29,7 +29,7 @@ module DsEnv = FStarC.Syntax.DsEnv
 module E     = FStarC.Errors
 module Ident = FStarC.Ident
 module BU    = FStarC.Util
-module SMap  = FStarC.SMap
+module HashTable = FStarC.HashTable
 module Tc    = FStarC.TypeChecker.Tc
 module U     = FStarC.Syntax.Util
 module TcEnv = FStarC.TypeChecker.Env
@@ -49,19 +49,19 @@ module TcEnv = FStarC.TypeChecker.Env
    *un*loaded, so "yes" stays true, while "no" is exactly what the caller is
    about to change.  The key carries [want_impl] because a module loaded
    through its interface answers yes to one and no to the other. *)
-let loaded_memo : SMap.t unit = SMap.create 100
+let loaded_memo : HashTable.t string unit = HashTable.create 100
 
 let loaded (env:TcEnv.env) (m:string) (want_impl:bool) : ML bool =
   let m = String.lowercase m in
   let key = (if want_impl then "!" else "?") ^ m in
-  match SMap.try_find loaded_memo key with
+  match HashTable.try_find loaded_memo key with
   | Some () -> true
   | None ->
     let b =
       TcEnv.modules env |> List.existsb (fun md ->
         String.lowercase (Ident.string_of_lid md.name) = m
         && not (want_impl && md.is_interface)) in
-    if b then SMap.add loaded_memo key ();
+    if b then HashTable.add loaded_memo key ();
     b
 
 (* Section 4.2: an abstract [val] in an interface tells an extractor nothing,
@@ -75,8 +75,8 @@ let loaded (env:TcEnv.env) (m:string) (want_impl:bool) : ML bool =
    the definitions are supplied by the realization (section 8.2), and it is the
    [val]s that describe them. *)
 let candidate_files (deps:Dep.deps) (m:string) : ML (list string) =
-  (* [Parser.Dep]'s file system map is keyed by *lowercase* module names. *)
-  let m = String.lowercase m in
+  (* The implementation for the target of the current backend, if any. *)
+  let m = Dep.module_key_for_target deps (Options.codegen_target ()) m in
   match Dep.implementation_of deps m, Dep.interface_of deps m with
   | Some i, Some j -> [i; j]
   | Some i, None   -> [i]
@@ -94,36 +94,68 @@ let candidate_files (deps:Dep.deps) (m:string) : ML (list string) =
    itself before asking for the module.  Loading from the cache does not touch
    the type-checking environment, so this stays compatible with section 4.2's
    laziness: it reads checked files, it does not push their declarations. *)
-let cache_primed : SMap.t unit = SMap.create 100
+let cache_primed : HashTable.t string unit = HashTable.create 100
 
-let rec prime_cache (deps:Dep.deps) (env:TcEnv.env) (fn:string) : ML unit =
-  match SMap.try_find cache_primed fn with
+(* [load_module_from_cache] reads the whole checked file every time, even one
+   that is already [Valid], and an unmarshalled module goes straight to the
+   major heap; so skip what is already validated -- its dependences are then
+   [Valid] too -- and leave [fn] itself to the caller when it is about to load
+   it anyway ([load_self = false]). *)
+let rec prime_cache' (load_self:bool) (deps:Dep.deps) (env:TcEnv.env) (fn:string) : ML unit =
+  match HashTable.try_find cache_primed fn with
   | Some _ -> ()
+  | None when Ch.is_validated_in_cache fn -> HashTable.add cache_primed fn ()
   | None ->
-    SMap.add cache_primed fn ();
+    if load_self then HashTable.add cache_primed fn ();
+    (* An implementation's checked file is validated against its interface's
+       dependences as well as its own -- [hash_dependences] takes them to be a
+       subset of the implementation's, which is true of a dependence *graph*.
+       It is not true of the list [Dep.deps_of] hands back for a file the scan
+       never reached, which is the module's own text and nothing more, so a
+       module the interface mentions and the implementation does not is left
+       [Unknown] and the load fails.  [FStarC.Tactics.Types] is the instance
+       that found this: its interface says [module PO =
+       FStarC.TypeChecker.Primops] and its implementation does not, and a
+       plugin reaches it only through a generated registration.  Priming the
+       interface first is also the order [load_module_from_cache] uses. *)
+    (if Dep.is_implementation fn then
+       match Dep.interface_of deps (Dep.module_key_of_file fn) with
+       | Some i -> prime_cache deps env i
+       | None -> ());
     Dep.deps_of deps fn |> List.iter (prime_cache deps env);
-    Prof.timed "cachefile" (fun () -> ignore (Ch.load_module_from_cache env fn))
+    if load_self then
+      Prof.timed "cachefile" (fun () -> ignore (Ch.load_module_from_cache env fn))
+
+and prime_cache deps env fn : ML unit = prime_cache' true deps env fn
 
 (* Modules whose implementation is in the dependency graph but has no usable
    checked file, so the interface is the best we will ever get.  Without this,
    [module_is_loaded] would keep demanding an implementation that cannot be
    loaded and [ensure_loaded] would register the interface again on every
    request -- an Error 47 the second time around. *)
-let iface_only : SMap.t unit = SMap.create 10
+let iface_only : HashTable.t string unit = HashTable.create 10
 
-let loaded_files : SMap.t unit = SMap.create 100
+let loaded_files : HashTable.t string unit = HashTable.create 100
 
 let module_is_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML bool =
   let m' = String.lowercase m in
-  let want_impl = Some? (Dep.implementation_of deps m') && None? (SMap.try_find iface_only m') in
+  let want_impl =
+    Some? (Dep.implementation_of deps (Dep.module_key_for_target deps (Options.codegen_target ()) m))
+    && None? (HashTable.try_find iface_only m') in
   loaded env m want_impl
 
+(* The search [Dep.cache_file_name] makes, without its failure. *)
+let impl_is_checked (deps:Dep.deps) (m:string) : ML bool =
+  match Dep.implementation_of deps (Dep.module_key_for_target deps (Options.codegen_target ()) m) with
+  | None -> false
+  | Some fn -> Some? (Find.find_file (Filepath.basename fn ^ ".checked"))
+
 (* Modules whose loading is in progress, to break the recursion below. *)
-let loading : SMap.t unit = SMap.create 100
+let loading : HashTable.t string unit = HashTable.create 100
 
 let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env =
   if module_is_loaded deps env m then env
-  else if Some? (SMap.try_find loading (String.lowercase m)) then env
+  else if Some? (HashTable.try_find loading (String.lowercase m)) then env
   else
     let rec first_usable (fns:list string) : ML (string & Ch.tc_result) =
       match fns with
@@ -134,13 +166,13 @@ let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env 
           text "Verify the module first, or pass --already_cached appropriately."
         ]
       | fn :: fns ->
-        prime_cache deps env fn;
+        prime_cache' false deps env fn;
         match Prof.timed "cachefile" (fun () -> Ch.load_module_from_cache env fn) with
         | None -> first_usable fns
         | Some tcr -> (fn, tcr)
     in
     let fn, tcr = first_usable (candidate_files deps m) in
-    SMap.add loaded_files fn ();
+    HashTable.add loaded_files fn ();
     (* Desugaring [m]'s declarations resolves the names they mention, so every
        module [m] depends on has to be in the desugaring environment first --
        [FStarC.TypeChecker.NBETerm]'s [val]s say [ML], which lives in
@@ -153,13 +185,13 @@ let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env 
        [prime_cache] above is not enough: it validates checked files, it does
        not register anything.  Recursion is broken by {!loading}, since a
        module's dependences include its own interface. *)
-    SMap.add loading (String.lowercase m) ();
+    HashTable.add loading (String.lowercase m) ();
     let env =
       Dep.deps_of deps fn |> List.fold_left (fun env dfn ->
         let dm = Dep.module_name_of_file dfn in
         if String.lowercase dm = String.lowercase m then env
         else ensure_loaded deps env dm) env in
-    SMap.remove loading (String.lowercase m);
+    HashTable.remove loading (String.lowercase m);
     (* We asked for an implementation and got an interface: the implementation
        is realized by hand and nothing ever checked it (section 8.2).  Record
        that, so later requests for this module stop asking.  If the driver had
@@ -167,7 +199,7 @@ let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env 
        entry point depends on -- there is nothing left to do, and pushing its
        sigelts a second time would be an Error 47. *)
     if not (Dep.is_implementation fn) then
-      SMap.add iface_only (String.lowercase m) ();
+      HashTable.add iface_only (String.lowercase m) ();
     if not (Dep.is_implementation fn) && loaded env m false then env
     else begin
         (* If the driver already registered this module's *interface*, its
@@ -208,4 +240,4 @@ let rec ensure_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML TcEnv.env 
     end
 
 let loaded_digests () : ML (list (string & string)) =
-  SMap.keys loaded_files |> List.map (fun fn -> (fn, BU.digest_of_file fn))
+  HashTable.keys loaded_files |> List.map (fun fn -> (fn, BU.digest_of_file fn))

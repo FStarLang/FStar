@@ -130,6 +130,13 @@ val is_stub_module : list string -> bool
    valued by the fully qualified lid, as a string. *)
 val stub_aliases : list (string & string)
 
+(* The reverse of {!no_fstar_stubs}, for the one compiler module that mirrors
+   a ulib module declaration for declaration: [FStarC.NormSteps] is the
+   [FStar.NormSteps] the compiler itself is extracted against, and the
+   compiler unit exports it under the ulib keys.  Takes and returns a
+   namespace. *)
+val fstarc_mirror_of : list string -> option (list string)
+
 (** Types that have no F* definition *and* none that Custard should emit,
     because a header outside F* already declares them: [FStar.Bytes.bytes] is
     a struct krmllib defines.  This is additive rather than a {!rule}: the
@@ -144,7 +151,7 @@ val is_no_unfold_lid : Ident.lident -> ML bool
 (** Whether karamel supplies this module itself on the backend being emitted
     for, so that Custard must emit neither its types nor its definitions and
     must leave every use of them under the F* name (section 20).  Only ever
-    true under [--custard_backend KrmlRust], where [Pulse.Lib.Slice] becomes
+    true under [--codegen KrmlRust], where [Pulse.Lib.Slice] becomes
     Rust's own borrowed slice rather than the owning struct its F* definition
     describes. *)
 val is_krml_model : list string -> ML bool
@@ -175,11 +182,17 @@ val krml_compat_name : list string -> string -> list string & string
     assertion and is taken at its word. *)
 val is_known_krml_model_op : list string -> string -> ML bool
 
+(** The dependency graph {!is_realized_module} consults to find the
+    interface-only modules. *)
+val set_deps : FStarC.Parser.Dep.deps -> ML unit
+
 (** Whether a module is realized by hand in OCaml (section 8.2), and so has a
     [.ml] of its own in [src/ml] or [ulib/ml] that Custard must neither
     compile over nor write a file on top of, or is one karamel models itself
-    ({!is_krml_model}).  Takes a namespace that has already been through
-    {!no_fstar_stubs}. *)
+    ({!is_krml_model}).  On the ML backends every module that has an
+    interface and no implementation is realized, as it was for ML extraction;
+    the ones that have both are listed.  Takes a namespace that has already
+    been through {!no_fstar_stubs}. *)
 val is_realized_module : list string -> ML bool
 
 (** Whether a realized module is realized for its *types only*, so that its
@@ -187,6 +200,10 @@ val is_realized_module : list string -> ML bool
     module; the exception is a module listed for its types alone because the
     realizations name them, with no hand-written file of its own. *)
 val is_type_only_realized_module : list string -> ML bool
+
+(** The modules Cherry compiles from a [-c.cherry.fst] implementation of their
+    own, though the ML backends realize them. *)
+val cherry_source_modules : list (list string)
 
 (** Section 128.2.  The header that realizes this module in C, if it is one of
     the modules whose realization is hand-written C as well as OCaml.  Its

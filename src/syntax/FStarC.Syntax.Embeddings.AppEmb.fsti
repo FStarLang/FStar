@@ -7,6 +7,7 @@ open FStarC.Syntax.Embeddings.Base
 type appemb 'a =
   args -> ML (option ('a & args))
 
+[@@FStar.Attributes.custard_inline]
 let (let?) (o : option 'a) (f : 'a -> ML (option 'b)) : ML (option 'b) = match o with | None -> None | Some v -> f v
 
 val (<*>) : appemb ('a -> ML 'b) -> appemb 'a -> appemb 'b

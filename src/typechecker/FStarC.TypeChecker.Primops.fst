@@ -101,6 +101,7 @@ let simple_ops : list primitive_step = [
     (fun x y -> Some (String.make x y))
     (fun x y -> Some (String.make x y));
   mk1 0 PC.string_list_of_string_lid list_of_string;
+  mk1 0 PC.string_length_lid (fun (s:string) -> (String.length s <: int));
   mk1 0 PC.string_lowercase_lid String.lowercase;
   mk1 0 PC.string_uppercase_lid String.uppercase;
   mk2' 0 PC.string_index_lid
@@ -148,3 +149,4 @@ let simplification_ops_list (env:Env.env_t) : ML (list primitive_step) =
   Primops.Eq.prop_eq_ops env
   @ Primops.Real.simplify_ops
   @ Primops.Erased.simplify_ops
+  @ Primops.MachineInts.simplify_ops

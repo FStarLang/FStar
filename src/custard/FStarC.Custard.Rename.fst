@@ -22,7 +22,7 @@ open FStarC.List
 open FStarC.Class.Show
 open FStarC.Custard.Syntax
 
-module SMap   = FStarC.SMap
+module HashTable = FStarC.HashTable
 module String = FStarC.String
 
 (* Everything a local name may need to be looked up against: the renaming in
@@ -38,10 +38,31 @@ let empty_scope : scope = { sub = []; used = [] }
    uniquifying suffix that extraction added; what is left is the [ppname] the
    programmer wrote, except for the [uu____NNN] that F* invents for a binder
    the programmer wrote as [_], whose digits are just as volatile as the
-   suffix we are removing and are collapsed too. *)
+   suffix we are removing and are collapsed too.
+
+   The [uu__] prefix also marks a temporary the compiler introduced and would
+   rather not see in the output (Custard's own ANF temporaries, and a local
+   [let] marked [CInline]): [uu__tmp] is spelled [tmp] and [uu___break] is
+   spelled [_break].  For karamel the prefix is not noise but the contract:
+   karamel attempts to inline every binder whose name starts with [uu__]
+   ([Helpers.is_uu]), and renumbers them itself, so there it is kept. *)
+let keeps_uu_prefix () : ML bool =
+  match Options.codegen_name () with
+  | "KrmlC" | "KrmlRust" -> true
+  | _ -> false
+
 let preferred (x:string) : ML string =
   let b = base_name x in
-  let b = if String.length b >= 4 && String.substring b 0 4 = "uu__" then "tmp" else b in
+  let b =
+    if String.length b >= 4 && String.substring b 0 4 = "uu__" then
+      if keeps_uu_prefix () then b
+      else
+        let rest = String.substring b 4 (String.length b - 4) in
+        let digits = String.list_of_string "_0123456789" in
+        let anonymous = String.list_of_string rest
+                        |> List.for_all (fun c -> List.mem c digits) in
+        if anonymous then "tmp" else rest
+    else b in
   if b = "" then "x" else b
 
 let taken (s:scope) (x:string) : ML bool =
@@ -82,7 +103,7 @@ let rec rn_cty (ts:scope) (c:cty) : ML cty =
   | TArrow (a, e, b) -> TArrow (rn_cty ts a, e, rn_cty ts b)
   | TApp (n, args) -> TApp (n, args |> List.map (rn_cty ts))
   | TBuf t -> TBuf (rn_cty ts t)
-  | TRef t -> TRef (rn_cty ts t)
+  | TRef (k, t) -> TRef (k, rn_cty ts t)
   | TInline t -> TInline (rn_cty ts t)
   | TTuple cs -> TTuple (cs |> List.map (rn_cty ts))
   | c -> c
@@ -96,12 +117,12 @@ let rec rn_cty (ts:scope) (c:cty) : ML cty =
    the [ERecord]/[EProj] nodes that mention them. *)
 let field_key (n:name) (f:string) : ML string = string_of_name n ^ "." ^ f
 
-let rn_field (fields:SMap.t string) (n:name) (f:string) : ML string =
-  match SMap.try_find fields (field_key n f) with
+let rn_field (fields:HashTable.t string string) (n:name) (f:string) : ML string =
+  match HashTable.try_find fields (field_key n f) with
   | Some f' -> f'
   | None -> preferred f
 
-let rec rn_pat (fields:SMap.t string) (s:scope) (p:pat) : ML (pat & scope) =
+let rec rn_pat (fields:HashTable.t string string) (s:scope) (p:pat) : ML (pat & scope) =
   match p with
   | PWild
   | PConst _ -> (p, s)
@@ -127,7 +148,7 @@ let rec rn_pat (fields:SMap.t string) (s:scope) (p:pat) : ML (pat & scope) =
     let ps, s = rn_pats fields s ps in
     (POr ps, s)
 
-and rn_pats (fields:SMap.t string) (s:scope) (ps:list pat) : ML (list pat & scope) =
+and rn_pats (fields:HashTable.t string string) (s:scope) (ps:list pat) : ML (list pat & scope) =
   match ps with
   | [] -> ([], s)
   | p :: ps ->
@@ -135,14 +156,14 @@ and rn_pats (fields:SMap.t string) (s:scope) (ps:list pat) : ML (list pat & scop
     let ps, s = rn_pats fields s ps in
     (p :: ps, s)
 
-let rec rn_expr (fields:SMap.t string) (ts:scope) (s:scope) (x:expr) : ML expr =
+let rec rn_expr (fields:HashTable.t string string) (ts:scope) (s:scope) (x:expr) : ML expr =
   let go = rn_expr fields ts s in
   let ty = rn_cty ts x.ty in
   let e =
     match x.e with
     | EConst _
     | EAny
-    | EAbort _ -> x.e
+    | EAbort _ | EUnreachable _ -> x.e
 
     | EVar v -> EVar (lookup s v)
     | EQual (n, args) -> EQual (n, args |> List.map (rn_cty ts))
@@ -177,7 +198,7 @@ let rec rn_expr (fields:SMap.t string) (ts:scope) (s:scope) (x:expr) : ML expr =
   in
   { x with e = e; ty = ty }
 
-and rn_branch (fields:SMap.t string) (ts:scope) (s:scope) (br:branch) : ML branch =
+and rn_branch (fields:HashTable.t string string) (ts:scope) (s:scope) (br:branch) : ML branch =
   let p, g, b = br in
   let p, s = rn_pat fields s p in
   (p, (match g with None -> None | Some g -> Some (rn_expr fields ts s g)),
@@ -199,18 +220,18 @@ and rn_binders (ts:scope) (s:scope) (bs:list binder) : ML (list binder & scope) 
 (* A constructor's fields are a scope of their own, so they are renamed in one
    pass over the declaration and the result is published in [fields] for the
    accessors elsewhere in the program to find. *)
-let rn_fields (fields:SMap.t string) (n:name) (ts:scope)
+let rn_fields (fields:HashTable.t string string) (n:name) (ts:scope)
               (fs:list (string & cty)) : ML (list (string & cty)) =
   let rec go (s:scope) (fs:list (string & cty)) : ML (list (string & cty)) =
     match fs with
     | [] -> []
     | (f, c) :: fs ->
       let f', s = bind s f in
-      SMap.add fields (field_key n f) f';
+      HashTable.add fields (field_key n f) f';
       (f', rn_cty ts c) :: go s fs in
   go empty_scope fs
 
-let rn_tydef (fields:SMap.t string) (self:name) (ts:scope) (b:tydef) : ML tydef =
+let rn_tydef (fields:HashTable.t string string) (self:name) (ts:scope) (b:tydef) : ML tydef =
   match b with
   | TAbbrev c -> TAbbrev (rn_cty ts c)
   | TRecord fs -> TRecord (rn_fields fields self ts fs)
@@ -220,14 +241,14 @@ let rn_tydef (fields:SMap.t string) (self:name) (ts:scope) (b:tydef) : ML tydef 
 (* Types have to be renamed before terms: a term that reads a field needs the
    field's new name, and the declaration it belongs to may come later in the
    program order. *)
-let rn_types (fields:SMap.t string) (d:decl) : ML decl =
+let rn_types (fields:HashTable.t string string) (d:decl) : ML decl =
   match d with
   | DType t ->
     let params, ts = bind_all empty_scope t.dt_params in
     DType { t with dt_params = params; dt_body = rn_tydef fields t.dt_name ts t.dt_body }
   | d -> d
 
-let rn_terms (fields:SMap.t string) (d:decl) : ML decl =
+let rn_terms (fields:HashTable.t string string) (d:decl) : ML decl =
   match d with
   | DType _ -> d
   | DLet l ->
@@ -248,7 +269,7 @@ let rn_terms (fields:SMap.t string) (d:decl) : ML decl =
 
 (* The verdicts are rewritten after [rn_types] has published every renaming,
    so that [ti_ctors] spells the field names the generated source spells. *)
-let rn_type_info (fields:SMap.t string) (ti:type_info) : ML type_info =
+let rn_type_info (fields:HashTable.t string string) (ti:type_info) : ML type_info =
   let rn_cl (cl:ctor_layout) : ML ctor_layout =
     { cl with cl_fields = cl.cl_fields |> List.map (fun (f, c) ->
                             (rn_field fields cl.cl_name f, c)) } in
@@ -262,7 +283,7 @@ let rn_type_info (fields:SMap.t string) (ti:type_info) : ML type_info =
       | l -> l }
 
 let run (infos:list (name & type_info)) (prog:program) : ML (program & list (name & type_info)) =
-  let fields : SMap.t string = SMap.create 50 in
+  let fields : HashTable.t string string = HashTable.create 50 in
   let prog = prog |> List.map (rn_types fields) in
   let prog = prog |> List.map (rn_terms fields) in
   (prog, infos |> List.map (fun (n, ti) -> (n, rn_type_info fields ti)))

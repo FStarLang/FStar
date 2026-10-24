@@ -72,6 +72,11 @@ val scan_deps_and_check_cache_validity (file:string) : ML (option (list string &
 
 val load_module_from_cache: TcEnv.env -> string -> ML (option tc_result)
 
+(* Whether the checked file of this source file has already been validated
+   (in this process) by [load_module_from_cache], so that loading it again
+   would only re-read its tc data. *)
+val is_validated_in_cache: string -> ML bool
+
 (** Why the most recent [load_module_from_cache] returned [None].
 
     The reason is computed either way, but it is only *reported* when the

@@ -70,7 +70,7 @@ ELIM = re.compile(r"(FStar_Pervasives(_Native)?\.)?(Some|None|Inl|Inr)\b")
 
 
 def find_tree(root):
-    for stage in ("stage3", "stage2", "stagec", "stage1"):
+    for stage in ("stage3", "stage2", "stage1"):
         objs = os.path.join(root, stage, "dune", "_build", "default",
                             "fstar-guts", ".fstarcompiler.objs", "byte")
         if not os.path.isdir(objs):

@@ -10,7 +10,6 @@
 #   FSTAR_EXE=out/bin/fstar.exe \
 #   CACHE_DIR=ulib.checked \
 #   TAG=lib \
-#   CODEGEN=none \
 #   OUTPUT_DIR=none \
 #   make -f mk/lib.mk verify
 # mk/lib.mk:3: *** FSTAR_EXE ("out/bin/fstar.exe") does not exist (cwd = /cygdrive/d/a/FStar/FStar/fstar).  Stop.
@@ -46,7 +45,6 @@ check_lib: install_bin
 	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
 	  CACHE_DIR=ulib.checked \
 	  TAG=lib \
-	  CODEGEN=none \
 	  OUTPUT_DIR=none \
 	  FSTAR_ROOT=$(CURDIR) \
 	  $(MAKE) -f mk/lib.mk verify
@@ -75,7 +73,6 @@ check_fstarc: install_bin
 	  SRC=src/ \
 	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
 	  CACHE_DIR=fstarc.checked/ \
-	  CODEGEN=none \
 	  OUTPUT_DIR=none \
 	  TAG=fstarc \
 	  FSTAR_LIB=$(call cygpath,ulib) \
@@ -127,7 +124,6 @@ check_pulse_common: check_lib
 	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
 	  CACHE_DIR=pulse/common.checked \
 	  TAG=pulse_common \
-	  CODEGEN=none \
 	  OUTPUT_DIR=none \
 	  FSTAR_ROOT=$(CURDIR) \
 	  OTHERFLAGS='--include ulib.checked' \
@@ -142,7 +138,6 @@ check_pulse: check_pulse_common
 	  FSTAR_EXE=$(call cygpath,out/bin/fstar.exe) \
 	  CACHE_DIR=pulse/pulse.checked \
 	  TAG=pulse \
-	  CODEGEN=none \
 	  OUTPUT_DIR=none \
 	  FSTAR_ROOT=$(CURDIR) \
 	  OTHERFLAGS='--include ulib.checked --include pulse/common --include pulse/common.checked' \
@@ -183,5 +178,5 @@ package:
 	.scripts/bin-install.sh pkgtmp/fstar
 	.scripts/mk-package.sh pkgtmp fstar$(FSTAR_TAG)
 ## LINES BELOW ADDED BY src-install.sh
-export FSTAR_COMMITDATE=2026-08-28 21:26:16 -0700
-export FSTAR_COMMIT=0444fb29c659cd176ddae9dde915695afa9f2f53
+export FSTAR_COMMITDATE=2026-10-16 22:28:41 +0000
+export FSTAR_COMMIT=e8f3263a4447fe252efda0a63c5139ce8f71b925

@@ -22,12 +22,13 @@ open FStarC.Custard.Syntax
 open FStarC.Errors.Msg
 open FStarC.Class.Show
 
-module SMap  = FStarC.SMap
+module HashTable = FStarC.HashTable
 module BU    = FStarC.Util
 module E     = FStarC.Errors
 module Dep     = FStarC.Parser.Dep
 module UF      = FStarC.Syntax.Unionfind
 module C       = FStarC.Custard.PrintC
+module Cherry  = FStarC.Custard.Cherry
 module Krml    = FStarC.Custard.PrintKrml
 module Extract = FStarC.Custard.Extract
 module Find    = FStarC.Find
@@ -106,13 +107,16 @@ let lost_cast (e:expr) (t:cty) : bool =
 let warn_any (prog:program) : ML unit =
   let sites : ref (list string) = mk_ref [] in
   let note (s:string) : ML unit = sites := s :: !sites in
+  (* Under Cherry a [TAny] is [FStar.Dyn.dyn], whose value carries its type
+     information, so nothing is lost; PrintC rejects a coercion into one. *)
+  let cherry = Options.custard_cherry () in
   let rec any_cty (c:cty) : ML bool =
     match c with
-    | TAny -> true
+    | TAny -> not cherry
     | TArrow (a, _, b) -> any_cty a || any_cty b
     | TApp (_, args) -> args |> List.existsb any_cty
     | TTuple cs -> cs |> List.existsb any_cty
-    | TBuf c | TRef c | TInline c -> any_cty c
+    | TBuf c | TRef (_, c) | TInline c -> any_cty c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   let at (where:string) (c:cty) : ML unit =
     if any_cty c then note ("the " ^ where ^ " has type " ^ show c) in
@@ -123,7 +127,7 @@ let warn_any (prog:program) : ML unit =
      | _ -> ());
     let sub (es:list expr) : ML unit = es |> List.iter go in
     match x.e with
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> ()
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> ()
     | ELet (v, t, e1, e2) -> at ("binding of '" ^ v ^ "'") t; sub [e1; e2]
     | EApp (h, es) -> sub (h :: es)
     | EFun (bs, b) ->
@@ -272,24 +276,24 @@ let imported_decls (imports:list (decl & option type_info)) : ML (list decl) =
    A [DLet]'s body is dropped.  A `.cui` is an interface: what a downstream
    unit needs is the name to call and the signature to call it at.  Keeping the
    body would invite exactly the thing separate compilation is here to prevent. *)
-let unit_entries (keys:list (string & string)) (homes:SMap.t string)
+let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
                  (prog:program) (infos:list (name & type_info))
   : ML (list Unit.entry) =
   (* Both lookups are once per declaration over a list as long as the program,
      which is quadratic in it and was the second-largest phase of extracting
      the compiler (section 12.14).  Indexing them first makes it linear. *)
-  let key_map : SMap.t string = SMap.create 100 in
+  let key_map : HashTable.t string string = HashTable.create 100 in
   (* [tryPick] takes the first match, so a later duplicate must not win. *)
   keys |> List.iter (fun (n', k) ->
-    if None? (SMap.try_find key_map n') then SMap.add key_map n' k);
-  let info_map : SMap.t type_info = SMap.create 100 in
+    if None? (HashTable.try_find key_map n') then HashTable.add key_map n' k);
+  let info_map : HashTable.t string type_info = HashTable.create 100 in
   infos |> List.iter (fun (n', ti) ->
     let k = string_of_name n' in
-    if None? (SMap.try_find info_map k) then SMap.add info_map k ti);
+    if None? (HashTable.try_find info_map k) then HashTable.add info_map k ti);
   let key_of (n:name) : ML (option string) =
-    SMap.try_find key_map (string_of_name n) in
+    HashTable.try_find key_map (string_of_name n) in
   let info_of (n:name) : ML (option type_info) =
-    SMap.try_find info_map (string_of_name n) in
+    HashTable.try_find info_map (string_of_name n) in
   prog |> List.collect (fun d ->
     if has_flag (decl_flags d) Inline || Some? (imported_unit d) then [] else
     (* An external is a hole this unit *leaves*, not a symbol it provides: a
@@ -298,16 +302,15 @@ let unit_entries (keys:list (string & string)) (homes:SMap.t string)
        another Custard unit does.  Exporting it would tell a downstream unit
        the symbol is already compiled, and that unit would then skip the very
        definition it was there to contribute; the link would come out with a
-       reference and nothing to resolve it against.  A downstream unit derives
-       an external's signature from the source anyway, exactly as this one
-       did, so nothing is lost by leaving it out. *)
+       reference and nothing to resolve it against.  Non-owning bindings are
+       published separately, without answering an implementation lookup. *)
     if DExternal? d then [] else
     (* Section 42.1.  A C unit's interface is its linking interface: what the
        header declares and nothing else.  A [static] definition offered here
        would be a symbol the consumer cannot name.  Types are all kept, since
        the header carries the whole type language -- and because that is what
        keeps two headers from defining one [struct] twice (section 42.2). *)
-    if Options.custard_backend () = "C"
+    if Options.codegen_c ()
        && (match d with DLet dl -> not (C.is_public dl) | _ -> false)
     then [] else
     let d, ti =
@@ -338,20 +341,25 @@ let unit_entries (keys:list (string & string)) (homes:SMap.t string)
     | None -> []
     | Some k -> [{ Unit.ue_key = k; Unit.ue_decl = d; Unit.ue_type = ti;
                    Unit.ue_home =
-                     SMap.try_find homes (string_of_name (name_of_decl d)) }])
+                     HashTable.try_find homes (string_of_name (name_of_decl d)) }])
 
-let write_unit_iface (st:Extract.state) (homes:SMap.t string)
+let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
                      (hdr_file:option string) (init:option string)
+                     (targets:list (string & string))
                      (prog:program) (infos:list (name & type_info))
   : ML unit =
   match Options.custard_unit () with
   | None -> ()
   | Some u ->
+    let keys = HashTable.create 100 in
+    Extract.exported_keys st |> List.iter (fun (n, k) -> HashTable.add keys n k);
+    let names = HashTable.create 100 in
+    targets |> List.iter (fun (n, c) -> HashTable.add names n c);
     let i = {
       Unit.ui_header = {
         Unit.uh_version = Unit.current_version;
         Unit.uh_name    = u;
-        Unit.uh_backend = Options.custard_backend ();
+        Unit.uh_backend = Options.codegen_name ();
         Unit.uh_options = Unit.layout_options ();
         (* Section 115.  The files this unit's IR was extracted from.
            {!Extract.loaded_digests} covers what the loader pulled in on
@@ -374,6 +382,18 @@ let write_unit_iface (st:Extract.state) (homes:SMap.t string)
         Unit.uh_init    = init;
       };
       Unit.ui_entries = unit_entries (Extract.exported_keys st) homes prog infos;
+      (* Functor members resolve through their instance, not a source binding. *)
+      Unit.ui_foreign = prog |> List.collect (function
+        | DExternal x when None? (imported_unit (DExternal x)) &&
+                           not (List.existsb Member? x.dx_flags) ->
+          (match HashTable.try_find keys (string_of_name x.dx_name) with
+           | Some k ->
+             let target = match HashTable.try_find names (string_of_name x.dx_name) with
+                          | Some c -> Some c | None -> x.dx_target in
+             [{ Unit.uf_key = k; Unit.uf_decl =
+                 { x with dx_target = target; dx_flags = Unit.foreign_flags x.dx_flags } }]
+           | None -> [])
+        | _ -> []);
     } in
     if Options.custard_dump_cui () then
       Format.print_string (Unit.iface_to_string i);
@@ -391,7 +411,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   let roots = entrypoints () @ (match main with Some l -> [l] | None -> []) in
   if Nil? roots && Nil? (Options.custard_entry_modules ()) then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text "--codegen Custard requires at least one --custard_entry, \
+      text "--codegen requires at least one --custard_entry, \
             --custard_entry_module or --custard_main.";
       text "Custard is a whole-program compiler: it extracts exactly the \
                    definitions reachable from the entry points."
@@ -408,15 +428,15 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      none of the two units involved.  Refusing here says which flag and which
      unit. *)
   if (Some? (Options.custard_unit ()) || Cons? (Options.custard_links ()))
-     && Options.custard_backend () = "KrmlRust" then
+     && Options.codegen () = Some Options.KrmlRust then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
       text "Separate compilation (--custard_unit, --custard_link) is not \
-            implemented for --custard_backend KrmlRust.";
+            implemented for --codegen KrmlRust.";
       text "karamel's Rust backend has no form for a declaration without a \
             definition: it assumes a function is defined elsewhere in the \
             crate and emits nothing for it, and it cannot translate a global \
             at all.";
-      text "Use --custard_backend KrmlC, OCaml or C, or compile the whole \
+      text "Use --codegen KrmlC, OCaml or C, or compile the whole \
             program at once."
     ];
   (* Looking definitions up in the environment instantiates their universes,
@@ -424,6 +444,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      read-only mode.  The ML extraction does the same thing. *)
   let st = Extract.init deps env in
   Extract.install_chain_reporter st;
+  Extract.set_embedding_hook RegEmb.plugin_embedding_expr;
   let prog = phase "extract" (fun () ->
                UF.with_uf_enabled (fun () ->
                  (* A module named by --custard_entry_module is requested by
@@ -453,6 +474,13 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog, infos, vd =
     phase "layout" (fun () -> Layout.run (imported_type_infos imports) prog) in
+  if Options.custard_monomorphize_types () then Monomorphize.check_tvar_clones infos;
+  let targets =
+    if Options.codegen_c () && Cons? (Options.custard_links ()) then
+      C.foreign_targets { C.no_unit with C.cu_no_prefix = Extract.link_no_prefix st }
+        (List.map fst imports @ prog)
+    else [] in
+  let prog = phase "foreign-bindings" (fun () -> Extract.apply_foreign_bindings st targets prog) in
   (* Effect-guarded simplification (sections 6 and 7.3).  [vd] is the
      representation the analysis above settled on; nothing below decides one. *)
   let prog = phase "simplify" (fun () ->
@@ -473,30 +501,34 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      program that has collapsed to a single file. *)
   let split_backends = ["OCaml"; "FSharp"; "KrmlC"; "KrmlRust"] in
   let files = if Options.custard_split ()
-                 && List.mem (Options.custard_backend ()) split_backends
+                 && List.mem (Options.codegen_name ()) split_backends
               then Some (phase "split" (fun () ->
                      Split.run deps (Extract.link_homes st)
                                (List.map fst imports @ prog)))
               else None in
-  let homes : SMap.t string = SMap.create 100 in
+  let homes : HashTable.t string string = HashTable.create 100 in
   let _ = match files with
           | None -> ()
           | Some fs -> fs |> List.iter (fun (m, ds) ->
                          ds |> List.iter (fun d ->
-                           SMap.add homes (string_of_name (name_of_decl d)) m)) in
+                           HashTable.add homes (string_of_name (name_of_decl d)) m)) in
   (* Custard emits one file for the whole program, so -o is unambiguous here,
      unlike in the per-module backends.  Settled before the interface is
      written, because a C unit's interface has to record the *name* of the
      header a downstream unit includes, and [-o] is what decides it
      (section 42.2). *)
-  let backend = Options.custard_backend () in
-  (* Section 95.  Only the direct-to-C printer reads this, so on any other
-     backend it would be silently ignored -- and a flag whose whole purpose is
-     to change the width of every index is not one to ignore quietly. *)
-  if Options.custard_sizet_32 () && backend <> "C" then
+  (* Cherry is the direct-to-C backend with reference counting inserted
+     just before printing (cherry.md), so from here on it is "C". *)
+  let backend = if Options.custard_cherry () then "C"
+                else Options.codegen_name () in
+  (* Section 95.  Only the direct-to-C and F# printers read this, so on any
+     other backend it would be silently ignored -- and a flag whose whole
+     purpose is to change the width of every index is not one to ignore
+     quietly. *)
+  if Options.custard_sizet_32 () && backend <> "C" && backend <> "FSharp" then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text ("--custard_sizet_width 32 is a direct-to-C option, but this run \
-             uses --custard_backend " ^ backend ^ ".");
+      text ("--custard_sizet_width 32 is an option of the direct-to-C and F# \
+             backends, but this run uses --codegen " ^ backend ^ ".");
       text "karamel decides the width of size_t for itself, and the OCaml \
             backend has no say in it at all."
     ];
@@ -506,7 +538,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      got the other shape would have no way to tell. *)
   if backend = "FSharp" && Some? (Options.custard_unit ()) then
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text "--custard_unit is not implemented for --custard_backend FSharp.";
+      text "--custard_unit is not implemented for --codegen FSharp.";
       text "Linking two separately extracted units means one .NET assembly \
             referencing another, which the generated project would have to \
             express; the F# backend compiles one whole program today \
@@ -525,7 +557,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                              else OCaml.module_name_of_unit u
                  | None -> "Custard" in
       Find.prepend_output_dir
-        (if Options.custard_backend_krml () then base ^ ".krml"
+        (if Options.codegen_krml () then base ^ ".krml"
          else match backend with
          | "C" -> base ^ ".c"
          | "FSharp" -> base ^ ".fs"
@@ -571,12 +603,21 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      | _ -> ());
   (* After [Rename], because the names a `.cui` exports are the names the
      generated source actually spells. *)
+  (* Cherry runs before the interface is written, which records the calling
+     convention borrow inference chose for each exported definition. *)
+  let cherried =
+    if backend = "C" && Options.custard_cherry ()
+    then Some (phase "cherry" (fun () -> Cherry.run (List.map fst imports @ prog)))
+    else None in
   phase "iface" (fun () ->
     let hdr_file, init =
       if backend = "C"
       then Some (stem ^ ".h"), C.init_globals_name cu (List.map fst imports @ prog)
       else None, None in
-    write_unit_iface st homes hdr_file init prog infos);
+    let prog = if Some? cherried then Cherry.record_conventions prog else prog in
+    let targets = if backend = "C" && Some? (Options.custard_unit ())
+                  then C.foreign_targets cu (List.map fst imports @ prog) else [] in
+    write_unit_iface st homes hdr_file init targets prog infos);
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   if Options.custard_warn_any () then warn_any prog;
@@ -598,10 +639,17 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
      karamel emits the [extern] prototype for it. *)
   | "KrmlC" | "KrmlRust" -> Krml.write_program ofile (List.map fst imports @ prog)
   | "C" ->
-    let hdr, src = C.print_program stem cu (List.map fst imports @ prog) in
-    BU.write_file (FStarC.Filepath.join_paths (FStarC.Filepath.dirname ofile)
-                     (stem ^ ".h")) hdr;
-    BU.write_file ofile src
+    let all = (match cherried with
+               | Some all ->
+                 if Options.custard_dump_ir () then
+                   Format.print_string ("(* After Cherry *)\n" ^ program_to_string all ^ "\n");
+                 all
+               | None -> List.map fst imports @ prog) in
+    let hdr, src, extras = C.print_program stem cu all in
+    let dir = FStarC.Filepath.dirname ofile in
+    BU.write_file (FStarC.Filepath.join_paths dir (stem ^ ".h")) hdr;
+    BU.write_file ofile src;
+    extras |> List.iter (fun (f, s) -> BU.write_file (FStarC.Filepath.join_paths dir f) s)
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
   (* Section 122.  One flat module, plus the two files that make the output
      directory build on its own: the support library and the project. *)
@@ -626,9 +674,9 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
                           (FStarC.Filepath.dirname ofile) f) src)
   | b ->
     E.raise_error0 E.Fatal_OptionsNotCompatible [
-      text ("Unknown --custard_backend " ^ b ^ ".");
-      text "The backends are OCaml (the default), FSharp, KrmlC, KrmlRust \
-            and C."
+      text ("Unknown --codegen " ^ b ^ ".");
+      text "The backends are OCaml, FSharp, KrmlC, KrmlRust, C \
+            and Cherry."
     ]
 
 (* [--profile_component FStarC.Custard] prints the phase breakdown.  Custard

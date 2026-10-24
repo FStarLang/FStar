@@ -187,6 +187,16 @@ type constant =
   | CChar   of char
   | CString of string
 
+(** Who frees what a [TRef] points at. *)
+type ref_kind =
+  | RManual
+  (** The program, explicitly: a Pulse reference, whose permissions say when
+      it is freed and by whom. *)
+  | RGc
+  (** The runtime: an ML reference, garbage-collected on OCaml and F#,
+      reference-counted under Cherry, and rejected by the C and karamel
+      backends. *)
+
 type cty =
   | TVar   of string
   | TInt   of signedness & iwidth
@@ -220,11 +230,13 @@ type cty =
       record type's fields take the place of it (section 5.7).  [Extract] puts
       it there, [Simplify.inline_fields] takes every one of them away again;
       no later pass and no backend ever sees one. *)
-  | TRef   of cty
-  (** A pointer to a single mutable value: Pulse's [ref] and [box].  C makes no
-      distinction -- both are [t*], and the buffer operations apply to either
-      -- but OCaml does, and a [t ref] is both the honest translation and a
-      far better one than a one-element array (section 8.4). *)
+  | TRef   of ref_kind & cty
+  (** A pointer to a single mutable value: Pulse's [ref] and [box]
+      ([RManual]), or an ML reference from [FStar.All] or [FStarC.Effect]
+      ([RGc]).  C makes no distinction between a [TRef (RManual, _)] and a
+      [TBuf] -- both are [t*], and the buffer operations apply to either --
+      but OCaml does, and a [t ref] is both the honest translation and a far
+      better one than a one-element array (section 8.4). *)
   | TExn
   (** [Prims.exn], the one extensible variant.  It has no parameters and no
       layout to derive: its constructors arrive one at a time, as [DExn]
@@ -390,6 +402,68 @@ type op =
       checked for a [*/], because that is where they are still known to have
       come from a literal the author wrote. *)
   | Commented of string & string
+  (** Cherry (cherry.md).  [RcInc x] and [RcDec x] take one more or drop one
+      reference to the value of the variable [x], at [x]'s own type.  Only
+      the Cherry pass inserts them, after every other pass has run, and only
+      the C printer in Cherry mode accepts them. *)
+  | RcInc
+  | RcDec
+  (** Cherry.  The operations on an ML reference ([TRef (RGc, t)]), which the
+      Cherry pass rewrites the buffer operations on one into: [RefNew v]
+      allocates a cell holding [v], [RefGet r] returns a counted copy of its
+      value, and [RefSet r v] replaces it. *)
+  | RefNew
+  | RefGet
+  | RefSet
+  (** Cherry: heap cell reuse (cherry.md).  [Reset (c, kept) x] takes the
+      owned cell [x], built with constructor [c], whose fields the branch
+      has read; [kept] says which of them the branch goes on to use.  If
+      [x] is unique, the fields not kept are released and [x]'s memory is
+      returned as a token; otherwise the kept fields are counted, [x] is
+      released, and the token is null.  [Reuse (c, c') (w :: args)] builds
+      constructor [c'] in the memory of token [w] (from a cell of
+      constructor [c]) if there is one and it fits, and allocates otherwise.
+      [ResetFree w] frees a token that no constructor reuses. *)
+  | Reset of name & list bool
+  | Reuse of name & name
+  | ResetFree
+  (** Cherry: a record update (cherry.md, "Record updates").
+      [Update (c, is) (x :: vs)] takes the owned cell [x], built with
+      constructor [c], and the values [vs], and returns a cell of [c] with
+      the fields at the positions [is] (ascending) replaced by [vs] and the
+      others as in [x]: [x] itself if it is unique, which loses the fields
+      it replaces, and otherwise a copy, with its fields counted. *)
+  | Update of name & list int
+  (** Cherry: an operation on an immutable array ([FStar.ImmutableArray.Base.t],
+      which Cherry represents as a counted cell), named as in that module:
+      [of_list], [to_list], [length], [index], [upd] or [push]. *)
+  | IArr of string
+  (** Cherry: [FStar.Dyn] (cherry.md, "The any type").  [Dyn "mk"] makes a
+      [TAny] of its operand, taking it; [Dyn "get"] reads the
+      value back out of one at the node's type, borrowing it. *)
+  | Dyn of string
+  (** Cherry: a Pulse reference or array ([TRef (RManual, t)] or [TBuf t]) holding
+      counted values (cherry.md, "References").  Everything stored in one is
+      marked shared first.  [PBuf "alloc" [v; n]] allocates on the heap,
+      taking [v]: the length goes in a header, so that [PBuf "free" [b]] can
+      release the elements.  [PBuf "read" [b; i]] returns a counted copy;
+      [PBuf "write" [b; i; v]] takes [v] and releases the value it replaces;
+      [PBuf "blit"] is a counting [BufBlit].  A stack allocation stays a
+      [BufCreate], with no initializer: [PBuf "init" [b; v; n]] fills it,
+      taking [v], and [PBuf "drop" [b; n]] releases it at the end of its
+      scope. *)
+  | PBuf of string
+  (** Cherry: exceptions, as error returns (cherry.md, "Exceptions").  A
+      thread-local slot holds the exception being propagated.  [ExnRaise e]
+      stores [e] there (taking it); [ExnPending] tests whether the slot is
+      full; [ExnTake] empties it, returning the exception; [ExnExit] leaves
+      the function with the exception still pending, returning a dummy value
+      of the function's type (or, in a global's initializer, reports it as
+      uncaught).  Only the Cherry pass inserts them. *)
+  | ExnRaise
+  | ExnPending
+  | ExnTake
+  | ExnExit
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =
@@ -458,8 +532,16 @@ and expr' =
   (** An arbitrary value of the node's type: what an uninitialized stack
       allocation is filled with.  Only a rule may introduce it. *)
   | EAbort   of string
-  (** Control never reaches here; the string says why.  Only a rule may
-      introduce it (Pulse's [unreachable], section 8.3). *)
+  (** Abort at run time; the string says why.  This is what a placeholder
+      compiles to -- [Prims.admit], [Prims.magic], a body Custard could not
+      extract -- so nothing has been proved about whether control reaches
+      it, and no pass may assume that it does not. *)
+  | EUnreachable of string
+  (** Control provably never reaches here; the string says why.  Only a rule
+      may introduce it, and only for a primitive whose precondition F* has
+      proved false (Pulse's [unreachable], section 8.3, and
+      [FStar.Pervasives.false_elim]).  It aborts like [EAbort] if reached, but
+      unlike [EAbort] the passes may delete the branches that lead to it. *)
   | EOp      of prim_op & list expr
   | EWhile   of expr & expr
   | ERaise   of expr
@@ -505,7 +587,7 @@ type flag =
   | Epilogue of string
   (** Text to emit immediately after the definition; the counterpart of
       {!Prologue}. *)
-  | ClosurePrologue of string & string
+  | ClosurePrologue of string
   (** Section 51.3.  A prologue for everything this declaration *reaches*,
       rather than for the declaration itself.
 
@@ -516,22 +598,34 @@ type flag =
       per-declaration flags a plugin can set, because the set is the
       transitive callees of a term the plugin has just built.
 
-      So this flag is propagated instead.  Every declaration reachable from
-      this one -- not this one, and not one that carries a {!Prologue} of its
-      own, which is another entry with its own regime -- receives a
-      {!Prologue}: the *first* string if the only way to reach it is through
-      a declaration marked this way, and the *second* if the ordinary program
-      reaches it as well.
+      So this flag is propagated instead, by *cloning* (section 51.5).
+      Every function reachable from this one -- not this one, and not one
+      that carries a {!Prologue} of its own, which is another entry with its
+      own regime -- is copied once per distinct string, the copy is given the
+      string as its {!Prologue} and a name disambiguated by it, and the calls
+      inside this declaration and inside the copies are redirected to the
+      copies.  The originals are left undecorated for whatever else calls
+      them.  In CUDA the string is ["__device__"]; for a CPU target it is a
+      [target(...)] attribute, which must never end up on a function some
+      caller reaches without checking the CPU first.  Globals are neither
+      copied nor decorated.
 
-      The two strings are the point.  In CUDA they are ["__device__"] and
-      ["__device__ __host__"], and a helper called from both a kernel and
-      host code needs the second and is miscompiled by the first.  Custard
-      does not read either string; it only decides which declaration gets
-      which, and that decision is a reachability question Custard can answer
-      and a plugin cannot.
-
-      Consumed by {!FStarC.Custard.Simplify}, which rewrites it into
-      {!Prologue}s.  No backend sees one. *)
+      Consumed by {!FStarC.Custard.Simplify}.  No backend sees one. *)
+  | ClosureGuard of string
+  (** Section 51.6.  A C preprocessor condition for this declaration *and*
+      for the copies {!ClosurePrologue} makes for it, which
+      {!FStarC.Custard.Simplify} turns into a {!Guard} on each.  The
+      declaration itself is included because it calls those copies.  Copies
+      are made once per (prologue, guard) pair. *)
+  | Guard of string
+  (** Section 51.6.  The direct-to-C backend wraps this declaration's
+      prototype, header declaration and definition in [#if s ... #endif].
+      Other backends ignore it. *)
+  | IfDef of string
+  (** Section 51.6.  On an external of type [bool]: its value is the C
+      preprocessor condition [s].  An [if] testing it compiles to
+      [#if s / #else / #endif]; no other use is allowed (error 398), and no
+      declaration is emitted for it.  Direct-to-C backend only. *)
   | CMacro
   (** Section 68.  A parameterless definition of constant value becomes a C
       preprocessor [#define] rather than a variable.
@@ -549,6 +643,21 @@ type flag =
       cannot use for the thing the constant is for.
 
       The body must be a constant expression; error 389 if it is not. *)
+  | CIfDef
+  (** karamel-only.  An [assume val] of type [bool] whose value is a C
+      preprocessor condition: a test of it compiles to [#if] rather than to a
+      read of a variable.
+
+      karamel's [@@ CIfDef ], recognized under the same F\* attribute and
+      carried through to it unchanged, because the backend that acts on it is
+      karamel's and the decision it makes -- which [if] becomes a [#if] -- is
+      about the C it prints.
+
+      Like {!CMacro} this is not decoration.  A compile-time flag that
+      survives as a variable is a variable the target never defines, so the
+      reference is a link error if the declaration is kept and an undeclared
+      identifier if it is dropped.  Only the direct-to-C backend has no use
+      for it, and ignores it. *)
   | CReference
   (** Section 70.2.  Values of this external type are *handles*: a binding of
       one aliases rather than copies.
@@ -604,7 +713,7 @@ type flag =
   | Modelled
   (** karamel supplies this declaration itself on the backend being emitted
       for, and recognizes it by its F* name (section 20).
-      [Pulse.Lib.Slice.slice] under [--custard_backend KrmlRust] is the case
+      [Pulse.Lib.Slice.slice] under [--codegen KrmlRust] is the case
       and today the only one: karamel matches
       [TApp ((["Pulse"; "Lib"; "Slice"], "slice"), [t])] and rewrites it to
       Rust's own borrowed slice, and matches each operation as an [ETApp] of
@@ -638,7 +747,8 @@ type flag =
       also monomorphizes [slice uint8] and would otherwise emit a second,
       conflicting [typedef] for it.
 
-      Set by [--custard_no_unfold]; see section 77 of doc/ref/custard.md. *)
+      Set by [--custard_no_unfold] or [@@custard_no_unfold]; see section 77
+      of doc/ref/custard.md. *)
   | Extern of option string & option string
   (** The type is defined outside F*: an abstract [val t : Type0] carrying
       [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration
@@ -653,8 +763,11 @@ type flag =
       same way and decides which to emit by layout (section 5.5), so the
       distinction only matters for a [Realized] type: there the OCaml shape is
       the hand-written one, and a realization mirrors what the F* source said
-      -- [FStarC.Parser.ParseIt.code_fragment] is an OCaml record and
+      -- [FStarC.Parser.Frontend.code_fragment] is an OCaml record and
       [FStar.Pervasives.dtuple4] an OCaml variant. *)
+  | CherryBoxed
+  (** [[@@cherry_boxed]]: under Cherry the type is a counted heap cell, as a
+      recursive type is (cherry.md, "Boxed types"). *)
   | Existential of string & string
   (** Section 33.4.  The source inductive is an existential package: the
       constructor named first stores a [Type0] field, named second, that a
@@ -679,11 +792,39 @@ type flag =
       when the upstream unit split its output (section 12.9): a reference then
       has to name that file rather than the unit, and the declaration may be
       spelled by its plain identifier rather than its mangled one. *)
+  | CallArity of list bool
+  (** Section 135.  The calling convention of a top-level definition on the
+      backends with polymorphic closures, OCaml and F#.  One entry per F\*
+      argument position the definition's own parameters consume; [true] marks
+      a position that is not passed at runtime (an erased or monomorphized
+      argument).  A call passes the arguments in these positions filtered by
+      the flags, and every argument past them unfiltered, erased ones as
+      [()]: that is how a function value on the heap is called, and the
+      definition returns one.  A reference that supplies fewer arguments than
+      there are flags, with a dropped one among those missing, is
+      eta-expanded into such a value.  Recorded here rather than recomputed
+      so that a separately compiled unit (section 12) calls the definition
+      the way it was compiled. *)
   | Member of name & string
   (** Section 133.  This declaration is the member named second of the OCaml
       functor instance named first, a [DModule].  It is emitted as nothing;
       a use is spelled as the module's member, and the declaration depends on
       the module so that the module is emitted first and kept alive. *)
+  | CherryConv of list bool
+  (** Cherry: the [[@@@cherry_owned]] ([Some true]) and
+      [[@@@cherry_borrowed]] ([Some false]) attributes on the definition's
+      leading parameters, which borrow inference does not change. *)
+  | CherryMode of list (option bool)
+  (** Cherry (cherry.md, "Calling convention").  For each parameter, whether
+      the definition takes it owned; a plain parameter is listed as owned.
+      Set on the exported definitions of a unit built with the Cherry
+      backend, from its borrow inference, so that a unit linked against it
+      calls them the way they were compiled.  A definition imported without
+      it is taken to own every parameter. *)
+  | CName of string
+  (** The exact direct-C spelling requested by a global [rename_let].
+      Logical identities and linkage are unchanged.  Kept in compiled units
+      so that consumers use the producer's spelling. *)
 
 type tydef =
   | TAbbrev  of cty
@@ -848,11 +989,11 @@ type type_info = {
     keeps a representation a function of the type. *)
 noeq
 type verdicts = {
-  vd_records: FStarC.SMap.t name;
+  vd_records: FStarC.HashTable.t string name;
   (** constructor -> the record type it becomes.  Deliberately not the field
       names: [inline_fields] changes those, so the only correct source for
       them is the declaration the rewriter is looking at. *)
-  vd_plans:   FStarC.SMap.t fplan;
+  vd_plans:   FStarC.HashTable.t string fplan;
   (** constructor -> how its inlined fields are stored *)
 }
 

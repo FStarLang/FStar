@@ -1,0 +1,124 @@
+== fits w=7
+aaa bbb|
+== breaks w=6
+aaa|
+bbb|
+== no-lookahead w=8
+aaa bbbcccccc|
+== nest w=3
+a|
+  b|
+  c|
+== hardline-in-group w=80
+a|
+b|
+c|
+== no-trailing-blanks w=80
+a|
+|
+   b|
+|
+== align w=80
+abcx|
+   y|
+== hang w=10
+abc|
+    dddddddd|
+    e|
+== ifflat w=8
+flat1234|
+== ifflat w=7
+broken1234|
+== ribbon-fits w=20
+x|
+    aaaa bbbbb|
+== ribbon-breaks w=20
+x|
+    aaaa|
+    bbbbb|
+== ribbon-line-start w=40
+x|
+    zzzaaaa|
+          bbb|
+== text w=80
+'a''\n''\\' true world hello -><-<--|
+== utf8 w=6
+ééé x|
+== bytes w=6
+ééé|
+x|
+== fancy w=8
+<b>ab</b> cdef|
+== enclose w=80
+'a'"b"`c`{d}(e)<f>[g]|h|@ij;|
+== repeat w=80
+ababab!!o|
+== separate w=80
+a, b, c a, b and c xy p,q|
+== lines w=80
+ab<>cd<><>ef<>|
+== words w=80
+ab<>cd<>ef<>gh|
+== split w=80
+<>,<>a<>,<><>,<>b<>;<>c<>,<>|
+== arbitrary_string w=5
+ab|
+cd|
+ef|
+== arbitrary_string w=80
+ab cd ef|
+== flow w=15
+the quick brown|
+  fox jumps|
+  over the lazy|
+  dog again and|
+  again|
+== flow_map w=15
+one, two, three,|
+four, five|
+== url w=10
+http://www|
+.example.|
+com/a/b.|
+html|
+== prefix w=10
+left right|
+== prefix w=8
+a|
+b|
+  cccccccc|
+== jump w=4
+x|
+  right|
+== infix w=20
+left  =  right|
+== infix w=8
+a|
+b =|
+  cccccccc|
+== surround w=10
+{|
+  a;|
+  bbbbb|
+}|
+== surround w=20
+{ a; bbbbb }|
+== soft_surround w=12
+{ a;|
+  bbbbb|
+  cc }|
+== soft_surround w=3
+{ aaaaa|
+}|
+== surround_separate w=80
+VOID { x,y }|
+== surround_separate w=6
+[|
+  a;|
+  b;|
+  c|
+]|
+== width-0 w=0
+a|
+b|
+render, is, width, 80

@@ -16,5 +16,5 @@
  )
  (link_flags "-linkall")
  (modes (native exe))
- (preprocess (pps ppx_deriving.show ppx_deriving_yojson sedlex.ppx))
+ (preprocess (pps ppx_deriving.show ppx_deriving_yojson))
 )

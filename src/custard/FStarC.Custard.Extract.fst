@@ -49,7 +49,7 @@ module PO     = FStarC.TypeChecker.Primops.Base
 module PC     = FStarC.Parser.Const
 module ExtractAs = FStarC.Parser.Const.ExtractAs
 module S      = FStarC.Syntax.Syntax
-module SMap   = FStarC.SMap
+module HashTable = FStarC.HashTable
 module Unit   = FStarC.Custard.Unit
 module Visit  = FStarC.Syntax.Visit
 module Hash   = FStarC.Syntax.Hash
@@ -345,23 +345,25 @@ type state = {
   (* Specialization key -> the IR name it was assigned.  Filled in *before*
      the definition is translated, so that a recursive occurrence finds it and
      stops. *)
-  names:   SMap.t name;
-  emitted: SMap.t decl;
+  names:   HashTable.t string name;
+  emitted: HashTable.t string decl;
+  (* Capture choices while the source lid is known: target names may unstub it. *)
+  foreign_choices: HashTable.t string (option string & bool & list flag);
   (* Emission order, reversed: a definition is appended once its body has been
      translated, so uses come after definitions. *)
   order:   ref (list string);
   (* lid -> its binder classification (section 3.1), computed once. *)
-  classes: SMap.t (list bclass);
+  classes: HashTable.t string (list bclass);
   (* Which of a declaration's binders are erased, unit-shaped or type
      parameters: a property of its F* type, asked at every *call site* of it
      and answered by normalizing every binder's sort.  Keyed by a tag and the
      lid; see {!binder_flags} and section 12.14. *)
-  bflags:  SMap.t (list bool);
+  bflags:  HashTable.t string (list bool);
   (* lid -> how many specializations of it we have created so far. *)
-  counts:  SMap.t int;
+  counts:  HashTable.t string int;
   (* The mangled names handed out already, so that two specializations whose
      hints coincide still get distinct names. *)
-  suffixes: SMap.t bool;
+  suffixes: HashTable.t string bool;
   fuel:    ref int;
   (* The chain of requests that led to what we are currently working on,
      innermost first.  Only used to make diagnostics debuggable (section
@@ -371,7 +373,7 @@ type state = {
      a recursive binder (by its IR variable name) to the lifted declaration's
      name, its type arguments, the captured variables its call sites have to
      supply, and its full arrow type.  See [lift_letrec]. *)
-  lifted:  SMap.t (name & list cty & list binder & cty & list S.bv);
+  lifted:  HashTable.t string (name & list cty & list binder & cty & list S.bv);
   (* The declaration currently being extracted, which is what a lifted local
      function is named after. *)
   cur:     ref name;
@@ -395,12 +397,12 @@ type state = {
      the variable stands for.  Binder indices are unique after opening, so a
      stale entry can never be found by a different variable and nothing is
      ever removed. *)
-  letdefs: SMap.t S.term;
+  letdefs: HashTable.t string S.term;
   (* Names bound to an *effectful* right-hand side, which [letdefs]
      deliberately does not record.  Kept only so that section 3.2's rejection
      can tell a runtime parameter apart from a computation's result: the two
      need entirely different advice. *)
-  effletdefs: SMap.t unit;
+  effletdefs: HashTable.t string unit;
   (* The binders of the definition currently being extracted.  Section 3.2's
      advice is to write [@@monomorphize] on the offending name "in the
      enclosing definition", which is only possible if the name *is* one of
@@ -408,7 +410,7 @@ type state = {
      instead, and the reader who follows the advice writes an attribute that
      nothing reads.  Indices are unique after opening, so entries accumulate
      harmlessly and are never removed. *)
-  defbinders: SMap.t unit;
+  defbinders: HashTable.t string unit;
   (* The type a local [let] was given, keyed by its bound variable's index.
      In a [--lax] run the typechecker leaves the sort of a binder it invented
      itself (the [uu__] of an ANF-style [let]) unknown, so the *occurrence* of
@@ -416,13 +418,13 @@ type state = {
      perfectly good type.  That loses information the backends need -- whether
      a value is a [ref] rather than a one-element run, for one -- so an
      occurrence whose own sort says nothing falls back to this. *)
-  lettys: SMap.t cty;
+  lettys: HashTable.t string cty;
   (* Every type abbreviation emitted so far, keyed by its target name.  An
      abbreviation is a name for a type, not a type of its own, so a use of it
      in *function position* has to be seen through: [exported_id_set] is an
      arrow, and an application of a value of that type has the arrow's result
      type, not [any].  Section 5.5. *)
-  abbrevs: SMap.t (list string & cty);
+  abbrevs: HashTable.t string (list string & cty);
   (* What the already-compiled units this run links against export, indexed by
      specialization key (section 12.4).  This is the whole of separate
      compilation on the extraction side: a request whose key is already in here
@@ -439,14 +441,17 @@ type state = {
      for by name: an entry point exists precisely because something outside
      the extracted program calls it, and that caller has nothing to inline
      into.  See [pulse/src/custard-entrypoints.txt]. *)
-  roots:   SMap.t bool;
+  roots:   HashTable.t string bool;
   (* Section 31.1.  Definitions whose [normalize_for_extraction] has already
      been honoured, by lid.  The normalization is the expensive one -- it is
      the whole point of the attribute that it does work the extractor would
      not do on its own -- and [extract_lid] is called once per
      specialization, so without this a definition with twenty specializations
      would pay for it twenty times. *)
-  nfe:     SMap.t sigelt;
+  nfe:     HashTable.t string sigelt;
+  (* The modules whose initializers have been requested, by name; see
+     {!request_inits}. *)
+  inits:   HashTable.t string unit;
 }
 
 (* Section 63.1.  A module speaks the floating-point vocabulary when it
@@ -465,31 +470,34 @@ let float_probe_of_env (env : ref TcEnv.env) (ns : list string) : ML (option fwi
 let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   let envr = mk_ref env in
   Builtins.set_float_probe (float_probe_of_env envr);
+  Builtins.set_deps deps;
   {
   deps    = deps;
   env     = envr;
-  names   = SMap.create 100;
-  emitted = SMap.create 100;
+  names   = HashTable.create 100;
+  emitted = HashTable.create 100;
+  foreign_choices = HashTable.create 20;
   order   = mk_ref [];
-  classes = SMap.create 100;
-  bflags = SMap.create 100;
-  counts  = SMap.create 100;
-  suffixes = SMap.create 100;
+  classes = HashTable.create 100;
+  bflags = HashTable.create 100;
+  counts  = HashTable.create 100;
+  suffixes = HashTable.create 100;
   fuel    = mk_ref (Options.custard_fuel ());
   chain   = mk_ref [];
-  lifted  = SMap.create 20;
+  lifted  = HashTable.create 20;
   cur     = mk_ref ({ ns = []; id = "custard"; spec = None });
   cur_lid = mk_ref None;
   chainlids = mk_ref [];
-  letdefs = SMap.create 100;
-  effletdefs = SMap.create 100;
-  defbinders = SMap.create 100;
-  lettys  = SMap.create 100;
-  abbrevs = SMap.create 100;
+  letdefs = HashTable.create 100;
+  effletdefs = HashTable.create 100;
+  defbinders = HashTable.create 100;
+  lettys  = HashTable.create 100;
+  abbrevs = HashTable.create 100;
   links   = Unit.load_links (Options.custard_links ());
   imports = mk_ref [];
-  roots   = SMap.create 20;
-  nfe     = SMap.create 20;
+  roots   = HashTable.create 20;
+  nfe     = HashTable.create 20;
+  inits   = HashTable.create 100;
 }
 
 (* A name given on --custard_entry, named by --custard_main, or registered by
@@ -497,7 +505,24 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
    reason this is worth a name, is that nothing in the F* program has to
    reach them: they are live because someone said so. *)
 let is_root (st:state) (l:Ident.lident) : ML bool =
-  Some? (SMap.try_find st.roots (Ident.string_of_lid l))
+  Some? (HashTable.try_find st.roots (Ident.string_of_lid l))
+
+(* The definition currently being extracted, for diagnostics. *)
+let enclosing_name (st:state) : ML string =
+  match !st.cur_lid with
+  | Some l -> Ident.string_of_lid l
+  | None -> "the enclosing definition"
+
+(* Section 13.6.  True when the offending name is a parameter of an enclosing
+   definition that is itself a root.  That combination is what distinguishes
+   "you annotated the wrong thing" from "you asked for an entry point whose
+   signature has a Mono binder": the latter has no call site to specialize at
+   and no source of yours to annotate, so it needs different advice. *)
+let root_binder_of_enclosing (st:state) (v:S.bv) : ML bool =
+  Some? (HashTable.try_find st.defbinders (show v.index)) &&
+  (match !st.cur_lid with
+   | Some l -> is_root st l
+   | None -> false)
 
 (* Just enough to fire the redexes that substituting a local function creates,
    and nothing else: this runs on the enclosing body, which is code, so any
@@ -505,6 +530,18 @@ let is_root (st:state) (l:Ident.lident) : ML bool =
 let local_inline_steps : list TcEnv.step = [
   TcEnv.AllowUnboundUniverses;
   TcEnv.Beta;
+  (* The redexes may sit inside a local [let rec], and they have to be fired
+     there too.  [Zeta] is on by default, and with it the normalizer ties the
+     knot: it unrolls the [let rec] once at its use and rebuilds every
+     recursive occurrence from the unreduced definition, so a substituted
+     local function stays a closure in the copy that is actually lifted, with
+     runtime type arguments (error 364; [tc_pat]'s [fail], used in its
+     [check_nested_pattern], is the case that found it).  As in
+     [custard_norm_steps], excluding [Zeta] together with
+     [PureSubtermsWithinComputations] selects the branch that normalizes
+     under the [let rec] and puts it back. *)
+  TcEnv.Exclude TcEnv.Zeta;
+  TcEnv.PureSubtermsWithinComputations;
 ]
 
 let custard_norm_steps : list TcEnv.step = [
@@ -605,6 +642,17 @@ let custard_error (#a:Type) (st:state) (code:E.error_code) (msg:list Pprint.docu
    call site asked for it. *)
 let custard_warning (st:state) (code:E.error_code) (msg:list Pprint.document) : ML unit =
   E.log_issue0 code (msg @ request_chain st)
+
+(* Section 13.7.  [plugin_embedding #t] is compiled to the embedding of [t]
+   that [RegEmb] builds, which is the only place that knows how; [RegEmb]
+   depends on this module, so it is reached through a hook the driver sets. *)
+let plugin_embedding_lid : Ident.lident =
+  PC.p2l ["FStarC"; "Syntax"; "Embeddings"; "Base"; "plugin_embedding"]
+
+let embedding_hook : ref (state -> term -> ML expr) =
+  mk_ref (fun (st:state) (_:term) ->
+    custard_error st E.Error_CustardUnrepresentableValue [
+      text "Custard: plugin_embedding is not available in this extraction." ])
 
 (* Every normalization Custard performs runs under a step budget.
 
@@ -764,7 +812,7 @@ let fixup_normalize_for_extraction (st:state) (se:sigelt) : ML sigelt =
   match se.sigel with
   | Sig_let {lids; lbs=(is_rec, lbs)} when Some? (U.extract_attr' PC.normalize_for_extraction_lid se.sigattrs) ->
     let key = show lids in
-    (match SMap.try_find st.nfe key with
+    (match HashTable.try_find st.nfe key with
      | Some se -> se
      | None ->
        let se =
@@ -785,7 +833,7 @@ let fixup_normalize_for_extraction (st:state) (se:sigelt) : ML sigelt =
                          else lb.lbtyp in
              { lb with lbdef; lbtyp } in
            { se with sigel = Sig_let {lids; lbs=(is_rec, List.map one lbs)} } in
-       SMap.add st.nfe key se;
+       HashTable.add st.nfe key se;
        se)
   | _ -> se
 
@@ -914,9 +962,13 @@ let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_extern_attr,          "custard_extern";
   PC.custard_c_header_attr,        "custard_c_header";
   PC.custard_opaque_attr,          "custard_opaque";
+  PC.custard_no_unfold_attr,       "custard_no_unfold";
   PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
   PC.custard_compile_time_attr,    "custard_compile_time";
   PC.custard_float_attr,           "custard_float";
+  PC.custard_boxed_fields_attr,    "custard_boxed_fields";
+  PC.cherry_boxed_attr,            "cherry_boxed";
+  PC.custard_inline_attr,          "custard_inline";
 ]
 
 (* Attributes that describe one *field* of a constructor. *)
@@ -947,10 +999,10 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
      redeclaration error, it is a syntax error.  Order is preserved, since
      multiple prologues accumulate and the author's order is the only one
      that means anything. *)
-  let seen : SMap.t bool = SMap.create 8 in
+  let seen : HashTable.t string bool = HashTable.create 8 in
   let fresh (k:string) : ML bool =
-    if Some? (SMap.try_find seen k) then false
-    else (SMap.add seen k true; true) in
+    if Some? (HashTable.try_find seen k) then false
+    else (HashTable.add seen k true; true) in
   attrs |> List.collect (fun a ->
     let a = SS.compress a in
     let head, args = U.head_and_args_full a in
@@ -962,16 +1014,9 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
        | "FStar.Attributes.Comment" -> [Comment str]
        | "FStar.Attributes.CPrologue" -> [Prologue str]
        | "FStar.Attributes.CEpilogue" -> [Epilogue str]
-       | _ -> [])
-    (* Section 51.3.  Two strings, so it does not fit the one-argument shape
-       above: the exclusive prologue and the one for a callee the rest of the
-       program reaches too. *)
-    | Tm_fvar fv, [({ n = Tm_constant (Const_string (a, _)) }, _);
-                   ({ n = Tm_constant (Const_string (b, _)) }, _)] ->
-      let nm = Ident.string_of_lid (S.lid_of_fv fv) in
-      if not (fresh (nm ^ "\u0000" ^ a ^ "\u0000" ^ b)) then [] else
-      (match nm with
-       | "FStar.Attributes.custard_c_closure_prologue" -> [ClosurePrologue (a, b)]
+       | "FStar.Attributes.custard_c_closure_prologue" -> [ClosurePrologue str]
+       | "FStar.Attributes.custard_c_closure_guard" -> [ClosureGuard str]
+       | "FStar.Attributes.custard_c_ifdef" -> [IfDef str]
        | _ -> [])
     | Tm_fvar fv, [] ->
       let nm = Ident.string_of_lid (S.lid_of_fv fv) in
@@ -982,6 +1027,7 @@ let c_decoration_flags (attrs:list term) : ML (list flag) =
           consumer that already marks its protocol constants for one pipeline
           should not have to mark them again for the other. *)
        | "FStar.Attributes.CMacro" -> [CMacro]
+       | "FStar.Attributes.CIfDef" -> [CIfDef]
        | _ -> [])
     | _ -> [])
 
@@ -1004,14 +1050,14 @@ let deriving_flags (attrs:list term) : ML (list flag) =
      for the reason [c_decoration_flags] gives, so the same attribute arrives
      twice and two [[@@deriving yojson]]s would be a duplicate-definition
      error out of the ppx rather than a no-op. *)
-  let seen : SMap.t bool = SMap.create 4 in
+  let seen : HashTable.t string bool = HashTable.create 4 in
   attrs |> List.collect (fun a ->
     let head, args = U.head_and_args_full (SS.compress a) in
     match (SS.compress head).n, args with
     | Tm_fvar fv, [] ->
       let nm = Ident.string_of_lid (S.lid_of_fv fv) in
-      if Some? (SMap.try_find seen nm) then [] else
-      (SMap.add seen nm true;
+      if Some? (HashTable.try_find seen nm) then [] else
+      (HashTable.add seen nm true;
        match nm with
        | "FStar.Attributes.PpxDerivingYoJson" -> [Deriving "yojson"]
        | _ -> [])
@@ -1044,14 +1090,14 @@ let source_attrs (se:sigelt) (l:Ident.lident) : ML (list term) =
 (* Reported once per declaration rather than once per request: a definition is
    extracted once per specialization key, and an attribute written in the
    wrong place is a property of the source, not of a call site. *)
-let deriving_reported : SMap.t bool = SMap.create 8
+let deriving_reported : HashTable.t string bool = HashTable.create 8
 
 let with_deriving (l:Ident.lident) (fs : list flag) (d:decl) : ML decl =
   if Nil? fs then d else
   let complain (why:string) : ML unit =
     let key = Ident.string_of_lid l in
-    if Some? (SMap.try_find deriving_reported key) then () else begin
-      SMap.add deriving_reported key true;
+    if Some? (HashTable.try_find deriving_reported key) then () else begin
+      HashTable.add deriving_reported key true;
       E.log_issue0 E.Warning_CustardIneffectiveAttribute [
         text ("[@@PpxDerivingYoJson] on " ^ key ^ " has no effect.");
         text why;
@@ -1089,6 +1135,9 @@ let attr_home (nm:string) : string =
      beside the [@@custard_extern] it configures."
   | "custard_opaque" ->
     "It fixes a *type's* representation elsewhere, so it goes on the type."
+  | "custard_no_unfold" ->
+    "It preserves a type abbreviation during extraction, so it goes on \
+     the abbreviation's declaration."
   | "custard_no_monomorphize" ->
     "It says that a type class is not a compile-time dictionary, so it goes \
      on the class."
@@ -1102,6 +1151,15 @@ let attr_home (nm:string) : string =
   | "custard_inline_field" ->
     "It asks for one field of a constructor to be stored by value, so it \
      goes on that field."
+  | "custard_boxed_fields" ->
+    "It keeps the fields of a *type's* constructors boxed, so it goes on \
+     that type."
+  | "custard_inline" ->
+    "It asks for every call of a *definition* to be inlined, so it goes on \
+     that definition."
+  | "cherry_boxed" ->
+    "It makes a *type* a counted heap cell under Cherry, so it goes on that \
+     type."
   | _ -> ""
 
 let report_attr (nm:string) (site:string) (why:string) : ML unit =
@@ -1109,6 +1167,21 @@ let report_attr (nm:string) (site:string) (why:string) : ML unit =
     text ("[@@" ^ nm ^ "] on " ^ site ^ " has no effect.");
     text why;
     text (attr_home nm) ]
+
+(* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
+   "Calling convention") on a list of value binders, by position. *)
+let cherry_mode_flags (bs:binders) : ML (list flag) =
+  let modes = bs |> List.map (fun (b:S.binder) ->
+    let o = U.has_attribute b.binder_attrs PC.cherry_owned_attr in
+    let br = U.has_attribute b.binder_attrs PC.cherry_borrowed_attr in
+    if o && br then begin
+      report_attr "cherry_owned" ("the parameter " ^ Ident.string_of_id b.binder_bv.ppname)
+        "It also has [@@@cherry_borrowed], and a parameter cannot be both: \
+         both are ignored.";
+      None
+    end
+    else if o then Some true else if br then Some false else None) in
+  if List.existsb Some? modes then [CherryMode modes] else []
 
 (* The binders of a declaration, from both routes: section 19.4's argument
    that the lambda and the arrow each know something the other does not
@@ -1180,6 +1253,23 @@ let check_decl_attrs (l:Ident.lident) (se:sigelt) : ML unit =
           [@@custard_extern].";
   attributed_binders se l |> List.iter (check_binder_attrs "the parameter" owner)
 
+let no_unfold_reported : HashTable.t string bool = HashTable.create 8
+
+let with_no_unfold_attribute (l:Ident.lident) (se:sigelt) (d:decl) : ML decl =
+  if not (has_attr PC.custard_no_unfold_attr (source_attrs se l)) then d else
+  match d with
+  | DType t when TAbbrev? t.dt_body ->
+    DType { t with dt_flags = NoUnfold :: t.dt_flags }
+  | _ ->
+    let key = Ident.string_of_lid l in
+    if not (Some? (HashTable.try_find no_unfold_reported key)) then begin
+      HashTable.add no_unfold_reported key true;
+      report_attr "custard_no_unfold" ("the declaration " ^ key)
+        "This declaration is not a type abbreviation, so there is no \
+         abbreviation to preserve."
+    end;
+    d
+
 (* Every consultation of a declaration's type goes through here.  Looking a
    lid up in an environment that has not loaded its module yet does not fail
    loudly: it returns [None], and every caller's fallback -- do not erase, do
@@ -1215,6 +1305,15 @@ let lookup_lid_typ (st:state) (l:Ident.lident) : ML (option ((universes & typ) &
    comes up in one program. *)
 let unstub_lid (st:state) (l:Ident.lident) : ML Ident.lident =
   let ns = List.map Ident.string_of_id (Ident.ns_of_lid l) in
+  match Builtins.fstarc_mirror_of ns with
+  | Some ns' ->
+    (* The two spellings already share a name (see {!name_of_lid}); this makes
+       them share a key, so a linked compiler unit answers both. *)
+    let l' = Ident.lid_of_path (ns' @ [Ident.string_of_id (Ident.ident_of_lid l)])
+                               (Ident.range_of_lid l) in
+    ensure_lid_available st l';
+    if Some? (TcEnv.lookup_qname (tcenv st) l') then l' else l
+  | None ->
   if not (Builtins.is_stub_module ns) then l
   else
     (* A stub whose counterpart moved module is resolved from the table
@@ -1272,20 +1371,35 @@ let name_of_bv (b:bv) : ML string =
    runs.  Anything else is ill-formed, and warning about it rather than
    silently keeping the source spelling is the point -- a [rename_let] whose
    argument did not reduce is a mistake the author wants to hear about. *)
-let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
+let rename_let_name (rng:Range.range) (lbattrs:list term) : ML (option string) =
   match U.get_attribute PC.rename_let_attr lbattrs with
   | None -> None
   | Some [(str, _)] ->
     (match (SS.compress str).n with
      | Tm_constant (Const_string (s, _)) when s <> "" -> Some s
      | _ ->
-       E.log_issue top E.Warning_UnrecognizedAttribute
+       E.log_issue rng E.Warning_UnrecognizedAttribute
          "Ignoring ill-formed application of `rename_let`";
        None)
   | Some _ ->
-    E.log_issue top E.Warning_UnrecognizedAttribute
+    E.log_issue rng E.Warning_UnrecognizedAttribute
       "Ignoring ill-formed application of `rename_let`";
     None
+
+let with_global_rename (l:Ident.lident) (se:sigelt) (d:decl) : ML decl =
+  if Options.codegen_name () <> "C" && Options.codegen_name () <> "Cherry"
+  then d else
+  match rename_let_name se.sigrng (source_attrs se l) with
+  | None -> d
+  | Some s ->
+    match d with
+    | DLet v -> DLet { v with dl_flags = CName s :: v.dl_flags }
+    | DType t -> DType { t with dt_flags = CName s :: t.dt_flags }
+    | DExternal x -> DExternal { x with dx_flags = CName s :: x.dx_flags }
+    | _ ->
+      E.log_issue se E.Warning_UnrecognizedAttribute
+        "Ignoring `rename_let` on a declaration without a direct-C name";
+      d
 
 (* The name a local [let] binder is given: its source spelling, unless
    [rename_let] asked for another one.  Renaming the [bv] itself, rather than
@@ -1293,10 +1407,25 @@ let rename_let_name (top:term) (lbattrs:list term) : ML (option string) =
    same way: every reference goes through [name_of_bv] on this very [bv], so
    there is nothing else to rewrite.  The index is deliberately preserved --
    it is the disambiguator [uniq] appends and the key of [st.letdefs],
-   [st.effletdefs] and [st.lettys]. *)
+   [st.effletdefs] and [st.lettys].
+
+   A local [let] marked [CInline] -- in hand-written code, or the reads of
+   [_break]-style flags that Pulse's goto elimination introduces -- asks to be
+   inlined into its use.  The way to say that is a [uu__] name, which is what
+   karamel inlines ([Helpers.is_uu]) and what {!Rename} spells without the
+   prefix everywhere else. *)
 let rename_let_bv (top:term) (b:bv) (body:term) (lbattrs:list term)
   : ML (bv & term) =
-  match rename_let_name top lbattrs with
+  let s =
+    let renamed = rename_let_name top.pos lbattrs in
+    let base = match renamed with
+               | Some s -> s
+               | None -> Ident.string_of_id b.ppname in
+    if U.has_attribute lbattrs PC.c_inline_attr &&
+       not (String.length base >= 4 && String.substring base 0 4 = "uu__")
+    then Some ("uu__" ^ base)
+    else renamed in
+  match s with
   | None -> b, body
   | Some s ->
     let b' = { b with ppname = Ident.mk_ident (s, Ident.range_of_id b.ppname) } in
@@ -1465,8 +1594,8 @@ let spec_suffix (st:state) (lstr:string) (args:list (int & term)) (n:int)
   else
     let claim (s:string) : ML bool =
       let key = lstr ^ "__" ^ s in
-      if Some? (SMap.try_find st.suffixes key) then false
-      else (SMap.add st.suffixes key true; true) in
+      if Some? (HashTable.try_find st.suffixes key) then false
+      else (HashTable.add st.suffixes key true; true) in
     (* Section 115.  The fallback is claimed too.  Reserving only the
        *preferred* hint left the fallback spelling free, so a later
        specialization whose preferred hint happened to be that spelling
@@ -1495,7 +1624,7 @@ let eff_of_comp (st:state) (c:comp) : ML eff = Effects.of_comp (tcenv st) c
 let unfold_abbrev (st:state) (ty:cty) : ML (option cty) =
   match ty with
   | TApp (n, args) ->
-    (match SMap.try_find st.abbrevs (string_of_name n) with
+    (match HashTable.try_find st.abbrevs (string_of_name n) with
      | Some (ps, body) ->
        let rec zip (ps:list string) (ts:list cty) : list (string & cty) =
          match ps, ts with
@@ -1522,6 +1651,23 @@ let rec head_ty (st:state) (ty:cty) (fuel:int) : ML cty =
   else match unfold_abbrev st ty with
        | Some ty' -> head_ty st ty' (fuel - 1)
        | None -> ty
+
+(* Every abbreviation unfolded, at every depth: two types the target would
+   agree on, [fname] and [string] for [type fname = string], come out equal. *)
+let rec unfold_abbrevs (st:state) (fuel:int) (ty:cty) : ML cty =
+  if fuel <= 0 then ty else
+  let go = unfold_abbrevs st (fuel - 1) in
+  match unfold_abbrev st ty with
+  | Some ty' -> go ty'
+  | None ->
+    match ty with
+    | TArrow (a, e, b) -> TArrow (go a, e, go b)
+    | TTuple cs -> TTuple (List.map go cs)
+    | TBuf c -> TBuf (go c)
+    | TRef (k, c) -> TRef (k, go c)
+    | TInline c -> TInline (go c)
+    | TApp (n, args) -> TApp (n, List.map go args)
+    | _ -> ty
 
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
@@ -1560,7 +1706,7 @@ let note_abbrev (st:state) (d:decl) : ML unit =
   match d with
   | DType t ->
     (match t.dt_body with
-     | TAbbrev body -> SMap.add st.abbrevs (string_of_name t.dt_name) (t.dt_params, body)
+     | TAbbrev body -> HashTable.add st.abbrevs (string_of_name t.dt_name) (t.dt_params, body)
      | _ -> ())
   | _ -> ()
 
@@ -1590,18 +1736,41 @@ let compile_time_steps : list TcEnv.step = [
    one is included because it reaches the same declarations by the same
    route, and a module realized outside F* is realized there too. *)
 let is_c_backend () : ML bool =
-  let b = Options.custard_backend () in
-  b = "C" || b = "KrmlC" || b = "KrmlRust"
+  let b = Options.codegen_name () in
+  b = "C" || b = "Cherry" || b = "KrmlC" || b = "KrmlRust"
+
+(* Section 135.  Whether a function value on the heap keeps every binder its
+   type has, erased ones as [unit].  OCaml and F\* closures are polymorphic: a
+   [list (unit -> unit -> int)] may be handed to code that applies its elements
+   at a type variable, so the arity of a closure has to be the arity its F\*
+   type spells.  Only a call to a top-level name may drop arguments, and then
+   only the ones that definition's own parameters consume (see [CallArity]).
+   The C backends have no polymorphic closures and keep dropping erased
+   binders everywhere -- except Cherry, whose closures are OCaml's. *)
+let heap_closures () : ML bool = not (is_c_backend ()) || Options.custard_cherry ()
 
 let c_realized_header (l:Ident.lident) : ML (option string) =
   Builtins.c_realization_header
     (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id))
 
+let module_inits (md:S.modul) : ML (list Ident.lident) =
+  md.declarations |> List.collect (fun (se:S.sigelt) ->
+    match se.sigel with
+    | Sig_let {lbs=(_, lbs)} ->
+      lbs |> List.collect (fun lb ->
+        match lb.lbname with
+        | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) -> [S.lid_of_fv fv]
+        | _ -> [])
+    | _ -> [])
+
+(* {!instantiate_letrec} gives up. *)
+exception LetrecNotInstantiable
+
 let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
   let k = { k with sk_lid = unstub_lid st k.sk_lid } in
   let key = string_of_key k in
-  match SMap.try_find st.names key with
+  match HashTable.try_find st.names key with
   | Some nm -> nm
   | None ->
   match import st key with
@@ -1610,20 +1779,25 @@ let rec request (st:state) (k:spec_key) : ML name =
     check_budget st k;
     let l = k.sk_lid in
     let lstr = Ident.string_of_lid l in
-    let n = (match SMap.try_find st.counts lstr with None -> 0 | Some n -> n) in
-    SMap.add st.counts lstr (n + 1);
+    let n = (match HashTable.try_find st.counts lstr with None -> 0 | Some n -> n) in
+    HashTable.add st.counts lstr (n + 1);
     let nm = { name_of_lid l with spec = spec_suffix st lstr k.sk_args n } in
     (* Register before translating: a self-reference must find this name
        rather than loop. *)
-    SMap.add st.names key nm;
+    HashTable.add st.names key nm;
     ensure_lid_available st l;
-    match datacon_owner st l with
+    (* Claimed now, requested once this definition is done: an initializer
+       that refers to it must find it emitted, not merely named. *)
+    let m = Ident.nsstr l in
+    let first = None? (HashTable.try_find st.inits m) in
+    if first then HashTable.add st.inits m ();
+    let nm = match datacon_owner st l with
     (* An exception constructor is not part of a declaration of [Prims.exn]:
        [exn] is extensible and has no declaration at all, so the constructor
        *is* the declaration.  Section 8.5. *)
     | Some ty_lid when Ident.lid_equals ty_lid PC.exn_lid ->
       let d = extract_exn st l nm in
-      SMap.add st.emitted key d;
+      HashTable.add st.emitted key d;
       st.order := key :: !st.order;
       nm
     | Some ty_lid ->
@@ -1642,12 +1816,43 @@ let rec request (st:state) (k:spec_key) : ML name =
       let d = E.with_ctx ("While extracting " ^ clip_chain_entry key) (fun () ->
                 Prof.timed "extract_lid"
                   (fun () -> extract_lid st l nm k.sk_subst k.sk_holes)) in
+      if DExternal? d && Some? (Unit.lookup_foreign st.links key) then begin
+        let attrs = match TcEnv.lookup_sigelt (tcenv st) l with
+                    | Some se -> source_attrs se l
+                    | None -> [] in
+        let rule = match Builtins.rule_of_attributes attrs with
+                   | Some r -> Some r | None -> Builtins.lookup_rule l in
+        let target, header =
+          match rule with
+          | Some (Builtins.Rule_extern e) -> e.Builtins.x_name, Some? e.Builtins.x_header
+          | _ -> None, false in
+        HashTable.add st.foreign_choices key (target, header, c_decoration_flags attrs)
+      end;
       st.chain := saved;
       st.chainlids := saved_lids;
-      SMap.add st.emitted key d;
+      HashTable.add st.emitted key d;
       note_abbrev st d;
       st.order := key :: !st.order;
-      nm)
+      nm in
+    if first then request_inits st m;
+    nm)
+
+(* A top-level [let] whose definiens is *effectful* is a module initializer
+   ([let _ = clear ()] in [FStarC.Options]).  OCaml runs a module's
+   initializers, in order, before those of any module that depends on it, and
+   a definition that refers to a module is extracted after it.  So the first
+   request into a module requests its initializers, once that definition is
+   done, and they come before the requesting definition: [FStarC.SMTEncoding.Encode.prims], computed at
+   start-up, reads options that [FStarC.Options]'s initializer has to set
+   first.  {!run} requests the rest, of the modules nothing refers to. *)
+and request_inits (st:state) (m:string) : ML unit =
+  if m = "" then () else begin
+    match TcEnv.modules (tcenv st) |> List.tryFind (fun (md:S.modul) ->
+            not md.is_interface && Ident.string_of_lid md.name = m) with
+    | None -> ()
+    | Some md -> module_inits md |> List.iter (fun l ->
+        let _ = request st { sk_lid = l; sk_args = []; sk_subst = []; sk_holes = 0 } in ())
+  end
 
 (* Section 12.4, rule 1.  A request whose key a linked unit already exports is
    answered by a reference to that unit's definition: it is *not* translated,
@@ -1680,7 +1885,7 @@ and import (st:state) (key:string) : ML (option name) =
       | DModule dm  -> DModule { dm with dm_flags = imp :: dm.dm_flags }
     in
     let nm = name_of_decl d in
-    SMap.add st.names key nm;
+    HashTable.add st.names key nm;
     (* Filed under the same key an ordinary translation would have used, and
        for the same reason: {!callee_sig} and {!callee_eff} read it to type a
        call and to decide whether the call may be dropped or reordered.
@@ -1688,7 +1893,7 @@ and import (st:state) (key:string) : ML (option name) =
        dereference of an imported [ref] prints as an array index, and a call
        to an imported effectful function may be optimized away.  It does
        *not* join [st.order], so nothing is emitted for it. *)
-    SMap.add st.emitted key d;
+    HashTable.add st.emitted key d;
     note_abbrev st d;
     st.imports := (d, e.ue_type) :: !st.imports;
     if Options.custard_dump_specializations () then
@@ -1701,7 +1906,7 @@ and import (st:state) (key:string) : ML (option name) =
 and check_budget (st:state) (k:spec_key) : ML unit =
   Prof.timed "budget" (fun () ->
   let lstr = Ident.string_of_lid k.sk_lid in
-  let n = match SMap.try_find st.counts lstr with None -> 0 | Some n -> n in
+  let n = match HashTable.try_find st.counts lstr with None -> 0 | Some n -> n in
   if n >= Options.custard_max_specializations () then
     custard_error st E.Error_CustardFuelExhausted [
       text ("Custard created " ^ show n ^ " specializations of " ^ lstr ^
@@ -1730,16 +1935,29 @@ and extract_exn (st:state) (l:Ident.lident) (nm:name) : ML decl =
   (* Section 133.  [@@custard_extern "Not_found"] on an exception names one
      the target already has, so that F* code can raise and catch the very
      exception a realization raises.  Nothing is declared for it. *)
-  let flags =
+  let extern =
     match TcEnv.lookup_sigelt (tcenv st) l with
     | Some se ->
       (match Builtins.rule_of_attributes se.sigattrs with
        | Some (Builtins.Rule_extern x) -> [Extern (x.Builtins.x_name, x.Builtins.x_header)]
        | _ -> [])
     | None -> [] in
+  (* Section 8.2 again, for the one declaration that is not a value and not a
+     type.  An exception of a realized module belongs to the hand-written
+     OCaml file: [FStarC.Plugins.Base]'s [DynlinkError] is raised by its
+     realization's [dynlink_loadfile], so a second [exception DynlinkError]
+     declared here is a *different* exception, and the [try ... with
+     DynlinkError e] in [FStarC.Plugins] matches nothing.  That failure is
+     silent at compile time and total at run time: the raise escapes to the
+     top level as an unexpected error.  So the declaration is suppressed and
+     every mention resolves to the realization's constructor, exactly as a
+     realized type's does. *)
+  let realized =
+    Builtins.is_realized_module
+      (Builtins.no_fstar_stubs (Ident.ns_of_lid l |> List.map Ident.string_of_id)) in
   DExn { de_name = nm;
          de_args = bs |> List.map (fun b -> ty_of_typ st b.binder_bv.sort);
-         de_flags = flags }
+         de_flags = extern @ (if realized then [Realized] else []) }
 
 and datacon_owner (st:state) (l:Ident.lident) : ML (option Ident.lident) =
   match TcEnv.lookup_sigelt (tcenv st) l with
@@ -1796,11 +2014,27 @@ and functor_instance (st:state) (scrut:term) : ML (option name) =
   match functor_app st scrut with
   | None -> None
   | Some (fl, path, arg, named) ->
-    let key = "<functor>" ^ Ident.string_of_lid fl ^ "#" ^ key_of_term arg in
-    match SMap.try_find st.names key with
+    (* Keyed on the argument's normal form, like a specialization (section
+       3.7), not on the term as written.  A dictionary reaches the argument
+       as the instance's name where a type mentions the application, but as
+       the record it unfolds to inside a body specialized on it (section
+       3.3); keyed raw, the two are separate OCaml modules whose types do
+       not agree.  See section 133.5. *)
+    let karg = match norm_optional st key_norm_steps arg with
+               | Some a -> a
+               | None -> arg in
+    let key = "<functor>" ^ Ident.string_of_lid fl ^ "#" ^ key_of_term karg in
+    match HashTable.try_find st.names key with
     | Some nm -> Some nm
     | None ->
-      if Options.custard_backend () <> "OCaml" then
+    (* An instance a linked unit already made is that unit's module: OCaml
+       functor application is generative, so a second instance here would
+       have types incompatible with every upstream type mentioning the first
+       (issue #4689). *)
+    match import st key with
+    | Some nm -> Some nm
+    | None ->
+      if Options.codegen () <> Some Options.OCaml then
         custard_error st E.Error_CustardBadFunctor [
           text ("Custard: " ^ Ident.string_of_lid fl ^ " is an OCaml functor \
                  (" ^ path ^ "), and functors exist only on the OCaml \
@@ -1816,12 +2050,12 @@ and functor_instance (st:state) (scrut:term) : ML (option name) =
                | Some l -> name_of_lid l
                | None ->
                  let lstr = Ident.string_of_lid fl in
-                 let n = match SMap.try_find st.counts lstr with None -> 0 | Some n -> n in
-                 SMap.add st.counts lstr (n + 1);
+                 let n = match HashTable.try_find st.counts lstr with None -> 0 | Some n -> n in
+                 HashTable.add st.counts lstr (n + 1);
                  { name_of_lid fl with spec = Some (show n) } in
-      SMap.add st.names key nm;
+      HashTable.add st.names key nm;
       let d = functor_module st nm fl path arg in
-      SMap.add st.emitted key d;
+      HashTable.add st.emitted key d;
       st.order := key :: !st.order;
       Some nm
 
@@ -1894,7 +2128,7 @@ and functor_module (st:state) (nm:name) (fl:Ident.lident) (path:string) (arg:ter
         let d = DLet { dl_name = vnm; dl_typars = []; dl_binders = [];
                        dl_ret = ty_of_typ st sort; dl_eff = E_Pure;
                        dl_body = body; dl_flags = [] } in
-        SMap.add st.emitted key d;
+        HashTable.add st.emitted key d;
         st.order := key :: !st.order;
         go bs args subst' (i + 1) tys (vals @ [(f, vnm)])
       end
@@ -1951,11 +2185,11 @@ and functor_member_app (st:state) (l:Ident.lident) (xs:args) : ML (option expr) 
     let flags = Mono.keep_thunk (tcenv st) bs c
                   (Mono.erased_binders (tcenv st) (U.arrow bs c)) in
     let nm =
-      match SMap.try_find st.names key with
+      match HashTable.try_find st.names key with
       | Some nm -> nm
       | None ->
         let nm = { inst with id = inst.id ^ "__" ^ f } in
-        SMap.add st.names key nm;
+        HashTable.add st.names key nm;
         let typars = bs |> List.collect (fun (b:S.binder) ->
                        if Mono.is_type_param (tcenv st) b
                        then [name_of_bv b.binder_bv] else []) in
@@ -1973,7 +2207,7 @@ and functor_member_app (st:state) (l:Ident.lident) (xs:args) : ML (option expr) 
                             dx_ty = build (drop_flagged flags bs);
                             dx_target = None; dx_header = None;
                             dx_flags = [Member (inst, f)] } in
-        SMap.add st.emitted key d;
+        HashTable.add st.emitted key d;
         st.order := key :: !st.order;
         nm in
     let rec split (bs:binders) (flags:list bool) (sp:args)
@@ -2010,16 +2244,16 @@ and functor_type_member (st:state) (hd:term) (xs:args) : ML (option cty) =
      | Some (inst, f, bs, _, rest) ->
        let key = "<functor-type>" ^ string_of_name inst ^ "." ^ f in
        let nm =
-         match SMap.try_find st.names key with
+         match HashTable.try_find st.names key with
          | Some nm -> nm
          | None ->
            let nm = { inst with id = inst.id ^ "__" ^ f } in
-           SMap.add st.names key nm;
+           HashTable.add st.names key nm;
            let d = DType { dt_name = nm;
                            dt_params = bs |> List.mapi (fun i _ -> "a" ^ show i);
                            dt_body = TAbstract;
                            dt_flags = [Member (inst, f); NoNewtype] } in
-           SMap.add st.emitted key d;
+           HashTable.add st.emitted key d;
            st.order := key :: !st.order;
            nm in
        Some (TApp (nm, rest |> List.map (fun (a, _) -> ty_of_typ st a))))
@@ -2034,7 +2268,7 @@ and functor_type_member (st:state) (hd:term) (xs:args) : ML (option cty) =
 and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
   Prof.timed "binder_classes" (fun () ->
   let key = Ident.string_of_lid l in
-  match SMap.try_find st.classes key with
+  match HashTable.try_find st.classes key with
   | Some cs -> cs
   | None ->
     ensure_lid_available st l;
@@ -2101,7 +2335,7 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
       else match lookup_lid_typ st l with
            | Some ((_, ty), _) -> classify (tcenv st) attrs ty
            | None -> [] in
-    SMap.add st.classes key cs;
+    HashTable.add st.classes key cs;
     cs)
 
 (* -------------------------------------------------------------------- *)
@@ -2161,16 +2395,22 @@ and ty_of_typ (st:state) (t:typ) : ML cty =
        stop being an arrow, and a value is not what a caller of it holds.  The
        two have to agree -- one describes what a definition *is*, the other
        what its type *says* -- so they run the same rule. *)
-    let bs = Prof.timed "erased_binders" (fun () ->
+    let bs = if heap_closures () then bs else
+             Prof.timed "erased_binders" (fun () ->
                drop_flagged (Mono.keep_thunk (tcenv st) bs c
                                (Mono.erased_binders (tcenv st) t)) bs) in
+    (* Section 135: on a heap-closure backend every binder stays, and an
+       erased one is a [unit]. *)
+    let bty (b:S.binder) : ML cty =
+      if heap_closures () && Mono.is_erased_binder (tcenv st) b then TUnit
+      else ty_of_typ st b.binder_bv.sort in
     (* The effect belongs to the last arrow only; the intermediate ones are the
        pure arrows a curried function is made of. *)
     let rec build (bs:binders) : ML cty =
       match bs with
       | [] -> res
-      | [b] -> TArrow (ty_of_typ st b.binder_bv.sort, e, res)
-      | b :: bs -> TArrow (ty_of_typ st b.binder_bv.sort, E_Pure, build bs)
+      | [b] -> TArrow (bty b, e, res)
+      | b :: bs -> TArrow (bty b, E_Pure, build bs)
     in
     build bs
 
@@ -2567,12 +2807,16 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
      term and is scanned again, while the same application reached twice is
      scanned once.  Nothing is lost -- a second scan of an identical term
      contributes exactly what the first one did -- and it is the entire
-     difference between exponential and linear. *)
-  let scanned : SMap.t bool = SMap.create 100 in
+     difference between exponential and linear.
+
+     The key is deeply compressed: term equality is syntactic, and the
+     normalizer leaves delayed substitutions behind that differ between two
+     results of the same reduction. *)
+  let scanned : ref (Hash.term_map unit) = mk_ref (Hash.term_map_empty #unit) in
   let already (t:term) : ML bool =
-    let k = show (Hash.ext_hash_term t) in
-    if Some? (SMap.try_find scanned k) then true
-    else (SMap.add scanned k true; false) in
+    let t = Visit.visit_term false (fun t -> t) t in
+    if Hash.term_map_mem t !scanned then true
+    else (scanned := Hash.term_map_add t () !scanned; false) in
   (* Section 88.  The scan is syntactic, and a type abbreviation is exactly
      what makes the syntax it is looking for absent.  [fragment] is an
      [inline_for_extraction] alias for an application of the template, so the
@@ -2880,12 +3124,12 @@ and compiled_decl (st:state) : ML (option Ident.lident) =
    between "somewhere" and a place to look. *)
 and name_provenance (st:state) (v:bv) : ML string =
   let key = show v.index in
-  if Some? (SMap.try_find st.defbinders key)
+  if Some? (HashTable.try_find st.defbinders key)
   then " (a binder of the definition being extracted)"
-  else match SMap.try_find st.letdefs key with
+  else match HashTable.try_find st.letdefs key with
        | Some d -> " (a local let, bound to: " ^ show d ^ ")"
        | None ->
-         if Some? (SMap.try_find st.effletdefs key)
+         if Some? (HashTable.try_find st.effletdefs key)
          then " (a local let bound to an effectful computation)"
          else " (not a binder of this definition, not a local let: it comes \
                from a definition that was inlined away)"
@@ -3166,7 +3410,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let ty = ty_of_typ st b.sort in
        let ty =
          if TAny? ty then
-           match SMap.try_find st.lettys (show b.index) with
+           match HashTable.try_find st.lettys (show b.index) with
            | Some ty' -> ty'
            | None -> ty
          else ty in
@@ -3182,6 +3426,20 @@ and expr_of_term (st:state) (t:term) : ML expr =
        before translating it.  After this the body is a term of the effect's
        representation type -- a function expecting the proofstate -- and the
        lambda is pure. *)
+    (* Whether the lambda's *codomain* is impure, read off the residual effect
+       before the reification below erases the evidence.  A reified [Tac] body
+       is a function of the proofstate and so is pure, which is the honest
+       answer about the term in hand and the wrong one for the guard further
+       down: what that guard asks is whether a caller can be holding the arrow
+       this lambda's last binder stands in front of, and [Mono.keep_thunk]
+       answers it from the unreified comp.  The two have to agree -- the call
+       site filters its spine by [Mono.erased_binders_unfold], which is
+       [keep_thunk] over the local's sort -- or a saturated call goes out with
+       one argument more than the lambda has binders. *)
+    let reified_codomain =
+      match rc with
+      | Some rc -> Effects.is_reifiable (tcenv st) rc.residual_effect
+      | None -> false in
     let body =
       match rc with
       | Some rc ->
@@ -3204,7 +3462,9 @@ and expr_of_term (st:state) (t:term) : ML expr =
          an impure body stops being the arrow a partial application of it was
          holding.  The purity read here is the body's own, which is Custard's
          answer and not F*'s -- the same distinction [Mono.impure_codomain]
-         makes on a comp, arrived at by having already translated the body. *)
+         makes on a comp, arrived at by having already translated the body --
+         together with [reified_codomain], which is that same question asked
+         of the effect the reification consumed. *)
       let flags =
         let all_erased = Cons? flags && List.for_all (fun b -> b) flags in
         let last_erased = (match List.rev flags with
@@ -3221,12 +3481,15 @@ and expr_of_term (st:state) (t:term) : ML expr =
           match List.rev bs with
           | b :: _ -> not (S.is_bqual_implicit_or_meta b.binder_qual)
           | [] -> false in
-        if last_erased && (all_erased || (not (is_pure body.eff) && last_explicit))
+        if last_erased
+           && (all_erased || ((reified_codomain || not (is_pure body.eff))
+                              && last_explicit))
         then (match List.rev flags with
               | _ :: r -> List.rev (false :: r)
               | [] -> flags)
         else flags in
-      flags in
+      (* Section 135: a lambda is a heap closure, and keeps them all. *)
+      if heap_closures () then List.map (fun _ -> false) flags else flags in
     (* Section 5.2's rule, as in [branch_of_branch] and [extract_letbinding]:
        a binder dropped here is one the body may still name, and its erased
        occurrences sit where the erasure left [unit], so [()] is the closure
@@ -3331,17 +3594,36 @@ and expr_of_term (st:state) (t:term) : ML expr =
            if not u && Mono.is_erased_term (tcenv st) (fst a)
            then narrow ufs' sp else u :: narrow ufs' sp
          | _ -> [] in
-       let args0 = drop_flagged flags args in
-       let ufs = narrow ufs args0 in
-       let args = keep ufs args0 in
-       let args = value_args st ufs args in
+       let args =
+         if heap_closures () then
+           (* Section 135.  Calling a heap closure: nothing is dropped, and
+              an erased argument is passed as [()]. *)
+           let ufs = match sort with
+                     | Some t -> Mono.unit_binders (tcenv st) t
+                     | None -> [] in
+           heap_args st ufs args
+         else
+           let args0 = drop_flagged flags args in
+           let ufs = narrow ufs args0 in
+           let args = keep ufs args0 in
+           value_args st ufs args in
        (match args with
         | [] -> hd
         | _ ->
           let n = List.length args in
           let e = List.fold_left (fun e a -> join_eff e a.eff)
                                  (join_eff hd.eff (apply_eff st hd.ty n)) args in
-          mk (EApp (hd, args)) (apply_result st hd.ty n) e))
+          (* A lambda-lifted local ({!lifted_ref}) is its declaration
+             partially applied to its captures, and a call to it is a direct
+             call taking the captures first, not a closure built only to be
+             applied (section 5.10). *)
+          let lifted = match (SS.compress hd_term).n with
+                       | Tm_name bv -> Some? (lifted_ref st bv)
+                       | _ -> false in
+          (match hd.e with
+           | EApp (f, caps) when lifted && EQual? f.e ->
+             mk (EApp (f, caps @ args)) (apply_result st hd.ty n) e
+           | _ -> mk (EApp (hd, args)) (apply_result st hd.ty n) e)))
 
   | Tm_let {lbs=(true, lbs); body} -> lift_letrec st lbs body
 
@@ -3360,6 +3642,22 @@ and expr_of_term (st:state) (t:term) : ML expr =
        else
        let erased_lb = TcUtil.must_erase_for_extraction (tcenv st) lb.lbtyp &&
                        U.is_pure_or_ghost_effect lb.lbeff in
+       let def = U.unmeta lb.lbdef in
+       if not erased_lb && Options.codegen_name () = "Cherry" &&
+          Tm_abs? (SS.compress def).n &&
+          (let xs, _, _ = U.abs_formals def in
+           let bs, _ = local_formals st lb.lbtyp (List.length xs) in
+           List.length bs >= List.length xs) then begin
+         (* Section 5.10: on Cherry, a local function that is not inlined is
+            lambda-lifted, just like a local [let rec].  A call to it is then
+            a direct call taking its captures as arguments, which allocates
+            no closure, and in tail position is a tail call; a closure would
+            have to be released after the call returned.  Only when its type
+            shows an arrow for each binder of the definiens: the lifted
+            declaration's signature comes from the type. *)
+         HashTable.add st.letdefs (show bv.index) lb.lbdef;
+         lift_locals st [{ lb with lbname = Inl bv; lbdef = def }] body
+       end else
        let e1 = if erased_lb then unit_expr else expr_of_term st lb.lbdef in
        (* Section 3.2b: remember what the variable stands for, so that a
           [Mono] argument written as [d] is judged by [d]'s definition rather
@@ -3370,8 +3668,8 @@ and expr_of_term (st:state) (t:term) : ML expr =
           [lbeff], which in an [ML] function reports [ML] for a perfectly pure
           right-hand side. *)
        if e1.eff = E_Pure then
-         SMap.add st.letdefs (show bv.index) lb.lbdef
-       else SMap.add st.effletdefs (show bv.index) ();
+         HashTable.add st.letdefs (show bv.index) lb.lbdef
+       else HashTable.add st.effletdefs (show bv.index) ();
        (* The annotation the typechecker left is authoritative when it says
           anything at all; a [--lax] run often leaves nothing, and then the
           right-hand side's own type is the better answer. *)
@@ -3383,7 +3681,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let lty = if erased_lb then e1.ty else
                  let lty = ty_of_typ st lb.lbtyp in
                  if TAny? lty then e1.ty else lty in
-       SMap.add st.lettys (show bv.index) lty;
+       HashTable.add st.lettys (show bv.index) lty;
        let e2 = expr_of_term st body in
        mk (ELet (name_of_bv bv, lty, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
      | Inr _ ->
@@ -3401,12 +3699,19 @@ and expr_of_term (st:state) (t:term) : ML expr =
        value of no common representation, and saying otherwise is a claim the
        rest of the pipeline believes: [narrow_rets] reads a body's type
        straight off this node, so a [d:dir -> arg_type d] whose first branch
-       is a [bool] came out declared [bool]. *)
+       is a [bool] came out declared [bool].  Agreement is up to
+       abbreviations: [if c then r.file_name else refind r.file_name] has a
+       branch of type [file_name] and one of type [string], and calling that
+       [any] made Cherry box both arms into a [string] variable. *)
     let ty =
       match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
                 |> List.filter (fun t -> not (TAny? t)) with
       | [] -> TAny
-      | t :: ts -> if ts |> List.for_all (fun u -> u = t) then t else TAny in
+      | t :: ts ->
+        if ts |> List.for_all (fun u -> u = t) then t else
+        let t' = unfold_abbrevs st 100 t in
+        if ts |> List.for_all (fun u -> unfold_abbrevs st 100 u = t') then t
+        else TAny in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
@@ -3463,7 +3768,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
   | _ -> unit_expr)
 
 (* -------------------------------------------------------------------- *)
-(* Local [let rec] (section 5.10)                                       *)
+(* Local functions and [let rec] (section 5.10)                         *)
 (* -------------------------------------------------------------------- *)
 
 (* A local [let rec] is lambda-lifted to a declaration of its own rather than
@@ -3487,7 +3792,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
    a capture keeps its name when it becomes a parameter, so a reference reads
    the same inside the lifted body as outside it. *)
 and lifted_ref (st:state) (b:S.bv) : ML (option expr) =
-  match SMap.try_find st.lifted (name_of_bv b) with
+  match HashTable.try_find st.lifted (name_of_bv b) with
   | None -> None
   | Some (nm, tyargs, caps, ty, _) ->
     let hd = mk (EQual (nm, tyargs)) ty E_Pure in
@@ -3507,6 +3812,123 @@ and is_type_bv (st:state) (b:S.bv) : ML bool =
 
 and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
   let lbs, body = SS.open_let_rec lbs body in
+  if Options.custard_cherry () && Options.custard_monomorphize_types () then
+    match instantiate_letrec st lbs body with
+    | Some ([], body) -> expr_of_term st body
+    | Some (lbs, body) -> lift_locals st lbs body
+    | None -> lift_locals st lbs body
+  else lift_locals st lbs body
+
+(* Section 5.10a.  A local [let rec] that binds types of its own is copied once
+   per instantiation it is used at, and each copy is lifted on its own.
+
+   Lifted as one declaration it would be polymorphic, and with type
+   monomorphization there is nothing left for that to mean: its body would
+   build [list@'a] while its caller passes a [list@goal], two layouts that C
+   cannot tell apart.  Instantiating it at the term level, before anything is
+   extracted, gives every copy concrete types, so the calls it makes into
+   specializing definitions are concrete too.
+
+   The instantiations are the type arguments of the uses in [body], and then
+   of the recursive calls in each copy -- the same, unless the recursion is
+   polymorphic, in which case the worklist finds the new ones.  It is bounded,
+   since polymorphic recursion need not reach a fixed point.
+
+   [None] leaves the nest to {!lift_locals} as it is: no member binds a type,
+   the members disagree on how many, or a use does not apply the name to its
+   type arguments. *)
+and instantiate_letrec (st:state) (lbs:list letbinding) (body:term)
+  : ML (option (list letbinding & term)) =
+  let recbvs = lbs |> List.collect (fun lb ->
+                 match lb.lbname with Inl bv -> [bv] | Inr _ -> []) in
+  let ntys (lb:letbinding) : ML int =
+    let xs, _, _ = U.abs_formals lb.lbdef in
+    let rec lead (xs:binders) : ML int =
+      match xs with
+      | x :: xs when is_type_bv st x.binder_bv -> 1 + lead xs
+      | _ -> 0 in
+    lead xs in
+  let ks = lbs |> List.map ntys in
+  match ks with
+  | [] -> None
+  | k :: _ ->
+  if k = 0 || List.length recbvs <> List.length lbs
+     || not (ks |> List.for_all (fun k' -> k' = k)) then None else
+  let insts : ref (list (list term & list S.bv)) = mk_ref [] in
+  let todo : ref (list (list term & list S.bv)) = mk_ref [] in
+  let max_insts = 16 in
+  let inst (tys:list term) : ML (list S.bv) =
+    match !insts |> List.tryFind (fun (tys', _) ->
+            List.forall2 (fun t t' -> U.term_eq t t') tys tys') with
+    | Some (_, bvs) -> bvs
+    | None ->
+      if List.length !insts >= max_insts then
+        custard_error st E.Error_CustardTypeVarInstantiation [
+          text ("Custard: the local recursive function " ^
+                Ident.string_of_id (List.hd recbvs).ppname ^ " is used at more than " ^
+                show max_insts ^ " type instantiations.");
+          text "On Cherry a local function that binds types is copied once per instantiation, so polymorphic recursion cannot be compiled.";
+          text "Make the recursion monomorphic, or move the function to the top level."];
+      let bvs = List.map2 (fun (bv:S.bv) (lb:letbinding) ->
+                  let bs, c = U.arrow_formals_comp lb.lbtyp in
+                  if List.length bs <= k then raise LetrecNotInstantiable;
+                  let tbs, bs = List.splitAt k bs in
+                  let sub = List.map2 (fun (b:S.binder) t -> NT (b.binder_bv, t)) tbs tys in
+                  S.gen_bv (Ident.string_of_id bv.ppname) (Some (Ident.range_of_id bv.ppname))
+                           (SS.subst sub (U.arrow bs c))) recbvs lbs in
+      insts := (tys, bvs) :: !insts;
+      todo := (tys, bvs) :: !todo;
+      bvs in
+  let rec index_of (x:S.bv) (i:int) (l:list S.bv) : option int =
+    match l with
+    | [] -> None
+    | y :: l -> if S.bv_eq x y then Some i else index_of x (i + 1) l in
+  let rewrite (t:term) : ML term =
+    let t = FStarC.Syntax.Visit.visit_term false (fun t ->
+      match (SS.compress t).n with
+      | Tm_app _ ->
+        let hd, args = U.head_and_args_full t in
+        (match (SS.compress hd).n with
+         | Tm_name x ->
+           (match index_of x 0 recbvs with
+            | Some i when List.length args >= k ->
+              let tys, rest = List.splitAt k args in
+              let x' = S.bv_to_name (List.nth (inst (List.map fst tys)) i) in
+              if Nil? rest then x' else S.mk_Tm_app x' rest t.pos
+            | _ -> t)
+         | _ -> t)
+      | _ -> t) t in
+    if elems (Free.names t) |> List.existsb (fun (v:S.bv) ->
+         Some? (index_of v 0 recbvs))
+    then raise LetrecNotInstantiable
+    else t in
+  try
+    let body = rewrite body in
+    let out : ref (list letbinding) = mk_ref [] in
+    let rec go () : ML unit =
+      match !todo with
+      | [] -> ()
+      | (tys, bvs) :: rest ->
+        todo := rest;
+        List.iter2 (fun (bv':S.bv) (lb:letbinding) ->
+          let xs, dbody, rc = U.abs_formals lb.lbdef in
+          let txs, xs = List.splitAt k xs in
+          let sub = List.map2 (fun (b:S.binder) t -> NT (b.binder_bv, t)) txs tys in
+          let def = U.abs (SS.subst_binders sub xs) (SS.subst sub dbody)
+                          (match rc with
+                           | Some rc -> Some (SS.subst_residual_comp sub rc)
+                           | None -> None) in
+          out := { lb with lbname = Inl bv'; lbtyp = bv'.sort; lbdef = rewrite def }
+                 :: !out) bvs lbs;
+        go () in
+    go ();
+    Some (List.rev !out, body)
+  with
+  | LetrecNotInstantiable -> None
+
+(* Lambda-lift the opened local definitions [lbs], which [body] and, for a
+   [let rec], the definitions themselves may refer to. *)
+and lift_locals (st:state) (lbs:list letbinding) (body:term) : ML expr =
   let recbvs = lbs |> List.collect (fun lb ->
                  match lb.lbname with Inl bv -> [bv] | Inr _ -> []) in
   if List.length recbvs <> List.length lbs then
@@ -3537,11 +3959,24 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       else
         let hit : ref bool = alloc false in
         let l = l |> List.collect (fun (v:S.bv) ->
-                  match SMap.try_find st.lifted (name_of_bv v) with
+                  match HashTable.try_find st.lifted (name_of_bv v) with
                   | Some (_, _, _, _, vs) -> hit := true; vs
                   | None -> [v]) in
         if !hit then expand (fuel - 1) l else l in
     let free = expand 100 free in
+    (* A type variable that only the *type* of a capture mentions is captured
+       too: [Free.names] does not look into the sorts of the variables it
+       finds, and a lifted [fun x -> f sep x] with [sep:'a] and [f:'a -> 'b ->
+       _] otherwise declares [f] at a type variable it does not bind. *)
+    let rec sort_tyvars (fuel:int) (l:list S.bv) : ML (list S.bv) =
+      if fuel <= 0 then l else
+      let extra = l |> List.collect (fun (v:S.bv) ->
+                    elems (Free.names v.sort) |> List.filter (fun (w:S.bv) ->
+                      is_type_bv st w &&
+                      not (List.existsb (fun (u:S.bv) -> S.bv_eq u w) l) &&
+                      not (List.existsb (fun (r:S.bv) -> S.bv_eq r w) recbvs))) in
+      if Nil? extra then l else sort_tyvars (fuel - 1) (l @ dedup extra) in
+    let free = sort_tyvars 100 free in
     let free = dedup free |> List.sortWith (fun (x:S.bv) (y:S.bv) -> x.index - y.index) in
     let tyvars, valvars = List.partition (is_type_bv st) free in
     (* Section 116.  A proof-irrelevant capture is not a capture.  The
@@ -3583,14 +4018,24 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let ns = (!st.cur).ns in
       let esp = (!st.cur).spec in
       let ckey = base ^ (match esp with None -> "" | Some s -> "@" ^ s) in
-      let n = (match SMap.try_find st.counts ckey with None -> 0 | Some n -> n) in
-      SMap.add st.counts ckey (n + 1);
-      let nm = { ns = ns; id = base;
-                 spec = (match esp, n with
-                         | None,   0 -> None
-                         | None,   n -> Some (show n)
-                         | Some s, 0 -> Some s
-                         | Some s, n -> Some (s ^ "_" ^ show n)) } in
+      let n = (match HashTable.try_find st.counts ckey with None -> 0 | Some n -> n) in
+      let mk_nm (n:int) : ML name =
+        { ns = ns; id = base;
+          spec = (match esp, n with
+                  | None,   0 -> None
+                  | None,   n -> Some (show n)
+                  | Some s, 0 -> Some s
+                  | Some s, n -> Some (s ^ "_" ^ show n)) } in
+      (* The scheme is not injective: the second local of an enclosing
+         definition without a suffix and the first of one with suffix [1] both
+         get [1].  Two locals of the same name in two lifted functions of the
+         same name, the two [check_branches] in [Core.do_check], hit it. *)
+      let rec fresh (n:int) : ML int =
+        if HashTable.mem st.emitted ("<local>" ^ mangled_name (mk_nm n))
+        then fresh (n + 1) else n in
+      let n = fresh n in
+      HashTable.add st.counts ckey (n + 1);
+      let nm = mk_nm n in
       (* Opened exactly once: each [abs_formals] invents *fresh* names for the
          binders it opens, so a second opening would give the body variables
          that no binder here binds. *)
@@ -3625,13 +4070,23 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       let valbs = valbs |> List.filter (fun (b:S.binder) ->
                     not (Mono.is_erased_binder (tcenv st) b)) in
       let own_typars = tybs |> List.map (fun (b:S.binder) -> name_of_bv b.binder_bv) in
-      let arg_binders = valbs |> List.map (fun (b:S.binder) ->
+      (* Section 135.  On a heap-closure backend a local function is a
+         closure whatever it is lifted to, and is called like one (the
+         variable-headed case of {!expr_of_term}): every binder stays, the
+         erased ones -- types included -- as [unit]. *)
+      let arg_binders =
+        if heap_closures ()
+        then xs |> List.map (fun (b:S.binder) ->
+               { b_name = name_of_bv b.binder_bv;
+                 b_ty   = if Mono.is_erased_binder (tcenv st) b then TUnit
+                          else ty_of_typ st b.binder_bv.sort })
+        else valbs |> List.map (fun (b:S.binder) ->
                           { b_name = name_of_bv b.binder_bv;
                             b_ty   = ty_of_typ st b.binder_bv.sort }) in
       let binders = caps @ arg_binders in
       let ty = List.fold_right (fun (b:binder) (t, e) -> (TArrow (b.b_ty, e, t), E_Pure))
                                binders (ret, eff) |> fst in
-      SMap.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty, free);
+      HashTable.add st.lifted (name_of_bv bv) (nm, tyargs, caps, ty, free);
       (nm, binders, ret, eff, own_typars, def_body)) in
     (* The whole group's signatures go in before any body is extracted: the
        calls that make the group recursive are extracted from those bodies,
@@ -3640,7 +4095,7 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
        overwritten by the loop below. *)
     let local_key (nm:name) : ML string = "<local>" ^ mangled_name nm in
     entries |> List.iter (fun (nm, binders, ret, eff, own_typars, _) ->
-      SMap.add st.emitted (local_key nm) (DLet {
+      HashTable.add st.emitted (local_key nm) (DLet {
         dl_name    = nm;
         dl_typars  = typars @ own_typars;
         dl_binders = binders;
@@ -3677,23 +4132,66 @@ and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
       st.cur := saved_cur;
       st.cur_lid := saved_cur_lid;
       Builtins.set_current_decl (Some saved_cur);
-      SMap.add st.emitted key d;
+      HashTable.add st.emitted key d;
       st.order := key :: !st.order);
     expr_of_term st body
   end
+
+(* Unfold the type abbreviation at the head of [ty], if any.  By hand, since
+   under [--lax] the head often lacks its universe instantiation, which the
+   normalizer insists on; universes do not matter to extraction. *)
+and unfold_typ_abbrev (st:state) (ty:typ) : ML (option typ) =
+  let hd, args = U.head_and_args_full ty in
+  let hd = SS.compress hd in
+  let us = match hd.n with Tm_uinst (_, us) -> us | _ -> [] in
+  match (SS.compress (U.un_uinst hd)).n with
+  | Tm_fvar fv ->
+    (match TcEnv.lookup_definition [TcEnv.Unfold S.delta_constant] (tcenv st)
+             (S.lid_of_fv fv) with
+     | Some (univs, def) ->
+       let us = if List.length us = List.length univs then us
+                else List.map (fun _ -> U_zero) univs in
+       let _, def = TcEnv.inst_tscheme_with (univs, def) us in
+       Some (N.normalize [TcEnv.Beta] (tcenv st) (S.mk_Tm_app def args ty.pos))
+     | None -> None)
+  | _ -> None
+
+(* The arrows of [ty], the type of a local definition whose definiens has [nx]
+   binders.  An abbreviation, [interp : interp_t] or [t0 -> t1 -> result a],
+   may hide arrows that the definiens binds. *)
+and local_formals (st:state) (ty:typ) (nx:int) : ML (binders & comp) =
+  let rec formals (fuel:int) (ty:typ) : ML (binders & comp) =
+    let bs, c = U.arrow_formals_comp ty in
+    if fuel <= 0 || List.length bs >= nx || not (U.is_total_comp c)
+    then bs, c
+    else match unfold_typ_abbrev st (U.comp_result c) with
+         | None -> bs, c
+         | Some r -> let bs', c' = formals (fuel - 1) r in bs @ bs', c' in
+  formals 10 ty
 
 (* The result type and effect of a local definition whose definiens has [xs]
    binders.  As at top level (see [extract_letbinding]), the definiens may have
    more binders than its type has arrows, and each extra one consumes an arrow
    -- and with it the effect that a call site actually runs. *)
 and local_result (st:state) (ty:typ) (xs:binders) : ML (cty & eff) =
-  let bs, c = U.arrow_formals_comp ty in
+  let bs, c = local_formals st ty (List.length xs) in
   (* The type's binders and the definiens' are different names for the same
      things, and the result type may mention them. *)
   let rec realign (bs:binders) (xs:binders) : ML (list subst_elt) =
     match bs, xs with
     | b :: bs, x :: xs -> NT (b.binder_bv, S.bv_to_name x.binder_bv) :: realign bs xs
     | _ -> [] in
+  (* A definiens with fewer binders than its type has arrows, [fun tl -> f
+     (tl, s)] at [tl:_ -> t:term -> ML term], returns a function: the arrows
+     it does not bind are put back into the result.  [arrow_formals_comp]
+     only merges arrows across total results, so applying the definiens to
+     its own binders is pure. *)
+  let bs, c =
+    let nx = List.length xs in
+    if List.length bs > nx
+    then (let bs1, bs2 = List.splitAt nx bs in
+          bs1, S.mk_Total (U.arrow bs2 c))
+    else bs, c in
   let c = SS.subst_comp (realign bs xs) c in
   let rec peel (n:int) (e:eff) (t:cty) : ML (eff & cty) =
     if n <= 0 then (e, t)
@@ -3766,12 +4264,51 @@ and app_of_fv (st:state) (fv:fv) (args:args) : ML expr =
      and so answered no.  The call survived for the wrong reason.  With [Tot]
      written honestly in its type the accident is gone, and the order here is
      what replaces it.  [pulse/test/Bug356.c.expected] pins the [abort]. *)
+  match heap_eta_app st fv args with
+  | Some e -> e
+  | None ->
   match Builtins.lookup_rule l with
   | Some (Builtins.Rule_prim (n, f)) -> prim_app st l n f args
   | _ ->
     if erasable_app st (lookup_lid_typ st l) args
     then unit_expr
     else app_of_fv' st fv args
+
+(* Section 135.  A primitive or a constructor is applied with its erased
+   arguments deleted, which is a top-level calling convention: a use that
+   stops in front of one of them is not a heap closure, which has to take every
+   argument its type spells.  So such a use is eta-expanded first, in F*,
+   and the lambda and the now saturated application are extracted by their
+   own rules.  A top-level definition gets the same treatment from
+   {!heap_call}, against its recorded arity. *)
+and heap_eta_app (st:state) (fv:fv) (args:args) : ML (option expr) =
+  if not (heap_closures ()) then None else
+  let l = S.lid_of_fv fv in
+  let shape =
+    match lookup_lid_typ st l with
+    | None -> None
+    | Some ((_, ty), _) ->
+      if is_data_ctor fv
+      then Some (fst (U.arrow_formals_comp ty), ctor_dropped_flags st l)
+      else match Builtins.lookup_rule l with
+           | Some (Builtins.Rule_prim _) ->
+             Some (fst (Mono.arrow_formals_unfold (tcenv st) ty),
+                   Mono.erased_binders_unfold (tcenv st) ty)
+           | _ -> None in
+  match shape with
+  | None -> None
+  | Some (bs, flags) ->
+    let n0 = List.length args in
+    if n0 >= List.length bs || n0 >= List.length flags then None
+    else if not (List.existsb (fun b -> b) (snd (List.splitAt n0 flags))) then None
+    else
+      let pre, post = List.splitAt n0 bs in
+      let subst = List.map2 (fun (b:S.binder) (a, _) -> NT (b.binder_bv, a)) pre args in
+      let post = SS.subst_binders subst post in
+      let post_args = post |> List.map (fun (b:S.binder) ->
+                        (S.bv_to_name b.binder_bv, U.aqual_of_binder b)) in
+      let app = S.mk_Tm_app (S.fv_to_tm fv) (args @ post_args) Range.dummyRange in
+      Some (expr_of_term st (U.abs post app None))
 
 (* Section 5.1: a term whose *result* is non-informative is replaced by [()]
    without ever being looked at.  This has to happen before the spine is
@@ -3813,6 +4350,7 @@ and erasable_result (st:state) (ty:typ) (args:args) : ML bool =
    under-applied use has to be eta-expanded rather than passed along. *)
 and prim_app (st:state) (l:Ident.lident) (n:int)
              (f : list cty -> list expr -> ML expr) (args:args) : ML expr =
+  let args0 = List.map fst args in
   let decl_ty = match lookup_lid_typ st l with
                 | Some ((_, ty), _) -> Some ty
                 | None -> None in
@@ -3940,7 +4478,7 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
     (* The eta binders stand for the arguments the source did not supply, so
        their types are the primitive's own remaining binder sorts. *)
     let sorts = match decl_ty with
-                | Some ty -> Mono.retained_sorts (tcenv st) ty
+                | Some ty -> Mono.retained_sorts_inst (tcenv st) ty args0
                 | None -> [] in
     (* Section 96.  And their names, for the same reason and from the same
        place: a binder the rule invents is one the reader has to carry, and
@@ -4025,14 +4563,14 @@ and prim_app (st:state) (l:Ident.lident) (n:int)
 and binder_flags (st:state) (tag:string) (l:Ident.lident)
                  (f : TcEnv.env -> typ -> ML (list bool)) : ML (list bool) =
   let key = tag ^ Ident.string_of_lid l in
-  match SMap.try_find st.bflags key with
+  match HashTable.try_find st.bflags key with
   | Some fs -> fs
   | None ->
     match lookup_lid_typ st l with
     | None -> []
     | Some ((_, ty), _) ->
       let fs = f (tcenv st) ty in
-      SMap.add st.bflags key fs;
+      HashTable.add st.bflags key fs;
       fs
 
 and ctor_dropped_flags (st:state) (l:Ident.lident) : ML (list bool) =
@@ -4056,6 +4594,14 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     let ufs = binder_flags st "u:" l Mono.unit_binders in
     mk (ECtor (nm, value_args st (drop_flagged flags ufs) (drop_flagged flags args)))
        (ctor_result_ty st l args) E_Pure
+  else if Ident.lid_equals l plugin_embedding_lid then
+    (* Section 13.7. *)
+    match args with
+    | [(t, _)] -> !embedding_hook st t
+    | _ ->
+      custard_error st E.Error_CustardUnrepresentableValue [
+        text "Custard: plugin_embedding must be applied to exactly its type \
+              argument." ]
   else
     (* Section 133. *)
     match functor_member_app st l args with
@@ -4073,9 +4619,6 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     let tyargs = call_type_args st l cs args in
     let hd_ty = callee_sig st (string_of_key key) tyargs in
     let hd = mk (EQual (nm, tyargs)) hd_ty E_Pure in
-    (* [split_mono_args] has already removed the [Mono] and [Dropped]
-       arguments, so everything left is passed at runtime. *)
-    let rest = value_args st (call_unit_flags st l cs args) rest in
     (* Section 3.2c: the values abstracted out of the [Mono] arguments are
        passed *first*, in the order [specialize] binds them.
 
@@ -4089,6 +4632,14 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
        argument is the one [map_optM] will pass -- would put them too early.
        Only the front is the same position in both. *)
     let hargs = List.map (fun (v:S.bv) -> expr_of_term st (S.bv_to_name v)) holes in
+    if heap_closures ()
+    then heap_call st l cs (string_of_key key) hd hd_ty hargs args
+    else
+    (* [split_mono_args] has already removed the [Mono] and [Dropped]
+       arguments, so everything left is passed at runtime.  Extracted only on
+       this path: [heap_call] extracts the spine itself, and extracting it
+       twice is exponential in the nesting depth of calls. *)
+    let rest = value_args st (call_unit_flags st l cs args) rest in
     let rest = hargs @ rest in
     match rest with
     | [] -> hd
@@ -4096,6 +4647,97 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
       let e = List.fold_left (fun e a -> join_eff e a.eff)
                              (callee_eff st (string_of_key key) (List.length rest)) rest in
       mk (EApp (hd, rest)) (apply_result st hd_ty (List.length rest)) e)
+
+(* Section 135.  The positions a top-level callee's own parameters consume, and
+   which of them are not passed: what {!extract_letbinding} recorded, or, for a
+   declaration it did not produce -- an external, a stub -- the classification,
+   which is what those are compiled against. *)
+and callee_arity (st:state) (cs:list bclass) (key:string) : ML (list bool) =
+  let from_cs () = cs |> List.map (fun c -> not (Poly? c)) in
+  match HashTable.try_find st.emitted key with
+  | Some (DLet d) ->
+    (match d.dl_flags |> List.tryFind CallArity? with
+     | Some (CallArity a) -> a
+     | _ -> from_cs ())
+  | _ -> from_cs ()
+
+(* Section 135.  A call to a top-level name on a heap-closure backend.  The
+   arguments in the positions the definition consumes are filtered by its
+   recorded arity; the rest go to the function value it returns, which is a
+   heap closure, so nothing is dropped from them.  A call that stops short of
+   a dropped position is not a partial application of the definition --
+   OCaml's would still be waiting for the argument that is never passed -- so
+   it is eta-expanded into a closure that takes every argument its F* type
+   says, and drops the right ones when it is finally applied. *)
+and heap_call (st:state) (l:Ident.lident) (cs:list bclass) (key:string)
+              (hd:expr) (hd_ty:cty) (hargs:list expr) (spine:args) : ML expr =
+  let arity = callee_arity st cs key in
+  let k = List.length arity in
+  let ub = binder_flags st "u:" l Mono.unit_binders in
+  let nth_or (#a:Type) (d:a) (l:list a) (i:int) : ML a =
+    if i < List.length l then List.nth l i else d in
+  let rec go (i:int) (sp:args) : ML (list expr) =
+    match sp with
+    | [] -> []
+    | (a, _) :: sp ->
+      if i < k && List.nth arity i then go (i + 1) sp
+      else
+        let u = nth_or false ub i ||
+                (i >= k && Mono.is_erased_term (tcenv st) a) in
+        (if u then unit_expr else expr_of_term st a) :: go (i + 1) sp in
+  let rest = hargs @ go 0 spine in
+  let n = List.length spine in
+  let apply (rest:list expr) : ML expr =
+    match rest with
+    | [] -> hd
+    | _ ->
+      let e = List.fold_left (fun e a -> join_eff e a.eff)
+                             (callee_eff st key (List.length rest)) rest in
+      mk (EApp (hd, rest)) (apply_result st hd_ty (List.length rest)) e in
+  let missing = if n < k then List.splitAt n arity |> snd else [] in
+  let missing_cs = if n < List.length cs then List.splitAt n cs |> snd else [] in
+  if not (List.existsb (fun b -> b) missing) || List.existsb Mono? missing_cs
+  then apply rest
+  else begin
+    (* The supplied arguments are evaluated once, where the source evaluated
+       them, and not every time the closure is applied. *)
+    let binds, rest =
+      rest |> List.map (fun (a:expr) ->
+        match a.e with
+        | EVar _ | EConst _ | EQual _ -> ([], a)
+        | _ ->
+          let v = uniq "arg" (GenSym.next_id ()) in
+          ([(v, a)], mk (EVar v) a.ty E_Pure))
+           |> List.unzip in
+    let binds = List.flatten binds in
+    (* The kept parameters still to come are the head's next arrows. *)
+    let rec peel (n:int) (t:cty) : ML cty =
+      if n <= 0 then t
+      else match head_ty st t 10 with
+           | TArrow (_, _, r) -> peel (n - 1) r
+           | t -> t in
+    let rec params (t:cty) (ms:list bool) : ML (list (binder & bool)) =
+      match ms with
+      | [] -> []
+      | dropped :: ms ->
+        let ty, t =
+          if dropped then TUnit, t
+          else match head_ty st t 10 with
+               | TArrow (a, _, r) -> a, r
+               | t -> TAny, t in
+        ({ b_name = uniq "eta" (GenSym.next_id ()); b_ty = ty }, dropped)
+        :: params t ms in
+    let ps = params (peel (List.length rest) hd_ty) missing in
+    let vs = ps |> List.collect (fun (b, dropped) ->
+               if dropped then [] else [mk (EVar b.b_name) b.b_ty E_Pure]) in
+    let body = apply (rest @ vs) in
+    let bs = List.map fst ps in
+    let ty = List.fold_right (fun (b:binder) (ty, e) -> (TArrow (b.b_ty, e, ty), E_Pure))
+                             bs (body.ty, body.eff) |> fst in
+    let f = mk (EFun (bs, body)) ty E_Pure in
+    List.fold_right (fun (v, (a:expr)) (acc:expr) ->
+      mk (ELet (v, a.ty, a, acc)) acc.ty (join_eff a.eff acc.eff)) binds f
+  end
 
 (* A constructor application's type is the constructor's result type with the
    inductive's parameters instantiated -- which the spine supplies, since the
@@ -4122,6 +4764,19 @@ and value_args (st:state) (ufs:list bool) (spine:args) : ML (list expr) =
   | _ :: ufs, (a, _) :: sp -> expr_of_term st a :: value_args st ufs sp
   | [], (a, _) :: sp -> expr_of_term st a :: value_args st [] sp
   | _, [] -> []
+
+(* Section 135.  The arguments of a call to a heap closure: every one of them,
+   with [()] for a position [ufs] marks and for any argument that is erased in
+   its own right (a type, a proof).  Nothing is deleted, so nothing shifts. *)
+and heap_args (st:state) (ufs:list bool) (spine:args) : ML (list expr) =
+  match ufs, spine with
+  | _, [] -> []
+  | u :: ufs, (a, _) :: sp ->
+    (if u || Mono.is_erased_term (tcenv st) a then unit_expr else expr_of_term st a)
+    :: heap_args st ufs sp
+  | [], (a, _) :: sp ->
+    (if Mono.is_erased_term (tcenv st) a then unit_expr else expr_of_term st a)
+    :: heap_args st [] sp
 
 (* [Mono.unit_binders] restricted to the arguments a call actually passes, in
    the order [split_mono_args] leaves them. *)
@@ -4159,7 +4814,7 @@ and call_type_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args) : M
    falls back to [TAny]. *)
 and callee_sig (st:state) (key:string) (tyargs:list cty) : ML cty =
   Prof.timed "callee_sig" (fun () ->
-  match SMap.try_find st.emitted key with
+  match HashTable.try_find st.emitted key with
   | Some (DLet d) ->
     let rec zip (ps:list string) (ts:list cty) : list (string & cty) =
       match ps, ts with
@@ -4326,7 +4981,7 @@ and mono_holes (st:state) (l:Ident.lident)
   List.sortWith (fun a b -> a.index - b.index) vs
 
 (* Section 5.11: is this local binding a function that should be substituted
-   at its uses instead of compiled as a closure?
+   at its uses instead of lambda-lifted?
 
    Only functions, and only pure ones.  A local function is the one construct
    that has no top-level identity, so it can be neither specialized nor
@@ -4347,8 +5002,8 @@ and mono_holes (st:state) (l:Ident.lident)
    effects from the IR arrow it builds, not from these markers, so dropping
    them changes nothing about the emitted code.
 
-   A local [let rec] cannot be substituted and is lambda-lifted instead
-   (section 5.10). *)
+   A local [let rec] cannot be substituted and is lambda-lifted, like every
+   local function that is not inlined (section 5.10). *)
 (* Section 5.11.  Only *polymorphic* local functions are inlined, and the
    restriction is not a heuristic -- it is the whole reason the pass exists.
    Inlining is what gives a local function's type arguments a concrete value at
@@ -4395,7 +5050,7 @@ and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
   if fuel <= 0 then t
   else
     let sub = elems (Free.names t) |> List.collect (fun (bv:S.bv) ->
-                match SMap.try_find st.letdefs (show bv.index) with
+                match HashTable.try_find st.letdefs (show bv.index) with
                 | Some d -> [NT (bv, d)]
                 | None -> []) in
     if Nil? sub then t else unfold_lets st (fuel - 1) (SS.subst sub t)
@@ -4447,7 +5102,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
         different messages.  Suggesting [@@monomorphize] for a computation's
         result would be advice that cannot be followed. *)
      let msg : list Pprint.document =
-       if Some? (SMap.try_find st.effletdefs (show v.index))
+       if Some? (HashTable.try_find st.effletdefs (show v.index))
        then
          [ text ("The argument passed to " ^ where ^ " is " ^ nm ^ ", the \
                  result of an effectful computation, so the whole argument is \
@@ -4491,12 +5146,39 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
                       than by the value -- or to keep the existential out of \
                       runtime data by specializing every use of it.") ]
             | None ->
-              [ text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
-                      definition so that it, too, is known at specialization \
-                      time, or drop the annotation on binder " ^ show i ^
-                      " and pass it at runtime.") ]
-              @ dyn_hint "To pass it at runtime at this call site only, \
-                          without changing either signature, ")
+              (* Section 13.6.  The enclosing definition may be a *root* --
+                 an entry point asked for by name, typically by an
+                 out-of-tree plugin naming a compiler function it calls from
+                 hand-written OCaml.  Then both remedies are unavailable:
+                 there is no source to annotate (the signature belongs to
+                 the library, not to the caller) and there is no call site to
+                 drop the annotation at, because a root is live by fiat and
+                 has no caller in this program at all.  What supplies one is
+                 an F* wrapper in the plugin, which is M10u's answer to the
+                 same question. *)
+              (if root_binder_of_enclosing st v
+               then
+                 [ text (enclosing_name st ^ " is a root: it was asked for by \
+                         name, so it has no call site in this program, and a \
+                         parameter of a root is a runtime parameter by \
+                         construction.");
+                   text ("Neither remedy applies -- a root's signature is not \
+                         yours to annotate, and there is no call site to drop \
+                         the annotation at.  Give it one: write a wrapper in \
+                         F* that calls " ^ enclosing_name st ^ " at the \
+                         instantiation you need, and root the wrapper instead.");
+                   text "Custard will then link against an existing \
+                         specialization if the producer has one, or emit a \
+                         fresh one into this unit if it does not, and the \
+                         wrapper's own name -- which is yours and is stable -- \
+                         is what hand-written OCaml calls." ]
+               else
+                 [ text ("Mark " ^ nm ^ " with [@@monomorphize] in the enclosing \
+                         definition so that it, too, is known at specialization \
+                         time, or drop the annotation on binder " ^ show i ^
+                         " and pass it at runtime.") ]
+                 @ dyn_hint "To pass it at runtime at this call site only, \
+                             without changing either signature, "))
      in
      custard_error st E.Error_CustardCannotMonomorphize msg
    | _ -> ());
@@ -4512,7 +5194,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
             " of " ^ Ident.string_of_lid l ^ " is not known at specialization \
             time: it mentions the runtime type parameter " ^
             Ident.string_of_id v.ppname ^ ".");
-      (if Some? (SMap.try_find st.defbinders (show v.index))
+      (if Some? (HashTable.try_find st.defbinders (show v.index))
        then text ("Mark " ^ Ident.string_of_id v.ppname ^ " with \
                   [@@monomorphize] in the enclosing definition so that it, \
                   too, is known at specialization time.  (A runtime *value* \
@@ -4544,7 +5226,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
    pure, a discarded [scan_stmt cbs s1; ...] is deleted by section 7.3 and the
    recursion silently stops traversing half of its argument. *)
 and callee_eff (st:state) (key:string) (n_args:int) : ML eff =
-  match SMap.try_find st.emitted key with
+  match HashTable.try_find st.emitted key with
   | Some (DLet l) ->
     let n = List.length l.dl_binders in
     if n_args < n then E_Pure
@@ -4672,7 +5354,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
              [m.create], and pass the application itself only to binders \
              that are specialized away (section 133)." ]
    | _ -> ());
-  match rule with
+  let d = (match rule with
   | Some (Builtins.Rule_extern x) when (match se with
                                         | Some { sigel = Sig_declare_typ {t} } ->
                                           is_type_sig st t
@@ -4702,10 +5384,12 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     (* Section 8.1, kind 4: the F* "definition" is a specification (often
        literally [admit ()]); the real one lives in a hand-written .ml or .c
        file, and all we owe the backend is the type. *)
-    let typars, ty = external_ty st l margs in
+    let typars, ty, cf = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
                 dx_target = x.Builtins.x_name; dx_header = x.Builtins.x_header;
-                dx_flags = [] }
+                dx_flags = (match se with
+                            | Some se -> c_decoration_flags (source_attrs se l)
+                            | None -> []) @ cf }
   | _ ->
   let is_opaque = (match rule with Some Builtins.Rule_opaque -> true | _ -> false) in
   let is_realized = (match rule with Some Builtins.Rule_realized -> true | _ -> false) in
@@ -4738,10 +5422,10 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
          a type declaration, and there is no such thing as an external one.
          A realized module's genuine types are handled by [with_realized]
          below. *)
-    let typars, ty = external_ty st l margs in
+    let typars, ty, cf = external_ty st l margs in
     DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty; dx_target = None;
                 dx_header = (if is_c_backend () then c_realized_header l else None);
-                dx_flags = if is_modelled_lid l then [Modelled] else [] }
+                dx_flags = (if is_modelled_lid l then [Modelled] else []) @ cf }
   | Some se ->
     let d = Prof.timed "extract_sigelt"
               (fun () -> extract_sigelt st l nm margs n_holes se) in
@@ -4765,8 +5449,13 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                   | None -> with_realized d) in
     let d = if is_modelled_lid l && not inlined then with_modelled d else d in
     let d = if Builtins.is_no_unfold_lid l then with_no_unfold d else d in
+    let d = if is_krml_backend () && is_private_sigelt se then with_private d else d in
+    let d = with_no_unfold_attribute l se d in
     if is_inlinable se && not (is_root st l)
-    then with_inline d else d
+    then with_inline d else d) in
+  match se with
+  | Some se -> with_global_rename l se d
+  | None -> d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
    for extraction.  This is how Pulse hands us its programs: the F* definition
@@ -4947,11 +5636,37 @@ and is_inlinable (se:sigelt) : ML bool =
      it in statement position. *)
   || (se.sigquals |> List.existsb (fun q -> q = S.Inline_for_extraction)
       && Some? (List.tryPick ExtractAs.is_extract_as_attr se.sigattrs))
+  || U.has_attribute se.sigattrs PC.custard_inline_attr
 
 and with_inline (d:decl) : ML decl =
   match d with
   | DLet l when not (l.dl_flags |> List.existsb Rec?) ->
     DLet { l with dl_flags = Inline :: l.dl_flags }
+  | d -> d
+
+(* On the karamel backends, F*'s [private] qualifier and the internal
+   [KrmlPrivate] attribute (see {!is_krml_private}) become karamel's [Private],
+   as they did with the legacy krml extraction: karamel then emits the
+   definition [static] and keeps it out of the header, and drops the flag
+   itself if a definition turns out to be used from another file.  The
+   direct C backends decide storage from [Root] instead (section 24). *)
+and is_krml_backend () : ML bool =
+  match Options.codegen_name () with
+  | "KrmlC" | "KrmlRust" -> true
+  | _ -> false
+
+and is_private_sigelt (se:sigelt) : ML bool =
+  List.contains S.Private se.sigquals ||
+  se.sigattrs |> List.existsb (fun attr ->
+    match (SS.compress attr).n with
+    | Tm_constant (Const_string ("KrmlPrivate", _)) -> true
+    | _ -> false)
+
+and with_private (d:decl) : ML decl =
+  match d with
+  | DLet l -> DLet { l with dl_flags = Private :: l.dl_flags }
+  | DType t -> DType { t with dt_flags = Private :: t.dt_flags }
+  | DExternal x -> DExternal { x with dx_flags = Private :: x.dx_flags }
   | d -> d
 
 (* [@@custard_opaque]: the representation is fixed outside F*, so neither
@@ -5034,9 +5749,9 @@ and is_modelled_lid (l:Ident.lident) : ML bool =
    exactly as [specialize] does for a definition; the [Poly] binders stay, and
    erasure handles them as usual. *)
 and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
-  : ML (list string & cty) =
+  : ML (list string & cty & list flag) =
   match lookup_lid_typ st l with
-  | None -> ([], TAny)
+  | None -> ([], TAny, [])
   | Some ((_, ty), _) ->
     let cs = binder_classes st l in
     (* The *unfolded* spine, because that is the one [cs] is indexed against
@@ -5279,7 +5994,8 @@ and external_ty (st:state) (l:Ident.lident) (margs:list (int & term))
       | [] -> res
       | [b] -> TArrow (bty b, e, res)
       | b :: bs -> TArrow (bty b, E_Pure, build bs) in
-    (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs))
+    (typars, subst_cty (anys |> List.map (fun a -> (a, TAny))) (build vs),
+     cherry_mode_flags vs)
 
 and extract_sigelt (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                    (n_holes:int) (se:sigelt)
@@ -5375,12 +6091,12 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
             is external because a rule said so, because its module is
             realized, or because F* only ever saw a [val], the same code
             decides what its signature is. *)
-         let typars, ty = external_ty st l margs in
+         let typars, ty, cf = external_ty st l margs in
          (* An [assume val] in a module this run is *compiling* has nowhere to
             be external to.  An external is a reference to [M.f] in the target
             language, and for OCaml that names the file Custard is writing:
             [Bug1485.err_exn] emitted into [Bug1485.ml] is a reference to
-            itself, which does not compile.  The ML backend has always emitted
+            itself, which does not compile.  The former ML backend always emitted
             a stub for this case -- [failwith "Not yet implemented: M.f"] --
             and a stub is the honest translation: the program says the
             definition does not exist, so a call to it is a failure, and the
@@ -5409,8 +6125,15 @@ and extract_sigelt_body (st:state) (l:Ident.lident) (nm:name) (margs:list (int &
                                     ret E_Impure;
                   dl_flags = [] }
          else
+         (* Section 45.2.  An [assume val] carries C decorations like any
+            other declaration, and [@@CMacro] on one is the whole point of
+            the attribute: the symbol the target realizes is a macro, so the
+            reference must be spelled as one.  Dropping the flags here left
+            the reference looking like a call to a function nothing
+            defines. *)
          DExternal { dx_name = nm; dx_typars = typars; dx_ty = ty;
-                     dx_target = None; dx_header = None; dx_flags = [] })
+                     dx_target = None; dx_header = None;
+                     dx_flags = c_decoration_flags (source_attrs se l) @ cf })
 
   | Sig_inductive_typ {params} ->
     let d = Prof.timed "inductive" (fun () -> extract_inductive st l nm params) in
@@ -5596,7 +6319,7 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
      binder survived into the emitted signature, so the definition took one
      more parameter than every call supplied, and the argument the
      specialization was keyed on was still a variable in its body. *)
-  let bs, c = Mono.arrow_formals_unfold (tcenv st) ty in
+  let bs, c, n_folded, folded_c = Mono.arrow_formals_unfold_folded (tcenv st) ty in
   (* How far the spine may run.  A value may be duplicated freely, so it takes
      the whole arrow; anything else only takes the binders its own lambdas
      absorb.  A [Mono] argument past that point has to be substituted all the
@@ -5645,9 +6368,19 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
     | _ :: _ when i >= cut ->
       (* The residual arrow becomes the result type: the declaration is emitted
          as a value of function type and its callers apply it, which is what
-         the source said. *)
-      (List.rev spine, List.rev poly, List.rev polycs,
-       S.mk_Total (U.arrow (SS.subst_binders subst bs) (SS.subst_comp subst c)))
+         the source said.  Within the folded prefix, it is rebuilt from the
+         folded codomain: an abbreviation that unfolds to an arrow -- realized
+         [FStar.Dyn.dyn] is [unit -> value_type_bundle] in its model -- has
+         to stay the name the target gives a representation of its own. *)
+      let res =
+        if i <= n_folded then
+          let rest, _ = List.splitAt (n_folded - i) bs in
+          (match rest with
+           | [] -> SS.subst_comp subst folded_c
+           | _ -> S.mk_Total (U.arrow (SS.subst_binders subst rest)
+                                       (SS.subst_comp subst folded_c)))
+        else S.mk_Total (U.arrow (SS.subst_binders subst bs) (SS.subst_comp subst c)) in
+      (List.rev spine, List.rev poly, List.rev polycs, res)
     | b :: bs' ->
       let cls, cs' = match cs with
                      | [] -> Poly, []
@@ -5737,7 +6470,7 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
     (fun () -> specialize st lb.lbtyp lb.lbdef cs margs n_holes) in
   let bs, body, rc = U.abs_formals def in
   bs |> List.iter (fun (b:S.binder) ->
-          SMap.add st.defbinders (show b.binder_bv.index) ());
+          HashTable.add st.defbinders (show b.binder_bv.index) ());
   (* [abs_formals] opens the binders under fresh names, but [c] still speaks of
      the ones [specialize] abstracted over.  Left unrelated, the two sets of
      names produce a signature whose result type mentions type variables no
@@ -5822,8 +6555,47 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      Only a binder the body actually names, as in [Tm_abs]: the rebinding
      costs the body its shape, and a body that stops being a single field
      access stops being inlined at its call sites. *)
+  (* Section 135.  The calling convention on a heap-closure backend: one flag
+     per F* argument position this definition's parameters consume, which are
+     the [Mono] positions [specialize] substituted away and the binders [bs]
+     still has (the holes excepted).  A call drops exactly these and passes
+     everything past them to the function value the definition returns.
+
+     And {!Mono.keep_thunk}'s first clause, at *this* arity.  [classify] keeps
+     the last binder of the unfolded spine when every one is erased, but the
+     definition may stop short of that spine -- a body that is not a lambda
+     all the way down -- and then deleting every parameter it does have turns
+     it into a value evaluated once at initialization, where the source
+     evaluated it at every use.  Only when that matters: a pure body evaluated
+     once is the same value, and stays one (section 122.11.1 relies on it). *)
+  let body_pure =
+    (n_extra = 0 && U.is_pure_or_ghost_comp c) ||
+    (match rc with
+     | Some rc -> U.is_pure_or_ghost_effect rc.residual_effect
+     | None -> false) in
+  let call_arity, flags =
+    if not (heap_closures ()) then None, flags else
+    let mono_idx = List.map fst margs in
+    let n_src = List.length bs - n_holes + List.length mono_idx in
+    let rec walk (i:int) (j:int) : ML (list (bool & option int)) =
+      if i >= n_src then []
+      else if List.mem i mono_idx then (true, None) :: walk (i + 1) j
+      else (List.nth flags j, Some j) :: walk (i + 1) (j + 1) in
+    let pos = walk 0 n_holes in
+    match List.rev pos with
+    | (true, Some j) :: rest when not body_pure && List.for_all fst rest ->
+      Some (List.map fst (List.rev rest) @ [false]),
+      List.mapi (fun i f -> if i = j then false else f) flags
+    | _ -> Some (List.map fst pos), flags in
+  let arity_flags = match call_arity with
+                    | Some a -> [CallArity a]
+                    | None -> [] in
   let dropped_binders = keep_flagged flags bs in
   let bs = drop_flagged flags bs in
+  (* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
+     "Calling convention"), by position: later passes only ever add
+     parameters after these. *)
+  let cherry_mode_flags = cherry_mode_flags bs in
   (* An *erased* binder that survived [drop_flagged] is the one
      {!Mono.keep_thunk} put back so that the definition does not become a
      value.  It carries nothing at runtime and its callers pass [()]
@@ -5835,11 +6607,37 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
      what this said until a [ghost fn] parameter found the difference: an
      erased *value* binder put back the same way kept its function type, its
      callers passed the erased [()], and the C compiler --- not Custard ---
-     was the first thing to object. *)
-  let binders = bs |> List.map (fun b ->
+     was the first thing to object.
+
+     Issue 4783.  But "its callers pass [()]" has to be asked of the same
+     type the callers ask it of, which is the *declared* one
+     ({!call_unit_flags}), not the specialized sort in hand here.  A
+     [fallback: nat -> a] specialized at [a := unit] is erased as a
+     [nat -> unit], yet every call site -- the recursive one in the body
+     included -- passes the closure.  Typing the parameter [unit] then hid a
+     counted value behind a unit type, and Cherry emitted [cherry_inc] of
+     the [()] that the C printer put in its place.  So where the declared
+     type classifies the binder, its unit flag decides.  Binder [i] of [bs]
+     past the holes is the [(i - n_holes)]th declared position that
+     [specialize] did not substitute away. *)
+  let ub = binder_flags st "u:" l Mono.unit_binders in
+  let n_ub = List.length ub in
+  let mono_idx = List.map fst margs in
+  let rec declared_idx (k:int) (j:int) : ML int =
+    if List.mem j mono_idx then declared_idx k (j + 1)
+    else if k = 0 then j
+    else declared_idx (k - 1) (j + 1) in
+  let kept_idx =
+    List.zip (List.mapi (fun i _ -> i) flags) flags
+    |> List.collect (fun (i, dropped) -> if dropped then [] else [i]) in
+  let binders = List.map2 (fun (b:S.binder) (i:int) ->
+    let j = if i < n_holes then -1 else declared_idx (i - n_holes) 0 in
+    let erased =
+      if j >= 0 && j < n_ub
+      then List.nth ub j
+      else Mono.is_erased_binder (tcenv st) b in
     { b_name = name_of_bv b.binder_bv;
-      b_ty = if Mono.is_erased_binder (tcenv st) b then TUnit
-             else ty_of_typ st b.binder_bv.sort }) in
+      b_ty = if erased then TUnit else ty_of_typ st b.binder_bv.sort }) bs kept_idx in
   (* Section 81.  The arity a caller has to meet, which is the one the
      diagnostics count and is not [specialize]'s "abstracted" number whenever
      the body's own lambdas outlive [cut]. *)
@@ -5953,14 +6751,14 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let () =
     match !st.chain with
     | key :: _ ->
-      SMap.add st.emitted key (DLet {
+      HashTable.add st.emitted key (DLet {
         dl_name    = nm;
         dl_typars  = typars;
         dl_binders = binders;
         dl_ret     = ret;
         dl_eff     = eff;
         dl_body    = mk (EAbort "Custard: provisional body") ret eff;
-        dl_flags   = [];
+        dl_flags   = arity_flags;
       })
     | [] -> () in
   let dl_body =
@@ -5994,7 +6792,8 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
        which is right for [__global__] -- each specialization is its own
        kernel -- and is the only answer available anyway, since the attribute
        is on the source and the source is what was specialized. *)
-    dl_flags   = (if is_rec then [Rec [nm]] else []) @ c_decoration_flags src_attrs;
+    dl_flags   = (if is_rec then [Rec [nm]] else []) @ c_decoration_flags src_attrs
+                 @ arity_flags @ cherry_mode_flags;
   }
 
 (* A field whose contents belong in the constructor rather than behind a
@@ -6003,17 +6802,23 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
    builds is never what the author meant to pay for (issue #4382).  Anything
    else has to say so with [@@@custard_inline_field] on the binder.
 
+   [@@custard_boxed_fields] on the *type* withdraws the uninvited half: a type
+   whose representation is an ABI -- marshalled to a file another program
+   reads back -- has to be laid out the way the ML extraction lays it out,
+   tuple field and all (section 5.7).  An explicit
+   request on a field still fires, since that one is the source's.
+
    The marker rides on the field's *type* so that it survives the passes that
    rewrite field lists without any of them having to know about it;
    [Simplify.inline_fields] strips every one. *)
 and is_tuple_name (n:name) : bool =
   n.ns = ["FStar"; "Pervasives"; "Native"] && FStarC.Util.starts_with n.id "tuple"
 
-and field_ty (st:state) (b:S.binder) : ML cty =
+and field_ty (st:state) (boxed:bool) (b:S.binder) : ML cty =
   let t = ty_of_typ st b.binder_bv.sort in
   let asked = U.has_attribute b.binder_attrs PC.custard_inline_field_attr in
   match t with
-  | TApp (n, _) when asked || is_tuple_name n -> TInline t
+  | TApp (n, _) when asked || (is_tuple_name n && not boxed) -> TInline t
   | _ -> t
 
 and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : ML decl =
@@ -6025,6 +6830,17 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
   let params = SS.open_binders params in
   let _, ctors = TcEnv.datacons_of_typ (tcenv st) l in
   let n_params = List.length params in
+  let se = TcEnv.lookup_sigelt (tcenv st) l in
+  (* Section 5.7.  The type, not the field, says that its layout is an ABI. *)
+  let boxed =
+    match se with
+    | Some se -> U.has_attribute se.sigattrs PC.custard_boxed_fields_attr
+    | None -> false in
+  (* Cherry: a counted heap cell; the newtype collapse would undo that. *)
+  let cherry_boxed =
+    match se with
+    | Some se -> U.has_attribute se.sigattrs PC.cherry_boxed_attr
+    | None -> false in
   (* Only the *type* parameters become parameters of the target type; a value
      index has no counterpart in the target's type language. *)
   let ty_params = params |> List.collect (fun b ->
@@ -6070,13 +6886,13 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     let bs = drop_flagged (bs |> List.map (Mono.is_erased_binder (tcenv st))) bs in
     (name_of_lid c,
      bs |> List.map (fun b ->
-       (name_of_bv b.binder_bv, field_ty st b)))
+       (name_of_bv b.binder_bv, field_ty st boxed b)))
   in
   (* Section 5.5: whether the source said [{ a; b }] or [| C : ... -> t] does
      not decide the target representation -- the layout does -- but it is the
      one thing a *realization* mirrors, so it has to be recorded. *)
   let is_record =
-    match TcEnv.lookup_sigelt (tcenv st) l with
+    match se with
     | Some se -> se.sigquals |> List.existsb (fun q -> RecordType? q)
     | None -> false in
   (* Section 33.4.  Recorded, not acted on: the type is rejected anyway, by
@@ -6091,7 +6907,8 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     dt_name   = nm;
     dt_params = ty_params;
     dt_body   = TVariant (ctors |> List.map ctor);
-    dt_flags  = (if is_record then [SourceRecord] else []) @ existential;
+    dt_flags  = (if is_record then [SourceRecord] else []) @
+                (if cherry_boxed then [CherryBoxed; NoNewtype] else []) @ existential;
   }
 
 (* -------------------------------------------------------------------- *)
@@ -6100,9 +6917,9 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
 
 let dump_specializations (st:state) : ML unit =
   BU.print_string "Custard specializations:\n";
-  SMap.iter st.counts (fun l n ->
+  HashTable.iter st.counts (fun l n ->
     if n > 1 then BU.print2 "  %s -> %s\n" l (show n));
-  BU.print1 "  (total: %s)\n" (show (SMap.fold st.counts (fun _ n acc -> acc + n) 0))
+  BU.print1 "  (total: %s)\n" (show (HashTable.fold st.counts (fun _ n acc -> acc + n) 0))
 
 (* {!Mono} runs below the extractor and so cannot read the chain out of a
    [state]; it holds a callback instead, and this is where it is filled in.
@@ -6222,7 +7039,7 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
 
 (* Section 126.3.  [@@noextract_to "krml"] is the backend-specific half of
    [noextract], and the string it carries is a codegen name.  Custard's own
-   names are its [--custard_backend] values; "krml" is accepted for every
+   names are its [--codegen] values; "krml" is accepted for every
    backend that produces C or Rust, because that is what the attribute has
    always meant in the wild -- FStar.UInt128, FStar.SizeT and FStar.Endianness
    use it to say "this one has a hand-written C implementation", and Custard's
@@ -6233,9 +7050,9 @@ let root_is_erased (st:state) (l:Ident.lident) : ML bool =
    there is no second pipeline downstream to drop the body later, so the
    definition is simply not a root here. *)
 let noextract_to_this_backend (se:S.sigelt) : ML bool =
-  let b = Options.custard_backend () in
+  let b = Options.codegen_name () in
   let names = "Custard" :: b ::
-              (if b = "KrmlC" || b = "KrmlRust" || b = "C"
+              (if b = "KrmlC" || b = "KrmlRust" || b = "C" || b = "Cherry"
                then ["krml"; "Krml"] else []) in
   se.sigattrs |> List.existsb (fun attr ->
     let hd, args = U.head_and_args_full attr in
@@ -6277,7 +7094,7 @@ let noextract_to_this_backend (se:S.sigelt) : ML bool =
    is meant to be consumed by other C code; there it means the same thing
    here, and the whole module is the surface again. *)
 let is_krml_private (st:state) (m:Ident.lident) (se:S.sigelt) : ML bool =
-  Dep.module_has_interface st.deps m &&
+  Dep.module_has_interface st.deps (Options.codegen_target ()) m &&
   se.sigattrs |> List.existsb (fun attr ->
     match (SS.compress attr).n with
     | Tm_constant (Const_string ("KrmlPrivate", _)) -> true
@@ -6292,13 +7109,13 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
        as good a root as a function: a hand-written realization that mentions,
        say, [FStarC_Range.t] needs the abbreviation emitted even though the
        extracted code unfolds it and never refers to it (section 8.2). *)
-    match SMap.try_find st.emitted key with
+    match HashTable.try_find st.emitted key with
     | Some (DLet d) ->
-      SMap.add st.emitted key (DLet { d with dl_flags = f :: d.dl_flags })
+      HashTable.add st.emitted key (DLet { d with dl_flags = f :: d.dl_flags })
     | Some (DType d) ->
-      SMap.add st.emitted key (DType { d with dt_flags = f :: d.dt_flags })
+      HashTable.add st.emitted key (DType { d with dt_flags = f :: d.dt_flags })
     | Some (DExternal d) ->
-      SMap.add st.emitted key (DExternal { d with dx_flags = f :: d.dx_flags })
+      HashTable.add st.emitted key (DExternal { d with dx_flags = f :: d.dx_flags })
     | Some _ -> ()
     | None when quiet -> ()
     | None ->
@@ -6321,7 +7138,7 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      projector or discriminator that some *other* root gets to first would be
      extracted, marked [Inline] and cached before its own turn came. *)
   roots |> List.iter (fun (l:Ident.lident) ->
-    SMap.add st.roots (Ident.string_of_lid l) true);
+    HashTable.add st.roots (Ident.string_of_lid l) true);
   (* Section 64.  A plugin's roots belong in this set too.  They were marked
      alongside [--custard_entry]'s below and described as being treated
      "exactly as [--custard_entry]'s are", but they were missing from the one
@@ -6329,7 +7146,7 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      the question, inlining and now [external_ty], answered it wrongly for
      precisely the names a plugin cares about. *)
   Builtins.registered_roots () |> List.iter (fun (l:Ident.lident) ->
-    SMap.add st.roots (Ident.string_of_lid l) true);
+    HashTable.add st.roots (Ident.string_of_lid l) true);
   let modroots, roots =
     roots |> List.partition (fun (l:Ident.lident) ->
                Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l))) in
@@ -6401,6 +7218,37 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
                             not (unrootable_definition st (S.lid_of_fv fv) lb.lbtyp) ->
                 mark' true Root (S.lid_of_fv fv)
               | _ -> ())
+          (* An [assume val] is part of what the module provides, and a module
+             that is nothing but [assume val]s -- a compile-time flag module,
+             a set of target primitives -- is precisely a library whose
+             interface is its externals.  Rooted nothing, it compiled to an
+             empty unit, and a consumer that reads both that unit and one
+             where the same declarations survived as imports gets whichever
+             of the two its linker happened to keep.
+
+             Values only.  An abstract type's declaration is its [val], so
+             rooting those would put every opaque type of an entry module
+             into the output whether or not anything mentions it; a type that
+             is used is rooted by its use, and one that is realized in the
+             target says so with [@@custard_extern].
+
+             C-emitting backends only.  There an external is the ordinary way
+             to name something the target provides, and the declaration is
+             all the target needs from us.  The OCaml backend has no such
+             story: an unrealized external is a [failwith] that runs when the
+             module is initialized, so emitting one nobody calls turns a
+             working plugin into one that aborts on load. *)
+          | Sig_declare_typ {lid; t}
+            when is_c_backend () &&
+                 not (se.sigquals |> List.existsb (function
+                        | NoExtract | Projector _ | Discriminator _ -> true
+                        | _ -> false)) &&
+                 not (noextract_to_this_backend se) &&
+                 not (is_krml_private st md.name se) &&
+                 not (erased_definition st t) &&
+                 not (is_type_sig st t) &&
+                 not (unrootable_definition st lid t) ->
+            mark' true Root lid
           | _ -> ())));
   Prof.timed "run.roots" (fun () ->
     roots |> List.iter (fun l -> if not (root_is_erased st l) then mark Root l);
@@ -6413,7 +7261,12 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
     Builtins.registered_roots () |> List.iter (fun l ->
       if not (root_is_erased st l) then mark Root l));
   Prof.timed "run.main" (fun () ->
-    match main with Some l -> mark Entrypoint l | None -> ());
+    (* [--custard_main M] may name a module, whose top-level effects are then
+       the program: it is already a root, and there is no definition to mark. *)
+    match main with
+    | Some l when Cons? (Loader.candidate_files st.deps (Ident.string_of_lid l)) -> ()
+    | Some l -> mark Entrypoint l
+    | None -> ());
   (* A top-level [let] whose definiens is *effectful* is a module initializer:
      [let _ = clear ()] in [FStarC.Options], [let _ = register_pass ...] in
      [FStarC.Syntax.Resugar].  Nothing in the program refers to it, so the
@@ -6422,33 +7275,43 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
      is complete, every module it pulled in contributes its initializers, and
      that may pull in more modules, hence the fixpoint.
 
-     Order: an initializer is requested after everything it can call, so it
-     lands at the end of [st.order], and OCaml runs the emitted [let]s in the
-     order they appear.  Across a split, the linker runs each unit's in
+     Order: the first request into a module requests its initializers
+     ({!request_inits}), so they come before anything that refers to the
+     module, as in OCaml; those of a module nothing refers to are requested
+     here, after everything they can call, so they land at the end of
+     [st.order], and OCaml runs the emitted [let]s in the order they appear.  Across a split, the linker runs each unit's in
      dependency order.  What is *not* guaranteed is the order of two
      initializers in unrelated modules; F* gives no meaning to that either. *)
-  let seen_inits : SMap.t unit = SMap.create 100 in
+  let seen_inits : HashTable.t string unit = HashTable.create 100 in
   let rec inits (fuel:int) : ML unit =
     if fuel <= 0 then () else
-    let fresh = TcEnv.modules (tcenv st) |> List.collect (fun (md:S.modul) ->
+    (* A module the program knows only by its interface -- one it merely
+       opens, as the compiler's drivers open [FStarC.Hooks] -- still has its
+       implementation linked, and initialized, by OCaml.  So load that
+       implementation, when the dependency graph has one and it was checked,
+       to see its initializers; one realized by hand stays an interface
+       ({!Loader}). *)
+    Prof.timed "inits.load" (fun () ->
+      TcEnv.modules (tcenv st) |> List.iter (fun (md:S.modul) ->
+        let m = Ident.string_of_lid md.name in
+        if md.is_interface && not (Loader.module_is_loaded st.deps (tcenv st) m)
+           && Loader.impl_is_checked st.deps m
+        then st.env := Loader.ensure_loaded st.deps (tcenv st) m));
+    let mods = TcEnv.modules (tcenv st) in
+    let fresh = mods |> List.collect (fun (md:S.modul) ->
       let m = Ident.string_of_lid md.name in
-      match SMap.try_find seen_inits m with
+      if md.is_interface && mods |> List.existsb (fun (md':S.modul) ->
+           not md'.is_interface && Ident.lid_equals md'.name md.name)
+      then [] else
+      match HashTable.try_find seen_inits m with
       | Some () -> []
-      | None -> SMap.add seen_inits m (); [md]) in
+      | None -> HashTable.add seen_inits m (); [md]) in
     if Nil? fresh then () else begin
       Prof.timed "inits" (fun () ->
        fresh |> List.iter (fun (md:S.modul) ->
-        md.declarations |> List.iter (fun (se:S.sigelt) ->
-          match se.sigel with
-          | Sig_let {lbs=(_, lbs)} ->
-            lbs |> List.iter (fun lb ->
-              match lb.lbname with
-              | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) ->
-                (* An initializer may erase to nothing at all, which is fine
-                   and is not the user naming a missing entry point. *)
-                mark' true Root (S.lid_of_fv fv)
-              | _ -> ())
-          | _ -> ())));
+        (* An initializer may erase to nothing at all, which is fine and is
+           not the user naming a missing entry point. *)
+        module_inits md |> List.iter (mark' true Root)));
       (* Section 13: the same fixpoint carries the generated declarations,
          because generating one is itself a source of requests and so of newly
          loaded modules -- a plugin registration refers to the interpretation
@@ -6464,7 +7327,7 @@ let run (st:state) (roots:list Ident.lident) (main:option Ident.lident)
   Prof.timed "run.collect" (fun () ->
     Builtins.take_lifted () @
     (List.rev !st.order |> List.collect (fun key ->
-      match SMap.try_find st.emitted key with
+      match HashTable.try_find st.emitted key with
       | Some d -> [d]
       | None -> [])))
 
@@ -6476,14 +7339,25 @@ let request_lid (st:state) (l:Ident.lident) : ML name =
    its own name, which is unique by construction and cannot collide with a
    real key (those always name a lid and a list of arguments). *)
 let emit (st:state) (key:string) (d:decl) : ML unit =
-  match SMap.try_find st.emitted key with
+  match HashTable.try_find st.emitted key with
   | Some _ -> ()
   | None ->
-    SMap.add st.emitted key d;
+    HashTable.add st.emitted key d;
     st.order := key :: !st.order
 
 let emitted (st:state) (key:string) : ML bool =
-  Some? (SMap.try_find st.emitted key)
+  Some? (HashTable.try_find st.emitted key)
+
+let emit_exported (st:state) (key:string) (d:decl) : ML unit =
+  if not (emitted st key) then begin
+    emit st key d;
+    HashTable.add st.names key (name_of_decl d)
+  end
+
+let import_key (st:state) (key:string) : ML (option name) = import st key
+
+let set_embedding_hook (f:state -> term -> ML expr) : ML unit =
+  embedding_hook := f
 
 let imports (st:state) : ML (list (decl & option type_info)) = List.rev !st.imports
 
@@ -6496,7 +7370,37 @@ let link_no_prefix (st:state) : ML (list string) = Unit.link_no_prefix st.links
 let link_inits (st:state) : ML (list string) = Unit.link_inits st.links
 
 let exported_keys (st:state) : ML (list (string & string)) =
-  SMap.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
+  HashTable.fold st.names (fun key nm acc -> (string_of_name nm, key) :: acc) []
+
+let apply_foreign_bindings (st:state) (targets:list (string & string)) (prog:program) : ML program =
+  if Unit.is_empty st.links then prog else
+  let keys = HashTable.create 100 in
+  exported_keys st |> List.iter (fun (n, k) -> HashTable.add keys n k);
+  let names = HashTable.create 100 in
+  targets |> List.iter (fun (n, c) -> HashTable.add names n c);
+  prog |> List.map (fun d ->
+    match d with
+    | DExternal x when not (List.existsb Member? x.dx_flags) ->
+      (match HashTable.try_find keys (string_of_name x.dx_name) with
+       | None -> d
+       | Some key ->
+         match Unit.lookup_foreign st.links key with
+         | None -> d
+         | Some (u, b) ->
+           let explicit_target, explicit_header, flags =
+             match HashTable.try_find st.foreign_choices key with
+             | Some choices -> choices
+             | None -> custard_error st E.Error_CustardBadUnitInterface [
+                 text ("Custard lost the source binding choices for " ^ key ^ ".");
+                 text "This is an internal Custard error; please report it." ] in
+           let explicit_target =
+             if Some? explicit_target then explicit_target
+             else if None? x.dx_target && None? x.dx_name.spec &&
+                     List.mem (String.concat "." x.dx_name.ns) (Options.custard_c_no_prefix ())
+             then HashTable.try_find names (string_of_name x.dx_name)
+             else None in
+           DExternal (Unit.apply_foreign u b x explicit_target explicit_header flags))
+    | _ -> d)
 
 let loaded_digests (_:state) : ML (list (string & string)) = Loader.loaded_digests ()
 

@@ -14,7 +14,3 @@
  (wrapped false)
  (flags (:standard -w -A))
 )
-
-(menhir
- (modules ml/pulseparser ml/FStarC_Parser_Parse)
- (merge_into Pulse_FStar_Parser))

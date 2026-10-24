@@ -40,3 +40,8 @@ module S       = FStarC.Syntax.Syntax
     program asked for it by name, not because its module happened to be
     loaded.  Called by {!FStarC.Custard.Extract.run} once per loaded module. *)
 val handle_module : Extract.state -> list Ident.lident -> S.modul -> ML unit
+
+(** Section 13.7.  The embedding [FStarC.Syntax.Embeddings.Base.plugin_embedding]
+    stands for at a type: a built-in one, or the one generated for a
+    [@@plugin] inductive -- by this unit, or by a linked unit that exports it. *)
+val plugin_embedding_expr : Extract.state -> S.term -> ML FStarC.Custard.Syntax.expr

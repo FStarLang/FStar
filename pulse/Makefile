@@ -17,9 +17,8 @@ ifeq (3.81,$(MAKE_VERSION))
     install make, then invoke gmake instead of make)
 endif
 
-# NOTE: this default goal will not build pulse2rust. We do check
-# PulseCore implementation files (lib/core) by choice, but that could be
-# omitted. Use `make all` to build all of this plus pulse2rust.
+# NOTE: We do check PulseCore implementation files (lib/core) by choice,
+# but that could be omitted.
 .DEFAULT_GOAL := default
 
 .PHONY: default
@@ -28,25 +27,19 @@ default: local-install lib-core
 .PHONY: all
 all: local-install # build plugin and library, and install in out/
 all: lib-core      # also check implentation files in core
-ifeq ($(PULSE_NO_RUST),)
-all: pulse2rust    # and pulse2rust tool, unless Rust is disabled
-endif
 
 .PHONY: .force
 .force:
 
-## Checking and extracting the plugin. The plugin is extracted with the
-## stage2 compiler (see mk/fstar-tree.mk).
-checker.src: .force
+## Verifying the checker, and extracting the plugin (checker and syntax
+## extension together). Both use the stage2 compiler (see mk/fstar-tree.mk).
+checker.verify: .force
 	$(MAKE) -f mk/checker.mk FSTAR_EXE=$(FSTAR2_EXE)
 
-extraction.src: .force
-	$(MAKE) -f mk/extraction.mk FSTAR_EXE=$(FSTAR2_EXE)
+plugin.extract: .force
+	$(MAKE) -f mk/plugin.mk FSTAR_EXE=$(FSTAR2_EXE)
 
-syntax_extension.src: checker.src .force
-	$(MAKE) -f mk/syntax_extension.mk FSTAR_EXE=$(FSTAR2_EXE)
-
-plugin.src: checker.src extraction.src syntax_extension.src
+plugin.src: checker.verify plugin.extract
 
 ## Building the plugin with dune
 plugin.build: plugin.src .force
@@ -104,8 +97,7 @@ do-install: plugin lib-pulse
 .PHONY: clean
 clean:
 	$(MAKE) -f mk/checker.mk clean
-	$(MAKE) -f mk/extraction.mk clean
-	$(MAKE) -f mk/syntax_extension.mk clean
+	$(MAKE) -f mk/plugin.mk clean
 	$(MAKE) -f mk/lib-pulse.mk clean
 	$(MAKE) -f mk/lib-core.mk clean
 	$(MAKE) -f mk/lib-common.mk clean
@@ -118,19 +110,8 @@ test-pulse: local-install
 test-share: local-install
 	+$(MAKE) -C share/pulse
 
-.PHONY: test-pulse2rust
-test-pulse2rust: pulse2rust test-share # test-pulse2rust uses .checked files from share/
-	+$(MAKE) -C pulse2rust test
-
 .PHONY: test
 test: test-pulse test-share
-ifeq ($(PULSE_NO_RUST),)
-test: test-pulse2rust
-endif
-
-.PHONY: pulse2rust
-pulse2rust: lib-pulse plugin
-	+$(MAKE) -C pulse2rust
 
 # Make can figure out internal dependencies between all and test.
 .PHONY: ci

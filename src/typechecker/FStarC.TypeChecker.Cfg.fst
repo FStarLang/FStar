@@ -294,35 +294,41 @@ let is_prim_step cfg fv : ML bool =
 let is_built_in_primop fv : ML bool =
     Some? (PSMap.try_find built_in_primitive_steps (I.string_of_lid fv.fv_name))
 
+[@@FStar.Attributes.custard_inline]
 let log cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.gen then f () else ()
 
+[@@FStar.Attributes.custard_inline]
 let log_top cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.top then f () else ()
 
+[@@FStar.Attributes.custard_inline]
 let log_cfg cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.cfg then f () else ()
 
+[@@FStar.Attributes.custard_inline]
 let log_primops cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.primop then f () else ()
 
 let dbg_unfolding = Debug.get_toggle "Unfolding"
+[@@FStar.Attributes.custard_inline]
 let log_unfolding cfg (f: unit -> ML unit) : ML unit =
   if !dbg_unfolding then f () else ()
 
+[@@FStar.Attributes.custard_inline]
 let log_nbe cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.debug_nbe then f ()
 
 (* Profiling the time each different primitive step consumes *)
-let primop_time_map : SMap.t int = SMap.create 50
+let primop_time_map : HashTable.t string int = HashTable.create 50
 
 let primop_time_reset () : ML unit =
-    SMap.clear primop_time_map
+    HashTable.clear primop_time_map
 
 let primop_time_count (nm : string) (ns : int) : ML unit =
-    match SMap.try_find primop_time_map nm with
-    | None     -> SMap.add primop_time_map nm ns
-    | Some ns0 -> SMap.add primop_time_map nm (ns0 + ns)
+    match HashTable.try_find primop_time_map nm with
+    | None     -> HashTable.add primop_time_map nm ns
+    | Some ns0 -> HashTable.add primop_time_map nm (ns0 + ns)
 
 let fixto n s : ML string =
     if String.length s < n
@@ -330,7 +336,7 @@ let fixto n s : ML string =
     else s
 
 let primop_time_report () : ML string =
-    let pairs = SMap.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
+    let pairs = HashTable.fold primop_time_map (fun nm ns rest -> (nm, ns)::rest) [] in
     let pairs = BU.sort_with (fun (_, t1) (_, t2) -> t1 - t2) pairs in
     List.fold_right (fun (nm, ns) rest -> (Format.fmt2 "%sms --- %s\n" (fixto 10 (show (ns / 1000000))) nm) ^ rest) pairs ""
 

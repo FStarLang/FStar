@@ -96,6 +96,9 @@ type debug_switches = {
 
 val no_debug_switches : debug_switches
 
+(* Large and passed to every call of the normalizer: boxed under Cherry, so
+   that passing it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type cfg = {
      steps: fsteps;
      tcenv: Env.env;

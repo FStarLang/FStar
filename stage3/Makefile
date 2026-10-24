@@ -82,6 +82,10 @@ install: # NOTE: no deps, dune figures it out and rebuilds if needed
 	$(INSTALL_DIR) fstarc.checked    $(PREFIX)/lib/fstar/fstarc/src.checked
 	echo 'src'          > $(PREFIX)/lib/fstar/fstarc/fstar.include
 	echo 'src.checked' >> $(PREFIX)/lib/fstar/fstarc/fstar.include
+	@# The compiler's link unit: a plugin is extracted against it
+	@# (--custard_link, doc/ref/custard.md section 13), so it is part of
+	@# what the compiler installs, exactly as the checked files are.
+	cp -f fstarc.ml/fstarc.cui $(PREFIX)/lib/fstar/fstarc/fstarc.cui
 	@# If we're not linking, remove the VS code configs, they have paths
 	@# into the repo.
 ifneq ($(FSTAR_LINK_LIBDIRS),1)
@@ -99,3 +103,7 @@ endif
 	echo 'pulse'          >> $(PREFIX)/lib/fstar/pulse/fstar.include
 	echo 'pulse.checked'  >> $(PREFIX)/lib/fstar/pulse/fstar.include
 	echo 'pulse'          >> $(PREFIX)/lib/fstar/fstar.include
+	@# C realizations of the extern Pulse library modules (Pulse.Lib.TCP, ...)
+	mkdir -p $(PREFIX)/share/pulse
+	rm -rf $(PREFIX)/share/pulse/runtime
+	$(INSTALL_DIR) $(FSTAR_ROOT)/pulse/share/pulse/runtime $(PREFIX)/share/pulse/runtime

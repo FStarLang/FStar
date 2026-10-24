@@ -888,6 +888,7 @@ val u64_not_1 (a:U64.t) :
 let u64_not_1 a =
   UInt.nth_lemma (UInt.lognot #64 (UInt.ones 64)) (UInt.zero 64)
 
+#restart-solver
 let gte_mask (a b: t) : Pure t
   (requires True)
   (ensures (fun r -> (v a >= v b ==> v r = pow2 128 - 1) /\ (v a < v b ==> v r = 0))) =

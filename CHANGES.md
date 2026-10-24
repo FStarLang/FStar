@@ -11,6 +11,79 @@ Guidelines for the changelog:
   possibly with details in the PR or links to sample fixes (for example, changes
   to F*'s test suite).
 
+## SMT solver
+
+  * The default Z3 version is now 5.3.0. Binary packages include this
+    version, and `.scripts/get_fstar_z3.sh` installs it for source builds.
+    Proofs may need additional hints when moving from an older solver;
+    `--z3version` can still select an installed older version explicitly.
+
+## Compilation targets
+
+  * A module can have tagged interfaces and implementations, written
+    `A-ocaml.fst`, `A-s2.qemu.fst`, `A-s3-c.fst`, ...  Tags are sets of
+    hierarchical atoms (`s2.qemu` implies `s2`).  A file sees, for each
+    module, the most specific file whose tag its own tag implies; common
+    files are the fallback.  Extraction selects files for `--target` plus a
+    language atom picked from `--codegen`.  Files whose names contain a dash
+    followed by a valid tag are now read this way.  See
+    `doc/ref/targets.md`.
+
+## Custard is the only extraction backend
+
+  * The legacy extraction pipeline (`src/extraction`: the per-module OCaml,
+    F#, plugin and krml backends, and `--codegen Extension`) has been removed.
+    All extraction now goes through Custard, the whole-program compiler
+    described in `doc/ref/custard.md`.
+
+  * `--custard_backend` is renamed to `--codegen`, which now takes `OCaml`,
+    `FSharp`, `KrmlC`, `KrmlRust`, `C` or `Plugin` (an OCaml plugin linked
+    against the compiler). `--codegen Custard` and `--codegen krml` are gone:
+    replace `--codegen Custard --custard_backend X` by `--codegen X`, and
+    `--codegen krml` by `--codegen KrmlC` (or `KrmlRust`). Every extraction
+    run needs an entry point: `--custard_main`, `--custard_entry` or
+    `--custard_entry_module`.
+
+  * Removed options: `--extract`, `--extract_module`, `--extract_namespace`,
+    `--no_extract`, `--cmi`, `--codegen-lib`, `--krmloutput`,
+    `--no_location_info`, `--use_nbe_for_extraction`. (`--read_krml_file`
+    stays, and dumps the `.krml` files Custard writes.)
+
+  * `--dep full` no longer emits rules or variables for `.ml`, `.fs` or
+    `.krml` files (`ALL_ML_FILES`, `ALL_KRML_FILES`, ...); `--dep dune` only
+    emits checking rules. Write one explicit extraction rule per program
+    instead; see `examples/hello` and `mk/test.mk`.
+
+  * The F# library (`fsharp/base`, `ulibfs`) and Pulse's `pulse2rust` are
+    removed. The F# backend still exists (`--codegen FSharp`).
+
+  * The OCaml library `fstar.lib` no longer contains OCaml extracted from
+    ulib; it holds only the hand-written realizations in `ulib/ml/app`
+    (now including `FStar_SizeT`). Custard compiles the rest of ulib into
+    each program. OCaml code that linked against an extracted ulib module
+    (e.g. `FStar_Int_Cast`, `FStar_Seq_Base`) must now be produced by Custard
+    as part of the program.
+
+  * `[@@custard_c_closure_prologue p]` now takes a single string and *copies*
+    every function the decorated definition reaches, once per distinct
+    prologue, rather than adding a prologue to the shared originals (issue
+    #4711). The copies are `static`, carry `p`, and are named after it
+    (`f__avx2` for `__attribute__((target("avx2")))`); everything else keeps
+    calling the undecorated originals. This makes CPU `target(...)` prologues
+    safe: a function reached without a runtime CPU check is never given one,
+    and seeds with different targets no longer share a callee. Drop the
+    second ("shared") argument: for CUDA, `__device__` alone is now correct.
+    Globals are no longer decorated (and error 383 is gone): a CUDA table
+    read from device code needs an explicit `[@@CPrologue "__device__"]`.
+
+  * New `[@@custard_c_closure_guard "cond"]` wraps the decorated definition
+    and the copies its closure prologue makes in `#if cond ... #endif`, so
+    code for one architecture (`target("avx2")`, intrinsics) is not compiled
+    on another. New `[@@custard_c_ifdef "cond"]` on an `assume val x : bool`
+    compiles `if x then .. else ..` to `#if cond / #else / #endif`, which is
+    how a caller guards both the call and its runtime CPU check. Direct-to-C
+    backend only; any other use of the flag is error 398.
+
 ## New `Nd` effect for nondeterministic, but terminating, computations
 
   * `Nd` (an instance of the new primitive effect `NDET`) sits strictly

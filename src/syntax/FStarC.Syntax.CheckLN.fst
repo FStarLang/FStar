@@ -48,12 +48,18 @@ let rec is_ln' (n:int) (t:term) : ML bool =
 
   | Tm_match {scrutinee; ret_opt; brs; rc_opt} ->
     is_ln' n scrutinee &&
+    (match ret_opt with
+     | None -> true
+     | Some (b, asc) -> is_ln'_binder n b && is_ln'_ascription (n + 1) asc) &&
     // TODO: check pats
     L.for_all (fun (p, _, t) -> is_ln' (n + pat_depth p) t) brs
 
-  | Tm_ascribed {tm; asc; eff_opt} ->
+  | Tm_ascribed {tm; asc} ->
     is_ln' n tm &&
-    true // is_ln' n asc
+    is_ln'_ascription n asc
+
+  | Tm_meta {tm} ->
+    is_ln' n tm
 
   | Tm_let {lbs; body} ->
     is_ln'_letbindings n lbs &&
@@ -89,8 +95,23 @@ and is_ln'_comp (n:int) (c:comp) : ML bool =
 
 and is_ln'_comp_typ (n:nat) (ct:comp_typ) : ML bool =
   is_ln' n ct.result_typ &&
-//   L.for_all (is_ln' n) ct.flags
-  true
+  L.for_all (is_ln'_flag n) ct.flags
+
+and is_ln'_flag (n:nat) (f:cflag) : ML bool =
+  match f with
+  | SMTPAT t -> is_ln' n t
+  | DECREASES (Decreases_lex ts) -> L.for_all (is_ln' n) ts
+  | DECREASES (Decreases_wf (rel, e)) -> is_ln' n rel && is_ln' n e
+  | _ -> true
+
+and is_ln'_ascription (n:nat) (asc:ascription) : ML bool =
+  let tc, tacopt, _ = asc in
+  (match tc with
+   | Inl t -> is_ln' n t
+   | Inr c -> is_ln'_comp n c) &&
+  (match tacopt with
+   | None -> true
+   | Some tac -> is_ln' n tac)
 
 and is_ln'_univ (n:nat) (u : universe) : ML bool =
   match SS.compress_univ u with

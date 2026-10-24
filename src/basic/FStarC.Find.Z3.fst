@@ -25,7 +25,7 @@ open FStarC.Class.Show
 
 let z3url = "https://github.com/Z3Prover/z3/releases"
 
-let packaged_z3_versions = ["4.8.5"; "4.13.3"; "4.15.3"]
+let packaged_z3_versions = ["4.8.5"; "4.13.3"; "4.15.3"; "5.3.0"]
 
 let z3_install_suggestion (v : string) : list Pprint.document =
   let open FStarC.Errors.Msg in
@@ -102,14 +102,14 @@ let do_locate_z3 (v:string) : ML (option string) =
   path
 
 let locate_z3 : string -> ML (option string) =
-  let cache : SMap.t (option string) = SMap.create 5 in
+  let cache : HashTable.t string (option string) = HashTable.create 5 in
   fun v ->
     let find_or (k:string) (f : string -> ML (option string)) : ML (option string) =
-      match SMap.try_find cache k with
+      match HashTable.try_find cache k with
       | Some v -> v
       | None ->
         let v = f k in
-        SMap.add cache k v;
+        HashTable.add cache k v;
         v
     in
     find_or v do_locate_z3

@@ -408,7 +408,7 @@ type error_code =
   | Error_CustardBadFloatLiteral
   | Warning_CustardRuleArity
   | Warning_CustardExternErasure
-  | Error_CustardSharedGlobal
+  | Unused02
   | Error_CustardExternConflict
   | Error_CustardEntryNotFound
   | Error_CustardBadFloatWidth
@@ -423,6 +423,8 @@ type error_code =
   | Error_CustardNoFSharpRealization
   | Error_CustardRuleArityExceeded
   | Error_CustardBadFunctor
+  | Error_CustardBadIfDef
+  | Error_CustardTypeVarInstantiation
 
 type error_setting = error_code & error_flag & int
 

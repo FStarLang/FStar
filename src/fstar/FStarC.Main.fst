@@ -82,7 +82,7 @@ let load_native_tactics () =
     let open FStarC.Errors.Msg in
     let modules_to_load = Options.load() |> List.map Ident.lid_of_str in
     let cmxs_to_load = Options.load_cmxs () |> List.map Ident.lid_of_str in
-    let ml_module_name m = FStarC.Extraction.ML.Util.ml_module_name_of_lid m in
+    let ml_module_name m = String.concat "_" (List.map Ident.string_of_id (Ident.ids_of_lid m)) in
     let ml_file m = ml_module_name m ^ ".ml" in
     let cmxs_file m =
         let cmxs = ml_module_name m ^ ".cmxs" in
@@ -162,7 +162,8 @@ let friends_of_implementation (fn:string) : ML (list Ident.lident) =
   FStarC.Parser.AST.decls_of_modul ast |> List.collect (fun d ->
     match d.FStarC.Parser.AST.d with
     | FStarC.Parser.AST.Friend l ->
-      [FStarC.String.lowercase (Ident.string_of_lid l) |> Ident.lid_of_str]
+      [Ident.set_lid_range (FStarC.String.lowercase (Ident.string_of_lid l) |> Ident.lid_of_str)
+                          (Ident.range_of_lid l)]
     | _ -> [])
 
 (* Normal mode with some flags, files, etc *)
@@ -280,7 +281,7 @@ let go_normal () : ML unit =
     (* --read_krml_file: read and print a krml file *)
     | Success when Some? (Options.read_krml_file ()) -> (
       let path = Some?.v <| Options.read_krml_file () in
-      match load_value_from_file path <: option Extraction.Krml.binary_format with
+      match Custard.KrmlJson.read_file path with
       | None ->
         let open FStarC.Pprint in
         Errors.raise_error0 Errors.Fatal_ModuleOrFileNotFound [
@@ -437,7 +438,7 @@ let go_normal () : ML unit =
                        dependence on a module, and the interface of this very
                        module (checked first) may depend on those modules too. *)
                     FStarC.Parser.Dep.set_root_friends (friends_of_implementation fn);
-                    match FStarC.Parser.Dep.interface_of deps m with
+                    match FStarC.Parser.Dep.interface_of deps (FStarC.Parser.Dep.module_key_of_file fn) with
                     | None -> [fn]
                     | Some iface ->
                       (* If the interface already has a usable checked file, do

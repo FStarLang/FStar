@@ -2240,7 +2240,7 @@ let t_commute_applied_match () : ML (tac unit) = wrap_err "t_commute_applied_mat
   )
 
 let string_to_term (e: Env.env) (s: string): ML (tac term)
-  = let open FStarC.Parser.ParseIt in
+  = let open FStarC.Parser.Frontend in
     let frag_of_text s = { frag_fname= "<string_of_term>"
                          ; frag_line = 1 ; frag_col  = 0
                          ; frag_text = s } in
@@ -2391,6 +2391,7 @@ let splice_attrs ()  : ML (tac (list attribute)) =
    internally. *)
 type refl_guard_and_tok_t = env & Core.guard_and_tok_t
 
+[@@FStar.Attributes.custard_inline]
 let dbg_refl (g:env) (msg:unit -> ML string) : ML unit =
   if !dbg_ReflTc
   then Format.print_string (msg ())
@@ -3089,7 +3090,7 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
         //   e.g., created as part of Rel.try_teq, return []
         //
         let b = List.existsb (fun {imp_uvar = {ctx_uvar_head = (uv, _, _)}} ->
-          PIMap.try_find tbl (Unionfind.puf_unique_id uv) = None) (Listlike.to_list guard.implicits) in
+          None? (PIMap.try_find tbl (Unionfind.puf_unique_id uv))) (Listlike.to_list guard.implicits) in
         if b then []
         else
           //
@@ -3144,7 +3145,7 @@ let refl_maybe_unfold_head (g:env) (e:term)  : ML (tac (option term & issues)) =
         (match eopt with
          | None -> "none"
          | Some e -> show e));
-    if eopt = None
+    if None? eopt
     then Errors.raise_error e Errors.Fatal_UnexpectedTerm
            (Format.fmt1 "Could not unfold head: %s\n" (show e))
     else (eopt |> Some?.v, []))

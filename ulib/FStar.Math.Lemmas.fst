@@ -657,8 +657,13 @@ let pow2_multiplication_modulo_lemma_2 a b c =
   }
 
 let pow2_modulo_division_lemma_1 a b c =
-  pow2_plus (c - b) b;
-  modulo_division_lemma a (pow2 b) (pow2 (c - b))
+  calc (==) {
+    (a % pow2 c) / pow2 b;
+    == { pow2_plus b (c - b) }
+    (a % (pow2 b * pow2 (c - b))) / pow2 b;
+    == { modulo_division_lemma a (pow2 b) (pow2 (c - b)) }
+    (a / pow2 b) % pow2 (c - b);
+  }
 
 let pow2_modulo_division_lemma_2 a b c =
   pow2_le_compat b c;

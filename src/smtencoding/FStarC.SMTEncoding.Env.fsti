@@ -106,7 +106,7 @@ type env_t = {
        first elt registered under that key, and to the module that registered
        it. Only the names are needed, which lets a module's encoding be
        registered here without deserializing it. *)
-    global_cache:SMap.t (list string & lident);
+    global_cache:HashTable.t string (list string & lident);
 }
 
 val print_env : env_t -> ML string

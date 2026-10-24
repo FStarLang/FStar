@@ -9,6 +9,20 @@ let example_1 (s:sign) : string =
  | 0 -> "zero"
  | -2 -> assert False; ""
 
+// The report also included a negative literal nested under Some.
+let example_option (s:option sign) : string =
+  match s with
+  | Some (-1) -> "negative"
+  | Some 1 -> "positive"
+  | Some 0 -> "zero"
+  | None -> "none"
+
+let test_option () =
+  assert (example_option (Some (-1)) == "negative");
+  assert (example_option (Some 0) == "zero");
+  assert (example_option (Some 1) == "positive");
+  assert (example_option None == "none")
+
 open FStar.Int32
 open FStar.Int8
 open FStar.UInt32

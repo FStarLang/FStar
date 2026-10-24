@@ -302,7 +302,7 @@ type smt_output = {
 
 let parse_stats (smt_stats : option smt_output_section) : ML z3statistics =
     (* Parse the statistics section, if it exists *)
-    let statistics : z3statistics = SMap.create 0 in
+    let statistics : z3statistics = HashTable.create 0 in
     match smt_stats with
     | None -> statistics
     | Some lines ->
@@ -315,7 +315,7 @@ let parse_stats (smt_stats : option smt_output_section) : ML z3statistics =
            let key = List.hd tokens in
            let ltok = List.nth tokens ((List.length tokens) - 1) in
            let value = if BU.ends_with ltok ")" then (BU.substring ltok 0 ((String.length ltok) - 1)) else ltok in
-           SMap.add statistics key value
+           HashTable.add statistics key value
         | _ -> ()
       in
       List.iter parse_line lines;
@@ -500,6 +500,18 @@ let z3_options (ver:string) : ML string =
          specify it. *)
       "(set-option :smt.arith.solver 2)";
     ]
+    end
+  in
+
+  (* Z3 4.15.4 made the Grobner basis computation of the nonlinear arithmetic
+     solver expand terms by default (smt.arith.nl.grobner_expand_terms). On F*
+     queries this frequently blows up: e.g. proving
+       (a + b) * (c + d) == a * c + a * d + b * c + b * d
+     goes from ~24k rlimit units to ~15M. Restore the previous behavior. *)
+  let opts = opts @ begin
+    if M.version_ge ver "4.15.4" then [
+      "(set-option :smt.arith.nl.grobner_expand_terms false)";
+    ] else []
     end
   in
   String.concat "\n" opts ^ "\n"

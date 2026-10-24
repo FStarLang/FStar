@@ -26,7 +26,7 @@ open FStarC.List
 open FStarC.Ident
 open FStarC.Errors
 open FStarC.Universal
-open FStarC.Parser.ParseIt
+open FStarC.Parser.Frontend
 open FStarC.TypeChecker.Env
 open FStarC.Interactive.JsonHelper
 open FStarC.Interactive.Ide.Types
@@ -298,7 +298,7 @@ let track_name_changes (env: env_t)
 // Little helper
 let tf_of_fname fname : ML timed_fname =
   { tf_fname = fname;
-    tf_modtime = Parser.ParseIt.get_file_last_modification_time fname }
+    tf_modtime = Parser.Frontend.get_file_last_modification_time fname }
 
 // Little helper: update timestamps in argument task to last modification times.
 let update_task_timestamps (task:repl_task) : ML repl_task =
@@ -325,10 +325,14 @@ let add_module_completions this_fname deps table : ML CTable.table =
     psmap_find_default loaded_mods_set modname false in
   let this_mod_key =
     Parser.Dep.lowercase_module_name this_fname in
+  let this_tgt = Parser.Dep.target_of_file this_fname in
   List.fold_left (fun table (modname, mod_path) ->
-      // modname is the filename part of mod_path
+      // modname is the filename part of mod_path, possibly with a target
+      let modname, tgt = FStarC.Target.split_target modname in
       let mod_key = String.lowercase modname in
-      if this_mod_key = mod_key then
+      if not (FStarC.Target.implies this_tgt tgt) then
+        table // Not visible from this file's target
+      else if this_mod_key = mod_key then
         table // Exclude current module from completion
       else
         let ns_query = Util.split (capitalize modname) "." in

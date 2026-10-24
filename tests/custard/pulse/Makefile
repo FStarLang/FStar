@@ -20,7 +20,7 @@ ifneq ($(KRML_FOUND),)
   override KRML_EXE := $(KRML_FOUND)
 endif
 
-# Each of these is extracted with --codegen Custard from its 'main'; the
+# Each of these is extracted with --codegen OCaml from its 'main'; the
 # generated OCaml must contain every GREP_<name> pattern and none of the
 # NOGREP_<name> ones.  We check the shape of the output rather than running
 # it: Pulse has no I/O library, so a Pulse program cannot print anything.
@@ -153,25 +153,25 @@ CGREP_ArrTup += "static uint32_t *ArrTup_get_snd(FStar_Pervasives_Native_tuple2_
 
 # Section 106.  The rule one level down: two tuples whose only difference is
 # the element type of an array nested inside an [option] must not share one
-# projection.  The two [fst] specializations are named apart; the control's
+# projection.  The two [pfst] specializations are named apart; the control's
 # single one shows the guard has not widened to types carrying no rule.
 C_TESTS += NestArr
-CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_array_t(FStar_Pervasives_Native_tuple2__uint32_option_uint32_ptr x) {"
-CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_array_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
-CGREP_NestArr += "static uint32_t FStar_Pervasives_Native_fst__t_option_box_t(FStar_Pervasives_Native_tuple2__uint32_option_box_uint32 x) {"
+CGREP_NestArr += "static uint32_t NestArr_pfst__t_option_array_t(FStar_Pervasives_Native_tuple2__uint32_option_uint32_ptr x) {"
+CGREP_NestArr += "static uint32_t NestArr_pfst__t_option_array_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_NestArr += "static uint32_t NestArr_pfst__t_option_box_t(FStar_Pervasives_Native_tuple2__uint32_option_box_uint32 x) {"
 
 # Section 109.  The rule can be hidden by a type abbreviation, which names it
 # at neither endpoint of the reduction: [pack a = option (array a)] mentions
 # no rule as written, and the reduced form has unfolded past it.
 C_TESTS += TupAlias
-CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_pack_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_pack_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
-CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_snd__pack_element_t(FStar_Pervasives_Native_tuple2__option_element_ptr_uint32 x) {"
-CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_snd__pack_bool_t(FStar_Pervasives_Native_tuple2__option_bool_ptr_uint32 x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_pack_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_pack_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_psnd__pack_element_t(FStar_Pervasives_Native_tuple2__option_element_ptr_uint32 x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_psnd__pack_bool_t(FStar_Pervasives_Native_tuple2__option_bool_ptr_uint32 x) {"
 # The spelled-out control, and the two-deep chain the fuel is for.
-CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_option_array_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_packed_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t FStar_Pervasives_Native_fst__t_packed_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_option_array_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_packed_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_packed_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
 
 # Section 94.  An initializer where C has one, and the loop where it does not:
 # a runtime fill cannot be repeated and a variable-length array may not be
@@ -366,7 +366,7 @@ C_TESTS += ExtBuf
 # what enforces it: extbuf_base is a macro yielding void *, which C converts
 # implicitly and C++ refuses.  Removing the cast from PrintC leaves this
 # file compiling clean under gcc and failing under g++.
-CGREP_ExtBuf = "(uint8_t *)extbuf_base"
+CGREP_ExtBuf = "(uint8_t *)(extbuf_base"
 # The returned pointer must be *bound* to a typed variable.  Discarding it
 # would emit a (void) cast, which C++ accepts with or without the fix.
 CGREP_ExtBuf += "uint8_t *"
@@ -452,7 +452,7 @@ CNOGREP_PulseGhostFn += "(justif()"
 # is refused rather than built at startup behind the programmer's back.
 REJECT_TESTS += PulseGlobalArrayOpaque
 CODE_PulseGlobalArrayOpaque = 393
-FLAGS_PulseGlobalArrayOpaque = --custard_backend C --custard_entry PulseGlobalArrayOpaque.tbl
+FLAGS_PulseGlobalArrayOpaque = --codegen C --custard_entry PulseGlobalArrayOpaque.tbl
 EGREP_PulseGlobalArrayOpaque += "known at compile time"
 # The message names the shape it got, since a rule has no request chain to
 # print and the shape is what identifies the culprit.
@@ -461,14 +461,14 @@ EGREP_PulseGlobalArrayOpaque += "reference to PulseGlobalArrayOpaque.opaque_list
 # would be no address to hand out either.
 REJECT_TESTS += PulseGlobalArrayEmpty
 CODE_PulseGlobalArrayEmpty = 393
-FLAGS_PulseGlobalArrayEmpty = --custard_backend C --custard_entry PulseGlobalArrayEmpty.tbl
+FLAGS_PulseGlobalArrayEmpty = --codegen C --custard_entry PulseGlobalArrayEmpty.tbl
 EGREP_PulseGlobalArrayEmpty += "is an empty static array"
 # A braced initializer is not an expression in C.  The other two backends
 # accept this same program, which is why the refusal is in PrintC and not in
 # the rule.
 REJECT_TESTS += PulseGlobalArrayLocal
 CODE_PulseGlobalArrayLocal = 393
-FLAGS_PulseGlobalArrayLocal = --custard_backend C
+FLAGS_PulseGlobalArrayLocal = --codegen C
 EGREP_PulseGlobalArrayLocal += "uses a static array where C needs an"
 EGREP_PulseGlobalArrayLocal += "Bind it to a top-level definition"
 
@@ -476,6 +476,7 @@ EGREP_PulseGlobalArrayLocal += "Bind it to a top-level definition"
 # does not reach.  The test runs, so the comments have to be in places a C
 # compiler accepts as well as places a reader wants them.
 C_TESTS += PulseComment
+OCAML_TESTS += PulseComment
 CGREP_PulseComment += "/* doubling */"
 CGREP_PulseComment += "/* the running total */"
 CGREP_PulseComment += "/* one step */"
@@ -488,19 +489,21 @@ CGREP_PulseComment += "/* inner after */ /* outer after */"
 # A comment on a value nothing reads is still a comment.
 CGREP_PulseComment += "/* kept */"
 CGREP_PulseComment += "/* even unread */"
+CGREP_PulseComment += "/* discarded load */" "/* load done */"
+CGREP_PulseComment += "/* discarded effect */" "/* effect done */"
 # No trace of the library the two functions come from: both are rules.
 CNOGREP_PulseComment += "Pulse_Lib_Comment"
 
 # Section 120.  The two ways the text is not usable as a comment.
 REJECT_TESTS += PulseCommentEnd
 CODE_PulseCommentEnd = 394
-FLAGS_PulseCommentEnd = --custard_backend C
+FLAGS_PulseCommentEnd = --codegen C
 EGREP_PulseCommentEnd += "the text given to Pulse.Lib.Comment.comment contains"
 EGREP_PulseCommentEnd += "would end the comment it is emitted into"
 
 REJECT_TESTS += PulseCommentDyn
 CODE_PulseCommentDyn = 394
-FLAGS_PulseCommentDyn = --custard_backend C
+FLAGS_PulseCommentDyn = --codegen C
 EGREP_PulseCommentDyn += "has to be a string literal, and after"
 EGREP_PulseCommentDyn += "there is nowhere to evaluate"
 
@@ -509,6 +512,96 @@ CGREP_PulseBlit += "memmove("
 CGREP_PulseBlit += "2 * sizeof(uint8_t)"
 CNOGREP_PulseBlit += "(((size_t)2ULL))"
 CNOGREP_PulseBlit += "(2) * sizeof"
+
+# Moved here from ../Makefile once ML references became garbage-collected
+# references, which C rejects: these hold their pointers in Pulse boxes and
+# references instead, and so need the Pulse extension.
+
+C_TESTS += CRecType CByValue
+# Section 17.3: recursion through a pointer.  Every struct is tagged and every
+# tag is forward-declared, so a field may name a type that is defined later --
+# which a self-referential type always does.
+CGREP_CRecType   = "typedef struct CRecType_tree_s CRecType_tree;" \
+                   "typedef struct CRecType_node_s CRecType_node;" \
+                   "struct CRecType_node_s {" \
+                   "CRecType_tree *left;"
+# No struct typedef is anonymous any more, and the recursive types are not
+# rejected as infinite: the recursion goes through a pointer.
+CNOGREP_CRecType = "typedef struct {" "} CRecType_tree;" "} CRecType_node;"
+
+# Section 18.4: a field held by value needs a complete type, so the struct
+# definitions are topologically sorted over the by-value edges -- which are
+# acyclic even when the group as a whole is cyclic through a pointer.  The
+# real assertion is that this compiles: without the sort, [arr] holds a
+# [slice__raw] that is still incomplete at that point, which is an error.
+CGREP_CByValue   = "CByValue_slice__raw a_ptr;" "CByValue_raw *s_base;"
+CNOGREP_CByValue = "typedef struct {"
+
+# Section 123.  [custard_unit] is emitted where it is used and nowhere else.
+# It is genuinely still reachable -- a [ref unit] is a [custard_unit *] --
+# but for a whole program it is usually reachable nowhere, which is why it
+# was boilerplate in every header and a use in none of them.
+C_TESTS += CUnitTy CUnitRef
+CHGREP_CUnitTy += "typedef uint8_t custard_unit;"
+CGREP_CUnitTy += "custard_unit *cell;"
+CHNOGREP_CUnitRef += "custard_unit"
+CGREP_CUnitRef += "typedef uint8_t custard_unit;"
+CGREP_CUnitRef += "CUnitRef_get(custard_unit *r)"
+
+# Section 6.  The dangling [else].  Both arms of each pair are one statement,
+# so both would be written unbraced, and an unbraced [if] with no [else] in a
+# [then] arm captures the [else] that follows it.  [-Wall -Werror] catches the
+# shape -- gcc and clang both have [-Wdangling-else] -- but the load-bearing
+# check is that the program *runs*: [f false true] must return 2 and [g G
+# false] must return 2, and under the capture the first falls through to 0 and
+# the second takes the [B] arm.
+C_TESTS += CDangle
+EXTRA_CDangle = --custard_entry_module CDangle
+CGREP_CDangle += "if (a) {"
+CGREP_CDangle += "else if (x == CDANGLE_G)"
+CNOGREP_CDangle += "if (a) if ("
+
+# Section 57.1: an extern returning a pointer.  A C macro over untyped memory
+# hands back [void *], which C converts silently and C++ rejects, so the
+# call site has to carry the cast.  The load-bearing check is the CXX step
+# of the [%.dc] rule below, not the grep; the grep just pins the shape.
+C_TESTS += ExtPtr
+CGREP_ExtPtr = "(uint8_t *)(extptr_base"
+
+# Casted reference and array results must be grouped before subscripting.
+C_TESTS += CastSubscript
+CGREP_CastSubscript = "(uint32_t *)(cast_subscript_ref" "(uint32_t *)(cast_subscript_array"
+CGREP_CastSubscript += "(uint32_t *)(cast_subscript_macro_ref"
+CGREP_CastSubscript += "))[0] = 11;" "))[1] = 29;"
+$(OUTPUT_DIR)/CastSubscript.dcexe $(OUTPUT_DIR)/CastSubscript.dcxx: CastSubscript_stubs.h
+
+# Native function pointers, including commented callees. Cherry does not yet
+# support comments around closure-valued operands.
+C_TESTS += Postfix
+CHERRY_C_SKIP += Postfix
+CGREP_Postfix = "v.data[0]" "v.data[0] = 9;" "Postfix_get_data(v)[0]" "v.apply(via_alias)"
+CGREP_Postfix += "/* buffer */ v.data /* end */[0]" "/* callee */ v.apply /* end */(via_alias)"
+CNOGREP_Postfix = "(v.data)[" "(Postfix_get_data(v))[" "(v.apply)("
+CGREP_PulseFnPtrRet += "PulseFnPtrRet_mk_unit()(x)"
+CNOGREP_PulseFnPtrRet += "(PulseFnPtrRet_mk_unit())("
+
+# Section 61.2.  Two negation sites, broken for two different reasons.
+# EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
+C_TESTS += ExtFlag
+CGREP_ExtFlag = "if (!(EXT_FLAG)) {" "return 0;" "r = 0;"
+CNOGREP_ExtFlag = "!EXT_FLAG"
+
+# The Cherry backend (cherry.md, "References"): Pulse references and
+# arrays holding reference-counted values, on the stack and on the heap,
+# freed where they were made and elsewhere, written, read and blitted.  Run
+# under AddressSanitizer with leak detection, as in ../Makefile.
+CHERRY_TESTS += CherryPulse
+
+# An uninitialized allocation of counted values has nothing to count.
+REJECT_TESTS += CherryPulseUninit
+CODE_CherryPulseUninit = 368
+FLAGS_CherryPulseUninit = --codegen Cherry --warn_error -288
+EGREP_CherryPulseUninit += "an uninitialized Pulse reference or array"
 
 # Section 5.6, escalated: neither of these -- and PulseHashTable in particular,
 # which is the repr-over-erased-index style section 5.4 is about -- may lose
@@ -522,7 +615,7 @@ WARN_ANY = --custard_warn_any --warn_error @367
 $(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_main $*.main $*.fst -o $@
+	$(Q)$(FSTAR) --codegen OCaml $(WARN_ANY) --custard_main $*.main $*.fst -o $@
 
 $(OUTPUT_DIR)/%.grepped: $(OUTPUT_DIR)/%.custard.ml
 	$(call msg, "GREP", $(basename $(notdir $@)))
@@ -544,7 +637,7 @@ $(OUTPUT_DIR)/%.mlchecked: $(OUTPUT_DIR)/%.custard.ml
 $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-KRML", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlC $(KRML_FLAGS_$*) \
+	$(Q)$(FSTAR) --codegen KrmlC $(WARN_ANY)  $(KRML_FLAGS_$*) \
 	  --custard_main $*.main $*.fst -o $@
 
 # Section 20.  KrmlRust is a different backend and not a flag on this one: it
@@ -553,7 +646,7 @@ $(OUTPUT_DIR)/%.custard.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 $(OUTPUT_DIR)/%.custard.rust.krml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-KRML-RUST", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend KrmlRust --custard_main $*.main \
+	$(Q)$(FSTAR) --codegen KrmlRust $(WARN_ANY) --custard_main $*.main \
 	  $(RUST_FLAGS_$*) $*.fst -o $@
 
 # -fkeep-tuples is not optional here and is part of what section 20 documents:
@@ -592,7 +685,7 @@ $(OUTPUT_DIR)/%.rsran: $(OUTPUT_DIR)/%.rs
 $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard $(WARN_ANY) --custard_backend C \
+	$(Q)$(FSTAR) --codegen C $(WARN_ANY) \
 	  --custard_monomorphize_types true --custard_main $*.main \
 	  $(EXTRA_$*) $*.fst -o $@
 	@# Section 35.3.  These were set here for two rounds and consulted by
@@ -605,6 +698,12 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(Q)for p in $(CNOGREP_$*); do \
 	  grep -qF -- "$$p" $@ $(basename $@).h \
 	    && { echo "ERROR: $* C output should not contain $$p"; exit 1; }; done; true
+	$(Q)for p in $(CHGREP_$*); do \
+	  grep -qF -- "$$p" $(basename $@).h \
+	    || { echo "ERROR: $* C header is missing $$p"; exit 1; }; done
+	$(Q)for p in $(CHNOGREP_$*); do \
+	  grep -qF -- "$$p" $(basename $@).h \
+	    && { echo "ERROR: $* C header should not contain $$p"; exit 1; }; done; true
 	$(Q)python3 $(CURDIR)/../checkgroup.py $@ $(basename $@).h
 
 $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx
@@ -638,6 +737,31 @@ $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 	$(Q)$<
 	$(Q)touch $@
 
+CHERRY_DIR = $(OUTPUT_DIR)/cherry
+CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+CHERRY_CC ?= $(CC)
+CHERRY_CXX ?= $(CXX)
+
+$(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
+	$(call msg, "CHERRY", $(basename $(notdir $@)))
+	@mkdir -p $(CHERRY_DIR)
+	$(Q)$(FSTAR) $(WARN_ANY) --codegen Cherry \
+	  --custard_monomorphize_types true --custard_main $*.main \
+	  $(EXTRA_$*) $*.fst -o $@
+
+$(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc
+	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  -x c $< $(CHERRY_INC)/cherry.c -o $@
+	$(Q)$(CHERRY_CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	  -fsyntax-only -x c++ $<
+
+$(CHERRY_DIR)/%.chran: $(CHERRY_DIR)/%.chexe
+	$(call msg, "RUN-ASAN", $(basename $(notdir $@)))
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $<
+	$(Q)touch $@
+
 $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 	$(call msg, "KRML", $(basename $(notdir $@)))
 	$(Q)$(KRML_EXE) -silent -skip-linking -tmpdir $(OUTPUT_DIR)/$*_c $<
@@ -653,7 +777,7 @@ $(OUTPUT_DIR)/%.cexe: $(OUTPUT_DIR)/%.custard.krml
 $(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", PulseSpecRoot)
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen Custard --custard_backend C \
+	$(Q)$(FSTAR) --codegen C \
 	  --custard_entry_module PulseSpecRoot PulseSpecRoot.fst \
 	  -o $(OUTPUT_DIR)/PulseSpecRoot.c
 	$(Q)grep -q 'PulseSpecRoot_size' $(OUTPUT_DIR)/PulseSpecRoot.c \
@@ -663,7 +787,7 @@ $(OUTPUT_DIR)/PulseSpecRoot.specroot: $(CACHE_DIR)/PulseSpecRoot.fst.checked $(F
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -c -x c \
 	  $(OUTPUT_DIR)/PulseSpecRoot.c -o $(OUTPUT_DIR)/PulseSpecRoot.o
 	$(Q)for e in rep rep_abs; do \
-	  $(FSTAR) --codegen Custard --custard_backend C \
+	  $(FSTAR) --codegen C \
 	    --custard_entry PulseSpecRoot.$$e PulseSpecRoot.fst \
 	    -o $(OUTPUT_DIR)/PulseSpecRoot_$$e.c > $(OUTPUT_DIR)/$$e.out 2>&1; \
 	  grep -q 'is a specification, not code' $(OUTPUT_DIR)/$$e.out \
@@ -677,7 +801,7 @@ specification:"; cat $(OUTPUT_DIR)/$$e.out; exit 1; }; done
 $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "REJECT", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --message_format human --codegen Custard $(WARN_ANY) \
+	$(Q)$(FSTAR) --message_format human --codegen OCaml $(WARN_ANY) \
 	  $(FLAGS_$*) --custard_main $*.main $*.fst \
 	  >$(OUTPUT_DIR)/$*.err 2>&1 || true
 	$(Q)grep -qE "(Error|Warning) $(CODE_$*)" $(OUTPUT_DIR)/$*.err \
@@ -695,7 +819,7 @@ $(OUTPUT_DIR)/%.rejected: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(Q)touch $@
 
 ALL_TEST_NAMES := $(GREP_TESTS) $(OCAML_TESTS) $(C_TESTS) \
-                  $(KRML_TESTS) $(RUST_TESTS) $(REJECT_TESTS)
+                  $(KRML_TESTS) $(RUST_TESTS) $(REJECT_TESTS) $(CHERRY_TESTS)
 
 # Section 35.3.  A setting whose name matches no registered test.
 #
@@ -705,7 +829,7 @@ ALL_TEST_NAMES := $(GREP_TESTS) $(OCAML_TESTS) $(C_TESTS) \
 # that does not exist.  Any name here that is not in a test list is one or the
 # other.  Recursively expanded, so that [.VARIABLES] is complete by the time a
 # recipe asks.
-SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CODE
+SETTING_PREFIXES := FLAGS GREP NOGREP EGREP NOEGREP CGREP CNOGREP CHGREP CHNOGREP CODE
 ORPHAN_SETTINGS = $(strip $(foreach p,$(SETTING_PREFIXES),\
   $(foreach v,$(filter $(p)_%,$(.VARIABLES)),\
     $(if $(filter $(patsubst $(p)_%,%,$(v)),$(ALL_TEST_NAMES) TESTS),,$(v)))))
@@ -729,5 +853,8 @@ ifneq ($(shell command -v rustc 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
+# Direct-C tests go through Cherry unless they need an unsupported feature.
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, \
+       $(CHERRY_TESTS) $(filter-out $(CHERRY_C_SKIP), $(C_TESTS))))
 endif
 endif

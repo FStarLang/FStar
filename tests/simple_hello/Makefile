@@ -17,6 +17,9 @@ ifneq ($(OS),Windows_NT)
 all: Hello.byte.test
 endif
 
+# The same program through the reference-counted C backend.
+all: Hello.cherry.test
+
 Hello.%.test: Hello.%
 	./$< | grep "Hello F\*!"
 
@@ -24,7 +27,7 @@ Hello.%.test: Hello.%
 	$(FSTAR_EXE) $< --cache_checked_modules
 
 %.ml: %.fst.checked
-	$(FSTAR_EXE) --codegen Custard --custard_entry_module $* $< -o $@
+	$(FSTAR_EXE) --codegen OCaml --custard_entry_module $* $< -o $@
 
 %.exe: %.ml
 	$(FSTAR_EXE) --ocamlopt $< -o $@
@@ -32,8 +35,16 @@ Hello.%.test: Hello.%
 %.byte: %.ml
 	$(FSTAR_EXE) --ocamlc $< -o $@
 
+CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+CHERRY_CC ?= $(CC)
+%.c: %.fst.checked
+	$(FSTAR_EXE) --codegen Cherry --custard_main $* $< -o $@
+
+%.cherry: %.c
+	$(CHERRY_CC) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c -o $@
+
 clean:
-	rm -f *.ml *.exe *.byte *.cm* *.o *.checked
+	rm -f *.ml *.c *.h *.exe *.byte *.cherry *.cm* *.o *.checked
 
 # Keep intermediate files
 .SECONDARY:

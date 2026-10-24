@@ -11,8 +11,8 @@ The compiler has three main components:
 - **Compiler** (`src/`): The F\* compiler source code (FStarC.\*
   modules), extracted to OCaml.
 - **Plugins** (`ulib/`): Tactic and metaprogramming plugins
-  (FStar.Tactics.\*, etc.), extracted from the standard library using
-  `--codegen Plugin`.
+  (FStar.Tactics.\*, etc.), compiled from the standard library together with
+  the compiler.
 - **Standard library** (`ulib/`): The F\* standard library (Prims,
   FStar.\* modules), verified and extracted to OCaml.
 

@@ -23,7 +23,9 @@ open FStarC.Custard.Syntax
 module BU  = FStarC.Util
 module Builtins = FStarC.Custard.Builtins
 module Dep = FStarC.Parser.Dep
-module SMap = FStarC.SMap
+module Find = FStarC.Find
+module Loader = FStarC.Custard.Loader
+module HashTable = FStarC.HashTable
 
 let module_of (n:name) : ML string =
   match n.ns with
@@ -47,12 +49,12 @@ let rank_key (m:string) : ML string =
    reference graph leaves free but which still matters, because the target
    modules are laid out in one flat directory and a hand-written realization
    may sit anywhere among them. *)
-let source_ranks (deps:Dep.deps) : ML (SMap.t int) =
-  let rank : SMap.t int = SMap.create 100 in
+let source_ranks (deps:Dep.deps) : ML (HashTable.t string int) =
+  let rank : HashTable.t string int = HashTable.create 100 in
   let n : ref int = mk_ref 0 in
   Dep.topological_order deps rank_key |> List.iter (fun m ->
     n := !n + 1;
-    SMap.add rank m !n);
+    HashTable.add rank m !n);
   rank
 
 (* Tarjan, iterative in the sense that matters: the components come out in
@@ -62,33 +64,33 @@ let source_ranks (deps:Dep.deps) : ML (SMap.t int) =
    files and have to be merged. *)
 let sccs (nodes : list string) (succ : string -> ML (list string))
   : ML (list (list string)) =
-  let index : SMap.t int = SMap.create 100 in
-  let low : SMap.t int = SMap.create 100 in
-  let onstack : SMap.t bool = SMap.create 100 in
+  let index : HashTable.t string int = HashTable.create 100 in
+  let low : HashTable.t string int = HashTable.create 100 in
+  let onstack : HashTable.t string bool = HashTable.create 100 in
   let stack : ref (list string) = mk_ref [] in
   let next : ref int = mk_ref 0 in
   let out : ref (list (list string)) = mk_ref [] in
-  let get (m:SMap.t int) (k:string) : ML int =
-    match SMap.try_find m k with Some v -> v | None -> 0 in
+  let get (m:HashTable.t string int) (k:string) : ML int =
+    match HashTable.try_find m k with Some v -> v | None -> 0 in
   let rec go (v:string) : ML unit =
-    SMap.add index v !next; SMap.add low v !next; next := !next + 1;
-    stack := v :: !stack; SMap.add onstack v true;
+    HashTable.add index v !next; HashTable.add low v !next; next := !next + 1;
+    stack := v :: !stack; HashTable.add onstack v true;
     succ v |> List.iter (fun w ->
-      if None? (SMap.try_find index w)
-      then (go w; if get low w < get low v then SMap.add low v (get low w))
-      else if Some true = SMap.try_find onstack w
-      then (if get index w < get low v then SMap.add low v (get index w)));
+      if None? (HashTable.try_find index w)
+      then (go w; if get low w < get low v then HashTable.add low v (get low w))
+      else if Some true = HashTable.try_find onstack w
+      then (if get index w < get low v then HashTable.add low v (get index w)));
     if get low v = get index v
     then begin
       let rec pop (acc : list string) : ML (list string) =
         match !stack with
         | [] -> acc
         | w :: rest ->
-          stack := rest; SMap.add onstack w false;
+          stack := rest; HashTable.add onstack w false;
           if w = v then w :: acc else pop (w :: acc) in
       out := pop [] :: !out
     end in
-  nodes |> List.iter (fun v -> if None? (SMap.try_find index v) then go v);
+  nodes |> List.iter (fun v -> if None? (HashTable.try_find index v) then go v);
   List.rev !out
 
 (* Where each module sits in the output, and which module a cycle of modules
@@ -107,24 +109,24 @@ let sccs (nodes : list string) (succ : string -> ML (list string))
 
    [source_ranks] survives as the tie-break, and as the fallback for a module
    that emits nothing. *)
-let module_ranks (deps:Dep.deps) (prog:program) : ML (SMap.t int) =
+let module_ranks (deps:Dep.deps) (prog:program) : ML (HashTable.t string int) =
   let src = source_ranks deps in
   let src_of (m:string) : ML int =
-    match SMap.try_find src (rank_key m) with Some r -> r | None -> 0 in
+    match HashTable.try_find src (rank_key m) with Some r -> r | None -> 0 in
   (* Which module each declaration came from, constructors included. *)
-  let owner : SMap.t string = SMap.create 100 in
+  let owner : HashTable.t string string = HashTable.create 100 in
   let ctors = Simplify.ctor_owners prog in
   let _ = prog |> List.iter (fun d ->
-            SMap.add owner (string_of_name (name_of_decl d))
+            HashTable.add owner (string_of_name (name_of_decl d))
                            (module_of (name_of_decl d))) in
   let owner_of (n:string) : ML (option string) =
-    let n = match SMap.try_find ctors n with Some o -> o | None -> n in
-    SMap.try_find owner n in
+    let n = match HashTable.try_find ctors n with Some o -> o | None -> n in
+    HashTable.try_find owner n in
   (* One node per module, edges to every module it refers to. *)
-  let succ : SMap.t (list string) = SMap.create 100 in
-  let seen : SMap.t bool = SMap.create 100 in
+  let succ : HashTable.t string (list string) = HashTable.create 100 in
+  let seen : HashTable.t string bool = HashTable.create 100 in
   let node (m:string) : ML unit =
-    if None? (SMap.try_find seen m) then (SMap.add seen m true; SMap.add succ m []) in
+    if None? (HashTable.try_find seen m) then (HashTable.add seen m true; HashTable.add succ m []) in
   let _ = prog |> List.iter (fun d ->
             let m = module_of (name_of_decl d) in
             node m;
@@ -134,19 +136,19 @@ let module_ranks (deps:Dep.deps) (prog:program) : ML (SMap.t int) =
                 if m' <> m
                 then begin
                   node m';
-                  let es = match SMap.try_find succ m with Some es -> es | None -> [] in
-                  if not (List.mem m' es) then SMap.add succ m (m' :: es)
+                  let es = match HashTable.try_find succ m with Some es -> es | None -> [] in
+                  if not (List.mem m' es) then HashTable.add succ m (m' :: es)
                 end
               | None -> ())) in
   (* Deterministic, and as close to F*'s order as the reference graph allows:
      visit the roots in source order, and each node's successors likewise. *)
   let by_source (a:string) (b:string) : ML int = src_of a - src_of b in
-  let nodes = BU.sort_with by_source (SMap.keys succ) in
+  let nodes = BU.sort_with by_source (HashTable.keys succ) in
   let succ_of (m:string) : ML (list string) =
-    match SMap.try_find succ m with
+    match HashTable.try_find succ m with
     | Some es -> BU.sort_with by_source es
     | None -> [] in
-  let rank : SMap.t int = SMap.create 100 in
+  let rank : HashTable.t string int = HashTable.create 100 in
   let n : ref int = mk_ref 0 in
   (* Inside a component the modules do refer to each other in a cycle, so no
      order of them is right and one has to be picked: source order, which is
@@ -156,12 +158,12 @@ let module_ranks (deps:Dep.deps) (prog:program) : ML (SMap.t int) =
      way.  Between components the order is forced, and nothing moves. *)
   let _ = sccs nodes succ_of |> List.iter (fun comp ->
             BU.sort_with by_source comp |> List.iter (fun m ->
-              n := !n + 1; SMap.add rank m !n)) in
+              n := !n + 1; HashTable.add rank m !n)) in
   (* A module that emits nothing is never a destination, but [rank_of] is
      still asked about it; put it after everything, in source order. *)
-  let _ = BU.sort_with by_source (SMap.keys src) |> List.iter (fun m ->
-            if None? (SMap.try_find rank m)
-            then (n := !n + 1; SMap.add rank m !n)) in
+  let _ = BU.sort_with by_source (HashTable.keys src) |> List.iter (fun m ->
+            if None? (HashTable.try_find rank m)
+            then (n := !n + 1; HashTable.add rank m !n)) in
   rank
 
 (* The members of a recursive group have to stay together -- they are printed
@@ -199,15 +201,45 @@ let emits (d:decl) : ML bool =
    | DType t -> not (has_flag t.dt_flags Realized)
    | _ -> true)
 
+(* The prefix of a file that holds declarations which are not at home.  Such a
+   file is named after somebody else's module, and two units may well make one
+   for the same module: Pulse's plugin, linked into [fstar.exe], had a
+   [Custard_FStarC_NormSteps], and a second plugin with one of its own failed
+   to load, since OCaml has one module per name in a process (issue #4692).
+   So a named OCaml unit uses its own name as the prefix, as in
+   [PulseChecker_FStar_Order].  karamel is left alone: there the file name
+   becomes the C symbols' prefix, which a consumer's [-bundle] flags are
+   written against. *)
+let unit_prefix () : ML (option string) =
+  match Options.custard_unit () with
+  | Some u when Options.codegen_name () = "OCaml" -> Some u
+  | _ -> None
+
+let mangle_prefix () : ML string =
+  match unit_prefix () with
+  | Some u -> u ^ "."
+  | None -> "Custard."
+
+(* A module of F*'s own library, compiled by a unit that links against
+   another.  Such a unit is a plugin, dynlinked into a process that may
+   already hold another plugin's copy of [FStar.Set] -- Pulse's, in
+   [fstar.exe] -- so the file is named after the unit as well.  The unit's
+   own modules keep their names: a hand-written realization refers to them by
+   those. *)
+let is_shared_library_module (deps:Dep.deps) (m:string) : ML bool =
+  Some? (unit_prefix ()) && Cons? (Options.custard_links ()) &&
+  List.existsb Find.is_library_file (Loader.candidate_files deps m)
+
 (* A realized module already has a [.ml], and a few of its symbols are
    compiled anyway: [Prims.pow2] and [FStar.List.Tot.Base.map] have F* bodies
    and no rule claiming them, so Custard emits its own copies.  They cannot go
    in the file the realization occupies, and they are not what anything else
    refers to that module by, so they go in a file of their own -- under
    mangled names, since nothing there is at home. *)
-let file_of (m:string) : ML string =
+let file_of (deps:Dep.deps) (m:string) : ML string =
   if Builtins.is_realized_module (String.split ['.'] m)
-  then "Custard." ^ m else m
+     || is_shared_library_module deps m
+  then mangle_prefix () ^ m else m
 
 (* The files a linked unit already emitted (section 12.9).  A unit is free to
    re-specialize an upstream definition -- section 12.6 says that is its own
@@ -220,45 +252,53 @@ let file_of (m:string) : ML string =
    So a file name an upstream unit owns is not available to this one, and the
    declaration goes to a mangled file instead.  The prefix is applied until it
    is free, because an upstream unit may itself have mangled the same name. *)
-let avoid (foreign : list string) (m:string) : ML string =
+let avoid (deps:Dep.deps) (foreign : list string) (m:string) : ML string =
   let rec go (f:string) (fuel:int) : ML string =
     if fuel = 0 || not (List.mem f foreign) then f
-    else go ("Custard." ^ f) (fuel - 1) in
-  go (file_of m) 10
+    else go (mangle_prefix () ^ f) (fuel - 1) in
+  go (file_of deps m) 10
 
 let run (deps:Dep.deps) (foreign:list string) (prog:program)
   : ML (list (string & program)) =
   let gs = groups prog in
   let rank = module_ranks deps prog in
   let rank_of (m:string) : ML int =
-    match SMap.try_find rank m with
+    match HashTable.try_find rank m with
     | Some r -> r
-    | None -> (match SMap.try_find rank (rank_key m) with Some r -> r | None -> 0) in
+    | None -> (match HashTable.try_find rank (rank_key m) with Some r -> r | None -> 0) in
   (* A reference to a constructor is a reference to its declaration. *)
   let own = Simplify.ctor_owners prog in
   let resolve (n:string) : ML string =
-    match SMap.try_find own n with Some o -> o | None -> n in
+    match HashTable.try_find own n with Some o -> o | None -> n in
   (* The file each declaration ended up in, by [string_of_name] key. *)
-  let home : SMap.t string = SMap.create 100 in
-  let chunks : SMap.t (ref (list decl)) = SMap.create 100 in
+  let home : HashTable.t string string = HashTable.create 100 in
+  let chunks : HashTable.t string (ref (list decl)) = HashTable.create 100 in
   let emit (m:string) (ds : list decl) : ML unit =
-    let r = match SMap.try_find chunks m with
+    let r = match HashTable.try_find chunks m with
             | Some r -> r
-            | None -> let r = mk_ref [] in SMap.add chunks m r; r in
+            | None -> let r = mk_ref [] in HashTable.add chunks m r; r in
     r := List.rev ds @ !r in
   gs |> List.iter (fun (g : list decl) ->
     (* The group's own module, and the home of everything it references.
        References inside the group resolve to nothing yet, which is right:
        they impose no constraint the members do not already impose jointly. *)
+    let owns =
+      g |> List.collect (fun d ->
+             if emits d then [module_of (name_of_decl d)] else []) in
     let cands =
-      (g |> List.collect (fun d ->
-             if emits d then [module_of (name_of_decl d)] else [])) @
+      owns @
       (g |> List.collect (fun d ->
              Simplify.decl_deps d |> List.collect (fun n ->
-               match SMap.try_find home (resolve n) with
+               match HashTable.try_find home (resolve n) with
                | Some m -> [m]
                | None -> []))) in
-    let own = match cands with
+    (* The group's own module is the one its *names* come from, and a group
+       that emits nothing -- a set of externals, say -- still has one.  Taking
+       the first candidate instead would take the home of the first thing the
+       group references, so an [assume val] whose type mentions an upstream
+       type would be declared in the upstream module's file, where a consumer
+       reading both that file and the upstream one sees the name twice. *)
+    let own = match owns with
               | m :: _ -> m
               | [] -> module_of (name_of_decl (List.hd g)) in
     let top = cands |> List.fold_left (fun acc m ->
@@ -274,17 +314,17 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
        fallback rather than the rule. *)
     let best = if rank_of own >= rank_of top then own else top in
     let _ = g |> List.iter (fun d ->
-              if emits d then SMap.add home (string_of_name (name_of_decl d)) best) in
+              if emits d then HashTable.add home (string_of_name (name_of_decl d)) best) in
     emit best g);
   (* Emitting in rank order is what makes every cross-file reference point
      backwards; within a file the extraction order is preserved untouched. *)
-  let names = SMap.keys chunks in
+  let names = HashTable.keys chunks in
   let names = BU.sort_with (fun a b -> rank_of a - rank_of b) names in
   let files = names |> List.collect (fun m ->
-    let ds = match SMap.try_find chunks m with
+    let ds = match HashTable.try_find chunks m with
              | Some r -> List.rev !r
              | None -> [] in
-    if ds = [] then [] else [(avoid foreign m, ds)]) in
+    if ds = [] then [] else [(avoid deps foreign m, ds)]) in
   (* Section 75.3.  A module that contributed no declaration still has to
      exist.  [-bundle] and [-no-prefix] select on module *names*, and karamel
      treats a pattern that names a module it was not given as a fatal error --
@@ -295,20 +335,20 @@ let run (deps:Dep.deps) (foreign:list string) (prog:program)
      included, and the consumer's flags were written against that.  So the
      empty modules are emitted too, in dependency order, which costs an empty
      record each and buys back the parity the flags assume. *)
-  let have : SMap.t bool = SMap.create 100 in
-  let _ = files |> List.iter (fun (m, _) -> SMap.add have m true) in
+  let have : HashTable.t string bool = HashTable.create 100 in
+  let _ = files |> List.iter (fun (m, _) -> HashTable.add have m true) in
   (* Only for karamel.  The OCaml split writes one [.ml] per entry, and a
      module that emits nothing is a module whose contents are somebody else's
      -- a hand-written realization, most often -- so an empty file of that
      name is not parity but a collision, and the realization is the thing it
      would shadow. *)
   let want_empties =
-    List.mem (Options.custard_backend ()) ["KrmlC"; "KrmlRust"] in
+    List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"] in
   let empties =
     if not want_empties then []
     else Dep.topological_order deps (fun m -> m) |> List.collect (fun m ->
-      if Some? (SMap.try_find have m) || List.mem m foreign
+      if Some? (HashTable.try_find have m) || List.mem m foreign
          || Builtins.is_realized_module (String.split ['.'] m)
       then []
-      else (SMap.add have m true; [(m, [])])) in
+      else (HashTable.add have m true; [(m, [])])) in
   files @ empties

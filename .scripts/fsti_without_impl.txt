@@ -1,0 +1,23 @@
+# Interfaces in ulib/ and pulse/lib/ that have neither an .fst nor a
+# -model.fst implementation, checked by .scripts/check_fsti_impls.py.
+#
+# Each of these is a list of axioms that may be inconsistent.  Do not add new
+# entries: write an implementation or a model instead (doc/ref/targets.md).
+# Remove an entry once it has an implementation (the script will tell you).
+
+# Prims.string is an opaque primitive with no eliminator, so the
+# list_of_string/string_of_list bijection cannot be defined.
+ulib/FStar.String.fsti
+
+# sealed a : Type u#0 cannot store an a : Type u#aa, and Nd has no choice
+# operator to produce one in unseal.
+ulib/FStar.Sealed.fsti
+
+# inspect_* must return a view that precedes (<<) and inverts its argument,
+# so term, namedv, etc. would have to contain the views of
+# FStar.Stubs.Reflection.V2.Data, which depends on FStar.Stubs.Reflection.Types.
+ulib/FStar.Stubs.Reflection.V2.Builtins.fsti
+
+# mk_gvar would have to run the stateful init in the total Nd effect, and
+# read_gvar_ghost must return its result.
+pulse/lib/pulse/lib/Pulse.Lib.GlobalVar.fsti

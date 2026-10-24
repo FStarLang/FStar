@@ -1,15 +1,14 @@
 module FStarC.HashMap
 
-(* NOTE: THIS IS A CACHE. COLLISIONS WILL BE DROPPED/OVERWRITTEN.
-
-However you should not get a wrong value from lookup/get as we store the key
-in the map too and compare it before returning the value. *)
+(* A finite map keyed by hash code. Keys with colliding hash codes are kept
+apart (and compared with the deq instance), so this is an exact map, as long
+as keys that are equal according to deq have equal hash codes. *)
 
 open FStarC.Effect
 open FStarC.Class.Deq
 open FStarC.Class.Hashable
 
-val hashmap (k v : Type) : Type0
+val hashmap (k v : Type0) : Type0
 
 type t = hashmap
 
@@ -60,5 +59,5 @@ val fold (#k #v : _)
   (init:'a)
 : ML 'a
 
-val cached_fun (#a #b : Type) {| hashable a |} {| deq a |} (f : a -> ML b)
+val cached_fun (#a #b : Type0) {| hashable a |} {| deq a |} (f : a -> ML b)
   : ML ((a -> ML b) & (unit -> ML unit))

@@ -11,11 +11,12 @@ In all cases (user or developer), please first read `README.md`
   its other subdirectories. It does not require loading the Pulse
   plugin (which makes sense, since the checker itself is part of the
   plugin.)
-* In `src/extraction`: The krml extraction rules for Pulse and
-  PulseC. This F* code typechecks against the F* sources.
-* In `src/syntax-extension`: A top-level parser hook for the custom
-  syntax of pulse. This F* code typechecks against the F* sources.
-* In `src/ml`: Base OCaml files for the checker.
+* In `src/syntax_extension`: A top-level parser hook for the custom
+  syntax of pulse, and the implementations of the checker interfaces
+  `Pulse.RuntimeUtils` and `Pulse.Extract.CompilerLib`, which call
+  into the compiler. This F* code typechecks against the F* sources.
+  The few genuinely foreign functions are `@@custard_extern`
+  declarations in `*-ocaml.fst` files there.
 
 ## Modifying the user-facing Pulse libraries
 
@@ -47,16 +48,17 @@ lib/pulse in files named `Pulse.Checker.*` but also `Pulse.Typing`,
 `Pulse.Checker` namespace to make it clear that they are not
 user-facing.
 
-Pulse also provides custom syntax, and this is implemented as a
-OCaml/Menhir parser in `src/ocaml/plugin`, which builds an AST in
-`src/syntax_extension/PulseSugar.fst`
+Pulse also provides custom syntax, and this is implemented as an
+extension of the F* grammar in
+`src/syntax_extension/PulseSyntaxExtension.Grammar.fst`, which builds an
+AST in `src/syntax_extension/PulseSyntaxExtension.Sugar.fst`
 
 The surface syntax parsed by the parser above is desugared to the the
 Pulse AST using the code in `src/syntax_extension/PulseDesugar.fst`
 
 Phases of the Pulse checker:
 
-1. menhir parser produces `PulseSugar`
+1. the parser produces `PulseSyntaxExtension.Sugar`
 
 2. `PulseDesugar` transforms `PulseSugar` to `Pulse.Syntax.Base` (in
    `src/checker`)
@@ -72,9 +74,8 @@ Phases of the Pulse checker:
 
 See F* PR https://github.com/FStarLang/FStar/pull/3363
 
-- FStar_Parser_Parse.mly is copied into src/ocaml/plugin from the FStar repo
-
-- src/ocaml/plugin/pulseparser.mly is an extension of FStar_Parser_Parse.mly
+- src/syntax_extension/PulseSyntaxExtension.Grammar.fst extends the F*
+  grammar of FStarC.Parser.Grammar
 
 - In PulseASTBuilder.fst, this snippet registers `parse_extension_lang` as a parser
   for #lang-pulse blocks 

@@ -22,7 +22,7 @@ open FStarC.List
 open FStarC.SMTEncoding.Z3
 open FStarC.SMTEncoding.Term
 open FStarC.Util
-open FStarC.SMap
+module HashTable = FStarC.HashTable
 open FStarC.TypeChecker
 open FStarC.TypeChecker.Env
 open FStarC.SMTEncoding
@@ -95,12 +95,21 @@ This used to be defined as exactly 544656 since that roughtly
 corresponded to 5 seconds in some "blessed" setting. But rlimit units
 are only very roughly correlated to time, and having this very non-round
 number makes reading SMT query dumps pretty confusing. So, for new
-solvers, we now just make it 500k. *)
+solvers, we now just make it 500k.
+
+Z3's rlimit is a 32-bit unsigned integer. Older versions of Z3 silently
+truncated larger values (5.0.0 still does), but newer ones reject them, so we
+cap the rlimit at the largest one Z3 accepts. *)
+let max_z3_rlimit : int = 4294967295
+
 let convert_rlimit (r : int) : ML int =
-  if Misc.version_ge (Options.z3_version ()) "4.12.3" then
-    500000 * r
-  else
-    544656 * r
+  let z3_rlimit =
+    if Misc.version_ge (Options.z3_version ()) "4.12.3" then
+      500000 * r
+    else
+      544656 * r
+  in
+  if z3_rlimit > max_z3_rlimit then max_z3_rlimit else z3_rlimit
 
 (* The block sent to the solver for a single proof obligation: the fuel
 settings, the negated goal, and the check-sat itself, all in their own
@@ -339,8 +348,8 @@ let query_info settings (g:goal) z3result =
         let used_rlimit_str =
           try
             let decimals = 3 in
-            let r0 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_initial_statistics "rlimit-count" in
-            let r1 = int_of_string <| Some?.v <| SMap.try_find z3result.z3result_statistics "rlimit-count" in
+            let r0 = int_of_string <| Some?.v <| HashTable.try_find z3result.z3result_initial_statistics "rlimit-count" in
+            let r1 = int_of_string <| Some?.v <| HashTable.try_find z3result.z3result_statistics "rlimit-count" in
             let used = r1 - r0 in
             div_with_decimals decimals used (convert_rlimit 1)
           with
@@ -351,7 +360,7 @@ let query_info settings (g:goal) z3result =
         this is the time of this goal alone: the wall clock time we could
         measure here covers the whole batch of goals in the round trip. *)
         let time_str =
-          match SMap.try_find z3result.z3result_statistics "time" with
+          match HashTable.try_find z3result.z3result_statistics "time" with
           | Some t -> t
           | None -> "0.00"
         in
@@ -479,8 +488,8 @@ let make_solver_configs
 let killed_result () : ML z3result = {
     z3result_status             = Z3.KILLED;
     z3result_time               = 0;
-    z3result_initial_statistics = SMap.create 0;
-    z3result_statistics         = SMap.create 0;
+    z3result_initial_statistics = HashTable.create 0;
+    z3result_statistics         = HashTable.create 0;
     z3result_log_file           = None;
 }
 

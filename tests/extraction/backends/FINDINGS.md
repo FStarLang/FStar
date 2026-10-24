@@ -19,6 +19,13 @@ the same as generating code the backend compiler rejects: no usable output.
 
 Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 
+The **ml**, **c** and **rs** columns belonged to the legacy extraction
+pipeline (`FStarC.Extraction`, `--codegen krml`), which has since been
+removed; the Makefile now runs only the Custard columns below. The legacy
+table and the analysis of its bugs are kept as a record of what the suite
+found, and because several of the bugs are in karamel and krmllib, which the
+Custard krml columns still go through.
+
 ---
 
 ## Summary
@@ -28,7 +35,7 @@ Backends: **ml** = OCaml, **c** = C via Karamel, **rs** = Rust via Karamel.
 | 1 | `IntN.ne` / `UIntN.ne` has no Krml opcode | 4 | ✗ | ✗ | ✗ | `ExtIntNe` |
 | 2 | `shift_arithmetic_right` unsupported by the Rust backend | 4 | ✓ | ✓ | ✗ | `ExtIntShiftArith` |
 | 3 | `UInt8.lognot` is not truncated in OCaml | **2** | ✗ | ✓ | ✓ | `ExtUInt8Lognot` |
-| 4 | narrowing casts dropped inside comparisons | **2** | ✓ | ✗ | ✓ | `ExtIntCast` |
+| 4 | narrowing casts dropped inside comparisons — **fixed** | **2** | ✓ | ✓ | ✓ | `ExtIntCast` |
 | 5 | `Prims.int` `/` and `%` truncate instead of Euclidean in C | **2** | ✓ | ✗ | – | `ExtPrimsIntDiv` |
 | 6 | `Prims_op_Star` is never defined in krmllib — **fixed** | 4 | – | – | – | `ExtPrimsIntMul` |
 | 7 | `Prims_int` is `int32_t`; literals silently truncate | **2** | ✓ | ✗ | – | `ExtPrimsIntBignum` |
@@ -58,7 +65,7 @@ direct C, **ckc** = Custard + karamel C, **ckr** = Custard + karamel Rust.
 | 1 | `IntN.ne` has no Krml opcode | ✗ | ✓ | ✓ | ✓ | `ExtIntNe` |
 | 2 | `shift_arithmetic_right` | ✓ | ✓ | ✓ | ✓ | `ExtIntShiftArith` |
 | 3 | `UInt8.lognot` untruncated in OCaml | ✗ | ✓ | ✓ | ✓ | `ExtUInt8Lognot` |
-| 4 | narrowing casts dropped in comparisons | ✓ | ✓ | ✗ | ✓ | `ExtIntCast` |
+| 4 | narrowing casts dropped in comparisons (**fixed**) | ✓ | ✓ | ✓ | ✓ | `ExtIntCast` |
 | 5–7 | `Prims.int` in krmllib | ✓ | – | ✗ | – | `ExtPrimsInt*` |
 | 8, 9 | recursive inductives | ✓ | – | ✗ | ✗ | `ExtDatatypes{Rec,Mutual}` |
 | 10 | Rust backend's missing `lowstar` module | ✓ | ✓ | ✓ | ✓ | `ExtDatatypes{Record,Variant}` |
@@ -68,7 +75,7 @@ direct C, **ckc** = Custard + karamel C, **ckr** = Custard + karamel Rust.
 | 15 | krmllib ships no `FStar_Int128` | ✓ | – | ✗ | ✗ | `ExtInt128` |
 | 16 | krmllib's undefined rotates | ✓ | ✓ | ✓ | ✓ | `ExtUIntRotate` |
 | 17 | Rust backend rejects `eq_mask`/`gte_mask` | ✓ | ✓ | ✗ | ✓ | `ExtUIntMask` |
-| 18 | the machine-integer modules are not realized | ✗ | ✓ | ✗ | ✓ | `ExtIntNe`, `ExtUIntMask` |
+| 18 | the machine-integer modules are not realized | ✗ | ✓ | ✓ | ✓ | `ExtIntNe`, `ExtUIntMask` |
 
 Custard is *better* than the pipeline above on thirteen cells and worse on
 two. It is better because it compiles projectors itself (#11), because it does
@@ -149,9 +156,12 @@ While diffing that file against the generated `FStar_UInt16.ml`, the following
 are also missing from `FStar_UInt8.ml`: `ne`, `of_int`, `of_native_int`,
 `to_native_int`, `shift_arithmetic_right`, `len`, `zeroes`.
 
-## 4. Narrowing casts are dropped inside comparisons (C)
+## 4. Narrowing casts are dropped inside comparisons (C) -- fixed
 
 *Severity 2 — silent wrong value. Test: `ExtIntCast`.*
+
+**Fixed** in karamel commit `4a0f2280` ("AstToCStar: preserve narrowing casts
+in comparisons").
 
 `mk_arith` in `karamel/lib/AstToCStar.ml` has an optimization that removes the
 `(uint32_t)` upcasts it inserts around `UInt8`/`UInt16` operands before a
@@ -619,15 +629,20 @@ that are now pinned down and will not silently regress.
 * **Rotations** on OCaml (`ExtUIntRotate`), including the `s = 0` case; see
   #16 for C and #17 for Rust.
 
-## 18. Custard does not realize the machine-integer modules
+## 18. Custard did not realize the machine-integer modules
 
-*Severity 4 (Custard OCaml, and the krml C column). Tests: `ExtIntNe`,
-`ExtUIntMask`.*
+*Severity 4 (Custard OCaml). Tests: `ExtIntNe`, `ExtUIntMask`.*
+
+**Fixed for the masks.** `realized_modules` now lists all eight of
+`FStar.{Int,UInt}{8,16,32,64}`, which is what `ulib/ml/app/ints` provides, so
+`eq_mask` and `gte_mask` reach the realization and `ExtUIntMask` passes on the
+krml C column too. `ExtIntNe` still fails on `custard-ocaml` for the reason
+below: `ne` has no primitive rule and no krml opcode.
 
 `realized_modules` in `src/custard/FStarC.Custard.Builtins.fst` lists the
 modules whose definitions Custard must *not* compile, because the runtime
-already provides them. `FStar.UInt8` is on that list; `FStar.UInt16`,
-`FStar.UInt32`, `FStar.UInt64` and the four signed modules are not.
+already provides them. `FStar.UInt8` was on that list; `FStar.UInt16`,
+`FStar.UInt32`, `FStar.UInt64` and the four signed modules were not.
 
 For those seven, the only operations Custard recognizes are the ones with a
 primitive rule: arithmetic, comparison, `&`/`|`/`^`, the shifts (including
@@ -655,8 +670,8 @@ same thing:
 * **karamel**: same, one stage later.
 
 The fix is in `Builtins`, not in any backend: either add the seven modules to
-`realized_modules`, or give the missing operations primitive rules. The second
-is what §125.1–§125.4 did for `shift_arithmetic_right`, `rotate_left` and
+`realized_modules` -- which is what was done -- or give the missing operations
+primitive rules. The second is what §125.1–§125.4 did for `shift_arithmetic_right`, `rotate_left` and
 `rotate_right`, which is why those two cells left this entry; it is the better
 answer of the two, because a rule serves all five backends and a realization
 serves only OCaml. The realizations do define all of them —

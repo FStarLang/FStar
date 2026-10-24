@@ -34,9 +34,9 @@ open FStarC.Class.Show
 open FStarC.Const
 open FStarC.Custard.Syntax
 
-module K    = FStarC.Extraction.KrmlAst
-module Krml = FStarC.Extraction.Krml
-module SMap = FStarC.SMap
+module K    = FStarC.Custard.KrmlAst
+module Krml = FStarC.Custard.KrmlAst
+module HashTable = FStarC.HashTable
 module BU   = FStarC.Util
 
 val print_program : program -> ML (list Krml.file)

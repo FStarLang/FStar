@@ -4736,6 +4736,12 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
             Callers with a better answer than an SMT obligation can turn even
             this off with [eq_norm_heuristic_ok]; see tests/tactics/TestBV.fst,
             and the note above [same_formula] in [meet_or_join]. *)
+         let hnf env t : ML term =
+           norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.2"
+             [Env.HNF; Env.UnfoldUntil delta_constant; Env.Primops;
+              Env.Beta; Env.Eager_unfolding; Env.Iota] env t
+           |> U.unmeta
+         in
          let rec equal env t1 t2 : ML bool =
            match TEQ.eq_tm env t1 t2 with
            | TEQ.Equal -> true
@@ -4743,12 +4749,7 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
            | TEQ.Unknown ->
              if not wl.eq_norm_heuristic_ok then false
              else
-             let hnf t =
-               norm_with_steps "FStarC.TypeChecker.Rel.norm_with_steps.2"
-                 [Env.HNF; Env.UnfoldUntil delta_constant; Env.Primops;
-                  Env.Beta; Env.Eager_unfolding; Env.Iota] env t
-               |> U.unmeta
-             in
+             let hnf = hnf env in
              let t1 = hnf t1 in
              let t2 = hnf t2 in
              match TEQ.eq_tm env t1 t2 with
@@ -4797,8 +4798,47 @@ let solve_t'_aux (problem:tprob) (wl:worklist) : ML solution =
            let t2 = full t2 in
            U.term_eq t1 t2 || TEQ.eq_tm env t1 t2 = TEQ.Equal
          in
+         (* Try congruence before unfolding anything: walk both terms in
+            lockstep while their heads agree, and reduce only where they
+            first differ, comparing the results with no further recursion.
+            This costs one pass over the terms as written.
+
+            The lazy reduction in [equal] unfolds the head first, and that
+            can be exponential when the difference is buried in an argument
+            that is cheap to decide: in [Mkst?.f #nat (kf #nat s)] vs
+            [Mkst?.f #word (kf #word s)], with [word] an abbreviation for
+            [nat], it unfolds [kf] into a definition that uses its argument
+            twice and then compares both copies separately, at every level of
+            the call graph (#4663). Congruence decides it by comparing
+            [nat] with [word].
+
+            A [false] here is not conclusive (the heads may compute to equal
+            terms from different arguments), so we then fall through to
+            [equal] and [equal_by_full_norm] as before.
+
+            At the root, when the heads differ, the reduce-and-compare step
+            would be exactly [equal]'s first step, so a failure there would
+            repeat it. Leave that case to [equal]. *)
+         let rec congruent (root:bool) t1 t2 : ML bool =
+           match TEQ.eq_tm env t1 t2 with
+           | TEQ.Equal -> true
+           | TEQ.NotEqual -> false
+           | TEQ.Unknown ->
+             let h1, args1 = U.head_and_args_full t1 in
+             let h2, args2 = U.head_and_args_full t2 in
+             if not (Nil? args1)
+                && List.length args1 = List.length args2
+                && TEQ.eq_tm env h1 h2 = TEQ.Equal
+             then List.forall2 (fun (a1, _) (a2, _) -> congruent false a1 a2) args1 args2
+             else if root then false
+             else
+               let t1 = hnf env t1 in
+               let t2 = hnf env t2 in
+               TEQ.eq_tm env t1 t2 = TEQ.Equal || U.term_eq t1 t2
+         in
          let equal t1 t2 : ML bool =
-           equal env t1 t2
+           (wl.eq_norm_heuristic_ok && congruent true t1 t2)
+           || equal env t1 t2
            || (wl.eq_norm_heuristic_ok && equal_by_full_norm t1 t2)
          in
          if (Env.is_interpreted wl.tcenv head1 || Env.is_interpreted wl.tcenv head2) //we have something like (+ x1 x2) =?= (- y1 y2)
@@ -5426,6 +5466,10 @@ let dedup_vc (vc:term) : ML term =
     | Tm_fvar fv -> S.fv_eq_lid fv lid
     | _ -> false
   in
+  (* SynHash.equal_term does not look through delayed substitutions, so push
+     them all the way down: once on the whole VC, and again after opening a
+     binder (as SS.open_term_1 delays its substitution on the body). *)
+  let compress_all (t:term) : ML term = FStarC.Syntax.Visit.visit_term false (fun t -> t) t in
   let rec go (known:SynHash.term_map unit) (t:term) : ML (term & SynHash.term_map unit) =
     let t0 = SS.compress t in
     let hd, args = U.head_and_args_full t0 in
@@ -5449,7 +5493,7 @@ let dedup_vc (vc:term) : ML term =
       (match (SS.compress f).n with
        | Tm_abs {b; body; rc_opt} ->
          let b, body = SS.open_term_1 b body in
-         let body, _ = go known body in
+         let body, _ = go known (compress_all body) in
          let known = SynHash.term_map_add t0 () known in
          if U.is_t_true body
          then U.t_true, known
@@ -5462,7 +5506,7 @@ let dedup_vc (vc:term) : ML term =
 
     | _ -> t0, SynHash.term_map_add t0 () known
   in
-  fst (go (SynHash.term_map_empty #unit) vc)
+  fst (go (SynHash.term_map_empty #unit) (compress_all vc))
 
 let do_discharge_vc use_env_range_msg env vc : ML unit =
   let open FStarC.Pprint in
@@ -5886,7 +5930,7 @@ let pick_a_univ_deffered_implicit (out : tagged_implicits)
   : ML (option Env.implicit & tagged_implicits)
   =
   let imps_with_deferred_univs, rest = List.partition
-    (fun (_, status) -> status = Implicit_checking_defers_univ_constraint)
+    (fun (_, status) -> Implicit_checking_defers_univ_constraint? status)
     out in
   match imps_with_deferred_univs with
   | [] -> None, out
@@ -6105,7 +6149,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
                  is_tac
                  force_univ_constraints in
                let res = Option.map Listlike.to_list res in
-               if res <> Some []
+               if not (match res with Some [] -> true | _ -> false)
                then failwith "Impossible: check_implicit_solution_and_discharge_guard for tac must return Some []"
                else ()
           else ();

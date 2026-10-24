@@ -109,7 +109,12 @@ val shorten_lid: env -> lid -> ML lid
 val try_lookup_lid_with_attributes_no_resolve: env -> lident -> ML (option (term & list attribute))
 val try_lookup_lid_no_resolve: env -> lident -> ML (option term)
 val try_lookup_datacon: env -> lident -> ML (option (fv & sigelt))
+(* The desugared declaration of a fully-qualified name, with no name resolution.
+   The bool is true if it was declared in an interface. *)
+val try_lookup_sigelt: env -> lident -> ML (option (sigelt & bool))
 val find_all_datacons: env -> lident -> ML (option (list lident))
+(* The record and data-constructor metadata currently in scope. *)
+val peek_record_cache: unit -> ML (list record_or_dc)
 val try_lookup_record_by_field_name: env -> lident -> ML (option record_or_dc)
 (* [try_lookup_record_by_field_name_many] finds a record type that includes all of the given fields *)
 val try_lookup_record_by_field_name_many: env -> list lident -> ML (option record_or_dc)

@@ -24,7 +24,7 @@ open FStarC.Const
 open FStarC.Custard.Syntax
 
 module BU   = FStarC.Util
-module SMap = FStarC.SMap
+module HashTable = FStarC.HashTable
 module E    = FStarC.Errors
 module Msg  = FStarC.Errors.Msg
 
@@ -108,10 +108,10 @@ let line_width : int = 80
    target, which the program supplied itself, and the handful of names the
    support library of section 122.8 implements.  Everything else is refused
    (section 122.9), which is why this table can be small. *)
-let externals : ref (SMap.t string) = mk_ref (SMap.create 0)
+let externals : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 let external_target (n:name) : ML (option string) =
-  SMap.try_find !externals (string_of_name n)
+  HashTable.try_find !externals (string_of_name n)
 
 (* Section 122.18: the F# module currently being printed, when the output is
    split.  A reference to a name of *this* module must not be qualified --
@@ -122,20 +122,20 @@ let current_module : ref (option string) = mk_ref None
 
 (* Section 122.18: the F# module each compiled declaration was emitted into.
    Empty for the whole-program single file, where nothing is qualified. *)
-let qualifiers : ref (SMap.t string) = mk_ref (SMap.create 0)
+let qualifiers : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 (* Section 122.18: the names emitted under their plain F* identifier rather
    than their mangled one.  Mangling exists to keep one flat file
    collision-free (section 122.3); once a declaration sits in the module its
    own F* module names, and is the only declaration from its source lid, the
    module already separates it and the plain name is the shorter one. *)
-let at_home : ref (SMap.t unit) = mk_ref (SMap.create 0)
+let at_home : ref (HashTable.t string unit) = mk_ref (HashTable.create 0)
 
 let is_at_home (n:name) : ML bool =
-  None? n.spec && Some? (SMap.try_find !at_home (string_of_name n))
+  None? n.spec && Some? (HashTable.try_find !at_home (string_of_name n))
 
 let qualifier (n:name) : ML (option string) =
-  match SMap.try_find !qualifiers (string_of_name n) with
+  match HashTable.try_find !qualifiers (string_of_name n) with
   | Some m -> if Some m = !current_module then None else Some m
   | None -> None
 
@@ -147,25 +147,25 @@ let qualify (n:name) (s:string) : ML string =
 (* [FStar.Pervasives.Native.tupleN] is .NET's own N-tuple: no constructor to
    name, no field to project.  Keyed by both the type's name and its
    constructor's, valued by the arity. *)
-let tuples : ref (SMap.t int) = mk_ref (SMap.create 0)
+let tuples : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 
 (* Constructors declared with no arguments.  [| C _ -> ] is a type error in F#
    when [C] is nullary, and a discriminator has to be written one way or the
    other, so the arity is recorded rather than guessed. *)
-let nullary : ref (SMap.t unit) = mk_ref (SMap.create 0)
+let nullary : ref (HashTable.t string unit) = mk_ref (HashTable.create 0)
 
 (* How many type parameters each record type takes, and which of its labels
    are contested.  F# resolves a bare label to the *last* record type declared
    with it, exactly as OCaml does, and is silent about it in exactly the same
    way; the fix is the same too. *)
-let record_params : ref (SMap.t int) = mk_ref (SMap.create 0)
-let record_labels : ref (SMap.t int) = mk_ref (SMap.create 0)
+let record_params : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
+let record_labels : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 
 let label_key (n:name) (f:string) : string =
   String.concat "." n.ns ^ "|" ^ f
 
 let ambiguous_label (n:name) (f:string) : ML bool =
-  match SMap.try_find !record_labels (label_key n f) with
+  match HashTable.try_find !record_labels (label_key n f) with
   | Some k -> k > 1
   | None -> false
 
@@ -176,10 +176,10 @@ let is_tuple_type (n:name) : ML bool =
 
 let tuple_arity (n:name) : ML (option int) =
   if Some? n.spec then None
-  else SMap.try_find !tuples (string_of_name n)
+  else HashTable.try_find !tuples (string_of_name n)
 
 let is_nullary_ctor (n:name) : ML bool =
-  Some? (SMap.try_find !nullary (string_of_name n))
+  Some? (HashTable.try_find !nullary (string_of_name n))
 
 (* A tuple component's field name is [_1], [_2], ...; its position is the
    number. *)
@@ -320,6 +320,15 @@ let fsharp_local (x:string) : ML string =
 (* Types                                                                *)
 (* -------------------------------------------------------------------- *)
 
+(* Section 95.6.  [--custard_sizet_width 32] narrows [FStar.SizeT.t] here
+   exactly as it does in the direct-to-C backend: the type, the literal
+   suffix and every conversion, all of which go through the three functions
+   below.  The licence is the same as there -- the program assumes or requires
+   [FStar.SizeT.fits_u32], and the flag is its author saying so -- and the
+   reason to want it is the target's: Fable carries a [uint64] as a
+   JavaScript BigInt and a [uint32] as a number. *)
+let sizet_narrow () : ML bool = Options.custard_sizet_32 ()
+
 (* Section 122.4.  A machine integer is .NET's own, not a support module's.
    This is the single largest difference from the OCaml backend and the reason
    this one exists: OCaml has no unsigned 32-bit type, so [FStar.UInt32.t]
@@ -331,7 +340,7 @@ let int_type (sw : signedness & iwidth) : ML string =
   (* [FStar.SizeT.t] is 64 bits at every target F* supports, so it is
      [uint64] and not [unativeint]: the latter would be 32 bits on a 32-bit
      runtime, which is a different type and a different program. *)
-  | WSizet -> "uint64"
+  | WSizet -> if sizet_narrow () then "uint32" else "uint64"
   | W128 -> (match s with
              | Unsigned -> "System.UInt128"
              | Signed -> "System.Int128")
@@ -347,7 +356,7 @@ let int_type (sw : signedness & iwidth) : ML string =
 let int_suffix (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   match w with
-  | WSizet -> "UL"
+  | WSizet -> if sizet_narrow () then "u" else "UL"
   | W8  -> (match s with Unsigned -> "uy" | Signed -> "y")
   | W16 -> (match s with Unsigned -> "us" | Signed -> "s")
   | W32 -> (match s with Unsigned -> "u"  | Signed -> "")
@@ -372,7 +381,7 @@ let reject_fwidth (fw:fwidth) : ML unit =
            narrower that arithmetic is defined on, so such a program would \
            compute at a width it did not ask for (sections 38 and 122.5).");
     text "Use FStar.Float32 or FStar.Float64, or extract with \
-          --custard_backend C." ]
+          --codegen C." ]
 
 (* Types F# already has.  Emitting a declaration for one of these would
    shadow the real thing; a monomorphized clone carries a [spec] suffix and is
@@ -425,31 +434,25 @@ let rec ty (t:cty) : ML string =
   | TFloat Float64 -> "float"
   | TFloat Float32 -> "float32"
   | TFloat fw -> reject_fwidth fw; "float"
-  (* Section 122.14.  A [unit] argument is not an argument: the IR drops such
-     a binder from a definition that has another one, exactly as the C backend
-     drops it from a signature, and an arrow type that kept it would disagree
-     with the definition it describes.  The disagreement is invisible while a
-     function is only called -- a call site consults the definition -- and
-     surfaces the moment one is passed as a value.
-
-     An arrow whose every argument is [unit] keeps one, because a definition
-     with no binders at all is a value rather than a function, and a value is
-     evaluated once. *)
+  (* Section 135.  An arrow is printed with every argument it has.  The IR
+     already decides which [unit] arguments a top-level definition deletes,
+     and a function value keeps all of them, so this matches both the
+     definitions and the closures.  Section 122.14 used to drop every [unit]
+     argument here, which disagreed with a closure applied at a type
+     variable. *)
   | TArrow _ ->
     let rec split (t:cty) : ML (list cty & cty) =
       match t with
       | TArrow (a, _, b) -> let args, r = split b in (a :: args, r)
       | _ -> ([], t) in
     let args, ret = split t in
-    let kept = args |> List.filter (fun a -> not (TUnit? a)) in
-    let kept = if Nil? kept then [TUnit] else kept in
-    "(" ^ String.concat " -> " (List.map ty kept) ^ " -> " ^ ty ret ^ ")"
+    "(" ^ String.concat " -> " (List.map ty args) ^ " -> " ^ ty ret ^ ")"
   | TTuple ts -> "(" ^ String.concat " * " (List.map ty ts) ^ ")"
   (* Section 8.4: a buffer is a .NET array.  Faithful for everything but
      [BufSub], which needs an interior pointer; that one is refused at run
      time rather than mistranslated. *)
   | TBuf t -> "(" ^ ty t ^ ")[]"
-  | TRef t -> "(" ^ ty t ^ " ref)"
+  | TRef (_, t) -> "(" ^ ty t ^ " ref)"
   | TInline _ ->
     failwith "Custard: an inline-field marker reached the F# backend"
   | TConst _ ->
@@ -459,7 +462,7 @@ let rec ty (t:cty) : ML string =
       text "[wmma::fragment<matrix_a, 16, 16, 16, half, row_major>] is one \
             type and [wmma::fragment<matrix_b, ...>] another; F# has no such \
             construction, so section 69 is a C-backend feature \
-            (--custard_backend C).";
+            (--codegen C).";
       text "The unparameterized form still works everywhere: a \
             [@@custard_extern] target with no [{0}] placeholder names one \
             target type, and its arguments are dropped." ]
@@ -497,8 +500,8 @@ let rec erased_pun (a:cty) (b:cty) : bool =
   | TApp (n1, a1), TApp (n2, a2) ->
     (Cons? a1 || Cons? a2) && not (n1 = n2 && a1 = a2)
   | TBuf t1, TBuf t2 -> not (t1 = t2)
-  | TRef t1, TRef t2 -> not (t1 = t2)
-  | TBuf t1, TRef t2 | TRef t1, TBuf t2 -> erased_pun t1 t2
+  | TRef (_, t1), TRef (_, t2) -> not (t1 = t2)
+  | TBuf t1, TRef (_, t2) | TRef (_, t1), TBuf t2 -> erased_pun t1 t2
   | _ -> false
 
 let reject_coercion (a:cty) (b:cty) : ML string =
@@ -512,7 +515,7 @@ let reject_coercion (a:cty) (b:cty) : ML string =
           (section 122.6.2).";
     text "The change is under a type constructor rather than at the top of \
           the type, which is where an erased field can be.  Extract this \
-          program with --custard_backend OCaml, or give the declaration a \
+          program with --codegen OCaml, or give the declaration a \
           type whose erased part is a field rather than a parameter." ]
 
 (* -------------------------------------------------------------------- *)
@@ -654,14 +657,17 @@ let w128_unop (sw : signedness & iwidth) (o:op) : ML (option string) =
 let is_shift (o:op) : bool = BShiftL? o || BShiftR? o
 
 (* Whether a width conversion can change the mathematical value.
-   [width_bits] is [Syntax]'s. *)
-let value_preserving (a b : signedness & iwidth) : bool =
+   [width_bits] is [Syntax]'s, which answers 64 for [WSizet] whatever
+   {!sizet_narrow} says, so that one width is read here instead. *)
+let value_preserving (a b : signedness & iwidth) : ML bool =
+  let bits (w:iwidth) : ML int =
+    if WSizet? w && sizet_narrow () then 32 else width_bits w in
   let sa, wa = a in
   let sb, wb = b in
   match sa, sb with
   | Unsigned, Unsigned
-  | Signed, Signed -> width_bits wa <= width_bits wb
-  | Unsigned, Signed -> width_bits wa < width_bits wb
+  | Signed, Signed -> bits wa <= bits wb
+  | Unsigned, Signed -> bits wa < bits wb
   | Signed, Unsigned -> false
 
 (* Section 122.4.  The conversion function for a target width.  F#'s own
@@ -672,7 +678,7 @@ let value_preserving (a b : signedness & iwidth) : bool =
 let int_conv (sw : signedness & iwidth) : ML string =
   let s, w = sw in
   match w with
-  | WSizet -> "uint64"
+  | WSizet -> int_type sw
   | W128 -> (match s with
              | Unsigned -> "FStarCustard.toU128"
              | Signed -> "FStarCustard.toI128")
@@ -697,7 +703,7 @@ let qualified_label (n:name) (f:string) : ML string =
    identity that is in question and never its arguments. *)
 let ascribe_record (n:name) (f:string) (s:string) : ML string =
   if not (ambiguous_label n f) then s else
-  match SMap.try_find !record_params (string_of_name n) with
+  match HashTable.try_find !record_params (string_of_name n) with
   | None -> s
   | Some k ->
     let rec wilds (i:int) : ML (list string) =
@@ -814,11 +820,9 @@ let rec term (ind:string) (e:expr) : ML string =
   | ECtor (n, args) ->
     join_at ind ("(" ^ ctor_ref n ^ " (") ", " term args ^ "))"
   | ETuple es -> join_at ind "(" ", " term es ^ ")"
-  (* Section 122.14, the call side of the same rule. *)
+  (* Section 135: every argument, as the IR passes it. *)
   | EApp (hd, args) ->
-    let kept = args |> List.filter (fun (a:expr) -> not (TUnit? a.ty)) in
-    let kept = if Nil? kept then args else kept in
-    join_at ind "(" " " term (hd :: kept) ^ ")"
+    join_at ind "(" " " term (hd :: args) ^ ")"
   (* Section 122.10.  Every binder carries its type.  F#'s inference is
      weaker than OCaml's -- it is left-to-right and has no principal types for
      a field access -- so a lambda whose parameter is only used as the subject
@@ -921,6 +925,11 @@ let rec term (ind:string) (e:expr) : ML string =
   | ECast (e1, t) ->
     (match e1.ty, t with
      | TInt sw1, TInt sw2 when sw1 = sw2 -> term ind e1
+     (* Section 95.6.  Under --custard_sizet_width 32, [FStar.SizeT.t] and
+        [FStar.UInt32.t] are the same .NET type, and a conversion between
+        them is nothing at all. *)
+     | TInt sw1, TInt sw2 when not (is_w128 sw1) && not (is_w128 sw2)
+                            && int_type sw1 = int_type sw2 -> term ind e1
      | TFloat _, TFloat fw2 ->
        reject_fwidth fw2;
        let pre = "(" ^ (if Float32? fw2 then "float32" else "float") ^ " " in
@@ -1013,7 +1022,7 @@ let rec term (ind:string) (e:expr) : ML string =
      that nothing downstream has to infer it -- which at a type variable it
      could not. *)
   | EAny -> "(Unchecked.defaultof<" ^ ty e.ty ^ ">)"
-  | EAbort s -> "(failwith \"" ^ escape s ^ "\")"
+  | EAbort s | EUnreachable s -> "(failwith \"" ^ escape s ^ "\")"
   | EWhile (c, body) ->
     let pre = "(while " in
     let hd = pre ^ term (after ind pre) c ^ " do\n" in
@@ -1435,7 +1444,7 @@ let reject_unrealized (p:program) : ML unit =
                backend accepts (section 122).");
         text "Give it a target with [@@custard_extern \"...\"] and supply \
               that name yourself, or extract this program with \
-              --custard_backend OCaml." ]
+              --codegen OCaml." ]
     | _ -> ())
 
 (* A realized *type* is the same situation one level up.  The ones .NET
@@ -1454,7 +1463,7 @@ let reject_realized_types (p:program) : ML unit =
         text ("Its declaration says what shape the type has, but not what it \
                is: the definition is in ulib/ml, and there is no F# \
                counterpart of that library (section 122.9).");
-        text "Extract this program with --custard_backend OCaml, or keep it \
+        text "Extract this program with --codegen OCaml, or keep it \
               to the fragment the C backend compiles." ]
     | _ -> ())
 
@@ -1473,7 +1482,7 @@ let reject_target_only_types (p:program) : ML unit =
             text ("Its target spelling [" ^ target ^ "] has a placeholder for \
                    an argument, so two instantiations of it are two different \
                    target types; F# has no such construction.  Section 69 is \
-                   a C-backend feature (--custard_backend C).") ]
+                   a C-backend feature (--codegen C).") ]
         | CReference ->
           E.raise_error0 E.Error_CustardBadReference [
             text ("Custard: the type " ^ string_of_name t.dt_name ^
@@ -1482,7 +1491,7 @@ let reject_target_only_types (p:program) : ML unit =
             text "The attribute says that values of the type are handles, so \
                   a binding of one has to alias rather than copy, which is \
                   C++ [T &x = ...] and F# has no way to spell.  Section 70.2 \
-                  is a C-backend feature (--custard_backend C)." ]
+                  is a C-backend feature (--codegen C)." ]
         | _ -> ())
     | _ -> ())
 
@@ -1506,7 +1515,7 @@ let rec mentions_tyvar (t:cty) : ML bool =
   | TVar _ -> true
   | TArrow (a, _, b) -> mentions_tyvar a || mentions_tyvar b
   | TTuple ts -> ts |> List.existsb mentions_tyvar
-  | TBuf t | TRef t | TInline t -> mentions_tyvar t
+  | TBuf t | TRef (_, t) | TInline t -> mentions_tyvar t
   | TApp (_, args) -> args |> List.existsb mentions_tyvar
   | _ -> false
 
@@ -1525,12 +1534,9 @@ let rec mentions_tyvar (t:cty) : ML bool =
    application is not: [a -> ML (b -> c)] expanded past its first arrow would
    run the [ML] part only once [b] arrived.
 
-   The binders follow the arrow-type convention of section 122.14 -- a [unit]
-   argument is dropped unless every argument is one -- because the type every
-   *use* sees is printed by that convention, and the definition has to have
-   that type.  A prefix that would need a lone [unit] binder while the type
-   goes on to take real arguments cannot be spelled consistently, and is left
-   to the refusal. *)
+   The binders are those of the arrow type, every one of them, [unit]
+   included (section 135), because the type every *use* sees is printed that
+   way and the definition has to have that type. *)
 let eta_generic_value (l:dlet) : ML dlet =
   let rec spine (t:cty) : ML (list cty & cty & eff) =
     match t with
@@ -1542,19 +1548,12 @@ let eta_generic_value (l:dlet) : ML dlet =
   let args, ret, ef = spine l.dl_ret in
   let named = args |> List.mapi (fun i a ->
                 (a, (if i = 0 then "custard_eta" else "custard_eta" ^ show i))) in
-  let kept = named |> List.filter (fun (a, _) -> not (TUnit? a)) in
-  if Nil? kept && TArrow? ret then l
-  else
-    let kept = if Nil? kept then [List.hd named] else kept in
-    let bs = kept |> List.map (fun (a, x) -> { b_name = x; b_ty = a }) in
-    let actuals = named |> List.map (fun (a, x) ->
-                    if TUnit? a && not (List.existsb (fun (_, y) -> y = x) kept)
-                    then mk (EConst CUnit) TUnit E_Pure
-                    else mk (EVar x) a E_Pure) in
-    let body = match l.dl_body.e with
-               | EApp (f, xs) -> mk (EApp (f, xs @ actuals)) ret ef
-               | _ -> mk (EApp (l.dl_body, actuals)) ret ef in
-    { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
+  let bs = named |> List.map (fun (a, x) -> { b_name = x; b_ty = a }) in
+  let actuals = named |> List.map (fun (a, x) -> mk (EVar x) a E_Pure) in
+  let body = match l.dl_body.e with
+             | EApp (f, xs) -> mk (EApp (f, xs @ actuals)) ret ef
+             | _ -> mk (EApp (l.dl_body, actuals)) ret ef in
+  { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }
 
 let eta_generic_values (p:program) : ML program =
   p |> List.map (fun d ->
@@ -1582,7 +1581,7 @@ let reject_generic_values (p:program) : ML unit =
         text ("F#'s value restriction does not generalize such a definition, \
                so it cannot be written at all (section 122.11).  " ^ why);
         text "Give it a parameter, specialize it at the type it is wanted at, \
-              or extract with --custard_backend OCaml." ]
+              or extract with --codegen OCaml." ]
     | _ -> ())
 
 (* -------------------------------------------------------------------- *)
@@ -1594,46 +1593,46 @@ let reject_generic_values (p:program) : ML unit =
    module its file compiles to, which is what every cross-file reference is
    qualified by and what decides whether a declaration is *at home* and so
    emitted under its plain identifier. *)
-let build_tables (homes : SMap.t string) (p:program) : ML unit =
-  let tbl = SMap.create 50 in
-  let tups = SMap.create 20 in
-  let nul = SMap.create 50 in
-  let recs : SMap.t int = SMap.create 100 in
-  let labels : SMap.t int = SMap.create 100 in
-  let quals = SMap.create 50 in
-  let home = SMap.create 50 in
+let build_tables (homes : HashTable.t string string) (p:program) : ML unit =
+  let tbl = HashTable.create 50 in
+  let tups = HashTable.create 20 in
+  let nul = HashTable.create 50 in
+  let recs : HashTable.t string int = HashTable.create 100 in
+  let labels : HashTable.t string int = HashTable.create 100 in
+  let quals = HashTable.create 50 in
+  let home = HashTable.create 50 in
   p |> List.iter (fun d ->
     match d with
     | DExternal e ->
       (match e.dx_target with
-       | Some t -> SMap.add tbl (string_of_name e.dx_name) t
+       | Some t -> HashTable.add tbl (string_of_name e.dx_name) t
        | None ->
          (match supported_realization e.dx_name with
-          | Some t -> SMap.add tbl (string_of_name e.dx_name) t
+          | Some t -> HashTable.add tbl (string_of_name e.dx_name) t
           (* Refused by {!reject_unrealized} before anything is printed. *)
           | None -> ()))
     | DExn e ->
-      if Nil? e.de_args then SMap.add nul (string_of_name e.de_name) ()
+      if Nil? e.de_args then HashTable.add nul (string_of_name e.de_name) ()
     | DType t ->
       (match t.dt_body with
        | TVariant cs ->
          cs |> List.iter (fun (cn, fs) ->
-           if Nil? fs then SMap.add nul (string_of_name cn) ());
+           if Nil? fs then HashTable.add nul (string_of_name cn) ());
          (* [tupleN] is the one realized type whose F# form is syntax rather
             than a name; record its arity under every name it is reached by. *)
          if is_tuple_type t.dt_name then
            (match cs with
             | [(cn, fs)] ->
-              SMap.add tups (string_of_name t.dt_name) (List.length fs);
-              SMap.add tups (string_of_name cn) (List.length fs)
+              HashTable.add tups (string_of_name t.dt_name) (List.length fs);
+              HashTable.add tups (string_of_name cn) (List.length fs)
             | _ -> ())
        | TRecord fs ->
          if is_tuple_type t.dt_name then
-           SMap.add tups (string_of_name t.dt_name) (List.length fs);
-         SMap.add recs (string_of_name t.dt_name) (List.length t.dt_params);
+           HashTable.add tups (string_of_name t.dt_name) (List.length fs);
+         HashTable.add recs (string_of_name t.dt_name) (List.length t.dt_params);
          fs |> List.iter (fun (f, _) ->
            let k = label_key t.dt_name f in
-           SMap.add labels k (1 + (match SMap.try_find labels k with
+           HashTable.add labels k (1 + (match HashTable.try_find labels k with
                                    | Some i -> i
                                    | None -> 0)))
        | _ -> ())
@@ -1649,13 +1648,13 @@ let build_tables (homes : SMap.t string) (p:program) : ML unit =
      unambiguous within the module. *)
   p |> List.iter (fun d ->
     let n = name_of_decl d in
-    match SMap.try_find homes (string_of_name n) with
+    match HashTable.try_find homes (string_of_name n) with
     | None -> ()
     | Some m ->
       let mark (x:name) : ML unit =
-        SMap.add quals (string_of_name x) m;
+        HashTable.add quals (string_of_name x) m;
         if None? x.spec && module_name_of_unit (String.concat "." x.ns) = m
-        then SMap.add home (string_of_name x) () in
+        then HashTable.add home (string_of_name x) () in
       mark n;
       (match d with
        | DType t ->
@@ -1761,7 +1760,7 @@ let reject_all (p:program) : ML unit =
 let print_program (stem:string) (p:program) : ML string =
   let p = eta_generic_values p in
   reject_all p;
-  build_tables (SMap.create 0) p;
+  build_tables (HashTable.create 0) p;
   current_module := None;
   reserve_top p;
   assemble (module_name_of_unit stem) (print_decls p @ entry_calls p)
@@ -1775,11 +1774,11 @@ let print_split (files : list (string & program)) : ML (list (string & string)) 
   let files = files |> List.map (fun (m, ds) -> (m, eta_generic_values ds)) in
   let whole = List.collect snd files in
   reject_all whole;
-  let homes = SMap.create 100 in
+  let homes = HashTable.create 100 in
   files |> List.iter (fun (m, ds) ->
     let m = module_name_of_unit m in
     ds |> List.iter (fun d ->
-      SMap.add homes (string_of_name (name_of_decl d)) m));
+      HashTable.add homes (string_of_name (name_of_decl d)) m));
   build_tables homes whole;
   let rendered = files |> List.map (fun (m, ds) ->
     let m = module_name_of_unit m in

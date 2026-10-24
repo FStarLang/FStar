@@ -798,64 +798,14 @@ let rec join_slprop (pick:option bool) (linked:bool) g b (ex1 ex2:list (universe
       let remaining = leftover pick b (list_as_slprop p1s) (list_as_slprop p2s) in
       list_as_slprop (remaining::pures1@pures2@matched)
 
-let rec join_effect_annot g (e1 e2:effect_annot)
-: T.Tac effect_annot
-= match e1, e2 with
-  | EffectAnnotSTTDiv, _
-  | _, EffectAnnotSTTDiv -> EffectAnnotSTTDiv
-
-  | _, EffectAnnotSTT
-  | EffectAnnotSTT, _ -> EffectAnnotSTT
-  
-  | EffectAnnotGhost { opens=o1 }, EffectAnnotGhost { opens=o2 } ->
-    let o = tm_join_inames o1 o2 in
-    let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    EffectAnnotGhost { opens = o }
-  | EffectAnnotAtomic { opens=o1 }, EffectAnnotAtomic { opens=o2 } ->
-    let o = tm_join_inames o1 o2 in
-    let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    EffectAnnotAtomic { opens = o }
-  | EffectAnnotAtomicOrGhost { opens=o1 }, EffectAnnotAtomicOrGhost { opens=o2 } ->
-    let o = tm_join_inames o1 o2 in
-    let ty = Pulse.Checker.Pure.core_check_term g o RT.E_Total tm_inames in
-    EffectAnnotAtomicOrGhost { opens = o }
-
-  | EffectAnnotAtomicOrGhost { opens=o1 }, EffectAnnotGhost _ ->
-    join_effect_annot g (EffectAnnotGhost {opens=o1}) e2
-
-  | EffectAnnotAtomicOrGhost { opens=o1 }, EffectAnnotAtomic _ ->
-    join_effect_annot g (EffectAnnotAtomic {opens=o1}) e2
-
-  | EffectAnnotAtomic _, EffectAnnotAtomicOrGhost { opens=o2 } ->
-    join_effect_annot g e1 (EffectAnnotAtomicOrGhost {opens=o2})
-
-  | EffectAnnotGhost _, EffectAnnotAtomicOrGhost { opens=o2 } ->
-    join_effect_annot g e1 (EffectAnnotGhost {opens=o2})
-
-  | _ -> 
-    let open Pulse.PP in
-    let open Pulse.Show in
-    fail_doc g (Some <| range_of_env g)
-      [text "Could not combine effect annotations";
-       text (Printf.sprintf "Effect of then-branch is %s" (show e1));
-       text (Printf.sprintf "Effect of else-branch is %s" (show e2))]
-
-let join_post_pick (pick:option bool) (linked:bool) #g #hyp #b
+let join_post_candidate (pick:option bool) (linked:bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
-: T.Tac (post_hint_for_env g)
+: T.Tac term
 = Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Joining postconditions:\n%s\nand\n%s\n"
       (T.term_to_string p1.post)
       (T.term_to_string p2.post)
-  );
-  if not (T.term_eq (RU.deep_compress_safe p1.ret_ty) (RU.deep_compress_safe p2.ret_ty))
-  then (
-    fail_doc g (Some (T.range_of_term p1.ret_ty))
-      Pulse.PP.(
-        [text "The branches of a conditional must return the same type";
-         text (Printf.sprintf "The types %s and %s are not equal" (T.term_to_string p1.ret_ty) (T.term_to_string p2.ret_ty))]
-      )
   );
   let x = fresh g in
   let g' = push_binding g x ppname_default p1.ret_ty in
@@ -869,19 +819,7 @@ let join_post_pick (pick:option bool) (linked:bool) #g #hyp #b
     Printf.sprintf "Inferred joint postcondition:\n%s\n"
       (T.term_to_string joined_post)
   );
-  assume (fresh_wrt x g (freevars joined_post));
-  let u = Pulse.Checker.Pure.check_universe g p1.ret_ty in
-  let joined_post' = open_term_nv joined_post (ppname_default, x) in 
-  let _ = Pulse.Checker.Pure.check_slprop_with_core g' joined_post' in
-  let eff = join_effect_annot g p1.effect_annot p2.effect_annot in
-  let res : post_hint_for_env g =
-    {g; effect_annot=eff;
-     ret_ty=p1.ret_ty; u=u;
-     post=joined_post}
-  in
-  res
-
-let join_post #g #hyp #b p1 p2 = join_post_pick None false #g #hyp #b p1 p2
+  joined_post
 
 let st_ghost_as_atomic_matches_post_hint
   (c:comp { C_STGhost? c })

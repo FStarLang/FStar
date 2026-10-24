@@ -32,7 +32,7 @@ module N       = FStarC.TypeChecker.Normalize
 module PC      = FStarC.Parser.Const
 module RC      = FStarC.Reflection.V2.Constants
 module S       = FStarC.Syntax.Syntax
-module SMap    = FStarC.SMap
+module HashTable = FStarC.HashTable
 module SS      = FStarC.Syntax.Subst
 module TcEnv   = FStarC.TypeChecker.Env
 module U       = FStarC.Syntax.Util
@@ -164,6 +164,9 @@ let building : ref (list Ident.lident) = mk_ref []
 
 let find_generated (l:Ident.lident) : ML (option gen_emb) =
   List.find (fun (g:gen_emb) -> Ident.lid_equals g.ge_lid l) !generated
+
+(* The key a generated embedding is emitted and exported under. *)
+let emb_key (l:Ident.lident) : ML string = "regemb-emb:" ^ Ident.string_of_lid l
 
 let emb_base (s:string) : ML Ident.lident =
   Ident.lid_of_str ("FStarC.Syntax.Embeddings.Base." ^ s)
@@ -436,6 +439,15 @@ and embedding_head (st:Extract.state) (k:kind) (t:term) : ML (option Ident.liden
    that a type that mentions itself -- which is most of them -- terminates. *)
 and ensure_generated (st:Extract.state) (l:Ident.lident) : ML unit =
   if Some? (find_generated l) then () else
+  (* Section 13.7.  A linked unit that generated this embedding exports it,
+     and this unit uses that one rather than generating a second. *)
+  match Extract.import_key st (emb_key l) with
+  | Some nm ->
+    generated := { ge_lid  = l;
+                   ge_ph   = S.new_bv None (embedding_typ (S.fvar l None));
+                   ge_emb  = nm;
+                   ge_knot = nm } :: !generated
+  | None ->
   match TcEnv.lookup_sigelt (Extract.tcenv st) l with
   | Some ({sigel = Sig_inductive_typ {params; mutuals}}) ->
     if Cons? params then
@@ -475,7 +487,7 @@ and generate_one (st:Extract.state) (g:gen_emb) : ML unit =
             dl_binders = [{ b_name = "_thunk"; b_ty = TUnit }];
             dl_ret = ety; dl_eff = E_Impure; dl_body = body;
             dl_flags = [Comment ("Embedding for " ^ Ident.string_of_lid g.ge_lid)] });
-  Extract.emit st ("regemb-emb:" ^ Ident.string_of_lid g.ge_lid)
+  Extract.emit_exported st (emb_key g.ge_lid)
     (DLet { dl_name = g.ge_emb; dl_typars = []; dl_binders = []; dl_ret = ety;
             dl_eff = E_Impure;
             dl_body = CSyn.mk (EApp (CSyn.mk (EQual (g.ge_knot, []))
@@ -552,17 +564,24 @@ and unembed_fun (st:Extract.state) (gty:typ)
 let native_lid (s:string) : name =
   { ns = ["FStarC"; "Tactics"; "Native"]; id = s; spec = None }
 
-(* [FStarC.Tactics.Native.register_plugin] and [register_tactic] exist only in
-   the hand-written [src/ml/FStarC_Tactics_Native.ml]: the module's interface
-   does not declare them, because nothing in F* calls them -- only generated
-   code does.  So there is nothing to request, and the reference is a
-   [DExternal] this module puts there itself. *)
+(* [FStarC.Tactics.Native.register_plugin] and [register_tactic] are called
+   only by generated code.  When the interface declares them (as it does when
+   the compiler itself is extracted), they are requested like any other
+   definition, so that an F* implementation gets extracted.  Otherwise, e.g.
+   when extracting a user plugin without the compiler's modules loaded, the
+   reference is a [DExternal] this module puts there itself, resolved against
+   the compiler library at link time. *)
 let register_fn (st:Extract.state) (which:string) (ty:cty) : ML name =
-  let nm = native_lid which in
-  Extract.emit st ("regemb-extern:" ^ which)
-    (DExternal { dx_name = nm; dx_typars = []; dx_ty = ty;
-                 dx_target = None; dx_header = None; dx_flags = [] });
-  nm
+  let l = Ident.lid_of_str ("FStarC.Tactics.Native." ^ which) in
+  if Some? (TcEnv.lookup_sigelt (Extract.tcenv st) l) then
+    Extract.request_lid st l
+  else begin
+    let nm = native_lid which in
+    Extract.emit st ("regemb-extern:" ^ which)
+      (DExternal { dx_name = nm; dx_typars = []; dx_ty = ty;
+                   dx_target = None; dx_header = None; dx_flags = [] });
+    nm
+  end
 
 let ir_call (f:name) (fty:cty) (args:list expr) : ML expr =
   let rec res (t:cty) (n:int) : ML cty =
@@ -623,7 +642,14 @@ let interp_term (st:Extract.state) (k:kind) (tac:bool) (fv_lid:Ident.lident)
              (b.binder_bv, S.new_bv None (arg_typ k))) in
   let tys = List.map (fun (b:binder) -> b.binder_bv.sort) bs @ [res] in
   let embs = tys |> List.map (embedding_for st k env) in
-  let f = S.fvar fv_lid None in
+  (* Section 135.  The compiled definition is handed over at the native
+     convention the interpretation functions expect: its type arguments
+     deleted.  Applied to them, the name is a call to the top-level
+     definition, whose dropped type positions are then filled; bare, it would
+     be a heap closure keeping one [unit] parameter per type binder. *)
+  let f = S.mk_Tm_app (S.fvar fv_lid None)
+            (tvs |> List.map (fun (b:binder) -> (S.t_unit, U.aqual_of_binder b)))
+            dummy in
   (* [vs] always ends in the argument list; with type binders the body sees a
      shortened one, and the match that shortens it wraps the whole thing. *)
   let wrap (vs:list bv) (res_ty:typ) (mk:list bv -> ML term) : ML term =
@@ -763,12 +789,21 @@ let handle_sigelt (st:Extract.state) (arity_opt:option int) (se:sigelt) : ML uni
   match se.sigel with
   | Sig_let {lbs=(_, lbs)} ->
     lbs |> List.iter (fun lb ->
+      let name () =
+        match lb.lbname with
+        | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)
+        | Inl bv -> Ident.string_of_id bv.ppname in
       try registration st arity_opt se.sigrng lb with
-      | NoEmbedding msg ->
-        warn_not_implemented se.sigrng
-          (match lb.lbname with
-           | Inr fv -> Ident.string_of_lid (S.lid_of_fv fv)
-           | Inl bv -> Ident.string_of_id bv.ppname) msg)
+      | NoEmbedding msg -> warn_not_implemented se.sigrng (name ()) msg
+      (* An exception this does not name is not the plugin machinery's to
+         interpret, but the message it carries says nothing about which
+         plugin was being registered when it was raised.  Say so, and
+         re-raise. *)
+      | e ->
+        let open FStarC.Errors.Msg in
+        E.log_issue se.sigrng E.Warning_PluginNotImplemented
+          [text (Format.fmt1 "While registering plugin `%s':" (name ()))];
+        raise e)
   | _ -> ()
 
 (* Only a module the *program* asked for by name gets registrations.
@@ -794,3 +829,13 @@ let handle_module (st:Extract.state) (roots:list Ident.lident) (md:modul) : ML u
     | Some _ when se.sigquals |> List.existsb (function Projector _ | Discriminator _ -> true
                                                       | _ -> false) -> ()
     | Some arity_opt -> handle_sigelt st arity_opt se)
+
+(* Section 13.7: [plugin_embedding #t]. *)
+let plugin_embedding_expr (st:Extract.state) (t:term) : ML expr =
+  try compile st (embedding_for st SyntaxTerm [] t) with
+  | NoEmbedding msg ->
+    let open FStarC.Errors.Msg in
+    E.raise_error0 E.Error_CustardUnrepresentableValue [
+      text ("Custard: plugin_embedding has no embedding to stand for at type " ^
+            show t ^ ".");
+      text msg ]

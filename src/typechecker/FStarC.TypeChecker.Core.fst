@@ -342,10 +342,10 @@ type __result a =
   | Success of a & cache_t
   | Error of error
 
-module THT = FStarC.Syntax.TermHashTable
+module HashTable = FStarC.HashTable
 type tc_table = {
-  table:THT.hashtable hash_entry;
-  guard_table:THT.hashtable guard_entry;
+  table:HashTable.t term hash_entry;
+  guard_table:HashTable.t term guard_entry;
   counter:ref int //version counter
 }
 
@@ -360,11 +360,13 @@ let result a = context -> cache_t -> ML (__result (success a))
 
 let equal_term_for_hash t1 t2 =
   FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term_for_hash"
+(* A fast path for relating terms, so up to delayed substitutions and solved
+   uvars: unlike the cache keys, these terms are not deeply compressed. *)
 let equal_term t1 t2 =
-  FStarC.Profiling.profile (fun _ -> Hash.equal_term t1 t2) None "FStarC.TypeChecker.Core.equal_term"
+  FStarC.Profiling.profile (fun _ -> Hash.equal_term_upto_compress t1 t2) None "FStarC.TypeChecker.Core.equal_term"
 let table : tc_table = {
-  table = THT.create 1048576; //2^20
-  guard_table = THT.create 1048576; //2^20
+  table = HashTable.create 1048576; //2^20
+  guard_table = HashTable.create 1048576; //2^20
   counter = mk_ref 0
 } 
 type cache_stats_t = { hits : int; misses : int }
@@ -379,8 +381,8 @@ let reset_cache_stats () =
     cache_stats := { hits = 0; misses = 0 }
 let report_cache_stats () = !cache_stats
 let clear_memo_table () = 
-  THT.clear table.table;
-  THT.clear table.guard_table;
+  HashTable.clear table.table;
+  HashTable.clear table.guard_table;
   table.counter := !table.counter + 1
 
 type guard_commit_token = {
@@ -406,11 +408,11 @@ let commit_guard_core (g:guard_commit_token) : ML unit =
     | Some cache ->
       g.guard_cache := None; //invalidate the cache in the token
       FStarC.Syntax.Hash.term_map_fold
-        (fun term hash_entry _ -> THT.insert term hash_entry table.table)
+        (fun term hash_entry _ -> HashTable.add table.table term hash_entry)
         cache.term_map
         ();
       FStarC.Syntax.Hash.term_map_fold
-        (fun term guard_entry _ -> THT.insert term guard_entry table.guard_table)
+        (fun term guard_entry _ -> HashTable.add table.guard_table term guard_entry)
         cache.guard_map
         ()
   )
@@ -459,6 +461,7 @@ let with_guard (#a #b:Type) (x:result a) (f: either (success a) error -> ML (res
     | Success (r, cache') -> f (Inl r) ctx cache'
     | Error err -> f (Inr err) ctx cache
 
+[@@FStar.Attributes.custard_inline]
 let (let?) (#a:Type) (#b:Type) (x:option a) (f: a -> option b)
   : option b
   = match x with
@@ -593,36 +596,6 @@ let check_arg_qual (a:aqual) (b:bqual)
       | _ -> return ()
       end
 
-(* The fixed-width machine-integer coercions that integer literals desugar
-   to (FStar.UInt32.__uint_to_t, which unfolds to FStar.UInt32.uint_to_t,
-   etc.), with the signedness and width of their argument's refinement.
-   FStar.SizeT is not included: its range is platform-dependent. *)
-let machine_int_literal_heads : list (string & (Const.signedness & Const.width)) =
-  let open FStarC.Const in
-  let u m w = [("FStar." ^ m ^ ".uint_to_t", (Unsigned, w));
-               ("FStar." ^ m ^ ".__uint_to_t", (Unsigned, w))] in
-  let s m w = [("FStar." ^ m ^ ".int_to_t", (Signed, w));
-               ("FStar." ^ m ^ ".__int_to_t", (Signed, w))] in
-  u "UInt8" Int8 @ u "UInt16" Int16 @ u "UInt32" Int32 @ u "UInt64" Int64 @
-  s "Int8" Int8 @ s "Int16" Int16 @ s "Int32" Int32 @ s "Int64" Int64
-
-(* [hd c] is a machine-integer literal: [c] is an [int] constant
-   ([Const_int]; suffixed literals are [Const_machine_int]), and
-   [within_bounds] -- the check that TcTerm.tc_constant makes authoritative
-   for literals -- decides its range. *)
-let is_checked_machine_int_literal (hd:term) (args:args) : ML bool =
-  match args with
-  | [(arg, None)] ->
-    begin match (Subst.compress (U.un_uinst hd)).n, (Subst.compress arg).n with
-    | Tm_fvar fv, Tm_constant (Const.Const_int (c, _)) ->
-      begin match List.assoc (I.string_of_lid fv.fv_name) machine_int_literal_heads with
-      | Some (sw, w) -> Const.within_bounds c sw w
-      | None -> false
-      end
-    | _ -> false
-    end
-  | _ -> false
-
 let check_bqual (b0 b1:bqual)
   : ML (result unit)
   = if U.bqual_compat b0 b1
@@ -750,7 +723,7 @@ let raw_lookup (e:term) : result (option hash_entry) =
   | Some he ->
     return (Some he)
   | None ->
-    return (THT.lookup e table.table)
+    return (HashTable.try_find table.table e)
 
 let raw_lookup_guard (e:term) : result (option guard_entry) =
   let! cache = get_cache() in
@@ -758,26 +731,33 @@ let raw_lookup_guard (e:term) : result (option guard_entry) =
   | Some he ->
     return (Some he)
   | None ->
-    return (THT.lookup e table.guard_table)
+    return (HashTable.try_find table.guard_table e)
 
 let insert_guard (g:env) (guard:typ)
   : result unit
   = let! cache = get_cache () in
     put_cache {cache with guard_map = FStarC.Syntax.Hash.term_map_add guard { ge_gamma = g.tcenv.gamma } cache.guard_map }
 
+(* The cache is keyed by syntactic equality (FStarC.Syntax.Hash.equal_term),
+   which does not look through delayed substitutions or solved uvars, so the
+   keys are deeply compressed. *)
+let cache_key (t:term) : ML term = FStarC.Syntax.Compress.deep_compress true true t
+
 let guard (g:env) (guard:typ)
   : result unit
-  = match! raw_lookup_guard guard with
-    | Some ge ->
-      if ge.ge_gamma `context_included` g.tcenv.gamma
-      then return () //cache hit 
-      else (
-        insert_guard g guard ;!
-        return_with_guard () (Some guard)
-      )
-    | _ ->
-      insert_guard g guard ;!
-      return_with_guard () (Some guard)
+  = fun ctx cache ->
+    let guard = cache_key guard in
+    (match! raw_lookup_guard guard with
+     | Some ge ->
+       if ge.ge_gamma `context_included` g.tcenv.gamma
+       then return () //cache hit 
+       else (
+         insert_guard g guard ;!
+         return_with_guard () (Some guard)
+       )
+     | _ ->
+       insert_guard g guard ;!
+       return_with_guard () (Some guard)) ctx cache
 
 
 let with_binders (#a:Type) (initial_env:env) (xs:binders) (us:universes) (f:result a)
@@ -980,7 +960,7 @@ instance showable_side = {
 
 
 let boolean_negation_simp b =
-  if Hash.equal_term b U.exp_false_bool
+  if equal_term b U.exp_false_bool
   then None
   else Some (U.mk_boolean_negation b)
 
@@ -1018,7 +998,7 @@ let combine_path_and_branch_condition (path_condition:term)
         match branch_condition with
         | None -> U.exp_false_bool
         | Some bc ->
-          if Hash.equal_term path_condition U.exp_true_bool
+          if equal_term path_condition U.exp_true_bool
           then U.mk_boolean_negation bc
           else U.mk_and path_condition (U.mk_boolean_negation bc)
     in
@@ -1260,7 +1240,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         then (
           (* For subtyping, we just check that x0.sort <: t1. But for equality,
           we must show that the refinement on the LHS is constantly true. *)
-          if rel = EQUALITY then (
+          if EQUALITY? rel then (
             let! u0 = universe_of_well_typed_term g x0.sort in
             let g0 = g in
             let g, b0, f0 = open_term g (S.mk_binder x0) f0 in
@@ -1343,7 +1323,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
               (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
           in
           if guard_ok &&
-            (rel=EQUALITY) && 
+            (EQUALITY? rel) && 
             (equatable g t0 || equatable g t1)
           then (
             handle_with 
@@ -1522,11 +1502,12 @@ and is_prop (g:env) (t:term) : ML (result unit) =
 
 and memo_check (g:env) (e:term)
   : ML (result (tot_or_ghost & typ))
-  = let check_then_memo g e =
+  = let key = cache_key e in
+    let check_then_memo g e =
       with_guard (do_check_and_promote g e)
       (function
       | Inl (res, guard) ->
-        insert g e (res, guard);!
+        insert g key (res, guard);!
         return_with_guard res guard
 
       | Inr err ->
@@ -1535,7 +1516,7 @@ and memo_check (g:env) (e:term)
     if not g.should_read_cache
     then check_then_memo g e
     else (
-      with_guard (lookup g e)
+      with_guard (lookup g key)
       (function
       | Inr _ ->
         check_then_memo g e
@@ -1683,14 +1664,6 @@ and do_check (g:env) (e:term)
     in
     let hd, args = U.head_and_args_full e in
     match args with
-    | [(arg, _)] when is_checked_machine_int_literal hd args ->
-      (* A literal such as [FStar.UInt32.uint_to_t 4096]: the argument's
-         refinement [size 4096 32] holds by computation, so do not emit it
-         as a guard (Pulse unfolds [__uint_to_t] in the terms it checks, and
-         each such guard would otherwise be an SMT query). *)
-      let! eff_hd, t_hd = check "app head" g hd in
-      let! x, eff_arr, t' = is_arrow g t_hd in
-      return (join_eff eff_hd eff_arr, Subst.subst [NT(x.binder_bv, arg)] t')
     | [(t1, _); (t2, _)] when TcUtil.short_circuit_head hd ->
       let! eff_hd, t_hd = check "app head" g hd in
       let! x, eff_arr1, s1 = is_arrow g t_hd in
@@ -2226,7 +2199,6 @@ let check_term_top g e topt (must_tot:bool)
                    (show (get_goal_ctr()))
                    (show e) 
                    (show topt));
-    THT.reset_counters table.table;
     reset_cache_stats();
     let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in
     let res =
@@ -2278,7 +2250,7 @@ let check_term_top g e topt (must_tot:bool)
     in
     if !dbg_Eq
     then (
-      THT.print_stats table.table;
+      Format.print1 "THT Statistics { num_bindings = %s }\n" (show (HashTable.size table.table));
       let cs = report_cache_stats() in
       Format.print2 "Cache_stats { hits = %s; misses = %s }\n"
                      (show cs.hits)

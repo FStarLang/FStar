@@ -85,7 +85,7 @@ plugin_objs = $(addprefix $(subst .,_,$(1)), .cmxs .cmi .cmx .o)
 # Extract step must not use fly_deps: it skips cache for CLI files,
 # which conflicts with CMI requiring modules to be pre-checked.
 %.ml: %.fst.checked $(FSTAR_EXE)
-	$(FSTAR_EXE) --ext optimize_let_vc $*.fst --cache_checked_modules --codegen Plugin --extract $*
+	$(FSTAR_EXE) --ext optimize_let_vc $*.fst --cache_checked_modules --codegen Plugin
 	touch -c $@
 
 %.clean:
@@ -98,4 +98,4 @@ plugin_objs = $(addprefix $(subst .,_,$(1)), .cmxs .cmi .cmx .o)
 	$(FSTAR) $*.fst
 
 clean:
-	rm -f *.test *.ml *.o *.cm[ix] *.cmxs *.checked
+	rm -f *.test *.ml *.o *.cm[ix] *.cmxs *.cui *.checked

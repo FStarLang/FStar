@@ -30,7 +30,19 @@ let nested (x:int) : ML int =
   let d (y:int) : ML int = c y + c (y + 1) in
   d 0 + d 1
 
+(* The same helper used only inside a local [let rec].  The redex that
+   substituting it creates sits in the [let rec]'s body, which is the copy
+   that gets lambda-lifted, so it has to be reduced there and not merely in
+   one unrolling of the fixpoint. *)
+let in_rec (n:nat) : ML string =
+  let tu (#a:Type) (e:emb a) (x:int) : ML (option a) = try_unembed #a #e x in
+  let rec go (k:nat) : ML string =
+    if k = 0 then (match tu e_bool n with Some b -> if b then "t" else "f" | None -> "none")
+    else go (k - 1) in
+  go n
+
 let main () : ML unit =
   FStar.IO.print_string (ops 3);
+  FStar.IO.print_string (in_rec 2);
   FStar.IO.print_string (string_of_int (nested 1));
   FStar.IO.print_string "\n"

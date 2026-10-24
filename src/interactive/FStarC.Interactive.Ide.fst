@@ -37,7 +37,7 @@ open FStarC.Universal
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 open FStarC.Interactive
-open FStarC.Parser.ParseIt
+open FStarC.Parser.Frontend
 module SS = FStarC.Syntax.Syntax
 module DsEnv = FStarC.Syntax.DsEnv
 module TcEnv = FStarC.TypeChecker.Env
@@ -463,10 +463,10 @@ let sig_of_fstar_option name typ =
   | Some arg_sig -> flag ^ " " ^ arg_sig
 
 let fstar_options_list_cache =
-  let defaults = SMap.of_list Options.defaults in
+  let defaults = HashTable.of_list Options.defaults in
   Options.all_specs_with_types
   |> List.filter_map (fun (_shortname, name, typ, doc) ->
-       SMap.try_find defaults name // Keep only options with a default value
+       HashTable.try_find defaults name // Keep only options with a default value
        |> Option.map (fun default_value ->
              { opt_name = name;
                opt_sig = sig_of_fstar_option name typ;
@@ -482,8 +482,8 @@ let fstar_options_list_cache =
                        (String.lowercase (o2.opt_name)))
 
 let fstar_options_map_cache =
-  let cache = SMap.create 50 in
-  List.iter (fun opt -> SMap.add cache opt.opt_name opt) fstar_options_list_cache;
+  let cache = HashTable.create 50 in
+  List.iter (fun opt -> HashTable.add cache opt.opt_name opt) fstar_options_list_cache;
   cache
 
 let update_option opt =
@@ -563,7 +563,7 @@ let run_segment (st: repl_state) (code: string) =
 
 let run_vfs_add st opt_fname contents =
   let fname = Option.dflt st.repl_fname opt_fname in
-  Parser.ParseIt.add_vfs_entry fname contents;
+  Parser.Frontend.add_vfs_entry fname contents;
   ((QueryOK, JsonNull), Inl st)
 
 let run_pop st =
@@ -609,7 +609,7 @@ let rephrase_dependency_error issue =
 
 let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     let open FStarC.Interactive.Incremental in
-    let json_of_code_fragment (cf:FStarC.Parser.ParseIt.code_fragment) =
+    let json_of_code_fragment (cf:FStarC.Parser.Frontend.code_fragment) =
         JsonAssoc ["range", json_of_def_range cf.range;
                    "code-digest", JsonStr (BU.digest_of_string cf.code)]
     in
@@ -790,7 +790,7 @@ let run_symbol_lookup st symbol pos_opt requested_info (symbol_range_opt:option 
 
 let run_option_lookup opt_name =
   let _, trimmed_name = trim_option_name opt_name in
-  match SMap.try_find fstar_options_map_cache trimmed_name with
+  match HashTable.try_find fstar_options_map_cache trimmed_name with
   | None -> Inl ("Unknown option:" ^ opt_name)
   | Some opt -> Inr ("option", alist_of_fstar_option (update_option opt))
 
@@ -921,8 +921,8 @@ let run_with_parsed_and_tc_term st term line column (continuation : TcEnv.env ->
     | _ -> None in
 
   let parse frag =
-    match FStarC.Parser.ParseIt.parse None (FStarC.Parser.ParseIt.Incremental frag) with
-    | FStarC.Parser.ParseIt.IncrementalFragment (decls, _, _err) -> Some (List.map fst decls)
+    match FStarC.Parser.Frontend.parse None (FStarC.Parser.Frontend.Incremental frag) with
+    | FStarC.Parser.Frontend.IncrementalFragment (decls, _, _err) -> Some (List.map fst decls)
     | _ -> None in
 
   let desugar env decls =

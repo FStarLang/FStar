@@ -24,7 +24,7 @@ open FStarC.Custard.Syntax
 open FStarC.Errors.Msg
 
 module E      = FStarC.Errors
-module SMap   = FStarC.SMap
+module HashTable = FStarC.HashTable
 module GenSym = FStarC.GenSym
 module Format = FStarC.Format
 module Prof   = FStarC.Custard.Prof
@@ -103,7 +103,7 @@ let anf_expr (x0:expr) : ML expr =
       let c = norm c in
       let b = norm b in
       { x with e = EWhile (c, b) }
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
 
     (* Everything else has operand positions, so it needs an accumulator. *)
     | _ ->
@@ -124,7 +124,7 @@ let anf_expr (x0:expr) : ML expr =
         let e = norm e in
         if is_pure e.eff || atomic e then e
         else begin
-          let v = uniq "tmp" (GenSym.next_id ()) in
+          let v = uniq "uu__tmp" (GenSym.next_id ()) in
           acc := (v, e.ty, e) :: !acc;
           { e with e = EVar v; eff = E_Pure }
         end in
@@ -261,7 +261,7 @@ let rec float_lets (x:expr) (e1:expr) (k : expr -> ML expr) : ML expr =
    Above the simplifier rather than with the inliner it was written for:
    section 102's copy propagation is a substitution too, and the smallest one
    there is. *)
-let subst = SMap.t expr
+let subst = HashTable.t string expr
 
 let rename (x:string) : ML string = uniq (base_name x) (GenSym.next_id ())
 
@@ -269,7 +269,7 @@ let rec sub (sm:subst) (x:expr) : ML expr =
   let g = sub sm in
   match x.e with
   | EVar v ->
-    (match SMap.try_find sm v with
+    (match HashTable.try_find sm v with
      (* A pattern binder's entry is a *rename* and not a substitution:
         [sub_pat] has no type to give it, so it writes [TAny], and taking
         that entry whole would erase the type the occurrence records.  That
@@ -282,17 +282,17 @@ let rec sub (sm:subst) (x:expr) : ML expr =
      | Some ({ e = EVar v' ; ty = TAny }) -> { x with e = EVar v' }
      | Some e -> e
      | None -> x)
-  | EConst _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
   | ELet (v, ty, e1, e2) ->
     let v' = rename v in
     let e1 = g e1 in
-    SMap.add sm v { x with e = EVar v'; ty; eff = E_Pure };
+    HashTable.add sm v { x with e = EVar v'; ty; eff = E_Pure };
     let e2 = sub sm e2 in
     { x with e = ELet (v', ty, e1, e2) }
   | EFun (bs, b) ->
     let bs = bs |> List.map (fun b ->
       let n = rename b.b_name in
-      SMap.add sm b.b_name { e = EVar n; ty = b.b_ty; eff = E_Pure };
+      HashTable.add sm b.b_name { e = EVar n; ty = b.b_ty; eff = E_Pure };
       { b with b_name = n }) in
     { x with e = EFun (bs, sub sm b) }
   (* The four binding forms are written out because they rebind, and
@@ -316,7 +316,7 @@ and sub_pat (sm:subst) (p:pat) : ML pat =
     (* No type is available here -- a pattern carries none -- so the entry is
        [TAny], which [sub] reads as "rename, and keep what the occurrence
        already knows".  Occurrences *are* read for their type. *)
-    SMap.add sm v { e = EVar v'; ty = TAny; eff = E_Pure };
+    HashTable.add sm v { e = EVar v'; ty = TAny; eff = E_Pure };
     PVar v'
   | PCtor (n, ps) -> PCtor (n, ps |> List.map (sub_pat sm))
   | PRecord (n, fs) -> PRecord (n, fs |> List.map (fun (f, q) -> (f, sub_pat sm q)))
@@ -363,20 +363,20 @@ let propagable_const (e:expr) : option constant =
    declaration order.  Section 105 needs it to ask whether a set of branches
    covers a type, which is the multiple-constructor form of the single
    constructor that carried section 102's argument. *)
-let one_ctor : SMap.t (list string) = SMap.create 100
-let ctor_family : SMap.t (list string) = SMap.create 100
+let one_ctor : HashTable.t string (list string) = HashTable.create 100
+let ctor_family : HashTable.t string (list string) = HashTable.create 100
 
 let record_ctor_tables (prog:program) : ML unit =
   prog |> List.iter (fun d ->
     match d with
     | DType t ->
       let put (n:name) (fs : list (string & cty)) : ML unit =
-        SMap.add one_ctor (string_of_name n) (fs |> List.map fst) in
+        HashTable.add one_ctor (string_of_name n) (fs |> List.map fst) in
       (match t.dt_body with
        | TRecord fs -> put t.dt_name fs
        | TVariant cs ->
          let all = cs |> List.map (fun (cn, _) -> string_of_name cn) in
-         cs |> List.iter (fun (cn, _) -> SMap.add ctor_family (string_of_name cn) all);
+         cs |> List.iter (fun (cn, _) -> HashTable.add ctor_family (string_of_name cn) all);
          (match cs with
           | [(cn, fs)] -> put t.dt_name fs; put cn fs
           | _ -> ())
@@ -384,7 +384,7 @@ let record_ctor_tables (prog:program) : ML unit =
     | _ -> ())
 
 let fields_of (n:name) : ML (option (list string)) =
-  SMap.try_find one_ctor (string_of_name n)
+  HashTable.try_find one_ctor (string_of_name n)
 
 (* Section 102.  [match s with C(x1,...,xn) -> C(x1,...,xn)] is [s]: the
    constructor's eta law, for the one shape where the IR states it and then
@@ -455,7 +455,7 @@ let covers_type (cs : list string) : ML bool =
   (match cs with
    | [] -> false
    | c0 :: _ ->
-     (match SMap.try_find ctor_family c0 with
+     (match HashTable.try_find ctor_family c0 with
       | Some all -> all |> List.for_all (fun c -> List.existsb (fun d -> d = c) cs)
       (* Not a variant, so section 102's case: one constructor, and a single
          branch naming it is exhaustive.  Kept as its own answer rather than
@@ -547,11 +547,38 @@ let rebuild_proj_id (x:expr) : ML (option expr) =
         | _ -> None))
   | _ -> None
 
+let keeps_unused_named_lets () : ML bool =
+  match Options.codegen_name () with
+  | "KrmlC" | "KrmlRust" -> true
+  | _ -> false
+
+let is_programmer_name (v:string) : ML bool =
+  let b = base_name v in
+  not (b = "" || b = "_" || (String.length b >= 4 && String.substring b 0 4 = "uu__"))
+
+(* Discard before floating an initializer's lets, so their liveness reflects
+   the discarded result. Comments retain their text, not a droppable operand. *)
+let rec discard_value (e:expr) : ML expr =
+  match e.e with
+  | ELet (v, ty, e1, e2) ->
+    let e2 = discard_value e2 in
+    { e with e = ELet (v, ty, e1, e2); ty = e2.ty }
+  | ESeq (e1, e2) ->
+    let e2 = discard_value e2 in
+    { e with e = ESeq (e1, e2); ty = e2.ty }
+  | EOp (op, [body])
+      when (match op.po_op with Commented _ -> true | _ -> false) && is_droppable body ->
+    { e with e = EOp (op, [unit_expr]); ty = TUnit }
+  | _ when is_droppable e -> unit_expr
+  | _ -> e
+
 let rec simpl (x:expr) : ML expr =
   match x.e with
   | ELet (v, ty, e1, e2) ->
-    let e1 = simpl e1 in
     let e2 = simpl e2 in
+    let used = occurs v e2 in
+    let keep = used || (keeps_unused_named_lets () && is_programmer_name v) in
+    let e1 = simpl (if keep then e1 else discard_value e1) in
     float_lets x e1 (fun e1 ->
     (* [let x = e in x] is just [e], whatever [e]'s effect: nothing moves. *)
     if (match e2.e with EVar w -> w = v | _ -> false) then e1
@@ -579,17 +606,23 @@ let rec simpl (x:expr) : ML expr =
        source happened to bind the literal. *)
     else if Some? (propagable_const e1) then
       subst_const v ty (Some?.v (propagable_const e1)) e2
-    else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
+    else if used then { x with e = ELet (v, ty, e1, e2) }
     (* Section 7.3: an unused binding may only be deleted if evaluating it is
        unobservable; otherwise it becomes a statement, which keeps its effect
        and its position.  Section 99: the question here is deletion and not
        motion, so the test is [is_droppable] and not [is_pure] -- a read whose
        value nothing wants goes, rather than becoming a [(void)] of itself. *)
     else if is_droppable e1 then e2
+    (* karamel keeps an unused binding the programmer named, as a variable
+       marked unused, and turns one it may inline -- a [uu__] name -- into a
+       discarded expression; an [ESeq] would lose the name and so the
+       distinction. *)
+    else if keeps_unused_named_lets () && is_programmer_name v then
+      { x with e = ELet (v, ty, e1, e2) }
     else { x with e = ESeq (e1, e2) })
 
   | ESeq (e1, e2) ->
-    let e1 = simpl e1 in
+    let e1 = simpl (discard_value e1) in
     let e2 = simpl e2 in
     float_lets x e1 (fun e1 ->
       (* Section 99.  The same question, and the same answer: a sequenced term
@@ -667,6 +700,16 @@ let rec count (v:string) (x:expr) : ML int =
     | _ -> fold_children (fun acc e -> imin 2 (acc + count v e)) 0 x)
   else 0
 
+(* How many times does [v] occur in [x] as written, alternatives included?
+   Capped at 2.  This is the count that measures code size, where [count]
+   measures work: substituting something used once in each of n branches
+   copies it n times. *)
+let rec occurrences (v:string) (x:expr) : ML int =
+  if occurs v x then (match x.e with
+    | EVar _ -> 1
+    | _ -> fold_children (fun acc e -> imin 2 (acc + occurrences v e)) 0 x)
+  else 0
+
 (* Duplicating an argument is only sound when evaluating it is unobservable,
    and only desirable when it is trivial; otherwise it gets a [let], which the
    simplifier will drop again if the parameter turns out to be unused. *)
@@ -676,13 +719,13 @@ let is_atomic (e:expr) : bool =
   | _ -> false
 
 let inline_call (bs : list binder) (body:expr) (args:list expr) (at:expr) : ML expr =
-  let sm : subst = SMap.create 10 in
+  let sm : subst = HashTable.create 10 in
   let lets = List.zip bs args |> List.collect (fun (b, a) ->
     if is_atomic a || (is_pure a.eff && count b.b_name body <= 1)
-    then (SMap.add sm b.b_name a; [])
+    then (HashTable.add sm b.b_name a; [])
     else
       let v = rename b.b_name in
-      SMap.add sm b.b_name { a with e = EVar v };
+      HashTable.add sm b.b_name { a with e = EVar v };
       [(v, b.b_ty, a)]) in
   let r = sub sm body in
   let r = { r with ty = at.ty; eff = at.eff } in
@@ -698,7 +741,8 @@ let beta (bs : list binder) (body:expr) (args:list expr) (at:expr) : ML expr =
   if List.length args < n then at
   else
     let given, extra = List.splitAt n args in
-    let r = inline_call bs body given at in
+    (* With a surplus, the inlined body has the body's type, not the call's. *)
+    let r = inline_call bs body given (if Nil? extra then at else { at with ty = body.ty }) in
     match extra with
     | [] -> r
     | _ -> { at with e = EApp (r, extra) }
@@ -740,6 +784,45 @@ let rec ctor_args_pure (e:expr) : ML bool =
   match e.e with
   | ECtor (_, es) -> es |> List.for_all (fun a -> is_pure a.eff)
   | ETuple es -> es |> List.for_all (fun a -> is_pure a.eff)
+  | _ -> false
+
+(* Issue 4630.  The bindings a constructor's fields carry, floated out of it:
+   [C (a, (let y = e in D (y, y)))] is [let y = e in C (a, D (y, y))].  The
+   function returned rebuilds the spine around whatever the caller puts in the
+   constructor's place, and each rebuilt node reuses [at], as {!float_lets}
+   does.
+
+   [None] unless every field that is left is pure.  That is what makes the
+   floating sound: a binding now runs before the fields to its left, which is
+   unobservable only because they are pure -- and iota, the only reason to
+   ask, needs them pure anyway.  Names are unique within a definition (see
+   {!sub}), so widening a binding's scope captures nothing. *)
+let rec float_ctor_lets (at:expr) (e:expr) : ML (option ((expr -> ML expr) & expr)) =
+  let fields (es:list expr) (mk_e:list expr -> expr') : ML (option ((expr -> ML expr) & expr)) =
+    let rs = es |> List.map (float_ctor_lets at) in
+    if rs |> List.existsb None? then None
+    else
+      let rs = rs |> List.map Some?.v in
+      let wrap (r:expr) : ML expr = List.fold_right (fun (wr : (expr -> ML expr) & expr) (acc:expr) -> fst wr acc) rs r in
+      Some (wrap, { e with e = mk_e (rs |> List.map snd); eff = E_Pure }) in
+  match e.e with
+  | ELet (v, t, a, b) ->
+    (match float_ctor_lets at b with
+     | Some (w, b) -> Some ((fun (r:expr) -> { at with e = ELet (v, t, a, w r) } <: ML expr), b)
+     | None -> None)
+  | ESeq (a, b) ->
+    (match float_ctor_lets at b with
+     | Some (w, b) -> Some ((fun (r:expr) -> { at with e = ESeq (a, w r) } <: ML expr), b)
+     | None -> None)
+  | ECtor (n, es) -> fields es (fun es -> ECtor (n, es))
+  | ETuple es -> fields es (fun es -> ETuple es)
+  | _ -> if is_pure e.eff then Some ((fun (r:expr) -> r <: ML expr), e) else None
+
+(* Does [iota] select a branch?  [float_ctor_lets] leaves every field pure,
+   so [ctor_args_pure] needs no asking on that path. *)
+let iota_fires (brs:list branch) (scrut:expr) : ML bool =
+  match brs with
+  | (p, None, _) :: _ -> Some? (match_pat p scrut)
   | _ -> false
 
 let rec iota (brs:list branch) (scrut:expr) (at:expr) : ML expr =
@@ -799,10 +882,10 @@ and called_only_list (v:string) (es:list expr) : ML bool =
    whole reason to prefer it -- [cheap_expr] admits [EApp] of arbitrary named
    functions, so relaxing the arity bound in [eta_expand_decl] would let
    [let table : int -> int = build_table 1000000] be re-evaluated per call. *)
-let forwarders : ref (SMap.t (int & int)) = mk_ref (SMap.create 0)
+let forwarders : ref (HashTable.t string (int & int)) = mk_ref (HashTable.create 0)
 
-let forwarder_table (prog:program) : ML (SMap.t (int & int)) =
-  let t : SMap.t (int & int) = SMap.create 50 in
+let forwarder_table (prog:program) : ML (HashTable.t string (int & int)) =
+  let t : HashTable.t string (int & int) = HashTable.create 50 in
   prog |> List.iter (fun d ->
     match d with
     | DLet l when Cons? l.dl_binders && is_pure l.dl_eff
@@ -814,7 +897,7 @@ let forwarder_table (prog:program) : ML (SMap.t (int & int)) =
            l.dl_binders |> List.fold_left (fun (acc, k) (b:binder) ->
              ((if b.b_name = v && acc < 0 then k else acc), k + 1)) (-1, 0) in
          let found = fst found in
-         if found >= 0 then SMap.add t (string_of_name l.dl_name) (n, found)
+         if found >= 0 then HashTable.add t (string_of_name l.dl_name) (n, found)
        | _ -> ())
     | _ -> ());
   t
@@ -882,11 +965,11 @@ let rec reduce (x:expr) : ML expr =
      (* Every argument must be pure, because the ones not returned are
         dropped.  ANF has already made each operand pure, so this holds in
         practice and costs nothing to check. *)
-     | EQual (n, _) when (match SMap.try_find !forwarders (string_of_name n) with
+     | EQual (n, _) when (match HashTable.try_find !forwarders (string_of_name n) with
                           | Some (a, _) -> a = List.length args
                                         && args |> List.for_all (fun (e:expr) -> is_pure e.eff)
                           | None -> false) ->
-       let _, i = Some?.v (SMap.try_find !forwarders (string_of_name n)) in
+       let _, i = Some?.v (HashTable.try_find !forwarders (string_of_name n)) in
        let arg = List.nth args i in
        (* The call site's type, not the argument's: they denote the same type
           but the caller's is the one the surrounding code was built against,
@@ -908,15 +991,33 @@ let rec reduce (x:expr) : ML expr =
 
   | EMatch (scrut, brs) ->
     let scrut = reduce scrut in
+    (* Issue 4630.  A field of the constructor that is under a [let] hides
+       the constructor from [iota] -- the nested tuple a recursive builder
+       returns, [let m = .. in (m, (let y = e in (y, y)))], is exactly this.
+       The bindings, the scrutinee's own and its fields', are floated out in
+       front of the [match], but only when iota then fires: otherwise the
+       scrutinee is left as it was written. *)
+    let floated : option ((expr -> ML expr) & expr) =
+      if iota_fires brs scrut then None
+      else match scrut.e with
+           | ECtor _ | ETuple _ | ELet _ | ESeq _ ->
+             (match float_ctor_lets x scrut with
+              | Some (wrap, s) -> if iota_fires brs s then Some (wrap, s) else None
+              | None -> None)
+           | _ -> None in
+    (match floated with
+     | Some (wrap, s) ->
+       reduce (wrap (iota brs s { x with e = EMatch (s, brs) }))
+     | None ->
     if ctor_args_pure scrut
     then
       let r = iota brs scrut { x with e = EMatch (scrut, brs |> List.map reduce_branch) } in
       (match r.e with
        | EMatch _ -> r
        | _ -> reduce r)
-    else { x with e = EMatch (scrut, brs |> List.map reduce_branch) }
+    else { x with e = EMatch (scrut, brs |> List.map reduce_branch) })
 
-  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+  | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
   (* Section 3.1: the backends have no closures, so a let-bound lambda that is
      only ever *called* has to reach its call, where beta can fire.  A lambda
      is a value, so moving it duplicates no work, and a single occurrence
@@ -931,7 +1032,14 @@ let rec reduce (x:expr) : ML expr =
      precise as the body's own -- on the OCaml path that turned a [ref] into
      [any], and an [any] prints as an array rather than as a [ref].  C has no
      closures at all, so there the inlining is not an optimization but the
-     only way the program compiles. *)
+     only way the program compiles.
+
+     Cherry has heap closures, so there it *is* an optimization, and one that
+     must not copy code: [count] takes the worst branch, so a helper called
+     once in each arm of a [match] would be copied into every arm, and the
+     helpers it calls into each copy.  In [FStarC.TypeChecker.Rel.solve_t']
+     that made a single C function of 200,000 lines with a 1.2MB stack frame.
+     Under Cherry the lambda is substituted only where it is written once. *)
   | ELet (v, ty, e1, e2) ->
     let e1 = reduce e1 in
     (* The body first: the rewrites below ask questions about how [v] is used,
@@ -941,10 +1049,12 @@ let rec reduce (x:expr) : ML expr =
        definition uses it, and the copy that would fix that has not been
        propagated yet. *)
     let e2 = reduce e2 in
-    if Options.custard_backend () = "C"
-       && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
-      let sm : subst = SMap.create 5 in
-      SMap.add sm v e1;
+    if Options.codegen_c ()
+       && EFun? e1.e && called_only v e2
+       && (if Options.custard_cherry () then occurrences v e2 <= 1
+           else count v e2 <= 1) then
+      let sm : subst = HashTable.create 5 in
+      HashTable.add sm v e1;
       reduce (sub sm e2)
     (* Section 129.  A constructor that is bound and then only ever taken
        apart.  [let (a, b) = p] is exactly this shape --- F* binds the
@@ -969,16 +1079,16 @@ let rec reduce (x:expr) : ML expr =
        Propagating the copy first puts the constructor and the match next to
        each other, which is what every rewrite here is written against. *)
     else if (match e1.e with EVar _ -> true | _ -> false) && is_pure e1.eff then
-      let sm : subst = SMap.create 5 in
-      SMap.add sm v e1;
+      let sm : subst = HashTable.create 5 in
+      HashTable.add sm v e1;
       reduce (sub sm e2)
     else if (match e1.e with
              | ECtor (_, es) | ETuple es -> es |> List.for_all reeval
              | ERecord (_, fs) -> fs |> List.for_all (fun (_, (e:expr)) -> reeval e)
              | _ -> false)
             && destructed_only v e2 then
-      let sm : subst = SMap.create 5 in
-      SMap.add sm v e1;
+      let sm : subst = HashTable.create 5 in
+      HashTable.add sm v e1;
       reduce (sub sm e2)
     else { x with e = ELet (v, ty, e1, e2) }
   | _ -> map_children reduce x
@@ -995,8 +1105,35 @@ let reduce_decls (prog:program) : ML program =
 
 (* [Inline] declarations are substituted at their fully applied uses.  A use
    that is *not* fully applied keeps the declaration alive, so it is emitted
-   after all; that is rare enough not to be worth eta-expanding. *)
-let rec inline_expr (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (x:expr)
+   after all; that is rare enough not to be worth eta-expanding, except
+   under Cherry where one of the arguments is a lambda (below). *)
+(* The type variables of a polymorphic definition, replaced by the type
+   arguments of a call to it.  The monomorphizing backends have none left by
+   now; the ML ones print some operations by the type of their operand, as
+   [!r] for a [BufRead] on a reference, so an inlined body has to say what its
+   variables are at the call. *)
+let rec subst_expr_ty (s:list (string & cty)) (x:expr) : ML expr =
+  let x = map_children (subst_expr_ty s) x in
+  let f = subst_cty s in
+  let fb (b:binder) : ML binder = { b with b_ty = f b.b_ty } in
+  let e = match x.e with
+    | EQual (n, tys) -> EQual (n, List.map f tys)
+    | ELet (v, ty, a, b) -> ELet (v, f ty, a, b)
+    | EFun (bs, b) -> EFun (List.map fb bs, b)
+    | ECoerce (a, t) -> ECoerce (a, f t)
+    | ECast (a, t) -> ECast (a, f t)
+    | e -> e in
+  { x with e = e; ty = f x.ty }
+
+let instantiate (typars:list string) (tys:list cty) (bs:list binder) (body:expr)
+  : ML (list binder & expr) =
+  if Nil? typars || List.length typars <> List.length tys then (bs, body)
+  else
+    let s = List.zip typars tys in
+    (bs |> List.map (fun (b:binder) -> { b with b_ty = subst_cty s b.b_ty }),
+     subst_expr_ty s body)
+
+let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)) (used : HashTable.t string bool) (x:expr)
   : ML expr =
   (* [used] records the [Inline] declarations that had to be kept after all,
      either because a use was not fully applied or because it came before the
@@ -1005,22 +1142,42 @@ let rec inline_expr (tbl : SMap.t (list binder & expr)) (used : SMap.t bool) (x:
   match x.e with
   | EApp ({e = EQual (n, tys)}, args) ->
     let args = args |> List.map g in
-    (match SMap.try_find tbl (string_of_name n) with
+    let lookup () : ML (option (list binder & expr)) =
+      match HashTable.try_find tbl (string_of_name n) with
+      | Some (ps, bs, body) -> Some (instantiate ps tys bs body)
+      | None -> None in
+    (match lookup () with
      (* Over-application is common and must be handled: F* stores the
         projector of an arrow-typed field as a one-binder function returning a
         function, so every use of it is applied to one argument too many. *)
      | Some (bs, body) when List.length bs <= List.length args ->
        let given, extra = List.splitAt (List.length bs) args in
-       let r = inline_call bs body given x in
-       (match extra with
-        | [] -> r
+       let r = inline_call bs body given (if Nil? extra then x else { x with ty = body.ty }) in
+       (match extra, r.e with
+        | [], _ -> r
+        (* An eta-reduced body, [for_some f = existsb f]: the surplus
+           arguments complete its application rather than applying the
+           closure it would build.  Cherry splits an over-application by
+           the callee's arity again; the other backends would see one. *)
+        | _, EApp (h, a) when Options.custard_cherry () -> { x with e = EApp (h, a @ extra) }
         | _ -> { x with e = EApp (r, extra) })
-     | _ -> SMap.add used (string_of_name n) true;
+     (* Cherry, [@@custard_inline] on a combinator.  [eta_reduce] has made
+        many a caller [add k = apply f], so the lambda only meets its call if
+        the partial application becomes [fun x -> body], whose binders
+        [eta_expand] moves back into the caller's parameters.  It is a
+        closure either way, and one rather than two (the lambda's and the
+        partial application's) when it stays one. *)
+     | Some (bs, body) when Options.custard_cherry () && Cons? args
+                         && args |> List.existsb (fun (a:expr) -> EFun? a.e) ->
+       let given, rest = List.splitAt (List.length args) bs in
+       let lam = { x with e = EFun (rest, body) } in
+       inline_call given lam args x
+     | _ -> HashTable.add used (string_of_name n) true;
             { x with e = EApp ({ x with e = EQual (n, tys) }, args) })
-  | EQual (n, _) ->
-    (match SMap.try_find tbl (string_of_name n) with
-     | Some ([], body) -> inline_call [] body [] x
-     | _ -> SMap.add used (string_of_name n) true; x)
+  | EQual (n, tys) ->
+    (match HashTable.try_find tbl (string_of_name n) with
+     | Some (ps, [], body) -> inline_call [] (snd (instantiate ps tys [] body)) [] x
+     | _ -> HashTable.add used (string_of_name n) true; x)
   | _ -> map_children g x
 
 (* -------------------------------------------------------------------- *)
@@ -1059,6 +1216,29 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
        eta_reduce bs' body' ret' E_Pure
      | _ -> (bs, body, ret, ef))
   | _ -> (bs, body, ret, ef)
+
+(* The declarations this run links against rather than compiles, as the units
+   that compiled them emitted them.  No pass here decides anything about them
+   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
+   over in a [verdicts] -- but the passes that ask how many constructors a type
+   has, what its fields are called, or what a function's declared argument
+   types are, still have to be able to see them.  The last of those is not
+   optional: a coercion is inserted where a declared type meets a value, and a
+   call to an imported function whose signature is invisible is a boundary
+   that silently disappears.  A [ref] rather than an argument threaded through
+   a dozen functions, for the same reason
+   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
+   program.  Set by {!run}. *)
+let imported_types : ref (list decl) = mk_ref []
+
+(* The program as the *declaration*-inspecting passes should see it.  An
+   imported declaration is visible to a question about a declaration and
+   invisible to everything else: it is not rewritten, not re-decided, and not
+   emitted. *)
+let with_imports (prog:program) : ML program =
+  match !imported_types with
+  | [] -> prog
+  | ds -> ds @ prog
 
 (* -------------------------------------------------------------------- *)
 (* Eta expansion                                                        *)
@@ -1139,15 +1319,15 @@ let rec arrow_arity (c:cty) : ML int =
    argument at once.  Getting the second case wrong is what let section 26's
    [let e : bool -> bool -> bool = ap band] escape: read as arity 0, its
    callers were owed nothing and stayed eta-short. *)
-let decl_arity (prog:program) : ML (SMap.t int) =
-  let tbl : SMap.t int = SMap.create 100 in
+let decl_arity (prog:program) : ML (HashTable.t string int) =
+  let tbl : HashTable.t string int = HashTable.create 100 in
   prog |> List.iter (fun d ->
     match d with
     | DLet l ->
-      SMap.add tbl (string_of_name l.dl_name)
+      HashTable.add tbl (string_of_name l.dl_name)
         (if Cons? l.dl_binders then List.length l.dl_binders
          else arrow_arity l.dl_ret)
-    | DExternal x -> SMap.add tbl (string_of_name x.dx_name) (arrow_arity x.dx_ty)
+    | DExternal x -> HashTable.add tbl (string_of_name x.dx_name) (arrow_arity x.dx_ty)
     | _ -> ());
   tbl
 
@@ -1159,12 +1339,12 @@ let decl_arity (prog:program) : ML (SMap.t int) =
    spine, which is where a wrapper's parameters got their meaning in the first
    place.  [base_name] because a declaration's binders carry extraction's
    uniquifying suffix and [rename] would otherwise stack a second one. *)
-let decl_binder_names (prog:program) : ML (SMap.t (list string)) =
-  let tbl : SMap.t (list string) = SMap.create 100 in
+let decl_binder_names (prog:program) : ML (HashTable.t string (list string)) =
+  let tbl : HashTable.t string (list string) = HashTable.create 100 in
   prog |> List.iter (fun d ->
     match d with
     | DLet l ->
-      SMap.add tbl (string_of_name l.dl_name)
+      HashTable.add tbl (string_of_name l.dl_name)
         (l.dl_binders |> List.map (fun (b:binder) -> base_name b.b_name))
     | _ -> ());
   tbl
@@ -1189,12 +1369,12 @@ let decl_binder_names (prog:program) : ML (SMap.t (list string)) =
    to one argument -- it is about to be given its second.  Every other use --
    under a [let], in an argument, as a bare address -- is final, and that is
    the only kind [mk_arg] has. *)
-let rec expr_uses (acc : SMap.t int) (x:expr) : ML unit =
+let rec expr_uses (acc : HashTable.t string int) (x:expr) : ML unit =
   let note (n:name) (k:int) : ML unit =
     let s = string_of_name n in
-    match SMap.try_find acc s with
+    match HashTable.try_find acc s with
     | Some m when m <= k -> ()
-    | _ -> SMap.add acc s k in
+    | _ -> HashTable.add acc s k in
   let sub (es:list expr) : ML unit = List.iter (expr_uses acc) es in
   match x.e with
   | EApp ({ e = EQual (n, _) }, es) -> note n (List.length es); sub es
@@ -1203,8 +1383,8 @@ let rec expr_uses (acc : SMap.t int) (x:expr) : ML unit =
      be distinguished -- only visited. *)
   | _ -> iter_children (expr_uses acc) x
 
-let use_arity (prog:program) : ML (SMap.t int) =
-  let tbl : SMap.t int = SMap.create 100 in
+let use_arity (prog:program) : ML (HashTable.t string int) =
+  let tbl : HashTable.t string int = HashTable.create 100 in
   prog |> List.iter (fun d ->
     match d with
     | DLet l ->
@@ -1217,7 +1397,7 @@ let use_arity (prog:program) : ML (SMap.t int) =
     | _ -> ());
   tbl
 
-let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
+let eta_expand_decl (tbl : HashTable.t string int) (uses : HashTable.t string int) (l:dlet) : ML dlet =
   (* Section 33.1.  A body that *is* a lambda is not the section 25.3
      re-evaluation hazard, and it is not eta-expansion either: there is
      nothing in front of the lambda to re-evaluate, so moving its binders
@@ -1265,7 +1445,7 @@ let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
        | None -> (bs, body, ret, ef))
     | _ -> (bs, body, ret, ef) in
   let absorb_room =
-    match SMap.try_find uses (string_of_name l.dl_name) with
+    match HashTable.try_find uses (string_of_name l.dl_name) with
     | Some k -> let r = k - List.length l.dl_binders in if r < 0 then 0 else r
     | None -> arrow_arity l.dl_ret in
   let abs_bs, abs_body, abs_ret, abs_ef =
@@ -1291,20 +1471,20 @@ let eta_expand_decl (tbl : SMap.t int) (uses : SMap.t int) (l:dlet) : ML dlet =
          that is precisely the over-application the C backend rejects.  So the
          demand is read off the callers, and is zero when there is none. *)
       | None ->
-        (match SMap.try_find uses (string_of_name l.dl_name) with
+        (match HashTable.try_find uses (string_of_name l.dl_name) with
          | Some k ->
            let room = k - List.length l.dl_binders in
            let have = arrow_arity l.dl_ret in
            if room <= 0 then 0 else if room < have then room else have
          | None -> 0)
       | Some n ->
-        (match SMap.try_find tbl (string_of_name n) with
+        (match HashTable.try_find tbl (string_of_name n) with
          | Some a when a > nargs ->
            let want = a - nargs in
            let have = arrow_arity l.dl_ret in
            let room =
              (* Never past what the callers ask for. *)
-             match SMap.try_find uses (string_of_name l.dl_name) with
+             match HashTable.try_find uses (string_of_name l.dl_name) with
              | Some k -> if k - List.length l.dl_binders < 0
                          then 0 else k - List.length l.dl_binders
              | None -> have in
@@ -1344,7 +1524,10 @@ let eta_expand_decls (prog:program) : ML program =
                                | DLet l -> n + List.length l.dl_binders
                                | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
-    let tbl = decl_arity p in
+    (* With the imports: a wrapper [eta_reduce] shortened to [f out] is
+       expanded back by reading [f]'s arity, and a linked [f] has its
+       declaration only there (#4771). *)
+    let tbl = decl_arity (with_imports p) in
     let uses = use_arity p in
     let p' = p |> List.map (fun d ->
       match d with
@@ -1374,25 +1557,25 @@ let eta_expand_decls (prog:program) : ML program =
    before the callee had any -- [use a b = wrapped a b] grows in the same round
    [wrapped] does, and never looks again.  Here the same fixpoint is run over
    naming alone, so the names propagate along a chain however long it is. *)
-let eta_rename_decl (bnames : SMap.t (list string)) (l:dlet) : ML dlet =
+let eta_rename_decl (bnames : HashTable.t string (list string)) (l:dlet) : ML dlet =
   match l.dl_body.e with
   | EApp ({ e = EQual (n, _) }, args) ->
-    (match SMap.try_find bnames (string_of_name n) with
+    (match HashTable.try_find bnames (string_of_name n) with
      | None -> l
      | Some ns ->
-       let sm : subst = SMap.create 10 in
+       let sm : subst = HashTable.create 10 in
        let pairs : ref (list (string & string)) = mk_ref [] in
        let bound (v:string) : ML bool =
          List.existsb (fun (b:binder) -> b.b_name = v) l.dl_binders in
        args |> List.iteri (fun j (a:expr) ->
          match a.e with
          | EVar v when base_name v = "eta" && bound v
-                    && None? (SMap.try_find sm v) ->
+                    && None? (HashTable.try_find sm v) ->
            if j < List.length ns then
              let nm = List.nth ns j in
              if nm <> "" && base_name nm <> "eta" then
                let nv = rename nm in
-               SMap.add sm v (mk (EVar nv) a.ty a.eff);
+               HashTable.add sm v (mk (EVar nv) a.ty a.eff);
                pairs := (v, nv) :: !pairs
          | _ -> ());
        if Nil? !pairs then l
@@ -1416,7 +1599,7 @@ let eta_rename_decls (prog:program) : ML program =
                                          then n + 1 else n) n l.dl_binders
       | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
-    let bnames = decl_binder_names p in
+    let bnames = decl_binder_names (with_imports p) in
     let p' = p |> List.map (fun d ->
       match d with
       | DLet l -> DLet (eta_rename_decl bnames l)
@@ -1446,7 +1629,7 @@ let rec cty_deps (c:cty) : ML (list string) =
   | TApp (n, args) -> string_of_name n :: List.collect cty_deps args
   | TArrow (a, _, b) -> cty_deps a @ cty_deps b
   | TTuple cs -> List.collect cty_deps cs
-  | TBuf c | TRef c | TInline c -> cty_deps c
+  | TBuf c | TRef (_, c) | TInline c -> cty_deps c
   | _ -> []
 
 let rec pat_deps (p:pat) : ML (list string) =
@@ -1569,25 +1752,25 @@ let is_identity (dl:dlet) : ML bool =
    | _ -> false)
 
 let inline_decls (prog:program) : ML program =
-  let tbl : SMap.t (list binder & expr) = SMap.create 50 in
-  let used : SMap.t bool = SMap.create 50 in
-  let inl : SMap.t dlet = SMap.create 50 in
+  let tbl : HashTable.t string (list string & list binder & expr) = HashTable.create 50 in
+  let used : HashTable.t string bool = HashTable.create 50 in
+  let inl : HashTable.t string dlet = HashTable.create 50 in
   prog |> List.iter (fun d ->
     match d with
     | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
-      SMap.add inl (string_of_name dl.dl_name) dl
+      HashTable.add inl (string_of_name dl.dl_name) dl
     | _ -> ());
-  let visiting : SMap.t bool = SMap.create 50 in
-  let bodies : SMap.t expr = SMap.create 50 in
+  let visiting : HashTable.t string bool = HashTable.create 50 in
+  let bodies : HashTable.t string expr = HashTable.create 50 in
   let rec fill (n:string) : ML unit =
-    if None? (SMap.try_find visiting n) then begin
-      SMap.add visiting n true;
-      match SMap.try_find inl n with
+    if None? (HashTable.try_find visiting n) then begin
+      HashTable.add visiting n true;
+      match HashTable.try_find inl n with
       | Some dl ->
         decl_deps (DLet dl) |> List.iter fill;
         let body = inline_expr tbl used dl.dl_body in
-        SMap.add bodies n body;
-        SMap.add tbl n (dl.dl_binders, body)
+        HashTable.add bodies n body;
+        HashTable.add tbl n (dl.dl_typars, dl.dl_binders, body)
       | None -> ()
     end in
   prog |> List.iter (fun d ->
@@ -1600,7 +1783,7 @@ let inline_decls (prog:program) : ML program =
     | DLet dl ->
       (* An [Inline] declaration's body was already rewritten by [fill], and
          rewriting it again would re-enter [used] for the calls that stayed. *)
-      (match SMap.try_find bodies (string_of_name dl.dl_name) with
+      (match HashTable.try_find bodies (string_of_name dl.dl_name) with
        | Some body -> DLet { dl with dl_body = body }
        | None -> DLet { dl with dl_body = inline_expr tbl used dl.dl_body })
     | d -> d) in
@@ -1613,7 +1796,7 @@ let inline_decls (prog:program) : ML program =
        stays. *)
     | DLet dl -> not (dl.dl_flags |> List.existsb Inline?)
               || dl.dl_flags |> List.existsb Root?
-              || Some? (SMap.try_find used (string_of_name dl.dl_name))
+              || Some? (HashTable.try_find used (string_of_name dl.dl_name))
     | _ -> true)
 
 (* -------------------------------------------------------------------- *)
@@ -1628,14 +1811,14 @@ let inline_decls (prog:program) : ML program =
    go.  Reachability is computed after inlining, when the call graph is final. *)
 
 (* A constructor or field name refers to its declaration, not to itself. *)
-let ctor_owners (prog:program) : ML (SMap.t string) =
-  let m : SMap.t string = SMap.create 50 in
+let ctor_owners (prog:program) : ML (HashTable.t string string) =
+  let m : HashTable.t string string = HashTable.create 50 in
   prog |> List.iter (fun d ->
     match d with
     | DType t ->
       let owner = string_of_name t.dt_name in
       (match t.dt_body with
-       | TVariant cs -> cs |> List.iter (fun (cn, _) -> SMap.add m (string_of_name cn) owner)
+       | TVariant cs -> cs |> List.iter (fun (cn, _) -> HashTable.add m (string_of_name cn) owner)
        | _ -> ())
     | _ -> ());
   m
@@ -1690,10 +1873,10 @@ let rec spellable (c:cty) : ML bool =
   | TAny | TExn -> false
   | TApp (_, args) | TTuple args -> args |> List.for_all spellable
   | TArrow (a, _, b) -> spellable a && spellable b
-  | TBuf c | TRef c | TInline c -> spellable c
+  | TBuf c | TRef (_, c) | TInline c -> spellable c
   | _ -> true
 
-let revive_abbrevs (prog:program) (live : SMap.t bool) : ML unit =
+let revive_abbrevs (prog:program) (live : HashTable.t string bool) : ML unit =
   let cands = prog |> List.collect (fun d ->
     match d with
     | DType dt ->
@@ -1702,16 +1885,16 @@ let revive_abbrevs (prog:program) (live : SMap.t bool) : ML unit =
          when entry_module dt.dt_name &&
               not (has_flag dt.dt_flags Private) &&
               spellable c &&
-              None? (SMap.try_find live (string_of_name dt.dt_name)) ->
+              None? (HashTable.try_find live (string_of_name dt.dt_name)) ->
          [(string_of_name dt.dt_name, cty_deps c)]
        | _ -> [])
     | _ -> []) in
   let rec go (fuel:int) : ML unit =
     if fuel <= 0 then () else
     let added = cands |> List.existsb (fun (n, deps) ->
-      if None? (SMap.try_find live n) &&
-         deps |> List.for_all (fun d -> Some? (SMap.try_find live d))
-      then (SMap.add live n true; true)
+      if None? (HashTable.try_find live n) &&
+         deps |> List.for_all (fun d -> Some? (HashTable.try_find live d))
+      then (HashTable.add live n true; true)
       else false) in
     if added then go (fuel - 1) in
   go (List.length cands + 1)
@@ -1719,15 +1902,15 @@ let revive_abbrevs (prog:program) (live : SMap.t bool) : ML unit =
 let dce (prog:program) : ML program =
   let own = ctor_owners prog in
   let resolve (n:string) : ML string =
-    match SMap.try_find own n with Some o -> o | None -> n in
-  let defs : SMap.t decl = SMap.create 50 in
-  prog |> List.iter (fun d -> SMap.add defs (string_of_name (name_of_decl d)) d);
-  let live : SMap.t bool = SMap.create 50 in
+    match HashTable.try_find own n with Some o -> o | None -> n in
+  let defs : HashTable.t string decl = HashTable.create 50 in
+  prog |> List.iter (fun d -> HashTable.add defs (string_of_name (name_of_decl d)) d);
+  let live : HashTable.t string bool = HashTable.create 50 in
   let rec visit (n:string) : ML unit =
     let n = resolve n in
-    if None? (SMap.try_find live n) then begin
-      SMap.add live n true;
-      match SMap.try_find defs n with
+    if None? (HashTable.try_find live n) then begin
+      HashTable.add live n true;
+      match HashTable.try_find defs n with
       | Some d -> decl_deps d |> List.iter visit
       | None -> ()
     end in
@@ -1736,7 +1919,7 @@ let dce (prog:program) : ML program =
     then visit (string_of_name (name_of_decl d)));
   revive_abbrevs prog live;
   prog |> List.filter (fun d ->
-    Some? (SMap.try_find live (string_of_name (name_of_decl d))))
+    Some? (HashTable.try_find live (string_of_name (name_of_decl d))))
 
 (* Section 51.3.  A prologue that follows the call graph.
 
@@ -1747,109 +1930,178 @@ let dce (prog:program) : ML program =
    The set that needs marking is the transitive callees of a term the plugin
    has just built, which the plugin cannot enumerate and Custard can.
 
-   Three sets, over the *live* program:
+   Section 51.5.  The callees are *cloned* rather than marked in place.
 
-   - [seeds], the declarations carrying [ClosurePrologue];
-   - [device], what those reach, seeds excluded;
-   - [host], what the ordinary roots reach *without descending through* a
-     declaration that is itself an entry -- one carrying a [Prologue] or a
-     [ClosurePrologue].  A kernel's body is device code however the kernel is
-     named, so walking into it would put the whole device closure in [host]
-     and every helper would come out shared.
+   Marking in place was designed for CUDA, where adding [__device__] to a
+   function only narrows who may call it, and a second string,
+   [__device__ __host__], covered a helper the rest of the program called
+   too.  The same attribute then came to carry CPU [target(...)] attributes
+   on code calling intrinsics, and there marking in place is wrong twice
+   over.  A [target("avx2")] on a helper some caller reaches *without* a
+   runtime CPU check lets the compiler use AVX2 in code that runs on any
+   machine; and with several targets in one program a shared helper can carry
+   only one of them, so it was given the first seed's string whatever
+   reached it (FStarLang/FStar#4711) -- an illegal instruction waiting to
+   happen, and an inlining barrier between functions whose targets disagree.
 
-   A declaration in [device] and not in [host] gets the exclusive string; one
-   in both gets the shared string.  In CUDA that is [__device__] and
-   [__device__ __host__], and a helper called from a kernel and from host
-   code is miscompiled by the first -- which is the case a plugin has no way
-   to express today, and the reason the flag carries two strings rather than
-   one.
+   So, as CUDA's own [__device__] model has it: every function in the
+   closure of a seed is copied once per distinct prologue, the copy carries
+   the prologue and a name disambiguated by it, and the seed's body and the
+   copies' bodies call the copies.  The originals are untouched, keep serving
+   every other caller, and are left for [dce] when nothing else calls them.
 
-   A declaration that already carries a [Prologue] is left alone: it is
-   another entry with its own regime, and overwriting a plugin's explicit
-   choice with an inferred one is the wrong way round.  Only [DLet]s are
-   marked; a type or an external has no body to compile for a device. *)
+   What is copied: a function -- a [DLet] with binders -- that this program
+   defines.  Not a type or an external, which have no body to compile for a
+   target; not an imported, realized or modelled declaration, whose code
+   comes from somewhere else; not a
+   macro, which has no storage and no attribute; and not a declaration that
+   carries a [Prologue] or a [ClosurePrologue] of its own, which is another
+   entry with its own regime -- the walk stops there, and overwriting a
+   plugin's explicit choice with an inferred one is the wrong way round.
+
+   A global -- a [DLet] with no binders -- is neither copied nor marked.
+   A copy of a variable is a second variable, which changes the meaning of a
+   program that writes to it; and a prologue on one is wrong for CPU targets,
+   where gcc ignores [target(...)] on a variable with a warning.  Section
+   53.2 used to mark one, and refused one host code also read (error 383),
+   which a constant table shared by a scalar and a vector path always is.
+   CUDA does need [__device__] or [__constant__] on a table device code
+   reads, but leaving it off fails loudly -- nvcc reports the identifier as
+   undefined in device code -- and the fix is an explicit [CPrologue] on the
+   variable.
+
+   Section 51.6.  A seed may also carry a [ClosureGuard g], a preprocessor
+   condition: a [target("avx2")] function does not even compile on an ARM
+   compiler.  The seed and its copies are given [Guard g], which the C
+   printer turns into [#if g ... #endif], and copies are made per (prologue,
+   guard) pair, since a copy one guard leaves out cannot serve a seed under
+   another.  The originals stay unguarded: they are portable code. *)
+
+(* The part of a prologue that says what it is for, as an identifier:
+   [__attribute__((target("avx2")))] becomes [avx2] and [__device__] becomes
+   [device].  Only for a reader; uniqueness is {!propagate_prologues}'s job. *)
+let prologue_suffix (s:string) : ML string =
+  let ok (c:FStarC.BaseTypes.char) : ML bool =
+    let i = FStarC.Util.int_of_char c in
+    (i >= 97 && i <= 122) || (i >= 65 && i <= 90) || (i >= 48 && i <= 57) in
+  let words, cur =
+    String.list_of_string s |> List.fold_left (fun (ws, cur) c ->
+      if ok c then (ws, c :: cur)
+      else if Nil? cur then (ws, cur)
+      else (String.string_of_list (List.rev cur) :: ws, [])) ([], []) in
+  let words = if Nil? cur then words
+              else String.string_of_list (List.rev cur) :: words in
+  let words = List.rev words |> List.filter (fun w ->
+                not (List.mem w ["attribute"; "target"])) in
+  match words with
+  | [] -> "clone"
+  | _ -> String.concat "_" words
+
 let propagate_prologues (prog:program) : ML program =
-  let own = ctor_owners prog in
-  let resolve (n:string) : ML string =
-    match SMap.try_find own n with Some o -> o | None -> n in
-  let defs : SMap.t decl = SMap.create 50 in
-  prog |> List.iter (fun d -> SMap.add defs (string_of_name (name_of_decl d)) d);
+  let defs : HashTable.t string decl = HashTable.create 50 in
+  prog |> List.iter (fun d -> HashTable.add defs (string_of_name (name_of_decl d)) d);
   let is_entry (d:decl) : ML bool =
-    decl_flags d |> List.existsb (fun f -> Prologue? f || ClosurePrologue? f) in
-  let reach (stop_at_entry:bool) (seeds:list string) : ML (SMap.t bool) =
-    let seen : SMap.t bool = SMap.create 50 in
-    let rec visit (n:string) : ML unit =
-      let n = resolve n in
-      if None? (SMap.try_find seen n) then begin
-        SMap.add seen n true;
-        match SMap.try_find defs n with
-        | Some d ->
-          if stop_at_entry && is_entry d then ()
-          else decl_deps d |> List.iter visit
-        | None -> ()
-      end in
-    seeds |> List.iter visit;
-    seen in
-  let seeds = prog |> List.collect (fun d ->
-    if decl_flags d |> List.existsb ClosurePrologue?
-    then [string_of_name (name_of_decl d)] else []) in
-  if Nil? seeds then prog else begin
-    (* The seeds' own callees, which is the closure minus the seeds. *)
-    let device = reach false (seeds |> List.collect (fun n ->
-      match SMap.try_find defs n with
-      | Some d -> decl_deps d
-      | None -> [])) in
-    let host = reach true (prog |> List.collect (fun d ->
-      if decl_flags d |> List.existsb (fun f -> Root? f || Entrypoint? f)
-         && not (is_entry d)
-      then [string_of_name (name_of_decl d)] else [])) in
-    (* One seed's strings are as good as another's: two seeds disagreeing
-       about what their shared callees should say is a plugin bug, and
-       picking the first is at least deterministic in program order. *)
-    let strings =
-      match prog |> List.collect (fun d ->
-              decl_flags d |> List.collect (fun f ->
-                match f with ClosurePrologue (a, b) -> [(a, b)] | _ -> [])) with
-      | (a, b) :: _ -> (a, b)
-      | [] -> ("", "") in
-    let excl, shared = strings in
-    (* Section 53.2.  A global is a [DLet] with no binders, and the two-string
-       API does not extend to one.  The exclusive string is fine -- CUDA's
-       [__device__] applies to a variable -- but the shared string is not: a
-       qualifier meaning "reachable from both" is a statement about a
-       *function*, and CUDA's answer for a shared variable is [__managed__],
-       which is unified memory and a runtime cost rather than a decoration.
-       [__host__] on a variable is dropped silently, so emitting the shared
-       string there would give a device-only variable that compiles with a
-       warning and reads the wrong memory at runtime -- the worst of the
-       outcomes available.  Custard reads neither string and so cannot tell;
-       it refuses rather than guessing. *)
-    let shared_global (l:dlet) : ML unit =
-      E.raise_error0 E.Error_CustardSharedGlobal [
-        text ("Custard: the global " ^ string_of_name l.dl_name ^
-              " is reached from device code and from host code.");
-        text "It is a variable and not a function, so the second string of custard_c_closure_prologue cannot be applied to it: a qualifier meaning \"reachable from both\" describes a function, and a target that has an answer for variables (CUDA's __managed__) spells it as a storage class with a runtime cost, which is not a decoration Custard may add on its own.";
-        text "Applying it anyway would be worse than refusing: on CUDA the host qualifier on a variable is dropped silently, so the result compiles with a warning and is wrong at runtime.";
-        text "Either make it a function of unit, so that the closure can decorate it like any other callee, or keep it out of the device closure." ] in
-    prog |> List.map (fun d ->
-      match d with
-      | DLet l ->
-        let n = string_of_name l.dl_name in
-        if List.mem n seeds then d
-        else if Some? (SMap.try_find device n)
-                && not (l.dl_flags |> List.existsb Prologue?)
-        then begin
-          let s =
-            if Some? (SMap.try_find host n)
-            then begin
-              if Nil? l.dl_binders then shared_global l;
-              shared
-            end
-            else excl in
-          DLet { l with dl_flags = Prologue s :: l.dl_flags }
-        end
-        else d
-      | d -> d)
+    decl_flags d |> List.existsb (fun f ->
+      Prologue? f || ClosurePrologue? f || ClosureGuard? f) in
+  let first (l:dlet) (pick:flag -> option string) : ML (option string) =
+    match l.dl_flags |> List.collect (fun f ->
+            match pick f with Some s -> [s] | None -> []) with
+    | s :: _ -> Some s
+    | [] -> None in
+  let seed_guard (d:decl) : ML (option string) =
+    match d with
+    | DLet l -> first l (fun f -> match f with ClosureGuard s -> Some s | _ -> None)
+    | _ -> None in
+  (* A copy is made per (prologue, guard): the key, and what it decorates. *)
+  let seed_prologue (d:decl) : ML (option (string & list flag)) =
+    match d with
+    | DLet l ->
+      (match first l (fun f -> match f with ClosurePrologue s -> Some s | _ -> None) with
+       | Some p ->
+         (match seed_guard d with
+          | Some g -> Some (p ^ "\u0001" ^ g, [Prologue p; Guard g])
+          | None -> Some (p, [Prologue p]))
+       | None -> None)
+    | _ -> None in
+  (* The seed's own guard, before anything else, so that the early exit
+     below cannot skip it. *)
+  let prog = prog |> List.map (fun d ->
+    match d, seed_guard d with
+    | DLet l, Some g -> DLet { l with dl_flags = Guard g :: l.dl_flags }
+    | d, _ -> d) in
+  let copyable (d:decl) : ML bool =
+    match d with
+    | DLet l -> Cons? l.dl_binders && not (is_entry d) && None? (imported_unit d) &&
+                not (l.dl_flags |> List.existsb (fun f ->
+                       CMacro? f || Realized? f || Modelled? f))
+    | _ -> false in
+  if not (prog |> List.existsb (fun d -> Some? (seed_prologue d))) then prog else begin
+    (* One suffix per distinct prologue, and one name per copy, neither of
+       which may collide with anything else in the program. *)
+    let suffixes : HashTable.t string string = HashTable.create 8 in
+    let suffix_taken : HashTable.t string bool = HashTable.create 8 in
+    let suffix_of (p:string) (deco:list flag) : ML string =
+      match HashTable.try_find suffixes p with
+      | Some s -> s
+      | None ->
+        let base = match deco with
+                   | Prologue q :: _ -> prologue_suffix q
+                   | _ -> prologue_suffix p in
+        let rec pick (i:int) : ML string =
+          let s = if i = 0 then base else base ^ show i in
+          if Some? (HashTable.try_find suffix_taken s) then pick (i + 1) else s in
+        let s = pick 0 in
+        HashTable.add suffix_taken s true;
+        HashTable.add suffixes p s;
+        s in
+    let names_taken : HashTable.t string bool = HashTable.create 50 in
+    prog |> List.iter (fun d ->
+      HashTable.add names_taken (string_of_name (name_of_decl d)) true);
+    let fresh_name (n:name) (sfx:string) : ML name =
+      let base = match n.spec with Some s -> s ^ "_" ^ sfx | None -> sfx in
+      let rec pick (i:int) : ML name =
+        let m = { n with spec = Some (if i = 0 then base else base ^ show i) } in
+        if Some? (HashTable.try_find names_taken (string_of_name m))
+        then pick (i + 1)
+        else (HashTable.add names_taken (string_of_name m) true; m) in
+      pick 0 in
+    (* (prologue, original) -> the copy's name; and the copies, by original. *)
+    let copies : HashTable.t string name = HashTable.create 50 in
+    let made : HashTable.t string (list decl) = HashTable.create 50 in
+    let rec copy_of (p:string) (deco:list flag) (n:string) : ML (option name) =
+      let key = p ^ "\u0000" ^ n in
+      match HashTable.try_find copies key with
+      | Some m -> Some m
+      | None ->
+        match HashTable.try_find defs n with
+        | Some (DLet l) when copyable (DLet l) ->
+          let m = fresh_name l.dl_name (suffix_of p deco) in
+          (* Before the body, so that recursion finds it. *)
+          HashTable.add copies key m;
+          let body = redirect p deco l.dl_body in
+          let flags = l.dl_flags |> List.filter (fun f ->
+                        not (Root? f || Entrypoint? f || Private? f || Rec? f)) in
+          let c = DLet { l with dl_name = m; dl_body = body;
+                                dl_flags = deco @ (Private :: flags) } in
+          let prev = match HashTable.try_find made n with Some cs -> cs | None -> [] in
+          HashTable.add made n (prev @ [c]);
+          Some m
+        | _ -> None
+    and redirect (p:string) (deco:list flag) (x:expr) : ML expr =
+      match x.e with
+      | EQual (n, tys) ->
+        (match copy_of p deco (string_of_name n) with
+         | Some m -> { x with e = EQual (m, tys) }
+         | None -> x)
+      | _ -> map_children (redirect p deco) x in
+    let prog = prog |> List.map (fun d ->
+      match d, seed_prologue d with
+      | DLet l, Some (p, deco) -> DLet { l with dl_body = redirect p deco l.dl_body }
+      | d, _ -> d) in
+    prog |> List.collect (fun d ->
+      d :: (match HashTable.try_find made (string_of_name (name_of_decl d)) with
+            | Some cs -> cs
+            | None -> []))
   end
 
 (* Section 36.1.  A reference to a declaration that is not in the program.
@@ -1880,9 +2132,9 @@ let propagate_prologues (prog:program) : ML program =
    assumption written down, so it holds where that assumption does. *)
 let check_resolved (prog:program) : ML program =
   if Some? (Options.custard_unit ()) || Cons? (Options.custard_links ()) then prog else
-  let defs : SMap.t bool = SMap.create 50 in
+  let defs : HashTable.t string bool = HashTable.create 50 in
   prog |> List.iter (fun d ->
-    SMap.add defs (string_of_name (name_of_decl d)) true);
+    HashTable.add defs (string_of_name (name_of_decl d)) true);
   let rec quals (x:expr) : ML (list name) =
     let sub (es:list expr) : ML (list name) = List.collect quals es in
     match x.e with
@@ -1892,7 +2144,7 @@ let check_resolved (prog:program) : ML program =
     match d with
     | DLet l ->
       quals l.dl_body |> List.iter (fun n ->
-        if None? (SMap.try_find defs (string_of_name n)) then
+        if None? (HashTable.try_find defs (string_of_name n)) then
           E.raise_error0 E.Error_CustardDanglingReference [
             text ("Custard: " ^ string_of_name l.dl_name ^ " refers to " ^
                   string_of_name n ^ ", which is not in the program.");
@@ -1921,54 +2173,54 @@ let check_resolved (prog:program) : ML program =
 let scc (prog:program) : ML program =
   let own = ctor_owners prog in
   let key (d:decl) : ML string = string_of_name (name_of_decl d) in
-  let defs : SMap.t decl = SMap.create 50 in
-  prog |> List.iter (fun d -> SMap.add defs (key d) d);
+  let defs : HashTable.t string decl = HashTable.create 50 in
+  prog |> List.iter (fun d -> HashTable.add defs (key d) d);
   (* Original position, so that a component's members and the components
      themselves come out in an order a reader can predict. *)
-  let pos : SMap.t int = SMap.create 50 in
-  let _ = prog |> List.fold_left (fun i d -> SMap.add pos (key d) i; i + 1) 0 in
+  let pos : HashTable.t string int = HashTable.create 50 in
+  let _ = prog |> List.fold_left (fun i d -> HashTable.add pos (key d) i; i + 1) 0 in
   let at (n:string) : ML int =
-    match SMap.try_find pos n with Some i -> i | None -> 0 in
+    match HashTable.try_find pos n with Some i -> i | None -> 0 in
   let succs (n:string) : ML (list string) =
-    match SMap.try_find defs n with
+    match HashTable.try_find defs n with
     | None -> []
     | Some d ->
       decl_deps d
-      |> List.map (fun m -> match SMap.try_find own m with Some o -> o | None -> m)
-      |> List.filter (fun m -> Some? (SMap.try_find defs m)) in
+      |> List.map (fun m -> match HashTable.try_find own m with Some o -> o | None -> m)
+      |> List.filter (fun m -> Some? (HashTable.try_find defs m)) in
 
-  let index : SMap.t int = SMap.create 50 in
-  let low : SMap.t int = SMap.create 50 in
-  let onstack : SMap.t bool = SMap.create 50 in
+  let index : HashTable.t string int = HashTable.create 50 in
+  let low : HashTable.t string int = HashTable.create 50 in
+  let onstack : HashTable.t string bool = HashTable.create 50 in
   let stack : ref (list string) = mk_ref [] in
   let counter : ref int = mk_ref 0 in
   (* Accumulated in reverse: Tarjan closes a component only once every
      component it depends on is closed, so prepending and reversing at the end
      puts dependencies first. *)
   let comps : ref (list (list string)) = mk_ref [] in
-  let get (m:SMap.t int) (n:string) : ML int =
-    match SMap.try_find m n with Some i -> i | None -> 0 in
+  let get (m:HashTable.t string int) (n:string) : ML int =
+    match HashTable.try_find m n with Some i -> i | None -> 0 in
   let rec strong (v:string) : ML unit =
     let i = !counter in
     counter := i + 1;
-    SMap.add index v i;
-    SMap.add low v i;
+    HashTable.add index v i;
+    HashTable.add low v i;
     stack := v :: !stack;
-    SMap.add onstack v true;
+    HashTable.add onstack v true;
     succs v |> List.iter (fun w ->
-      match SMap.try_find index w with
+      match HashTable.try_find index w with
       | None ->
         strong w;
-        SMap.add low v (imin (get low v) (get low w))
+        HashTable.add low v (imin (get low v) (get low w))
       | Some iw ->
-        if SMap.try_find onstack w = Some true
-        then SMap.add low v (imin (get low v) iw));
+        if HashTable.try_find onstack w = Some true
+        then HashTable.add low v (imin (get low v) iw));
     if get low v = get index v then begin
       let rec pop (acc:list string) (st:list string) : ML (list string & list string) =
         match st with
         | [] -> (acc, [])
         | w :: rest ->
-          SMap.add onstack w false;
+          HashTable.add onstack w false;
           if w = v then (w :: acc, rest) else pop (w :: acc) rest in
       let comp, rest = pop [] !stack in
       stack := rest;
@@ -1976,7 +2228,7 @@ let scc (prog:program) : ML program =
     end in
   prog |> List.iter (fun d ->
     let n = key d in
-    if None? (SMap.try_find index n) then strong n);
+    if None? (HashTable.try_find index n) then strong n);
 
   (* A component is recursive if it has more than one member, or if its single
      member refers to itself. *)
@@ -1984,7 +2236,7 @@ let scc (prog:program) : ML program =
     match comp with
     | [n] when not (succs n |> List.existsb (fun m -> m = n)) -> []
     | _ -> [Rec (comp |> List.collect (fun n ->
-                   match SMap.try_find defs n with
+                   match HashTable.try_find defs n with
                    | Some d -> [name_of_decl d]
                    | None -> []))] in
   let retag (fs:list flag) (d:decl) : ML decl =
@@ -1998,7 +2250,7 @@ let scc (prog:program) : ML program =
   List.rev !comps |> List.collect (fun comp ->
     let fs = flags comp in
     comp |> List.collect (fun n ->
-      match SMap.try_find defs n with
+      match HashTable.try_find defs n with
       | Some d -> [retag fs d]
       | None -> []))
 
@@ -2006,11 +2258,17 @@ let scc (prog:program) : ML program =
 (* Unreachable branches                                                 *)
 (* -------------------------------------------------------------------- *)
 
-(* [EAbort] says control does not reach here, and it means it: the only rule
-   that introduces one is Pulse's [unreachable] (section 8.3), whose
-   precondition F* has already proved false.  A branch whose body is nothing
-   but an abort therefore contributes nothing to the value of the match, and
-   testing for it is wasted work at run time and noise in the output.
+(* [EUnreachable] says control does not reach here, and it means it: the only
+   rules that introduce one are Pulse's [unreachable] (section 8.3) and
+   [FStar.Pervasives.false_elim], whose preconditions F* has already proved
+   false.  A branch whose body is nothing but one therefore contributes
+   nothing to the value of the match, and testing for it is wasted work at run
+   time and noise in the output.
+
+   [EAbort] is deliberately not treated this way.  It is what [Prims.admit]
+   and [Prims.magic] compile to, and those are placeholders, not proofs:
+   pruning the branch would make [if b then 1ul else admit ()] return [1ul]
+   unconditionally instead of aborting when [b] is false (FStarLang/FStar#4661).
 
    This was a C-backend peephole first, where dropping the branch also lets the
    one before it become unconditional.  But the reasoning has nothing to do
@@ -2032,11 +2290,15 @@ let rec prune (x:expr) : ML expr =
   | EMatch (s, brs) ->
     let s = g s in
     let brs = brs |> List.map prune_branch in
-    let live = brs |> List.filter (fun (_, _, b) -> not (EAbort? b.e)) in
-    (* A match all of whose branches abort cannot be entered at all, so there
-       is nothing to choose between them: it is just the abort, with the
-       scrutinee kept only if evaluating it is observable. *)
+    let live = brs |> List.filter (fun (_, _, b) -> not (EUnreachable? b.e)) in
+    (* A match all of whose branches are unreachable cannot be entered at
+       all, so there is nothing to choose between them: it is just the first
+       of them, with the scrutinee kept only if evaluating it is observable. *)
     (match live, brs with
+     (* A match with no branches at all, on a value of an empty type, is the
+        degenerate case: F* proved it is never entered.  Neither OCaml nor F#
+        can even spell one, so it must not reach a printer. *)
+     | [], [] -> take x s { x with e = EUnreachable "empty match" }
      | [], (_, _, b) :: _ -> take x s b
      (* One live branch is the same situation one step on: the match was
         exhaustive before pruning, so if every other arm is unreachable this
@@ -2059,8 +2321,8 @@ let rec prune (x:expr) : ML expr =
     let c = g c in
     let a = g a in
     let b = g b in
-    if EAbort? b.e && not (EAbort? a.e) then take x c a
-    else if EAbort? a.e && not (EAbort? b.e) then take x c b
+    if EUnreachable? b.e && not (EUnreachable? a.e) then take x c a
+    else if EUnreachable? a.e && not (EUnreachable? b.e) then take x c b
     else { x with e = EIf (c, a, b) }
 
   | _ -> map_children g x
@@ -2102,31 +2364,8 @@ type ctor_info = {
   ci_exn: bool;                  (* a [DExn] constructor: its type is [exn] *)
 }
 
-(* The declarations this run links against rather than compiles, as the units
-   that compiled them emitted them.  No pass here decides anything about them
-   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
-   over in a [verdicts] -- but the passes that ask how many constructors a type
-   has, what its fields are called, or what a function's declared argument
-   types are, still have to be able to see them.  The last of those is not
-   optional: a coercion is inserted where a declared type meets a value, and a
-   call to an imported function whose signature is invisible is a boundary
-   that silently disappears.  A [ref] rather than an argument threaded through
-   a dozen functions, for the same reason
-   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
-   program.  Set by {!run}. *)
-let imported_types : ref (list decl) = mk_ref []
-
-(* The program as the *declaration*-inspecting passes should see it.  An
-   imported declaration is visible to a question about a declaration and
-   invisible to everything else: it is not rewritten, not re-decided, and not
-   emitted. *)
-let with_imports (prog:program) : ML program =
-  match !imported_types with
-  | [] -> prog
-  | ds -> ds @ prog
-
-let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
-  let m : SMap.t ctor_info = SMap.create 50 in
+let ctor_infos (prog:program) : ML (HashTable.t string ctor_info) =
+  let m : HashTable.t string ctor_info = HashTable.create 50 in
   prog |> List.iter (fun d ->
     match d with
     | DType ({ dt_name = tn; dt_params = ps; dt_body = TVariant cs; dt_flags = fl }) ->
@@ -2135,7 +2374,7 @@ let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
         (* [TInline] is [inline_fields]'s business; the types this table hands
            out end up on [EProj] nodes, where the marker has no meaning. *)
         let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
-        SMap.add m (string_of_name cn)
+        HashTable.add m (string_of_name cn)
           { ci_owner = tn; ci_count = n; ci_params = ps; ci_fields = fs;
             ci_realized = has_flag fl Realized && not (has_flag fl SourceRecord);
             ci_exn = false })
@@ -2143,7 +2382,7 @@ let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
        [PRecord] all name.  It has one "constructor" by construction. *)
     | DType ({ dt_name = tn; dt_params = ps; dt_body = TRecord fs; dt_flags = fl }) ->
       let fs = fs |> List.map (fun (f, c) -> (f, (match c with TInline c -> c | c -> c))) in
-      SMap.add m (string_of_name tn)
+      HashTable.add m (string_of_name tn)
         { ci_owner = tn; ci_count = 1; ci_params = ps; ci_fields = fs;
           ci_realized = has_flag fl Realized && not (has_flag fl SourceRecord);
           ci_exn = false }
@@ -2160,7 +2399,7 @@ let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
        it is exhaustive.  The fields are positional, as a variant's unnamed
        arguments are; [ci_params] is empty because [exn] takes none. *)
     | DExn de ->
-      SMap.add m (string_of_name de.de_name)
+      HashTable.add m (string_of_name de.de_name)
         { ci_owner = de.de_name; ci_count = 2; ci_params = [];
           ci_fields = de.de_args |> List.mapi (fun i c ->
                         ("_" ^ string_of_int i,
@@ -2169,8 +2408,8 @@ let ctor_infos (prog:program) : ML (SMap.t ctor_info) =
     | _ -> ());
   m
 
-let single_ctor (tbl:SMap.t ctor_info) (cn:name) : ML (option ctor_info) =
-  match SMap.try_find tbl (string_of_name cn) with
+let single_ctor (tbl:HashTable.t string ctor_info) (cn:name) : ML (option ctor_info) =
+  match HashTable.try_find tbl (string_of_name cn) with
   | Some ci when ci.ci_count = 1 -> Some ci
   | _ -> None
 
@@ -2190,14 +2429,14 @@ let rec dup_ok (e:expr) : ML bool =
 let rec psub (sm:subst) (x:expr) : ML expr =
   let g = psub sm in
   match x.e with
-  | EVar v -> (match SMap.try_find sm v with Some e -> e | None -> x)
+  | EVar v -> (match HashTable.try_find sm v with Some e -> e | None -> x)
   | _ -> map_children g x
 
 (* A binding whose pattern cannot fail: one constructor, and no nested test.
    The result names the key an [EProj] on the scrutinee has to carry -- the
    constructor for a variant, the type for a record -- and pairs each field
    with the pattern standing for it. *)
-let irrefutable (tbl:SMap.t ctor_info) (p:pat)
+let irrefutable (tbl:HashTable.t string ctor_info) (p:pat)
   : ML (option (name & list ((string & cty) & pat))) =
   let plain (ps:list pat) : ML bool = ps |> List.for_all (fun p -> PVar? p || PWild? p) in
   match p with
@@ -2217,7 +2456,7 @@ let irrefutable (tbl:SMap.t ctor_info) (p:pat)
   (* A record pattern is irrefutable whatever it leaves out, and it names the
      fields it does mention, so there is no arity to check. *)
   | PRecord (tn, fs) ->
-    (match SMap.try_find tbl (string_of_name tn) with
+    (match HashTable.try_find tbl (string_of_name tn) with
      | Some ci when plain (fs |> List.map snd) ->
        Some (tn, fs |> List.collect (fun (f, q) ->
          match ci.ci_fields |> List.tryFind (fun (g, _) -> g = f) with
@@ -2226,7 +2465,7 @@ let irrefutable (tbl:SMap.t ctor_info) (p:pat)
      | _ -> None)
   | _ -> None
 
-let rec depat (tbl:SMap.t ctor_info) (x:expr) : ML expr =
+let rec depat (tbl:HashTable.t string ctor_info) (x:expr) : ML expr =
   let g = depat tbl in
   match x.e with
   | EMatch (s, [(p, None, body)]) ->
@@ -2240,20 +2479,20 @@ let rec depat (tbl:SMap.t ctor_info) (x:expr) : ML expr =
          if dup_ok s then None, s
          else let v = rename "scrut" in
               Some v, { s with e = EVar v; eff = E_Pure } in
-       let sm : subst = SMap.create 10 in
+       let sm : subst = HashTable.create 10 in
        (* A field's declared type speaks of the type's *parameters*; the
           scrutinee says what they are here.  Left uninstantiated, the third
           component of an [ident & bv & ref bool] comes out typed ['c], and a
           [ref] the OCaml backend cannot see is printed as an array. *)
        let inst (ft:cty) : ML cty =
-         match SMap.try_find tbl (string_of_name cn), s.ty with
+         match HashTable.try_find tbl (string_of_name cn), s.ty with
          | Some ci, TApp (_, args)
              when Cons? ci.ci_params && List.length args = List.length ci.ci_params ->
            subst_cty (List.zip ci.ci_params args) ft
          | _ -> ft in
        fps |> List.iter (fun ((f, ft), p) ->
          match p with
-         | PVar v -> SMap.add sm v (mk (EProj (s', cn, f)) (inst ft) E_Pure)
+         | PVar v -> HashTable.add sm v (mk (EProj (s', cn, f)) (inst ft) E_Pure)
          | _ -> ());
        let body = psub sm body in
        (match bound with
@@ -2295,13 +2534,13 @@ let eta_ctors (vd:verdicts) (prog:program) : ML program =
      record it held, while the [ECtor] here has not been rewritten yet.  A
      plan is stated in the pre-expansion fields, so its length is the arity
      wanted -- and for a local constructor it agrees with the declaration. *)
-  let imported : SMap.t unit = SMap.create 20 in
+  let imported : HashTable.t string unit = HashTable.create 20 in
   !imported_types |> List.iter (fun (d:decl) ->
     match d with
     | DType t ->
       (match t.dt_body with
-       | TVariant cs -> cs |> List.iter (fun (cn, _) -> SMap.add imported (string_of_name cn) ())
-       | TRecord _ -> SMap.add imported (string_of_name t.dt_name) ()
+       | TVariant cs -> cs |> List.iter (fun (cn, _) -> HashTable.add imported (string_of_name cn) ())
+       | TRecord _ -> HashTable.add imported (string_of_name t.dt_name) ()
        | _ -> ())
     | _ -> ());
   (* Walk the plan and the final fields together to recover the fields the
@@ -2318,8 +2557,8 @@ let eta_ctors (vd:verdicts) (prog:program) : ML program =
       let rec drop n l = if n <= 0 then l else (match l with [] -> [] | _ :: l -> drop (n - 1) l) in
       (f, ex.ex_ty) :: unplan pl (drop (List.length ex.ex_dst) fs) in
   let declared (cn:name) (ci:ctor_info) : ML (list (string & cty)) =
-    match SMap.try_find vd.vd_plans (string_of_name cn) with
-    | Some pl when Some? (SMap.try_find imported (string_of_name cn)) -> unplan pl ci.ci_fields
+    match HashTable.try_find vd.vd_plans (string_of_name cn) with
+    | Some pl when Some? (HashTable.try_find imported (string_of_name cn)) -> unplan pl ci.ci_fields
     | _ -> ci.ci_fields in
   let rec go (x:expr) : ML expr =
     let g = go in
@@ -2327,7 +2566,7 @@ let eta_ctors (vd:verdicts) (prog:program) : ML program =
     | ECtor (cn, es) ->
       let es = es |> List.map g in
       let alt = { x with e = ECtor (cn, es) } in
-      (match SMap.try_find infos (string_of_name cn) with
+      (match HashTable.try_find infos (string_of_name cn) with
        | Some ci ->
          let n = List.length es in
          let fs = declared cn ci in
@@ -2356,20 +2595,20 @@ let records (vd:verdicts) (prog:program) : ML program =
   (* The verdict says *whether*; the fields are read off the declaration the
      rewrite is about to change, because [inline_fields] has already replaced
      some of them with the pieces of the record they held (section 5.7). *)
-  let fields : SMap.t (list string) = SMap.create 100 in
+  let fields : HashTable.t string (list string) = HashTable.create 100 in
   let _ = with_imports prog |> List.iter (fun d ->
     match d with
     | DType t ->
       (match t.dt_body with
-       | TRecord fs -> SMap.add fields (string_of_name t.dt_name) (fs |> List.map fst)
-       | TVariant [(_, fs)] -> SMap.add fields (string_of_name t.dt_name) (fs |> List.map fst)
+       | TRecord fs -> HashTable.add fields (string_of_name t.dt_name) (fs |> List.map fst)
+       | TVariant [(_, fs)] -> HashTable.add fields (string_of_name t.dt_name) (fs |> List.map fst)
        | _ -> ())
     | _ -> ()) in
   let as_record (cn:name) : ML (option (name & list string)) =
-    match SMap.try_find vd.vd_records (string_of_name cn) with
+    match HashTable.try_find vd.vd_records (string_of_name cn) with
     | None -> None
     | Some tn ->
-      (match SMap.try_find fields (string_of_name tn) with
+      (match HashTable.try_find fields (string_of_name tn) with
        | Some fs -> Some (tn, fs)
        | None -> None) in
   let rec go (x:expr) : ML expr =
@@ -2511,7 +2750,7 @@ let rec rebinds (v:string) (x:expr) : ML bool =
   | ETry (a, brs) -> g a || (brs |> List.existsb br)
   | _ -> exists_child g x
 
-let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
+let rec unbuild (infos:HashTable.t string ctor_info) (x:expr) : ML expr =
   let g = unbuild infos in
   let pick (fs:list (string & expr)) (f:string) : ML (option expr) =
     if fs |> List.for_all (fun (h, (e:expr)) -> h = f || is_pure e.eff)
@@ -2526,7 +2765,7 @@ let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
     (match e1.e with
      | ERecord (_, fs) -> (match pick fs f with Some e -> e | None -> alt)
      | ECtor (cn, es) ->
-       (match SMap.try_find infos (string_of_name cn) with
+       (match HashTable.try_find infos (string_of_name cn) with
         | Some ci ->
           if List.length es <> List.length ci.ci_fields then alt
           else (match pick (List.zip (ci.ci_fields |> List.map fst) es) f with
@@ -2560,7 +2799,7 @@ let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
       match rhs.e with
       | ERecord (_, fs) -> Some fs
       | ECtor (cn, es) ->
-        (match SMap.try_find infos (string_of_name cn) with
+        (match HashTable.try_find infos (string_of_name cn) with
          | Some ci ->
            if List.length es = List.length ci.ci_fields
            then Some (List.zip (ci.ci_fields |> List.map fst) es)
@@ -2570,16 +2809,16 @@ let rec unbuild (infos:SMap.t ctor_info) (x:expr) : ML expr =
     (match fields with
      | Some fs when (fs |> List.for_all (fun (_, (e:expr)) -> reeval e))
                  && only_projected v b && not (rebinds v b) ->
-       let sm : subst = SMap.create 1 in
-       SMap.add sm v rhs;
+       let sm : subst = HashTable.create 1 in
+       HashTable.add sm v rhs;
        g (psub sm b)
      | _ -> alt)
 
   | _ -> map_children g x
 
 let inline_fields (vd:verdicts) (prog:program) : ML program =
-  if SMap.keys vd.vd_plans = [] then prog else begin
-  let plan (cn:name) : ML (option fplan) = SMap.try_find vd.vd_plans (string_of_name cn) in
+  if HashTable.keys vd.vd_plans = [] then prog else begin
+  let plan (cn:name) : ML (option fplan) = HashTable.try_find vd.vd_plans (string_of_name cn) in
 
   let rec go (x:expr) : ML expr =
     match x.e with
@@ -2652,7 +2891,7 @@ let inline_fields (vd:verdicts) (prog:program) : ML program =
      duplicated. *)
   and go_branch (br:branch) : ML branch =
     let p, gd, b = br in
-    let sm : subst = SMap.create 10 in
+    let sm : subst = HashTable.create 10 in
     let lets : ref (list (string & cty & expr)) = mk_ref [] in
     (* Whether the value bound to [v] can be substituted rather than let-bound:
        either it is read at most once, or every read of it is a projection,
@@ -2679,7 +2918,7 @@ let inline_fields (vd:verdicts) (prog:program) : ML program =
                   | PVar v ->
                     let ns = ex.ex_src |> List.map (fun (g, gt) -> (rename g, gt)) in
                     let e = ex_build ex (ns |> List.map (fun (n, t) -> mk (EVar n) t E_Pure)) in
-                    (if free v then SMap.add sm v e
+                    (if free v then HashTable.add sm v e
                      else lets := !lets @ [(v, ex.ex_ty, e)]);
                     acc @ (ns |> List.map (fun (n, _) -> PVar n))
                   | _ -> acc @ [p]))
@@ -2691,10 +2930,10 @@ let inline_fields (vd:verdicts) (prog:program) : ML program =
       | p -> p in
     let p = go_pat p in
     (* A guard cannot be wrapped in a [let], so it always substitutes. *)
-    let gsm : subst = SMap.create 10 in
-    SMap.keys sm |> List.iter (fun k ->
-      match SMap.try_find sm k with Some e -> SMap.add gsm k e | None -> ());
-    !lets |> List.iter (fun (v, t, e) -> SMap.add gsm v e);
+    let gsm : subst = HashTable.create 10 in
+    HashTable.keys sm |> List.iter (fun k ->
+      match HashTable.try_find sm k with Some e -> HashTable.add gsm k e | None -> ());
+    !lets |> List.iter (fun (v, t, e) -> HashTable.add gsm v e);
     let gd = (match gd with None -> None | Some g -> Some (go (psub gsm g))) in
     let b = go (psub sm b) in
     let b = List.fold_right (fun (v, t, e) acc -> { acc with e = ELet (v, t, e, acc) })
@@ -2760,14 +2999,14 @@ let unbuild_decls (prog:program) : ML program =
    scrutinee to a variable, the fallback being a second use of it.  An
    irrefutable sub-pattern cannot fail, so it keeps the single-branch form and
    costs nothing. *)
-let rec refutable (infos:SMap.t ctor_info) (p:pat) : ML bool =
+let rec refutable (infos:HashTable.t string ctor_info) (p:pat) : ML bool =
   match p with
   | PVar _ | PWild -> false
   | PConst _ | POr _ -> true
   | PTuple ps -> ps |> List.existsb (refutable infos)
   | PRecord (_, fps) -> fps |> List.existsb (fun (_, q) -> refutable infos q)
   | PCtor (cn, ps) ->
-    (match SMap.try_find infos (string_of_name cn) with
+    (match HashTable.try_find infos (string_of_name cn) with
      | Some ci when ci.ci_count = 1 -> ps |> List.existsb (refutable infos)
      | _ -> true)
 
@@ -2798,7 +3037,7 @@ let tuple_fields (sc:option cty) (ps:list pat) : ML (list cty) =
 
 (* Whether [split_any] on this pattern will produce an inner match that can
    fail -- which is exactly when the branch needs the rest behind it. *)
-let rec splits_refutably (infos:SMap.t ctor_info) (sc:option cty) (p:pat) : ML bool =
+let rec splits_refutably (infos:HashTable.t string ctor_info) (sc:option cty) (p:pat) : ML bool =
   let simple (q:pat) : bool = PVar? q || PWild? q in
   let field (t:cty) (q:pat) : ML bool =
     (TAny? t && not (simple q) && refutable infos q) ||
@@ -2807,12 +3046,12 @@ let rec splits_refutably (infos:SMap.t ctor_info) (sc:option cty) (p:pat) : ML b
     List.zip ts ps |> List.existsb (fun (t, q) -> field t q) in
   match p with
   | PCtor (cn, ps) ->
-    (match SMap.try_find infos (string_of_name cn) with
+    (match HashTable.try_find infos (string_of_name cn) with
      | Some ci when List.length ci.ci_fields = List.length ps ->
        many (inst_fields ci sc |> List.map snd) ps
      | _ -> false)
   | PRecord (tn, fps) ->
-    (match SMap.try_find infos (string_of_name tn) with
+    (match HashTable.try_find infos (string_of_name tn) with
      | Some ci ->
        let fs = inst_fields ci sc in
        fps |> List.existsb (fun (f, q) ->
@@ -2823,7 +3062,7 @@ let rec splits_refutably (infos:SMap.t ctor_info) (sc:option cty) (p:pat) : ML b
   | PTuple ps -> many (tuple_fields sc ps) ps
   | POr _ | PVar _ | PWild | PConst _ -> false
 
-let rec split_any (infos:SMap.t ctor_info) (fb:option expr) (sc:option cty)
+let rec split_any (infos:HashTable.t string ctor_info) (fb:option expr) (sc:option cty)
                   (p:pat) (body:expr)
   : ML (pat & expr) =
   let simple (p:pat) : bool = PVar? p || PWild? p in
@@ -2845,13 +3084,13 @@ let rec split_any (infos:SMap.t ctor_info) (fb:option expr) (sc:option cty)
       (p :: ps, body)) (List.zip ts ps) ([], body) in
   match p with
   | PCtor (cn, ps) ->
-    (match SMap.try_find infos (string_of_name cn) with
+    (match HashTable.try_find infos (string_of_name cn) with
      | Some ci when List.length ci.ci_fields = List.length ps ->
        let ps, body = many (inst_fields ci sc |> List.map snd) ps body in
        (PCtor (cn, ps), body)
      | _ -> (p, body))
   | PRecord (tn, fps) ->
-    (match SMap.try_find infos (string_of_name tn) with
+    (match HashTable.try_find infos (string_of_name tn) with
      | Some ci ->
        let fs = inst_fields ci sc in
        let ts = fps |> List.map (fun (f, _) ->
@@ -2866,7 +3105,7 @@ let rec split_any (infos:SMap.t ctor_info) (fb:option expr) (sc:option cty)
     (PTuple ps, body)
   | POr _ | PVar _ | PWild | PConst _ -> (p, body)
 
-let rec split_any_expr (infos:SMap.t ctor_info) (x:expr) : ML expr =
+let rec split_any_expr (infos:HashTable.t string ctor_info) (x:expr) : ML expr =
   let g = split_any_expr infos in
   let br (sc:option cty) (fb:option expr) (b0:branch) : ML branch =
     let p, gd, b = b0 in
@@ -2991,11 +3230,11 @@ let rec unit_args_expr (x:expr) : ML expr =
     if not (TUnit? e.ty) then e
     else match e.e with
          | EConst CUnit -> e
-         | EAbort _ -> e
+         | EAbort _ | EUnreachable _ -> e
          | _ ->
            if is_pure e.eff then { e with e = EConst CUnit }
            else begin
-             let v = uniq "tmp" (GenSym.next_id ()) in
+             let v = uniq "uu__tmp" (GenSym.next_id ()) in
              acc := (v, e.ty, e) :: !acc;
              { e with e = EConst CUnit; eff = E_Pure }
            end in
@@ -3085,7 +3324,7 @@ let rec cty_mismatch (a b : cty) : ML bool =
   | TApp (n, xs), TApp (m, ys) ->
     string_of_name n = string_of_name m && ctys_mismatch xs ys
   | TBuf x, TBuf y
-  | TRef x, TRef y
+  | TRef (_, x), TRef (_, y)
   | TInline x, TInline y -> cty_mismatch x y
   | TTuple xs, TTuple ys -> ctys_mismatch xs ys
   | _ -> false
@@ -3126,32 +3365,32 @@ let rec arrows (ts:list cty) (res:cty) : cty =
    entry is deliberate: a lambda binder whose [b_ty] is [TAny] is bound to
    "unknown", because a lambda binder is not annotated in the output and so its
    [TAny] was never a claim about the representation. *)
-type cenv = SMap.t (option cty)
+type cenv = HashTable.t string (option cty)
 
 let coerce_prog (prog:program) : ML program =
   let all = with_imports prog in
   let infos = ctor_infos all in
-  let tparams : SMap.t (list string) = SMap.create 50 in
+  let tparams : HashTable.t string (list string) = HashTable.create 50 in
   (* A declaration's signature as the backend will print it, with its type
      parameters still abstract. *)
-  let sigs : SMap.t (list string & cty) = SMap.create 100 in
+  let sigs : HashTable.t string (list string & cty) = HashTable.create 100 in
   let _ = all |> List.iter (fun d ->
     match d with
-    | DType dt -> SMap.add tparams (string_of_name dt.dt_name) dt.dt_params
+    | DType dt -> HashTable.add tparams (string_of_name dt.dt_name) dt.dt_params
     | DLet dl ->
       let rec build (bs:list binder) : cty =
         match bs with
         | [] -> dl.dl_ret
         | b :: bs -> TArrow (b.b_ty, E_Pure, build bs) in
-      SMap.add sigs (string_of_name dl.dl_name) (dl.dl_typars, build dl.dl_binders)
-    | DExternal dx -> SMap.add sigs (string_of_name dx.dx_name) (dx.dx_typars, dx.dx_ty)
+      HashTable.add sigs (string_of_name dl.dl_name) (dl.dl_typars, build dl.dl_binders)
+    | DExternal dx -> HashTable.add sigs (string_of_name dx.dx_name) (dx.dx_typars, dx.dx_ty)
     | DExn _ | DModule _ -> ()) in
   let params_of (n:name) : ML (list string) =
-    match SMap.try_find tparams (string_of_name n) with
+    match HashTable.try_find tparams (string_of_name n) with
     | Some ps -> ps
     | None -> [] in
   let sig_of (n:name) (targs:list cty) : ML (option cty) =
-    match SMap.try_find sigs (string_of_name n) with
+    match HashTable.try_find sigs (string_of_name n) with
     | None -> None
     | Some (ps, t) ->
       if List.length ps = List.length targs
@@ -3164,7 +3403,7 @@ let coerce_prog (prog:program) : ML program =
      target needs only the head -- OCaml infers the rest from the pattern or
      the field name. *)
   let owner_of (key:string) : ML (option cty) =
-    match SMap.try_find infos key with
+    match HashTable.try_find infos key with
     | None -> None
     | Some ci ->
       if ci.ci_exn then Some TExn
@@ -3174,7 +3413,7 @@ let coerce_prog (prog:program) : ML program =
      the declared types come back unsubstituted; their [TVar]s then agree with
      everything, which is the conservative answer. *)
   let fields_of (key:string) (owner:option cty) : ML (list (string & cty)) =
-    match SMap.try_find infos key with
+    match HashTable.try_find infos key with
     | None -> []
     | Some ci ->
       let ps = params_of ci.ci_owner in
@@ -3224,7 +3463,7 @@ let coerce_prog (prog:program) : ML program =
     | TArrow (a, _, b) -> has_any a || has_any b
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
-    | TBuf c | TRef c | TInline c -> has_any c
+    | TBuf c | TRef (_, c) | TInline c -> has_any c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   let trust (c:cty) : ML (option cty) = if has_any c then None else Some c in
   (* Does this term obviously have *some* representation, whatever it is?  When
@@ -3238,10 +3477,10 @@ let coerce_prog (prog:program) : ML program =
     match x.e with
     | ECtor _ | ERecord _ | ETuple _ | EConst _ | EFun _ | EOp _ -> true
     | _ -> false in
-  let lookup (env:cenv) (v:string) : ML (option (option cty)) = SMap.try_find env v in
+  let lookup (env:cenv) (v:string) : ML (option (option cty)) = HashTable.try_find env v in
   let extend (env:cenv) (v:string) (t:option cty) : ML cenv =
-    let env' = SMap.copy env in
-    let _ = SMap.add env' v t in
+    let env' = HashTable.copy env in
+    let _ = HashTable.add env' v t in
     env' in
   (* Bind the variables a pattern introduces, at the field types of the
      constructor it names as seen through [sc], the scrutinee's type. *)
@@ -3280,7 +3519,7 @@ let coerce_prog (prog:program) : ML program =
     | TTuple ps, TTuple qs ->
       if List.length ps = List.length qs then unify_ctys ps qs acc else acc
     | TBuf p1, TBuf a1
-    | TRef p1, TRef a1
+    | TRef (_, p1), TRef (_, a1)
     | TInline p1, TInline a1 -> unify_cty p1 a1 acc
     | _ -> acc
   and unify_ctys (ps qs : list cty) (acc:list (string & cty)) : ML (list (string & cty)) =
@@ -3364,7 +3603,9 @@ let coerce_prog (prog:program) : ML program =
     | _ -> mk (ECoerce (x, t)) t x.eff in
   let rec check (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let x = go env exp x in
-    if Some? exp && pushes_down x then x else
+    (* Every result position of such a node now has the expected type, so the
+       node has it too.  A lifted lambda's result type is its body's. *)
+    if Some? exp && pushes_down x then { x with ty = Some?.v exp } else
     match exp, infer env x with
     | Some e, Some t -> if cty_mismatch t e then coerce x e else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
@@ -3378,12 +3619,22 @@ let coerce_prog (prog:program) : ML program =
        argument rather than taking Custard's word for it -- then has two
        incompatible types for one expression.  A node whose type is itself
        [TAny] says nothing and is left alone. *)
-    | Some e, None -> if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e else x
+    | Some e, None ->
+      if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e
+      (* A value built in place and typed [TAny] -- a constructor out of an
+         inlined polymorphic [return], say -- is built at whatever type its
+         position wants; left at [TAny] under a parent that now has that type
+         (see above), Cherry would take it out of an [any] it was never put
+         into. *)
+      else if TAny? x.ty && not (has_any e) &&
+              (match x.e with ECtor _ | ERecord _ | ETuple _ | EConst _ -> true | _ -> false)
+      then { x with ty = e }
+      else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
     match x.e with
-    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ -> x
+    | EConst _ | EVar _ | EQual _ | EAny | EAbort _ | EUnreachable _ -> x
     | ECast (e1, t) -> same (ECast (go env None e1, t))
     | ECoerce (e1, t) -> same (ECoerce (go env None e1, t))
     (* A comparison's operands all have the one type, so an operand of unknown
@@ -3450,16 +3701,43 @@ let coerce_prog (prog:program) : ML program =
          rejects the second. *)
       let hint (b:binder) : ML (option cty) =
         if TAny? b.b_ty then Some TAny else trust b.b_ty in
+      (* An expected [TAny] parameter does not override a binder whose own
+         type is trusted: the lambda is then coerced as a whole (the [check]
+         around this node sees its type disagree), and the backends that
+         print the binder -- Cherry -- print that type, so the body has to
+         agree with it.  Taking [TAny] here instead coerced each use of the
+         binder out of [any] that was never put into it. *)
+      let param (b:binder) (p:cty) : ML (option cty) =
+        match p, trust b.b_ty with
+        | TAny, Some t -> Some t
+        | _ -> Some p in
       let ps, res =
         (match exp with
          | Some t ->
            (match peel_arrows (List.length bs) t with
-            | Some (ps, res) -> (ps |> List.map Some, Some res)
+            | Some (ps, res) -> (List.map2 param bs ps, Some res)
             | None -> (bs |> List.map hint, None))
          | None -> (bs |> List.map hint, None)) in
       let env = List.fold_left (fun env ((b:binder), t) -> extend env b.b_name t)
                                env (List.zip bs ps) in
-      same (EFun (bs, check env res body))
+      (* The lambda returns what its body does once checked: the body may
+         have been coerced to the expected result.  Left at its old result
+         type, the lambda disagrees with the expectation and is coerced as a
+         whole as well, and Cherry's adapter then takes the body's [any] out
+         at the old type it was never at. *)
+      let rec with_res (n:int) (t:cty) (r:cty) : option cty =
+        if n = 0 then Some r else
+        match t with
+        | TArrow (a, f, b) ->
+          (match with_res (n - 1) b r with
+           | Some b -> Some (TArrow (a, f, b))
+           | None -> None)
+        | _ -> None in
+      let body = check env res body in
+      let ty = (match with_res (List.length bs) x.ty body.ty with
+                | Some t -> t
+                | None -> x.ty) in
+      { x with e = EFun (bs, body); ty = ty }
     | EApp (h, es) ->
       (match infer env h with
        | Some t ->
@@ -3586,8 +3864,8 @@ let coerce_prog (prog:program) : ML program =
     | DLet dl ->
       (* A top-level binder and result *are* printed, so a [TAny] in one of
          them is a claim: the value really is an [Obj.t] there. *)
-      let env : cenv = SMap.create 20 in
-      dl.dl_binders |> List.iter (fun (b:binder) -> SMap.add env b.b_name (Some b.b_ty));
+      let env : cenv = HashTable.create 20 in
+      dl.dl_binders |> List.iter (fun (b:binder) -> HashTable.add env b.b_name (Some b.b_ty));
       DLet { dl with dl_body = check env (Some dl.dl_ret) dl.dl_body }
     | d -> d)
 
@@ -3612,7 +3890,7 @@ let coerce_prog (prog:program) : ML program =
    costs nothing where there are none (the direct backend, which is the only
    caller) and stays correct where there are.
 
-   Only for [--custard_backend C].  OCaml has closures and karamel has its own
+   Only for [--codegen C].  OCaml has closures and karamel has its own
    treatment, so lifting there would churn the output to no purpose. *)
 let lift_lambdas (prog:program) : ML program =
   (* Free term variables, minus the ones bound on the way in.  Unlike
@@ -3645,14 +3923,14 @@ let lift_lambdas (prog:program) : ML program =
        into an OCaml [Match_failure]. *)
     | POr ps -> List.collect pat_vars ps
     | PRecord (_, fs) -> List.collect pat_vars (List.map snd fs) in
-  let taken : SMap.t bool = SMap.create 100 in
+  let taken : HashTable.t string bool = HashTable.create 100 in
   prog |> List.iter (fun d ->
     match d with
-    | DLet d -> SMap.add taken (string_of_name d.dl_name) true
-    | DType d -> SMap.add taken (string_of_name d.dt_name) true
-    | DExternal d -> SMap.add taken (string_of_name d.dx_name) true
-    | DExn d -> SMap.add taken (string_of_name d.de_name) true
-    | DModule d -> SMap.add taken (string_of_name d.dm_name) true);
+    | DLet d -> HashTable.add taken (string_of_name d.dl_name) true
+    | DType d -> HashTable.add taken (string_of_name d.dt_name) true
+    | DExternal d -> HashTable.add taken (string_of_name d.dx_name) true
+    | DExn d -> HashTable.add taken (string_of_name d.de_name) true
+    | DModule d -> HashTable.add taken (string_of_name d.dm_name) true);
   let lifted : ref (list decl) = mk_ref [] in
   (* One declaration at a time, so that a lifted function is emitted next to
      the definition it came out of and the names stay readable. *)
@@ -3663,9 +3941,9 @@ let lift_lambdas (prog:program) : ML program =
         dl.dl_name.id ^ "__lam" ^ (if i = 0 then "" else "_" ^ show i) in
       let rec first (i:int) : ML name =
         let cand = { dl.dl_name with id = pick i } in
-        if Some? (SMap.try_find taken (string_of_name cand))
+        if Some? (HashTable.try_find taken (string_of_name cand))
         then first (i + 1)
-        else (SMap.add taken (string_of_name cand) true; cand) in
+        else (HashTable.add taken (string_of_name cand) true; cand) in
       let r = first !n in
       n := !n + 1; r in
     let rec go (x:expr) : ML expr =
@@ -3723,17 +4001,17 @@ let narrow_rets (prog:program) : ML program =
     | TArrow (a, _, b) -> has_any a || has_any b
     | TApp (_, args) -> args |> List.existsb has_any
     | TTuple cs -> cs |> List.existsb has_any
-    | TBuf c | TRef c | TInline c -> has_any c
+    | TBuf c | TRef (_, c) | TInline c -> has_any c
     | TVar _ | TInt _ | TFloat _ | TUnit | TExn | TConst _ -> false in
   (* Name -> the whole type, arguments included, so that a use of a name in
      head position can be peeled the same way [coerce_prog] peels it. *)
-  let tbl : SMap.t cty = SMap.create 100 in
+  let tbl : HashTable.t string cty = HashTable.create 100 in
   let full (dl:dlet) (r:cty) : ML cty =
     arrows (dl.dl_binders |> List.map (fun (b:binder) -> b.b_ty)) r in
   prog |> List.iter (fun d ->
     match d with
     | DLet dl when Nil? dl.dl_typars ->
-      SMap.add tbl (string_of_name dl.dl_name) (full dl dl.dl_ret)
+      HashTable.add tbl (string_of_name dl.dl_name) (full dl dl.dl_ret)
     | _ -> ());
   (* What the body says it returns.  A bare name and a saturated call are the
      two shapes that carry the answer forward from another definition; a
@@ -3743,11 +4021,11 @@ let narrow_rets (prog:program) : ML program =
     match x.e with
     | ECoerce (e1, TAny) -> body_ty e1
     | EQual (n, []) ->
-      (match SMap.try_find tbl (string_of_name n) with
+      (match HashTable.try_find tbl (string_of_name n) with
        | Some t when not (has_any t) -> t
        | _ -> x.ty)
     | EApp ({ e = EQual (n, []) }, es) ->
-      (match SMap.try_find tbl (string_of_name n) with
+      (match HashTable.try_find tbl (string_of_name n) with
        | Some t ->
          (match peel_arrows (List.length es) t with
           | Some (_, res) when not (has_any res) -> res
@@ -3760,7 +4038,7 @@ let narrow_rets (prog:program) : ML program =
       match d with
       | DLet dl when Nil? dl.dl_typars && has_any dl.dl_ret ->
         let key = string_of_name dl.dl_name in
-        let cur = (match SMap.try_find tbl key with
+        let cur = (match HashTable.try_find tbl key with
                    | Some t -> (match peel_arrows (List.length dl.dl_binders) t with
                                 | Some (_, r) -> r
                                 | None -> dl.dl_ret)
@@ -3768,7 +4046,7 @@ let narrow_rets (prog:program) : ML program =
         if has_any cur
         then (let r = body_ty dl.dl_body in
               if not (has_any r)
-              then (SMap.add tbl key (full dl r); changed := true))
+              then (HashTable.add tbl key (full dl r); changed := true))
       | _ -> ()) in
   (* Bounded rather than run to exhaustion: each round can only replace a
      [TAny] by a ground type, so it converges, but a bound costs nothing and
@@ -3781,7 +4059,7 @@ let narrow_rets (prog:program) : ML program =
   prog |> List.map (fun d ->
     match d with
     | DLet dl when Nil? dl.dl_typars && has_any dl.dl_ret ->
-      (match SMap.try_find tbl (string_of_name dl.dl_name) with
+      (match HashTable.try_find tbl (string_of_name dl.dl_name) with
        | Some t ->
          (match peel_arrows (List.length dl.dl_binders) t with
           | Some (_, r) when not (has_any r) -> DLet { dl with dl_ret = r }
@@ -3858,11 +4136,11 @@ let const_globals (prog:program) : ML program =
      before its users): a global can only name one already in the table, so
      the substituted bodies are already fully substituted and no fixpoint is
      needed. *)
-  let tbl : SMap.t expr = SMap.create 50 in
+  let tbl : HashTable.t string expr = HashTable.create 50 in
   let rec subst (x:expr) : ML expr =
     match x.e with
     | EQual (n, []) ->
-      (match SMap.try_find tbl (string_of_name n) with Some e -> e | None -> x)
+      (match HashTable.try_find tbl (string_of_name n) with Some e -> e | None -> x)
     | ECast (e1, c) -> { x with e = ECast (subst e1, c) }
     | ECoerce (e1, c) -> { x with e = ECoerce (subst e1, c) }
     | EOp (o, es) -> { x with e = EOp (o, es |> List.map subst) }
@@ -3879,7 +4157,7 @@ let const_globals (prog:program) : ML program =
                    not (dl.dl_flags |> List.existsb CMacro?) ->
       let body = subst dl.dl_body in
       if const_shape body
-      then (SMap.add tbl (string_of_name dl.dl_name) body;
+      then (HashTable.add tbl (string_of_name dl.dl_name) body;
             DLet { dl with dl_body = body })
       else DLet { dl with dl_body = body }
     | d -> d)
@@ -3942,7 +4220,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   (* Before [dce], which reads the final call graph and would otherwise drop
      every lifted function as unreachable, and before [scc], which orders
      them. *)
-  let prog = if Options.custard_backend () = "C"
+  let prog = if Options.codegen_c ()
              then pass "lift_lambdas" lift_lambdas prog else prog in
   (* Section 76.  Before [dce], which is what removes the declaration a
      substituted constant made unreachable. *)
@@ -3957,8 +4235,10 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
   let prog = pass "check_resolved" check_resolved prog in
   (* After [dce], because a prologue on a declaration nothing reaches is
      noise, and because the call graph this reads is the one [dce] just
-     computed.  Before nothing in particular: it changes flags and no term. *)
+     computed.  It copies the functions a seed reaches (section 51.5), so
+     [dce] runs again to drop an original that only the seeds called. *)
   let prog = pass "propagate_prologues" propagate_prologues prog in
+  let prog = pass "dce_prologues" dce prog in
   let prog = pass "scc" scc prog in
   let prog = pass "records" (records vd) prog in
   (* After [records], which is what gives a collapsed record's body a ground
@@ -3971,5 +4251,5 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      an argument, and a coercion wrapped around the variable this replaces
      would put it back.  karamel-only: the direct backends have no assumption
      to satisfy here. *)
-  if List.mem (Options.custard_backend ()) ["KrmlC"; "KrmlRust"]
+  if List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"]
   then pass "unit_args" unit_args prog else prog

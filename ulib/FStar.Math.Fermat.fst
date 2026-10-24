@@ -485,7 +485,7 @@ let mod_mult_congr_aux p a b c =
     (a * c) % p == (b * c) % p;
     ==> { mod_add_both (a * c) (b * c) (-b * c) p }
     (a * c + (- b * c)) % p == (b * c + (- b * c)) % p;
-    ==> {}
+    ==> { neg_mul_left b c }
     (a * c - b * c) % p == (b * c - b * c) % p;
     ==> { swap_mul a c; swap_mul b c; lemma_mul_sub_distr c a b }
     (c * (a - b)) % p == (b * c - b * c) % p;

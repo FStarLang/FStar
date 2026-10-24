@@ -64,6 +64,7 @@ let tag (e:expr) : string =
   | ECast _    -> "a cast"
   | EAny       -> "an arbitrary value"
   | EAbort _   -> "an abort"
+  | EUnreachable _ -> "an unreachable point"
   | EOp _      -> "a primitive operation"
   | EWhile _   -> "a while"
   | ERaise _   -> "a raise"

@@ -22,9 +22,9 @@ open FStarC.Class.Show
 open FStarC.Const
 open FStarC.Custard.Syntax
 
-module K    = FStarC.Extraction.KrmlAst
-module Krml = FStarC.Extraction.Krml
-module SMap = FStarC.SMap
+module K    = FStarC.Custard.KrmlAst
+module Krml = FStarC.Custard.KrmlAst
+module HashTable = FStarC.HashTable
 module BU   = FStarC.Util
 module E    = FStarC.Errors
 module Options = FStarC.Options
@@ -44,7 +44,7 @@ open FStarC.Errors.Msg
 type kenv = {
   names:      list string;
   names_t:    list string;
-  ctor_arity: SMap.t int;
+  ctor_arity: HashTable.t string int;
   (* An external symbol has no type-parameter list in karamel's AST -- and C has
      no polymorphism to give it one -- so a type variable in its signature is
      approximated by [any] instead of being reported as unbound. *)
@@ -144,7 +144,7 @@ let type_body_ctys (t:dtype) : ML (list cty) =
 
 (* Which of [c]'s type variables does it reach by value, given the current
    approximation [tbl] of every head's by-value parameter positions? *)
-let rec by_value_vars (tbl:SMap.t (list bool)) (c:cty) : ML (list string) =
+let rec by_value_vars (tbl:HashTable.t string (list bool)) (c:cty) : ML (list string) =
   match c with
   | TVar x -> [x]
   | TApp (n, args) ->
@@ -152,7 +152,7 @@ let rec by_value_vars (tbl:SMap.t (list bool)) (c:cty) : ML (list string) =
        slice type holds a pointer and not the elements. *)
     if B.is_krml_model n.ns then []
     else
-      let bs = SMap.try_find tbl (string_of_name n) in
+      let bs = HashTable.try_find tbl (string_of_name n) in
       args |> List.mapi (fun i a ->
         let by_value = match bs with
                        | None -> true
@@ -160,43 +160,43 @@ let rec by_value_vars (tbl:SMap.t (list bool)) (c:cty) : ML (list string) =
         if by_value then by_value_vars tbl a else [])
            |> List.flatten
   | TInline c -> by_value_vars tbl c
-  | TBuf _ | TRef _ | TArrow _ -> []
+  | TBuf _ | TRef (_, _) | TArrow _ -> []
   | _ -> []
 
-let by_value_param_table (p:program) : ML (SMap.t (list bool)) =
-  let params : SMap.t (list string) = SMap.create 100 in
-  let bodies : SMap.t (list cty) = SMap.create 100 in
-  let tbl    : SMap.t (list bool) = SMap.create 100 in
+let by_value_param_table (p:program) : ML (HashTable.t string (list bool)) =
+  let params : HashTable.t string (list string) = HashTable.create 100 in
+  let bodies : HashTable.t string (list cty) = HashTable.create 100 in
+  let tbl    : HashTable.t string (list bool) = HashTable.create 100 in
   let _ = p |> List.iter (fun d ->
             match d with
             | DType t ->
               let n = string_of_name t.dt_name in
-              SMap.add params n t.dt_params;
-              SMap.add bodies n (type_body_ctys t);
-              SMap.add tbl n (t.dt_params |> List.map (fun _ -> false))
+              HashTable.add params n t.dt_params;
+              HashTable.add bodies n (type_body_ctys t);
+              HashTable.add tbl n (t.dt_params |> List.map (fun _ -> false))
             | _ -> ()) in
   (* Monotone in the number of positions marked, so it terminates; the keys are
      fixed and each pass can only turn a [false] into a [true]. *)
   let rec fixpoint () : ML unit =
-    let changed = SMap.keys tbl |> List.map (fun n ->
-      let ps  = match SMap.try_find params n with Some ps -> ps | None -> [] in
-      let cur = match SMap.try_find tbl n with Some bs -> bs | None -> [] in
-      let vars = match SMap.try_find bodies n with
+    let changed = HashTable.keys tbl |> List.map (fun n ->
+      let ps  = match HashTable.try_find params n with Some ps -> ps | None -> [] in
+      let cur = match HashTable.try_find tbl n with Some bs -> bs | None -> [] in
+      let vars = match HashTable.try_find bodies n with
                  | Some cs -> cs |> List.collect (by_value_vars tbl)
                  | None -> [] in
       let next = ps |> List.map (fun x -> List.mem x vars) in
       if next = cur then false
-      else (SMap.add tbl n next; true)) in
+      else (HashTable.add tbl n next; true)) in
     if List.existsb (fun b -> b) changed then fixpoint () in
   fixpoint ();
   tbl
 
-let rec by_value_names (tbl:SMap.t (list bool)) (c:cty) : ML (list string) =
+let rec by_value_names (tbl:HashTable.t string (list bool)) (c:cty) : ML (list string) =
   match c with
   | TApp (n, args) ->
     if B.is_krml_model n.ns then []
     else
-      let bs = SMap.try_find tbl (string_of_name n) in
+      let bs = HashTable.try_find tbl (string_of_name n) in
       string_of_name n :: (args |> List.mapi (fun i a ->
         let by_value = match bs with
                        | None -> true
@@ -204,37 +204,37 @@ let rec by_value_names (tbl:SMap.t (list bool)) (c:cty) : ML (list string) =
         if by_value then by_value_names tbl a else [])
                                 |> List.flatten)
   | TInline c -> by_value_names tbl c
-  | TBuf _ | TRef _ | TArrow _ -> []
+  | TBuf _ | TRef (_, _) | TArrow _ -> []
   | _ -> []
 
-let rec_type_table (p:program) : ML (SMap.t bool) =
+let rec_type_table (p:program) : ML (HashTable.t string bool) =
   let by_value = by_value_param_table p in
-  let refs : SMap.t (list string) = SMap.create 100 in
+  let refs : HashTable.t string (list string) = HashTable.create 100 in
   let _ = p |> List.iter (fun d ->
             match d with
             | DType t ->
               let body = type_body_ctys t |> List.collect (by_value_names by_value) in
-              SMap.add refs (string_of_name t.dt_name) body
+              HashTable.add refs (string_of_name t.dt_name) body
             | _ -> ()) in
-  let out : SMap.t bool = SMap.create 20 in
-  let _ = SMap.keys refs |> List.iter (fun start ->
-            let seen : SMap.t bool = SMap.create 20 in
+  let out : HashTable.t string bool = HashTable.create 20 in
+  let _ = HashTable.keys refs |> List.iter (fun start ->
+            let seen : HashTable.t string bool = HashTable.create 20 in
             let rec go (n:string) : ML bool =
-              if n = start && Some true = SMap.try_find seen n then true
-              else if Some true = SMap.try_find seen n then false
+              if n = start && Some true = HashTable.try_find seen n then true
+              else if Some true = HashTable.try_find seen n then false
               else begin
-                SMap.add seen n true;
-                match SMap.try_find refs n with
+                HashTable.add seen n true;
+                match HashTable.try_find refs n with
                 | None -> false
                 | Some ns -> ns |> List.existsb (fun m -> m = start || go m)
               end in
-            match SMap.try_find refs start with
+            match HashTable.try_find refs start with
             | Some ns when ns |> List.existsb (fun m -> m = start || go m) ->
-              SMap.add out start true
+              HashTable.add out start true
             | _ -> ()) in
   out
 
-let rec_types : ref (SMap.t bool) = mk_ref (SMap.create 0)
+let rec_types : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 
 (* Section 77.  A type abbreviation nothing refers to is dropped on the Rust
@@ -276,9 +276,9 @@ let rec_types : ref (SMap.t bool) = mk_ref (SMap.create 0)
    so they are exactly the ones where the two answers can differ.  Dropping
    one changes no type Custard emits: the alias was equal to its body, and
    every occurrence already prints as the body. *)
-let dead_abbrev_table (p:program) : ML (SMap.t bool) =
-  let out : SMap.t bool = SMap.create 20 in
-  if Options.custard_backend () <> "KrmlRust" then out
+let dead_abbrev_table (p:program) : ML (HashTable.t string bool) =
+  let out : HashTable.t string bool = HashTable.create 20 in
+  if Options.codegen () <> Some Options.KrmlRust then out
   else begin
     let modelled_abbrev (t:dtype) : ML bool =
       match t.dt_body with
@@ -286,11 +286,11 @@ let dead_abbrev_table (p:program) : ML (SMap.t bool) =
       | _ -> false in
     let is_cand (d:decl) : ML bool =
       match d with
-      | DType t -> Some true = SMap.try_find out (string_of_name t.dt_name)
+      | DType t -> Some true = HashTable.try_find out (string_of_name t.dt_name)
       | _ -> false in
     p |> List.iter (fun d ->
       match d with
-      | DType t when modelled_abbrev t -> SMap.add out (string_of_name t.dt_name) true
+      | DType t when modelled_abbrev t -> HashTable.add out (string_of_name t.dt_name) true
       | _ -> ());
     (* Dropping one candidate can make another unreferenced, so this is a
        fixpoint and not a sweep.  Each round drops at least one candidate or
@@ -301,8 +301,8 @@ let dead_abbrev_table (p:program) : ML (SMap.t bool) =
         p |> List.iter (fun d ->
           if is_cand d then () else
             Simplify.decl_deps d |> List.iter (fun n ->
-              if Some true = SMap.try_find out n then begin
-                SMap.remove out n; changed := true
+              if Some true = HashTable.try_find out n then begin
+                HashTable.remove out n; changed := true
               end));
         if !changed then go (fuel - 1)
       end in
@@ -310,7 +310,7 @@ let dead_abbrev_table (p:program) : ML (SMap.t bool) =
     out
   end
 
-let dead_abbrevs : ref (SMap.t bool) = mk_ref (SMap.create 0)
+let dead_abbrevs : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 
 (* Section 65.1.  The declarations Custard compiles whose lident karamel
@@ -337,8 +337,12 @@ let dead_abbrevs : ref (SMap.t bool) = mk_ref (SMap.create 0)
    agree with the file rather than adding a second rule.  Only declarations
    Custard actually emits a body for are in the table: an external or a
    modelled type resolves to a definition someone else wrote, and renaming it
-   would be renaming away from that definition rather than towards it. *)
-let shadowed : ref (SMap.t bool) = mk_ref (SMap.create 0)
+   would be renaming away from that definition rather than towards it.
+
+   Moved by lowercasing the namespace: [Prims.list] becomes [prims.list],
+   printed [prims_list].  An F* module name is capitalized, so no F* module
+   can be called that, and neither can karamel's own [Prims]. *)
+let shadowed : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
 let lident_of_name (n:name) : ML K.lident =
   (* Every value name reaches karamel through here, which is what
@@ -349,18 +353,18 @@ let lident_of_name (n:name) : ML K.lident =
   let id = match n.spec with
            | None -> id
            | Some s -> id ^ "__" ^ s in
-  let ns = if Some true = SMap.try_find !shadowed (string_of_name n)
-           then "Custard" :: ns else ns in
+  let ns = if Some true = HashTable.try_find !shadowed (string_of_name n)
+           then List.map String.lowercase ns else ns in
   (ns, id)
 
 (* The external types of the program being printed, by mangled name, mapped to
    the C name they are declared under.  karamel does not prefix an lident whose
    namespace is empty, so an entry here reaches the C output verbatim. *)
-let extern_types : ref (SMap.t string) = mk_ref (SMap.create 0)
+let extern_types : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 let type_lident_of_name (n:name) : ML K.lident =
   let lid = lident_of_name n in
-  match SMap.try_find !extern_types (string_of_name n) with
+  match HashTable.try_find !extern_types (string_of_name n) with
   | Some t -> ([], t)
   | None -> lid
 
@@ -370,10 +374,10 @@ let type_lident_of_name (n:name) : ML K.lident =
    declared one symbol and called another: nothing defined the name that was
    called, nothing called the name that was declared, and karamel had no
    reason to complain about either.  A link error at best. *)
-let extern_values : ref (SMap.t string) = mk_ref (SMap.create 0)
+let extern_values : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
 let value_lident_of_name (n:name) : ML K.lident =
-  match SMap.try_find !extern_values (string_of_name n) with
+  match HashTable.try_find !extern_values (string_of_name n) with
   | Some t -> ([], t)
   | None -> lident_of_name n
 
@@ -383,12 +387,12 @@ let value_lident_of_name (n:name) : ML K.lident =
 let is_tuple_type_name (n:name) : ML bool =
   n.ns = ["FStar"; "Pervasives"; "Native"] &&
   FStarC.Util.starts_with n.id "tuple" &&
-  Options.custard_backend () = "KrmlRust"
+  Options.codegen () = Some Options.KrmlRust
 
 let is_tuple_ctor_name (n:name) : ML bool =
   n.ns = ["FStar"; "Pervasives"; "Native"] &&
   FStarC.Util.starts_with n.id "Mktuple" &&
-  Options.custard_backend () = "KrmlRust"
+  Options.codegen () = Some Options.KrmlRust
 
 (* Section 92.  A constructor's name inside a variant, without the namespace
    the mangled name carries.  A variant's arms are scoped to the variant --
@@ -424,7 +428,7 @@ let krml_fwidth (fw:fwidth) : ML K.width =
       FStarC.Errors.Msg.text
         "karamel's IR has no 16-bit floating-point width (section 66).";
       FStarC.Errors.Msg.text
-        "Extract with --custard_backend C, which emits these as a two-byte \
+        "Extract with --codegen C, which emits these as a two-byte \
          struct with the arithmetic in the support header." ]
 
 (* Section 43.2.  karamel's [EConstant] carries the literal as text, and what
@@ -437,7 +441,7 @@ let krml_fwidth (fw:fwidth) : ML K.width =
    survives the trip, and decimal for the rest.  A base is for the reader; the
    value is not negotiable. *)
 let krml_int_lit (v:int) (b:int_base) : ML string =
-  if Options.custard_backend () = "KrmlRust" then int_lit_to_string v b
+  if Options.codegen () = Some Options.KrmlRust then int_lit_to_string v b
   else match b with
        | Hex -> int_lit_to_string v Hex
        | _   -> int_lit_to_string v Dec
@@ -466,12 +470,12 @@ let krml_reject_with (#a:Type) (what:string) (where:string) : ML a =
 (* The construct is karamel's limitation alone. *)
 let krml_reject_c_ok (#a:Type) (what:string) : ML a =
   krml_reject_with what
-    "The direct C backend (--custard_backend C) does accept it."
+    "The direct C backend (--codegen C) does accept it."
 
 (* No backend has it; the program has to change. *)
 let krml_reject (#a:Type) (what:string) : ML a =
   krml_reject_with what
-    "The direct C backend (--custard_backend C) has no representation for \
+    "The direct C backend (--codegen C) has no representation for \
      it either."
 
 (* Section 50.2.  A third scope, which the two above cannot express.  karamel
@@ -486,8 +490,8 @@ let krml_reject_rust (#a:Type) (what:string) (why:string) : ML a =
     [text ("Custard: " ^ what ^ " has no representation in karamel's Rust \
             backend.");
      text why;
-     text "Both C routes accept it: --custard_backend KrmlC and \
-           --custard_backend C."]
+     text "Both C routes accept it: --codegen KrmlC and \
+           --codegen C."]
 
 (* Section 43.3.  karamel's C printer has no suffix for [Float32]
    (karamel/lib/PrintC.ml:245 falls through to [empty]), so a binary32 constant
@@ -509,7 +513,7 @@ let krml_float_lit (fw:fwidth) (v:float_lit) : ML string =
    | FLInf _ -> krml_reject_c_ok "an infinity literal"
    | FLNum _ -> ());
   let s = float_lit_to_string v in
-  if Float32? fw && Options.custard_backend () = "KrmlC" then s ^ "f" else s
+  if Float32? fw && Options.codegen () = Some Options.KrmlC then s ^ "f" else s
 
 let krml_width (sw : signedness & iwidth) : ML K.width =
   match sw with
@@ -557,6 +561,9 @@ let krml_op (o:op) : ML K.op =
      it never reaches the operator table. *)
   | Commented _ ->
     failwith "Custard: a comment is not a karamel operator"
+  | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
+  | ExnRaise | ExnPending | ExnTake | ExnExit ->
+    failwith "Custard: reference counting is not a karamel operator"
 
 (* -------------------------------------------------------------------- *)
 (* Types                                                                *)
@@ -632,8 +639,14 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
   | TArrow (a, _, b) -> K.TArrow (krml_typ env a, krml_typ env b)
   | TTuple ts -> K.TTuple (ts |> List.map (krml_typ env))
   (* karamel has no separate reference type: a [ref] is a one-element buffer,
-     which is exactly what the operations on it already say. *)
-  | TBuf t | TRef t -> K.TBuf (krml_typ env t)
+     which is exactly what the operations on it already say.  But nothing
+     would free an ML reference's buffer. *)
+  | TRef (RGc, _) ->
+    krml_reject_with "a garbage-collected reference (FStar.All.ref or \
+                      FStarC.Effect.ref)"
+      "Nothing would free it: use a Pulse reference, which is freed \
+       explicitly, or --codegen Cherry, which counts references."
+  | TBuf t | TRef (_, t) -> K.TBuf (krml_typ env t)
   (* Section 49.1.  Removed by [Simplify.inline_fields]; see the same case in
      [PrintC.decl_of]. *)
   | TInline _ ->
@@ -646,13 +659,13 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
             16, 16, 16, half, row_major>] is one type and \
             [wmma::fragment<matrix_b, ...>] another, and neither the OCaml \
             nor the karamel type language has anywhere to put the \
-            arguments.  Section 69 is a C-backend feature (--custard_backend \
+            arguments.  Section 69 is a C-backend feature (--codegen \
             C).";
       text "The unparameterized form still works everywhere: a \
             [@@custard_extern] target with no [{0}] placeholder names one \
             target type and its arguments are dropped." ]
   | TApp (n, args) when Cons? args &&
-                        (match SMap.try_find !extern_types (string_of_name n) with
+                        (match HashTable.try_find !extern_types (string_of_name n) with
                          | Some t -> is_template (template_of_string t)
                          | None -> false) ->
     E.raise_error0 E.Error_CustardBadTemplateArg [
@@ -661,7 +674,7 @@ let rec krml_typ (env:kenv) (t:cty) : ML K.typ =
             16, 16, 16, half, row_major>] is one type and \
             [wmma::fragment<matrix_b, ...>] another, and neither the OCaml \
             nor the karamel type language has anywhere to put the \
-            arguments.  Section 69 is a C-backend feature (--custard_backend \
+            arguments.  Section 69 is a C-backend feature (--codegen \
             C).";
       text "The unparameterized form still works everywhere: a \
             [@@custard_extern] target with no [{0}] placeholder names one \
@@ -743,7 +756,7 @@ let rec krml_pat (env:kenv) (p:pat) : ML (kenv & K.pattern) =
      and sending the reader to the direct C backend alone would omit the
      nearer answer. *)
   | PConst (CString _) ->
-    if Options.custard_backend () = "KrmlRust"
+    if Options.codegen () = Some Options.KrmlRust
     then krml_reject_rust "a string pattern"
            "A flat string match is compiled to a comparison chain using \
             krmllib's __eq__Prims_string, which is C and has no Rust \
@@ -860,11 +873,11 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
 
        Freshened against the enclosing scope because [find] resolves a
        reference by the *first* matching name: [Rename] gives a local its bare
-       source spelling, so a program with its own [discarded] in scope would
+       source spelling, so a program with its own [uu__discarded] in scope would
        otherwise have every reference to it captured by this binder. *)
-    let x = fresh_local env "discarded" in
+    let x = fresh_local env "uu__discarded" in
     let t = match e1.ty with
-            | TBuf _ | TRef _ -> krml_typ env e1.ty
+            | TBuf _ | TRef (_, _) -> krml_typ env e1.ty
             | _ -> K.TAny in
     let b = { K.name = x; K.typ = t; K.mut = false; K.meta = [] } in
     K.ELet (b, krml_expr env e1, krml_expr (extend env x) e2)
@@ -886,7 +899,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
      branch ignores all of [Foo]'s fields and whose second is a catch-all --
      which in karamel is a variable pattern, there being no wildcard. *)
   | EDiscrim (e1, n) ->
-    let arity = match SMap.try_find env.ctor_arity (mangled_name n) with
+    let arity = match HashTable.try_find env.ctor_arity (mangled_name n) with
                 | Some n -> n
                 | None -> 0 in
     let wilds = List.map (fun _ -> K.PVar (dummy_binder "_")) (repeat_unit arity) in
@@ -904,14 +917,14 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     K.EBufCreate ((match l with LStack -> K.Stack | LHeap -> K.ManuallyManaged),
                   krml_expr env init, krml_expr env len)
   | EOp ({ po_op = BufRead }, [b; i]) ->
-    K.EBufRead (krml_expr env b, krml_expr env i)
+    K.EBufRead (krml_expr env b, krml_index env b i)
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
-    K.EBufWrite (krml_expr env b, krml_expr env i, krml_expr env v)
+    K.EBufWrite (krml_expr env b, krml_index env b i, krml_expr env v)
   | EOp ({ po_op = BufSub }, [b; i]) ->
-    K.EBufSub (krml_expr env b, krml_expr env i)
+    K.EBufSub (krml_expr env b, krml_index env b i)
   | EOp ({ po_op = BufFree }, [b]) -> K.EBufFree (krml_expr env b)
   | EOp ({ po_op = BufNull }, []) ->
-    K.EBufNull (match e.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny)
+    K.EBufNull (match e.ty with TBuf t | TRef (_, t) -> krml_typ env t | _ -> K.TAny)
   | EOp ({ po_op = BufIsNull }, [b]) ->
     (* karamel has no [is_null], so compare against a null of the same type.
        Equality on pointers is the *polymorphic* one, and karamel types that
@@ -919,7 +932,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
        the [Eq]/[Neq] case below does.  Left as a bare [EOp (Eq, Bool)] the
        checker reads the width as the operand type, decides the arguments
        should be booleans, and drops the whole declaration as not Low\*. *)
-    let t = match b.ty with TBuf t | TRef t -> krml_typ env t | _ -> K.TAny in
+    let t = match b.ty with TBuf t | TRef (_, t) -> krml_typ env t | _ -> K.TAny in
     let pt = K.TBuf t in
     K.EApp (K.ETypApp (K.EOp (K.Eq, K.Bool), [pt]),
             [krml_expr env b; K.EBufNull t])
@@ -959,7 +972,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
      [s = t] on strings has crashed the Rust path since strings did. *)
   | EOp ({ po_op = o; po_ty = None }, args)
       when (Eq? o || Neq? o) && Cons? args &&
-           Options.custard_backend () = "KrmlRust" &&
+           Options.codegen () = Some Options.KrmlRust &&
            (match args with a :: _ -> is_string_cty a.ty | [] -> false) ->
     krml_reject_rust "string equality"
       "It is realized by krmllib's __eq__Prims_string, a C function with no \
@@ -986,7 +999,7 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
   | EWhile (c, body) -> K.EWhile (krml_expr env c, krml_expr env body)
 
   | EAny -> K.EAny
-  | EAbort s -> K.EAbortS s
+  | EAbort s | EUnreachable s -> K.EAbortS s
 
   (* Section 46.3.  These were one [EAbortS], which is a *translation*, not a
      refusal -- and for [ETry] a translation that discards the expression it
@@ -1008,7 +1021,7 @@ and is_string_match (scrut:expr) (brs:list branch) : ML bool =
      krmllib *C* primitive with no Rust counterpart, so the desugaring is
      C-only.  Ungated it turned a clean refusal into a karamel crash on the
      Rust path. *)
-  Options.custard_backend () = "KrmlC" &&
+  Options.codegen () = Some Options.KrmlC &&
   is_string_cty scrut.ty &&
   Cons? brs &&
   brs |> List.for_all (fun (p, g, _) ->
@@ -1063,6 +1076,20 @@ and krml_branch (env:kenv) (br:branch) : ML K.branch =
 and repeat_unit (n:int) : ML (list unit) =
   if n <= 0 then [] else () :: repeat_unit (n - 1)
 
+(* A reference holds one value, not a run, so its read, write and address are
+   all at index 0.  karamel prints [b[EZeroForDeref]] as [*b] (and
+   [&b[EZeroForDeref]] as [b]), which is how C spells an access through a
+   pointer to one value; a literal 0 would print as [b[0U]], which is how it
+   spells the first element of an array. *)
+and krml_index (env:kenv) (b:expr) (i:expr) : ML K.expr =
+  match b.ty, i.e with
+  | TRef (_, _), EConst (CInt (0, _, w)) ->
+    (* karamel only accepts [UInt32] and [SizeT] indices. *)
+    K.EZeroForDeref (match w with
+                     | Some (Unsigned, WSizet) -> K.SizeT
+                     | _ -> K.UInt32)
+  | _ -> krml_expr env i
+
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
@@ -1087,6 +1114,17 @@ let krml_flags (fs : list flag) : ML (list K.flag) =
        same [#define] and a consumer's C does not have to know which one
        produced the header. *)
     | CMacro -> [K.Macro]
+    (* karamel's own [IfDef], for the same reason: the flag only means
+       anything to the pass that turns a test of the constant into a [#if]. *)
+    | CIfDef -> [K.IfDef]
+    (* Section 51.6.  karamel's [IfDef] spells the condition as the flag's
+       name, and this flag's condition is arbitrary text it has no field
+       for; an [extern] it would read instead is a link error. *)
+    | IfDef _ ->
+      E.raise_error0 E.Error_CustardBadIfDef [
+        text "Custard: [@@custard_c_ifdef] is supported by the direct-to-C \
+              backend only.";
+        text "With karamel, use [@@CIfDef], whose condition is the name." ]
     | _ -> [])
 
 let with_typars (env:kenv) (ps : list string) : ML kenv =
@@ -1157,7 +1195,7 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
   | DType t when has_flag t.dt_flags Modelled -> None
 
   (* Section 77. *)
-  | DType t when Some true = SMap.try_find !dead_abbrevs (string_of_name t.dt_name) -> None
+  | DType t when Some true = HashTable.try_find !dead_abbrevs (string_of_name t.dt_name) -> None
 
   | DType t ->
     let env = with_typars env t.dt_params in
@@ -1165,7 +1203,7 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
     (* Section 65.2.  A type that contains itself has no layout without an
        indirection, and [GCType] is how karamel is told to put one in. *)
     let flags = krml_flags t.dt_flags
-                @ (if Some true = SMap.try_find !rec_types (string_of_name t.dt_name)
+                @ (if Some true = HashTable.try_find !rec_types (string_of_name t.dt_name)
                    then [K.GCType] else []) in
     let lid = lident_of_name t.dt_name in
     (match t.dt_body with
@@ -1212,7 +1250,7 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
       text ("Custard: " ^ string_of_name x.dx_name ^ " is in a module karamel \
             models on this backend, but karamel has no translation for it.");
       text "Only the operations karamel recognizes can be used from a modelled \
-           module; use the F* definition through --custard_backend KrmlC, or \
+           module; use the F* definition through --codegen KrmlC, or \
            extend the model in karamel."
     ];
     (* Section 45.3.  And the header that declares it.  The C backend emits
@@ -1241,35 +1279,35 @@ let krml_decl (env:kenv) (d:decl) : ML (option K.decl) =
 (* Entry point                                                          *)
 (* -------------------------------------------------------------------- *)
 
-let ctor_table (p:program) : ML (SMap.t int) =
-  let t = SMap.create 100 in
+let ctor_table (p:program) : ML (HashTable.t string int) =
+  let t = HashTable.create 100 in
   p |> List.iter (fun d ->
     match d with
     | DType { dt_body = TVariant cs } ->
-      cs |> List.iter (fun (cn, fs) -> SMap.add t (mangled_name cn) (List.length fs))
+      cs |> List.iter (fun (cn, fs) -> HashTable.add t (mangled_name cn) (List.length fs))
     | _ -> ());
   t
 
-let extern_type_table (p:program) : ML (SMap.t string) =
-  let t = SMap.create 20 in
+let extern_type_table (p:program) : ML (HashTable.t string string) =
+  let t = HashTable.create 20 in
   p |> List.iter (fun d ->
     match d with
     | DType ty ->
       ty.dt_flags |> List.iter (fun f ->
         match f with
-        | Extern (Some target, _) -> SMap.add t (string_of_name ty.dt_name) target
+        | Extern (Some target, _) -> HashTable.add t (string_of_name ty.dt_name) target
         | _ -> ())
     | _ -> ());
   t
 
-let extern_value_table (p:program) : ML (SMap.t string) =
-  let t = SMap.create 20 in
+let extern_value_table (p:program) : ML (HashTable.t string string) =
+  let t = HashTable.create 20 in
   p |> List.iter (fun d ->
     match d with
     | DExternal x ->
       (match x.dx_target with
        | Some target when target <> "" ->
-         SMap.add t (string_of_name x.dx_name) target
+         HashTable.add t (string_of_name x.dx_name) target
        | _ -> ())
     | _ -> ());
   t
@@ -1296,8 +1334,8 @@ let decls_of (p:program) : ML (list K.decl) =
    a body for it *and* its module is one that already has a definition on this
    backend -- an external, a modelled type and a realized type all resolve to
    someone else's, and are exactly the ones that must keep their names. *)
-let shadow_table (p:program) : ML (SMap.t bool) =
-  let t = SMap.create 20 in
+let shadow_table (p:program) : ML (HashTable.t string bool) =
+  let t = HashTable.create 20 in
   (* Section 42.6.  A declaration a linked unit compiled counts as emitted: the
      home unit's printer asked this same question about it and moved it, so the
      name in the object file this run links against is the moved one.  Asking a
@@ -1312,7 +1350,7 @@ let shadow_table (p:program) : ML (SMap.t bool) =
   p |> List.iter (fun d ->
     let n = name_of_decl d in
     if emits d && B.is_realized_module n.ns
-    then SMap.add t (string_of_name n) true);
+    then HashTable.add t (string_of_name n) true);
   t
 
 (* Sections 69 and 70.2.  Two C++ constructions with no counterpart here.  A
@@ -1336,7 +1374,7 @@ let reject_target_only_types (p:program) : ML unit =
               ("Its target spelling [" ^ target ^ "] has a placeholder for an \
                 argument, so two instantiations of it are two different \
                 target types; karamel has no such construction.  Section 69 \
-                is a C-backend feature (--custard_backend C).");
+                is a C-backend feature (--codegen C).");
             text
               "The unparameterized form still works everywhere: a \
                [@@custard_extern] target with no [{0}] placeholder names one \
@@ -1354,7 +1392,7 @@ let reject_target_only_types (p:program) : ML unit =
                copy instead would compile and be wrong, which is the exact \
                failure the attribute exists to prevent.";
             text
-              "Section 70.2 is a C-backend feature (--custard_backend C)." ]
+              "Section 70.2 is a C-backend feature (--codegen C)." ]
         | _ -> ())
     | _ -> ())
 
@@ -1390,19 +1428,19 @@ let own_file () : ML string =
    karamel reads a file list in order and a reference forward is one it has to
    resolve later. *)
 let import_files (p:program) : ML (list (string & program)) =
-  let chunks : SMap.t (ref (list decl)) = SMap.create 20 in
+  let chunks : HashTable.t string (ref (list decl)) = HashTable.create 20 in
   let order : ref (list string) = mk_ref [] in
   p |> List.iter (fun d ->
     if Some? (imported_unit d) then
       let f = import_file d in
-      let r = match SMap.try_find chunks f with
+      let r = match HashTable.try_find chunks f with
               | Some r -> r
               | None -> let r = mk_ref [] in
-                        SMap.add chunks f r; order := f :: !order; r in
+                        HashTable.add chunks f r; order := f :: !order; r in
       r := d :: !r
     else ());
   List.rev !order |> List.map (fun f ->
-    (f, (match SMap.try_find chunks f with
+    (f, (match HashTable.try_find chunks f with
          | Some r -> List.rev !r
          | None -> [])))
 
@@ -1459,8 +1497,7 @@ let print_split (fs : list (string & program)) : ML (list Krml.file) =
     [(m, ds)])
 
 let write_files (fn:string) (fs : list Krml.file) : ML unit =
-  let bin : Krml.binary_format = (Krml.current_version, fs) in
-  BU.save_value_to_file fn bin
+  FStarC.Custard.KrmlJson.write_file fn (Krml.current_version, fs)
 
 let write_program (fn:string) (p:program) : ML unit =
   write_files fn (print_program p)

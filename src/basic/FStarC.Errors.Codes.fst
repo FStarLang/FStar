@@ -398,7 +398,7 @@ let default_settings : list error_setting =
     Error_CustardBadFloatLiteral                       , CAlwaysError, 380;
     Warning_CustardRuleArity                           , CWarning, 381;
     Warning_CustardExternErasure                       , CWarning, 382;
-    Error_CustardSharedGlobal                          , CAlwaysError, 383;
+    Unused02                                           , CAlwaysError, 383;
     Error_CustardExternConflict                        , CAlwaysError, 384;
     Error_CustardEntryNotFound                         , CAlwaysError, 385;
     Error_CustardBadFloatWidth                         , CAlwaysError, 386;
@@ -413,4 +413,6 @@ let default_settings : list error_setting =
     Error_CustardNoFSharpRealization                   , CAlwaysError, 395;
     Error_CustardRuleArityExceeded                     , CAlwaysError, 396;
     Error_CustardBadFunctor                            , CAlwaysError, 397;
+    Error_CustardBadIfDef                              , CAlwaysError, 398;
+    Error_CustardTypeVarInstantiation                  , CAlwaysError, 399;
     ]
