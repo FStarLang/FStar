@@ -68,12 +68,28 @@ let rec init = function
   | [_] -> []
   | hd::tl -> hd::(init tl)
 
+(** [length_acc l acc] is [acc + length l], computed tail-recursively.
+It is the extracted implementation of [length]; see
+[length_acc_correct]. *)
+let rec length_acc (#a:Type) (l:list a) (acc:nat) : Tot nat (decreases l) =
+  match l with
+  | [] -> acc
+  | _::tl -> length_acc tl (acc + 1)
+
 (** [length l] returns the total number of elements in [l]. Named as
-in: OCaml, F#, Coq *)
+in: OCaml, F#, Coq.  It is extracted as [length_acc l 0], which runs
+in constant stack space. *)
 val length: list 'a -> Tot nat
+[@@FStar.ExtractAs.extract_as (`(fun (#a:Type) (l:list a) -> length_acc #a l 0))]
 let rec length = function
   | [] -> 0
   | _::tl -> 1 + length tl
+
+let rec length_acc_correct (#a:Type) (l:list a) (acc:nat)
+  : Lemma (ensures length_acc l acc == acc + length l) (decreases l)
+  = match l with
+    | [] -> ()
+    | _::tl -> length_acc_correct tl (acc + 1)
 
 (** [nth l n] returns the [n]-th element in list [l] (with the first
 element being the 0-th) if [l] is long enough, or [None]

@@ -34,7 +34,9 @@ let main () : ML U32.t =
   keep := build 1000000 [];
   let ok = (match l with x :: _ -> x = 1 | [] -> false) &&
            (match t with Node _ k _ -> k = 1 | Leaf -> false) &&
-           RCons? r in
+           RCons? r &&
+           (* FStar.List.Tot.length must not recurse either (issue #4789). *)
+           FStar.List.Tot.length l = 1000000 in
   let _ = f in
   keep := [];
   if ok then 0ul else 1ul

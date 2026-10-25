@@ -16,6 +16,7 @@ let rec init = function
   | hd :: tl -> hd :: init tl
 
 let length l = Z.of_int (BatList.length l)
+let length_acc l acc = Z.add acc (length l)
 let nth l i = try Some (BatList.nth l (Z.to_int i)) with _ -> None
 let index l i = BatList.nth l (Z.to_int i)
 
