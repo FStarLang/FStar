@@ -2,6 +2,9 @@ module BvModelAgreesWithZ3
 
 // Exhaustive width-3 cases keep the Cartesian operation groups tractable.
 
+friend FStar.BV
+friend FStar.Seq.Base
+
 open FStar.List.Tot
 open FStar.Tactics.V2
 
@@ -47,10 +50,34 @@ let argument_name (n:int) : string =
   if n < 0 then "m" ^ string_of_int (-n) else string_of_int n
 
 let model_normal_form (t:term) : Tac term =
-  norm_term [NS.delta; NS.iota; NS.zeta_full; NS.primops; NS.unascribe] t
+  norm_term [NS.iota; NS.zeta_full; NS.primops; NS.unascribe] t
 
-let lemma_decl (name:string) (lhs model:term) : Tac sigelt =
-  let rhs = model_normal_form model in
+let bv_definitions =
+  [`%FStar.BV.bv_uext; `%FStar.BV.bv_sext; `%FStar.BV.bv_repeat; `%FStar.BV.bv_concat;
+   `%FStar.BV.bv_extract; `%FStar.BV.bvnot; `%FStar.BV.bvneg; `%FStar.BV.bvand; `%FStar.BV.bvor;
+   `%FStar.BV.bvxor; `%FStar.BV.bvnand; `%FStar.BV.bvnor; `%FStar.BV.bvxnor; `%FStar.BV.bvcomp;
+   `%FStar.BV.bvadd; `%FStar.BV.bvsub; `%FStar.BV.bvmul'; `%FStar.BV.bvmul; `%FStar.BV.bvshl;
+   `%FStar.BV.bvshl'; `%FStar.BV.bvshr; `%FStar.BV.bvshr'; `%FStar.BV.bvashr; `%FStar.BV.bvrol;
+   `%FStar.BV.bvrol'; `%FStar.BV.bvror; `%FStar.BV.bvror'; `%FStar.BV.bvdiv;
+   `%FStar.BV.bvdiv_unsafe; `%FStar.BV.bvmod; `%FStar.BV.bvmod_unsafe; `%FStar.BV.bvsdiv;
+   `%FStar.BV.bvsrem; `%FStar.BV.bvsmod; `%FStar.BV.bvult; `%FStar.BV.bvule; `%FStar.BV.bvugt;
+   `%FStar.BV.bvuge; `%FStar.BV.bvslt; `%FStar.BV.bvsle; `%FStar.BV.bvsgt; `%FStar.BV.bvsge;
+   `%FStar.BV.bvuaddo; `%FStar.BV.bvsaddo; `%FStar.BV.bvumulo; `%FStar.BV.bvsmulo;
+   `%FStar.BV.bvusubo; `%FStar.BV.bvssubo; `%FStar.BV.bvsdivo; `%FStar.BV.bvnego;
+   `%FStar.BV.int2bv; `%FStar.BV.bv2int; `%FStar.BV.sbv_to_int]
+
+let unfolded_model_normal_form (t:term) : Tac term =
+  // Unfold BV before enabling primops, then compute the exposed implementation.
+  let unfolded =
+    norm_term
+      [NS.delta_only bv_definitions; NS.iota; NS.zeta_full; NS.unascribe]
+      t
+  in
+  norm_term
+    [NS.delta; NS.iota; NS.zeta_full; NS.primops; NS.unascribe]
+    unfolded
+
+let lemma_decl (name:string) (lhs rhs:term) : Tac sigelt =
   let typ = `(squash ((`#lhs) == (`#rhs))) in
   let lb = {
     lb_fv = pack_fv (cur_module () @ [name]);
@@ -60,8 +87,22 @@ let lemma_decl (name:string) (lhs model:term) : Tac sigelt =
   } in
   pack_sigelt (Sg_Let {isrec=false; lbs=[lb]})
 
+let unfolded_lemma_decl (name:string) (lhs model:term) : Tac sigelt =
+  lemma_decl (name ^ "_unfolded") lhs (unfolded_model_normal_form model)
+
 let vector_result (value:term) : Tac term = `(BV.bv2int (`#value))
 let direct_result (value:term) : Tac term = value
+
+// Every operand domain contains these nontrivial width-3 witnesses.
+let unfolded_left_sample (values:list int) : int =
+  match values with
+  | [] -> 5
+  | x :: _ -> if x < 0 then -3 else 5
+
+let unfolded_right_sample (values:list int) : int =
+  match values with
+  | [] -> 3
+  | x :: _ -> if x < 0 then 2 else 3
 
 let test_op1
   (values:list int)
@@ -70,17 +111,32 @@ let test_op1
   (op:term)
   (prefix:string)
   : Tac decls =
-  TU.map
-    (fun n ->
-      let a = argument n in
-      let opaque_a = opaque_argument n in
-      let model = `((`#op) (`#a)) in
-      let lhs = `((`#op) (`#opaque_a)) in
-      lemma_decl
+  let declarations =
+    TU.map
+      (fun n ->
+        let a = argument n in
+        let opaque_a = opaque_argument n in
+        let model = `((`#op) (`#a)) in
+        let lhs = `((`#op) (`#opaque_a)) in
+        lemma_decl
+          (prefix ^ "_" ^ argument_name n)
+          (project lhs)
+          (model_normal_form (project model)))
+      values
+  in
+  match values with
+  | [] -> declarations
+  | _ ->
+    let n = unfolded_left_sample values in
+    let a = argument n in
+    let opaque_a = opaque_argument n in
+    let model = `((`#op) (`#a)) in
+    let lhs = `((`#op) (`#opaque_a)) in
+    declarations @
+      [unfolded_lemma_decl
         (prefix ^ "_" ^ argument_name n)
         (project lhs)
-        (project model))
-    values
+        (project model)]
 
 let test_op2
   (left_values right_values:list int)
@@ -90,22 +146,40 @@ let test_op2
   (op:term)
   (prefix:string)
   : Tac decls =
-  TU.concatMap
-    (fun x ->
-      TU.map
-        (fun y ->
-          let a = left_argument x in
-          let b = right_argument y in
-          let opaque_a = opaque_left_argument x in
-          let opaque_b = opaque_right_argument y in
-          let model = `((`#op) (`#a) (`#b)) in
-          let lhs = `((`#op) (`#opaque_a) (`#opaque_b)) in
-          lemma_decl
-            (prefix ^ "_" ^ argument_name x ^ "_" ^ argument_name y)
-            (project lhs)
-            (project model))
-        right_values)
-    left_values
+  let declarations =
+    TU.concatMap
+      (fun x ->
+        TU.map
+          (fun y ->
+            let a = left_argument x in
+            let b = right_argument y in
+            let opaque_a = opaque_left_argument x in
+            let opaque_b = opaque_right_argument y in
+            let model = `((`#op) (`#a) (`#b)) in
+            let lhs = `((`#op) (`#opaque_a) (`#opaque_b)) in
+            lemma_decl
+              (prefix ^ "_" ^ argument_name x ^ "_" ^ argument_name y)
+              (project lhs)
+              (model_normal_form (project model)))
+          right_values)
+      left_values
+  in
+  match left_values, right_values with
+  | [], _ | _, [] -> declarations
+  | _ ->
+    let x = unfolded_left_sample left_values in
+    let y = unfolded_right_sample right_values in
+    let a = left_argument x in
+    let b = right_argument y in
+    let opaque_a = opaque_left_argument x in
+    let opaque_b = opaque_right_argument y in
+    let model = `((`#op) (`#a) (`#b)) in
+    let lhs = `((`#op) (`#opaque_a) (`#opaque_b)) in
+    declarations @
+      [unfolded_lemma_decl
+        (prefix ^ "_" ^ argument_name x ^ "_" ^ argument_name y)
+        (project lhs)
+        (project model)]
 
 let test_bvop1 values op =
   test_op1 values bv_term opaque_bv_term vector_result op
