@@ -77,7 +77,7 @@ let symlookup tcenv symbol pos_opt requested_info =
       match TcErr.info_at_pos tcenv file row col with
       | Some info -> Some info
       | None ->
-        (* Use the same module-qualified filename as the parser's ranges,
+        (* Use the same include-relative filename as the parser's ranges,
            including for absolute paths and VS Code's file URIs. *)
         let path =
           if U.starts_with file "file://" then U.substring_from file 7 else file

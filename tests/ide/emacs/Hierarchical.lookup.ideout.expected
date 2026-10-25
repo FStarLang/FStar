@@ -5,3 +5,5 @@
 {"kind": "response", "query-id": "4", "response": {"defined-at": {"beg": [4, 4], "end": [4, 5], "fname": "Client/Lookup.fst"}, "definition": null, "documentation": null, "kind": "symbol", "name": "Client.Lookup.x", "type": "bool"}, "status": "success"}
 {"kind": "response", "query-id": "5", "response": "\"Lookup.fst\"", "status": "success"}
 {"kind": "response", "query-id": "6", "response": {"defined-at": {"beg": [2, 4], "end": [2, 5], "fname": "A/B/C.fst"}, "definition": null, "documentation": null, "kind": "symbol", "name": "A.B.C.x", "type": "int"}, "status": "success"}
+{"kind": "response", "query-id": "7", "response": "\"A/B/C.fst\", 1, 2, 3, 4", "status": "success"}
+{"kind": "response", "query-id": "8", "response": "\"A/B/C.fst\", 1, 2, 5, 6", "status": "success"}

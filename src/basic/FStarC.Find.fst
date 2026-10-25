@@ -35,7 +35,6 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
 let _full_include : ref (option (list string)) = mk_ref None
 let _module_include_paths_normalized : ref (option (list module_include_path)) = mk_ref None
 let find_file_cache : HashTable.t string (option string) = HashTable.create 100
-let refind_file_cache : HashTable.t string string = HashTable.create 100
 
 (* Bumped every time the include path (or anything else affecting file
 resolution) changes. Clients that cache results derived from the include path
@@ -44,7 +43,6 @@ let _epoch : ref int = mk_ref 0
 
 let clear () : ML unit =
   HashTable.clear find_file_cache;
-  HashTable.clear refind_file_cache;
   _full_include := None;
   _module_include_paths_normalized := None;
   _epoch := !_epoch + 1;
@@ -244,12 +242,6 @@ let relative_source_path (filename:string) : ML (option string) =
   best |> Option.map (fun dir ->
     BU.substring_from filename (String.length dir + 1))
 
-let source_file_name (filename:string) : ML string =
-  match relative_source_path filename with
-  | None -> Filepath.basename filename
-  | Some relative ->
-    BU.replace_char (BU.replace_char relative '\\' '.') '/' '.'
-
 let do_find (paths : list string) (filename : string) : ML (option string) =
   // Stats.record "Find.do_find" fun () ->
   if Filepath.is_path_absolute filename then
@@ -277,6 +269,21 @@ let do_find (paths : list string) (filename : string) : ML (option string) =
 let find_file =
   cached_fun find_file_cache fun s ->
     do_find (full_include_path ()) s
+
+let source_file_name (filename:string) : ML string =
+  // Resolve relative names first: an incremental parser may already have an
+  // include-relative range filename, rather than a path relative to cwd.
+  let filename =
+    match find_file filename with
+    | Some path -> Filepath.normalize_file_path path
+    | None -> filename
+  in
+  if Filepath.is_path_absolute filename then
+    match relative_source_path filename with
+    | Some relative -> relative
+    | None -> Filepath.basename filename
+  else
+    BU.replace_char filename '\\' '/'
 
 let find_file_odir =
   (* NOTE: this function is not cached, since the plugin-building code
@@ -319,31 +326,7 @@ let locate_fstarc_cui () : ML (option string) =
   if Filepath.file_exists f then Some f else None
 
 
-(* Ranges store module-qualified filenames rather than machine-specific
-paths. Resolve them under the current include roots, including mixed layouts
-such as A/B.C.fst. Never split off the file extension. *)
-let rec find_hierarchical_source (dir:string) (parts:list string) : ML (option string) =
-  let filename = String.concat "." parts in
-  match do_find [dir] filename with
-  | Some path -> Some path
-  | None ->
-    match parts with
-    | part :: name :: ext :: rest ->
-      let subdir = Filepath.join_paths dir part in
-      if Filepath.is_directory subdir
-      then find_hierarchical_source subdir (name :: ext :: rest)
-      else None
-    | _ -> None
-
-let refind_file =
-  cached_fun refind_file_cache fun f ->
-    let filename = Filepath.basename f in
-    let found =
-      BU.find_map (List.rev (module_include_paths ())) (fun path ->
-        match path.kind with
-        | Flat -> do_find [path.dir] filename
-        | Recursive -> find_hierarchical_source path.dir (BU.split filename "."))
-    in
-    match found with
-    | None -> f
-    | Some path -> Filepath.normalize_file_path path
+let refind_file f =
+  match find_file f with
+  | None -> f
+  | Some path -> Filepath.normalize_file_path path

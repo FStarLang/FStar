@@ -21,8 +21,9 @@ def cleanup_json(js, source_root=None):
     if isinstance(js, dict):
         if "fname" in js:
             fname = js["fname"].replace('\\', '/')
-            if source_root is not None and os.path.isabs(fname):
-                js["fname"] = os.path.relpath(fname, source_root).replace('\\', '/')
+            if source_root is not None:
+                js["fname"] = (os.path.relpath(fname, source_root).replace('\\', '/')
+                               if os.path.isabs(fname) else fname)
             else:
                 js["fname"] = os.path.basename(fname)
         # We do currently care about locations, do not remove them

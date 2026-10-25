@@ -1,6 +1,8 @@
-{"query-id": "1", "query": "push", "args": {"kind": "full", "code": "module Client.Lookup\nopen A.B.C\nlet y : int = x\nlet x = false\nlet source_file = __SOURCE_FILE__\n", "line": 1, "column": 0}}
+{"query-id": "1", "query": "push", "args": {"kind": "full", "code": "module Client.Lookup\nopen A.B.C\nlet y : int = x\nlet x = false\nlet source_file = __SOURCE_FILE__\nlet source_range = FStar.Range.mk_range \"A/B/C.fst\" 1 2 3 4\n", "line": 1, "column": 0}}
 {"query-id": "2", "query": "lookup", "args": {"context": "code", "symbol": "x", "requested-info": ["type", "defined-at"], "location": {"filename": "hierarchical/Client/Lookup.fst", "line": 3, "column": 14}}}
-{"query-id": "3", "query": "lookup", "args": {"context": "code", "symbol": "x", "requested-info": ["type", "defined-at"], "location": {"filename": "Client.Lookup.fst", "line": 3, "column": 14}}}
+{"query-id": "3", "query": "lookup", "args": {"context": "code", "symbol": "x", "requested-info": ["type", "defined-at"], "location": {"filename": "Client/Lookup.fst", "line": 3, "column": 14}}}
 {"query-id": "4", "query": "lookup", "args": {"context": "code", "symbol": "x", "requested-info": ["type", "defined-at"], "location": {"filename": "hierarchical/Client/Lookup.fst", "line": 4, "column": 4}}}
 {"query-id": "5", "query": "compute", "args": {"term": "source_file", "rules": ["beta", "delta", "iota", "zeta"]}}
 {"query-id": "6", "query": "lookup", "args": {"context": "code", "symbol": "A.B.C.x", "requested-info": ["type", "defined-at"]}}
+{"query-id": "7", "query": "compute", "args": {"term": "FStar.Range.explode (FStar.Range.mk_range \"A/B/C.fst\" 1 2 3 4)", "rules": ["beta", "delta", "iota", "zeta"]}}
+{"query-id": "8", "query": "compute", "args": {"term": "FStar.Range.explode (FStar.Range.join_range (FStar.Range.mk_range \"A/B/C.fst\" 1 2 3 4) (FStar.Range.mk_range \"A/B/C.fst\" 2 0 5 6))", "rules": ["beta", "delta", "iota", "zeta"]}}

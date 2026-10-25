@@ -476,7 +476,7 @@ let load_module_from_cache_internal =
         let suppress_warning = try_load || Options.should_check (Dep.module_name_of_file fn) || !already_failed in
         if not suppress_warning || !dbg then begin
           already_failed := true;
-          FStarC.Errors.log_issue (Range.mk_range fn (Range.mk_pos 0 0) (Range.mk_pos 0 0))
+          FStarC.Errors.log_issue (Range.mk_range (Find.source_file_name fn) (Range.mk_pos 0 0) (Range.mk_pos 0 0))
             Errors.Warning_CachedFile [Errors.text (Format.fmt3
                "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)"
                cache_file msg fn)
@@ -653,7 +653,7 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
           Format.print2 "FAILING to store cache file for %s, with deps %s\n"
             fn (show deps_of_fn));
 
-      log_issue (FStarC.Range.mk_range fn (FStarC.Range.mk_pos 0 0)
+      log_issue (FStarC.Range.mk_range (Find.source_file_name fn) (FStarC.Range.mk_pos 0 0)
                                  (FStarC.Range.mk_pos 0 0))
         Errors.Warning_FileNotWritten [
           text <| Format.fmt1 "Checked file %s was not written." cache_file;
