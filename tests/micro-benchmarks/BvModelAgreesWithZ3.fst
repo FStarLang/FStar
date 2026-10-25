@@ -93,17 +93,6 @@ let unfolded_lemma_decl (name:string) (lhs model:term) : Tac sigelt =
 let vector_result (value:term) : Tac term = `(BV.bv2int (`#value))
 let direct_result (value:term) : Tac term = value
 
-// Every operand domain contains these nontrivial width-3 witnesses.
-let unfolded_left_sample (values:list int) : int =
-  match values with
-  | [] -> 5
-  | x :: _ -> if x < 0 then -3 else 5
-
-let unfolded_right_sample (values:list int) : int =
-  match values with
-  | [] -> 3
-  | x :: _ -> if x < 0 then 2 else 3
-
 let test_op1
   (values:list int)
   (argument opaque_argument:int -> Tac term)
@@ -111,32 +100,16 @@ let test_op1
   (op:term)
   (prefix:string)
   : Tac decls =
-  let declarations =
-    TU.map
-      (fun n ->
-        let a = argument n in
-        let opaque_a = opaque_argument n in
-        let model = `((`#op) (`#a)) in
-        let lhs = `((`#op) (`#opaque_a)) in
-        lemma_decl
-          (prefix ^ "_" ^ argument_name n)
-          (project lhs)
-          (model_normal_form (project model)))
-      values
-  in
-  match values with
-  | [] -> declarations
-  | _ ->
-    let n = unfolded_left_sample values in
-    let a = argument n in
-    let opaque_a = opaque_argument n in
-    let model = `((`#op) (`#a)) in
-    let lhs = `((`#op) (`#opaque_a)) in
-    declarations @
-      [unfolded_lemma_decl
-        (prefix ^ "_" ^ argument_name n)
-        (project lhs)
-        (project model)]
+  TU.concatMap
+    (fun n ->
+      let a = argument n in
+      let opaque_a = opaque_argument n in
+      let model = `((`#op) (`#a)) in
+      let lhs = `((`#op) (`#opaque_a)) in
+      let name = prefix ^ "_" ^ argument_name n in
+      [lemma_decl name (project lhs) (model_normal_form (project model));
+       unfolded_lemma_decl name (project lhs) (project model)])
+    values
 
 let test_op2
   (left_values right_values:list int)
@@ -146,40 +119,23 @@ let test_op2
   (op:term)
   (prefix:string)
   : Tac decls =
-  let declarations =
-    TU.concatMap
-      (fun x ->
-        TU.map
-          (fun y ->
-            let a = left_argument x in
-            let b = right_argument y in
-            let opaque_a = opaque_left_argument x in
-            let opaque_b = opaque_right_argument y in
-            let model = `((`#op) (`#a) (`#b)) in
-            let lhs = `((`#op) (`#opaque_a) (`#opaque_b)) in
-            lemma_decl
-              (prefix ^ "_" ^ argument_name x ^ "_" ^ argument_name y)
-              (project lhs)
-              (model_normal_form (project model)))
-          right_values)
-      left_values
-  in
-  match left_values, right_values with
-  | [], _ | _, [] -> declarations
-  | _ ->
-    let x = unfolded_left_sample left_values in
-    let y = unfolded_right_sample right_values in
-    let a = left_argument x in
-    let b = right_argument y in
-    let opaque_a = opaque_left_argument x in
-    let opaque_b = opaque_right_argument y in
-    let model = `((`#op) (`#a) (`#b)) in
-    let lhs = `((`#op) (`#opaque_a) (`#opaque_b)) in
-    declarations @
-      [unfolded_lemma_decl
-        (prefix ^ "_" ^ argument_name x ^ "_" ^ argument_name y)
-        (project lhs)
-        (project model)]
+  TU.concatMap
+    (fun x ->
+      TU.concatMap
+        (fun y ->
+          let a = left_argument x in
+          let b = right_argument y in
+          let opaque_a = opaque_left_argument x in
+          let opaque_b = opaque_right_argument y in
+          let model = `((`#op) (`#a) (`#b)) in
+          let lhs = `((`#op) (`#opaque_a) (`#opaque_b)) in
+          let name =
+            prefix ^ "_" ^ argument_name x ^ "_" ^ argument_name y
+          in
+          [lemma_decl name (project lhs) (model_normal_form (project model));
+           unfolded_lemma_decl name (project lhs) (project model)])
+        right_values)
+    left_values
 
 let test_bvop1 values op =
   test_op1 values bv_term opaque_bv_term vector_result op
