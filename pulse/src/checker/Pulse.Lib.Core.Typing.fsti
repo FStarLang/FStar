@@ -358,12 +358,12 @@ let with_localarray_body_pre (pre:term) (a:term) (arr:term) (init:term) (len:ter
 // post has 0 db index free
 //
 let with_localarray_body_post_body (post:term) (a:term) (arr:term) : term =
-  // exists_ (A.pts_to arr full_perm)
-  let exists_tm =
-    mk_exists uzero (mk_seq uzero a)
-      (mk_abs (mk_seq uzero a) Q_Explicit
-         (mk_array_pts_to a arr tm_full_perm (bound_var 0))) in
-  mk_star post exists_tm
+  // A.pts_to_uninit_post arr
+  let uninit_post =
+    pack_ln (Tv_App (pack_ln (Tv_App (pack_ln (Tv_UInst (pack_fv array_pts_to_uninit_post_lid) [uzero]))
+                                     (a, Q_Implicit)))
+                    (arr, Q_Explicit)) in
+  mk_star post uninit_post
 
 let with_localarray_body_post (post:term) (a:term) (ret_t:term) (arr:term) : term =
   mk_abs ret_t Q_Explicit (with_localarray_body_post_body post a arr)

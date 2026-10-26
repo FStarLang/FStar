@@ -760,6 +760,7 @@ let flag_to_doc (f:flag) : ML document =
             match b with Some true -> "o" | Some false -> "b" | None -> "?") fs) ^ "]")
   | CherryConv fs ->
     text ("cherry_conv[" ^ String.concat "" (List.map (fun b -> if b then "o" else "b") fs) ^ "]")
+  | DeclareInCHeader -> text "declare_in_c_header"
 
 let flags_to_doc (fs : list flag) : ML document =
   match fs with

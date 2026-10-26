@@ -197,6 +197,7 @@ let defaults = [
   ("custard_entrypoints"                       , List []);
   ("custard_entry_module"                      , List []);
   ("custard_c_no_prefix"                       , List []);
+  ("custard_static_header"                     , Bool false);
   ("custard_main"                              , Unset);
   ("target"                                    , Unset);
   ("custard_dump_ir"                           , Bool false);
@@ -469,6 +470,7 @@ let get_custard_entry           ()      = lookup_opt "custard_entry"            
 let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      (as_list as_string)
 let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
 let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      (as_list as_string)
+let get_custard_static_header   ()      = lookup_opt "custard_static_header"    as_bool
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_target                  ()      = lookup_opt "target"                   (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
@@ -887,6 +889,16 @@ specialization: a specialized name carries a hint (section 30.15) that is \
 free to change when the monomorphizer's input changes, and is not something \
 another translation unit may depend on. Two public definitions that would \
 share an unqualified name is an error.");
+
+  ( noshort,
+    "custard_static_header",
+    Const (Bool true),
+    text "With --codegen C, emit a single header containing static function \
+definitions and no source file. CInline independently requests inline. \
+Foreign declarations retain extern linkage. -o must name a .h file; the \
+default is Custard.h (or the --custard_unit name). Does not change roots \
+or API names. Non-macro globals, runtime initialization, --custard_main, \
+--custard_split and other code generators are not supported.");
 
   ( noshort,
     "custard_entry_module",
@@ -2266,6 +2278,7 @@ let custard_entries              () = get_custard_entry ()
 let custard_entrypoint_files     () = get_custard_entrypoints ()
 let custard_entry_modules        () = get_custard_entry_module ()
 let custard_c_no_prefix          () = get_custard_c_no_prefix ()
+let custard_static_header        () = get_custard_static_header ()
 let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()
