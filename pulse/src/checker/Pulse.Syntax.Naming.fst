@@ -247,6 +247,20 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' lbl x i;
       close_open_inverse' arg x i
 
+    | Tm_Raise { arg } ->
+      close_open_inverse' arg x i
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      close_open_inverse_comp' normal x i;
+      close_open_inverse' exceptional x i;
+      close_open_inverse_st' body x i
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      close_open_inverse_comp' normal x i;
+      close_open_inverse' exceptional x i;
+      close_open_inverse_st' body x i;
+      close_open_inverse_st' handler x (i + 1)
+
     | Tm_Defer { handler_pre; handler; body } ->
       close_open_inverse' handler_pre x i;
       close_open_inverse_st' handler x i;

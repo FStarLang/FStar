@@ -137,6 +137,8 @@ the previous result value is stored in `cond.result` instead.
 *)
 let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option st_term) =
   match t.term with
+  | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+    fail g (Some t.range) "Internal error: exceptions must be checked before eliminating jumps"
   | Tm_Return ..
   | Tm_Abs ..
   | Tm_IntroPure ..
@@ -325,6 +327,8 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
 
 let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
   match t.term with
+  | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+    fail g (Some t.range) "Internal error: exceptions must be checked before eliminating jumps"
   | Tm_Return ..
   | Tm_IntroPure ..
   | Tm_ElimExists ..

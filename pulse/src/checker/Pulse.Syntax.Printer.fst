@@ -337,6 +337,15 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "goto %s %s"
         (term_to_string lbl)
         (term_to_string arg)
+    | Tm_Raise { arg } ->
+      sprintf "raise %s" (term_to_string arg)
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      sprintf "%s raises %s { %s }" (comp_to_string normal)
+        (term_to_string exceptional) (st_term_to_string' (indent level) body)
+    | Tm_Try { normal; exceptional; body; handler } ->
+      sprintf "try %s raises %s { %s } catch { %s }" (comp_to_string normal)
+        (term_to_string exceptional) (st_term_to_string' (indent level) body)
+        (st_term_to_string' (indent level) handler)
     | Tm_Defer { handler_pre; handler; body } ->
       sprintf "defer %s { %s };\n%s%s"
         (term_to_string handler_pre)
@@ -413,6 +422,9 @@ let tag_of_st_term (t:st_term) =
   | Tm_PragmaWithOptions _ -> "Tm_PragmaWithOptions"
   | Tm_ForwardJumpLabel _ -> "Tm_ForwardJumpLabel"
   | Tm_Goto _ -> "Tm_Goto"
+  | Tm_Raise _ -> "Tm_Raise"
+  | Tm_ExceptionScope _ -> "Tm_ExceptionScope"
+  | Tm_Try _ -> "Tm_Try"
   | Tm_Defer _ -> "Tm_Defer"
 
 let tag_of_comp (c:comp) : T.Tac string =
@@ -455,6 +467,9 @@ let print_st_head (t:st_term)
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
   | Tm_ForwardJumpLabel _ -> "ForwardJumpLabel"
   | Tm_Goto _ -> "Goto"
+  | Tm_Raise _ -> "Raise"
+  | Tm_ExceptionScope _ -> "ExceptionScope"
+  | Tm_Try _ -> "Try"
   | Tm_Defer _ -> "Defer"
 
 let rec print_skel (t:st_term) = 
@@ -479,6 +494,9 @@ let rec print_skel (t:st_term) =
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
   | Tm_ForwardJumpLabel {body} -> Printf.sprintf "(ForwardJumpLabel %s)" (print_skel body)
   | Tm_Goto _ -> "Goto"
+  | Tm_Raise _ -> "Raise"
+  | Tm_ExceptionScope {body} -> Printf.sprintf "(ExceptionScope %s)" (print_skel body)
+  | Tm_Try {body;handler} -> Printf.sprintf "(Try %s %s)" (print_skel body) (print_skel handler)
   | Tm_Defer {body} -> Printf.sprintf "(Defer %s)" (print_skel body)
 
 let decl_to_string (d:decl) : T.Tac string =

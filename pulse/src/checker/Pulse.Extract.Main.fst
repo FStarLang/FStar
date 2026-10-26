@@ -162,6 +162,8 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   let with_open b e = with_open g b e simplify_st_term in
 
   match e.term with
+  | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+    T.fail "Internal error: unchecked exception syntax in simplification"
   | Tm_Return _
   | Tm_IntroPure _
   | Tm_ElimExists _
@@ -267,6 +269,8 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
   then unit_tm
   else begin
     match p.term with
+    | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+      T.fail "Internal error: unchecked exception syntax in erasure"
     | Tm_IntroPure _
     | Tm_ElimExists _
     | Tm_IntroExists _ 
@@ -431,6 +435,8 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
   if is_erasable p then ECL.mk_return ECL.unit_tm
   else begin
     match p.term with
+    | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+      T.fail "Internal error: unchecked exception syntax in extraction"
     | Tm_IntroPure _
     | Tm_ElimExists _
     | Tm_IntroExists _ 

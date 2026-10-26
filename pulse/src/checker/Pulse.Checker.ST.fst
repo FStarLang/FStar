@@ -39,6 +39,7 @@ let check
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_ST? t.term })
+  (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint) =
 
   let g = push_context "st" t.range g in
@@ -106,7 +107,15 @@ let check
          | Some _ -> ())
     );
  // TODO: thread through prover
-      if comp_post c `eq_tm` tm_is_unreachable then
+      if Some? (Pulse.Checker.Exceptions.outcome_types (comp_res c)) then
+        let Some (exn, a) = Pulse.Checker.Exceptions.outcome_types (comp_res c) in
+        if not (C_ST? c || C_STDiv? c) then
+          fail g (Some range) "Exception-producing calls must have the stateful effect";
+        let c = add_frame c ctxt' in
+        let framed : checker_result_t g ctxt NoHint =
+          checker_result_for_st_typing (k NoHint (| t, c |)) res_ppname in
+        Pulse.Checker.Exceptions.unwrap post_hint res_ppname framed exn a (comp_post c) range check
+      else if comp_post c `eq_tm` tm_is_unreachable then
         let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname in
         RU.record_stats "prove_post_hint" fun _ -> prove_post_hint framed post_hint range
       else
