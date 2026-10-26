@@ -826,6 +826,10 @@ type flag =
       Logical identities and linkage are unchanged.  Kept in compiled units
       so that consumers use the producer's spelling. *)
 
+  | DeclareInCHeader
+  (** Emit this external function's prototype in the direct-C header,
+      after the types it uses, instead of in the source. *)
+
 type tydef =
   | TAbbrev  of cty
   | TRecord  of list (string & cty)

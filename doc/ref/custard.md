@@ -1606,6 +1606,39 @@ Beyond that one module, the whole of `tests/custard` has been re-extracted
 under the flag, compiled and run, and every module agrees with the output it
 produces without it.
 
+#### 5.0.2 An instantiation at a type variable is error 399 on Cherry
+
+"Every type is ground" is the premise of the pass, and nothing used to check
+it: `request` happily made a clone at a `TVar`.  In C that is error 368 as
+soon as the clone's fields are printed.  On Cherry a type variable is `any`, so
+it compiled, and that was the bug: `list@'a` has a boxed `hd` and `list@goal`
+does not, both are a `cherry_obj *`, and a value built at one was read at the
+other.  The result was a misread field or a segmentation fault, or an `undyn`
+abort under `-DCHERRY_DEBUG`, and never a diagnostic.
+
+Two constructs reached it:
+
+- A local `let rec` that binds a type of its own, lifted as one polymorphic
+  declaration (§5.10).  §5.10a now copies it per instantiation instead.
+- A polymorphic method of a dictionary passed at runtime (§3.2c1).  A monad
+  instance over `option` has a `bind` at every `a` and `b`, a rank-2 field,
+  and no single instantiation of it agrees with every caller.  The `id`
+  monad happens to work, since `id 'a` is just `any` and the caller boxes to
+  match.  There is no fix short of passing types at runtime, so it is refused.
+  `Tactics.Interpreter`'s check for an `admit` in a stuck tactic was the one
+  use in the compiler, and it now uses the non-monadic `Syntax.Visit`.
+
+So `Monomorphize.request` records each clone whose arguments mention a type
+variable anywhere, and once the layouts are known,
+`Monomorphize.check_tvar_clones` refuses those that kept a layout of their own
+with error 399 (`Error_CustardTypeVarInstantiation`), naming the declaration
+that asked for it.  A clone that collapsed to its one field (§5.2) or was erased
+is no such thing: `Syntax.Visit`'s `id@'a` is just `any`, and the coercions at
+its uses convert it like any other `any` (`tests/custard/DynCurry.fst`).  Only
+on Cherry: the other C backends already reject a type variable, as 368, and the
+OCaml backend has no layouts to disagree.  `tests/custard/CherryDynPolyMethod.fst`
+is the rejected monad, and `CherryLocalPolyRec.fst` is the `let rec`.
+
 ### 5.1 Erasure
 
 A type is erased when it is non-informative.  The existing predicate is
@@ -2325,6 +2358,38 @@ declaration's signature is read off the type.  In
 `tests/bug-reports/closed/Bug1714`, `f : t true = fun src -> ...` with `t` a
 recursive type function, which unfolding abbreviations does not see through,
 stays a closure; lifted, it had result type `int -> p`.
+
+### 5.10a A local `let rec` that binds types is lifted per instantiation
+
+F\* generalizes a local `let rec` as it does a top-level one, so
+`Tactics.V2.Basic.t_apply_lemma`'s
+
+```fstar
+let rec filter' (f : 'a -> list 'a -> ML bool) (xs : list 'a) : ML (list 'a) = ...
+```
+
+binds `#a:Type` itself.  Lifted as above, that binder became one of the
+declaration's `dl_typars`, which no call site passes and which type
+monomorphization (§5.0.1) cannot instantiate.  The body therefore built
+`list@'a` while the caller passed a `list@goal` (§5.0.2).
+
+On Cherry under `--custard_monomorphize_types`, `Extract.instantiate_letrec`
+therefore copies the nest at the F\* term level before anything is lifted.  It
+collects the type arguments each use in the body applies the name to, makes
+one copy of the whole nest per distinct tuple with the type binders
+substituted away, and rewrites each use, `filter' #goal`, to the copy's own
+name.  The copies' recursive calls are rewritten the same way, so a
+polymorphic recursion finds its further instantiations through the same
+worklist.  It is bounded at sixteen, because polymorphic recursion need not
+reach a fixed point, and past that it is error 399.  The copies are then one
+ordinary nest for §5.10: every copy has concrete types, so the calls it makes
+into specializing definitions are concrete as well.  A copy that nothing
+reaches is never made.
+
+The nest is left to §5.10 as it is when no member binds a type, when members
+bind different numbers of them, or when some use does not apply the name to
+its type arguments.  If that leaves a type variable in a datatype,
+§5.0.2 reports it.
 
 ### 5.11 Polymorphic local functions are inlined
 
@@ -3467,6 +3532,15 @@ that no OCaml plugin is needed for them.
 - `[@@custard_c_header "h.h"]` names the C header that declares such a symbol.
   The karamel backend ignores it (karamel takes includes on its command line);
   it is there for the direct-to-C backend of M8.
+- `[@@custard_declare_in_c_header]` on an `assume val` function (or an
+  interface-only `val`) puts its generated `extern` prototype in the direct-C
+  header instead of the source. The prototype follows the generated types
+  and is inside the header's C++ `extern "C"` guard. This does not root the
+  declaration or change its name, erased signature or linkage. It also works
+  with `custard_extern` to choose the foreign name. Definitions, types,
+  non-function values and declarations supplied by `custard_c_header` receive
+  ineffective-attribute warning 371; that header already owns the declaration.
+  This is a C/Cherry emission policy; other backends ignore it.
 - `[@@custard_opaque]` gives `Rule_opaque`.
 - `[@@@custard_inline_field]`, on a constructor's *binder* rather than on a
   definition, asks for that field to be stored in the constructor itself
