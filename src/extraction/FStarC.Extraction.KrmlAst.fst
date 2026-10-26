@@ -136,10 +136,19 @@ and expr =
   | EGFor of expr & expr & expr & expr // C-style for loops: init, cond, incr, body
 
 and op =
+  (* Arithmetic operations *)
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
+  (* Bitwise operations *)
   | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
+  (* Arithmetic comparisons / boolean comparisons *)
   | Eq | Neq | Lt | Lte | Gt | Gte
+  (* Boolean operations *)
   | And | Or | Xor | Not
+  (* Effectful operations. Only appears in C. *)
+  | Assign | PreIncr | PreDecr | PostIncr | PostDecr
+  (* Misc *)
+  | Comma
+  | Neg
 
 and branches =
   list branch
@@ -311,6 +320,13 @@ instance pretty_op = { pp = function
   | Or -> doc_of_string "Or"
   | Xor -> doc_of_string "Xor"
   | Not -> doc_of_string "Not"
+  | Assign -> doc_of_string "Assign"
+  | PreIncr -> doc_of_string "PreIncr"
+  | PreDecr -> doc_of_string "PreDecr"
+  | PostIncr -> doc_of_string "PostIncr"
+  | PostDecr -> doc_of_string "PostDecr"
+  | Comma -> doc_of_string "Comma"
+  | Neg -> doc_of_string "Neg"
 }
 instance showable_op : showable op = showable_from_pretty
 
