@@ -150,6 +150,9 @@ val link_headers : state -> ML (list string)
 (** See {!Unit.link_no_prefix}. *)
 val link_no_prefix : state -> ML (list string)
 
+(** See {!Unit.link_c_names}. *)
+val link_c_names : state -> ML (list (string & list (string & string)))
+
 (** The global initializer of each linked unit, in link order; see
     {!Unit.link_inits}. *)
 val link_inits : state -> ML (list string)
