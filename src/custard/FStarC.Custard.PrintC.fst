@@ -684,7 +684,7 @@ type clo_req =
 
 let clo_queue : ref (list clo_req) = mk_ref []
 let clo_seen : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
-let arrow_ids : ref (list (cty & int)) = mk_ref []
+let arrow_ids : ref (list (cty & string)) = mk_ref []
 
 (* Under Cherry, the globals of function type, which hold closures: their
    types, since the head of an application is typed as its result. *)
@@ -733,13 +733,22 @@ let rec split_nonunit (c:int) (t:cty) : ML (list cty & cty) =
     if c > 0 then failwith "Custard: a closure taking more arguments than its type has"
     else ([], t)
 
+(* Named after the type rather than numbered in the order the types were met,
+   so that an edit elsewhere in the program does not rename every
+   [cherry_apply_] and [cherry_papc_] after it.  Two types with the same hash
+   are told apart by a suffix, in the order they are met, which at
+   {!stable_hash}'s width does not happen in practice. *)
 let arrow_id (t:cty) : ML string =
   match List.tryFind (fun (u, _) -> u = t) !arrow_ids with
-  | Some (_, i) -> string_of_int i
+  | Some (_, i) -> i
   | None ->
-    let i = List.length !arrow_ids in
-    arrow_ids := !arrow_ids @ [(t, i)];
-    string_of_int i
+    let h = stable_hash (show t) in
+    let rec pick (k:int) : ML string =
+      let i = if k = 0 then h else h ^ "_" ^ string_of_int k in
+      if List.existsb (fun (_, j) -> j = i) !arrow_ids then pick (k + 1) else i in
+    let i = pick 0 in
+    arrow_ids := (t, i) :: !arrow_ids;
+    i
 
 let clo_key (r:clo_req) : ML string =
   match r with
@@ -1718,11 +1727,30 @@ let mentions_float_special (s:string) : bool =
 let string_lits : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 let string_lit_defs : ref (list string) = mk_ref []
 
+(* The literal's name is its leading letters and digits, for the reader, and
+   a hash of all of it, for uniqueness: named in order of use, every literal
+   after an edit was renamed. *)
+let lit_hint (s:string) : ML string =
+  let ok (c:FStar.Char.char) : ML bool =
+    let n = BU.int_of_char c in
+    (n >= 48 && n <= 57) || (n >= 65 && n <= 90) || (n >= 97 && n <= 122) in
+  let cs = String.list_of_string s |> List.map (fun c -> if ok c then c else '_') in
+  let rec squeeze (cs:list FStar.Char.char) (k:int) : ML (list FStar.Char.char) =
+    match cs with
+    | _ when k = 0 -> []
+    | '_' :: '_' :: rest -> squeeze ('_' :: rest) k
+    | c :: rest -> c :: squeeze rest (k - 1)
+    | [] -> [] in
+  let h = String.string_of_list (squeeze cs 16) in
+  let h = if String.length h > 0 && String.substring h 0 1 = "_"
+          then String.substring h 1 (String.length h - 1) else h in
+  if h = "" then "" else if String.substring h (String.length h - 1) 1 = "_" then h else h ^ "_"
+
 let string_lit (s:string) : ML string =
   match HashTable.try_find !string_lits s with
   | Some n -> n
   | None ->
-    let n = alloc_name "cherry_lit" in
+    let n = alloc_name ("cherry_lit_" ^ lit_hint s ^ stable_hash s) in
     HashTable.add !string_lits s n;
     string_lit_defs := !string_lit_defs @
       ["CHERRY_STRING_LIT(" ^ n ^ ", \"" ^ escape s ^ "\");\n"];
@@ -1742,7 +1770,7 @@ let int_lit (v:int) : ML string =
     match HashTable.try_find !int_lits (show v) with
     | Some n -> n
     | None ->
-      let n = alloc_name "cherry_intlit" in
+      let n = alloc_name ("cherry_intlit_" ^ (if v < 0 then "m" ^ show (- v) else show v)) in
       HashTable.add !int_lits (show v) n;
       let ds = limbs (if v < 0 then - v else v) in
       string_lit_defs := !string_lit_defs @
@@ -5655,13 +5683,20 @@ let cherry_closure_helpers () : ML (list string & list string) =
      point and arity are what tells them apart, and the constructor takes
      both. *)
   let layouts : HashTable.t string string = HashTable.create 100 in
+  let layout_names : HashTable.t string bool = HashTable.create 100 in
   let layout (fields:list (string & cty)) : ML string =
     let key = String.concat ";" (fields |> List.map (fun (x, t) -> decl_of t x)) ^
               "|" ^ on "dec" "" fields ^ "|" ^ on "mark" "" fields in
     match HashTable.try_find layouts key with
     | Some s -> s
     | None ->
-      let s = "cherry_envl_" ^ string_of_int (HashTable.size layouts) in
+      (* Named after its fields, for the reason {!arrow_id} is. *)
+      let h = "cherry_envl_" ^ stable_hash key in
+      let rec pick (k:int) : ML string =
+        let s = if k = 0 then h else h ^ "_" ^ string_of_int k in
+        if HashTable.mem layout_names s then pick (k + 1) else s in
+      let s = pick 0 in
+      HashTable.add layout_names s true;
       HashTable.add layouts key s;
       protos := !protos @ ["struct " ^ s ^ " {\n  cherry_closure clo;\n" ^
         String.concat "" (fields |> List.map (fun (x, t) -> "  " ^ decl_of t x ^ ";\n")) ^ "};\n"];

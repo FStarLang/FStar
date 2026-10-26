@@ -174,6 +174,10 @@ let global_tbl : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 (* How many arguments each external takes. *)
 let extern_arity : ref (HashTable.t string (int & option cty)) = mk_ref (HashTable.create 0)
 let current : ref string = mk_ref ""
+(* Numbers [cherry_tmp]s, and the closures lifted out of a definition.  Reset
+   for every definition: the names only have to be unique within it, and a
+   number counted across the program would make every function after an edit
+   change its text, which a checked-in copy of the C output cannot afford. *)
 let counter : ref int = mk_ref 0
 
 let unsupported (#a:Type) (what:string) : ML a =
@@ -734,6 +738,7 @@ and unguard_node (e:expr) : ML expr =
 let lower_any_decl (d:decl) : ML decl =
   match d with
   | DLet l ->
+    co_counter := 0;
     let b = lower_any l.dl_body in
     let b = if b.ty <> l.dl_ret && (mentions_any b.ty || mentions_any l.dl_ret)
             then coerce_any b l.dl_ret else b in
@@ -746,6 +751,7 @@ let lift_decl (d:decl) : ML (list decl) =
     current := string_of_name l.dl_name;
     lift_parent := Some l;
     lifted := [];
+    counter := 0;
     let body = lift (List.map (fun b -> (b.b_name, b.b_ty)) l.dl_binders) l.dl_body in
     if Cons? !lifted && Cons? l.dl_typars then unsupported "a lambda in a polymorphic definition";
     List.rev !lifted @ [DLet { l with dl_body = body }]
@@ -1699,6 +1705,7 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
 
 let run_let (l:dlet) : ML dlet =
   current := string_of_name l.dl_name;
+  counter := 0;
   let fl = match HashTable.try_find !param_owned (string_of_name l.dl_name) with
            | Some fl -> fl
            | None -> List.map (fun _ -> true) l.dl_binders in
