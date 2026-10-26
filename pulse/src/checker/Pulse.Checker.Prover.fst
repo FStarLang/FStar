@@ -638,6 +638,20 @@ let elim_pure_step (g: env) (ctxt: slprop_view) :
     let x = ppname_default, fresh g in
     let ty = mk_squash p in
     let g' = push_binding g (snd x) (fst x) ty in
+    // Keep an impossible exit spatially available for ex-falso, rather than
+    // losing it to an SMT hypothesis that cannot synthesize owned resources.
+    // Retain the SMT hypothesis too, for pure well-formedness obligations.
+    if eq_tm p tm_l_false then
+      Some (| g', [IsUnreachable], [], [], fun g'' ->
+        let pv = check_prop_validity g' p in
+        (fun frame ->
+          let f = elab_slprops frame in
+          k_elab_equiv
+            (elab_slprops (frame @ [ctxt]))
+            (elab_slprops (frame @ [IsUnreachable]))
+            (k_elab_trans (elim_pure g f p x g') (intro_pure g' f p pv))),
+        cont_elab_refl _ _ _ <: T.Tac _ |)
+    else
     Some (| g', [], [], [], fun g'' ->
       (fun frame ->
 
@@ -1491,6 +1505,17 @@ let k_unreach (g: env) (x: nvar { freshv g (snd x) }) (post_hint: post_hint_t { 
 
 #restart-solver
 #push-options "--z3rlimit_factor 2"
+let check_remaining (g:env) (rng:range) (remaining:slprop) : T.Tac unit =
+  let remaining = inspect_slprop (mk_penv g true) remaining in
+  let remaining = T.filter (function | Atom _ dup _ _ -> not dup | _ -> true) remaining in
+  if not (Nil? remaining || List.existsb IsUnreachable? remaining) then
+    fail_doc g (Some rng) [
+      prefix 2 1 (text "Leftover resources:") (align (pp_slprops remaining));
+      (if Cons? remaining
+       then text "Did you forget to free these resources?"
+       else text "Did you forget to free this resource?");
+    ]
+
 let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (post_hint:post_hint_opt g) (rng:range)
   : T.Tac (checker_result_t g ctxt post_hint) =
 
@@ -1536,25 +1561,14 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
           prove rng g2 ctxt' post_hint_opened false in
         assume lookup g3 x == lookup g2 x;
 
-        let remaining_ctxt = inspect_slprop (mk_penv g true) remaining_ctxt in
-        let remaining_ctxt = T.filter (function | Atom _ dup _ _ -> not dup | _ -> true) remaining_ctxt in
-        let no_left_over = Nil? remaining_ctxt || List.existsb IsUnreachable? remaining_ctxt in
-        if not no_left_over then
-          fail_doc g (Some rng) [
-            prefix 2 1 (text "Leftover resources:")
-                      (align (pp_slprops remaining_ctxt));
-            (if Cons? remaining_ctxt
-            then text "Did you forget to free these resources?"
-            else text "Did you forget to free this resource?");
-          ]
-        else
+        check_remaining g rng remaining_ctxt;
 
-          // for the typing of ty in g3, we have typing of ty in g2 above, and g3 `env_extends` g2
+        // for the typing of ty in g3, we have typing of ty in g2 above, and g3 `env_extends` g2
 
-          // for the typing of post_hint_opened, again post_hint is well-typed in g, and g3 `env_extends` g
+        // for the typing of post_hint_opened, again post_hint is well-typed in g, and g3 `env_extends` g
 
-          (| x, g3, (u_ty, ty), post_hint_opened,
-            k_elab_trans k (k_elab_equiv ctxt' post_hint_opened k_post) |)
+        (| x, g3, (u_ty, ty), post_hint_opened,
+          k_elab_trans k (k_elab_equiv ctxt' post_hint_opened k_post) |)
 #pop-options
 
 let try_frame_pre (allow_ambiguous : bool) (#g:env)
@@ -1567,3 +1581,8 @@ let try_frame_pre (allow_ambiguous : bool) (#g:env)
  // weakening from g to g'
  // weakening from to g'
   checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname
+
+let prove_exact rng g ctxt goals =
+  let (| g', remaining, k |) = prove rng g ctxt goals false in
+  check_remaining g' rng remaining;
+  (| g', k_elab_equiv_continuation goals k |)

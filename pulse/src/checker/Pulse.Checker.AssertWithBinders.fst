@@ -197,7 +197,7 @@ let try_find_equality (g:env) (x:R.term)
 : T.Tac (option R.term)
 = T.tryPick
     (function
-      | BindingGotoLabel .. | BindingPost .. -> None
+      | BindingGotoLabel .. | BindingPost .. | BindingCleanupBoundary -> None
       | BindingVar {ty} ->
         match is_squash ty with
         | None -> None

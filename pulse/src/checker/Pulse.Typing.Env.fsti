@@ -31,14 +31,15 @@ noeq type var_binding = { n: ppname; x: var; ty: typ }
 
 noeq type binding =
   | BindingVar of var_binding
-  | BindingGotoLabel { n: ppname; x: var; post: comp_st }
+  | BindingGotoLabel { n: ppname; x: var; post: comp_st; is_exception: bool }
   | BindingPost { post: term }
+  | BindingCleanupBoundary
 
 let binding_dom : binding -> Set.set var = function
   | BindingVar { x }
   | BindingGotoLabel { x }
     -> Set.singleton x
-  | BindingPost ..
+  | BindingPost .. | BindingCleanupBoundary
     -> Set.empty
 
 type env_bindings = list binding
@@ -48,7 +49,7 @@ let bindings_dom (g: env_bindings) : Set.set var =
 
 let binding_extend_env (f: R.env) : binding -> R.env = function
   | BindingVar { n; x; ty } -> R.push_binding f { ppname = n.name; uniq = x; sort = ty }
-  | BindingGotoLabel .. | BindingPost .. -> f
+  | BindingGotoLabel .. | BindingPost .. | BindingCleanupBoundary -> f
 
 let bindings_extend_env (f:R.env) (g:env_bindings) : R.env =
   L.fold_right (fun b g -> binding_extend_env g b) g f
@@ -97,7 +98,17 @@ let push_binding (g:env) (x:var { freshv g x }) (n:ppname) (ty:typ) =
   push g (BindingVar { n; x; ty })
 
 let push_goto (g: env) (x: var { freshv g x }) (n: ppname) (c: comp_st) =
-  push g (BindingGotoLabel { x; n; post = c })
+  push g (BindingGotoLabel { x; n; post = c; is_exception = false })
+
+let push_exception (g: env) (x: var { freshv g x }) (n: ppname) (c: comp_st) =
+  push g (BindingGotoLabel { x; n; post = c; is_exception = true })
+
+let rec exception_label (bs:env_bindings) : option (ppname & var) =
+  match bs with
+  | BindingGotoLabel { n; x; is_exception = true } :: _ -> Some (n, x)
+  | BindingCleanupBoundary :: _ -> None
+  | _ :: bs -> exception_label bs
+  | [] -> None
 
 let push_post (g: env) (post: term) =
   push g (BindingPost { post })
@@ -117,7 +128,7 @@ val lookup_fresh g x : Lemma (requires freshv g x) (ensures lookup g x == None) 
 val lookup_push g x (b: binding {dom g `Set.disjoint` binding_dom b}) :
   Lemma (lookup (push g b) x == (match b with
     | BindingVar {n; x=y; ty} -> if x = y then Some ty else lookup g x
-    | BindingGotoLabel .. | BindingPost .. -> lookup g x
+    | BindingGotoLabel .. | BindingPost .. | BindingCleanupBoundary -> lookup g x
   )) [SMTPat (lookup (push g b) x)]
 
 val lookup_goto (g: env) (x: var) : option (ppname & comp_st)
@@ -125,6 +136,7 @@ val lookup_goto (g: env) (x: var) : option (ppname & comp_st)
 val lookup_goto_push g x (b: binding {dom g `Set.disjoint` binding_dom b}) :
   Lemma (lookup_goto (push g b) x == (match b with
     | BindingVar .. -> lookup_goto g x
+    | BindingCleanupBoundary -> None
     | BindingGotoLabel { n; x=y; post } ->
       if x = y then Some (n, post) else lookup_goto g x
     | BindingPost { post } ->
