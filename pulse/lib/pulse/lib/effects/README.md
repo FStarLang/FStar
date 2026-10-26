@@ -1,15 +1,16 @@
 # Resource-indexed effects in Pulse
 
-This directory implements the first review milestone of an extensible effects
-library: ordinary Pulse computations embedded in reified control-flow trees,
-returning operation implementations, and abortive exception handlers. The goal is
-to make control and ownership transfers explicit enough to verify with Pulse's
-existing separation logic, without adding a native exception mechanism.
+This directory contains two complementary developments in Pulse's existing
+separation logic: reified control-flow trees for extensible operations, and
+two-exit proof rules underlying the native exception checker. Both make control
+and ownership transfers explicit; neither adds an assumed logical effect rule.
 
 The executable and negative examples are in
 [`share/pulse/examples/effects`](../../../../share/pulse/examples/effects/README.md).
 Read `Core.fsti`, then `Exception.fsti`, then the examples before studying the
-implementation proofs. Names below omit the `Pulse.Lib.Effects.` prefix.
+implementation proofs. For native syntax, read `Rules.fsti` and
+`Example.Effects.Native.fst` instead. Names below omit the
+`Pulse.Lib.Effects.` prefix.
 
 ## Files and their responsibilities
 
@@ -19,6 +20,8 @@ implementation proofs. Names below omit the `Pulse.Lib.Effects.` prefix.
 | [`Pulse.Lib.Effects.Core.fst`](Pulse.Lib.Effects.Core.fst) | Executable Pulse helpers, pure tree transformations, the interpreter, and proofs that transformations preserve request policies. |
 | [`Pulse.Lib.Effects.Exception.fsti`](Pulse.Lib.Effects.Exception.fsti) | One-layer exception extension, the empty-private-frame discipline, `throw`, abortive `handle`/`catch`, and the theorem needed to compose nested catches. |
 | [`Pulse.Lib.Effects.Exception.fst`](Pulse.Lib.Effects.Exception.fst) | Abort-aware sequencing and handler traversals. Shows exactly where the throwing continuation is bypassed and how ownership is accounted for. |
+| [`Pulse.Lib.Effects.Rules.fsti`](Pulse.Lib.Effects.Rules.fsti) | Two-exit computation contracts, return/raise, sequencing, framing, consequence, partial handling, and local reclamation; also the native checker's result-type convention. |
+| [`Pulse.Lib.Effects.Rules.fst`](Pulse.Lib.Effects.Rules.fst) | Derives the two-exit rules with ordinary Pulse operations, for both terminating and potentially divergent computations. No tree interpreter or native raise is used in these proofs. |
 | [`Makefile`](Makefile) | Independent, incremental verification of these interfaces and implementations, using a local cache rather than trusting installed copies of the development. |
 | [`.fst.config.json`](.fst.config.json) | VS Code compiler, checking options, and include paths; its fields are described below because JSON does not support inline comments. |
 | `README.md` | This file: the semantic overview, reading map, build contract, editor setup, and limits of the milestone. |
@@ -99,6 +102,83 @@ arguments. A local frame policy says nothing about `Other` requests.
 through an inner handler, including the requests introduced by its clauses.
 The nested example exercises this distinction explicitly.
 
+## Two-exit rules and the native checker
+
+`Rules.outcome exn a` has constructors `Normal x` and `Raised e`.
+`Rules.exit_post q r` selects `q x` or `r e`. Thus:
+
+```text
+stt_exn exn a p q r =
+  stt (outcome exn a) p (fun v -> exit_post q r v)
+```
+
+`stt_exn_div` uses `stt_div` instead. The `_div` rules have the same
+ownership discipline as their terminating counterparts; divergence is
+independent of the possibility of raising.
+
+| Rule | Ownership and control obligation |
+| --- | --- |
+| `return_`, `raise_` | Establish precisely the selected exit's resources. |
+| `bind`, `bind_div` | Run the continuation only on normal return; share the exceptional contract between both computations. |
+| `frame`, `frame_div` | Preserve the frame on **both** exits. |
+| `lift`, `lift_div` | Embed a nonraising action with exceptional post `pure False`. |
+| `consequence`, `consequence_div` | Prove separate precondition, normal-exit, and exceptional-exit entailments. |
+| `handle`, `handle_div` | Handle selected payloads; prove forwarding under the negation of the selection predicate. Both clauses may themselves raise under the outer contract. |
+| `residual` | Express the unhandled domain as `r e ** pure (not (matches e))`, not as a decision procedure for satisfiability of `r e`. |
+| `with_local`, `with_local_div` | Reclaim full local ownership on either exit; expose neither its permission nor its cleanup obligation in the public postconditions. |
+
+The native checker lowers `raises`, `raise`, and `try ... catch` to this
+two-exit representation plus existing lexical forward jumps. It does not
+construct or interpret `Core.prog` trees. The function's normal return label is
+inside its exception scope. A catch clause is outside the scope it handles, so
+re-raising reaches an outer handler rather than the same catch again.
+
+Calls are split into their two exits, with their ordinary frame present on
+both. Abortive jumps require exact resource transfer: their destination
+contract and the cleanup obligations of crossed scopes must account for every
+nonduplicable resource. Ordinary call framing is insufficient at a jump,
+because its continuation will not run. Scoped locals use the existing cleanup
+machinery; a handler still inside a local's scope retains that local.
+
+### Representation boundary
+
+Native contracts retain the transparent alias `Rules.native_outcome exn a`
+as their result type in ordinary `stt`/`stt_div` computations. The checker
+recognizes that spelling to split native calls even outside an exception scope:
+ignoring a returned value must not silently swallow an exception. Raw
+`Rules.outcome` computations remain ordinary data for library proofs, including
+when called from native code.
+
+This alias is an internal ABI convention, not a new logical computation
+constructor or a nominal effect distinction. Hand-written native higher-order
+types should use `fn ... raises ...`, preserving the convention, rather than
+unfolding the alias or presenting the computation through a raw outcome type.
+The current readback also needs literal `stt`/`stt_div` types for raw semantic
+callbacks; the proofs spell those out instead of relying on recognition of
+`stt_exn` aliases. `Native.raw_raise` shows the same adapter for clients.
+
+### Current native slice
+
+`try` requires an explicit protected-body `raises` contract. Optional
+`returns`/`ensures` annotations describe both its protected normal completion
+and its catch results; the entry context supplies its precondition. The
+checker uses ordinary match-pattern facts to mask handled payloads, with an
+implicit unmatched forwarding branch. Nested forwarding scopes use compatible
+payload types; this slice does not insert payload embeddings between different
+types, including in an implicit unreachable fallback.
+
+Payloads and results are in `Type0`. Raising is permitted only in stateful
+computations, not ghost or atomic computations. No new open-invariant rule is
+needed. Ordinary catches may re-raise or raise a different payload. A `defer`
+cleanup may catch exceptions and use local control flow internally, but may not
+raise, return, break, or jump to a destination outside the cleanup: the existing
+normal-only cleanup rule does not justify abandoning a pending exit's resources.
+
+Native Custard extraction, resumable handlers, dynamic instances, and general
+effect rows are separate work. These examples establish checking and proof
+rules, not an efficient native runtime or a mechanized simulation theorem for
+the new lowering.
+
 ## Building and incrementality
 
 With the repository's installed stage3 compiler available, run from this directory:
@@ -118,6 +198,7 @@ The bootstrap ordering is:
 ```text
 Core.fsti -> Core.fst
 Core.fsti -> Exception.fsti -> Exception.fst
+Rules.fsti -> Rules.fst
 ```
 
 The Makefile first materializes local checked outputs, then asks F* to generate
@@ -162,8 +243,9 @@ observational-equivalence proof or complete algebraic-law development yet.
 
 These trees are not owned, first-class stack resumptions. The library does not
 provide multi-shot continuations, a general resumable handler API, dynamic effect
-instances, automatic unwinding/cleanup, or a recursion interface for arbitrary
-effectful loops.
+instances, or a recursion interface for arbitrary tree-based effectful loops.
+Native exceptions separately support scoped cleanup, recursive calls, and
+exceptional exits from loops as described above.
 
 Custard specializes the existential result type stored in `Step`. The executable
 examples currently specialize their exception branch choices; their proofs are

@@ -5,6 +5,8 @@ This directory exercises the resource-indexed effects library in
 The progression is ordinary operations, one abortive exception layer, then
 nested layers whose forwarding preserves the enclosing handler's ownership
 discipline. Negative examples check that plausible but invalid uses are rejected.
+`Native` and `NativeRejected` separately exercise the native two-exit checker,
+without constructing effect trees. Their Custard extraction is deferred.
 
 Read the modules in the order below. Each definition has an adjacent explanation
 of its role, the ownership it consumes/returns, or the scenario it exercises.
@@ -17,6 +19,8 @@ of its role, the ownership it consumes/returns, or the scenario it exercises.
 | [`Example.Effects.Exception.fst`](Example.Effects.Exception.fst) | A throwing branch and a normal branch, exact recovery ownership, unreachable continuation code, and framing around the handled result. Its local function `handle` uses library `X.catch`, not `X.handle`. |
 | [`Example.Effects.Nested.fst`](Example.Effects.Nested.fst) | Two unit-payload exception layers distinguished by tags. Explicit policy proofs make an inner catch produce a computation admissible to an outer catch. The handlers change the result type from empty to int to bool. |
 | [`Example.Effects.Rejected.fst`](Example.Effects.Rejected.fst) | Five expected verification failures: stale ownership, missing ownership, an unresolved effect, a stranded private frame, and a wrong exception-entry state. Not an executable test module. |
+| [`Example.Effects.Native.fst`](Example.Effects.Native.fst) | Native raises contracts, partial catches, re-raising, exact state transfers, framing, local reclamation, cleanup, loops, recursion, and higher-order calls. Verification only. |
+| [`Example.Effects.NativeRejected.fst`](Example.Effects.NativeRejected.fst) | Expected rejections for lost ownership, unhandled calls, incomplete handlers, escaping cleanup, invalid local reclamation, and ghost/atomic raises. Verification only. |
 | [`Example.Effects.Runtime.fst`](Example.Effects.Runtime.fst) | The one extraction entry point. Calls five concrete cases and returns a list of runtime comparisons, with a proof that they are all true. |
 | [`driver.ml`](driver.ml) | External OCaml harness that checks the complete list returned by the extracted entry point and fails the executable if any observation differs. |
 | [`Makefile`](Makefile) | Builds the library first, verifies all examples, extracts the runtime entry, links the driver, and records a successful run incrementally. |
@@ -100,6 +104,54 @@ Both requests carry ownership at state 0. An inner recovery writes 2 and returns
 clause changes the intermediate integer result to bool true. There are no
 dynamically allocated effect instances or first-class resumptions in this test.
 
+### Native syntax and exact two-exit contracts
+
+For example, `Native.maybe_value` specifies both paths:
+
+```pulse
+fn maybe_value (b:bool)
+  returns x:int
+  ensures pure (not b /\ x == 7)
+  raises (fun (e:nat) -> pure (b /\ e == 1))
+{
+  if (b) { raise 1 } else { 7 }
+}
+```
+
+A handler gives an explicit contract for exceptions leaving its protected body:
+
+```pulse
+try
+  returns x:int
+  ensures pure (x == (if b then 42 else 7))
+  raises (fun (e:nat) -> pure (b /\ e == 1))
+{ maybe_value b }
+catch { 1 -> { 42 } }
+```
+
+The implicit fallback forwards unmatched payloads. Without an outer exception
+scope, its reachability must be refuted. `raises (fun _ -> emp)` allows an
+exception with no resources; only an impossible assertion such as `pure False`
+rules it out. Omitting `raises` does not let a caller discard a possible
+exception by ignoring the call's result.
+
+| Definitions | What they establish |
+| --- | --- |
+| `raise_code`, `catch_code` | A direct throwing call and complete recovery with result 7. |
+| `failure`, `failed`, `update_and_raise` | A payload-indexed ownership protocol, state update, and reclamation of an exited local scope. |
+| `partial`, `framed_call` | Only `Second` escapes, with its resources and an unrelated framed cell preserved. |
+| `reraised`, `translate` | Clauses execute outside their own catch; they can change owned state and re-raise or replace the payload. |
+| `handler_inside_scope` | A catch still inside a local's scope can read and update it. |
+| `maybe_value`, `catch_then_continue`, `increment_result`, `known_normal` | Precise normal/exceptional branch facts, try as an initializer, native call sequencing, and elimination of an impossible exceptional exit without a handler. |
+| `invoke`, `locally_defined`, `countdown` | Higher-order, local, and recursive native functions retain their exceptional contracts. |
+| `raw_raise`, `raw_outcome` | Raw semantic outcomes remain explicit data rather than being mistaken for native control effects. |
+| `deferred_free`, `cleanup_handles_locally`, `cleanup_local_loop` | Nonraising cleanup frees real heap ownership, and cleanup may use internally contained catches and loop exits. |
+| `loop_exit`, `skipped_write`, `raise_read`, `early_return` | Propagation across loops, unreachable continuation code, stateful payload evaluation, and ordinary early return in a native function. |
+
+See the [library guide](../../../../lib/pulse/lib/effects/README.md) for
+the derived rules, native result-type convention, and current restrictions.
+Native scenarios are not included in `Runtime.test` or its five observations.
+
 ## Negative scenarios and their expected failures
 
 | Definition | Invalid claim | Expected error category |
@@ -114,6 +166,26 @@ dynamically allocated effect instances or first-class resumptions in this test.
 It is neither an admitted valid program nor code that the runtime driver calls.
 Successful verification of this module is evidence that all five misuses were
 rejected at the intended boundaries.
+
+`NativeRejected` separately checks:
+
+| Definitions | Rejected behavior | Error |
+| --- | --- | --- |
+| `ignored_exception`, `cleanup_call_escapes` | Ignoring a native call result to swallow an exception, including across a cleanup boundary. | 19 |
+| `captured_exception_exit` | Capturing an enclosing function's exception exit in a local function. | 19 |
+| `catch_is_not_termination` | Claiming termination just because a potentially divergent call's exceptions are caught, including under defer. | 228 |
+| `cleanup_return_abandons_exception` | Returning out of cleanup and abandoning a pending exception's ownership. | 228 |
+| `missing_exception_resource` | Raising without the promised ownership. | 228 |
+| `lost_frame`, `reraise_abandons_resource` | Propagating a call or re-raising while abandoning owned resources. | 228 |
+| `unmatched`, `unhandled_reraise` | Leaving a possible payload unhandled, or treating a clause as protected by its own catch. | 19 |
+| `stale_handler_state` | Recovering with the pre-call state instead of the exceptional state. | 19 |
+| `ghost_raise`, `atomic_raise` | Raising in a non-stateful computation. | 228 |
+| `escaping_cleanup` | Replacing a pending exit by an exception escaping `defer`. | 19 |
+| `escaped_local_permission` | Exporting half a local's permission while also claiming to reclaim it. | 19 |
+| `return_abandons_frame` | Using ordinary return inside a try to hide lost ownership behind an impossible normal continuation. | 228 |
+
+These are sixteen expected failures, not admitted programs. Both direct
+raises and automatically propagated calls must satisfy the ownership checks.
 
 ## Build stages and generated files
 
@@ -130,7 +202,9 @@ make clean    # Remove this directory's generated artifacts only
 ```
 
 `extract`, `build`, and `run` follow the runtime entry's dependencies; default
-`make` and `make verify` also check the standalone negative-test module.
+`make` and `make verify` also check both standalone negative-test modules and
+the native scenarios. Use `make verify` for the native proof/checker milestone;
+the runtime targets still concern only the original tree-based entry point.
 
 The library owns its own `_cache`; these examples keep their checked files in
 this directory's `_cache`. F* generates `.depend`. Custard produces
@@ -146,6 +220,7 @@ The dependency distinctions are intentional:
 | Library implementation only | Recheck that implementation and re-extract/relink/rerun; unchanged client interfaces need no new proof. |
 | An example used by Runtime | Recheck its dependents and update the runtime. |
 | `Example.Effects.Rejected.fst` only | Recheck the negative scenarios; do not re-extract an unrelated runtime entry. |
+| `Example.Effects.Native.fst` or `Example.Effects.NativeRejected.fst` | Recheck affected native proofs; these modules are not runtime-entry dependencies. |
 | `driver.ml` only | Relink and rerun; no F* rechecking or extraction is needed. |
 | Missing generated runtime artifact | Recreate the missing stage and update its dependents. |
 
