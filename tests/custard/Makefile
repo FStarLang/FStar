@@ -468,6 +468,21 @@ C_TESTS += CExternStmt
 FLAGS_CExternStmt = --custard_entry_module CExternStmt
 CGREP_CExternStmt = "if (a) {" "else if (x == CEXTERNSTMT_B) {"
 CNOGREP_CExternStmt = "if (a) CS_" "else CS_"
+C_TESTS += DeclareInCHeader
+CUSTARD_TESTS += DeclareInCHeaderOCaml
+FLAGS_DeclareInCHeader += --custard_entry DeclareInCHeader.rooted
+CEXTRA_DeclareInCHeader = DeclareInCHeader_stubs.c
+CHERRY_TESTS += DeclareInCHeaderCherry
+CEXTRA_DeclareInCHeaderCherry = DeclareInCHeaderCherry_stubs.c
+CHGREP_DeclareInCHeader += "extern DeclareInCHeader_pair DeclareInCHeader_swap(DeclareInCHeader_pair);"
+CHGREP_DeclareInCHeader += "extern uint32_t header_named(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeader_erased(uint32_t);"
+CHGREP_DeclareInCHeader += "extern void DeclareInCHeader_tick(void);"
+CHGREP_DeclareInCHeader += "extern const char * DeclareInCHeader_label(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeader_rooted(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeaderIface_ping(uint32_t);"
+CHNOGREP_DeclareInCHeader += "DeclareInCHeader_private_hook"
+CNOGREP_DeclareInCHeader += "DeclareInCHeader_unreachable"
 C_TESTS += Rotate
 KRML_TESTS += Rotate
 # The mask is the whole point of the rule, so the C is pinned as well as run:
@@ -1021,6 +1036,17 @@ NOEGREP_ExistChain += "please report it"
 # written -- so without the report the author has configured nothing and has
 # no way to tell.  The test is the diagnostic; the program itself is fine.
 REJECT_TESTS += AttrPos
+REJECT_TESTS += DeclareInCHeaderInvalid
+CODE_DeclareInCHeaderInvalid = 371
+FLAGS_DeclareInCHeaderInvalid += --codegen C --custard_monomorphize_types true
+FLAGS_DeclareInCHeaderInvalid += --custard_entry DeclareInCHeaderInvalid.abstract_type
+EGREP_DeclareInCHeaderInvalid += "custard_declare_in_c_header"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.definition"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.value"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.abstract_type"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.supplied"
+EGREP_DeclareInCHeaderInvalid += "parameter x of" "DeclareInCHeaderInvalid.binder"
+EGREP_DeclareInCHeaderInvalid += "prototype is supplied by an external header"
 CODE_AttrPos = 371
 FLAGS_AttrPos += --codegen C --custard_monomorphize_types true
 EGREP_AttrPos += "custard_opaque\] on the field contents of AttrPos.Box"
@@ -1523,6 +1549,22 @@ $(OUTPUT_DIR)/CExternStmt.dcexe $(OUTPUT_DIR)/CExternStmt.dcxx: CExternStmt_stub
 $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx $$(CEXTRA_$$*)
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -I$(OUTPUT_DIR) -x c $< $(CEXTRA_$*) -o $@
+
+all: $(OUTPUT_DIR)/DeclareInCHeader.header-linked
+$(OUTPUT_DIR)/DeclareInCHeader.header-linked: $(OUTPUT_DIR)/DeclareInCHeader.dcexe DeclareInCHeader_client.cpp DeclareInCHeader_stubs.c
+	$(Q)grep -q '^extern uint32_t DeclareInCHeader_private_hook(uint32_t);' $(OUTPUT_DIR)/DeclareInCHeader.dc
+	$(Q)test "$$(grep -c '^extern .*;' $(OUTPUT_DIR)/DeclareInCHeader.dc)" = 1
+	$(Q)test "$$(grep -c '^extern uint32_t header_named(uint32_t);' $(OUTPUT_DIR)/DeclareInCHeader.h)" = 1
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -Dmain=declare_header_generated_main \
+	  -x c -c $(OUTPUT_DIR)/DeclareInCHeader.dc -o $(OUTPUT_DIR)/DeclareInCHeader.generated.o
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) \
+	  -c DeclareInCHeader_stubs.c -o $(OUTPUT_DIR)/DeclareInCHeader.stubs.o
+	$(Q)$(CXX) -std=c++17 -Wall -Wextra -Werror -I$(OUTPUT_DIR) DeclareInCHeader_client.cpp \
+	  $(OUTPUT_DIR)/DeclareInCHeader.generated.o $(OUTPUT_DIR)/DeclareInCHeader.stubs.o \
+	  -o $(OUTPUT_DIR)/DeclareInCHeader.client
+	$(Q)$(OUTPUT_DIR)/DeclareInCHeader.dcexe
+	$(Q)$(OUTPUT_DIR)/DeclareInCHeader.client
+	$(Q)touch $@
 
 # Section 47.1.  Every generated unit is also compiled as C++.
 #
@@ -3865,6 +3907,7 @@ all: $(addprefix $(CHERRY_SPLIT_DIR)/, $(addsuffix .chsplit, $(CHERRY_SPLIT_TEST
 # cover yet.  This one hands a Prims.string to hand-written C expecting a
 # [const char *]:
 CHERRY_C_SKIP += PatStr
+CHERRY_C_SKIP += DeclareInCHeader
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \

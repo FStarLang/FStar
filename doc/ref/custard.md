@@ -3532,6 +3532,15 @@ that no OCaml plugin is needed for them.
 - `[@@custard_c_header "h.h"]` names the C header that declares such a symbol.
   The karamel backend ignores it (karamel takes includes on its command line);
   it is there for the direct-to-C backend of M8.
+- `[@@custard_declare_in_c_header]` on an `assume val` function (or an
+  interface-only `val`) puts its generated `extern` prototype in the direct-C
+  header instead of the source. The prototype follows the generated types
+  and is inside the header's C++ `extern "C"` guard. This does not root the
+  declaration or change its name, erased signature or linkage. It also works
+  with `custard_extern` to choose the foreign name. Definitions, types,
+  non-function values and declarations supplied by `custard_c_header` receive
+  ineffective-attribute warning 371; that header already owns the declaration.
+  This is a C/Cherry emission policy; other backends ignore it.
 - `[@@custard_opaque]` gives `Rule_opaque`.
 - `[@@@custard_inline_field]`, on a constructor's *binder* rather than on a
   definition, asks for that field to be stored in the constructor itself
