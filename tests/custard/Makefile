@@ -2576,6 +2576,8 @@ FLAGS_AnyCond = --warn_error -367
 # that to an error would make the cases unwritable.
 FLAGS_SplitAny = --warn_error -367
 FLAGS_RealizedField = --warn_error -367
+# A class over a type constructor, which no target type can name.
+FLAGS_CherryInlineDyn = --warn_error -367
 # Section 116.  The exception payload's dependent field is the [any] under
 # test; escalating it would make the case unwritable.
 FLAGS_AnyException = --warn_error -367
@@ -3778,13 +3780,15 @@ $(CHERRY_DIR)/CherryInlineHO.chgrep: $(CHERRY_DIR)/CherryInlineHO.chc
 	  || { echo "ERROR: CherryInlineHO_add builds or applies a closure"; exit 1; }
 	$(Q)! sed -n '/^static .* CherryInlineHO_has_above(.*{$$/,/^}/p' $< | grep -q 'cherry_apply_\|CherryInlineHO_some' \
 	  || { echo "ERROR: CherryInlineHO_has_above does not call existsb directly"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryInlineHO_sum(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_\|bind' \
+	  || { echo "ERROR: CherryInlineHO_sum builds or applies a closure"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryInlineHO.chgrep
 
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryErasedClosure
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2

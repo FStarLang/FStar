@@ -1139,9 +1139,8 @@ let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)
      either because a use was not fully applied or because it came before the
      definition (which a mutually recursive group can do). *)
   let g = inline_expr tbl used in
-  match x.e with
-  | EApp ({e = EQual (n, tys)}, args) ->
-    let args = args |> List.map g in
+  (* [args] have been rewritten already. *)
+  let rec app (n:name) (tys:list cty) (args:list expr) : ML expr =
     let lookup () : ML (option (list binder & expr)) =
       match HashTable.try_find tbl (string_of_name n) with
       | Some (ps, bs, body) -> Some (instantiate ps tys bs body)
@@ -1158,7 +1157,12 @@ let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)
         (* An eta-reduced body, [for_some f = existsb f]: the surplus
            arguments complete its application rather than applying the
            closure it would build.  Cherry splits an over-application by
-           the callee's arity again; the other backends would see one. *)
+           the callee's arity again; the other backends would see one.
+           The completed call may be to an [Inline] declaration in turn --
+           [( let! ) = bind] is -- which the body, rewritten while still
+           partial, could not inline. *)
+        | _, EApp ({e = EQual (n', tys')}, a) when Options.custard_cherry () ->
+          app n' tys' (a @ extra)
         | _, EApp (h, a) when Options.custard_cherry () -> { x with e = EApp (h, a @ extra) }
         | _ -> { x with e = EApp (r, extra) })
      (* Cherry, [@@custard_inline] on a combinator.  [eta_reduce] has made
@@ -1173,7 +1177,9 @@ let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)
        let lam = { x with e = EFun (rest, body) } in
        inline_call given lam args x
      | _ -> HashTable.add used (string_of_name n) true;
-            { x with e = EApp ({ x with e = EQual (n, tys) }, args) })
+            { x with e = EApp ({ x with e = EQual (n, tys) }, args) }) in
+  match x.e with
+  | EApp ({e = EQual (n, tys)}, args) -> app n tys (args |> List.map g)
   | EQual (n, tys) ->
     (match HashTable.try_find tbl (string_of_name n) with
      | Some (ps, [], body) -> inline_call [] (snd (instantiate ps tys [] body)) [] x
@@ -3607,7 +3613,17 @@ let coerce_prog (prog:program) : ML program =
        node has it too.  A lifted lambda's result type is its body's. *)
     if Some? exp && pushes_down x then { x with ty = Some?.v exp } else
     match exp, infer env x with
-    | Some e, Some t -> if cty_mismatch t e then coerce x e else x
+    | Some e, Some t ->
+      if cty_mismatch t e then coerce x e
+      (* Cherry types a call by its head, and takes its result out of an
+         [any] when the node says otherwise.  Here the head and the
+         expectation agree, and the node's own type is a leftover: a method
+         of a class with a higher-kinded [m], inlined at a dictionary that is
+         not a constant, is a projection returning [any] where the call it
+         replaced returned [m b] at a known [m]. *)
+      else if Options.custard_cherry () && EApp? x.e && cty_mismatch x.ty e
+      then { x with ty = e }
+      else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
     (* [infer] declined, which for a compound type containing a [TAny] is what
        [trust] always does -- but the node's own type is still [Extract]'s
