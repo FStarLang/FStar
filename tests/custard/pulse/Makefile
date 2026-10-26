@@ -366,7 +366,7 @@ C_TESTS += ExtBuf
 # what enforces it: extbuf_base is a macro yielding void *, which C converts
 # implicitly and C++ refuses.  Removing the cast from PrintC leaves this
 # file compiling clean under gcc and failing under g++.
-CGREP_ExtBuf = "(uint8_t *)extbuf_base"
+CGREP_ExtBuf = "(uint8_t *)(extbuf_base"
 # The returned pointer must be *bound* to a typed variable.  Discarding it
 # would emit a (void) cast, which C++ accepts with or without the fix.
 CGREP_ExtBuf += "uint8_t *"
@@ -476,6 +476,7 @@ EGREP_PulseGlobalArrayLocal += "Bind it to a top-level definition"
 # does not reach.  The test runs, so the comments have to be in places a C
 # compiler accepts as well as places a reader wants them.
 C_TESTS += PulseComment
+OCAML_TESTS += PulseComment
 CGREP_PulseComment += "/* doubling */"
 CGREP_PulseComment += "/* the running total */"
 CGREP_PulseComment += "/* one step */"
@@ -488,6 +489,8 @@ CGREP_PulseComment += "/* inner after */ /* outer after */"
 # A comment on a value nothing reads is still a comment.
 CGREP_PulseComment += "/* kept */"
 CGREP_PulseComment += "/* even unread */"
+CGREP_PulseComment += "/* discarded load */" "/* load done */"
+CGREP_PulseComment += "/* discarded effect */" "/* effect done */"
 # No trace of the library the two functions come from: both are rules.
 CNOGREP_PulseComment += "Pulse_Lib_Comment"
 
@@ -563,12 +566,29 @@ CNOGREP_CDangle += "if (a) if ("
 # call site has to carry the cast.  The load-bearing check is the CXX step
 # of the [%.dc] rule below, not the grep; the grep just pins the shape.
 C_TESTS += ExtPtr
-CGREP_ExtPtr = "(uint8_t *)extptr_base"
+CGREP_ExtPtr = "(uint8_t *)(extptr_base"
+
+# Casted reference and array results must be grouped before subscripting.
+C_TESTS += CastSubscript
+CGREP_CastSubscript = "(uint32_t *)(cast_subscript_ref" "(uint32_t *)(cast_subscript_array"
+CGREP_CastSubscript += "(uint32_t *)(cast_subscript_macro_ref"
+CGREP_CastSubscript += "))[0] = 11;" "))[1] = 29;"
+$(OUTPUT_DIR)/CastSubscript.dcexe $(OUTPUT_DIR)/CastSubscript.dcxx: CastSubscript_stubs.h
+
+# Native function pointers, including commented callees. Cherry does not yet
+# support comments around closure-valued operands.
+C_TESTS += Postfix
+CHERRY_C_SKIP += Postfix
+CGREP_Postfix = "v.data[0]" "v.data[0] = 9;" "Postfix_get_data(v)[0]" "v.apply(via_alias)"
+CGREP_Postfix += "/* buffer */ v.data /* end */[0]" "/* callee */ v.apply /* end */(via_alias)"
+CNOGREP_Postfix = "(v.data)[" "(Postfix_get_data(v))[" "(v.apply)("
+CGREP_PulseFnPtrRet += "PulseFnPtrRet_mk_unit()(x)"
+CNOGREP_PulseFnPtrRet += "(PulseFnPtrRet_mk_unit())("
 
 # Section 61.2.  Two negation sites, broken for two different reasons.
 # EXT_FLAG is "0 || 1", so an unparenthesized !EXT_FLAG is silently true.
 C_TESTS += ExtFlag
-CGREP_ExtFlag = "if (!(EXT_FLAG)) return 0;" "if (!(EXT_FLAG)) r = 0;"
+CGREP_ExtFlag = "if (!(EXT_FLAG)) {" "return 0;" "r = 0;"
 CNOGREP_ExtFlag = "!EXT_FLAG"
 
 # The Cherry backend (cherry.md, "References"): Pulse references and
@@ -719,6 +739,8 @@ $(OUTPUT_DIR)/%.dcran: $(OUTPUT_DIR)/%.dcexe
 
 CHERRY_DIR = $(OUTPUT_DIR)/cherry
 CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
+CHERRY_CC ?= $(CC)
+CHERRY_CXX ?= $(CXX)
 
 $(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CHERRY", $(basename $(notdir $@)))
@@ -729,10 +751,10 @@ $(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 
 $(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc
 	$(call msg, "CC-ASAN", $(basename $(notdir $@)))
-	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g -fsanitize=address,undefined \
 	  -fno-sanitize-recover=undefined -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  -x c $< $(CHERRY_INC)/cherry.c -o $@
-	$(Q)$(CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
+	$(Q)$(CHERRY_CXX) -std=c++17 -Wall -Werror -I$(CURDIR) -I$(CHERRY_DIR) -I$(CHERRY_INC) \
 	  -fsyntax-only -x c++ $<
 
 $(CHERRY_DIR)/%.chran: $(CHERRY_DIR)/%.chexe
@@ -831,7 +853,8 @@ ifneq ($(shell command -v rustc 2>/dev/null),)
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rsran, $(RUST_TESTS)))
 
 all: $(addprefix $(OUTPUT_DIR)/, $(addsuffix .rejected, $(REJECT_TESTS)))
-# Every direct-C test goes through Cherry too.
-all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, $(CHERRY_TESTS) $(C_TESTS)))
+# Direct-C tests go through Cherry unless they need an unsupported feature.
+all: $(addprefix $(CHERRY_DIR)/, $(addsuffix .chran, \
+       $(CHERRY_TESTS) $(filter-out $(CHERRY_C_SKIP), $(C_TESTS))))
 endif
 endif

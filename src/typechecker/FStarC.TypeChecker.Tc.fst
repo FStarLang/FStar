@@ -120,7 +120,7 @@ let tc_decl_attributes env se =
   let blacklisted_attrs, other_attrs =
     if lid_exists env PC.attr_substitute_lid
     then ([], se.sigattrs)
-    else partition ((=) attr_substitute) se.sigattrs
+    else partition (U.is_fvar PC.attr_substitute_lid) se.sigattrs
   in
   let g, other_attrs = tc_attributes env other_attrs in
   Rel.force_trivial_guard env g;
@@ -251,6 +251,7 @@ let tc_decls_knot : ref (option (Env.env -> list sigelt -> ML (list sigelt & Env
   mk_ref None
 
 let do_two_phases env : ML bool = true
+[@@FStar.Attributes.custard_inline]
 let run_phase1 (f:unit -> ML 'a) : ML 'a =
   FStarC.TypeChecker.Core.clear_memo_table();
   let r = f () in

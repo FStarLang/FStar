@@ -274,7 +274,7 @@ Notes:
   only when the two widths are equal.  The two were one node until §17.2; see
   there for the miscompilation that cost.
 - **No local `letrec`.**  `ELet` is non-recursive; local recursive functions
-  and local closures that need to be recursive are lambda-lifted to top-level
+  (and, on Cherry, the other local functions too) are lambda-lifted to top-level
   decls during phase 2 (which is easy: the extraction loop already creates
   top-level decls on demand, so lifting is just "request a specialization of a
   fresh name").  This is what breaks the `decl`/`expr` mutual recursion.
@@ -887,7 +887,7 @@ Processing one item `(lid, margs) ↦ nm`:
    normal form, and `request (g, margs')`.  The two failure modes — partial
    application, and a `Poly` argument in a `Mono` position — are rejected here
    with the diagnostics of §3.2.
-4. **Lambda-lift** local recursive functions and emit them as extra decls.
+4. **Lambda-lift** local recursive functions (on Cherry, all local functions) and emit them as extra decls.
 5. **Emit** the `DLet` and record it.
 
 Types are handled by the same loop: `TApp (ind, args)` requests a
@@ -1357,14 +1357,28 @@ A top-level `let` whose definiens is *effectful* is a module initializer:
 loop of §3.3 never reaches it, and dropping it does not merely lose code --- it
 silently changes what the program does, since the registration never happens.
 
-So once the closure from the roots is complete, **every module it pulled in
-contributes its initializers**, and that may pull in further modules, so the
+So **the first request into a module also requests its initializers**, and
+once the closure from the roots is complete, every module it pulled in
+contributes its initializers too, and that may pull in further modules, so the
 step is iterated to a fixpoint.  An initializer is requested after everything
-it can call, so it lands at the end of the declaration order and OCaml runs the
-emitted `let`s in the order they are printed; across a split (§12.9) the linker
-runs each file's in dependency order.  What is *not* defined is the relative
-order of two initializers in unrelated modules --- F\* gives that no meaning
-either.
+it can call, and the emitted `let`s run in the order they are printed (OCaml's
+module initialization, `custard_init_globals` in C); across a split (§12.9) the
+linker runs each file's in dependency order.  Requesting a module's
+initializers on first use puts them before every definition outside the module
+that refers to it, as OCaml initializes a module completely before the modules
+that depend on it: `FStarC.SMTEncoding.Encode.prims` is computed at start-up
+from options that `FStarC.Options`' `let _ = clear ()` has to set first, and
+requested at the end that initializer came after it (test: `InitOrder`).
+
+A module the program only `open`s for its effect --- the compiler's drivers
+open `FStarC.Hooks` --- is known to the program by its interface alone, which
+has no initializers.  OCaml still links, and so initializes, its
+implementation, so the fixpoint loads the implementation of every such module
+whose checked file it can find (`Loader.impl_is_checked`; a module realized by
+hand has none) and requests its initializers too (test: `InitOpen`).
+
+What is *not* defined is the relative order of two initializers in unrelated
+modules --- F\* gives that no meaning either.
 
 This is why the note in §7.3's legality table used to say that dead-code
 elimination of a top-level `DLet` is always legal.  It is legal only for a
@@ -1591,6 +1605,39 @@ and `tuple2` keep their names while a `list int` inside the tuple does not.
 Beyond that one module, the whole of `tests/custard` has been re-extracted
 under the flag, compiled and run, and every module agrees with the output it
 produces without it.
+
+#### 5.0.2 An instantiation at a type variable is error 399 on Cherry
+
+"Every type is ground" is the premise of the pass, and nothing used to check
+it: `request` happily made a clone at a `TVar`.  In C that is error 368 as
+soon as the clone's fields are printed.  On Cherry a type variable is `any`, so
+it compiled, and that was the bug: `list@'a` has a boxed `hd` and `list@goal`
+does not, both are a `cherry_obj *`, and a value built at one was read at the
+other.  The result was a misread field or a segmentation fault, or an `undyn`
+abort under `-DCHERRY_DEBUG`, and never a diagnostic.
+
+Two constructs reached it:
+
+- A local `let rec` that binds a type of its own, lifted as one polymorphic
+  declaration (§5.10).  §5.10a now copies it per instantiation instead.
+- A polymorphic method of a dictionary passed at runtime (§3.2c1).  A monad
+  instance over `option` has a `bind` at every `a` and `b`, a rank-2 field,
+  and no single instantiation of it agrees with every caller.  The `id`
+  monad happens to work, since `id 'a` is just `any` and the caller boxes to
+  match.  There is no fix short of passing types at runtime, so it is refused.
+  `Tactics.Interpreter`'s check for an `admit` in a stuck tactic was the one
+  use in the compiler, and it now uses the non-monadic `Syntax.Visit`.
+
+So `Monomorphize.request` records each clone whose arguments mention a type
+variable anywhere, and once the layouts are known,
+`Monomorphize.check_tvar_clones` refuses those that kept a layout of their own
+with error 399 (`Error_CustardTypeVarInstantiation`), naming the declaration
+that asked for it.  A clone that collapsed to its one field (§5.2) or was erased
+is no such thing: `Syntax.Visit`'s `id@'a` is just `any`, and the coercions at
+its uses convert it like any other `any` (`tests/custard/DynCurry.fst`).  Only
+on Cherry: the other C backends already reject a type variable, as 368, and the
+OCaml backend has no layouts to disagree.  `tests/custard/CherryDynPolyMethod.fst`
+is the rejected monad, and `CherryLocalPolyRec.fst` is the `let rec`.
 
 ### 5.1 Erasure
 
@@ -1866,6 +1913,15 @@ Two rules fall out of that and are worth naming:
   down to the terms that produce their value, so each of those has already been
   coerced and the node agrees by construction.  Asking a second time is exactly
   how a coercion ends up around the `if` as well as inside each branch.
+  Such a node then *takes* the expected type, since every value it can
+  produce now has it; so does a lambda, whose result type becomes that of its
+  checked body.  Left at the old type, the node disagrees with its parent's
+  view of it, and Cherry, which reads a node's type to decide where a value
+  goes into or comes out of an `any`, unboxes a value that was never boxed.
+  For the same reason a constructor, record, tuple or constant typed `TAny`
+  --- a `Some` out of an inlined polymorphic `return` --- takes a concrete
+  expected type: it is built in place, at whatever type its position wants
+  (tests: `CoerceLamRes`, `CoerceCtor`).
 
 A scrutinee, a projection and a discriminator are the one place the expectation
 is manufactured rather than read off: a value of type `Obj.t` cannot be taken
@@ -2250,7 +2306,8 @@ regression is `tests/custard/MonoState.fst`.
 ### 5.10 Local `let rec`
 
 A local `let rec` is lambda-lifted to a top-level `DLet` rather than given an
-IR node of its own.
+IR node of its own.  On Cherry, so is a non-recursive local function, unless
+§5.11 inlines it.
 
 The IR's `ELet` is documented non-recursive, and adding an `ELetRec` would mean
 teaching every traversal about it.  There are ~57 `ELet` sites across a dozen
@@ -2284,10 +2341,60 @@ Occurrences of a lifted name in the body of the enclosing definition become
 `EQual (nm, tyargs)` applied to the captures.  The partial application is pure:
 the binders the user actually wrote are always still missing.
 
+A non-recursive local function is lifted for the sake of its calls.  As a
+closure, every call to it was an indirect call, and on Cherry the closure was
+allocated and then released after the last call returned, so no call to it
+could be a tail call.  `Normalize.norm`'s `fallback`, which calls `norm` back
+in tail position, made the unit tests' stack grow with the length of the term.
+Lifted, a full application is a direct call that passes the captures as
+arguments; only a use as a value still builds a closure, the partial
+application above.  `tests/custard/MutualTail.fst`'s `walk` checks the tail call.
+
+Only on Cherry: OCaml's closures are cheap and its tail calls guaranteed, and
+the C backends rely on a local function staying a value that later passes can
+inline (`pulse/test/InlineArrayLen` sizes an array by one).  And only when the
+local's type shows an arrow for each binder of its definiens, since the lifted
+declaration's signature is read off the type.  In
+`tests/bug-reports/closed/Bug1714`, `f : t true = fun src -> ...` with `t` a
+recursive type function, which unfolding abbreviations does not see through,
+stays a closure; lifted, it had result type `int -> p`.
+
+### 5.10a A local `let rec` that binds types is lifted per instantiation
+
+F\* generalizes a local `let rec` as it does a top-level one, so
+`Tactics.V2.Basic.t_apply_lemma`'s
+
+```fstar
+let rec filter' (f : 'a -> list 'a -> ML bool) (xs : list 'a) : ML (list 'a) = ...
+```
+
+binds `#a:Type` itself.  Lifted as above, that binder became one of the
+declaration's `dl_typars`, which no call site passes and which type
+monomorphization (§5.0.1) cannot instantiate.  The body therefore built
+`list@'a` while the caller passed a `list@goal` (§5.0.2).
+
+On Cherry under `--custard_monomorphize_types`, `Extract.instantiate_letrec`
+therefore copies the nest at the F\* term level before anything is lifted.  It
+collects the type arguments each use in the body applies the name to, makes
+one copy of the whole nest per distinct tuple with the type binders
+substituted away, and rewrites each use, `filter' #goal`, to the copy's own
+name.  The copies' recursive calls are rewritten the same way, so a
+polymorphic recursion finds its further instantiations through the same
+worklist.  It is bounded at sixteen, because polymorphic recursion need not
+reach a fixed point, and past that it is error 399.  The copies are then one
+ordinary nest for §5.10: every copy has concrete types, so the calls it makes
+into specializing definitions are concrete as well.  A copy that nothing
+reaches is never made.
+
+The nest is left to §5.10 as it is when no member binds a type, when members
+bind different numbers of them, or when some use does not apply the name to
+its type arguments.  If that leaves a type variable in a datatype,
+§5.0.2 reports it.
+
 ### 5.11 Polymorphic local functions are inlined
 
 A non-recursive local `let` whose definition is a lambda **that binds at least
-one type** is substituted at its uses rather than compiled as a closure.
+one type** is substituted at its uses rather than lambda-lifted (§5.10).
 
 A local function is the one construct with no top-level identity: it cannot be
 specialized, because specialization is keyed on a `lid`, and it cannot be
@@ -2357,7 +2464,7 @@ duplication.
 
 `tests/custard/LocalPoly.fst` pins both halves: the polymorphic helper is gone
 from the output and specialized per type, and the four nested monomorphic
-helpers are still there, once each.
+helpers are still there, once each (lambda-lifted on Cherry, §5.10).
 
 A local `let rec` cannot be substituted and is lambda-lifted instead (§5.10).
 
@@ -4138,9 +4245,39 @@ of `PulseSyntaxExtension.ASTBuilder.fsti` with no `.fst`, so `parse_pulse` is
 an external there and a real definition in the `syntax_extension` unit.
 Exporting it told `syntax_extension` the symbol was already compiled, and that
 unit then skipped the very definition it was there to contribute; the link came
-out with a reference and nothing to resolve it against.  A downstream unit
-derives an external's signature from the source anyway, exactly as the upstream
-one did, so nothing is lost.
+out with a reference and nothing to resolve it against.
+
+Instead, an external contributes a **non-owning foreign binding**, in a
+separate table keyed by the same canonical specialization key. It records the
+post-layout signature and calling convention, target name, supplying header,
+and declaration attributes, but never answers an implementation lookup.
+For direct C, the target is the exact C spelling, including producer-only
+`--custard_c_no_prefix` settings. Ownership and reachability flags are not
+propagated.
+
+This is automatic with `--custard_unit` and `--custard_link`; there is no new
+enable option. The consumer still extracts the source. Only when that leaves
+an external hole does it adopt the linked binding, after checking its own
+post-layout signature (modulo type-parameter names) and calling convention.
+Explicit source targets, headers, declaration attributes, and direct-C
+no-prefix requests must agree with the binding; absent choices inherit it.
+Conflicting linked bindings are rejected in either link order, while
+identical bindings from multiple units are allowed. A local F* implementation
+or an implementation exported by another CUI takes precedence: foreign
+metadata cannot suppress its extraction or ownership lookup.
+
+An external reached by a downstream unit is published again with its adopted
+binding, so further consumers inherit the same contract. This does not
+re-export owned definitions or remove the requirement to supply the complete
+owned-unit dependency closure. Foreign **types** remain ordinary type entries
+carrying their external representation, not value-binding records. Extraction
+without CUIs is unchanged apart from preserving C decoration attributes on
+explicit `custard_extern` values, just as on ordinary assumed values.
+
+The CUI format is now 21; older interfaces must be rebuilt.
+`tests/custard/foreignbindings.py` exercises C/C++ consumers, values and
+specialized functions, chained binding propagation, producer-only naming,
+conflicts, and local and separately compiled real implementations.
 
 Everything else is exported unconditionally, and §12.5 explains why that is
 both possible and necessary.
@@ -6131,6 +6268,44 @@ definition is a root, since its signature belongs to the library and it has no
 call site, so `root_binder_of_enclosing` distinguishes that case and the
 message asks for the wrapper instead.
 
+### 13.7 Embeddings across units, and naming them from F\*
+
+A `[@@plugin]` type gets an embedding `e_<type>` generated by §13.4 into the
+unit that defines it.  Two problems followed from that (issue #4689).  A
+downstream unit linked against it generated a second copy of the same
+embedding, and F\* code had no way to refer to the generated one at all,
+since it exists only in the extracted OCaml.
+
+The first is fixed by exporting the embedding.  `RegEmb.generate_one` emits
+`e_<type>` with `Extract.emit_exported` under the key `regemb-emb:<lid>`, so it
+lands in the unit's `.cui` like any other exported name.
+`RegEmb.ensure_generated` calls `Extract.import_key` on that key before it
+generates anything.  If a linked unit already exports the embedding, both the
+embedding and its knot resolve to the imported name, and nothing is emitted.
+The knot is never exported: inside the defining unit it ties recursive
+embeddings together, and outside it the finished embedding is all anyone
+needs.
+
+The second is fixed by a builtin,
+`FStarC.Syntax.Embeddings.Base.plugin_embedding : #a:Type0 -> embedding a`.
+In code checked with `--with_fstarc` it typechecks at any type.  Custard
+translates `plugin_embedding #t` to the embedding §13.4 would use for `t`: a
+generated one (local or imported), a compiler one such as `e_int`, or a
+composition such as `e_list CustardEmbA.e_color`.  If `t` has no embedding,
+extraction fails with error 370.  The F\* definition is `irreducible` so that
+specialization keys never unfold it, and its embedder and unembedder fail if
+called, so the builtin has no meaning outside Custard-extracted code.
+
+```fstar
+let e_color  : EB.embedding color        = EB.plugin_embedding
+let e_colors : EB.embedding (list color) = EB.plugin_embedding
+```
+
+In the unit linked against the unit that defines `color`, this extracts to
+`CustardEmbA.e_color` and `FStarC_Syntax_Embeddings.e_list CustardEmbA.e_color`.
+The test is `CustardEmbA`/`CustardEmbB`/`CustardEmbTest` in
+`tests/custard/plugin`.
+
 ## 14. Migrating an example: DICE
 
 `pulse/share/pulse/examples/dice` is a DICE Protection Environment: about
@@ -6308,6 +6483,17 @@ other two backends, so there the inlining buys nothing and is not worth that.
 > A transformation that only one backend needs belongs behind a test on the
 > backend, not in the shared pipeline.
 
+"At most one" counts the worst branch: the alternatives of a `match`, `if` or
+`try` are not added up.  That is the right count for plain C, which has no
+other way to compile the lambda, but it copies the lambda into every branch
+that calls it, and the lambdas it calls into each copy.  Cherry has heap
+closures, so there the substitution is an optimization and must not copy code:
+under Cherry the lambda is substituted only where it is written once.  The
+local helpers of `FStarC.TypeChecker.Rel.solve_t'` had made it a single C
+function of 200,000 lines with a 1.2MB stack frame; it is 8,500 lines now.
+`tests/custard/LocalFunDup.fst` checks that the helper is called from one
+place.
+
 ### 14.8 Two clones of one type
 
 With `--custard_monomorphize_types`, `option sid_t` and `option U16.t` asked
@@ -6381,6 +6567,15 @@ emission has to leave nothing behind: `fresh` and the name allocator are
 counters, and letting them run renumbered the variables of the branch that was
 *kept* (`ns` came out as `ns_3`).  `scope` was already saved and restored;
 `ctr` and `declared` now are too.
+
+The trial is also only made where a body *can* come out empty: where the
+match's value is discarded (`D_Ignore`, or `D_Return` in a `void` function).
+A value that is assigned or returned always gets a statement.  This matters
+for more than the work saved: the arm that is kept is emitted again, so
+trying the last arm of every match costs twice per level of matches nested
+in each other's last arm, and the compiler's own unit-test driver had nests
+deep enough that printing it did not finish.  `tests/custard/DeepMatch.fst`
+is twenty-eight of them.
 
 Thirty lines of the DICE output went, and the test the fix suggested found one
 more, in the previous section's own work: `custard_init_globals` was emitted
@@ -9817,6 +10012,32 @@ does the work.  A local is named `uniq (ppname b) b.index`, the `'#'` in
 
 `tests/custard/RenameLet.fst` pins all three: the requested names appear, the
 source spellings do not, and the duplicate is numbered.
+
+On a global declaration, Custard's direct-C backends (`C` and `Cherry`)
+also accept `[@@FStar.Attributes.rename_let "PublicName"]`. This requests
+the **exact C identifier** for a surviving function, global variable, type
+declaration, or assumed external value. Definitions, prototypes, references,
+and compiled-unit consumers use the same name. The F* identity, rooting,
+linkage, inlining and type-abbreviation unfolding rules do not change:
+use `--custard_entry` to export a function, for example. Other backends'
+global naming rules are unchanged.
+
+The argument follows the same literal-string rule as for local bindings;
+an empty or malformed argument produces warning 278. A global C name must
+use ASCII letters, digits and underscores, must not start with a digit, and
+must not be a C11/C++17 keyword or a reserved runtime name such as `main`
+or `NULL`. Invalid identifiers and collisions are error
+374, rather than sanitized names or silently numbered alternatives. This
+also applies to private functions and to multiple surviving specializations
+of a generic declaration: one exact name cannot identify two definitions.
+Give concrete wrappers different names when exporting multiple instances.
+
+An explicit name takes precedence over `--custard_c_no_prefix` and over
+`CMacro`'s usual uppercasing. It must agree with an explicit `custard_extern`
+target; contradictory attributes are error 374. Source attributes on an
+interface and names stored in `.cui` files are honored too.
+`tests/custard/GlobalRename.fst` and `GlobalRenameApp.fst` exercise the C
+boundary and separate compilation.
 
 ## 32 After the attribute
 
@@ -17196,6 +17417,19 @@ Not backend specific.  Naming a monomorphic instance is as meaningful on the
 OCaml path as on the karamel one, and an abbreviation that is emitted is
 always a legal thing for a target to see.
 
+The source-level equivalent is `[@@FStar.Attributes.custard_no_unfold]`:
+
+```fstar
+[@@FStar.Attributes.custard_no_unfold]
+type byte_pair = pair FStar.UInt8.t
+```
+
+The attribute and command-line option set the same `NoUnfold` flag. The
+attribute belongs on a type abbreviation; using it on a value, a non-alias
+type, or a binder reports warning 371. It preserves extraction-time naming,
+not verification-time opacity, and does not root an otherwise unreachable
+declaration or replace `custard_opaque`'s representation controls.
+
 ## Section 78. Unfolding a spine is not eta-expanding it
 
 ### 78.1 Intake
@@ -23604,6 +23838,12 @@ there is none.  Instances are interned by the functor and a structural key
 of its argument's normal form (§133.5).  OCaml functor application is generative and F\*'s is
 applicative, so two F\* names for the same application have to be the
 same OCaml module, or their types would disagree.
+
+The same holds across units.  The `<functor>` key is looked up in the
+linked `.cui`s (§12.4) before a new instance is made, so a plugin that
+compiles its own copy of compiler code using `FStarC.HashTable` refers
+to the compiler's instance, whose type the compiler's records mention
+(issue #4689).
 
 The argument has to reduce to a record literal.  Its type fields are
 printed as `type f = ...`, and higher-kinded ones are rejected.  Each

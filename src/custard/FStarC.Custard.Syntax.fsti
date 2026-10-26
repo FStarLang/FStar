@@ -427,6 +427,13 @@ type op =
   | Reset of name & list bool
   | Reuse of name & name
   | ResetFree
+  (** Cherry: a record update (cherry.md, "Record updates").
+      [Update (c, is) (x :: vs)] takes the owned cell [x], built with
+      constructor [c], and the values [vs], and returns a cell of [c] with
+      the fields at the positions [is] (ascending) replaced by [vs] and the
+      others as in [x]: [x] itself if it is unique, which loses the fields
+      it replaces, and otherwise a copy, with its fields counted. *)
+  | Update of name & list int
   (** Cherry: an operation on an immutable array ([FStar.ImmutableArray.Base.t],
       which Cherry represents as a counted cell), named as in that module:
       [of_list], [to_list], [length], [index], [upd] or [push]. *)
@@ -740,7 +747,8 @@ type flag =
       also monomorphizes [slice uint8] and would otherwise emit a second,
       conflicting [typedef] for it.
 
-      Set by [--custard_no_unfold]; see section 77 of doc/ref/custard.md. *)
+      Set by [--custard_no_unfold] or [@@custard_no_unfold]; see section 77
+      of doc/ref/custard.md. *)
   | Extern of option string & option string
   (** The type is defined outside F*: an abstract [val t : Type0] carrying
       [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration
@@ -757,6 +765,9 @@ type flag =
       the hand-written one, and a realization mirrors what the F* source said
       -- [FStarC.Parser.Frontend.code_fragment] is an OCaml record and
       [FStar.Pervasives.dtuple4] an OCaml variant. *)
+  | CherryBoxed
+  (** [[@@cherry_boxed]]: under Cherry the type is a counted heap cell, as a
+      recursive type is (cherry.md, "Boxed types"). *)
   | Existential of string & string
   (** Section 33.4.  The source inductive is an existential package: the
       constructor named first stores a [Type0] field, named second, that a
@@ -810,6 +821,10 @@ type flag =
       backend, from its borrow inference, so that a unit linked against it
       calls them the way they were compiled.  A definition imported without
       it is taken to own every parameter. *)
+  | CName of string
+  (** The exact direct-C spelling requested by a global [rename_let].
+      Logical identities and linkage are unchanged.  Kept in compiled units
+      so that consumers use the producer's spelling. *)
 
 type tydef =
   | TAbbrev  of cty

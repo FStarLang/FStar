@@ -254,6 +254,15 @@ Note, this process of arriving at the state machine refinement class was itself
 done using a collaborative process between an agent and a human, emphasized our
 focus on structured interaction between humans and agents.
 
+These classes are part of the Pulse library, in
+``pulse/lib/pulse/lib/protocol``: ``Pulse.Lib.Protocol.StateMachine``,
+``Pulse.Lib.Protocol.WireFormat``,
+``Pulse.Lib.Protocol.WireFormatStateMachine`` and
+``Pulse.Lib.Protocol.Implementation``. The same directory has the TCP channel
+model, buffered streams, a generic driver and the temporal-logic and
+two-party product libraries used later in this chapter. The snippets below are
+simplified from those modules.
+
 State Machine Class
 ...................
 
@@ -702,4 +711,7 @@ The resulting verified code extracts to about 300 lines of C code and correctly
 runs a suite of network tests.
 
 * Here is the calculator service: `Calc.Server.CanonicalProtocol.fst
-  <https://github.com/project-everest/mitls-fstar/blob/agentic_classes/calc_sample/impl/Calc.Server.CanonicalProtocol.fst>`_
+  <https://github.com/FStarLang/FStar/blob/master/pulse/share/pulse/examples/protocol/calc/impl/Calc.Server.CanonicalProtocol.fst>`_.
+  The full example, with its specification, C test harness and design notes,
+  is in ``pulse/share/pulse/examples/protocol/calc``. The neighbouring ``echo``
+  and ``tftp`` examples show the buffered-stream and file-transfer libraries.

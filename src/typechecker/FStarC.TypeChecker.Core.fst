@@ -461,6 +461,7 @@ let with_guard (#a #b:Type) (x:result a) (f: either (success a) error -> ML (res
     | Success (r, cache') -> f (Inl r) ctx cache'
     | Error err -> f (Inr err) ctx cache
 
+[@@FStar.Attributes.custard_inline]
 let (let?) (#a:Type) (#b:Type) (x:option a) (f: a -> option b)
   : option b
   = match x with
@@ -1239,7 +1240,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         then (
           (* For subtyping, we just check that x0.sort <: t1. But for equality,
           we must show that the refinement on the LHS is constantly true. *)
-          if rel = EQUALITY then (
+          if EQUALITY? rel then (
             let! u0 = universe_of_well_typed_term g x0.sort in
             let g0 = g in
             let g, b0, f0 = open_term g (S.mk_binder x0) f0 in
@@ -1322,7 +1323,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
               (fun _ -> maybe_unfold_side_and_retry Both t0 t1)
           in
           if guard_ok &&
-            (rel=EQUALITY) && 
+            (EQUALITY? rel) && 
             (equatable g t0 || equatable g t1)
           then (
             handle_with 

@@ -51,7 +51,7 @@ $(OUTPUT_DIR)/cherry/%.c: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 
 $(OUTPUT_DIR)/cherry/%.exe: $(OUTPUT_DIR)/cherry/%.c
 	$(call msg, "CC", $*)
-	$(Q)$(CC) -std=c11 $(CHERRY_CFLAGS) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c -o $@
+	$(Q)$(CHERRY_CC) -std=c11 $(CHERRY_CFLAGS) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c -o $@
 
 $(OUTPUT_DIR)/ocaml/%.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD", $*)

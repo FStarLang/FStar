@@ -556,11 +556,29 @@ let is_programmer_name (v:string) : ML bool =
   let b = base_name v in
   not (b = "" || b = "_" || (String.length b >= 4 && String.substring b 0 4 = "uu__"))
 
+(* Discard before floating an initializer's lets, so their liveness reflects
+   the discarded result. Comments retain their text, not a droppable operand. *)
+let rec discard_value (e:expr) : ML expr =
+  match e.e with
+  | ELet (v, ty, e1, e2) ->
+    let e2 = discard_value e2 in
+    { e with e = ELet (v, ty, e1, e2); ty = e2.ty }
+  | ESeq (e1, e2) ->
+    let e2 = discard_value e2 in
+    { e with e = ESeq (e1, e2); ty = e2.ty }
+  | EOp (op, [body])
+      when (match op.po_op with Commented _ -> true | _ -> false) && is_droppable body ->
+    { e with e = EOp (op, [unit_expr]); ty = TUnit }
+  | _ when is_droppable e -> unit_expr
+  | _ -> e
+
 let rec simpl (x:expr) : ML expr =
   match x.e with
   | ELet (v, ty, e1, e2) ->
-    let e1 = simpl e1 in
     let e2 = simpl e2 in
+    let used = occurs v e2 in
+    let keep = used || (keeps_unused_named_lets () && is_programmer_name v) in
+    let e1 = simpl (if keep then e1 else discard_value e1) in
     float_lets x e1 (fun e1 ->
     (* [let x = e in x] is just [e], whatever [e]'s effect: nothing moves. *)
     if (match e2.e with EVar w -> w = v | _ -> false) then e1
@@ -588,7 +606,7 @@ let rec simpl (x:expr) : ML expr =
        source happened to bind the literal. *)
     else if Some? (propagable_const e1) then
       subst_const v ty (Some?.v (propagable_const e1)) e2
-    else if occurs v e2 then { x with e = ELet (v, ty, e1, e2) }
+    else if used then { x with e = ELet (v, ty, e1, e2) }
     (* Section 7.3: an unused binding may only be deleted if evaluating it is
        unobservable; otherwise it becomes a statement, which keeps its effect
        and its position.  Section 99: the question here is deletion and not
@@ -604,7 +622,7 @@ let rec simpl (x:expr) : ML expr =
     else { x with e = ESeq (e1, e2) })
 
   | ESeq (e1, e2) ->
-    let e1 = simpl e1 in
+    let e1 = simpl (discard_value e1) in
     let e2 = simpl e2 in
     float_lets x e1 (fun e1 ->
       (* Section 99.  The same question, and the same answer: a sequenced term
@@ -680,6 +698,16 @@ let rec count (v:string) (x:expr) : ML int =
     (* Everywhere else the children are all evaluated, so the count is their
        sum; only the three nodes above have alternatives. *)
     | _ -> fold_children (fun acc e -> imin 2 (acc + count v e)) 0 x)
+  else 0
+
+(* How many times does [v] occur in [x] as written, alternatives included?
+   Capped at 2.  This is the count that measures code size, where [count]
+   measures work: substituting something used once in each of n branches
+   copies it n times. *)
+let rec occurrences (v:string) (x:expr) : ML int =
+  if occurs v x then (match x.e with
+    | EVar _ -> 1
+    | _ -> fold_children (fun acc e -> imin 2 (acc + occurrences v e)) 0 x)
   else 0
 
 (* Duplicating an argument is only sound when evaluating it is unobservable,
@@ -1004,7 +1032,14 @@ let rec reduce (x:expr) : ML expr =
      precise as the body's own -- on the OCaml path that turned a [ref] into
      [any], and an [any] prints as an array rather than as a [ref].  C has no
      closures at all, so there the inlining is not an optimization but the
-     only way the program compiles. *)
+     only way the program compiles.
+
+     Cherry has heap closures, so there it *is* an optimization, and one that
+     must not copy code: [count] takes the worst branch, so a helper called
+     once in each arm of a [match] would be copied into every arm, and the
+     helpers it calls into each copy.  In [FStarC.TypeChecker.Rel.solve_t']
+     that made a single C function of 200,000 lines with a 1.2MB stack frame.
+     Under Cherry the lambda is substituted only where it is written once. *)
   | ELet (v, ty, e1, e2) ->
     let e1 = reduce e1 in
     (* The body first: the rewrites below ask questions about how [v] is used,
@@ -1015,7 +1050,9 @@ let rec reduce (x:expr) : ML expr =
        propagated yet. *)
     let e2 = reduce e2 in
     if Options.codegen_c ()
-       && EFun? e1.e && count v e2 <= 1 && called_only v e2 then
+       && EFun? e1.e && called_only v e2
+       && (if Options.custard_cherry () then occurrences v e2 <= 1
+           else count v e2 <= 1) then
       let sm : subst = HashTable.create 5 in
       HashTable.add sm v e1;
       reduce (sub sm e2)
@@ -1068,8 +1105,35 @@ let reduce_decls (prog:program) : ML program =
 
 (* [Inline] declarations are substituted at their fully applied uses.  A use
    that is *not* fully applied keeps the declaration alive, so it is emitted
-   after all; that is rare enough not to be worth eta-expanding. *)
-let rec inline_expr (tbl : HashTable.t string (list binder & expr)) (used : HashTable.t string bool) (x:expr)
+   after all; that is rare enough not to be worth eta-expanding, except
+   under Cherry where one of the arguments is a lambda (below). *)
+(* The type variables of a polymorphic definition, replaced by the type
+   arguments of a call to it.  The monomorphizing backends have none left by
+   now; the ML ones print some operations by the type of their operand, as
+   [!r] for a [BufRead] on a reference, so an inlined body has to say what its
+   variables are at the call. *)
+let rec subst_expr_ty (s:list (string & cty)) (x:expr) : ML expr =
+  let x = map_children (subst_expr_ty s) x in
+  let f = subst_cty s in
+  let fb (b:binder) : ML binder = { b with b_ty = f b.b_ty } in
+  let e = match x.e with
+    | EQual (n, tys) -> EQual (n, List.map f tys)
+    | ELet (v, ty, a, b) -> ELet (v, f ty, a, b)
+    | EFun (bs, b) -> EFun (List.map fb bs, b)
+    | ECoerce (a, t) -> ECoerce (a, f t)
+    | ECast (a, t) -> ECast (a, f t)
+    | e -> e in
+  { x with e = e; ty = f x.ty }
+
+let instantiate (typars:list string) (tys:list cty) (bs:list binder) (body:expr)
+  : ML (list binder & expr) =
+  if Nil? typars || List.length typars <> List.length tys then (bs, body)
+  else
+    let s = List.zip typars tys in
+    (bs |> List.map (fun (b:binder) -> { b with b_ty = subst_cty s b.b_ty }),
+     subst_expr_ty s body)
+
+let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)) (used : HashTable.t string bool) (x:expr)
   : ML expr =
   (* [used] records the [Inline] declarations that had to be kept after all,
      either because a use was not fully applied or because it came before the
@@ -1078,21 +1142,41 @@ let rec inline_expr (tbl : HashTable.t string (list binder & expr)) (used : Hash
   match x.e with
   | EApp ({e = EQual (n, tys)}, args) ->
     let args = args |> List.map g in
-    (match HashTable.try_find tbl (string_of_name n) with
+    let lookup () : ML (option (list binder & expr)) =
+      match HashTable.try_find tbl (string_of_name n) with
+      | Some (ps, bs, body) -> Some (instantiate ps tys bs body)
+      | None -> None in
+    (match lookup () with
      (* Over-application is common and must be handled: F* stores the
         projector of an arrow-typed field as a one-binder function returning a
         function, so every use of it is applied to one argument too many. *)
      | Some (bs, body) when List.length bs <= List.length args ->
        let given, extra = List.splitAt (List.length bs) args in
        let r = inline_call bs body given (if Nil? extra then x else { x with ty = body.ty }) in
-       (match extra with
-        | [] -> r
+       (match extra, r.e with
+        | [], _ -> r
+        (* An eta-reduced body, [for_some f = existsb f]: the surplus
+           arguments complete its application rather than applying the
+           closure it would build.  Cherry splits an over-application by
+           the callee's arity again; the other backends would see one. *)
+        | _, EApp (h, a) when Options.custard_cherry () -> { x with e = EApp (h, a @ extra) }
         | _ -> { x with e = EApp (r, extra) })
+     (* Cherry, [@@custard_inline] on a combinator.  [eta_reduce] has made
+        many a caller [add k = apply f], so the lambda only meets its call if
+        the partial application becomes [fun x -> body], whose binders
+        [eta_expand] moves back into the caller's parameters.  It is a
+        closure either way, and one rather than two (the lambda's and the
+        partial application's) when it stays one. *)
+     | Some (bs, body) when Options.custard_cherry () && Cons? args
+                         && args |> List.existsb (fun (a:expr) -> EFun? a.e) ->
+       let given, rest = List.splitAt (List.length args) bs in
+       let lam = { x with e = EFun (rest, body) } in
+       inline_call given lam args x
      | _ -> HashTable.add used (string_of_name n) true;
             { x with e = EApp ({ x with e = EQual (n, tys) }, args) })
-  | EQual (n, _) ->
+  | EQual (n, tys) ->
     (match HashTable.try_find tbl (string_of_name n) with
-     | Some ([], body) -> inline_call [] body [] x
+     | Some (ps, [], body) -> inline_call [] (snd (instantiate ps tys [] body)) [] x
      | _ -> HashTable.add used (string_of_name n) true; x)
   | _ -> map_children g x
 
@@ -1132,6 +1216,29 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
        eta_reduce bs' body' ret' E_Pure
      | _ -> (bs, body, ret, ef))
   | _ -> (bs, body, ret, ef)
+
+(* The declarations this run links against rather than compiles, as the units
+   that compiled them emitted them.  No pass here decides anything about them
+   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
+   over in a [verdicts] -- but the passes that ask how many constructors a type
+   has, what its fields are called, or what a function's declared argument
+   types are, still have to be able to see them.  The last of those is not
+   optional: a coercion is inserted where a declared type meets a value, and a
+   call to an imported function whose signature is invisible is a boundary
+   that silently disappears.  A [ref] rather than an argument threaded through
+   a dozen functions, for the same reason
+   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
+   program.  Set by {!run}. *)
+let imported_types : ref (list decl) = mk_ref []
+
+(* The program as the *declaration*-inspecting passes should see it.  An
+   imported declaration is visible to a question about a declaration and
+   invisible to everything else: it is not rewritten, not re-decided, and not
+   emitted. *)
+let with_imports (prog:program) : ML program =
+  match !imported_types with
+  | [] -> prog
+  | ds -> ds @ prog
 
 (* -------------------------------------------------------------------- *)
 (* Eta expansion                                                        *)
@@ -1417,7 +1524,10 @@ let eta_expand_decls (prog:program) : ML program =
                                | DLet l -> n + List.length l.dl_binders
                                | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
-    let tbl = decl_arity p in
+    (* With the imports: a wrapper [eta_reduce] shortened to [f out] is
+       expanded back by reading [f]'s arity, and a linked [f] has its
+       declaration only there (#4771). *)
+    let tbl = decl_arity (with_imports p) in
     let uses = use_arity p in
     let p' = p |> List.map (fun d ->
       match d with
@@ -1489,7 +1599,7 @@ let eta_rename_decls (prog:program) : ML program =
                                          then n + 1 else n) n l.dl_binders
       | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
-    let bnames = decl_binder_names p in
+    let bnames = decl_binder_names (with_imports p) in
     let p' = p |> List.map (fun d ->
       match d with
       | DLet l -> DLet (eta_rename_decl bnames l)
@@ -1642,7 +1752,7 @@ let is_identity (dl:dlet) : ML bool =
    | _ -> false)
 
 let inline_decls (prog:program) : ML program =
-  let tbl : HashTable.t string (list binder & expr) = HashTable.create 50 in
+  let tbl : HashTable.t string (list string & list binder & expr) = HashTable.create 50 in
   let used : HashTable.t string bool = HashTable.create 50 in
   let inl : HashTable.t string dlet = HashTable.create 50 in
   prog |> List.iter (fun d ->
@@ -1660,7 +1770,7 @@ let inline_decls (prog:program) : ML program =
         decl_deps (DLet dl) |> List.iter fill;
         let body = inline_expr tbl used dl.dl_body in
         HashTable.add bodies n body;
-        HashTable.add tbl n (dl.dl_binders, body)
+        HashTable.add tbl n (dl.dl_typars, dl.dl_binders, body)
       | None -> ()
     end in
   prog |> List.iter (fun d ->
@@ -2253,29 +2363,6 @@ type ctor_info = {
   ci_realized: bool;             (* realized, and a variant there (section 8.2) *)
   ci_exn: bool;                  (* a [DExn] constructor: its type is [exn] *)
 }
-
-(* The declarations this run links against rather than compiles, as the units
-   that compiled them emitted them.  No pass here decides anything about them
-   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
-   over in a [verdicts] -- but the passes that ask how many constructors a type
-   has, what its fields are called, or what a function's declared argument
-   types are, still have to be able to see them.  The last of those is not
-   optional: a coercion is inserted where a declared type meets a value, and a
-   call to an imported function whose signature is invisible is a boundary
-   that silently disappears.  A [ref] rather than an argument threaded through
-   a dozen functions, for the same reason
-   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
-   program.  Set by {!run}. *)
-let imported_types : ref (list decl) = mk_ref []
-
-(* The program as the *declaration*-inspecting passes should see it.  An
-   imported declaration is visible to a question about a declaration and
-   invisible to everything else: it is not rewritten, not re-decided, and not
-   emitted. *)
-let with_imports (prog:program) : ML program =
-  match !imported_types with
-  | [] -> prog
-  | ds -> ds @ prog
 
 let ctor_infos (prog:program) : ML (HashTable.t string ctor_info) =
   let m : HashTable.t string ctor_info = HashTable.create 50 in
@@ -3516,7 +3603,9 @@ let coerce_prog (prog:program) : ML program =
     | _ -> mk (ECoerce (x, t)) t x.eff in
   let rec check (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let x = go env exp x in
-    if Some? exp && pushes_down x then x else
+    (* Every result position of such a node now has the expected type, so the
+       node has it too.  A lifted lambda's result type is its body's. *)
+    if Some? exp && pushes_down x then { x with ty = Some?.v exp } else
     match exp, infer env x with
     | Some e, Some t -> if cty_mismatch t e then coerce x e else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
@@ -3530,7 +3619,17 @@ let coerce_prog (prog:program) : ML program =
        argument rather than taking Custard's word for it -- then has two
        incompatible types for one expression.  A node whose type is itself
        [TAny] says nothing and is left alone. *)
-    | Some e, None -> if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e else x
+    | Some e, None ->
+      if not (TAny? x.ty) && cty_mismatch x.ty e then coerce x e
+      (* A value built in place and typed [TAny] -- a constructor out of an
+         inlined polymorphic [return], say -- is built at whatever type its
+         position wants; left at [TAny] under a parent that now has that type
+         (see above), Cherry would take it out of an [any] it was never put
+         into. *)
+      else if TAny? x.ty && not (has_any e) &&
+              (match x.e with ECtor _ | ERecord _ | ETuple _ | EConst _ -> true | _ -> false)
+      then { x with ty = e }
+      else x
     | _ -> x
   and go (env:cenv) (exp:option cty) (x:expr) : ML expr =
     let same (e':expr') : expr = { x with e = e' } in
@@ -3621,7 +3720,24 @@ let coerce_prog (prog:program) : ML program =
          | None -> (bs |> List.map hint, None)) in
       let env = List.fold_left (fun env ((b:binder), t) -> extend env b.b_name t)
                                env (List.zip bs ps) in
-      same (EFun (bs, check env res body))
+      (* The lambda returns what its body does once checked: the body may
+         have been coerced to the expected result.  Left at its old result
+         type, the lambda disagrees with the expectation and is coerced as a
+         whole as well, and Cherry's adapter then takes the body's [any] out
+         at the old type it was never at. *)
+      let rec with_res (n:int) (t:cty) (r:cty) : option cty =
+        if n = 0 then Some r else
+        match t with
+        | TArrow (a, f, b) ->
+          (match with_res (n - 1) b r with
+           | Some b -> Some (TArrow (a, f, b))
+           | None -> None)
+        | _ -> None in
+      let body = check env res body in
+      let ty = (match with_res (List.length bs) x.ty body.ty with
+                | Some t -> t
+                | None -> x.ty) in
+      { x with e = EFun (bs, body); ty = ty }
     | EApp (h, es) ->
       (match infer env h with
        | Some t ->
