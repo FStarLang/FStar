@@ -16,6 +16,16 @@
 
 module PulseCore.Atomic
 
+(**
+Core atomic computations and their semantic combinators.
+
+The logical-atomicity library uses as_action/of_action to pass between the
+existing Pulse atomic effect and its action representation. These conversions
+preserve the footprint, assertions, and observability index; they neither
+weaken the one-observable-step restriction nor add an atomicity axiom.
+Paired open masks are implemented separately in LogicalAtomicity.Masks.
+*)
+
 open FStar.Ghost
 
 open PulseCore.InstantiatedSemantics
@@ -38,11 +48,17 @@ val stt_atomic
     (post:a -> slprop)
 : Type u#(max 5 a)
 
+(** Expose the semantic action of an already atomic computation. Neutral
+computations yield ghost actions; observable ones yield atomic actions.
+Used to lift a primitive into a mask-changing action sequence. *)
 val as_action (#a:Type u#a) (#obs:observability) (#opens:inames)
     (#pre:slprop) (#post:a -> slprop)
     (f:stt_atomic a #obs opens pre post)
   : act a (if obs = Neutral then Ghost else Atomic) opens pre post
 
+(** Package a semantic action as an ordinary atomic computation with exactly
+the same contract. The caller must already establish action validity;
+LogicalAtomicity.Masks.run does so using balanced, mask-parametric actions. *)
 val of_action (#a:Type u#a) (#obs:observability) (#opens:inames)
     (#pre:slprop) (#post:a -> slprop)
     (f:act a (if obs = Neutral then Ghost else Atomic) opens pre post)

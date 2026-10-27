@@ -1,4 +1,15 @@
 module PulseCore.IndirectionTheoryActions
+
+(**
+Framed semantic actions over the indirection model's invariant resource.
+
+Ordinary actions preserve the ambient `except` mask. The logical-atomicity
+library separately defines paired-mask actions and reuses intro_read_inv'
+and elim_read_inv to redistribute one invariant body. These are existing
+proved interpretation lemmas, exposed here without bypassing the later
+guard, locality, or positive-step-index conditions of the invariant model.
+*)
+
 module PM = PulseCore.MemoryAlt
 module HST = PulseCore.HoareStateMonad
 open PulseCore.IndirectionTheorySep
@@ -59,12 +70,18 @@ val dup_inv (e:inames) (i:iref) (p:slprop)
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
 
+(** Closing direction: turn a localized, later-guarded body into read_inv i
+at the same memory, retaining the handle and arbitrary frame. The paired-
+mask model then puts this resource back into its ambient mem_invariant. *)
 val intro_read_inv' (i:iref) (p frame:slprop) (m:mem)
   : Lemma
       (requires iname_ok i m /\ level m > 0 /\
         interp (inv i p `star` somewhere (later p) `star` frame) m)
       (ensures interp (inv i p `star` read_inv i m `star` frame) m)
 
+(** Opening direction: expose somewhere (later p) from read_inv i, preserving
+the handle and frame. This does not yield plain p or eliminate a later;
+the ordinary-invariant adapter must supply locality transport and a credit. *)
 val elim_read_inv (i:iref) (p frame:slprop) (m:mem)
   : Lemma
       (requires iname_ok i m /\ level m > 0 /\
