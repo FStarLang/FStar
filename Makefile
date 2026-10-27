@@ -230,6 +230,42 @@ $(TESTS2_EXE): .tests2.src.touch .src.ml.touch $(MAYBEFORCE)
 stage2-unit-tests: $(TESTS2_EXE)
 	FSTAR_LIB=$(CURDIR)/ulib $(TESTS2_EXE)
 
+# The same unit tests, extracted with the Cherry backend (doc/ref/cherry.md)
+# to a single C file and run natively: the part of the compiler they reach,
+# compiled without OCaml.  The checked files are the ones stage2-unit-tests
+# extracts from; the stage 2 build also checks the Cherry realizations
+# (the -c.cherry.fst modules).  The default build is the debug mode
+# (CHERRY_DEBUG), which checks incomplete matches and array bounds, at -O0,
+# which compiles fastest; tail calls are still guaranteed there.  Cherry
+# needs GCC 15 (cherry.md, "Tail calls"), so the compiler is $(CHERRY_CC).
+CHERRY_TESTS2_DIR   := stage2/tests.cherry
+CHERRY_TESTS2_EXE   := $(CHERRY_TESTS2_DIR)/fstarc2_tests.exe
+CHERRY_CC           ?= $(CC)
+CHERRY_TESTS2_CFLAGS ?= -O0 -g -DCHERRY_DEBUG
+
+$(CHERRY_TESTS2_DIR)/tests.c: .tests2.src.touch $(MAYBEFORCE)
+	$(call bold_msg, "CHERRY", "STAGE 2 TESTS")
+	rm -rf $(CHERRY_TESTS2_DIR)
+	mkdir -p $(CHERRY_TESTS2_DIR)
+	env FSTAR_LIB=$(abspath ulib) $(FSTAR1_FULL_EXE) --lax \
+	  --include src --include stage2/fstarc.checked \
+	  --cache_dir stage2/tests.checked --already_cached '*' \
+	  --odir $(CHERRY_TESTS2_DIR) \
+	  --warn_error -321-274-272-241-377 \
+	  --codegen Cherry --custard_monomorphize_types true \
+	  --custard_main FStarC.Tests.Test.main \
+	  src/tests/FStarC.Tests.Test.fst -o $(CHERRY_TESTS2_DIR)/tests.c
+
+$(CHERRY_TESTS2_EXE): $(CHERRY_TESTS2_DIR)/tests.c ulib/c/cherry.c ulib/c/cherry.h
+	$(call bold_msg, "CC", "STAGE 2 CHERRY TESTS")
+	$(CHERRY_CC) -std=c11 $(CHERRY_TESTS2_CFLAGS) -Wall -Wextra -Werror \
+	  -Wno-unused -Wno-free-nonheap-object \
+	  -I$(CHERRY_TESTS2_DIR) -Iulib/c \
+	  $< ulib/c/cherry.c -o $@ -lm
+
+stage2-cherry-unit-tests: $(CHERRY_TESTS2_EXE)
+	FSTAR_LIB=$(CURDIR)/ulib $(CHERRY_TESTS2_EXE)
+
 $(FSTAR2_FULL_EXE): .bare2.src.touch .src.ml.touch $(MAYBEFORCE)
 	$(call bold_msg, "BUILD", "STAGE 2 FSTARC")
 	$(MAKE) -C stage2 fstarc-full
@@ -564,7 +600,7 @@ check-fsti-impls: .force
 ci: .force
 	+$(MAKE) check-fsti-impls
 	+$(MAKE) 2
-	+$(MAKE) test fsharp-test boot-diff test-2-bare stage2-unit-tests
+	+$(MAKE) test fsharp-test boot-diff test-2-bare stage2-unit-tests stage2-cherry-unit-tests
 
 save: stage0_new
 
@@ -736,6 +772,7 @@ help:
 	echo "  trim               clean some buildfiles, but retain any installed F* in out"
 	echo "  distclean          remove every generated file"
 	echo "  unit-tests         run the smaller unit test suite (implied by test)"
+	echo "  stage2-cherry-unit-tests  run the compiler's unit tests compiled with Cherry, using CHERRY_CC (GCC 15; implied by ci)"
 	echo "  check-fsti-impls   check that every .fsti in ulib and pulse/lib has an .fst or -model.fst (implied by ci)"
 	echo "  save               copy a trimmed stage2 into stage0_new (essentially snapshotting a package-src-2)"
 	echo "  bump-stage0        like save, but replace existing stage0 and reset to a default state"
