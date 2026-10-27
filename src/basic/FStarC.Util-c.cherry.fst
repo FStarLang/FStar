@@ -883,6 +883,7 @@ let monitor_wait _ = ()
 let monitor_pulse _ = ()
 
 (* This function only protects against signals *)
+[@@FStar.Attributes.custard_inline]
 private
 let atomically' (#a:Type) (f:unit -> ML a) : ML a =
   finally
