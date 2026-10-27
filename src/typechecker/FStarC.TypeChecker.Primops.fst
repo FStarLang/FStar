@@ -129,6 +129,7 @@ let built_in_primitive_steps_list : list primitive_step =
   @ short_circuit_ops
   @ Primops.Issue.ops
   @ Primops.Array.ops
+  @ Primops.BV.ops
   @ Primops.Sealed.ops
   @ Primops.Erased.ops
   (* These two answer with embedded [FStar.Pprint.document]s, which have no
