@@ -300,6 +300,19 @@ let name_of_decl (d:decl) : name =
   | DExn e -> e.de_name
   | DModule m -> m.dm_name
 
+(* A polynomial hash modulo the Mersenne prime 2^61 - 1, truncated to 40
+   bits.  Collisions are resolved by whoever allocates the name, which numbers
+   them; at 40 bits that does not happen in practice. *)
+let stable_hash (s:string) : ML string =
+  let p = 2305843009213693951 in
+  let h = List.fold_left (fun h c -> (h * 1099511628211 + BU.int_of_char c + 1) % p)
+                         5381 (String.list_of_string s) in
+  let rec hex (n:int) (k:int) : ML string =
+    if k = 0 then "" else
+    let d = n % 16 in
+    hex (n / 16) (k - 1) ^ String.substring "0123456789abcdef" d 1 in
+  hex (h % 1099511627776) 10
+
 (* Section 69. *)
 let extern_template_of_flags (fs : list flag) : ML (option (list tmpl_piece)) =
   match List.tryPick (fun f -> match f with

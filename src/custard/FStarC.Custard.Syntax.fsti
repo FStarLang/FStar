@@ -1011,6 +1011,12 @@ val subst_cty : list (string & cty) -> cty -> ML cty
 val mk : expr' -> cty -> eff -> expr
 val unit_expr : expr
 val name_of_decl : decl -> name
+
+(* Ten hex digits that depend only on [s].  For naming a generated helper
+   after what it is, so that its name survives edits elsewhere in the
+   program.  Not [FStarC.Hash.of_string], which differs between the OCaml and
+   the Cherry builds of the compiler: the output must not. *)
+val stable_hash : string -> ML string
 (** The template pieces of an external declaration's target spelling, if it
     has a target and that target mentions any argument.  The one place that
     decides whether a [TApp] of an external type is a template, so that
