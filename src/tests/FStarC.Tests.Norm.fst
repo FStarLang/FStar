@@ -35,6 +35,36 @@ open FStarC.Class.Show
 
 (* A big chunk of this module is thunkued to not incur in a top-level effect. *)
 
+let test_ascribed_projector_sharing () : ML unit =
+  Format.print_string "Testing sharing through an ascribed projectee\n";
+  Pars.pars_and_tc_fragment
+    "noeq type projection_payload = | ProjectionPayload : chosen:int -> projection_payload";
+  Pars.pars_and_tc_fragment
+    "let rec projection_grow (n:nat) (p:projection_payload) : Tot projection_payload (decreases n) = \
+       if n = 0 then p else \
+       let next : projection_payload = \
+         ProjectionPayload (ProjectionPayload?.chosen p + ProjectionPayload?.chosen p) in \
+       projection_grow (n - 1) next";
+  let projectee = tc "projection_grow 14 (ProjectionPayload 1)" in
+  (* Insert the ascription after typechecking so it is present exactly where
+     the projector continuation encounters the projectee. *)
+  let annotated = mk (Tm_ascribed {
+    tm=projectee; asc=(Inl (tc "projection_payload"), None, false); eff_opt=None
+  }) dummyRange in
+  let input = app (tc "ProjectionPayload?.chosen") [annotated] in
+  let expected = tc "16384" in
+  let steps = let open Env in
+    [Beta; Iota; Zeta; Primops; UnfoldUntil delta_constant; Weak] in
+  (* Each update doubles the chosen field. Without sharing, 14 updates take
+     exponential work; with sharing they need fewer than 1,000 norm calls.
+     Use a generous step budget rather than a machine-dependent time limit. *)
+  let result =
+    try N.with_budget 5000 (fun () -> N.normalize steps (Pars.init ()) input)
+    with | N.Budget_exceeded ->
+      failwith "Ascribed projector sharing: normalization exceeded the 5,000-step budget"
+  in
+  always 701 (term_eq (U.unascribe result) expected)
+
 let run_all () : ML unit =
   let b = mk_binder in
   let id     = pars "fun x -> x" in
@@ -404,27 +434,8 @@ let run_all () : ML unit =
       let _ = run_all_whnf_with_time () in
       let l_int = run_all_interpreter_with_time () in
       let l_nbe = run_all_nbe_with_time () in
-      compare_times l_int l_nbe
+      compare_times l_int l_nbe;
+      test_ascribed_projector_sharing ()
   in
 
-  run_all ();
-
-  let _ = Pars.pars_and_tc_fragment
-    "noeq type projection_payload = | ProjectionPayload : chosen:int -> projection_payload \
-     let rec projection_grow (n:nat) (p:projection_payload) : Tot projection_payload (decreases n) = \
-       if n = 0 then p else \
-       let next : projection_payload = \
-         ProjectionPayload (ProjectionPayload?.chosen p + ProjectionPayload?.chosen p) in \
-       projection_grow (n - 1) next" in
-  let projectee = tc "projection_grow 14 (ProjectionPayload 1)" in
-  let annotated = mk (Tm_ascribed {
-    tm=projectee; asc=(Inl (tc "projection_payload"), None, false); eff_opt=None
-  }) dummyRange in
-  let projector = tc "ProjectionPayload?.chosen" in
-  let input = app projector [annotated] in
-  let expected = tc "16384" in
-  let steps = let open Env in
-    [Beta; Iota; Zeta; Primops; UnfoldUntil delta_constant; Weak] in
-  // Reading back the ascribed projectee loses sharing and exceeds this budget.
-  let result = N.with_budget 5000 (fun () -> N.normalize steps (Pars.init ()) input) in
-  always 701 (term_eq (U.unascribe result) expected)
+  run_all ()

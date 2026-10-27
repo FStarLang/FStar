@@ -1734,7 +1734,6 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             in
             if stack_may_reduce stack then (
                 log cfg  (fun () -> Format.print_string "+++ Dropping ascription \n");
-                // In particular, retain projector argument closures and their sharing.
                 norm cfg env stack t1 // Ascriptions should not block reduction
             ) else (
                 (* Drops stack *)
