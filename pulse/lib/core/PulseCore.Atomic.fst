@@ -34,6 +34,9 @@ let r_of_obs = function
 let stt_atomic a #obs opens pre post =
   A.act a (r_of_obs obs) opens pre post
 
+let as_action #a #obs #opens #pre #post f = f
+let of_action #a #obs #opens #pre #post f = f
+
 let pure_equiv (p q:prop) (_:squash (p <==> q))
   : slprop_equiv (pure p) (pure q)
   = FStar.PropositionalExtensionality.apply p q;

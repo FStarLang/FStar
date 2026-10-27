@@ -59,6 +59,18 @@ val dup_inv (e:inames) (i:iref) (p:slprop)
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
 
+val intro_read_inv' (i:iref) (p frame:slprop) (m:mem)
+  : Lemma
+      (requires iname_ok i m /\ level m > 0 /\
+        interp (inv i p `star` somewhere (later p) `star` frame) m)
+      (ensures interp (inv i p `star` read_inv i m `star` frame) m)
+
+val elim_read_inv (i:iref) (p frame:slprop) (m:mem)
+  : Lemma
+      (requires iname_ok i m /\ level m > 0 /\
+        interp (inv i p `star` read_inv i m `star` frame) m)
+      (ensures interp (inv i p `star` somewhere (later p) `star` frame) m)
+
 val fresh_invariant (e:inames) (p:slprop) (ctx:inames { Pulse.Lib.GhostSet.is_finite ctx })
 : ghost_act
    (i:iref{~(GhostSet.mem i ctx)})

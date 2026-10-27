@@ -38,6 +38,16 @@ val stt_atomic
     (post:a -> slprop)
 : Type u#(max 5 a)
 
+val as_action (#a:Type u#a) (#obs:observability) (#opens:inames)
+    (#pre:slprop) (#post:a -> slprop)
+    (f:stt_atomic a #obs opens pre post)
+  : act a (if obs = Neutral then Ghost else Atomic) opens pre post
+
+val of_action (#a:Type u#a) (#obs:observability) (#opens:inames)
+    (#pre:slprop) (#post:a -> slprop)
+    (f:act a (if obs = Neutral then Ghost else Atomic) opens pre post)
+  : stt_atomic a #obs opens pre post
+
 val return_atomic
     (#a:Type u#a)
     (x:a)
