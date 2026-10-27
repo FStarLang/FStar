@@ -3785,10 +3785,20 @@ $(CHERRY_DIR)/CherryInlineHO.chgrep: $(CHERRY_DIR)/CherryInlineHO.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryInlineHO.chgrep
 
+# Cherry: a let-bound lambda that is only ever called is no closure.
+$(CHERRY_DIR)/CherryLocalFn.chgrep: $(CHERRY_DIR)/CherryLocalFn.chc
+	$(Q)! sed -n '/^static .* CherryLocalFn_use_twice(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryLocalFn_use_twice builds or applies a closure"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryLocalFn_use_twice_let(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryLocalFn_use_twice_let builds or applies a closure"; exit 1; }
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherryLocalFn.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2

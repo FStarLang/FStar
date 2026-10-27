@@ -1174,6 +1174,12 @@ let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)
      | Some (bs, body) when Options.custard_cherry () && Cons? args
                          && args |> List.existsb (fun (a:expr) -> EFun? a.e) ->
        let given, rest = List.splitAt (List.length args) bs in
+       (* With values for arguments, the bindings [inline_call] makes for
+          them can go inside the lambda, where they do not stop [eta_expand];
+          a lambda bound there and only called is then no closure either. *)
+       if args |> List.for_all (fun (a:expr) -> is_atomic a || EFun? a.e)
+       then { x with e = EFun (rest, inline_call given body args body) }
+       else
        let lam = { x with e = EFun (rest, body) } in
        inline_call given lam args x
      | _ -> HashTable.add used (string_of_name n) true;

@@ -31,5 +31,6 @@ let force (t:thunk 'a) : ML 'a =
       t := Inr a;
       a
 
+[@@FStar.Attributes.custard_inline]
 let map (f : 'a -> ML 'b) (t:thunk 'a) : ML (thunk 'b) =
   mk (fun () -> f (force t))

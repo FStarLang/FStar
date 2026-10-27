@@ -376,10 +376,67 @@ let eta_extern (hd:expr) : ML (option expr) =
      | _ -> None)
   | _ -> None
 
-let rec lift (env:list (string & cty)) (e:expr) : ML expr =
+(* Whether every occurrence of [v] in [x] is the head of a call with exactly
+   [n] arguments. *)
+let rec called_with (v:string) (n:int) (x:expr) : ML bool =
+  if not (occurs v x) then true
+  else match x.e with
+  | EVar _ -> false
+  | EApp ({e = EVar w}, es) when w = v ->
+    List.length es = n && List.for_all (called_with v n) es
+  | _ -> for_all_children (called_with v n) x
+
+(* The names bound anywhere in [x]. *)
+let rec binders_in (x:expr) : ML (list string) =
+  let here = match x.e with
+    | ELet (v, _, _, _) -> [v]
+    | EFun (bs, _) -> List.map (fun b -> b.b_name) bs
+    | EMatch (_, brs) | ETry (_, brs) -> List.collect (fun (p, _, _) -> pat_vars p) brs
+    | _ -> [] in
+  here @ List.collect binders_in (children x)
+
+(* [v args] becomes [hd caps args]. *)
+let rec call_direct (v:string) (hd:expr) (caps:list expr) (x:expr) : ML expr =
+  match x.e with
+  | EApp ({e = EVar w}, es) when w = v ->
+    { x with e = EApp (hd, caps @ List.map (call_direct v hd caps) es) }
+  | _ -> map_children (call_direct v hd caps) x
+
+(* A lambda lifted to a definition taking its captured variables first, and
+   those variables. *)
+let rec lift_lambda (env:list (string & cty)) (bs:list binder) (body:expr) (t:cty)
+  : ML (expr & list binder) =
+  let body = lift (List.map (fun b -> (b.b_name, b.b_ty)) bs @ env) body in
+  let caps = dedup (without (List.map (fun b -> b.b_name) bs) (fv body))
+    |> List.map (fun x ->
+         match List.assoc x env with
+         | Some t -> { b_name = x; b_ty = t }
+         | None -> unsupported ("a lambda capturing " ^ x ^ ", whose type is unknown")) in
+  let n = new_fn (caps @ bs) body in
+  (mk (EQual (n, [])) (arrows (List.map (fun b -> b.b_ty) caps) t) E_Pure, caps)
+
+and lift (env:list (string & cty)) (e:expr) : ML expr =
   match e.e with
   | EQual _ when TArrow? e.ty ->
     (match eta_extern e with Some e' -> e' | None -> e)
+  (* A local function that is only ever called, with all its arguments, needs
+     no closure: the calls go to the lifted definition directly, passing what
+     it captured, which is still in scope at each of them unless [b] binds
+     the name again.  Inlining a combinator that calls its argument on more
+     than one path ([finally], a wrapper that tests a flag first) leaves
+     exactly this, and so does a helper a function defines for itself. *)
+  | ELet (x, t, a, b)
+    when (match a.e with EFun (bs, _) -> called_with x (List.length bs) b | _ -> false) ->
+    let EFun (bs, body) = a.e in
+    let hd, caps = lift_lambda env bs body a.ty in
+    let bound = binders_in b in
+    if List.existsb (fun c -> List.mem c.b_name bound) caps || List.mem x bound then
+      let lam = if Nil? caps then { hd with ty = a.ty }
+                else mk (EApp (hd, List.map (fun c -> mk (EVar c.b_name) c.b_ty E_Pure) caps)) a.ty E_Impure in
+      { e with e = ELet (x, t, lam, lift ((x, t) :: env) b) }
+    else
+      let capv = List.map (fun c -> mk (EVar c.b_name) c.b_ty E_Pure) caps in
+      lift env (call_direct x hd capv b)
   | ELet (x, t, a, b) ->
     { e with e = ELet (x, t, lift env a, lift ((x, t) :: env) b) }
   | EMatch (s, brs) ->
@@ -408,17 +465,9 @@ let rec lift (env:list (string & cty)) (e:expr) : ML expr =
     { e with e = ETry (mk (EApp (hd, args)) s.ty E_Impure,
                        List.map (lift_branch env TExn) brs) }
   | EFun (bs, body) ->
-    let body = lift (List.map (fun b -> (b.b_name, b.b_ty)) bs @ env) body in
-    let caps = dedup (without (List.map (fun b -> b.b_name) bs) (fv body))
-      |> List.map (fun x ->
-           match List.assoc x env with
-           | Some t -> { b_name = x; b_ty = t }
-           | None -> unsupported ("a lambda capturing " ^ x ^ ", whose type is unknown")) in
-    let n = new_fn (caps @ bs) body in
-    if Nil? caps then mk (EQual (n, [])) e.ty E_Pure
-    else
-      let hd = mk (EQual (n, [])) (arrows (List.map (fun b -> b.b_ty) caps) e.ty) E_Pure in
-      mk (EApp (hd, List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) caps)) e.ty E_Impure
+    let hd, caps = lift_lambda env bs body e.ty in
+    if Nil? caps then { hd with ty = e.ty }
+    else mk (EApp (hd, List.map (fun b -> mk (EVar b.b_name) b.b_ty E_Pure) caps)) e.ty E_Impure
   | EApp (hd, args) ->
     let args = List.map (lift env) args in
     let hd =
