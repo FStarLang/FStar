@@ -13,6 +13,7 @@
   ],
   "include_dirs": [
     "by-example",
+    "logical_atomicity",
     "parallel",
     "c",
     "dice",
