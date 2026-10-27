@@ -1725,6 +1725,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               match s with
               | Match _ :: _
               | Arg _ :: _
+              | Projector _ :: _
               | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
               | MemoLazy _ :: _ when cfg.steps.beta ->
                 true
@@ -1733,6 +1734,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
             in
             if stack_may_reduce stack then (
                 log cfg  (fun () -> Format.print_string "+++ Dropping ascription \n");
+                // In particular, retain projector argument closures and their sharing.
                 norm cfg env stack t1 // Ascriptions should not block reduction
             ) else (
                 (* Drops stack *)
