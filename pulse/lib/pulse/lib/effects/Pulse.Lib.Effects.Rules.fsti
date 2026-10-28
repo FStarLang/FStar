@@ -1,15 +1,16 @@
 module Pulse.Lib.Effects.Rules
 #lang-pulse
 
-(* Two-exit proof rules for native, abortive exceptions. Unlike Core.prog,
-   this representation contains no reified computation tree: both exits are
-   ordinary Pulse results. A checker can implement these rules directly.
+(* Two-exit proof rules derived through graded computation trees. Both exits
+   remain ordinary Pulse results in the checker-facing computation contracts.
    Exception payloads are parameterized, so their identity is not tied to a
    particular closed datatype or to F*'s host-language exceptions. *)
 
 open Pulse.Lib.Core
 open Pulse.Main
 module R = Pulse.Lib.Reference
+module E = Pulse.Lib.Effects.Core
+module X = Pulse.Lib.Effects.Exception
 
 type outcome (exn a:Type0) =
   | Normal : value:a -> outcome exn a
@@ -35,6 +36,36 @@ unfold let stt_exn (exn a:Type0) (p:slprop) (q:a -> slprop) (r:exn -> slprop) =
 
 unfold let stt_exn_div (exn a:Type0) (p:slprop) (q:a -> slprop) (r:exn -> slprop) =
   stt_div (outcome exn a) p (fun v -> exit_post q r v)
+
+// Reification delays an arbitrary callback, dispatching its result to exactly
+// the corresponding normal or abortive leaf. It introduces no outer requests.
+let of_outcome (#other #exn:Type0) (#ops:E.signature other)
+  (#r:exn -> slprop) (#g:E.grade) (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (action:unit -> E.comp g (outcome exn a) p (fun v -> exit_post q r v))
+  : X.prog ops r g a p q =
+  E.Step action (fun v -> match v with
+    | Normal x -> E.Return x
+    | Raised e -> X.throw #other #exn #ops #r #g #a #q e)
+
+// Expose exceptions as data, leaving all other operations intact. This is a
+// handler transformation, not execution or a second interpreter.
+let observe (#other #exn:Type0) (#ops:E.signature other)
+  (#r:exn -> slprop) (#g:E.grade) (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (c:X.prog ops r g a p q)
+  : E.tree ops g (outcome exn a) p (fun v -> exit_post q r v) =
+  X.handle #other #exn #ops #r #g #g #a #(outcome exn a)
+    #p #q #(fun v -> exit_post q r v) c
+    (fun x -> E.Return (Normal x)) (fun e -> E.Return (Raised e))
+
+val run_tree (#exn:Type0) (#ops:E.signature E.empty)
+  (#r:exn -> slprop) (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (c:X.prog ops r E.Terminating a p q)
+  : stt (outcome exn a) p (fun v -> exit_post q r v)
+
+val run_tree_div (#exn:Type0) (#ops:E.signature E.empty) (#g:E.grade)
+  (#r:exn -> slprop) (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (c:X.prog ops r g a p q)
+  : stt_div (outcome exn a) p (fun v -> exit_post q r v)
 
 // Returning and raising each require precisely the resources of that exit.
 val return_ (#exn #a:Type0) (#q:a -> slprop) (#r:exn -> slprop) (x:a)

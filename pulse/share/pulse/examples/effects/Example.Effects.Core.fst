@@ -30,13 +30,10 @@ type op = | Exchange | ExchangeAgain
 // pairs an erased old-state witness with a runtime new value. request transfers
 // ownership at that old state; reply transfers ownership at the new state and
 // proves the returned integer equals the witness.
-let ops (r:ref int) : E.signature op = fun _ -> {
-  E.input = erased int & int;
-  E.output = int;
-  E.request = (fun arg -> R.pts_to r (reveal (fst arg)));
-  E.reply = (fun arg old ->
-    R.pts_to r (snd arg) ** pure (old == reveal (fst arg)));
-}
+let ops (r:ref int) : E.signature op = fun _ ->
+  E.Returning (erased int & int) int
+    (fun arg -> R.pts_to r (reveal (fst arg)))
+    (fun arg old -> R.pts_to r (snd arg) ** pure (old == reveal (fst arg)))
 
 // Implement either exchange tag: read the old value and install the new one.
 // The old-state witness is proof-only, whereas both the update and returned
@@ -86,14 +83,14 @@ fn forget_initial (r:ref int) (n:int)
 // the state transferred to the operation. The final contract pins both r = 2
 // and result = 42, so a missing update or wrong reply cannot satisfy it.
 let client (r:ref int)
-  : E.prog (ops r) int (R.pts_to r 0)
+  : E.tree (ops r) E.Terminating int (R.pts_to r 0)
       (fun n -> R.pts_to r 2 ** pure (n == 42)) =
   E.bind (E.lift (fun () -> read_initial r)) (fun n ->
     E.Step
       (fun () -> forget_initial r n)
       (fun _ ->
         E.bind
-          (E.perform #(op) #(ops r)
+          (E.perform #(op) #(ops r) #E.Terminating
             (if n = 0 then Exchange else ExchangeAgain) (hide 0, 1))
           (fun old -> E.lift (fun () -> finish r old))))
 
@@ -106,7 +103,7 @@ fn framed (r other:ref int)
   ensures (R.pts_to r 2 ** pure (n == 42)) ** R.pts_to other 7
 {
   let c = E.frame (R.pts_to other 7) (client r);
-  E.run #op #(ops r) (exchange r) c
+  E.run_terminating #op #(E.frame_signature (R.pts_to other 7) (ops r)) (exchange r) c
 }
 
 // The exception payload type is empty, so no value can initiate a local throw.
@@ -117,10 +114,10 @@ let no_exception (impossible:E.empty) : slprop = match impossible with
 // The normal clause returns its input; the exceptional clause is impossible.
 // Both exchange tags must reach the original operation implementation unchanged.
 let through_handler (r:ref int)
-  : E.prog (ops r) int (R.pts_to r 0)
+  : E.tree (ops r) E.Terminating int (R.pts_to r 0)
       (fun n -> R.pts_to r 2 ** pure (n == 42)) =
-  X.catch
-    (X.weaken #op #E.empty #int #(ops r) #no_exception (client r))
+  X.handle #_ #_ #_ #_ #E.Terminating #E.Terminating
+    (X.weaken #op #E.empty #(ops r) #no_exception (client r))
     (fun n -> E.Return n)
     (fun impossible -> match impossible with)
 
@@ -144,7 +141,7 @@ ghost fn positive_result (r:ref int) (n:int)
 // ghost entailments above. This is a verification-only API-composition example;
 // the runtime entry below keeps the stronger exact-result contract instead.
 let positive_client (r:ref int)
-  : E.prog (ops r) int (R.pts_to r 0)
+  : E.tree (ops r) E.Terminating int (R.pts_to r 0)
       (fun n -> R.pts_to r 2 ** pure (n > 0)) =
   E.consequence (preserve_initial r) (client r) (positive_result r)
 
@@ -160,7 +157,7 @@ fn test ()
   let c = E.frame (R.pts_to other 7) (through_handler r);
   let before = !r;
   assert pure (before == 0);
-  let result = E.run #op #(ops r) (exchange r) c;
+  let result = E.run_terminating #op #(E.frame_signature (R.pts_to other 7) (ops r)) (exchange r) c;
   let after = !r;
   assert pure (after == 2);
   let untouched = !other;

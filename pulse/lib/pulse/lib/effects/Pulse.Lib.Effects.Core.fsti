@@ -1,230 +1,171 @@
 module Pulse.Lib.Effects.Core
-#lang-pulse
 
-(* Resource-indexed computations with reified control and ordinary Pulse steps.
-
-   This is the semantic interface for the first effects-library milestone.
-   A program describes how execution transforms owned resources; constructing
-   the description does not require or manipulate those resources. run realizes
-   the description as a Pulse computation once its precondition is available.
-
-   The central transfer rule is request ** frame -> reply ** frame. Operations
-   receive only their request resources, while their continuations retain the
-   private frame. The exception layer refines this rule for abortive handling.
-   The guarantees here are interpreter Hoare contracts and structural policy
-   preservation, not an observational-equivalence or monad-law development.
-
-   Custard specializes the existentially typed Step representation. The current
-   executable examples use specialized tree shapes; arbitrary runtime-shaped
-   trees and owned, first-class resumptions are not established by this API.
-   See README.md for the file map, build instructions, and ownership examples. *)
+(* Graded computation trees with intrinsic abortive ownership.
+   Trees describe code, not owned resumptions.
+   Their grade bounds embedded computations, independently of the grade of
+   operation implementations used when interpreting them. *)
 
 open Pulse.Lib.Core
-open Pulse.Main
 
-// The protocol for one operation, independent of any particular implementation.
-// Result types depend on the operation tag, not on the input value; reply can
-// relate both values and resources. Inputs may carry erased specification data.
-noeq
-type operation = {
-  // Data supplied at a request site, including any ghost parameters.
-  input: Type0;
-  // Data supplied on resumption; empty makes an operation non-returning.
-  output: Type0;
-  // Ownership handed to the operation implementation or handling clause.
-  request: input -> slprop;
-  // Ownership and facts returned to the suspended continuation.
-  reply: input -> output -> slprop;
-}
+type grade = | Terminating | MayDiverge
 
-// A statically typed effect environment. Tags select complete operation
-// protocols; sums of tag types can extend an environment without changing prog.
-let signature (tag:Type0) = tag -> operation
+let join (g h:grade) : grade =
+  match g, h with Terminating, Terminating -> Terminating | _ -> MayDiverge
 
-// An uninhabited tag type closes an environment. As an operation's output type,
-// it also expresses that no resumption value can be supplied.
+let below (g h:grade) : bool =
+  match g, h with MayDiverge, Terminating -> false | _ -> true
+
+let comp (g:grade) (a:Type0) (p:slprop) (q:a -> slprop) =
+  match g with
+  | Terminating -> stt a p (fun x -> q x)
+  | MayDiverge -> stt_div a p (fun x -> q x)
+
 type empty =
 
-// Intrinsically specified, inductively constructed code: prog ops a p q executes
-// from p and returns an a satisfying q when interpreted with suitable handlers.
-// This value is duplicable code, not a token owning p or a captured stack.
-// Recursive combinators decrease on the tree, including continuation subtrees.
-noeq
-type prog (#tag:Type0) (ops:signature tag) (a:Type0)
+// Abortive operations cannot hide a continuation or its private ownership.
+// Their empty reply type is exposed only to the generic interpreter interface.
+noeq type operation =
+  | Returning : input:Type0 -> output:Type0 ->
+      request:(input -> slprop) -> reply:(input -> output -> slprop) -> operation
+  | Aborting : input:Type0 -> request:(input -> slprop) -> operation
+
+let input (op:operation) : Type0 =
+  match op with Returning i _ _ _ -> i | Aborting i _ -> i
+
+let output (op:operation) : Type0 =
+  match op with Returning _ o _ _ -> o | Aborting _ _ -> empty
+
+let request (op:operation) : input op -> slprop =
+  match op with Returning _ _ p _ -> p | Aborting _ p -> p
+
+let reply (op:operation) : input op -> output op -> slprop =
+  match op with
+  | Returning _ _ _ q -> q
+  | Aborting _ _ -> fun _ impossible -> match impossible with
+
+let signature (tag:Type0) = tag -> operation
+let empty_ops : signature empty = fun impossible -> match impossible with
+
+// The grade is an upper bound: even Return and Abort may inhabit MayDiverge.
+// All continuation branches obey that bound; it is not a runtime tree scan.
+noeq type tree (#tag:Type0) (ops:signature tag) (g:grade) (a:Type0)
   : slprop -> (a -> slprop) -> Type =
-  // Terminate with x. No heap action establishes q x: it must already hold.
-  | Return : #q:(a -> slprop) -> x:a -> prog ops a (q x) q
-  // Delay a Pulse computation. Its result-dependent postcondition supplies
-  // exactly the resources needed by next; merely building Step runs nothing.
-  | Step : #p:slprop -> #q:(a -> slprop) ->
-      #b:Type0 -> #s:(b -> slprop) ->
-      action:(unit -> stt b p (fun x -> s x)) ->
-      next:(x:b -> prog ops a (s x) q) ->
-      prog ops a p q
-  // Suspend at an operation request. Preserve frame separately from request;
-  // resume only with a reply value and reply ownership, not the old request.
+  | Return : #q:(a -> slprop) -> x:a -> tree ops g a (q x) q
+  | Step : #p:slprop -> #q:(a -> slprop) -> #b:Type0 -> #s:(b -> slprop) ->
+      action:(unit -> comp g b p s) ->
+      next:(x:b -> tree ops g a (s x) q) ->
+      tree ops g a p q
   | Perform : #q:(a -> slprop) -> #frame:slprop ->
-      op:tag -> arg:(ops op).input ->
-      next:(y:(ops op).output ->
-        prog ops a ((ops op).reply arg y ** frame) q) ->
-      prog ops a ((ops op).request arg ** frame) q
+      op:tag{Returning? (ops op)} -> arg:input (ops op) ->
+      next:(y:output (ops op) ->
+        tree ops g a (reply (ops op) arg y ** frame) q) ->
+      tree ops g a (request (ops op) arg ** frame) q
+  | Abort : #q:(a -> slprop) ->
+      op:tag{Aborting? (ops op)} -> arg:input (ops op) ->
+      tree ops g a (request (ops op) arg) q
 
-// An additional logical restriction on requests and their private frames.
-// It does not change an operation's protocol or perform any runtime check.
-// Exception.frame_policy uses this hook to prohibit stranded abort-site frames.
-let request_policy (#tag:Type0) (ops:signature tag) =
-  op:tag -> (ops op).input -> slprop -> prop
-
-// Require policy throughout the tree, quantifying over every continuation
-// argument, not just one concrete execution. Return has no requests; Step
-// checks its continuations; Perform checks its own request and its continuations.
-let rec all_requests (#tag:Type0) (#ops:signature tag) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop)
-  (c:prog ops a p q) (policy:request_policy ops)
-  : Tot prop (decreases c) =
-  match c with
-  | Return _ -> True
-  | Step action k -> forall x. all_requests (k x) policy
-  | Perform #_ #_ #_ #_ #r op arg k ->
-      policy op arg r /\ (forall y. all_requests (k y) policy)
-
-// Embed an ordinary Pulse action without executing it. This contributes a Step
-// followed by Return, so it introduces no algebraic operation of its own.
+// Computation-algebra operations select existing Pulse rules by grade.
+// There is no coercion from a potentially divergent action to a terminating one.
 inline_for_extraction
-val lift (#tag:Type0) (#ops:signature tag) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop)
-  (action:unit -> stt a p (fun x -> q x))
-  : prog ops a p q
+val frame_comp (#a:Type0) (g:grade) (#p:slprop) (#q:a -> slprop)
+  (f:slprop) (action:comp g a p q)
+  : comp g a (p ** f) (fun x -> q x ** f)
 
-// Transport along equality of preconditions, preserving the very same tree.
-// Useful for associativity/unit rearrangements of ** that elaboration does not
-// automatically coerce. This is equality transport, not arbitrary entailment.
 inline_for_extraction
-val reindex_pre (#tag:Type0) (#ops:signature tag) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop) (p':slprop) (_:squash (p == p'))
-  (c:prog ops a p q)
-  : c':prog ops a p' q{c' == c}
+val lift_comp (#a:Type0) (#g:grade) (h:grade{below g h})
+  (#p:slprop) (#q:a -> slprop) (action:comp g a p q)
+  : comp h a p q
 
-// Sequence descriptions: each normal result x transfers q x to next x.
-// Requests and delayed actions stay in order, with sequencing threaded through
-// their continuations. Specializing next supports extraction of the composition.
-inline_for_extraction
-val bind (#tag:Type0) (#ops:signature tag) (#a #b:Type0)
-  (#p:slprop) (#q:a -> slprop) (#s:b -> slprop)
-  (c:prog ops a p q)
-  ([@@@FStar.Attributes.monomorphize] next:(x:a -> prog ops b (q x) s))
-  : Tot (prog ops b p s) (decreases c)
+val ghost_comp (g:grade) (#p #q:slprop)
+  (proof:unit -> stt_ghost unit emp_inames p (fun _ -> q))
+  : comp g unit p (fun _ -> q)
 
-// Thread additional ownership f through every action and continuation without
-// giving it to operation implementations. At a Perform node it joins the private
-// frame. This can invalidate an exception layer's empty-abort-frame policy:
-// frame the handled computation instead, or change its exceptional protocol.
+// Widening and sequencing preserve all operation protocols. A mixed-grade bind
+// takes the join; a terminating subtree can always enter a divergent context.
 inline_for_extraction
-val frame (#tag:Type0) (#ops:signature tag) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop)
-  (f:slprop) (c:prog ops a p q)
-  : Tot (prog ops a (p ** f) (fun x -> q x ** f)) (decreases c)
+val weaken_grade (#tag:Type0) (#ops:signature tag) (#g:grade)
+  (#a:Type0) (#p:slprop) (#q:a -> slprop) (h:grade{below g h})
+  (c:tree ops g a p q)
+  : Tot (tree ops h a p q) (decreases c)
 
-// The minimal requesting program: issue op arg with an empty private frame,
-// then return the reply value with precisely the reply postcondition.
 inline_for_extraction
-val perform (#tag:Type0) (#ops:signature tag)
-  (op:tag) (arg:(ops op).input)
-  : prog ops (ops op).output ((ops op).request arg) ((ops op).reply arg)
+val lift (#tag:Type0) (#ops:signature tag) (#g:grade)
+  (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (action:unit -> comp g a p q)
+  : tree ops g a p q
 
-// Relabel all requests into target while preserving their complete protocols.
-// Injectivity is not required for this safety statement, so this is not a
-// theorem that distinct nominal operations remain distinguishable.
 inline_for_extraction
-val weaken (#tag #other:Type0)
-  (#ops:signature tag) (#target:signature other) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop)
-  (embed:(op:tag -> l:other{target l == ops op}))
-  (c:prog ops a p q)
-  : Tot (prog target a p q) (decreases c)
+val bind (#tag:Type0) (#ops:signature tag) (#g #h:grade)
+  (#a #b:Type0) (#p:slprop) (#q:a -> slprop) (#s:b -> slprop)
+  (c:tree ops g a p q)
+  ([@@@FStar.Attributes.monomorphize] next:(x:a -> tree ops h b (q x) s))
+  : tree ops (join g h) b p s
 
-// Change the advertised pre/postconditions using verified ghost entailments.
-// before turns p' into p; after turns each q x into q' x. These proof steps
-// surround c without changing its returned value or adding algebraic requests.
+// Framing changes every abortive request protocol, not just the innermost one.
+// Returning requests retain the frame privately and return it to continuation.
+let frame_operation (f:slprop) (op:operation) : operation =
+  match op with
+  | Returning _ _ _ _ -> op
+  | Aborting i p -> Aborting i (fun x -> p x ** f)
+
+let frame_signature (#tag:Type0) (f:slprop) (ops:signature tag) : signature tag =
+  fun op -> frame_operation f (ops op)
+
 inline_for_extraction
-val consequence (#tag:Type0) (#ops:signature tag) (#a:Type0)
+val frame (#tag:Type0) (#ops:signature tag) (#g:grade)
+  (#a:Type0) (#p:slprop) (#q:a -> slprop) (f:slprop) (c:tree ops g a p q)
+  : Tot (tree (frame_signature f ops) g a (p ** f) (fun x -> q x ** f))
+      (decreases c)
+
+inline_for_extraction
+val perform (#tag:Type0) (#ops:signature tag) (#g:grade)
+  (op:tag{Returning? (ops op)}) (arg:input (ops op))
+  : tree ops g (output (ops op)) (request (ops op) arg) (reply (ops op) arg)
+
+// Relabeling preserves complete protocols, including returning/abortive kind.
+inline_for_extraction
+val relabel (#tag #other:Type0) (#ops:signature tag) (#target:signature other)
+  (#g:grade) (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (embed:(op:tag -> l:other{target l == ops op})) (c:tree ops g a p q)
+  : Tot (tree target g a p q) (decreases c)
+
+inline_for_extraction
+val consequence (#tag:Type0) (#ops:signature tag) (#g:grade) (#a:Type0)
   (#p #p':slprop) (#q #q':a -> slprop)
   (before:unit -> stt_ghost unit emp_inames p' (fun _ -> p))
-  (c:prog ops a p q)
+  (c:tree ops g a p q)
   (after:(x:a -> stt_ghost unit emp_inames (q x) (fun _ -> q' x)))
-  : prog ops a p' q'
+  : tree ops g a p' q'
 
-// A returning Pulse implementation for every operation in an environment.
-// Each obeys its own request/reply protocol, without access to private frames.
-// This is not a general control handler: there is no resumption argument.
-let implementations (#tag:Type0) (ops:signature tag) =
-  op:tag -> arg:(ops op).input ->
-    stt (ops op).output ((ops op).request arg) (fun y -> (ops op).reply arg y)
+// Abstract requests do not determine their implementations' termination.
+// The interpreter combines the tree grade with the implementation-table grade.
+let implementations (#tag:Type0) (ops:signature tag) (h:grade) =
+  op:tag -> arg:input (ops op) ->
+    comp h (output (ops op)) (request (ops op) arg) (reply (ops op) arg)
 
-// Interpret Return/Step/Perform using their ownership contracts. The result
-// is a Pulse computation from p to q; this type is the interpreter's soundness
-// guarantee. At Perform, impl receives request and the continuation gets reply
-// plus the retained frame. No operation is silently ignored.
-val run (#tag:Type0) (#ops:signature tag) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop)
-  (impl:implementations ops)
-  (c:prog ops a p q)
+// Grade-specialized open interpreters expose literal computation types to Pulse.
+val run_terminating (#tag:Type0) (#ops:signature tag)
+  (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (impl:implementations ops Terminating) (c:tree ops Terminating a p q)
   : Tot (stt a p (fun x -> q x)) (decreases c)
 
-// Execute a description whose effect environment is empty. No implementation
-// table is needed because a Perform tag cannot exist; unresolved exception or
-// state-operation environments must be handled before using this entry point.
-fn run_closed (#ops:signature empty) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop)
-  (c:prog ops a p q)
-  requires p
-  returns x:a
-  ensures q x
+val run_divergent (#tag:Type0) (#ops:signature tag)
+  (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (impl:implementations ops MayDiverge) (c:tree ops MayDiverge a p q)
+  : Tot (stt_div a p (fun x -> q x)) (decreases c)
 
-// A lifted Pulse action is vacuously acceptable under any request policy.
-// The claim concerns reified requests, not the absence of ordinary heap effects.
-val lift_all_requests (#tag:Type0) (#ops:signature tag) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop)
-  (action:unit -> stt a p (fun x -> q x)) (policy:request_policy ops)
-  : Lemma (all_requests (lift action) policy)
+inline_for_extraction
+val run (#tag:Type0) (#ops:signature tag) (#g #h:grade)
+  (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (impl:implementations ops h) (c:tree ops g a p q)
+  : Tot (comp (join g h) a p q) (decreases c)
 
-// Build the policy proof for a Step from proofs for all its continuations.
-// Useful when composing policy-refined trees directly, as in the nested example.
-val step_all_requests (#tag:Type0) (#ops:signature tag) (#a #b:Type0)
-  (#p:slprop) (#s:b -> slprop) (#q:a -> slprop)
-  (action:unit -> stt b p (fun x -> s x))
-  (next:(x:b -> prog ops a (s x) q))
-  (policy:request_policy ops)
-  : Lemma (requires forall x. all_requests (next x) policy)
-          (ensures all_requests (Step action next) policy)
+// Literal computation types make these closing interfaces usable from Pulse.
+// An empty signature may have been transformed by framing; it need not be the
+// particular empty_ops function defined above.
+val run_closed (#ops:signature empty) (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (c:tree ops Terminating a p q) : stt a p (fun x -> q x)
 
-// A minimal perform satisfies policy when that one request is allowed with emp.
-// Its Return continuation introduces no further obligations.
-val perform_all_requests (#tag:Type0) (#ops:signature tag)
-  (op:tag) (arg:(ops op).input) (policy:request_policy ops)
-  : Lemma (requires policy op arg emp)
-          (ensures all_requests (perform op arg) policy)
-
-// Sequencing preserves a policy shared by c and every possible next x.
-// This exposes compositional reasoning without asking clients to unfold bind
-// and quantify over its internal continuation functions themselves.
-val bind_all_requests (#tag:Type0) (#ops:signature tag) (#a #b:Type0)
-  (#p:slprop) (#q:a -> slprop) (#s:b -> slprop)
-  (c:prog ops a p q) (next:(x:a -> prog ops b (q x) s))
-  (policy:request_policy ops)
-  : Lemma (requires all_requests c policy /\ (forall x. all_requests (next x) policy))
-          (ensures all_requests (bind c next) policy)
-          (decreases c)
-
-// Establish a target policy when it permits every embedded request and frame.
-// This deliberately strong premise suffices to embed a computation as Other
-// operations under an exception layer, whose local throw restriction is vacuous.
-// It is not a general theorem transporting an arbitrary source policy.
-val weaken_all_requests (#tag #other:Type0)
-  (#ops:signature tag) (#target:signature other) (#a:Type0)
-  (#p:slprop) (#q:a -> slprop)
-  (embed:(op:tag -> l:other{target l == ops op}))
-  (c:prog ops a p q) (policy:request_policy target)
-  : Lemma (requires forall op arg frame. policy (embed op) arg frame)
-          (ensures all_requests (weaken embed c) policy)
-          (decreases c)
+val run_closed_div (#ops:signature empty) (#g:grade)
+  (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (c:tree ops g a p q) : stt_div a p (fun x -> q x)

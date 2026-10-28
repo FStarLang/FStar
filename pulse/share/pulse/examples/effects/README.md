@@ -2,23 +2,24 @@
 
 This directory exercises the resource-indexed effects library in
 [`lib/pulse/lib/effects`](../../../../lib/pulse/lib/effects/README.md).
-The progression is ordinary operations, one abortive exception layer, then
-nested layers whose forwarding preserves the enclosing handler's ownership
-discipline. Negative examples check that plausible but invalid uses are rejected.
+All library examples use the single graded model in `Pulse.Lib.Effects.Core`
+and its `Exception` layer. `Rules` exercises the two-exit rules derived through
+that interpreter. Negative examples check invalid ownership and grade uses.
 `Native` and `NativeRejected` separately exercise the native two-exit checker,
 without constructing effect trees. Their Custard extraction is deferred.
 
-Read the modules in the order below. Each definition has an adjacent explanation
-of its role, the ownership it consumes/returns, or the scenario it exercises.
+Start with `Core`, `Exception`, and `Nested`, then `Graded` and `Rules`.
 
 ## File map
 
 | File | What to look for |
 | --- | --- |
 | [`Example.Effects.Core.fst`](Example.Effects.Core.fst) | Delayed heap actions, an operation with a state-changing request/reply contract, explicit tree framing, an erased old-state witness, consequence, and forwarding through an exception layer that cannot throw. |
-| [`Example.Effects.Exception.fst`](Example.Effects.Exception.fst) | A throwing branch and a normal branch, exact recovery ownership, unreachable continuation code, and framing around the handled result. Its local function `handle` uses library `X.catch`, not `X.handle`. |
-| [`Example.Effects.Nested.fst`](Example.Effects.Nested.fst) | Two unit-payload exception layers distinguished by tags. Explicit policy proofs make an inner catch produce a computation admissible to an outer catch. The handlers change the result type from empty to int to bool. |
-| [`Example.Effects.Rejected.fst`](Example.Effects.Rejected.fst) | Five expected verification failures: stale ownership, missing ownership, an unresolved effect, a stranded private frame, and a wrong exception-entry state. Not an executable test module. |
+| [`Example.Effects.Exception.fst`](Example.Effects.Exception.fst) | A throwing branch and a normal branch, exact recovery ownership, unreachable continuation code, and framing around the handled result. |
+| [`Example.Effects.Nested.fst`](Example.Effects.Nested.fst) | Two unit-payload exception layers distinguished by tags. Ordinary handlers compose without policy proofs, changing the result type from empty to int to bool. |
+| [`Example.Effects.Graded.fst`](Example.Effects.Graded.fst) | Nested handling of an open framed tree, returning-operation framing, divergent actions/implementations/clauses, mixed-grade bind, and exact outcome round trips. Verification only. |
+| [`Example.Effects.Rules.fst`](Example.Effects.Rules.fst) | Tree-derived two-exit bind, frame, partial handling and re-raising, local reclamation on both exits, and divergent callbacks. Verification only. |
+| [`Example.Effects.Rejected.fst`](Example.Effects.Rejected.fst) | Twelve expected failures covering ownership, operation kinds, unresolved effects, framing, and grades. Not an executable test module. |
 | [`Example.Effects.Native.fst`](Example.Effects.Native.fst) | Native raises contracts, partial catches, re-raising, exact state transfers, framing, local reclamation, cleanup, loops, recursion, and higher-order calls. Verification only. |
 | [`Example.Effects.NativeRejected.fst`](Example.Effects.NativeRejected.fst) | Expected rejections for lost ownership, unhandled calls, incomplete handlers, escaping cleanup, invalid local reclamation, and ghost/atomic raises. Verification only. |
 | [`Example.Effects.Runtime.fst`](Example.Effects.Runtime.fst) | The one extraction entry point. Calls five concrete cases and returns a list of runtime comparisons, with a proof that they are all true. |
@@ -54,6 +55,40 @@ runtime-dependent exception-tree shape extraction.
 
 ## Ownership and control scenarios
 
+### Graded intrinsic trees
+
+`Graded.nested_frame b` follows the same routes as `Nested.test`,
+but frames the **open** computation with a second cell initially at 1.
+Both local and outer exceptions acquire that cell in their protocols.
+The result is exactly `(b, (2, 2))` when `b`, and `(b, (3, 3))` otherwise:
+either handler receives and updates both cells. The one `framed_layer` call
+exposes the framed outer signature without a separate ownership proof.
+
+`Graded.returning_frame ()` returns `(10, (1, 5))`. The returning operation updates
+only its request cell; the private framed cell stays at 5 while the request is
+forwarded through an exception handler.
+`mixed_steps` joins a terminating prefix with a potentially divergent action.
+`divergent_implementation` and `divergent_handler` start from terminating request
+trees but produce potentially divergent interpretations or handled trees.
+Their recursive callback genuinely loops when requested, rather than merely
+being an ordinary action annotated as divergent.
+
+`Graded.outcome_round_trip b` returns exactly `(b, (10, 1))` or
+`(b, (7, 1))`. It embeds an arbitrary-style two-exit callback, handles its
+exception into data, and interprets the result; both its outcome and heap
+update survive the bridge.
+
+`Rules.bind_frame_reraise b` returns `(20, (2, 5))` on the normal route.
+On the exceptional route it skips the bind continuation, lets the handler
+update the framed cell, and re-raises: the result is `(8, (3, 6))`.
+`with_local` preserves the callback's exact two-exit contract while reclaiming
+the local on either route. `divergent_program` checks the same bind/frame/handler
+composition for a genuinely recursive callback.
+
+`Graded` and `Rules` are proof examples, not extraction entry points.
+The five-case executable uses the same canonical model; native Custard extraction
+and arbitrary delayed request generation are separate milestones.
+
 ### Core operations
 
 `ops r` describes an exchange over a particular reference. Its input contains
@@ -87,17 +122,16 @@ the exceptional protocol to write 2.
 exception protocol when framing execution of the already handled computation.
 It does not frame an open throwing tree, and it is not called by `Runtime.test`.
 
-### Nested routing and policy preservation
+### Nested routing
 
 The two layers both use unit payloads. An inner request uses `Throw`; an outer
 request, seen from the inner environment, uses `Other Throw`. This tests static
 layer identity independently of payload type.
 
-`request_inner` and `request_outer` each establish the inner frame policy and
-the forwarded outer policy. `prefix` carries both through a preparatory Pulse
-step. `handle_inner` uses `catch_all_requests` to retain the outer policy after
-removing the inner layer. Without that fact, an unrestricted result tree would
-not suffice for the outer `catch`.
+`body` prepares the selected request's ownership and constructs an `Abort`.
+`handle_inner` removes the local layer and forwards an outer abort unchanged.
+`handle_outer` then removes the outer layer. The constructor types suffice:
+there are no separate request-policy or policy-preservation lemmas.
 
 Both requests carry ownership at state 0. An inner recovery writes 2 and returns
 10; an outer recovery must still see state 0 and writes 3. The outer normal
@@ -152,6 +186,35 @@ See the [library guide](../../../../lib/pulse/lib/effects/README.md) for
 the derived rules, native result-type convention, and current restrictions.
 Native scenarios are not included in `Runtime.test` or its five observations.
 
+### Extensible exceptions
+
+The final group in `Native` uses F*'s shared extensible `exn` rather than raw
+numbers or a closed exception datatype:
+
+```fstar
+exception BadRequest of nat
+exception ConnectionLost of string
+```
+
+Both constructors produce `exn`, so every nested contract has type
+`exn -> slprop`. Forwarding needs no payload embedding. The exceptional
+assertions describe which constructors can occur and what resources they carry;
+they do not change the exception value's type.
+
+| Definitions | What they establish |
+| --- | --- |
+| `is_bad_request` | An explicit match defines the handled domain; exception declarations do not generate closed-datatype `C?` discriminators. |
+| `exn_raise` | Raising an arbitrary `exn` transfers ownership at state 1 and reclaims a temporary local. |
+| `exn_recover_request` | `BadRequest code` recovers with state and result `code + 1`. Every other exception propagates unchanged, with state 1 and a fact excluding `BadRequest`. |
+| `exn_nested` | The inner recovery handles `BadRequest 4`; the outer handler handles `ConnectionLost "database"`. The final state/result is exactly 5 or 42, according to the input flag. |
+| `exn_reraised` | Re-raising preserves the string payload while transferring the updated state 2 to the outer handler, which finishes at state 3 with result 42. |
+| `RetryLater`, `exn_later_extension` | A constructor declared after the selective handler is forwarded through it without changing its contract. `RetryLater 9` is distinct from `BadRequest 9` despite carrying the same payload type. |
+
+The general selective handler never assumes that it knows all constructors.
+Complete recovery in its clients is justified by their precise exceptional
+contracts, not by treating `exn` as a closed datatype. The corresponding
+rejection scenario below checks that distinction.
+
 ## Negative scenarios and their expected failures
 
 | Definition | Invalid claim | Expected error category |
@@ -159,12 +222,17 @@ Native scenarios are not included in `Runtime.test` or its five observations.
 | `stale_ownership` | After exchanging 0 for 1, the continuation still owns the cell at 0. | 19: refinement/resource-index proof failure |
 | `missing_request_ownership` | Owning a program description suffices to execute it without owning its required cell. | 228: Pulse cannot establish the required ownership |
 | `unhandled_exception` | A body whose signature still contains Throw can be treated as an empty-environment computation. | 12: type mismatch |
-| `stranded_frame` | A Throw retaining another cell outside its exceptional protocol satisfies the safe-catch refinement. | 19: frame-policy proof failure |
+| `stranded_abort_frame` | An abort can retain another cell outside its request protocol. | 19: resource-index proof failure |
+| `abort_as_perform`, `returning_as_abort` | Operation kind can be ignored when choosing a node constructor. | 19: kind refinement failure |
+| `downgrade_divergent_step` | A potentially divergent tree can be weakened to terminating. | 19: grade-bound proof failure |
+| `ignore_implementation_grade`, `ignore_handler_grade` | A terminating request tree makes its implementation or handler terminate. | 12: grade/computation type mismatch |
+| `forget_outer_frame` | Framing an inner tree leaves its outer exception contract unchanged. | 19: signature mismatch |
+| `lose_acquired_resource` | Ownership acquired by an embedded action can disappear at an abort. | 19: resource-index proof failure |
 | `wrong_exception_state` | The exceptional entry contract at state 1 permits proving a read equals 0. | 19: false pure assertion |
 
 `expect_failure` means the declaration must fail with the indicated category.
 It is neither an admitted valid program nor code that the runtime driver calls.
-Successful verification of this module is evidence that all five misuses were
+Successful verification of this module is evidence that all twelve misuses were
 rejected at the intended boundaries.
 
 `NativeRejected` separately checks:
@@ -183,8 +251,9 @@ rejected at the intended boundaries.
 | `escaping_cleanup` | Replacing a pending exit by an exception escaping `defer`. | 19 |
 | `escaped_local_permission` | Exporting half a local's permission while also claiming to reclaim it. | 19 |
 | `return_abandons_frame` | Using ordinary return inside a try to hide lost ownership behind an impossible normal continuation. | 228 |
+| `exn_known_cases_are_not_exhaustive` | Treating the example constructors as exhaustive for an arbitrary value of extensible type `exn`. | 19 |
 
-These are sixteen expected failures, not admitted programs. Both direct
+These are seventeen expected failures, not admitted programs. Both direct
 raises and automatically propagated calls must satisfy the ownership checks.
 
 ## Build stages and generated files
@@ -204,7 +273,7 @@ make clean    # Remove this directory's generated artifacts only
 `extract`, `build`, and `run` follow the runtime entry's dependencies; default
 `make` and `make verify` also check both standalone negative-test modules and
 the native scenarios. Use `make verify` for the native proof/checker milestone;
-the runtime targets still concern only the original tree-based entry point.
+the runtime targets concern only the five-case tree-based entry point.
 
 The library owns its own `_cache`; these examples keep their checked files in
 this directory's `_cache`. F* generates `.depend`. Custard produces

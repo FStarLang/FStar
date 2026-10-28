@@ -1,254 +1,243 @@
-# Resource-indexed effects in Pulse
+# Graded, resource-indexed effects in Pulse
 
-This directory contains two complementary developments in Pulse's existing
-separation logic: reified control-flow trees for extensible operations, and
-two-exit proof rules underlying the native exception checker. Both make control
-and ownership transfers explicit; neither adds an assumed logical effect rule.
+This library has one semantic model: graded computation trees in
+`Pulse.Lib.Effects.Core`, with intrinsic support for returning and aborting
+operations. `Exception` adds exception layers and handlers. `Rules` derives the
+two-exit contracts used by the native exception checker through that same
+interpreter. No new logical effect rule is assumed.
 
-The executable and negative examples are in
-[`share/pulse/examples/effects`](../../../../share/pulse/examples/effects/README.md).
-Read `Core.fsti`, then `Exception.fsti`, then the examples before studying the
-implementation proofs. For native syntax, read `Rules.fsti` and
-`Example.Effects.Native.fst` instead. Names below omit the
-`Pulse.Lib.Effects.` prefix.
+Read `Core.fsti`, `Exception.fsti`, and then `Rules.fsti` and its implementation.
+The [examples](../../../../share/pulse/examples/effects/README.md) cover ordinary
+operations, exceptions, nested framing, grades, native syntax, and rejected uses.
+Names below omit the `Pulse.Lib.Effects.` prefix.
 
-## Files and their responsibilities
+## Modules
 
-| File | Purpose |
+| Module | Responsibility |
 | --- | --- |
-| [`Pulse.Lib.Effects.Core.fsti`](Pulse.Lib.Effects.Core.fsti) | Operation protocols, the indexed tree, composition/framing/consequence/relabeling, interpreter contracts, and structural request-policy lemmas. Each constructor explains its resource transfer. |
-| [`Pulse.Lib.Effects.Core.fst`](Pulse.Lib.Effects.Core.fst) | Executable Pulse helpers, pure tree transformations, the interpreter, and proofs that transformations preserve request policies. |
-| [`Pulse.Lib.Effects.Exception.fsti`](Pulse.Lib.Effects.Exception.fsti) | One-layer exception extension, the empty-private-frame discipline, `throw`, abortive `handle`/`catch`, and the theorem needed to compose nested catches. |
-| [`Pulse.Lib.Effects.Exception.fst`](Pulse.Lib.Effects.Exception.fst) | Abort-aware sequencing and handler traversals. Shows exactly where the throwing continuation is bypassed and how ownership is accounted for. |
-| [`Pulse.Lib.Effects.Rules.fsti`](Pulse.Lib.Effects.Rules.fsti) | Two-exit computation contracts, return/raise, sequencing, framing, consequence, partial handling, and local reclamation; also the native checker's result-type convention. |
-| [`Pulse.Lib.Effects.Rules.fst`](Pulse.Lib.Effects.Rules.fst) | Derives the two-exit rules with ordinary Pulse operations, for both terminating and potentially divergent computations. No tree interpreter or native raise is used in these proofs. |
-| [`Makefile`](Makefile) | Independent, incremental verification of these interfaces and implementations, using a local cache rather than trusting installed copies of the development. |
-| [`.fst.config.json`](.fst.config.json) | VS Code compiler, checking options, and include paths; its fields are described below because JSON does not support inline comments. |
-| `README.md` | This file: the semantic overview, reading map, build contract, editor setup, and limits of the milestone. |
+| [`Core`](Pulse.Lib.Effects.Core.fsti) ([implementation](Pulse.Lib.Effects.Core.fst)) | Operation protocols, graded trees, composition, framing, consequence, relabeling, and interpretation. |
+| [`Exception`](Pulse.Lib.Effects.Exception.fsti) ([implementation](Pulse.Lib.Effects.Exception.fst)) | An abortive exception layer, throwing, forwarding, and handling with ordinary resource-indexed clauses. |
+| [`Rules`](Pulse.Lib.Effects.Rules.fsti) ([implementation](Pulse.Lib.Effects.Rules.fst)) | Outcome/tree conversion and derived terminating/divergent two-exit rules; preserves the native result-type convention. |
 
-Generated `.depend`, `_cache/`, and `_output/` contents are build artifacts, not
-additional library definitions. They should not be edited or treated as the
-authoritative source of a specification.
+The earlier policy-based representation has been removed; its development is
+available in git history. There is no parallel `Tree` module or compatibility
+implementation. Generic programs use `Core.tree ops grade a pre post`;
+exception programs use `Exception.prog ops exceptional grade a pre post`.
 
-## What a program owns, and when
+## Ownership at each node
 
-`Core.prog ops a p q` is a description of a computation whose execution starts
-with ownership `p` and returns an `a` satisfying `q`. Constructing or duplicating
-the description does not allocate, consume, or duplicate the resources described
-by `p`. The interpreter still needs that ownership to execute it.
+A tree is a description of code, not an owned live resumption. Constructing or
+duplicating it neither executes its actions nor duplicates the ownership needed
+to run them. The interpreter requires `pre` and, on normal return of `x`,
+establishes `post x`.
 
-The three constructors express different boundaries:
+Operations are explicitly `Returning input output request reply` or
+`Aborting input request`. Their kinds determine which node can invoke them:
 
-| Constructor | Meaning |
+| Constructor | Ownership and control |
 | --- | --- |
-| `Return x` | Return immediately; the entry resources already satisfy `q x`. |
-| `Step action next` | Delay an ordinary Pulse action. Its result `x` and postcondition `s x` feed `next x`. |
-| `Perform op arg next` | Give the operation `request arg`; retain a private `frame`; resume with a reply value `y` and `reply arg y ** frame`. |
+| `Return x` | Entry ownership already satisfies `post x`. |
+| `Step action next` | Delay a Pulse action; its result and postcondition establish the next tree's precondition. |
+| `Perform op arg next` | Give a returning operation `request arg`, retain a private frame, then resume with `reply arg y ** frame`. |
+| `Abort op arg` | Give an aborting operation exactly `request arg`. There is no continuation and no private frame. |
 
-Thus an operation may change ownership, not just return data:
+An empty reply type alone does not turn a `Returning` operation into an
+`Aborting` one. Exception handlers eliminate actual abortive nodes.
 
-```text
-at request:       request arg ** frame
-operation owns:   request arg
-on resumption:    reply arg y ** frame
-```
+`bind` follows normal leaves and returning continuations; it bypasses its
+continuation at an abort. `consequence` uses verified ghost entailments to
+change pre/normal postconditions, keeping operation protocols fixed.
+`relabel` preserves complete operation descriptors, including kind. It need
+not be injective: it establishes protocol compatibility, not nominal identity.
 
-The old request assertion is not automatically available after resumption.
-`Example.Effects.Core` makes this concrete with an exchange operation whose
-request owns a reference at 0 and whose reply owns it at 1.
+## Framing and exception handling
 
-`bind` threads postconditions into continuations. `frame` carries extra ownership
-through the tree without passing it to operation implementations. `consequence`
-uses ghost entailments to change the exposed pre/postconditions. `weaken` relabels
-requests while requiring equality of their protocols; it is not a theorem about
-preserving nominal identity, since the embedding need not be injective.
+`Core.frame f` adds `f` to the precondition and normal postcondition and also
+transforms the signature:
 
-`run` interprets the tree using returning implementations of all its operations.
-`run_closed` needs no implementation table because its tag type is empty.
-Handling and forwarding eliminate or relocate effects before this closing step;
-an unresolved effect is not silently ignored.
-
-## Why abortive handling needs another ownership rule
-
-An exception uses `output = Core.empty`: no reply value can resume its
-continuation. Nevertheless, that continuation's private resources must still be
-accounted for. Discarding code is not permission to discard ownership.
-
-Both `Exception.handle` and `Exception.catch` remove one local exception layer,
-invoke a normal or exceptional clause, and forward `Other` operations. Neither
-lets the clause resume the throwing continuation. Their distinction is:
-
-| API | Input discipline | Exceptional clause owns |
+| Operation kind | Request protocol | Continuation ownership |
 | --- | --- | --- |
-| `handle` | Unrestricted `Core.prog` in the extended environment | `exceptional e ** frame`, for every possible private frame |
-| `catch` | `Exception.prog`, a refinement requiring empty private frames at local throws | `exceptional e` |
+| Returning | Unchanged | Private frame grows by `f`. |
+| Aborting | Strengthened to `request arg ** f` | None; all ownership goes to the abort handler. |
 
-The universal frame parameter makes `handle` a low-level, resource-explicit API:
-its clause must account for arbitrary ownership while establishing a fixed
-result postcondition. It is not automatically implementable from an ordinary
-exception-only clause. `catch` uses the tree's refinement to prove the frame is
-`emp` at each local throw and therefore exposes the simpler clause type.
+This transforms **every** abortive protocol, including outer exception layers.
+It is safe to frame an open throwing computation: its handlers receive the
+extra ownership rather than abandoning it in unreachable continuation code.
+Resources acquired inside a `Step` are still subject to the same discipline:
+return them, transfer them in an exit protocol, or reclaim them before exiting.
 
-For example, if recovery must update a reference, include that reference's
-ownership in `exceptional e`. Putting it only in a throw's private frame will
-not satisfy `Exception.prog`. Likewise, applying `Core.frame` to an open throwing
-tree generally breaks this refinement. Framing the already handled computation
-is different: the surrounding Pulse computation retains the additional resource
-while executing a closed handler result.
+`Exception.extend ops exceptional` adds `Throw` with protocol
+`Aborting exn exceptional`, and embeds existing operations under `Other`.
+`Exception.prog` is just a tree alias. `throw e` requires `exceptional e`.
+`handle` takes a normal clause requiring `post x` and an exceptional clause
+requiring `exceptional e`; both establish the handler's result postcondition.
+No whole-tree frame policy or frame-polymorphic clause is required.
 
-`all_requests` expresses these disciplines structurally, over all continuation
-arguments. A local frame policy says nothing about `Other` requests.
-`forwarded_policy` and `catch_all_requests` carry an enclosing layer's policy
-through an inner handler, including the requests introduced by its clauses.
-The nested example exercises this distinction explicitly.
+The clauses execute outside the removed layer, so they may re-raise in an
+enclosing layer. Other operations are forwarded with their kind and protocols
+intact. Tags distinguish layers independently of payload types.
 
-## Two-exit rules and the native checker
+`Exception.frame` exposes the strengthened local and outer contracts.
+After removing an inner layer, `framed_layer` presents the already-framed outer
+signature as another exception layer. This is a verified protocol-preserving
+relabeling, not an ownership proof supplied by the caller.
+`Example.Effects.Graded.nested_frame` demonstrates both handlers updating a
+cell originally introduced by framing.
 
-`Rules.outcome exn a` has constructors `Normal x` and `Raised e`.
-`Rules.exit_post q r` selects `q x` or `r e`. Thus:
+## Grades and execution
+
+`Terminating` selects `stt`; `MayDiverge` selects `stt_div`. A grade is a
+conservative bound, not a scan of a runtime tree:
+
+| Construction | Grade obligation |
+| --- | --- |
+| `Return`, `Abort` | Either bound; neither exit itself diverges. |
+| `Step` | Its action and every continuation obey the tree's bound. |
+| `bind` | Join of the input and continuation grades. |
+| Exception handler | Join of the protected tree and clause grades. |
+| `run impl tree` | Join of the tree and implementation-table grades. |
+
+`weaken_grade` permits widening, never narrowing. A terminating request tree
+does not imply a terminating interpretation when its implementations or
+handler clauses may diverge.
+
+The structural interpreter remains `Tot`: potentially divergent execution
+lives in embedded Pulse computations. Two grade-specialized recursive cases
+keep the underlying Pulse computation types explicit. Executable Pulse
+helpers implement sequencing, framing, returns, and lifting, rather than
+extracting calls to semantic-only computation combinators.
+
+| Interpreter | Use |
+| --- | --- |
+| `run` | Grade-polymorphic F* composition; returns `comp (join g h)`. |
+| `run_terminating` | A terminating tree and implementation table; exposes literal `stt` to Pulse. |
+| `run_divergent` | A `MayDiverge` tree and implementation table; exposes literal `stt_div`. |
+| `run_closed` | A terminating tree with an empty tag type. |
+| `run_closed_div` | A tree of either grade with an empty tag type. |
+
+An open interpreter needs implementations for every operation in its
+signature. An aborting implementation would return `empty`; normally handlers
+eliminate aborts before execution. An unresolved operation is never silently
+ignored. An empty signature may have been transformed by framing; it need not
+be the particular `Core.empty_ops` function.
+
+## Two-exit rules derived through trees
+
+`Rules.outcome exn a` is `Normal x | Raised e`.
+`exit_post q r` selects `q x` or `r e`, so:
 
 ```text
-stt_exn exn a p q r =
-  stt (outcome exn a) p (fun v -> exit_post q r v)
+stt_exn exn a p q r = stt (outcome exn a) p (fun v -> exit_post q r v)
 ```
 
-`stt_exn_div` uses `stt_div` instead. The `_div` rules have the same
-ownership discipline as their terminating counterparts; divergence is
-independent of the possibility of raising.
+`stt_exn_div` uses `stt_div`. Raising and divergence are independent.
+The connection to the reference model is constructive:
 
-| Rule | Ownership and control obligation |
+```text
+of_outcome action = Step action (Normal x -> Return x | Raised e -> Abort Throw e)
+observe tree      = handle tree (x -> Return (Normal x)) (e -> Return (Raised e))
+run_tree tree     = Core.run_closed (observe tree)
+```
+
+`run_tree_div` uses the divergent closing interpreter. The interface exposes
+`of_outcome` and `observe` as definitions for arbitrary normal/exceptional
+postconditions. The rules construct the corresponding tree transformations
+before interpretation, rather than independently proving similar contracts.
+
+| Rules | Meaning |
 | --- | --- |
-| `return_`, `raise_` | Establish precisely the selected exit's resources. |
-| `bind`, `bind_div` | Run the continuation only on normal return; share the exceptional contract between both computations. |
-| `frame`, `frame_div` | Preserve the frame on **both** exits. |
-| `lift`, `lift_div` | Embed a nonraising action with exceptional post `pure False`. |
-| `consequence`, `consequence_div` | Prove separate precondition, normal-exit, and exceptional-exit entailments. |
-| `handle`, `handle_div` | Handle selected payloads; prove forwarding under the negation of the selection predicate. Both clauses may themselves raise under the outer contract. |
-| `residual` | Express the unhandled domain as `r e ** pure (not (matches e))`, not as a decision procedure for satisfiability of `r e`. |
-| `with_local`, `with_local_div` | Reclaim full local ownership on either exit; expose neither its permission nor its cleanup obligation in the public postconditions. |
+| `return_`, `raise_` | Interpret the selected normal or abortive leaf. |
+| `bind`, `bind_div` | Compose through normal leaves only. |
+| `frame`, `frame_div` | Preserve a frame on both exits. |
+| `lift`, `lift_div` | Embed a nonraising action; exceptional post is `pure False`. |
+| `consequence`, `consequence_div` | Ghost steps translate entry ownership and each exit separately. |
+| `handle`, `handle_div` | Handle selected payloads; forward others using an entailment under the negated selection predicate. Clauses may re-raise. |
+| `with_local`, `with_local_div` | Allocate a scoped Pulse local around interpretation; reclaim its ownership on either outcome. |
 
-The native checker lowers `raises`, `raise`, and `try ... catch` to this
-two-exit representation plus existing lexical forward jumps. It does not
-construct or interpret `Core.prog` trees. The function's normal return label is
-inside its exception scope. A catch clause is outside the scope it handles, so
-re-raising reaches an outer handler rather than the same catch again.
+`residual r matches e` means `r e ** pure (not (matches e))`. Selection tests
+payloads, never satisfiability of spatial assertions.
 
-Calls are split into their two exits, with their ordinary frame present on
-both. Abortive jumps require exact resource transfer: their destination
-contract and the cleanup obligations of crossed scopes must account for every
-nonduplicable resource. Ordinary call framing is insufficient at a jump,
-because its continuation will not run. Scoped locals use the existing cleanup
-machinery; a handler still inside a local's scope retains that local.
+## Native checker boundary
 
-### Representation boundary
+The checker lowers `raises`, `raise`, and `try ... catch` to two-exit
+computations and lexical forward jumps. It does not construct trees at runtime.
+The tree derivation supplies the reference proof rules without changing this ABI.
 
-Native contracts retain the transparent alias `Rules.native_outcome exn a`
-as their result type in ordinary `stt`/`stt_div` computations. The checker
-recognizes that spelling to split native calls even outside an exception scope:
-ignoring a returned value must not silently swallow an exception. Raw
-`Rules.outcome` computations remain ordinary data for library proofs, including
-when called from native code.
+Native contracts retain the transparent alias `Rules.native_outcome exn a`.
+The checker recognizes that spelling and splits calls even outside exception
+scopes; ignoring a result must not swallow a possible exception. Raw
+`Rules.outcome` computations remain ordinary data, including inside native
+code. Higher-order native contracts should use `fn ... raises ...`.
+Raw semantic callbacks need literal `stt`/`stt_div` types for Pulse readback;
+`Native.raw_raise` demonstrates an adapter.
 
-This alias is an internal ABI convention, not a new logical computation
-constructor or a nominal effect distinction. Hand-written native higher-order
-types should use `fn ... raises ...`, preserving the convention, rather than
-unfolding the alias or presenting the computation through a raw outcome type.
-The current readback also needs literal `stt`/`stt_div` types for raw semantic
-callbacks; the proofs spell those out instead of relying on recognition of
-`stt_exn` aliases. `Native.raw_raise` shows the same adapter for clients.
+Ordinary calls retain their frame on both exits. Abortive jumps require exact
+resource transfer: the destination contract and crossed cleanup scopes must
+account for every nonduplicable resource. Exiting a local scope reclaims its
+locals; a handler still inside that scope retains access to them.
 
-### Current native slice
+`try` requires a protected-body `raises` contract. Optional `returns`/`ensures`
+annotations cover protected normal completion and catch results. Pattern facts
+mask handled payloads; an implicit fallback forwards unmatched ones. Nested
+forwarding requires compatible payload types, with no inserted embeddings,
+even for an unreachable fallback. The shared extensible `exn` type provides
+the conventional common payload type.
 
-`try` requires an explicit protected-body `raises` contract. Optional
-`returns`/`ensures` annotations describe both its protected normal completion
-and its catch results; the entry context supplies its precondition. The
-checker uses ordinary match-pattern facts to mask handled payloads, with an
-implicit unmatched forwarding branch. Nested forwarding scopes use compatible
-payload types; this slice does not insert payload embeddings between different
-types, including in an implicit unreachable fallback.
+Raising is stateful, not ghost or atomic. Clauses run outside their own catch
+and may re-raise. Cleanup may contain local catches and loop exits, but cannot
+raise, return, break, or jump outside its cleanup boundary and abandon a
+pending exit's ownership.
 
-Payloads and results are in `Type0`. Raising is permitted only in stateful
-computations, not ghost or atomic computations. No new open-invariant rule is
-needed. Ordinary catches may re-raise or raise a different payload. A `defer`
-cleanup may catch exceptions and use local control flow internally, but may not
-raise, return, break, or jump to a destination outside the cleanup: the existing
-normal-only cleanup rule does not justify abandoning a pending exit's resources.
+## Build, dependency ordering, and editor support
 
-Native Custard extraction, resumable handlers, dynamic instances, and general
-effect rows are separate work. These examples establish checking and proof
-rules, not an efficient native runtime or a mechanized simulation theorem for
-the new lowering.
-
-## Building and incrementality
-
-With the repository's installed stage3 compiler available, run from this directory:
+With the repository's installed stage3 compiler, run here:
 
 ```sh
-make -j8
+make -j8      # Interfaces and implementations only
 make verify
-make clean
+make clean   # This directory's generated artifacts only
 ```
 
-Default `make` verifies the library; it does not extract a standalone polymorphic
-library executable. The examples' Makefile builds this library automatically
-before verifying or extracting its clients.
+The example Makefile builds the library before its clients. The bootstrap graph
+is `Core.fsti -> Exception.fsti -> Rules.fsti`; each implementation also depends
+on its own interface. After these local checked files exist, F* generates the
+complete `.depend` graph. This avoids selecting an installed effects cache
+instead of the changed sources.
 
-The bootstrap ordering is:
+Interface changes invalidate dependent proofs. Implementation-only changes
+invalidate extraction without unnecessarily rechecking unchanged client
+interfaces. Makefile changes and source-directory membership also participate
+in dependency generation. `_cache`, `_output`, and `.depend` are generated.
 
-```text
-Core.fsti -> Core.fst
-Core.fsti -> Exception.fsti -> Exception.fst
-Rules.fsti -> Rules.fst
-```
+For fresh proof checking, use `SIL='--force --z3refresh'` and force the desired
+make roots with `-W filename` on the `verify` target. Merely rerunning a recipe
+can otherwise reuse a root's checked file. `--print_expected_failures` displays
+rejection diagnostics. Run example extraction/build targets separately without
+`--force`: extraction takes a checked file as its input.
 
-The Makefile first materializes local checked outputs, then asks F* to generate
-the complete `.depend` graph. This avoids accidentally selecting an installed
-effects cache as the target to update. The explicit cross-interface bootstrap
-edge must be maintained if more library interfaces are introduced.
+`.fst.config.json` selects the same compiler, local include/cache directories,
+`--z3rlimit 10`, and shared dependency/VC settings as make.
+`--already_cached` excludes `Pulse.Lib.Effects` here so these sources are checked.
+`--warn_error -321` suppresses cache-location warnings, not failed obligations.
+Paths are relative to the configuration directory. Restart F* in open editor
+buffers after rebuilding dependencies or changing the configuration.
 
-An implementation-only change updates its checked implementation without
-rechecking clients of an unchanged interface. The examples additionally depend
-on checked implementations for extraction, so such a change still reaches their
-executable. Interface changes invalidate their dependent proofs. The local
-Makefile and source-directory membership also participate in dependency
-generation. `clean` removes only this directory's generated artifacts.
+## Current limits
 
-## Editor configuration: `.fst.config.json`
+The interpreter establishes its Hoare contract, and constructor types enforce
+abortive ownership. The bridge preserves arbitrary two-exit contracts; examples
+also fix exact exit values and heap states. There is not yet a full
+observational-equivalence theorem for arbitrary opaque callbacks or a
+simulation theorem for native lowering.
 
-The F* VS Code extension selects the nearest configuration in the workspace
-hierarchy and, for this configuration, uses its directory as the working
-directory. All paths are relative to that directory, not an absolute developer
-checkout location.
+The trees are well-founded descriptions, not owned first-class resumptions.
+Retaining/discarding resumptions, multi-shot handlers, dynamic instances, and
+general effect rows need additional design. Divergent callbacks are supported;
+an infinite sequence of separately visible requests needs a future delayed
+request-generation interface.
 
-| Field or option | Why it is present |
-| --- | --- |
-| `fstar_exe` | `../../../../../stage3/out/bin/fstar.exe` selects the same installed compiler family as the Makefile, with Pulse support available. |
-| `include_dirs` | `.` finds these sources; `_cache` exposes this development's checked modules instead of relying on installed effects copies. |
-| `--cache_dir _cache` | Uses the local checked cache. Run `make` to populate or refresh it; opening a file is not a replacement for building all dependencies. |
-| `--already_cached ...` | Reuses installed F*/Pulse prerequisites. The final `-Pulse.Lib.Effects` excludes this development from that blanket assumption. |
-| `--z3rlimit 10` | Matches the proof budget used by the Makefile. |
-| `--warn_error -321` | Matches the build's suppression of warnings about checked files found at an unexpected location; it does not admit failed proof obligations. |
-| `--ext optimize_let_vc` | Matches the build's Pulse verification-condition optimization setting. |
-| `--ext fly_deps` | Matches the build's dependency-loading setting. |
-
-After changing the configuration or rebuilding dependencies, use **F*: Restart**
-in an already-open document to start a fresh session. The examples have their own
-configuration, including this library's source and cache directories.
-
-## What this milestone does not claim
-
-The interpreter's type establishes its advertised Hoare contract; the policy
-lemmas establish compositional ownership restrictions. There is no separate
-observational-equivalence proof or complete algebraic-law development yet.
-
-These trees are not owned, first-class stack resumptions. The library does not
-provide multi-shot continuations, a general resumable handler API, dynamic effect
-instances, or a recursion interface for arbitrary tree-based effectful loops.
-Native exceptions separately support scoped cleanup, recursive calls, and
-exceptional exits from loops as described above.
-
-Custard specializes the existential result type stored in `Step`. The executable
-examples currently specialize their exception branch choices; their proofs are
-uniform in those choices, but arbitrary runtime-shaped trees remain an extraction
-limitation. The source-level `inline_for_extraction` and `monomorphize` annotations
-serve that extraction boundary, not the logical ownership discipline.
+The five-case tree executable is supported by Custard specialization, including
+literal branch choices at its entry point. `inline_for_extraction` and
+`monomorphize` annotations serve this compilation boundary, not the ownership
+proof. Arbitrary runtime-shaped existential `Step` trees and native exception
+extraction remain separate work.

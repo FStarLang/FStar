@@ -49,3 +49,4 @@ $(CACHE_DIR)/%.fst.checked: %.fst $(CACHE_DIR)/%.fsti.checked
 # Bootstrap the cross-module interface edge before .depend exists. Additional
 # library interfaces may need corresponding bootstrap edges when introduced.
 $(CACHE_DIR)/Pulse.Lib.Effects.Exception.fsti.checked: $(CACHE_DIR)/Pulse.Lib.Effects.Core.fsti.checked
+$(CACHE_DIR)/Pulse.Lib.Effects.Rules.fsti.checked: $(CACHE_DIR)/Pulse.Lib.Effects.Exception.fsti.checked

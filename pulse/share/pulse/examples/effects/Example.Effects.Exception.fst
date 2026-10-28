@@ -26,7 +26,7 @@ module R = Pulse.Lib.Reference
 type exception_value = | Boom
 
 // There are no effects other than the exception layer introduced by X.prog.
-// After catch removes that layer, this signature permits E.run_closed.
+// After handling removes that layer, this signature permits E.run_closed.
 let empty_ops : E.signature E.empty = fun impossible -> match impossible with
 
 // Ownership delivered to the exception clause, before recovery runs: r is at 1.
@@ -82,18 +82,19 @@ fn complete_normally (r:ref int) (raise_it:bool{not raise_it})
 
 // Build, but do not execute, the selected branch. In the throwing branch,
 // X.throw is instantiated with an impossible normal postcondition so subsequent
-// code can be typed without claiming that it is reachable. X.bind must bypass
+// code can be typed without claiming that it is reachable. E.bind must bypass
 // dead_write when the local exception is caught.
 let body (r:ref int) (raise_it:bool)
   : X.prog empty_ops (exceptional r raise_it)
-      int (R.pts_to r 0) (normal r raise_it) =
+      E.Terminating int (R.pts_to r 0) (normal r raise_it) =
   if raise_it then
-    X.bind (X.lift (fun () -> prepare_throw r raise_it)) (fun _ ->
-      X.bind
-        (X.throw #E.empty #exception_value #unit #empty_ops
-          #(exceptional r raise_it) #(fun _ -> R.pts_to r 1 ** pure False) Boom)
-        (fun _ -> X.lift (fun () -> dead_write r raise_it)))
-  else X.lift (fun () -> complete_normally r raise_it)
+    E.bind (E.lift (fun () -> prepare_throw r raise_it)) (fun _ ->
+      E.bind
+        (X.throw #E.empty #exception_value #empty_ops
+          #(exceptional r raise_it) #E.Terminating #unit
+          #(fun _ -> R.pts_to r 1 ** pure False) Boom)
+        (fun _ -> E.lift (fun () -> dead_write r raise_it)))
+  else E.lift (fun () -> complete_normally r raise_it)
 
 // Adapt normal completion to the common handled postcondition without another
 // heap update or a replacement result. This clause must see the normal flag.
@@ -120,12 +121,10 @@ fn exception_clause (r:ref int) (raise_it:bool) (e:exception_value)
   42
 }
 
-// Assemble this example's handler using the library's X.catch. Despite its
-// local name, this is not a use of the library's frame-polymorphic X.handle.
-// Both clauses are lifted Pulse computations and the output environment is empty.
+// Both clauses run outside the removed layer; the output environment is empty.
 let handle (r:ref int) (raise_it:bool)
-  : E.prog empty_ops int (R.pts_to r 0) (handled r raise_it) =
-  X.catch (body r raise_it)
+  : E.tree empty_ops E.Terminating int (R.pts_to r 0) (handled r raise_it) =
+  X.handle #_ #_ #_ #_ #E.Terminating #E.Terminating (body r raise_it)
     (fun n -> E.lift (fun () -> return_clause r raise_it n))
     (fun e -> E.lift (fun () -> exception_clause r raise_it e))
 
@@ -143,7 +142,7 @@ fn test ([@@@FStar.Attributes.monomorphize] raise_it:bool)
   (result, value)
 }
 
-// Exercise Pulse's ordinary frame rule around execution after catch has removed
+// Exercise Pulse's ordinary frame rule around execution after handling has removed
 // the exception. The unrelated cell remains at 17 without being included in
 // Boom's protocol. This helper is verified, but not called by Runtime.test.
 fn framed_test (r other:ref int)

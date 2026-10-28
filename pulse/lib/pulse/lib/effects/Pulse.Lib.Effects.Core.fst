@@ -1,34 +1,20 @@
 module Pulse.Lib.Effects.Core
 #lang-pulse
 
-(* Implementation of the resource-indexed core described in the interface.
-
-   Pure tree transformations never run the Step thunks they rearrange. The
-   small Pulse helpers below provide executable sequencing, framing, returns,
-   and ghost entailments for the interpreter. Keeping these helpers as actual
-   Pulse definitions also avoids extracting calls to semantic-only stt helpers.
-
-   The implementation separates three obligations: construct correctly indexed
-   trees, interpret them with the advertised resource transfers, and preserve
-   structural request policies. Local ** equalities make the transports explicit;
-   none of those proofs dispose of heap ownership. *)
+(* All transformations below are total and preserve resource indices.
+   Only execution of an embedded action or an operation implementation may
+   diverge. Aborts have no continuation in which ownership could be stranded. *)
 
 open Pulse.Lib.Core
 open Pulse.Main
 
-// Realize Return as an executable Pulse computation. Ownership q x is already
-// available and is preserved while returning x; no allocation or proof of q x
-// is manufactured by this helper.
+// Pulse bodies keep execution visible to extraction, unlike semantic stt rules.
 fn return_value (#a:Type0) (x:a) (#q:a -> slprop)
   requires q x
   returns y:a
   ensures q y
-{
-  x
-}
+{ x }
 
-// Run one thunk, then pass both its result and its postcondition to next.
-// The interpreter uses this for both ordinary Step nodes and operation replies.
 fn sequence (#a #b:Type0) (#p:slprop) (#q:a -> slprop) (#s:b -> slprop)
   (action:unit -> stt a p (fun x -> q x))
   (next:(x:a -> stt b (q x) (fun y -> s y)))
@@ -40,133 +26,185 @@ fn sequence (#a #b:Type0) (#p:slprop) (#q:a -> slprop) (#s:b -> slprop)
   next x
 }
 
-// Exercise Pulse's frame rule at the execution boundary: action consumes p,
-// not f, and its returned resources are recombined with the unchanged f.
 fn framed_action (#a:Type0) (#p:slprop) (#q:a -> slprop)
   (f:slprop) (action:unit -> stt a p (fun x -> q x))
   requires p ** f
   returns x:a
   ensures q x ** f
+{ action () }
+
+divergent fn return_value_div (#a:Type0) (x:a) (#q:a -> slprop)
+  requires q x
+  returns y:a
+  ensures q y
+{ x }
+
+divergent fn sequence_div (#a #b:Type0) (#p:slprop) (#q:a -> slprop) (#s:b -> slprop)
+  (action:unit -> stt_div a p (fun x -> q x))
+  (next:(x:a -> stt_div b (q x) (fun y -> s y)))
+  requires p
+  returns y:b
+  ensures s y
 {
-  action ()
+  let x = action ();
+  next x
 }
 
-// Store the action and immediately return its eventual result. The constructor
-// application itself is pure; sequence is what will later invoke the thunk.
-let lift #tag #ops #a #p #q action =
-  Step action (fun x -> Return x)
+divergent fn framed_action_div (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (f:slprop) (action:unit -> stt_div a p (fun x -> q x))
+  requires p ** f
+  returns x:a
+  ensures q x ** f
+{ action () }
 
-// Equality transport has no operational content. Keeping the returned tree
-// equal to c also lets policy proofs survive precondition rearrangements.
-let reindex_pre #tag #ops #a #p #q p' pf c = c
+divergent fn lift_action (#a:Type0) (#p:slprop) (#q:a -> slprop)
+  (action:unit -> stt a p (fun x -> q x))
+  requires p
+  returns x:a
+  ensures q x
+{ action () }
 
-// Replace normal leaves with next. Requests keep their tags/arguments/frames,
-// and all continuations are composed recursively rather than executed here.
-let rec bind #tag #ops #a #b #p #q #s c next =
-  match c with
-  | Return x -> next x
-  | Step action k -> Step action (fun x -> bind (k x) next)
-  | Perform op arg k -> Perform op arg (fun y -> bind (k y) next)
+let frame_comp #a g #p #q f =
+  match g returns (comp g a p q -> comp g a (p ** f) (fun x -> q x ** f)) with
+  | Terminating -> fun action -> framed_action f (fun () -> action)
+  | MayDiverge -> fun action -> framed_action_div f (fun () -> action)
 
-// Frame each executable action and extend each request's private frame r to
-// r ** f. The two transports in Perform only reassociate resources: they do
-// not move f into the request/reply protocol visible to the implementation.
-let rec frame #tag #ops #a #p #q f c =
-  match c with
-  | Return x -> Return x
-  | Step action k ->
-      Step (fun () -> framed_action f action) (fun x -> frame f (k x))
-  | Perform #_ #_ #_ #_ #r op arg k ->
-      let next y : prog ops a ((ops op).reply arg y ** (r ** f)) (fun x -> q x ** f) =
-        star_assoc ((ops op).reply arg y) r f;
-        reindex_pre ((ops op).reply arg y ** (r ** f)) () (frame f (k y))
-      in
-      star_assoc ((ops op).request arg) r f;
-      reindex_pre (p ** f) () (Perform #_ #_ #_ #_ #(r ** f) op arg next)
-
-// Build Perform followed by Return, then remove the administrative ** emp from
-// its external precondition. The reply-side transport restores the constructor's
-// required reply ** emp while preserving the actual reply ownership.
-let perform #tag #ops op arg =
-  let next y : prog ops (ops op).output ((ops op).reply arg y ** emp) ((ops op).reply arg) =
-    star_comm ((ops op).reply arg y) emp;
-    emp_unit ((ops op).reply arg y);
-    reindex_pre ((ops op).reply arg y ** emp) () (Return y)
+let lift_comp #a #g h #p #q =
+  let up =
+    match g returns
+      (h:grade{below g h} -> comp g a p q -> comp h a p q) with
+    | Terminating -> (fun h ->
+        match h returns (comp Terminating a p q -> comp h a p q) with
+        | Terminating -> fun action -> action
+        | MayDiverge -> fun action -> lift_action (fun () -> action))
+    | MayDiverge -> (fun h ->
+        match h returns (comp MayDiverge a p q -> comp h a p q) with
+        | MayDiverge -> fun action -> action)
   in
-  star_comm ((ops op).request arg) emp;
-  emp_unit ((ops op).request arg);
-  reindex_pre ((ops op).request arg) () (Perform #_ #_ #_ #_ #emp op arg next)
+  up h
 
-// Rebuild requests using embed; its contract equality justifies reusing their
-// arguments, reply types, and resource indices. Delayed Pulse actions are shared.
-let rec weaken #tag #other #ops #target #a #p #q embed c =
-  match c with
-  | Return x -> Return x
-  | Step action k -> Step action (fun x -> weaken embed (k x))
-  | Perform #_ #_ #_ #_ #r op arg k ->
-      Perform #other #target #a #q #r (embed op) arg
-        (fun y -> weaken #tag #other #ops #target embed (k y))
-
-// Package a verified ghost entailment as a Pulse action acceptable to Step.
-// It changes logical ownership according to proof, not by running a heap update.
-fn ghost_step (#p #q:slprop)
+fn ghost_action (#p #q:slprop)
   (proof:unit -> stt_ghost unit emp_inames p (fun _ -> q))
   requires p
   ensures q
-{
-  proof ();
-}
+{ proof () }
 
-// Prepend the precondition entailment and append the result-indexed postcondition
-// entailment. The final Return deliberately returns c's original result x.
-let consequence #tag #ops #a #p #p' #q #q' before c after =
-  Step (fun () -> ghost_step before)
-    (fun _ -> bind c (fun x ->
-      Step (fun () -> ghost_step (fun () -> after x)) (fun _ -> Return x)))
+let ghost_comp g #p #q proof = lift_comp g (ghost_action proof)
 
-// The three constructor cases realize the interface's Hoare contract. In the
-// operation case, framed_action shields the request's private frame from impl;
-// sequence then gives the reply and retained frame to the recursive execution.
-let rec run #tag #ops #a #p #q impl c =
+let rec weaken_grade #tag #ops #g #a #p #q h c =
+  match c with
+  | Return x -> Return x
+  | Step action k -> Step (fun () -> lift_comp h (action ()))
+      (fun x -> weaken_grade h (k x))
+  | Perform op arg k -> Perform op arg (fun y -> weaken_grade h (k y))
+  | Abort op arg -> Abort op arg
+
+let lift #tag #ops #g #a #p #q action = Step action (fun x -> Return x)
+
+inline_for_extraction
+let rec bind_same (#tag:Type0) (#ops:signature tag) (#g:grade)
+  (#a #b:Type0) (#p:slprop) (#q:a -> slprop) (#s:b -> slprop)
+  (c:tree ops g a p q)
+  ([@@@FStar.Attributes.monomorphize] next:(x:a -> tree ops g b (q x) s))
+  : Tot (tree ops g b p s) (decreases c) =
+  match c with
+  | Return x -> next x
+  | Step action k -> Step action (fun x -> bind_same (k x) next)
+  | Perform op arg k -> Perform op arg (fun y -> bind_same (k y) next)
+  | Abort op arg -> Abort op arg
+
+let bind #tag #ops #g #h #a #b #p #q #s c next =
+  bind_same (weaken_grade (join g h) c)
+    (fun x -> weaken_grade (join g h) (next x))
+
+inline_for_extraction
+let reindex_pre (#tag:Type0) (#ops:signature tag) (#g:grade) (#a:Type0)
+  (#p:slprop) (#q:a -> slprop) (p':slprop) (_:squash (p == p'))
+  (c:tree ops g a p q) : tree ops g a p' q = c
+
+let rec frame #tag #ops #g #a #p #q f c =
+  match c with
+  | Return x -> Return x
+  | Step action k ->
+      Step (fun () -> frame_comp g f (action ())) (fun x -> frame f (k x))
+  | Perform #_ #_ #_ #_ #_ #r op arg k ->
+      let next y =
+        star_assoc (reply (ops op) arg y) r f;
+        reindex_pre (reply (ops op) arg y ** (r ** f)) () (frame f (k y))
+      in
+      star_assoc (request (ops op) arg) r f;
+      reindex_pre (p ** f) ()
+        (Perform #_ #(frame_signature f ops) #g #a #(fun x -> q x ** f) #(r ** f) op arg next)
+  | Abort op arg -> Abort #tag #(frame_signature f ops) op arg
+
+let perform #tag #ops #g op arg =
+  let next y =
+    star_comm (reply (ops op) arg y) emp;
+    emp_unit (reply (ops op) arg y);
+    reindex_pre (reply (ops op) arg y ** emp) () (Return y)
+  in
+  star_comm (request (ops op) arg) emp;
+  emp_unit (request (ops op) arg);
+  reindex_pre (request (ops op) arg) ()
+    (Perform #tag #ops #g #(output (ops op)) #(reply (ops op) arg) #emp op arg next)
+
+let rec relabel #tag #other #ops #target #g #a #p #q embed c =
+  match c with
+  | Return x -> Return x
+  | Step action k -> Step action (fun x -> relabel embed (k x))
+  | Perform op arg k ->
+      Perform #other #target (embed op) arg
+        (fun y -> relabel #tag #other #ops #target embed (k y))
+  | Abort op arg -> Abort #other #target (embed op) arg
+
+let consequence #tag #ops #g #a #p #p' #q #q' before c after =
+  Step (fun () -> ghost_comp g before)
+    (fun _ -> bind_same c (fun x ->
+      Step (fun () -> ghost_comp g (fun () -> after x)) (fun _ -> Return x)))
+
+let rec run_terminating #tag #ops #a #p #q impl c =
   match c with
   | Return x -> return_value x
-  | Step action k ->
-      sequence action (fun x -> run impl (k x))
-  | Perform op arg k ->
-      sequence (fun () -> framed_action _ (fun () -> impl op arg))
-        (fun y -> run impl (k y))
+  | Step action k -> sequence action (fun x -> run_terminating impl (k x))
+  | Perform #_ #_ #_ #_ #_ #r op arg k ->
+      sequence (fun () -> framed_action r (fun () -> impl op arg))
+        (fun y -> run_terminating impl (k y))
+  | Abort op arg ->
+      sequence (fun () -> impl op arg)
+        (fun y -> let impossible:empty = y in match impossible with)
 
-// Supply the unique implementation table on an empty tag type. Its impossible
-// branch cannot execute, so this is a checked closing boundary, not a fallback.
+let rec run_divergent #tag #ops #a #p #q impl c =
+  match c with
+  | Return x -> return_value_div x
+  | Step action k -> sequence_div action (fun x -> run_divergent impl (k x))
+  | Perform #_ #_ #_ #_ #_ #r op arg k ->
+      sequence_div (fun () -> framed_action_div r (fun () -> impl op arg))
+        (fun y -> run_divergent impl (k y))
+  | Abort op arg ->
+      sequence_div (fun () -> impl op arg)
+        (fun y -> let impossible:empty = y in match impossible with)
+
+let run #tag #ops #g #h #a #p #q =
+  let dispatch = match g returns
+    (h:grade -> implementations ops h -> tree ops g a p q ->
+      comp (join g h) a p q) with
+  | Terminating -> (fun h ->
+      match h returns
+        (implementations ops h -> tree ops Terminating a p q ->
+          comp (join Terminating h) a p q) with
+      | Terminating -> fun impl c -> run_terminating impl c
+      | MayDiverge -> fun impl c -> run_divergent impl (weaken_grade MayDiverge c))
+  | MayDiverge -> (fun h ->
+      match h returns
+        (implementations ops h -> tree ops MayDiverge a p q ->
+          comp (join MayDiverge h) a p q) with
+      | Terminating -> fun impl c ->
+          run_divergent (fun op arg -> lift_action (fun () -> impl op arg)) c
+      | MayDiverge -> fun impl c -> run_divergent impl c)
+  in dispatch h
+
 let run_closed #ops #a #p #q c =
-  run (fun op -> match op with) c
+  run_terminating (fun op -> match op with) c
 
-// Unfolding lift reveals a Step whose continuations are all Return.
-let lift_all_requests #tag #ops #a #p #q action policy = ()
-
-// The premise is precisely the Step clause of all_requests.
-let step_all_requests #tag #ops #a #b #p #s #q action next policy = ()
-
-// The interface's emp-frame premise discharges the sole request; transports
-// preserve tree equality and the reply continuation is just Return.
-let perform_all_requests #tag #ops op arg policy = ()
-
-// Structural induction follows bind. Quantifier introduction supplies the
-// induction hypothesis for every delayed action result and every operation reply.
-let rec bind_all_requests #tag #ops #a #b #p #q #s c next policy =
-  match c with
-  | Return _ -> ()
-  | Step action k ->
-      FStar.Classical.forall_intro (fun x -> bind_all_requests (k x) next policy)
-  | Perform op arg k ->
-      FStar.Classical.forall_intro (fun y -> bind_all_requests (k y) next policy)
-
-// Structural induction follows relabelling. The caller's uniform permission
-// premise covers each embedded request, regardless of its retained frame.
-let rec weaken_all_requests #tag #other #ops #target #a #p #q embed c policy =
-  match c with
-  | Return _ -> ()
-  | Step action k ->
-      FStar.Classical.forall_intro (fun x -> weaken_all_requests embed (k x) policy)
-  | Perform op arg k ->
-      FStar.Classical.forall_intro (fun y -> weaken_all_requests embed (k y) policy)
+let run_closed_div #ops #g #a #p #q c =
+  run_divergent (fun op -> match op with) (weaken_grade MayDiverge c)
