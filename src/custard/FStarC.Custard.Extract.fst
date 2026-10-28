@@ -1719,6 +1719,51 @@ let rec apply_result (st:state) (ty:cty) (n:int) : ML cty =
       | Some ty -> apply_result st ty n
       | None -> TAny
 
+(* Issue #4803.  A lambda put where an arrow [expected] is wanted -- bound by
+   an annotated [let], or passed as an argument -- has to have that arrow's
+   arity.  Both come from one F\* type and run the same [Mono.keep_thunk], so
+   they normally agree; but the lambda decides from its own body when its
+   residual comp is gone, which extraction normalization makes the common
+   case, and a Pulse [fn] whose body is all ghost steps erases to a pure [()]
+   although its codomain is [stt].  The arrow then keeps the trailing thunk
+   that the lambda dropped.
+
+   The repair is the binder: when the arrow has one more [unit] parameter
+   after the lambda's own and the body is not itself a function, the lambda
+   gets it back.  Nothing else of that shape is well typed, so nothing else is
+   touched. *)
+let conform_lambda (st:state) (expected:cty) (e:expr) : ML expr =
+  match e.e with
+  | EFun (bs, body) ->
+    let rec peel (n:int) (t:cty) : ML (option cty) =
+      if n <= 0 then Some (head_ty st t 10)
+      else match head_ty st t 10 with
+           | TArrow (_, _, r) -> peel (n - 1) r
+           | _ -> None in
+    (match peel (List.length bs) expected with
+     | Some (TArrow (TUnit, eff, _))
+         when not (TArrow? (head_ty st body.ty 10)) && not (TAny? body.ty) ->
+       let bs = bs @ [{ b_name = uniq "uu__thunk" (GenSym.next_id ()); b_ty = TUnit }] in
+       let rec arrow (bs:list binder) : ML cty =
+         match bs with
+         | [] -> body.ty
+         | [b] -> TArrow (b.b_ty, join_eff eff body.eff, body.ty)
+         | b :: bs -> TArrow (b.b_ty, E_Pure, arrow bs) in
+       { e with e = EFun (bs, body); ty = arrow bs }
+     | _ -> e)
+  | _ -> e
+
+(* {!conform_lambda} for each argument of a call through [hd_ty]. *)
+let conform_args (st:state) (hd_ty:cty) (args:list expr) : ML (list expr) =
+  let rec go (t:cty) (args:list expr) : ML (list expr) =
+    match args with
+    | [] -> []
+    | a :: args ->
+      match head_ty st t 10 with
+      | TArrow (p, _, r) -> conform_lambda st p a :: go r args
+      | _ -> a :: args in
+  go hd_ty args
+
 (* -------------------------------------------------------------------- *)
 (* Requests                                                             *)
 (* -------------------------------------------------------------------- *)
@@ -3630,7 +3675,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
            let args0 = drop_flagged flags args in
            let ufs = narrow ufs args0 in
            let args = keep ufs args0 in
-           value_args st ufs args in
+           conform_args st hd.ty (value_args st ufs args) in
        (match args with
         | [] -> hd
         | _ ->
@@ -3705,6 +3750,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let lty = if erased_lb then e1.ty else
                  let lty = ty_of_typ st lb.lbtyp in
                  if TAny? lty then e1.ty else lty in
+       let e1 = conform_lambda st lty e1 in
        HashTable.add st.lettys (show bv.index) lty;
        let e2 = expr_of_term st body in
        mk (ELet (name_of_bv bv, lty, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
@@ -4664,7 +4710,7 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
        this path: [heap_call] extracts the spine itself, and extracting it
        twice is exponential in the nesting depth of calls. *)
     let rest = value_args st (call_unit_flags st l cs args) rest in
-    let rest = hargs @ rest in
+    let rest = conform_args st hd_ty (hargs @ rest) in
     match rest with
     | [] -> hd
     | _ ->
