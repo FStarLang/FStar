@@ -447,6 +447,12 @@ CGREP_PulseGhostFn += "PulseGhostFn_with_justif(void)"
 CNOGREP_PulseGhostFn += "*justif"
 CNOGREP_PulseGhostFn += "(justif()"
 
+# Issue #4803.  A method whose implementation erases to a pure [()] keeps the
+# unit thunk of its arrow type, whether bound to a local or passed on; no unit
+# value is ever called.
+C_TESTS += PulseGhostMethod
+CNOGREP_PulseGhostMethod += "custard_unit)0)("
+
 # Section 71.4.  The three ways a static array is not one, and what each says.
 # A run whose contents are a run-time value is a contradiction in terms, so it
 # is refused rather than built at startup behind the programmer's back.
