@@ -7,7 +7,7 @@
   ],
   "include_dirs": [
     ".",
-    "..",
+    "../msqueue",
     "../../../../../lib/pulse/logical_atomicity",
     "../../../../../lib/core",
     "../../../../../build/lib.core.checked"

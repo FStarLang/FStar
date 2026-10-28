@@ -108,7 +108,7 @@ atomic instruction, and it adds no generic atomic-pointer primitive.
 
 The implementation invariant is entirely ghost state: there is **no global
 runtime set lock**. The generic
-[`MSQueue.Actions`](../Pulse.Lib.LogicalAtomicity.Example.MSQueue.Actions.fst)
+[`MSQueue.Actions`](../msqueue/Pulse.Lib.LogicalAtomicity.Example.MSQueue.Actions.fst)
 helpers are reused for AU composition and delayed closing; they do not
 depend on the FIFO implementation. The lexical implementation invariant is
 closed before the suspended client closing update runs.

@@ -15,6 +15,7 @@
     "by-example",
     "logical_atomicity",
     "logical_atomicity/concurrent_set",
+    "logical_atomicity/msqueue",
     "parallel",
     "c",
     "dice",

@@ -32,20 +32,12 @@ $(OUTPUT_DIR)/Read.ml: $(ALL_CHECKED_FILES)
 $(OUTPUT_DIR)/Helping.ml: $(ALL_CHECKED_FILES)
 	$(FSTAR_EXE) --silent --include $(CACHE_DIR) Pulse.Lib.LogicalAtomicity.Example.Helping.fst --codegen OCaml --custard_entry_module Pulse.Lib.LogicalAtomicity.Example.Helping -o $@
 
-$(OUTPUT_DIR)/MSQueueClients.ml: $(ALL_CHECKED_FILES)
-	$(FSTAR_EXE) --silent --include $(CACHE_DIR) Pulse.Lib.LogicalAtomicity.Example.MSQueue.Clients.fst --codegen OCaml --custard_entry_module Pulse.Lib.LogicalAtomicity.Example.MSQueue.Clients -o $@
-
-$(OUTPUT_DIR)/MSQueueConcurrent.ml: $(ALL_CHECKED_FILES)
-	$(FSTAR_EXE) --silent --include $(CACHE_DIR) Pulse.Lib.LogicalAtomicity.Example.MSQueue.Concurrent.fst --codegen OCaml --custard_entry_module Pulse.Lib.LogicalAtomicity.Example.MSQueue.Concurrent -o $@
-
 # Reuse the task tests' native fork/sleep and the library lock realization.
-# Queue atomics have their own mutex-backed boundary documented in that file.
 REALIZATIONS := $(PULSE_ROOT)/lib/pulse/lib/ml/Pulse_Lib_SpinLock.ml \
 	$(PULSE_ROOT)/test/pool/pulse_task/ml/Pulse_Lib_Core.ml \
-	$(PULSE_ROOT)/test/pool/pulse_task/ml/Pulse_Lib_Sleep.ml \
-	MSQueue_atomics.ml
+	$(PULSE_ROOT)/test/pool/pulse_task/ml/Pulse_Lib_Sleep.ml
 
-RUNTIME_MODULES := Counter.ml Read.ml Helping.ml MSQueueClients.ml MSQueueConcurrent.ml
+RUNTIME_MODULES := Counter.ml Read.ml Helping.ml
 
 # Copy handwritten modules into the output directory so OCaml intermediates
 # never appear beside sources; compile against this compiler's runtime.
@@ -59,7 +51,7 @@ runtime-test: $(OUTPUT_DIR)/runtime.exe
 	$<
 
 # Keep all's recursion separate from verify's recursion, avoiding two concurrent
-# make processes writing the child's proof cache for a single all invocation.
+# make processes writing a child's proof cache for a single all invocation.
 .PHONY: concurrent-set-verify concurrent-set-runtime concurrent-set-clean
 concurrent-set-verify:
 	$(MAKE) -C concurrent_set verify
@@ -67,7 +59,14 @@ concurrent-set-runtime:
 	$(MAKE) -C concurrent_set runtime-test
 concurrent-set-clean:
 	$(MAKE) -C concurrent_set clean
-verify: concurrent-set-verify
-runtime-test: concurrent-set-runtime
-clean: concurrent-set-clean
+.PHONY: msqueue-verify msqueue-runtime msqueue-clean
+msqueue-verify:
+	$(MAKE) -C msqueue verify
+msqueue-runtime:
+	$(MAKE) -C msqueue runtime-test
+msqueue-clean:
+	$(MAKE) -C msqueue clean
+verify: concurrent-set-verify msqueue-verify
+runtime-test: concurrent-set-runtime msqueue-runtime
+clean: concurrent-set-clean msqueue-clean
 all: all-checked runtime-test

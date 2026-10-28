@@ -8,6 +8,7 @@
   "include_dirs": [
     ".",
     "concurrent_set",
+    "msqueue",
     "../../../../lib/pulse/logical_atomicity",
     "../../../../lib/core",
     "../../../../build/lib.core.checked"
