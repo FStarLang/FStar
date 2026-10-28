@@ -101,7 +101,7 @@ no extraction can ever pick it up.  In Pulse, e.g., `Pulse.Lib.Reference`,
 `Box`, `Vec`, `Array.Core`, `ArrayPtr` and `Comment` are compiled by
 Custard's extraction rules, `Pulse.Lib.SpinLock` is realized by hand, and
 `Pulse.Lib.Primitives` (whose model `cas` is a read followed by a write) is
-realized in C by `pulse/share/pulse/runtime/Pulse_Lib_Primitives_runtime.c`
+realized in C by `pulse/share/pulse/runtime/Pulse_Lib_Primitives_runtime.h`
 (there is no OCaml realization).  Executable code
 derived from such primitives lives in the `.fsti` as `inline_for_extraction`
 definitions.

@@ -31,9 +31,12 @@ module B = Pulse.Lib.Box
 /// extractable implementation: Pulse.Lib.Primitives-model.fst is only a
 /// sequential model, and must never be compiled.  Extracted code calls
 /// [read_atomic], [write_atomic] and [cas] as externals, which are
-/// implemented by handwritten code: for C, in
-/// share/pulse/runtime/Pulse_Lib_Primitives_runtime.c (with Karamel, use the
-/// option `-library Pulse.Lib.Primitives`).  There is no OCaml
+/// implemented by handwritten code: for C, as static inline functions in
+/// share/pulse/runtime/Pulse_Lib_Primitives_runtime.h, which must be
+/// included before the extracted code (with Karamel, use the options
+/// `-library Pulse.Lib.Primitives -add-include
+/// '"Pulse_Lib_Primitives_runtime.h"'`; with Custard's C backend, compile
+/// with `-include Pulse_Lib_Primitives_runtime.h`).  There is no OCaml
 /// implementation.
 
 val read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
