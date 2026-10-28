@@ -14,6 +14,7 @@
   "include_dirs": [
     "by-example",
     "logical_atomicity",
+    "logical_atomicity/concurrent_set",
     "parallel",
     "c",
     "dice",

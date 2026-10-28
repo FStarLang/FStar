@@ -58,4 +58,16 @@ $(OUTPUT_DIR)/runtime.exe: runtime_test.ml $(addprefix $(OUTPUT_DIR)/,$(RUNTIME_
 runtime-test: $(OUTPUT_DIR)/runtime.exe
 	$<
 
-all: verify runtime-test
+# Keep all's recursion separate from verify's recursion, avoiding two concurrent
+# make processes writing the child's proof cache for a single all invocation.
+.PHONY: concurrent-set-verify concurrent-set-runtime concurrent-set-clean
+concurrent-set-verify:
+	$(MAKE) -C concurrent_set verify
+concurrent-set-runtime:
+	$(MAKE) -C concurrent_set runtime-test
+concurrent-set-clean:
+	$(MAKE) -C concurrent_set clean
+verify: concurrent-set-verify
+runtime-test: concurrent-set-runtime
+clean: concurrent-set-clean
+all: all-checked runtime-test

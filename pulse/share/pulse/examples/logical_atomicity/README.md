@@ -48,21 +48,29 @@ module- and definition-level documentation.
    `SendableTrade` transfers a recipe built from sendable ownership; the winner
    constructs the AU locally. This is a locked protocol, not a lock-free one.
 
-6. **[MSQueue.Clients](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Clients.fst):
+6. **[Concurrent set](concurrent_set/README.md): lock coupling and strong
+   concurrent client guarantees.** Start with its public AU interface and
+   sequential client, then the Jacobs--Piessens producer/consumer protocol.
+   The second removal of a successfully removed key is proved to fail despite
+   interference; the finite task client also proves final emptiness.
+   This example uses a finite key universe and reusable, per-node-locked
+   linked-list nodes. Its guide explains the difference from the paper.
+
+7. **[MSQueue.Clients](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Clients.fst):
    first read the queue's client-facing contracts.** Begin with `enqueue_owned`,
    `dequeue_owned`, `pop_owned`, and `empty_owned`, then `fifo_ownership`.
    Private model ownership specializes the concurrent AU contracts to ordinary
    sequential FIFO reasoning. The last client transfers two exclusive boxed
    payloads through the queue, retrieves them in order, and frees them.
 
-7. **[The queue proof](#queue-proof-reading-order): connect the client
+8. **[The queue proof](#queue-proof-reading-order): connect the client
    contracts to a multi-step implementation.** Follow the module order below,
    from the pure history model through physical ownership to enqueue/dequeue
    linearization. Then return to `MSQueue.Clients.enqueue_deferred`,
    `delayed_tail`, and `stale_tail_retry` for clients that expose publication,
    helping, and failed-CAS scheduling points.
 
-8. **[MSQueue.Concurrent](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Concurrent.fst):
+9. **[MSQueue.Concurrent](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Concurrent.fst):
    share the abstract model between workers.** Read `share_model`,
    `prepare_enqueue`, and `prepare_dequeue`, then the producer/consumer wrappers
    and `two_producers_two_consumers_in_pool`. Workers construct AUs from a
@@ -71,12 +79,12 @@ module- and definition-level documentation.
    described below; the operation contracts are stronger than this harness's
    final postcondition.
 
-9. **[MSQueue.Rejections](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Rejections.fst)
-   and [the runtime tests](runtime_test.ml): inspect ownership boundaries and
-   executable evidence.** The rejection cases prohibit reusing an enqueue
-   ticket and reading a transferred payload before ownership is returned.
-   Finish with the atomic realizations and runtime checks described below
-   to distinguish verified contracts from handwritten backend assumptions.
+10. **[MSQueue.Rejections](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Rejections.fst)
+    and [the runtime tests](runtime_test.ml): inspect ownership boundaries and
+    executable evidence.** The rejection cases prohibit reusing an enqueue
+    ticket and reading a transferred payload before ownership is returned.
+    Finish with the atomic realizations and runtime checks described below
+    to distinguish verified contracts from handwritten backend assumptions.
 
 ## Michael--Scott FIFO queue
 
