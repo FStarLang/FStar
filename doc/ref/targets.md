@@ -95,3 +95,13 @@ native) a `-model.fst` showing that the interface is consistent.  Model
 implementations must not use `assume`, `admit`, etc.  This is checked in CI
 by `make check-fsti-impls` (`.scripts/check_fsti_impls.py`), and the
 remaining exceptions are listed in `.scripts/fsti_without_impl.txt`.
+
+A model must be a `-model.fst` whenever compiling it would be wrong, so that
+no extraction can ever pick it up.  In Pulse, e.g., `Pulse.Lib.Reference`,
+`Box`, `Vec`, `Array.Core`, `ArrayPtr` and `Comment` are compiled by
+Custard's extraction rules, `Pulse.Lib.SpinLock` is realized by hand, and
+`Pulse.Lib.Primitives` (whose model `cas` is a read followed by a write) is
+realized in C by `pulse/share/pulse/runtime/Pulse_Lib_Primitives_runtime.c`
+(there is no OCaml realization).  Executable code
+derived from such primitives lives in the `.fsti` as `inline_for_extraction`
+definitions.

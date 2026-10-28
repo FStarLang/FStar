@@ -109,7 +109,13 @@ fn gather u#a (#a: Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   ensures (r |-> Frac (p0 +. p1) x0)
   ensures pure (x0 == x1)
 
-val with_local
+(* Pulse.Lib.Reference-model.fst is only a model: the operations above are
+   compiled by extraction rules, so everything executable that is built on
+   them is defined here, in the interface.  [with_local] is the sound way to
+   use [alloc] and [free], hence the warning is silenced. *)
+#push-options "--warn_error -288"
+inline_for_extraction
+fn with_local u#a u#b
   (#a:Type u#a) {| small_type u#a |}
   (init:a)
   (#pre:slprop)
@@ -117,8 +123,16 @@ val with_local
   (#post:ret_t -> slprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
                                (fun v -> post v ** (exists* (x:a). pts_to r x)))
-  : stt ret_t pre (fun r -> post r)
+  : stt ret_t pre (fun r -> post r) =
+{
+  let x = alloc init;
+  let r = body x;
+  free x;
+  r
+}
+#pop-options
 
+inline_for_extraction
 let with_local0
   (#a:Type0)
   (init:a)
@@ -212,8 +226,14 @@ fn return_array_at_uninit u#a (#a: Type u#a) (arr: array a) (i: nat) (#v': Seq.s
   requires pure (~(mask i))
   ensures exists* vi. pts_to_mask arr (Seq.upd v' i vi) (fun k -> mask k \/ k == i)
 
+inline_for_extraction
 fn replace u#a (#a:Type u#a) (r:ref a) (x:a) (#v:erased a)
   requires r |-> v
   returns  res: a
   ensures  r |-> x
   ensures  rewrites_to res v
+{
+  let y = !r;
+  r := x;
+  y
+}

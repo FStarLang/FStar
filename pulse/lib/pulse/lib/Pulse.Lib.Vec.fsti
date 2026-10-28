@@ -128,6 +128,10 @@ fn to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
   requires A.pts_to (vec_to_array v) #p s
   ensures pts_to v #p s
 
+(* Pulse.Lib.Vec-model.fst is only a model: the operations above are
+   compiled by extraction rules, so everything executable that is built on
+   them is defined here, in the interface. *)
+inline_for_extraction
 fn read_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (#v:erased (vec a))
@@ -136,7 +140,17 @@ fn read_ref (#a:Type0) (r:R.ref (vec a))
   preserves pts_to v s
   returns res : a
   ensures pure (res == Seq.index s (SZ.v i))
+{
+  let vc = R.(!r);
+  rewrite (pts_to (reveal v) s)
+       as (pts_to vc s);
+  let x = op_Dot_Lparen_Rparen vc i;
+  rewrite (pts_to vc s)
+       as (pts_to (reveal v) s);
+  x
+}
 
+inline_for_extraction
 fn write_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)
   (x:a)
@@ -145,14 +159,30 @@ fn write_ref (#a:Type0) (r:R.ref (vec a))
   preserves R.pts_to r v
   requires pts_to v s
   ensures pts_to v (Seq.upd s (SZ.v i) x)
+{
+  let vc = R.(!r);
+  rewrite (pts_to (reveal v) s)
+       as (pts_to vc s);
+  op_Dot_Lparen_Rparen_Less_Minus vc i x;
+  with s. assert (pts_to vc s);
+  rewrite (pts_to vc s)
+       as (pts_to (reveal v) s)
+}
 
+inline_for_extraction
 fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
   requires pts_to v s
   returns  res : a
   ensures pts_to v (Seq.upd s (SZ.v i) x)
   ensures pure (res == Seq.index s (SZ.v i))
+{
+  let y = op_Dot_Lparen_Rparen v i;
+  op_Dot_Lparen_Rparen_Less_Minus v i x;
+  y
+}
 
+inline_for_extraction
 fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s})
@@ -161,7 +191,19 @@ fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   returns  res : a
   ensures pts_to v (Seq.upd s (SZ.v i) x)
   ensures pure (res == Seq.index s (SZ.v i))
+{
+  let vc = R.(!r);
+  rewrite (pts_to v s)
+       as (pts_to vc s);
+  let y = op_Dot_Lparen_Rparen vc i;
+  op_Dot_Lparen_Rparen_Less_Minus vc i x;
+  with s. assert (pts_to vc s);
+  rewrite (pts_to vc s)
+       as (pts_to v s);
+  y
+}
 
+inline_for_extraction
 fn compare
         (#t:eqtype)
         (l:SZ.t)
@@ -176,3 +218,11 @@ fn compare
      pts_to a1 #p1 s1 **
      pts_to a2 #p2 s2 **
      pure (res <==> Seq.equal s1 s2)
+{
+  to_array_pts_to a1;
+  to_array_pts_to a2;
+  let r = Pulse.Lib.Array.compare l (vec_to_array a1) (vec_to_array a2);
+  to_vec_pts_to a1;
+  to_vec_pts_to a2;
+  r
+}

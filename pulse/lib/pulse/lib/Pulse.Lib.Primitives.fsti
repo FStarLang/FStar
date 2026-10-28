@@ -27,10 +27,14 @@ open Pulse.Class.PtsTo
 module U32 = FStar.UInt32
 module B = Pulse.Lib.Box
 
-/// This module provides primitive atomic operations that are not
-/// meant to be extracted to C (since they are intended to be
-/// implemented by handwritten C code.) Thus, please use Karamel
-/// option `-library Pulse.Lib.Primitives`
+/// This module provides primitive atomic operations.  They have no
+/// extractable implementation: Pulse.Lib.Primitives-model.fst is only a
+/// sequential model, and must never be compiled.  Extracted code calls
+/// [read_atomic], [write_atomic] and [cas] as externals, which are
+/// implemented by handwritten code: for C, in
+/// share/pulse/runtime/Pulse_Lib_Primitives_runtime.c (with Karamel, use the
+/// option `-library Pulse.Lib.Primitives`).  There is no OCaml
+/// implementation.
 
 val read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
   : stt_atomic U32.t #Observable emp_inames
@@ -51,16 +55,45 @@ val cas (r:ref U32.t) (u v:U32.t) (#i:erased U32.t)
       cond b (pts_to r v ** pure (reveal i == u)) 
              (pts_to r i))
 
+inline_for_extraction
 atomic fn read_atomic_box (r:B.box U32.t) (#n:erased U32.t) (#p:perm)
   preserves r |-> Frac p n
   returns x:U32.t
   ensures pure (reveal n == x)
+{
+  B.to_ref_pts_to r;
+  let x = read_atomic (B.box_to_ref r);
+  B.to_box_pts_to r;
+  x
+}
 
+inline_for_extraction
 atomic fn write_atomic_box (r:B.box U32.t) (x:U32.t) (#n:erased U32.t)
   requires r |-> n
   ensures r |-> x
+{
+  B.to_ref_pts_to r;
+  write_atomic (B.box_to_ref r) x;
+  B.to_box_pts_to r;
+}
 
+inline_for_extraction
 atomic fn cas_box (r:B.box U32.t) (u v:U32.t) (#i:erased U32.t)
   requires r |-> i
   returns b: bool
   ensures cond b ((r |-> v) ** pure (reveal i == u)) (r |-> i)
+{
+  B.to_ref_pts_to r;
+  let b = cas (B.box_to_ref r) u v;
+  if (b) {
+    unfold cond;
+    B.to_box_pts_to r;
+    fold cond true ((r |-> v) ** pure (reveal i == u)) (r |-> i);
+    b
+  } else {
+    unfold cond;
+    B.to_box_pts_to r;
+    fold cond false ((r |-> v) ** pure (reveal i == u)) (r |-> i);
+    b
+  }
+}
