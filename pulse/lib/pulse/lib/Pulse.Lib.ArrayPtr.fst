@@ -367,11 +367,11 @@ fn join (#t: Type) (s1: ptr t) (#p: perm) (#v1: Seq.seq t) (s2: ptr t) (#v2: Seq
 
 fn memcpy
     (#t:Type0) (#p0:perm)
-    (src:ptr t) (idx_src: SZ.t)
-    (dst:ptr t) (idx_dst: SZ.t)
+    (src:ptr t)
+    (dst:ptr t)
     (len: SZ.t)
-    (#s0:Ghost.erased (Seq.seq t) { SZ.v idx_src + SZ.v len <= Seq.length s0 })
-    (#s1:Ghost.erased (Seq.seq t) { SZ.v idx_dst + SZ.v len <= Seq.length s1 })
+    (#s0:Ghost.erased (Seq.seq t) { SZ.v len <= Seq.length s0 })
+    (#s1:Ghost.erased (Seq.seq t) { SZ.v len <= Seq.length s1 })
   requires pts_to src #p0 s0
   requires pts_to dst s1
   ensures pts_to src #p0 s0 **

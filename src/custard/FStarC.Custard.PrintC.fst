@@ -3347,24 +3347,21 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let b = c_expr out ind b in
     !out ^ ind ^ "free(" ^ b ^ ");\n" ^ unit_result ind d
 
-  | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
+  | EOp ({ po_op = BufBlit }, [src; dst; len]) ->
     let out = mk_ref "" in
     let elt = match dst.ty with
               | TBuf e | TRef (_, e) -> ty e
               | _ -> reject "a blit whose destination is not a pointer" [] in
     let srcv = c_expr out ind src in
-    (* Section 59.  The two offsets are added to a pointer and the length is
-       multiplied by a [sizeof], so in all three the other operand fixes the
-       type and a literal's cast repeats it. *)
-    let siv = c_rvalue out ind si.ty si in
     let dstv = c_expr out ind dst in
-    let div = c_rvalue out ind di.ty di in
+    (* Section 59.  The length is multiplied by a [sizeof], so the other
+       operand fixes the type and a literal's cast repeats it. *)
     let lenv = c_rvalue out ind len.ty len in
     (* [group] and not a hand-written pair: section 41.1.  The length is
        almost always already parenthesized -- a literal, a cast, a field of a
        struct -- and a second pair around it is what section 32.10's gate
        rejects. *)
-    !out ^ ind ^ "memmove(" ^ dstv ^ " + " ^ div ^ ", " ^ srcv ^ " + " ^ siv ^
+    !out ^ ind ^ "memmove(" ^ dstv ^ ", " ^ srcv ^
     ", " ^ group lenv ^ " * sizeof(" ^ elt ^ "));\n" ^ unit_result ind d
 
   (* Cherry: any other call in tail position is a guaranteed tail call when
@@ -5535,10 +5532,10 @@ let cherry_pbuf_helpers () : ML (list string & list string) =
        ("  size_t n = cherry_pbuf_len((void *)b);\n" ^ drop ^ "  cherry_pbuf_release((void *)b);\n");
     (* The source range gains its references before the destination range
        loses its own, so that an overlap never frees what is copied. *)
-    fn ("static inline void " ^ p ^ "_blit(" ^ decl_of (TBuf t) "s" ^ ", size_t si, " ^ b ^ ", size_t di, size_t n)")
-       ("  for (size_t j = 0; j < n; j++) " ^ op "inc" "s[si + j]" ^ "\n" ^
-        "  for (size_t j = 0; j < n; j++) " ^ op "dec" "b[di + j]" ^ "\n" ^
-        "  memmove(&b[di], &s[si], n * sizeof(b[0]));\n"));
+    fn ("static inline void " ^ p ^ "_blit(" ^ decl_of (TBuf t) "s" ^ ", " ^ b ^ ", size_t n)")
+       ("  for (size_t j = 0; j < n; j++) " ^ op "inc" "s[j]" ^ "\n" ^
+        "  for (size_t j = 0; j < n; j++) " ^ op "dec" "b[j]" ^ "\n" ^
+        "  memmove(b, s, n * sizeof(b[0]));\n"));
   !protos, !defs
 
 let cherry_iarr_helpers () : ML (list string & list string) =

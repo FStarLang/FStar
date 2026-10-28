@@ -936,9 +936,9 @@ let rec krml_expr (env:kenv) (e:expr) : ML K.expr =
     let pt = K.TBuf t in
     K.EApp (K.ETypApp (K.EOp (K.Eq, K.Bool), [pt]),
             [krml_expr env b; K.EBufNull t])
-  | EOp ({ po_op = BufBlit }, [src; srci; dst; dsti; len]) ->
-    K.EBufBlit (krml_expr env src, krml_expr env srci,
-                krml_expr env dst, krml_expr env dsti, krml_expr env len)
+  | EOp ({ po_op = BufBlit }, [src; dst; len]) ->
+    let zero = K.EConstant (K.SizeT, "0") in
+    K.EBufBlit (krml_expr env src, zero, krml_expr env dst, zero, krml_expr env len)
   (* Section 71.  karamel has the node already, and [Eternal] is the lifetime
      that means static storage duration -- which is what a static array is.
      karamel's own C backend then emits the same [const] declaration this

@@ -25,7 +25,7 @@ fn copy2 (src: AP.ptr U8.t) (dst: AP.ptr U8.t)
                   Seq.index s 0 == Seq.index s0 0 /\
                   Seq.index s 1 == Seq.index s0 1)
 {
-  AP.memcpy src 0sz dst 0sz 2sz;
+  AP.memcpy src dst 2sz;
 }
 
 fn main ()
