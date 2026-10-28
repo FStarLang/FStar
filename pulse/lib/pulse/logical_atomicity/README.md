@@ -4,13 +4,11 @@ This is a library-only prototype: no Pulse syntax, elaboration, or checker
 changes. The semantic model and all combinators are verified; there are no new
 axioms or admitted proofs.
 
-Foundations live in this directory; executable and rejection examples live in
-[`pulse/share/pulse/examples/logical_atomicity`](../../../share/pulse/examples/logical_atomicity).
-The example module names retain `Pulse.Lib.LogicalAtomicity.Example` for source
-compatibility, but they are no longer roots of the Pulse library build or
-included through its `fstar.include`. Each source has a module-level account
-of its proof role and limitations, followed by definition-level contracts
-and proof explanations.
+Foundations live in this directory. The separate
+[examples guide](../../../share/pulse/examples/logical_atomicity/README.md)
+provides a simple-to-complex reading order, worked examples, implementation
+details, and executable validation instructions. Each source file documents
+its proof role, definitions, and limitations.
 
 ## Layers
 
@@ -58,8 +56,8 @@ abort branch for later.
 The `forall*` over `option b` encodes an **additive** choice over that one
 capability. It must not be replaced with separating conjunction of two
 continuations: both alternatives may capture the same exclusive ownership.
-In contrast, `forall+` in the queue's storage proof owns a separating
-collection of distinct physical next fields.
+In contrast, `forall+` owns a separating collection of resources, one for
+each quantified element.
 
 `Update.wand` hides owned resources plus pure existence of suitable ghost
 code. Pure code availability does not make captured resources persistent.
@@ -80,21 +78,19 @@ equivalence theorems between logics**.
 | Iris atomic accessor (`atomic_acc`) | `Atomic.accessor`, exposing alpha with an additive abort/commit choice | Credits and Pulse locality are explicit; the API uses two ordinary witness types rather than Iris's telescope notation. |
 | Iris atomic update (`atomic_update`) | `Atomic.atomic_update`, with abort restoring the hidden retry state | The existential state/step construction supplies introduction and reusable opening, not a proof of equivalence to Iris's greatest-fixed-point definition. |
 | TaDA abstract atomicity | An implementation can take many steps while exposing one abstract alpha-to-beta transition to clients | No TaDA region/guard calculus, abstract-atomic triple syntax, or translation of its proof rules is implemented. |
-| HoCAP-style client ghost code and resource protocols | `Triple.from_invariant` takes a client `finish` callback; payload predicates and the helping descriptor carry client-chosen resources | This is a particular invariant-backed constructor, not the full HoCAP logic or a general higher-order concurrent protocol framework. |
-| Authoritative ghost state with persistent observations | Queue history authority, monotone snapshots, and agreeing model halves | Uses Pulse's existing ghost-reference APIs; there is no new generic Iris camera/resource-algebra layer. |
+| HoCAP-style client ghost code and resource protocols | `Triple.from_invariant` takes a client `finish` callback and captures client-owned resources | This is a particular invariant-backed constructor, not the full HoCAP logic or a general higher-order concurrent protocol framework. |
 
 TaDA combines abstraction over *when* an operation takes effect with
-abstraction over *which* data it owns. The examples exercise both: FIFO state
-changes at a successful link/head CAS, while payload resources cross the
-queue boundary at that same logical point. The FIFO abstract specification
-is stronger than memory safety or a count invariant.
+abstraction over *which* data it owns. Here, an AU lets the implementation
+expose one abstract transition while interacting with client-owned resources.
+The alpha/beta contract must describe the intended operation, not merely
+memory safety.
 
 The HoCAP connection concerns allowing clients to refine resource protocols
-by supplying ghost code at synchronization points. That callback need not
-run on the calling thread: the `Helping` descriptor arranges for a winning
-worker to construct and commit it. The queue's tail helping is a different,
-weaker phenomenon: it repairs representation after enqueue has committed.
-Neither mechanism automatically establishes liveness.
+by supplying ghost code at synchronization points. The `finish` callback
+captures resources and must reestablish the client invariant. Executing it
+on another thread requires a separate justification for transferring those
+resources; the AU interface does not supply generic sendability or liveness.
 
 Primary references:
 
@@ -122,134 +118,25 @@ one observable action.
 
 Every attempt supplies fresh later credits. Abort restores the atomic update,
 **not** the spent credits. An ordinary invariant needs one credit per opening.
-The counter buys credits separately for its load and CAS attempts.
 
 An arbitrary atomic update is not automatically sendable: its hidden state
-may contain thread-local ownership. The helping example uses the existing
-`SendableTrade` combinator to transfer a capability capturing sendable resources
-and construct the update on the winning helper.
+may contain thread-local ownership. Transferring an operation requires a
+protocol that justifies moving its captured resources, or construction of
+the update at the destination from already-sendable ownership.
 
-## Examples and validation
+## Building and examples
 
-The relocated [examples directory](../../../share/pulse/examples/logical_atomicity)
-contains the following modules (all prefixed `Pulse.Lib.LogicalAtomicity.Example`):
-
-* `Counter`: load/CAS-loop modular UInt32 fetch-and-add; failed attempts abort,
-  successful CAS commits. A client proves the old value is zero and advances
-  its ghost state to one.
-* `Read`: a read-only linearization point and a client proving the value is 37
-  without changing the abstract state.
-* `Masks`: open `i`, open `j`, close `i`, close `j`, using explicit combinators.
-* `Helping`: two workers compete for a descriptor. Only the winner executes
-  the operation; the caller receives its result and exclusive payload
-  ownership, joins the helpers, and frees the descriptor.
-* `Rejections`: double opening, escaping an open mask, two observable steps,
-  missing credits, double commit, abort after commit, and automatic transfer
-  of an arbitrary atomic update.
-* `MSQueue.*`: an intrusive Michael--Scott MPMC FIFO queue, with ownership
-  transfer, CAS retries, tail helping, and sequential and concurrent clients.
-
-### Michael--Scott queue
-
-The queue uses an immutable arena of cells and UInt32 node IDs, because Pulse's
-existing atomic primitives are UInt32-based. Each cell has an immutable payload
-value and an atomic next field. ID `0xffffffff` is null; node zero is the initial
-dummy. Enqueue consumes a **one-use node ticket**, backed by exclusive ownership
-of that node's next field, and the payload resource `P value`. Nodes are neither
-reclaimed nor reused. Thus this example has a finite lifetime allocation budget,
-not an unbounded allocator or a recycling bounded queue.
-
-The public logical-atomic specifications are sequence-based:
-
-* Enqueue changes `xs` to `xs ++ [value]` and transfers `P value` into the queue.
-* Successful dequeue changes `value :: xs` to `xs` and returns `P value`.
-* Empty dequeue proves that the abstract sequence was empty.
-
-`MSQueue.Model` proves the append-only history and FIFO sequence lemmas.
-`Storage` manages physical links and exclusive tickets. `State` connects head,
-tail, retained links, payload ownership, and a client model half-reference.
-Monotonic ghost snapshots justify using stale observations without ABA or
-prophecies. `Enqueue` commits at the successful link CAS; `Dequeue` commits at
-the successful head CAS or a null-next read. Tail CAS operations help structural
-progress but do not change the abstract sequence or commit another operation's
-client continuation. Dequeue reads head, next, then tail; the snapshot proof
-justifies this ordering and avoids a second head-validation load.
-
-`MSQueue.Actions` combines an open client update with one atomic implementation
-step and delays its closing action until the implementation invariant is
-restored. The client's open mask must exclude the queue invariant. Failed CAS
-attempts restore the update and any untransferred ownership; each attempt buys
-fresh credits for both invariants.
-
-Start with `MSQueue.Clients.fst`: `fifo_ownership` proves exact FIFO results,
-recovers two exclusive boxed payloads, and frees them; `delayed_tail` exposes the
-scheduling point after linking; `stale_tail_retry` exercises a stale link CAS.
-`MSQueue.Rejections` checks that an enqueue ticket cannot be reused and that a
-transferred payload cannot be read before ownership is returned.
-`MSQueue.Concurrent.fst` constructs updates from a shared client invariant and
-verifies a two-producer/two-consumer task-pool client. Each worker constructs its
-own update from sendable resources; no arbitrary-update sendability is assumed.
-The concurrent client establishes safe sharing and uses the FIFO operation
-contracts, but does not additionally prove a closed-world permutation theorem
-for its two returned values or final emptiness; the executable test checks
-those results. Similarly, `delayed_tail` and `stale_tail_retry` prove their
-final empty models, but the diagnostic booleans are checked at runtime rather
-than refined to `true` in their F* postconditions. These are explicit client
-specification gaps, not gaps in the sequence-based operation contracts.
-
-Suggested queue reading order: `Model` -> `Storage` -> `State` -> `Actions` ->
-`Enqueue`/`Dequeue` -> `Clients`/`Concurrent`. `Atomics.fsti` states the primitive
-assumptions already supplied by Pulse; its two verified implementations and
-the handwritten `MSQueue_atomics.ml` explain the model/runtime boundary.
-`Rejections` records expected failures for resource misuse.
-
-### Build, editor support, and runtime checks
-
-From the F* repository root:
+From the F* repository root, verify and install the foundational libraries
+and model:
 
 ```sh
 make -j$(nproc) 3
-make -C pulse/share/pulse/examples/logical_atomicity -j$(nproc)
 ```
 
-The first command verifies and installs the foundational libraries and model;
-the examples are now checked by the second command and by the parent
-`pulse/share/pulse/examples` target, not by the library build. Use `verify`
-instead of the default `all` target for proof-only checking, or `runtime-test`
-to request the executable regression target (which depends on the proofs).
-Generated artifacts stay in `pulse/build/logical_atomicity`.
-
-The local `Pulse.fst.config.json` selects the installed stage-3 compiler and
-source/core include paths for editing this directory. The Makefile uses core
-includes for verification only: extraction must use the installed/native
-realizations rather than accidentally selecting core semantic implementations.
-Neither the editor configuration nor the Makefile enables admits.
-
-The default target extracts and runs OCaml regression tests, including failed CAS, wraparound,
-read-only behavior, and 32 two-helper runs. Queue regressions cover FIFO payload
-recovery, stale and deliberately failed CAS attempts, delayed tail helping,
-a producer paused after linking while another producer helps, 64
-two-producer/two-consumer runs, and 16 native four-producer/four-consumer batches
-of 64 distinct payloads each. The repeated verified clients reuse one task pool:
-the existing `Task.teardown_pool` establishes logical completion but does not
-yet stop its worker threads. The native stress-test workers are explicitly
-joined.
-
-The handwritten OCaml harness is not itself verified and must respect erased
-preconditions such as one-use node tickets and disjoint producer IDs. Its
-sorted-result comparisons check loss/duplication for executed schedules,
-not every concurrent FIFO history or all possible schedules. The F* operation
-proofs, not the stress tests, establish the sequence transition contracts.
-
-The runtime reuses the native lock, fork, and sleep realizations from the
-existing task-pool tests. Queue reads and CAS use the explicit
-`MSQueue.Atomics-ocaml.fst` realization in `MSQueue_atomics.ml`, not the ordinary
-read/write CAS lowering. This test realization serializes individual atomic
-operations with a mutex and can inject permitted spurious CAS failures. It
-tests concurrent safety, not lock-free execution. Both F* atomic wrapper
-implementations are verified against the existing primitive API; as with other
-Pulse primitives, the handwritten target realization is a runtime trust
-boundary. No pointer-atomic axiom or checker extension is added.
+Examples are separate from the library build. See the
+[examples README](../../../share/pulse/examples/logical_atomicity/README.md)
+for the reading order, queue design and proof structure, example-specific
+limitations, editor setup, and proof/extraction/runtime commands.
 
 ## Limitations and remaining design work
 
@@ -259,10 +146,10 @@ boundary. No pointer-atomic axiom or checker extension is added.
 * **Explicit composition.** There is no checker notation, automatic AU
   opening, inferred linearization point, or general atomic-triple proof mode.
   The abstraction remains a library of explicit, verified combinators.
-* **Footprints.** Current executable examples use `run_closed`, exposing
-  `all_inames`; they cannot be called inside an already-open lexical invariant.
-  Selective client footprints can be derived through the mask-parametric
-  `run` API, but corresponding convenient operation wrappers are not supplied.
+* **Footprints.** `run_closed` exposes `all_inames` and cannot be called inside
+  an already-open lexical invariant. Selective client footprints can be
+  derived through the mask-parametric `run` API, but corresponding convenient
+  operation wrappers are not supplied.
 * **Modal rules.** Only the update rules exported by `Update.fsti` are
   available. A complete Iris-style derived-rule collection (mask weakening,
   richer framing/quantifier rules, later interaction, and generalized triple
@@ -271,17 +158,11 @@ boundary. No pointer-atomic axiom or checker extension is added.
   one credit per opening, and an empty-footprint ghost continuation. More
   general multi-invariant clients can use the lower-level primitives, but
   there is no packaged general constructor for them here.
-* **Thread transfer.** AU state is not automatically sendable. The descriptor
-  example transfers a `SendableTrade` recipe; queue workers construct AUs
-  locally from shared handles. General helping must justify captured-resource
-  transfer rather than assume it.
-* **Queue lifetime.** The immutable list arena has finite one-use IDs.
-  Draining returns payloads but not node tickets. No destructor, reclamation,
-  reuse/ABA treatment, or constant-time arena lookup is proved.
+* **Thread transfer.** AU state is not automatically sendable. General helping
+  must justify captured-resource transfer rather than assume it.
 * **Future-dependent linearization.** There are no prophecy variables or
-  retrospective-commit rules. The intended Herlihy--Wing queue FIFO proof
-  remains deferred rather than being approximated by a weaker bag contract.
+  retrospective-commit rules; clients requiring future-dependent reasoning
+  need additional support.
 * **Runtime trust.** Existing primitive/extraction contracts and handwritten
-  target realizations remain boundaries of the executable story. The queue
-  OCaml backend is mutex-based; weak-memory atomics and native lock-freedom
-  are outside this validation.
+  target realizations remain boundaries of the executable story. The
+  examples guide documents the concrete backends and their limitations.
