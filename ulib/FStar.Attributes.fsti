@@ -634,6 +634,18 @@ val cherry_boxed : unit
     effect on recursive definitions. *)
 val custard_inline : unit
 
+(** Custard: specialize this definition on this function parameter when the
+    call site passes a lambda or a partial application, and pass it at run
+    time otherwise.  Written on the binder of a higher-order recursive
+    function such as [List.iter]: each call site that passes a lambda gets
+    its own copy of the function, with the lambda's body in place of every
+    call of the parameter and its captured variables passed as extra
+    arguments, so no closure is allocated.  A call that passes a bare
+    variable shares one copy that takes the function at run time.  This is
+    [monomorphize] (doc/ref/custard.md, 3.2c) without its rejection of a bare
+    variable.  No effect on other backends. *)
+val custard_specialize : unit
+
 (** Custard: keep every field of this type's constructors boxed, that is, lay
     the type out the way the ML extraction does.  It turns off the automatic
     inlining of tuple fields that [custard_inline_field] describes, so

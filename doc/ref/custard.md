@@ -822,6 +822,41 @@ there is no runtime value to pass, so the case (b) rejection above stands and
 only option 2's promotion reaches it.  The diagnostic checks the sort of the
 variable and only suggests `dyn` where it could actually work.
 
+### 3.2d `custard_specialize`: specialize where possible
+
+`[@@@custard_specialize]` on a binder is the other end of §3.2c1's dial,
+chosen by the callee rather than the caller.  It is meant for the function
+argument of a recursive higher-order function such as `List.map_acc` or
+`List.fold_left`.  Most callers pass a lambda or a partial application, and
+specializing on it turns the closure call in the loop into a direct call.
+Some callers have only a variable.
+
+The binder is classified `Mono`, like `[@@@monomorphize]`, and an argument is
+keyed and specialized exactly as for that attribute, with three differences:
+
+- A bare variable is not rejected.  It is passed at run time as though it had
+  been written `dyn x`: the key is the identity skeleton and the variable is a
+  hole.  All variables share one copy of the function.
+- The key is computed without `UnfoldUntil`.  A partial application such as
+  `abstr vars` would otherwise unfold to its body.  If that body calls the
+  same function on a local recursive function whose arguments grow (`List.map
+  (aux (ix + 1))`), every specialization keys a new one and extraction does
+  not terminate.  Without delta the argument stays `abstr vars` and `vars` is
+  a hole.
+- The argument is not `unfold_lets`-substituted as a whole.  Only a variable
+  bound by a local `let` to a lambda is replaced by its definition
+  (`unfold_soft`).  Built-in type representation rules (section 93) are not
+  consulted, since the argument is a function and not a type.
+
+A definition that wraps such a function and is inlined by
+`[@@custard_inline]` (`map f l = map_acc f l []`) must also mark its `f`.
+Specialization runs before inlining, so the wrapper's call to `map_acc`
+passes the variable `f`.  With the attribute on the wrapper, `map` is
+specialized first and its copy calls `map_acc` with the lambda.
+
+The ML extraction ignores the attribute.  Test:
+`tests/custard/CherrySpecializeHO.fst`.
+
 ### 3.3 The extraction loop
 
 State:
