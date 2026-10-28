@@ -906,9 +906,9 @@ let rec term (ind:string) (e:expr) : ML string =
   | EOp ({ po_op = BufIsNull }, [b]) ->
     if TRef? b.ty then "(not (Obj.is_block (Obj.repr " ^ term ind b ^ ")))"
     else "(Array.length (" ^ term ind b ^ ") = 0)"
-  | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
-    "(Array.blit " ^ term ind src ^ " " ^ index ind si ^ " " ^
-    term ind dst ^ " " ^ index ind di ^ " " ^ index ind len ^ ")"
+  | EOp ({ po_op = BufBlit }, [src; dst; len]) ->
+    "(Array.blit " ^ term ind src ^ " 0 " ^
+    term ind dst ^ " 0 " ^ index ind len ^ ")"
   | EOp ({ po_op = BufSub }, _) ->
     "(failwith \"Custard: pointer arithmetic has no OCaml representation\")"
   (* Section 71.  OCaml has an array literal, and no notion of an object with

@@ -843,7 +843,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
   | ["Pulse"; "Lib"; "ArrayPtr"], "from_array" ->
     Some (identity_rule 1)
   | ["Pulse"; "Lib"; "ArrayPtr"], "memcpy" ->
-    Some (buf_prim 5 BufBlit E_Impure unit_ty (fun args -> args))
+    Some (buf_prim 3 BufBlit E_Impure unit_ty (fun args -> args))
 
   (* Section 71.  A read-only run whose contents are known at compile time:
      in C an object with static storage duration and a braced initializer,

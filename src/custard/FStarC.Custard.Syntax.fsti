@@ -365,7 +365,7 @@ type op =
   | BufFree                (** [buf] *)
   | BufNull                (** no arguments; the element type is the node's *)
   | BufIsNull              (** [buf] *)
-  | BufBlit                (** [src; srcidx; dst; dstidx; len] *)
+  | BufBlit                (** [src; dst; len] *)
   (** Section 71.  A run whose contents are known at compile time: the
       arguments are the elements, and the node's type is the [TBuf].
 
