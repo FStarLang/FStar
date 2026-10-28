@@ -190,3 +190,18 @@ divergent fn reraise_abandons_resource (r:ref int)
   { N.update_and_raise r false }
   catch { e -> { raise e } }
 }
+
+// Listing the examples' constructors does not exhaust the extensible exn type.
+// An arbitrary exception may still reach the implicit forwarding branch.
+[@@expect_failure [19]]
+fn exn_known_cases_are_not_exhaustive (error:exn)
+{
+  try
+    raises (fun (e:exn) -> pure (e == error))
+  { raise error }
+  catch {
+    N.BadRequest _ -> { () }
+    N.ConnectionLost _ -> { () }
+    N.RetryLater _ -> { () }
+  }
+}

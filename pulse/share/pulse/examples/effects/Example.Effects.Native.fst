@@ -362,9 +362,185 @@ fn locally_defined (b:bool)
     returns x:int
     ensures pure (not b /\ x == 7)
     raises (fun (e:nat) -> pure (b /\ e == 1))
-  {
-    if (b) { raise 1 }
+    {
+      if (b) { raise 1 }
     else { 7 }
   };
   local b
+}
+
+// These independently declared constructors extend the shared exn type. Their
+// payloads have different types, but every raises contract below is exn -> slprop.
+exception BadRequest of nat
+exception ConnectionLost of string
+
+// Exception declarations do not generate the C? discriminators of closed
+// datatypes. An explicit match describes the handled part of the open exn type.
+let is_bad_request (e:exn) : bool =
+  match e with BadRequest _ -> true | _ -> false
+
+// Accept an arbitrary exception value, including constructors unknown here.
+// Raising transfers the updated caller-owned cell and reclaims the temporary.
+fn exn_raise (r:ref int) (error:exn)
+  requires R.pts_to r 0
+  returns x:int
+  ensures pure False
+  raises (fun (e:exn) -> R.pts_to r 1 ** pure (e == error))
+{
+  let mut temporary = 10;
+  temporary := 11;
+  r := 1;
+  raise error
+}
+
+// Recover only BadRequest, using its payload as the new state and result.
+// Every other constructor is forwarded unchanged with ownership at 1. This
+// contract does not enumerate, or assume a closed set of, other exceptions.
+fn exn_recover_request (r:ref int) (error:exn)
+  requires R.pts_to r 0
+  returns x:int
+  ensures R.pts_to r x **
+    pure (match error with BadRequest code -> x == code + 1 | _ -> False)
+  raises (fun (e:exn) ->
+    R.pts_to r 1 ** pure (e == error /\ not (is_bad_request e)))
+{
+  try
+    returns x:int
+    ensures R.pts_to r x **
+      pure (match error with BadRequest code -> x == code + 1 | _ -> False)
+    raises (fun (e:exn) -> R.pts_to r 1 ** pure (e == error))
+  { exn_raise r error }
+  catch {
+    BadRequest code -> { r := code + 1; code + 1 }
+  }
+}
+
+// The inner handler recovers BadRequest 4; the outer one recovers ConnectionLost
+// "database". Different payload shapes need no embedding: both values are exn.
+// Their contracts exclude every other constructor, making the final fallback
+// unreachable despite exn itself being extensible.
+fn exn_nested (r:ref int) (offline:bool)
+  requires R.pts_to r 0
+  returns x:int
+  ensures R.pts_to r x ** pure (x == (if offline then 42 else 5))
+{
+  try
+    returns x:int
+    ensures R.pts_to r x ** pure (x == (if offline then 42 else 5))
+    raises (fun (e:exn) ->
+      R.pts_to r 1 ** pure (offline /\ e == ConnectionLost "database"))
+  {
+    exn_recover_request r
+      (if offline then ConnectionLost "database" else BadRequest 4)
+  }
+  catch {
+    ConnectionLost endpoint -> {
+      assert pure (endpoint == "database");
+      r := 42;
+      42
+    }
+  }
+}
+
+// Re-raise the same exception and payload after changing the owned state.
+// The outer handler gets state 2, not the original throwing state 1; the inner
+// handler must not catch its own re-raise. No payload-type conversion is involved.
+fn exn_reraised (r:ref int)
+  requires R.pts_to r 0
+  returns x:int
+  ensures R.pts_to r 3 ** pure (x == 42)
+{
+  try
+    returns x:int
+    ensures R.pts_to r 3 ** pure (x == 42)
+    raises (fun (e:exn) ->
+      R.pts_to r 2 ** pure (e == ConnectionLost "database"))
+  {
+    try
+      returns x:int
+      ensures R.pts_to r 3 ** pure (x == 42)
+      raises (fun (e:exn) ->
+        R.pts_to r 1 ** pure (e == ConnectionLost "database"))
+    { exn_raise r (ConnectionLost "database") }
+    catch {
+      ConnectionLost endpoint -> {
+        r := 2;
+        raise (ConnectionLost endpoint)
+      }
+    }
+  }
+  catch {
+    ConnectionLost endpoint -> {
+      assert pure (endpoint == "database");
+      r := 3;
+      42
+    }
+  }
+}
+
+// Extend exn after defining the selective handler: its forwarding contract
+// already covers this new constructor without changing or wrapping its payload.
+exception RetryLater of nat
+
+// The earlier BadRequest handler forwards RetryLater 9, even though both carry
+// a nat. Constructor identity determines which clause runs, not payload type.
+fn exn_later_extension (r:ref int)
+  requires R.pts_to r 0
+  returns x:int
+  ensures R.pts_to r 9 ** pure (x == 9)
+{
+  try
+    returns x:int
+    ensures R.pts_to r 9 ** pure (x == 9)
+    raises (fun (e:exn) -> R.pts_to r 1 ** pure (e == RetryLater 9))
+  { exn_recover_request r (RetryLater 9) }
+  catch {
+    RetryLater delay -> { r := delay; delay }
+  }
+}
+
+[@@expect_failure [228]] //frame capture
+//- Leftover resources: R.pts_to s 1
+//- Did you forget to free these resources?
+fn test_frame_capture (r s:ref int)
+requires r |-> 0
+requires s |-> 1
+ensures r |-> 1
+ensures s |-> 2
+{
+  try
+    ensures r |-> 17
+    raises (fun (_:unit) -> r |-> 1)
+  {
+    r := 1;
+    raise ()
+  }
+  catch {
+    _ -> {
+      r := 1;
+      s := 2;
+    }
+  }
+}
+
+fn test_frame_capture_ok (r s:ref int)
+requires r |-> 0
+requires s |-> 1
+ensures r |-> 1
+ensures s |-> 2
+{
+  try
+    ensures r |-> 1 ** s |-> 2
+    raises (fun (_:unit) -> r |-> 1 ** s |-> 1)
+  {
+    r := 1;
+    raise ();
+    s := 17;
+  }
+  catch {
+    _ -> {
+      r := 1;
+      s := 2
+    }
+  }
 }
