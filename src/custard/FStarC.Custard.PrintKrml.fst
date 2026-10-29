@@ -564,6 +564,8 @@ let krml_op (o:op) : ML K.op =
   | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
   | ExnRaise | ExnPending | ExnTake | ExnExit ->
     failwith "Custard: reference counting is not a karamel operator"
+  | ClosureNew | ClosureCall ->
+    failwith "Custard: a Pulse closure is not a karamel operator"
 
 (* -------------------------------------------------------------------- *)
 (* Types                                                                *)

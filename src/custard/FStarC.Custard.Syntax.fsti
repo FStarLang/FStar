@@ -464,6 +464,16 @@ type op =
   | ExnPending
   | ExnTake
   | ExnExit
+  (** C: [Pulse.Lib.Closure] (custard.md, section 136).  [ClosureNew f] boxes
+      the function [f] with what it captures and is a [custard_closure *];
+      [Simplify.lift_lambdas] leaves [f] either a top-level name or a
+      partial application of one to the captured variables.
+      [ClosureCall c], at the boxed function's own arrow type, is the
+      function in the box: it is only meaningful as the head of an
+      application to every argument of that arrow.  A closure is freed with
+      [BufFree]. *)
+  | ClosureNew
+  | ClosureCall
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

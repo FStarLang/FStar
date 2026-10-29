@@ -140,6 +140,12 @@ let int_op (id:string) : option (op & int) =
    always is; the backends recognize [Prims.bool] by name. *)
 let bool_name : name = { ns = ["Prims"]; id = "bool"; spec = None }
 
+(* Section 136.  [Pulse.Lib.Closure.closure t], under [--codegen C]: a
+   [custard_closure *] whatever [t] is, so the type has no arguments and the
+   C backend recognizes it by name, as it does [Prims.bool]. *)
+let closure_name : name = { ns = ["Pulse"; "Lib"; "Closure"]; id = "closure"; spec = None }
+let closure_ty : cty = TApp (closure_name, [])
+
 let int_lit (sw : signedness & iwidth) (v:int) : expr =
   mk (EConst (CInt (v, Dec, Some sw))) (TInt sw) E_Pure
 
@@ -745,6 +751,7 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     match args with
     | a :: _ -> a.ty
     | _ -> TAny in
+  let c_only = Options.codegen () = Some Options.C in
   match ns, id with
   (* Types.  Every one of them is a pointer. *)
   | ["Pulse"; "Lib"; "Vec"], "vec"
@@ -801,6 +808,22 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
                          | [r; v] -> [r; size_lit 0; v]
                          | args -> args))
   | ["Pulse"; "Lib"; "Box"], "box_to_ref" -> Some (identity_rule 1)
+
+  (* Section 136.  A closure is a primitive of the C backend only: every
+     other backend has closures of its own and extracts the library's model,
+     in which a closure is its function. *)
+  | ["Pulse"; "Lib"; "Closure"], "closure" when c_only ->
+    Some (Rule_type (fun _ -> closure_ty))
+  | ["Pulse"; "Lib"; "Closure"], "alloc" when c_only ->
+    Some (Rule_prim (1, fun _ args ->
+      mk (EOp ({ po_op = ClosureNew; po_ty = None }, args)) closure_ty E_Impure))
+  (* Pure: the code pointer of a live closure never changes, and the call
+     this is the head of has the effect of the boxed function. *)
+  | ["Pulse"; "Lib"; "Closure"], "call" when c_only ->
+    Some (Rule_prim (1, fun tys args ->
+      mk (EOp ({ po_op = ClosureCall; po_ty = None }, args)) (elt_of tys) E_Pure))
+  | ["Pulse"; "Lib"; "Closure"], "free" when c_only ->
+    Some (buf_prim 1 BufFree E_Impure unit_ty (fun args -> args))
 
   (* A vector is a heap-allocated run. *)
   | ["Pulse"; "Lib"; "Vec"], "alloc" ->

@@ -466,7 +466,8 @@ let rec is_droppable (e:expr) : ML bool =
   | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
-  | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
+  | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _)
+  | EOp ({ po_op = ClosureNew }, _) -> false
   | EOp (_, es) -> all es
   (* Everything else is deletable exactly when all of it is.  A branch's
      guard and body are children, and its pattern binds nothing that
@@ -533,7 +534,8 @@ let op_to_string (o:prim_op) : string =
    | Dyn f -> "dyn_" ^ f
    | PBuf f -> "pbuf_" ^ f
    | ExnRaise -> "exn_raise" | ExnPending -> "exn_pending"
-   | ExnTake -> "exn_take" | ExnExit -> "exn_exit") ^
+   | ExnTake -> "exn_take" | ExnExit -> "exn_exit"
+   | ClosureNew -> "closure_new" | ClosureCall -> "closure_call") ^
   (match o.po_ty with
    | None -> ""
    | Some (PInt sw) -> width_to_string sw

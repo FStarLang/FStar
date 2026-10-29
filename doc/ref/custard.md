@@ -24113,6 +24113,67 @@ of it with an arrow still in hand is `Error_CustardFuelExhausted` (365),
 naming the type and the chain of requests.  It is no longer a guess.
 `tests/custard/ArrowUnfoldLimit.fst` pins the error.
 
+# 136 First-class closures in C: `Pulse.Lib.Closure`
+
+C has function pointers but no closures, and §19.12 lifts only the lambdas
+that capture nothing.  A Pulse program that hands a closure to `pthread_create`
+or builds one inside a combinator needs a value that carries its environment
+with it.  `Pulse.Lib.Closure` provides one without the reference counting that
+Cherry's closures rely on:
+
+```fstar
+val closure (t: Type0) : Type0
+val is_closure (#t: Type0) ([@@@mkey] c: closure t) (#p: perm) : slprop
+fn alloc (#t: Type0) (f: t) returns c: closure t ensures is_closure c
+unobservable fn call (#t: Type0) (c: closure t) (#p: perm)
+  preserves is_closure c #p returns f: t
+fn free (#t: Type0) (c: closure t) requires is_closure c
+```
+
+plus ghost `share` and `gather`.  The permission is fractional so that a
+closure can be shared between threads, and it is not indexed by the boxed
+value: a boxed function's specification is its type.  `t` is any function
+type, of any arity and effect: `U32.t -> U32.t` and
+`ref bool -> ref bool -> stt unit p q` alike.
+
+**On OCaml, F# and Cherry** the library's model is extracted: a closure is
+its function, `call` is the identity, and `free` does nothing.
+
+**On C** every name is a primitive (`Builtins`, guarded by
+`Options.codegen () = Some C`).  A closure is a `custard_closure *`, a
+pointer to a header holding the code pointer.  The captured environment
+follows the header in the same allocation:
+
+```c
+typedef struct custard_closure { void (*code)(void); } custard_closure;
+```
+
+* `alloc f` becomes the IR node `ClosureNew`.  `Simplify.lift_lambdas`
+  converts it.  `f` is flattened and eta-expanded through type abbreviations
+  to the whole spine of `t`, and lifted to a top-level `<def>__clo` that takes
+  the captured variables first and then every parameter.  The node becomes
+  `ClosureNew (<def>__clo :: captures)`.  A named function, a function-typed
+  variable and a partial application are covered by the eta-expansion.  An
+  operand that has to be evaluated is evaluated once and captured.  A Pulse
+  local `fn` arrives let-bound, so `alloc` of it substitutes a fresh copy of
+  the lambda.  A `t` that is not a function is refused (368): box a thunk.
+* `PrintC` generates, per allocation site, `<def>__clo_env` (the header and
+  the non-unit captures) and `<def>__clo_entry (custard_closure *self, ...)`,
+  which unpacks the environment and calls `<def>__clo`.  The allocation is a
+  `malloc` that aborts on `NULL`, a store of the entry point converted to
+  `void (*)(void)` (no `-Wcast-function-type` warning), and stores of the
+  captures.  Its value is `&env->hdr`.
+* `call c` is `ClosureCall`, and `let f = call c` is substituted into its
+  uses.  An application of it to all of `t`'s non-unit arguments is
+  `((R (*)(custard_closure *, A...))c->code)(c, args...)`.  Any other use of
+  the boxed function (passing it on, or applying it partially) is refused
+  (368), since in C it is not a value.
+* `free c` is `free(c)`.
+
+`tests/custard/pulse/PulseClosure.fst` covers the arities, effects and
+captures above, plus a combinator that builds a closure from two others, on
+C, Cherry and OCaml.  `PulseClosureEscape.fst` pins the refusal.
+
 | M | Deliverable | Notes |
 | --- | --- | --- |
 | M0 | `src/custard/` skeleton, `--codegen OCaml`, `--custard_entry`, IR types, IR pretty-printer | No extraction yet; `--custard_dump_ir` on an empty program |
