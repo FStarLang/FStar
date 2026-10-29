@@ -146,6 +146,20 @@ let key_norm_steps : list TcEnv.step = TcEnv.Primops :: norm_steps_base
 let subst_norm_steps : list TcEnv.step =
   TcEnv.SafePrimops :: TcEnv.Weak :: TcEnv.HNF :: norm_steps_base
 
+(* Section 3.2d.  A [Mono] argument of function type is keyed as written:
+   a lambda, or a top-level function applied to some of its arguments.  So
+   nothing is unfolded.  Unfolding the head of [abstr vars] would put
+   [abstr]'s body into the key, and with it every call [abstr] makes to a
+   specializing function, each one keyed by a larger term than the last --
+   specialization would never reach a fixed point. *)
+let rec no_delta (steps:list TcEnv.step) : list TcEnv.step =
+  match steps with
+  | [] -> []
+  | TcEnv.UnfoldUntil _ :: steps -> no_delta steps
+  | s :: steps -> s :: no_delta steps
+let soft_key_norm_steps : list TcEnv.step = no_delta key_norm_steps
+let soft_subst_norm_steps : list TcEnv.step = no_delta subst_norm_steps
+
 (* -------------------------------------------------------------------- *)
 (* The key printer (section 12.3)                                       *)
 (* -------------------------------------------------------------------- *)
@@ -2367,6 +2381,11 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
                     | Inr fv -> Ident.lid_equals (S.lid_of_fv fv) l
                     | Inl _ -> false) with
             | Some lb ->
+              (* Section 3.2d: which [Mono] binders have a function type.
+                 Recorded beside the classification, for [split_mono_args]. *)
+              let soft = Mono.soft_binders (tcenv st) lb.lbtyp (Some lb.lbdef) in
+              if List.existsb (fun b -> b) soft
+              then HashTable.add st.bflags ("soft:" ^ key) soft;
               (* Section 19.4: [lbdef] is what makes the classification as
                  long as the definition really is.  [lbtyp] stops at an
                  abbreviation in the codomain; the lambda does not. *)
@@ -4918,6 +4937,10 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
   if not (has_mono cs) && not (has_dropped cs) then ([], [], spine, [])
   else
     let n_args = List.length spine in
+    let soft = match HashTable.try_find st.bflags ("soft:" ^ Ident.string_of_lid l) with
+               | Some fs -> fs
+               | None -> [] in
+    let is_soft (i:int) : ML bool = i < List.length soft && List.nth soft i in
     let rec go (i:int) (cs:list bclass) (sp:args) (margs:list (int & term))
                (msubst:list (int & term)) (rest:args)
       : ML (list (int & term) & list (int & term) & args) =
@@ -4927,14 +4950,15 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       (* Section 5.1: an erased argument is deleted, not passed as unit. *)
       | Dropped :: cs, _ :: sp -> go (i + 1) cs sp margs msubst rest
       | Mono :: cs, a :: sp ->
-        let a0 = unfold_lets st 100 (fst a) in
+        let soft = is_soft i in
+        let a0 = if soft then unfold_soft st (fst a) else unfold_lets st 100 (fst a) in
         let what = "the argument to binder " ^ show i ^ " of " ^
                    Ident.string_of_lid l in
         (* Section 30.17.  Both reductions are optional.  When neither fits
            in the budget the argument is used as written, which is the only
            form of it guaranteed to be small, being the one the programmer
            typed. *)
-        let w_opt = norm_optional st subst_norm_steps a0 in
+        let w_opt = norm_optional st (if soft then soft_subst_norm_steps else subst_norm_steps) a0 in
         let w = match w_opt with Some w -> w | None -> a0 in
         (* Section 30.17.  A key is a full normal form, and computing one
            destroys sharing: a value built by binding its predecessor once and
@@ -4961,7 +4985,7 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
            perfectly good key, and substituting a name preserves exactly the
            sharing that reducing it would have destroyed. *)
         let t =
-          match norm_optional st key_norm_steps a0 with
+          match norm_optional st (if soft then soft_key_norm_steps else key_norm_steps) a0 with
           | Some t -> t
           | None ->
             custard_warning st E.Warning_CustardKeyNotReduced [
@@ -4978,7 +5002,13 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
                                     (TcEnv.dsenv (tcenv st)) a0))
             ];
             w in
-        check_mono_arg st l i t;
+        (* Section 3.2d.  A bare variable passed to a [Mono] binder of
+           function type has no shape to specialize on, and is passed at run time:
+           it becomes a hole like any other runtime value, and the argument
+           abstracts to the identity skeleton -- exactly what writing
+           [FStar.Custard.dyn] at the call site would have done. *)
+        let soft_name = soft && Tm_name? (SS.compress t).n in
+        if not soft_name then check_mono_arg st l i t;
         (* Full reduction can eliminate a free variable that weak reduction
            leaves behind ([fst (x, 1)]); if that happens the two disagree
            about what is a hole, so use the reduced one for both. *)
@@ -4995,7 +5025,12 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
            programmer wrote, for the key and for the substitution alike -- the
            two must agree, and the written form is the one that still says how
            the type is represented. *)
+        (* A [Mono] argument of function type is never a type, so
+           there is no representation rule to keep; and walking it is not
+           free, since every name the walk meets in a partial application is
+           unfolded to look for one. *)
         let t, w =
+          if soft then t, w else
           let before = builtin_type_rules st a0 in
           let after = builtin_type_rules st t in
           if before |> List.existsb (fun r ->
@@ -5116,6 +5151,24 @@ and inlinable_local (st:state) (lb:S.letbinding) : ML bool =
    [let d = { cmp = f } in sort #a #d], the shape [FStarC.Class.Ord.sort_by]
    is written in.  [d] is not a runtime parameter, it is a name for a value
    that section 3.2b can see through. *)
+(* Section 3.2d.  A [Mono] argument of function type is unfolded only when
+   its head is the name of a local function, so that [let f x = ... in
+   List.map f l] specializes on [f]'s body as [List.map (fun x -> ...) l]
+   would.  The head may be applied: Pulse binds a [fn] block as a thunk and
+   passes [body ()], which the normalizer then beta-reduces.  The names a lambda mentions stay names, and become holes: a
+   function body is large and its local [let]s are shared, so substituting
+   them into the key costs time exponential in their nesting and buys a key
+   that identifies nothing more. *)
+and unfold_soft (st:state) (t:term) : ML term =
+  let hd, args = U.head_and_args_full t in
+  match (SS.compress hd).n with
+  | Tm_name bv ->
+    (match HashTable.try_find st.letdefs (show bv.index) with
+     | Some d when Tm_abs? (SS.compress (U.unmeta d)).n ->
+       if Nil? args then d else S.mk_Tm_app d args t.pos
+     | _ -> t)
+  | _ -> t
+
 and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
   if fuel <= 0 then t
   else

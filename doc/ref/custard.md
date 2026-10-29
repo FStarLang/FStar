@@ -593,7 +593,8 @@ so v1 shipping the error is not a design commitment.
   §12.8 item 5, not a rare shape.
 
 The *only* bad case is the one above: a value that exists only at runtime
-reaching a `Mono` parameter.  The interesting instance of it is storing a
+reaching a `Mono` parameter.  (§3.2d makes an exception for a parameter of
+function type: a bare variable passed to it is passed at run time.)  The interesting instance of it is storing a
 dictionary in a runtime data structure — a `ref (foo a)`, a dictionary read out
 of a `Poly` list, a dictionary returned from a branch — and then trying to call
 a method on it.  Supporting that would mean falling back to real
@@ -821,6 +822,43 @@ possible but not yet implemented.
 there is no runtime value to pass, so the case (b) rejection above stands and
 only option 2's promotion reaches it.  The diagnostic checks the sort of the
 variable and only suggests `dyn` where it could actually work.
+
+### 3.2d Function arguments: specialize where possible
+
+A `[@@@monomorphize]` binder whose type is a function (an arrow, possibly
+behind abbreviations) is treated more leniently than §3.2(b) describes.  It is
+meant for the function argument of a recursive higher-order function such as
+`List.map_acc` or `List.fold_left`.  Most callers pass a lambda or a partial
+application, and specializing on it turns the closure call in the loop into a
+direct call.  Some callers have only a variable.
+
+Such an argument is keyed and specialized as any other `Mono` argument, with
+three differences:
+
+- A bare variable is not rejected.  It is passed at run time as though it had
+  been written `dyn x` (§3.2c1): the key is the identity skeleton and the
+  variable is a hole.  All variables share one copy of the function.  A bare
+  variable of any other type is still rejected (`MonoPoly`).
+- The key and the substituted value are computed without `UnfoldUntil`.  A
+  partial application such as `abstr vars` would otherwise unfold to its
+  body.  If that body calls the same function on a local recursive function
+  whose arguments grow (`List.map (aux (ix + 1))`), every specialization keys
+  a new one and extraction does not terminate.  Without delta the argument
+  stays `abstr vars` and `vars` is a hole.  A top-level function passed by
+  name is likewise kept as a direct call to it rather than inlined into the
+  copy.
+- The argument is not `unfold_lets`-substituted as a whole.  Only a variable
+  bound by a local `let` to a lambda is replaced by its definition
+  (`unfold_soft`).  Built-in type representation rules (section 93) are not
+  consulted, since the argument is a function and not a type.
+
+A definition that wraps such a function and is inlined by
+`[@@custard_inline]` (`map f l = map_acc f l []`) must also mark its `f`.
+Specialization runs before inlining, so the wrapper's call to `map_acc`
+passes the variable `f`.  With the attribute on the wrapper, `map` is
+specialized first and its copy calls `map_acc` with the lambda.
+
+Test: `tests/custard/CherrySpecializeHO.fst`.
 
 ### 3.3 The extraction loop
 

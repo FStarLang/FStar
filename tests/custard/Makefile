@@ -557,7 +557,7 @@ CNOGREP_CVarArity = "CVarArity_e(a);"
 # the leftover arrow in the declared result, so the greps are on the
 # signature.
 C_TESTS += CAbbrevArity
-CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool(bool x, bool x1)"
+CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool_band(bool x, bool b)"
 CNOGREP_CAbbrevArity = "(*CAbbrevArity_mk_eq_test__bool"
 # Section 27.4: a saturated call to a forwarder is the identity on one of its
 # arguments, so the definition becomes a real function instead of a mutable
@@ -3795,10 +3795,20 @@ $(CHERRY_DIR)/CherryLocalFn.chgrep: $(CHERRY_DIR)/CherryLocalFn.chc
 
 all: $(CHERRY_DIR)/CherryLocalFn.chgrep
 
+# [@@@monomorphize] on a function binder (custard.md, 3.2d): a lambda or a partial
+# application passed to the function builds no closure.
+$(CHERRY_DIR)/CherrySpecializeHO.chgrep: $(CHERRY_DIR)/CherrySpecializeHO.chc
+	$(Q)for f in add_all shift_all scale_all deep rebinds; do \
+	  ! sed -n "/^static .* CherrySpecializeHO_$$f(.*{$$/,/^}/p" $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherrySpecializeHO_$$f builds or applies a closure"; exit 1; }; done
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
