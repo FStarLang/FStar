@@ -807,7 +807,6 @@ let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
     if is_dropped_binder env b || is_unit_binder b                (* rule 1 *)
     then Dropped
     else if U.has_attribute b.binder_attrs PC.monomorphize_attr   (* rule 3 *)
-         || U.has_attribute b.binder_attrs PC.custard_specialize_attr (* 3.2d *)
     then Mono
     (* Rule 2's opt-out beats the rules that infer [Mono], and loses to the
        one that is written on the binder itself: a class can say that it is
@@ -1002,7 +1001,8 @@ let classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term
 let soft_binders (env:TcEnv.env) (t:typ) (def:option term) : ML (list bool) =
   let bs, _ = def_binders env t def in
   bs |> List.map (fun (b:binder) ->
-    U.has_attribute b.binder_attrs PC.custard_specialize_attr)
+    U.has_attribute b.binder_attrs PC.monomorphize_attr &&
+    Cons? (fst (arrow_formals_unfold env b.binder_bv.sort)))
 
 let has_mono (cs:list bclass) : ML bool =
   cs |> List.existsb Mono?

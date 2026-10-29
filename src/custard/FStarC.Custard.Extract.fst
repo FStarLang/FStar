@@ -146,12 +146,12 @@ let key_norm_steps : list TcEnv.step = TcEnv.Primops :: norm_steps_base
 let subst_norm_steps : list TcEnv.step =
   TcEnv.SafePrimops :: TcEnv.Weak :: TcEnv.HNF :: norm_steps_base
 
-(* Section 3.2d.  A [@@@custard_specialize] argument is a function, and its
-   key is the function as written: a lambda, or a top-level function applied
-   to some of its arguments.  So nothing is unfolded.  Unfolding the head of
-   [abstr vars] would put [abstr]'s body into the key, and with it every call
-   [abstr] makes to a specializing function, each one keyed by a larger term
-   than the last -- specialization would never reach a fixed point. *)
+(* Section 3.2d.  A [Mono] argument of function type is keyed as written:
+   a lambda, or a top-level function applied to some of its arguments.  So
+   nothing is unfolded.  Unfolding the head of [abstr vars] would put
+   [abstr]'s body into the key, and with it every call [abstr] makes to a
+   specializing function, each one keyed by a larger term than the last --
+   specialization would never reach a fixed point. *)
 let rec no_delta (steps:list TcEnv.step) : list TcEnv.step =
   match steps with
   | [] -> []
@@ -2381,7 +2381,7 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
                     | Inr fv -> Ident.lid_equals (S.lid_of_fv fv) l
                     | Inl _ -> false) with
             | Some lb ->
-              (* Section 3.2d: which [Mono] binders accept a bare variable.
+              (* Section 3.2d: which [Mono] binders have a function type.
                  Recorded beside the classification, for [split_mono_args]. *)
               let soft = Mono.soft_binders (tcenv st) lb.lbtyp (Some lb.lbdef) in
               if List.existsb (fun b -> b) soft
@@ -5002,8 +5002,8 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
                                     (TcEnv.dsenv (tcenv st)) a0))
             ];
             w in
-        (* Section 3.2d.  A bare variable passed to a [@@@custard_specialize]
-           binder has no shape to specialize on, and is passed at run time:
+        (* Section 3.2d.  A bare variable passed to a [Mono] binder of
+           function type has no shape to specialize on, and is passed at run time:
            it becomes a hole like any other runtime value, and the argument
            abstracts to the identity skeleton -- exactly what writing
            [FStar.Custard.dyn] at the call site would have done. *)
@@ -5025,7 +5025,7 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
            programmer wrote, for the key and for the substitution alike -- the
            two must agree, and the written form is the one that still says how
            the type is represented. *)
-        (* A [@@@custard_specialize] argument is a function, never a type, so
+        (* A [Mono] argument of function type is never a type, so
            there is no representation rule to keep; and walking it is not
            free, since every name the walk meets in a partial application is
            unfolded to look for one. *)
@@ -5151,7 +5151,7 @@ and inlinable_local (st:state) (lb:S.letbinding) : ML bool =
    [let d = { cmp = f } in sort #a #d], the shape [FStarC.Class.Ord.sort_by]
    is written in.  [d] is not a runtime parameter, it is a name for a value
    that section 3.2b can see through. *)
-(* Section 3.2d.  A [@@@custard_specialize] argument is unfolded only when it
+(* Section 3.2d.  A [Mono] argument of function type is unfolded only when it
    is nothing but the name of a local function, so that [let f x = ... in
    List.map f l] specializes on [f]'s body as [List.map (fun x -> ...) l]
    would.  The names a lambda mentions stay names, and become holes: a

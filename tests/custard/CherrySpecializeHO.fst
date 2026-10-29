@@ -2,21 +2,21 @@ module CherrySpecializeHO
 module U32 = FStar.UInt32
 open FStar.All
 
-(* [@@@custard_specialize] on a function parameter (custard.md, 3.2d): a call
+(* [@@@monomorphize] on a function parameter (custard.md, 3.2d): a call
    that passes a lambda gets its own copy of the function, with the lambda's
    body in place of the parameter's calls and its captures passed as
    arguments, so no closure is built.  A call that passes a variable shares
    one copy that takes the function at run time. *)
-let rec map_acc ([@@@FStar.Attributes.custard_specialize] f: int -> ML int)
+let rec map_acc ([@@@FStar.Attributes.monomorphize] f: int -> ML int)
                 (l: list int) (acc: list int) : ML (list int) =
   match l with
   | [] -> List.rev acc
   | x :: t -> let y = f x in map_acc f t (y :: acc)
 
-let map ([@@@FStar.Attributes.custard_specialize] f: int -> ML int) (l: list int)
+let map ([@@@FStar.Attributes.monomorphize] f: int -> ML int) (l: list int)
   : ML (list int) = map_acc f l []
 
-let rec fold ([@@@FStar.Attributes.custard_specialize] f: (list int & int) -> int -> ML (list int & int))
+let rec fold ([@@@FStar.Attributes.monomorphize] f: (list int & int) -> int -> ML (list int & int))
              (a: list int & int) (l: list int) : ML (list int & int) =
   match l with
   | [] -> a

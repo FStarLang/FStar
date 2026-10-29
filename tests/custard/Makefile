@@ -557,7 +557,7 @@ CNOGREP_CVarArity = "CVarArity_e(a);"
 # the leftover arrow in the declared result, so the greps are on the
 # signature.
 C_TESTS += CAbbrevArity
-CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool(bool x, bool x1)"
+CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool_band(bool x, bool b)"
 CNOGREP_CAbbrevArity = "(*CAbbrevArity_mk_eq_test__bool"
 # Section 27.4: a saturated call to a forwarder is the identity on one of its
 # arguments, so the definition becomes a real function instead of a mutable
@@ -3795,7 +3795,7 @@ $(CHERRY_DIR)/CherryLocalFn.chgrep: $(CHERRY_DIR)/CherryLocalFn.chc
 
 all: $(CHERRY_DIR)/CherryLocalFn.chgrep
 
-# [@@@custard_specialize] (custard.md, 3.2d): a lambda or a partial
+# [@@@monomorphize] on a function binder (custard.md, 3.2d): a lambda or a partial
 # application passed to the function builds no closure.
 $(CHERRY_DIR)/CherrySpecializeHO.chgrep: $(CHERRY_DIR)/CherrySpecializeHO.chc
 	$(Q)for f in add_all shift_all scale_all deep rebinds; do \
