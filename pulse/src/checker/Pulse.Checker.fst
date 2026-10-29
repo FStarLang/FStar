@@ -264,6 +264,13 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
     in
     Pulse.Checker.Base.hoist g (Inl arg) true rebuild  
 
+  | Tm_Raise { arg } ->
+    let rebuild (arg:either term st_term {Inl? arg}) : T.Tac st_term =
+      let Inl arg = arg in
+      { t with term=Tm_Raise { arg } }
+    in
+    Pulse.Checker.Base.hoist g (Inl arg) true rebuild
+
   | _ -> None
 #pop-options
 #restart-solver
@@ -330,7 +337,7 @@ let rec check
 
       | Tm_ST _ ->
         RU.record_stats "check_st" (fun _ ->
-        Pulse.Checker.ST.check g pre post_hint res_ppname t)
+        Pulse.Checker.ST.check g pre post_hint res_ppname t check)
 
       | Tm_ElimExists _ ->
         Exists.check_elim_exists g pre post_hint res_ppname t
@@ -504,6 +511,17 @@ let rec check
 
       | Tm_Goto _ ->
         Goto.check g pre post_hint res_ppname t
+
+      | Tm_Raise { arg } ->
+        Pulse.Checker.Exceptions.check_raise g pre post_hint res_ppname arg t.range
+
+      | Tm_ExceptionScope { normal; exceptional; body } ->
+        Pulse.Checker.Exceptions.check_scope g pre post_hint res_ppname
+          normal exceptional body t.range check
+
+      | Tm_Try { normal; exceptional; body; handler } ->
+        Pulse.Checker.Exceptions.check_try g pre post_hint res_ppname
+          normal exceptional body handler t.range check
 
       | Tm_Defer _ ->
         Defer.check g pre post_hint res_ppname t check

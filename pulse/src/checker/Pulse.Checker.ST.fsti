@@ -28,4 +28,5 @@ val check
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_ST? t.term})
+  (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)

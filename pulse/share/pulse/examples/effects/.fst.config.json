@@ -1,0 +1,17 @@
+{
+  "fstar_exe": "../../../../../stage3/out/bin/fstar.exe",
+  "options": [
+    "--cache_dir", "_cache",
+    "--already_cached", "Prims,FStar,Pulse.Nolib,Pulse.Lib,Pulse.Class,PulseCore,Pulse.Main,-Pulse.Lib.Effects",
+    "--z3rlimit", "10",
+    "--warn_error", "-321",
+    "--ext", "optimize_let_vc",
+    "--ext", "fly_deps"
+  ],
+  "include_dirs": [
+    ".",
+    "../../../../lib/pulse/lib/effects",
+    "_cache",
+    "../../../../lib/pulse/lib/effects/_cache"
+  ]
+}

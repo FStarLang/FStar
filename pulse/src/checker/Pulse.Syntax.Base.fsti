@@ -309,6 +309,20 @@ type st_term' =
       lbl: term; // either var or named
       arg: term;
     }
+  | Tm_Raise {
+      arg: term;
+    }
+  | Tm_ExceptionScope {
+      normal: comp_st;
+      exceptional: term;
+      body: st_term;
+    }
+  | Tm_Try {
+      normal: comp_st;
+      exceptional: term;
+      body: st_term;
+      handler: st_term; // exception payload bound at index 0
+    }
   | Tm_Defer {
       handler_pre: slprop;
       handler: st_term;
@@ -463,4 +477,3 @@ let ppname_for_uvar (p : ppname) : T.Tac ppname =
   {
     p with name = T.seal ("?" ^ T.unseal p.name);
   }
-

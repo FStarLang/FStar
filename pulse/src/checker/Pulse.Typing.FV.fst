@@ -231,6 +231,20 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' lbl x i;
       freevars_close_term' arg x i
 
+    | Tm_Raise { arg } ->
+      freevars_close_term' arg x i
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      freevars_close_comp normal x i;
+      freevars_close_term' exceptional x i;
+      freevars_close_st_term' body x i
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      freevars_close_comp normal x i;
+      freevars_close_term' exceptional x i;
+      freevars_close_st_term' body x i;
+      freevars_close_st_term' handler x (i + 1)
+
     | Tm_Defer { handler_pre; handler; body } ->
       freevars_close_term' handler_pre x i;
       freevars_close_st_term' handler x i;

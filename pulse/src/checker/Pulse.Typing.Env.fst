@@ -71,7 +71,8 @@ let rec lookup_bindings (g: env_bindings) (x: var) : option typ =
   match g with
   | [] -> None
   | BindingVar {n; x=y; ty} :: g -> if x = y then Some ty else lookup_bindings g x
-  | BindingGotoLabel .. :: g | BindingPost .. :: g -> lookup_bindings g x
+  | BindingGotoLabel .. :: g | BindingPost .. :: g
+  | BindingCleanupBoundary :: g -> lookup_bindings g x
 
 let rec lookup_bindings_fresh (g: env_bindings) (x: var { ~(x `Set.mem` bindings_dom g) }) :
     Lemma (lookup_bindings g x == None) =
@@ -87,6 +88,7 @@ let rec lookup_goto_bindings (g: env_bindings) (x: var) : option (ppname & comp_
   match g with
   | [] -> None
   | BindingVar .. :: g -> lookup_goto_bindings g x
+  | BindingCleanupBoundary :: _ -> None
   | BindingGotoLabel { n; x=y; post } :: g ->
     if x = y then Some (n, post) else lookup_goto_bindings g x
   | BindingPost { post } :: g ->
@@ -257,6 +259,7 @@ let binding_to_string : binding -> T.Tac string = function
     Printf.sprintf "%s#%d : %s" (T.unseal n.name) x (Pulse.Syntax.Printer.comp_to_string post)
   | BindingPost { post } ->
     Printf.sprintf "extra post: %s" (Pulse.Syntax.Printer.term_to_string post)
+  | BindingCleanupBoundary -> "nonlocal exits may not escape this cleanup"
 
 let env_to_string (e:env) : T.Tac string =
   String.concat "\n  " (T.map binding_to_string (bindings e))
@@ -301,6 +304,7 @@ let env_to_doc' (simplify:bool) (e:env) : T.Tac document =
         (group <| doc_of_string "goto" ^/^ doc_of_string (T.unseal n.name ^ "#" ^ string_of_int x))
         (Pulse.Syntax.Printer.term_to_doc (comp_pre post))]
     | BindingPost ..
+    | BindingCleanupBoundary
     | BindingVar .. -> []) in
   separate hardline (var_bindings @ [empty] @ goto_bindings) 
 

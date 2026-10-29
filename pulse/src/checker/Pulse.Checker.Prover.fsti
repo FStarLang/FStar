@@ -44,3 +44,9 @@ val try_frame_pre (allow_ambiguous : bool) (#g:env)
     (d:(t:st_term & c:comp_st))
     (res_ppname:ppname) :
   T.Tac (checker_result_t g ctxt NoHint)
+
+// Unlike framing an ordinary call, an abortive exit cannot retain ownership
+// for a continuation. Require all nonduplicable resources in its destination.
+val prove_exact (rng:range) (g:env) (ctxt goals:slprop) :
+  T.Tac (g':env { env_extends g' g } &
+    continuation_elaborator g ctxt g' goals)

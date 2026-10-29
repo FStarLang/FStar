@@ -53,6 +53,9 @@ let check
     let (| body', c_body |) = apply_checker_result_k (check g' pre (PostHint body_post) res_ppname body) res_ppname in
     // The body's postcondition should be (post ** cpre)
     // Now check the handler with cpre as (part of) precondition
+    // A nonlocal exit would abandon the pending exit's framed resources.
+    // Cleanup may use local control flow, but cannot jump or raise out of it.
+    let g_cleanup = push g BindingCleanupBoundary in
     let post_hint_for_handler: post_hint_for_env g = {
       g;
       effect_annot = body_post.effect_annot;
@@ -60,11 +63,11 @@ let check
       u = u0;
       post = tm_emp;
     } in
-    let (| handler, c_handler |) = apply_checker_result_k (check g cpre (PostHint post_hint_for_handler) ppname_default handler) ppname_default in
+    let (| handler, c_handler |) = apply_checker_result_k (check g_cleanup cpre (PostHint post_hint_for_handler) ppname_default handler) ppname_default in
     // After body, context is (post ** cpre); handler consumes cpre
     // Overall defer comp has the original post (without cpre)
     let t = wtag (Some (ctag_of_comp_st c_body)) (Tm_Defer { handler_pre = cpre; handler; body=body' }) in
-    let c = C_ST { u=comp_u c_body; res=comp_res c_body; pre; post=post.post } in
+    let c = with_st_comp c_body { u=comp_u c_body; res=comp_res c_body; pre; post=post.post } in
     let c'' = match_comp_res_with_post_hint t c post_hint in
     prove_post_hint
       (try_frame_pre false #g (|t, c''|) res_ppname)

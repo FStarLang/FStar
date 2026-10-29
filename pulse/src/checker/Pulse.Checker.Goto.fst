@@ -61,8 +61,11 @@ let check'
       in
       let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
       let c' = match_comp_res_with_post_hint t c' post_hint in
+      // No continuation runs after a jump. Its destination and intervening
+      // cleanup obligations must account for all owned resources.
+      let (| g', k |) = prove_exact rng g pre (comp_pre c') in
       prove_post_hint #g
-        (try_frame_pre false #g (|t,c'|) res_ppname)
+        (checker_result_for_st_typing (k NoHint (|t,c'|)) res_ppname)
         post_hint
         rng
     | None ->

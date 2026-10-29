@@ -449,6 +449,14 @@ let rec freevars_st (t:st_term)
     | Tm_Goto { lbl; arg } ->
       freevars lbl ++ freevars arg
 
+    | Tm_Raise { arg } -> freevars arg
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      freevars_comp normal ++ freevars exceptional ++ freevars_st body
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      freevars_comp normal ++ freevars exceptional ++ freevars_st body ++ freevars_st handler
+
     | Tm_Defer { handler_pre; handler; body } ->
       freevars handler_pre ++ freevars_st handler ++ freevars_st body
 
@@ -641,6 +649,14 @@ let rec ln_st' (t:st_term) (i:int)
 
     | Tm_Goto { lbl; arg } ->
       ln' lbl i && ln' arg i
+
+    | Tm_Raise { arg } -> ln' arg i
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      ln_c' normal i && ln' exceptional i && ln_st' body i
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      ln_c' normal i && ln' exceptional i && ln_st' body i && ln_st' handler (i+1)
 
     | Tm_Defer { handler_pre; handler; body } ->
       ln' handler_pre i && ln_st' handler i && ln_st' body i
@@ -911,6 +927,17 @@ let rec subst_st_term (t:st_term) (ss:subst)
 
     | Tm_Goto { lbl; arg } ->
       Tm_Goto { lbl=subst_term lbl ss; arg=subst_term arg ss }
+
+    | Tm_Raise { arg } ->
+      Tm_Raise { arg=subst_term arg ss }
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      Tm_ExceptionScope { normal=subst_comp normal ss; exceptional=subst_term exceptional ss;
+                          body=subst_st_term body ss }
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      Tm_Try { normal=subst_comp normal ss; exceptional=subst_term exceptional ss;
+               body=subst_st_term body ss; handler=subst_st_term handler (shift_subst ss) }
 
     | Tm_Defer { handler_pre; handler; body } ->
       Tm_Defer { handler_pre=subst_term handler_pre ss; handler=subst_st_term handler ss; body=subst_st_term body ss }
