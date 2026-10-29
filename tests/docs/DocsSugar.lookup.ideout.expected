@@ -1,0 +1,6 @@
+{"kind": "protocol-info", "rest": "[...]"}
+{"kind": "response", "query-id": "1", "response": [], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [], "status": "success"}
+{"kind": "response", "query-id": "3", "response": [], "status": "success"}
+{"kind": "response", "query-id": "4", "response": {"defined-at": null, "definition": null, "documentation": "Doubles 'x'.", "kind": "symbol", "name": "DocsSugar.double", "type": null}, "status": "success"}
+{"kind": "response", "query-id": "5", "response": {"defined-at": null, "definition": null, "documentation": null, "kind": "symbol", "name": "DocsSugar.quadruple", "type": null}, "status": "success"}
