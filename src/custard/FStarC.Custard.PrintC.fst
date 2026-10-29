@@ -451,6 +451,12 @@ let keeps : ref (HashTable.t string (list bool)) = mk_ref (HashTable.create 0)
    an operand. *)
 let void_fns : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 
+(* Section 136.  The environment structs and entry points of the
+   [Pulse.Lib.Closure] closures the program allocates, generated as each
+   allocation is printed, and the code functions that already have theirs. *)
+let cclo_defs : ref (list string) = mk_ref []
+let cclo_seen : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
+
 (* How many arguments each named definition takes, after the dropped
    parameters of [keeps] are removed.  Only used to refuse a call that does
    not match: C has neither partial application nor a way to apply a call's
@@ -927,7 +933,15 @@ let builtin_type (n:name) : ML (option string) =
     Some (if Options.custard_cherry () then "cherry_string" else "const char *")
   | "Prims.int" when Options.custard_cherry () -> Some "cherry_int"
   | "FStar.Char.char" -> Some "uint32_t"
+  (* Section 136.  Whatever it boxes. *)
+  | "Pulse.Lib.Closure.closure" -> Some "custard_closure *"
   | _ -> None
+
+let is_closure_ty (t:cty) : ML bool =
+  match t with
+  | TApp (n, []) ->
+    None? n.spec && String.concat "." (n.ns @ [n.id]) = "Pulse.Lib.Closure.closure"
+  | _ -> false
 
 (* Section 44.2.  [Prims.string] is [const char *], so C's [==] on two of them
    is a comparison of addresses.  That is right for no F* program: F*'s
@@ -1050,6 +1064,7 @@ let rec decl_of (t:cty) (x:string) : ML string =
       ["C has no garbage collector: use a Pulse reference, which is freed \
         explicitly, or --codegen Cherry, which counts references."]
   | TBuf e | TRef (_, e) -> decl_of e ("*" ^ x)
+  | TApp (_, []) when is_closure_ty t -> "custard_closure *" ^ x
   (* A function cannot be stored, only a pointer to one, so a [TArrow] in a
      data position becomes a function pointer.  Custard has no closures --
      [EFun] in a value position is rejected below -- so the value is always a
@@ -1697,6 +1712,19 @@ let unit_support : string =
 
 let mentions_unit (s:string) : bool = BU.contains s "custard_unit"
 
+(* Section 136.  A [Pulse.Lib.Closure.closure] is a pointer to this header,
+   which the closure's environment follows.  The code pointer is stored as
+   the one function pointer type every other converts to and back from
+   without a [-Wcast-function-type] warning, and each call site converts it
+   to the type of the entry point it really is. *)
+let closure_support : string =
+  "#ifndef CUSTARD_CLOSURE_DEFINED\n\
+   #define CUSTARD_CLOSURE_DEFINED\n\
+   typedef struct custard_closure { void (*code)(void); } custard_closure;\n\
+   #endif\n"
+
+let mentions_closure (s:string) : bool = BU.contains s "custard_closure"
+
 (* Section 125.5.  A NaN and an infinity are [<math.h>]'s [NAN] and
    [INFINITY], which is the only portable spelling of either: C has no
    floating-point constant syntax for them, so a literal cannot be written and
@@ -2147,6 +2175,8 @@ let reset_program_state () : ML unit =
   ifdefs := HashTable.create 0;
   keeps := HashTable.create 0;
   void_fns := HashTable.create 0;
+  cclo_defs := [];
+  cclo_seen := HashTable.create 0;
   arities := HashTable.create 0;
   fn_sigs := HashTable.create 0;
   fn_globals := HashTable.create 0;
@@ -2187,6 +2217,8 @@ let is_stmt (e:expr) : bool =
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = ResetFree }, _)
   | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnExit }, _) -> true
+  (* An allocation and the stores that fill in its environment. *)
+  | EOp ({ po_op = ClosureNew }, _) -> true
   | EOp ({ po_op = PBuf f }, _) -> f <> "read" && f <> "alloc"
   | _ -> false
 
@@ -2282,7 +2314,8 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
-  | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
+  | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _)
+  | EOp ({ po_op = ClosureNew }, _) -> false
   | EOp (_, es) | ECtor (_, es) | ETuple es -> all es
   | ELet (_, _, a, b) | ESeq (a, b) -> is_pure a && is_pure b
   | EIf (a, b, c) -> is_pure a && is_pure b && is_pure c
@@ -2392,6 +2425,86 @@ let rec is_foreign_token (t:cty) : ML bool =
      | _ -> false)
   | _ -> false
 
+(* Section 136.  [Pulse.Lib.Closure].  The parameters and result of a boxed
+   function type, through every abbreviation: the boxed type is curried, and
+   a closure is called with all of its arguments at once. *)
+let rec closure_spine (t:cty) : ML (list cty & cty) =
+  match arrow_view t with
+  | Some (a, b) -> let ds, r = closure_spine b in (a :: ds, r)
+  | None -> ([], t)
+
+(* The C type of the entry point of a closure whose boxed type has spine
+   [doms -> ret], with [x] in the declarator position.  As in [decl_of], a
+   unit parameter is not passed and a unit result is [void]. *)
+let closure_fn_decl (doms:list cty) (ret:cty) (x:string) : ML string =
+  let ps = "custard_closure *" ::
+           (doms |> List.filter (fun d -> not (TUnit? d))
+                 |> List.map (fun d -> decl_of d "")) in
+  let inner = x ^ "(" ^ String.concat ", " ps ^ ")" in
+  if TUnit? ret then "void " ^ inner else decl_of ret inner
+
+let closure_env_name (nm:name) : ML string = c_name nm ^ "_env"
+let closure_entry_name (nm:name) : ML string = c_name nm ^ "_entry"
+
+let rec strip_coerce (e:expr) : expr =
+  match e.e with
+  | ECoerce (e', _) -> strip_coerce e'
+  | _ -> e
+
+(* The environment struct and the entry point of the closures whose code is
+   the lifted definition [nm] (section 19.12), which takes the captured
+   values [caps] first and the boxed function's parameters after them.  The
+   entry point unpacks the environment and calls [nm]: every allocation site
+   has a definition of its own, so the struct's layout is known exactly
+   there and nowhere else, which is all a call needs -- it goes through the
+   header's code pointer and passes the closure itself along. *)
+let closure_helpers (nm:name) (code_ty:cty) (caps:list cty) : ML unit =
+  let key = string_of_name nm in
+  if HashTable.mem !cclo_seen key then () else begin
+  HashTable.add !cclo_seen key true;
+  let _, rest = arrow_take (List.length caps) code_ty in
+  let doms, ret = closure_spine rest in
+  let env = closure_env_name nm in
+  let fields = caps |> List.mapi (fun i t -> (i, t))
+                    |> List.filter (fun (_, t) -> not (TUnit? t)) in
+  let env_def =
+    match fields with
+    | [] -> ""
+    | _ ->
+      "typedef struct {\n  custard_closure hdr;\n" ^
+      String.concat "" (fields |> List.map (fun (i, t) ->
+        "  " ^ decl_of t ("x" ^ show i) ^ ";\n")) ^
+      "} " ^ env ^ ";\n\n" in
+  let params = doms |> List.mapi (fun i t -> (i, t)) in
+  let entry = closure_entry_name nm in
+  let header =
+    let ps = "custard_closure *self" ::
+             (params |> List.filter (fun (_, t) -> not (TUnit? t))
+                     |> List.map (fun (i, t) -> decl_of t ("a" ^ show i))) in
+    let inner = entry ^ "(" ^ String.concat ", " ps ^ ")" in
+    "static " ^ (if TUnit? ret then "void " ^ inner else decl_of ret inner) in
+  let unpack =
+    match fields with
+    | [] -> "  (void)self;\n"
+    | _ -> "  " ^ env ^ " *env = (" ^ env ^ " *)self;\n" in
+  let args =
+    (caps |> List.mapi (fun i t ->
+       if TUnit? t then unit_value else "env->x" ^ show i)) @
+    (params |> List.map (fun (i, t) ->
+       if TUnit? t then unit_value else "a" ^ show i)) in
+  let args =
+    match HashTable.try_find !keeps key with
+    | Some flags -> filter_by flags args
+    | None -> args in
+  let call = c_name nm ^ "(" ^ String.concat ", " args ^ ")" in
+  let body =
+    if TUnit? ret || Some? (HashTable.try_find !void_fns key)
+    then "  " ^ call ^ ";\n"
+    else "  return " ^ call ^ ";\n" in
+  let def = env_def ^ header ^ " {\n" ^ unpack ^ body ^ "}\n" in
+  cclo_defs := !cclo_defs @ [def]
+  end
+
 let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
   (c_expr_doc out ind e).c_text
 
@@ -2427,6 +2540,36 @@ and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
      (* A foreign name may expand to an expression rather than one C token. *)
      | Some t -> if is_foreign_token e.ty then c_opaque t else c_postfix (group t)
      | None -> c_postfix (c_name n))
+  (* Section 136.  A call through the closure's code pointer, which is
+     stored type-erased and converted back to the entry point's type here,
+     with the closure itself as the first argument. *)
+  | EApp ({ e = EOp ({ po_op = ClosureCall }, [c]); ty = hd_ty }, args) ->
+    let doms, ret = closure_spine hd_ty in
+    let nonunit (ts:list cty) = List.length (List.filter (fun t -> not (TUnit? t)) ts) in
+    let args = args |> List.filter (fun (a:expr) -> not (TUnit? a.ty)) in
+    if List.length args <> nonunit doms then
+      reject "a partial application of Pulse.Lib.Closure.call's result"
+        ["The boxed function takes " ^ show (nonunit doms) ^
+         " arguments and is applied to " ^ show (List.length args) ^ ".";
+         "A boxed function is called through a code pointer with all of its \
+          arguments at once: apply the result of [call] to every argument."];
+    let cv = c_expr out ind (strip_coerce c) in
+    let cv = if cv <> "" && List.for_all (fun ch -> BU.is_letter_or_digit ch || ch = '_') (String.list_of_string cv) then cv else begin
+      let tmp = fresh "clo" in
+      out := !out ^ ind ^ "custard_closure *" ^ tmp ^ " = " ^ cv ^ ";\n";
+      tmp
+    end in
+    let fty = closure_fn_decl doms ret "(*)" in
+    let vs = List.map (fun (a:expr) -> c_rvalue out ind a.ty a) args in
+    let call = "((" ^ fty ^ ")" ^ cv ^ "->code)(" ^
+               String.concat ", " (cv :: vs) ^ ")" in
+    if TUnit? ret
+    then (out := !out ^ ind ^ call ^ ";\n"; c_postfix unit_value)
+    else c_postfix call
+  | EOp ({ po_op = ClosureCall }, _) ->
+    reject "a use of Pulse.Lib.Closure.call's result other than a call"
+      ["The result of [call] is the boxed function, which C can only call: \
+        apply it to all of its arguments where it is obtained."]
   | EApp (hd, args) when is_closure_app hd args ->
     let k = List.length args in
     let eargs = args in
@@ -3341,6 +3484,40 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      cell is freed by leaving the scope, so there is nothing to say. *)
   | EOp ({ po_op = BufFree }, [{ e = EVar y }]) when is_cell y ->
     unit_result ind d
+
+  (* Section 136.  The environment is allocated with the header first, so a
+     pointer to it is a pointer to the header; the entry point converts it
+     back. *)
+  | EOp ({ po_op = ClosureNew }, code :: caps) ->
+    let out = mk_ref "" in
+    let code = strip_coerce code in
+    let nm = match code.e with
+             | EQual (nm, _) -> nm
+             | _ -> reject_ir "a closure allocation whose code is not a definition"
+                      ["Simplify.lift_lambdas lifts every closure's code to the top level."] in
+    let caps = List.map strip_coerce caps in
+    closure_helpers nm code.ty (List.map (fun (c:expr) -> c.ty) caps);
+    let fields = caps |> List.mapi (fun i c -> (i, c))
+                      |> List.filter (fun (_, (c:expr)) -> not (TUnit? c.ty)) in
+    let vs = fields |> List.map (fun (i, (c:expr)) -> (i, c_rvalue out ind c.ty c)) in
+    let tmp = fresh "clo" in
+    let entry = "(void (*)(void))" ^ closure_entry_name nm in
+    let s =
+      match vs with
+      | [] ->
+        ind ^ "custard_closure *" ^ tmp ^
+        " = (custard_closure *)malloc(sizeof(custard_closure));\n" ^
+        ind ^ "if (" ^ tmp ^ " == NULL) { abort(); }\n" ^
+        ind ^ tmp ^ "->code = " ^ entry ^ ";\n"
+      | _ ->
+        let env = closure_env_name nm in
+        ind ^ env ^ " *" ^ tmp ^ " = (" ^ env ^ " *)malloc(sizeof(" ^ env ^ "));\n" ^
+        ind ^ "if (" ^ tmp ^ " == NULL) { abort(); }\n" ^
+        ind ^ tmp ^ "->hdr.code = " ^ entry ^ ";\n" ^
+        String.concat "" (vs |> List.map (fun (i, v) ->
+          ind ^ tmp ^ "->x" ^ show i ^ " = " ^ v ^ ";\n")) in
+    let res = match vs with [] -> tmp | _ -> "&" ^ tmp ^ "->hdr" in
+    !out ^ s ^ finish ind d res
 
   | EOp ({ po_op = BufFree }, [b]) ->
     let out = mk_ref "" in
@@ -6481,7 +6658,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
   let support_groups = [
     "", exts; "", lits; "", rc_protos; "", ref_protos; "", iarr_protos;
     "", exn_protos; "", any_protos; "", pbuf_protos; "\n", rc_defs; "", protos;
-    "", clo_protos; "\n", clo_defs; "\n", ref_defs; "\n", iarr_defs;
+    "", clo_protos; "\n", clo_defs; "\n", !cclo_defs; "\n", ref_defs; "\n", iarr_defs;
     "\n", exn_defs; "\n", any_defs; "\n", pbuf_defs; "", eq_protos;
     "\n", eq_defs; "\n", inline_defs ] in
   let render_groups (gs:list (string & list string)) : ML string =
@@ -6512,6 +6689,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
      is the first line, so the same rule holds there. *)
   let hdr_narrow = mentions_narrow hdr_body in
   let hdr_unit   = mentions_unit hdr_body in
+  let hdr_clo    = mentions_closure hdr_body in
   let hdr_fspec  = mentions_float_special hdr_body in
   let hdr =
     header ^
@@ -6519,6 +6697,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
     (* The runtime is not generated: it ships with F* as ulib/c/cherry.h. *)
     (if Options.custard_cherry () then "\n#include \"cherry.h\"\n" else "") ^
     (if hdr_unit then "\n" ^ unit_support else "") ^
+    (if hdr_clo then "\n" ^ closure_support else "") ^
     (if hdr_fspec then "\n" ^ float_special_support else "") ^
     (if hdr_narrow then narrow_support else "") ^
     "\n" ^ hdr_body ^
@@ -6531,6 +6710,8 @@ let print_program (base:string) (cu:unit_info) (p:program)
     "#include \"" ^ base ^ ".h\"\n" ^
     (if not hdr_unit && mentions_unit src_body
      then "\n" ^ unit_support else "") ^
+    (if not hdr_clo && mentions_closure src_body
+     then "\n" ^ closure_support else "") ^
     (if not hdr_fspec && mentions_float_special src_body
      then "\n" ^ float_special_support else "") ^
     (if not hdr_narrow && mentions_narrow src_body
@@ -6597,6 +6778,8 @@ let print_program (base:string) (cu:unit_info) (p:program)
       banner ^ "#include \"" ^ base ^ ".h\"\n" ^
       (if not hdr_unit && mentions_unit src_body
        then "\n" ^ unit_support else "") ^
+      (if not hdr_clo && mentions_closure src_body
+       then "\n" ^ closure_support else "") ^
       (if not hdr_fspec && mentions_float_special src_body
        then "\n" ^ float_special_support else "") ^
       (if not hdr_narrow && mentions_narrow src_body

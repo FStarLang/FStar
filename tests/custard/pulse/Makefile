@@ -173,6 +173,20 @@ CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_option_array_bool(FStar_Perv
 CGREP_TupAlias += "static uint32_t TupAlias_psnd__option_array_element_t(FStar_Pervasives_Native_tuple2__option_element_ptr_uint32 x) {"
 CGREP_TupAlias += "static uint32_t TupAlias_psnd__option_array_bool_t(FStar_Pervasives_Native_tuple2__option_bool_ptr_uint32 x) {"
 
+# Section 136.  Pulse.Lib.Closure: a closure is a pointer to a header holding
+# the code pointer, followed by the captured environment, and a call goes
+# through the code pointer.
+C_TESTS += PulseClosure
+CGREP_PulseClosure += "typedef struct custard_closure { void (*code)(void); } custard_closure;"
+CGREP_PulseClosure += "->hdr.code = (void (*)(void))"
+CGREP_PulseClosure += "->code)("
+OCAML_TESTS += PulseClosure
+# The boxed function can only be called, not passed on.
+REJECT_TESTS += PulseClosureEscape
+CODE_PulseClosureEscape = 368
+FLAGS_PulseClosureEscape = --codegen C
+EGREP_PulseClosureEscape += "Pulse.Lib.Closure.call's result other than a call"
+
 # Section 94.  An initializer where C has one, and the loop where it does not:
 # a runtime fill cannot be repeated and a variable-length array may not be
 # initialized at all, so both of those keep the loop.
