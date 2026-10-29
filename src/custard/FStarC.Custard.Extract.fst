@@ -5151,18 +5151,21 @@ and inlinable_local (st:state) (lb:S.letbinding) : ML bool =
    [let d = { cmp = f } in sort #a #d], the shape [FStarC.Class.Ord.sort_by]
    is written in.  [d] is not a runtime parameter, it is a name for a value
    that section 3.2b can see through. *)
-(* Section 3.2d.  A [Mono] argument of function type is unfolded only when it
-   is nothing but the name of a local function, so that [let f x = ... in
+(* Section 3.2d.  A [Mono] argument of function type is unfolded only when
+   its head is the name of a local function, so that [let f x = ... in
    List.map f l] specializes on [f]'s body as [List.map (fun x -> ...) l]
-   would.  The names a lambda mentions stay names, and become holes: a
+   would.  The head may be applied: Pulse binds a [fn] block as a thunk and
+   passes [body ()], which the normalizer then beta-reduces.  The names a lambda mentions stay names, and become holes: a
    function body is large and its local [let]s are shared, so substituting
    them into the key costs time exponential in their nesting and buys a key
    that identifies nothing more. *)
 and unfold_soft (st:state) (t:term) : ML term =
-  match (SS.compress t).n with
+  let hd, args = U.head_and_args_full t in
+  match (SS.compress hd).n with
   | Tm_name bv ->
     (match HashTable.try_find st.letdefs (show bv.index) with
-     | Some d when Tm_abs? (SS.compress (U.unmeta d)).n -> d
+     | Some d when Tm_abs? (SS.compress (U.unmeta d)).n ->
+       if Nil? args then d else S.mk_Tm_app d args t.pos
      | _ -> t)
   | _ -> t
 
