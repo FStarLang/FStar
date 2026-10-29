@@ -162,16 +162,16 @@ CGREP_NestArr += "static uint32_t NestArr_pfst__t_option_box_t(FStar_Pervasives_
 
 # Section 109.  The rule can be hidden by a type abbreviation, which names it
 # at neither endpoint of the reduction: [pack a = option (array a)] mentions
-# no rule as written, and the reduced form has unfolded past it.
+# no rule as written, and the reduced form has unfolded past it.  Since
+# Pulse.Lib.Array.Core's implementation became a -model.fst, [array] is
+# abstract to extraction and nothing unfolds past it, so every spelling
+# reduces to [option array] -- one specialization per element type, which
+# must still be two.
 C_TESTS += TupAlias
-CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_pack_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_pack_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_psnd__pack_element_t(FStar_Pervasives_Native_tuple2__option_element_ptr_uint32 x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_psnd__pack_bool_t(FStar_Pervasives_Native_tuple2__option_bool_ptr_uint32 x) {"
-# The spelled-out control, and the two-deep chain the fuel is for.
 CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_option_array_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_packed_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_packed_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_option_array_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_psnd__option_array_element_t(FStar_Pervasives_Native_tuple2__option_element_ptr_uint32 x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_psnd__option_array_bool_t(FStar_Pervasives_Native_tuple2__option_bool_ptr_uint32 x) {"
 
 # Section 94.  An initializer where C has one, and the loop where it does not:
 # a runtime fill cannot be repeated and a variable-length array may not be
