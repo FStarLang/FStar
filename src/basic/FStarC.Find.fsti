@@ -111,5 +111,5 @@ FStarC.Options and doc/ref/custard.md, section 13.6. *)
 val locate_fstarc_cui () : ML (option string)
 
 (* Try to find a file from an include-relative path we might have read in a
-checked file. Leave unresolved names unchanged. *)
+checked file. Leave the name unchanged if lookup or normalization fails. *)
 val refind_file (f:string) : ML string

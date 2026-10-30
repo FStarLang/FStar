@@ -424,7 +424,6 @@ type lstate = {
   buf       : string;
   len       : t;
   fname     : string;
-  range_fname : string;
   cur       : ref t;
   lnum      : ref t;
   bol       : ref t; (* the offset of the beginning of the current line *)
@@ -481,7 +480,7 @@ let new_line (st:lstate) : ML unit =
   st.cache_off := !st.cur;
   st.cache_col := zero
 
-let mk_range (st:lstate) (p1 p2:R.pos) : R.range = R.mk_range st.range_fname p1 p2
+let mk_range (st:lstate) (p1 p2:R.pos) : R.range = R.mk_range st.fname p1 p2
 
 let add_comment (st:lstate) (s:string) (r:R.range) : ML unit =
   st.comments := (s, r) :: !st.comments;
@@ -997,9 +996,9 @@ let rec next_token (st:lstate) : ML token =
     st.cur := e;
     let pos = cur_pos st in
     use_lang st [] name pos sp
-  | RSourceFile -> finish STRING (Filepath.basename st.fname)
+  | RSourceFile -> finish STRING st.fname
   | RLine -> finish INT (show !st.lnum)
-  | RFileLine -> finish STRING (Filepath.basename st.fname ^ "(" ^ show !st.lnum ^ ")")
+  | RFileLine -> finish STRING (st.fname ^ "(" ^ show !st.lnum ^ ")")
   | RWhite -> st.cur := e; next_token st
   | RNewline -> st.cur := e; new_line st; next_token st
   | RCharLit
@@ -1093,8 +1092,7 @@ let lex_all (fname:string) (contents:string) (line col:int)
 = let st = {
     buf = contents;
     len = S.byte_length contents;
-    fname = fname;
-    range_fname = Find.source_file_name fname;
+    fname = Find.source_file_name fname;
     cur = mk_ref zero;
     lnum = mk_ref (of_int line);
     bol = mk_ref zero;

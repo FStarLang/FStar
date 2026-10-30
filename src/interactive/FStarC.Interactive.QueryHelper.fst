@@ -77,10 +77,14 @@ let symlookup tcenv symbol pos_opt requested_info =
       match TcErr.info_at_pos tcenv file row col with
       | Some info -> Some info
       | None ->
-        (* Use the same include-relative filename as the parser's ranges,
-           including for absolute paths and VS Code's file URIs. *)
+        (* The identifier-info table is keyed by filenames as stored in ranges,
+           which are include-relative. Clients can send other forms: fstar-mode
+           passes the name it was given, while VS Code sends an absolute path or
+           a "file://" URI. Retry with the parser's filename convention so a
+           mismatch does not fall through to scope-order resolution, which can
+           select the wrong overload. *)
         let path =
-          if U.starts_with file "file://" then U.substring_from file 7 else file
+          Option.dflt file (Parser.AST.strip_prefix "file://" file)
         in
         let source_name = Find.source_file_name path in
         if source_name = file then None

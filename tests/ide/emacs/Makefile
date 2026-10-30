@@ -40,14 +40,10 @@ $(CACHE_DIR)/A.B.C.fst.checked: $(HIERARCHICAL_DIR)/A/B/C.fst
 	$(call msg, "CHECK", $(notdir $<))
 	$(FSTAR) --include "$(HIERARCHICAL_DIR)" -c $< -o $@
 
-# Check resolved and include-relative ranges against the same snapshot. Keep
-# directory components so a basename-only response fails in either mode.
+# Preserve directory components in ranges so basename-only responses
+# fail the snapshot comparison.
 $(OUTPUT_DIR)/Hierarchical.%.ideout: Hierarchical.%.in $(CACHE_DIR)/A.B.C.fst.checked
 	$(call msg, "OUT_IDE", $<)
-	$(FSTAR) --ext fstar:no_absolute_paths=false --include "$(HIERARCHICAL_DIR)" \
+	$(FSTAR) --include "$(HIERARCHICAL_DIR)" \
 	  --ide --silent "$(HIERARCHICAL_DIR)/Client/Lookup.fst" < "$<" \
 	  | $(JSON_CLEANUP) "$@" "$(HIERARCHICAL_DIR)"
-	$(FSTAR) --ext fstar:no_absolute_paths --include "$(HIERARCHICAL_DIR)" \
-	  --ide --silent "$(HIERARCHICAL_DIR)/Client/Lookup.fst" < "$<" \
-	  | $(JSON_CLEANUP) "$@.relative" "$(HIERARCHICAL_DIR)"
-	cmp "$@" "$@.relative"

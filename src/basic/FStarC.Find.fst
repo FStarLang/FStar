@@ -326,7 +326,12 @@ let locate_fstarc_cui () : ML (option string) =
   if Filepath.file_exists f then Some f else None
 
 
+(* Resolve include-relative filenames from ranges under the current include
+paths. Error reporting must retain the original name if lookup or normalization
+fails, including when reading checked files from another location. *)
 let refind_file f =
-  match find_file f with
-  | None -> f
-  | Some path -> Filepath.normalize_file_path path
+  try
+    match find_file f with
+    | None -> f
+    | Some path -> Filepath.normalize_file_path path
+  with _ -> f
