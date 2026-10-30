@@ -894,16 +894,20 @@ let check_no_escape (cause : escape_cause)
             match escaping_vars phi with
             | [] -> phi
             | _ ->
-              let binder_of (x:bv) : ML binder =
-                S.mk_binder { x with sort = N.normalize_refinement N.whnf_steps env x.sort }
+              (* The sorts may mention the variables going out of scope. *)
+              let env_fvs = Env.push_bvs env (List.rev fvs) in
+              (* The quantifier is instantiated at the universe of its binder,
+                 as TcTerm would have it: this formula is not checked again. *)
+              let close_exists (x:bv) (phi:term) : ML term =
+                let x = { x with sort = N.normalize_refinement N.whnf_steps env x.sort } in
+                U.mk_exists (env_fvs.universe_of env_fvs x.sort) x phi
               in
               let rec close (fuel:nat) (phi:term) : ML term =
                 match escaping_vars phi with
                 | [] -> phi
                 | xs ->
                   if fuel = 0 then phi
-                  else close (fuel - 1)
-                             (U.close_exists_no_univs (List.map binder_of xs) phi)
+                  else close (fuel - 1) (List.fold_right close_exists xs phi)
               in
               N.normalize [Env.Beta; Env.Simplify; Env.Primops] env
                           (close (List.length fvs) phi)

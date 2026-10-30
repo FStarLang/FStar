@@ -619,17 +619,21 @@ let is_type (g:env) (t:term)
             text "Expected a type, got" ^/^ fquotes (pp t)
           ]
     in
-    (* Unfold and unrefine until a [Type] appears, e.g. through
-       [type p (x:t) = a:u0{...}] with [u0 = Type0]. *)
-    let rec go (n:int) (t:term) : ML (result universe) =
+    (* Unfold until a [Type] appears, e.g. through [type p (x:t) =
+       a:u0{...}] with [u0 = Type0]: the [Unrefine] step has the normalizer
+       continue with the sort of every refinement it reaches in head
+       position. An ascription it leaves (e.g. the [Type0 <: Type] of [kf 0]
+       in tests/custard/KindAbbrev) is stripped and the rest unfolded in
+       turn, until nothing changes. No bound is needed: [t] is the type of
+       a well-typed term, so it normalizes. *)
+    let rec go (t:term) : ML (result universe) =
       handle_with
         (aux t)
         (fun _ ->
-          let t' = U.unrefine (N.unfold_whnf g.tcenv t) in
-          if n <= 0 || U.term_eq t t' then aux t'
-          else go (n - 1) t')
+          let t' = U.unascribe (N.unfold_whnf' [Env.Unrefine] g.tcenv t) in
+          if U.term_eq t t' then aux t' else go t')
     in
-    with_context "is_type" (Some (CtxTerm t)) (fun _ -> go 8 t)
+    with_context "is_type" (Some (CtxTerm t)) (fun _ -> go t)
 
 let comp_eff (c:comp) : ML eff =
   if U.is_total_comp c then ETot
@@ -1372,14 +1376,23 @@ let facts_concat (fs:list (Thunk.t (list term))) : ML (Thunk.t (list term)) =
 let facts_subst (s:subst_t) (fs:Thunk.t (list term)) : ML (Thunk.t (list term)) =
   Thunk.map (List.map (Subst.subst s)) fs
 
-(* The facts [fs] that do not mention the variables [xs], e.g. those of the
-   body of a [let] that do not mention its variable, when that variable
-   cannot be substituted by its (effectful) definition. *)
-let facts_without (xs:list bv) (fs:Thunk.t (list term)) : ML (Thunk.t (list term)) =
+(* The facts [fs] with the variables [xs], of universes [us], going out of
+   scope, e.g. the variable of a [let] that cannot be substituted by its
+   (effectful) definition. Rather than drop the facts that mention them,
+   they are stated together under an existential over [xs], which the
+   variables themselves witness: as in [TcUtil.close_escaping], what the
+   facts say about other variables through [xs] then survives. *)
+let facts_exists (xs:list bv) (us:list universe) (fs:Thunk.t (list term)) : ML (Thunk.t (list term)) =
   Thunk.map
-    (List.filter (fun (f:term) ->
-      let fvs = FStarC.Syntax.Free.names f in
-      not (BU.for_some (fun (x:bv) -> mem x fvs) xs)))
+    (fun (fs:list term) ->
+      let mentions_xs (f:term) : ML bool =
+        let fvs = FStarC.Syntax.Free.names f in
+        BU.for_some (fun (x:bv) -> mem x fvs) xs
+      in
+      let bound, free = List.partition mentions_xs fs in
+      match bound with
+      | [] -> free
+      | _ -> List.fold_right2 U.mk_exists us xs (U.mk_conj_l bound) :: free)
     fs
 
 (* What the type [t_a] of the pure term [a] says about it. *)
@@ -1470,23 +1483,24 @@ let mk_facts (g:env) (e:term) (eff:eff) (t:typ) (s:sub_facts) : ML facts =
 
 (* Those of [let x = def in body], from those of [def] and [body]: a pure
    [def] is substituted for [x], whose facts are those of [def]; otherwise,
-   only the facts of [body] that do not mention [x] remain. *)
-let let_facts (pure_def:bool) (def:term) (x:bv) (fdef fbody:facts) : ML sub_facts =
+   those of [body] are closed over [x], of universe [u]. *)
+let let_facts (pure_def:bool) (def:term) (x:bv) (u:universe) (fdef fbody:facts) : ML sub_facts =
   if pure_def
   then
     let s = [NT(x, def)] in
     { s_sub = facts_concat [fdef.f_term; facts_subst s fbody.f_sub];
       s_tail = Some (facts_subst s fbody.f_tail) }
   else
-    { s_sub = facts_without [x] fbody.f_sub;
-      s_tail = Some (facts_without [x] fbody.f_tail) }
+    { s_sub = facts_exists [x] [u] fbody.f_sub;
+      s_tail = Some (facts_exists [x] [u] fbody.f_tail) }
 
-(* Those of [let rec xs = ... in body]: the recursive names are not
-   definitions that facts could be stated about. *)
-let letrec_facts (xs:binders) (fbody:facts) : ML sub_facts =
+(* Those of [let rec xs = ... in body], of universes [us]: the recursive
+   names are not definitions that could be substituted, so the facts of the
+   body are closed over them. *)
+let letrec_facts (xs:binders) (us:list universe) (fbody:facts) : ML sub_facts =
   let xs = List.map (fun (b:binder) -> b.binder_bv) xs in
-  { s_sub = facts_without xs fbody.f_sub;
-    s_tail = Some (facts_without xs fbody.f_tail) }
+  { s_sub = facts_exists xs us fbody.f_sub;
+    s_tail = Some (facts_exists xs us fbody.f_tail) }
 
 (* [e], of type [t_e] and effect [eff], was expected to have effect
    [target_eff] (and type [target_t]): reported as TcTerm's
@@ -2048,13 +2062,20 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
       else
         fallback t0 t1
     in
-    let eta_target (t:term) : bool =
-      match t.n with
-      | Tm_app _ | Tm_fvar _ | Tm_uinst _ | Tm_name _ -> true
-      | _ -> false
-    in
     let maybe_unfold_and_retry t0 t1 =
       maybe_unfold_side_and_retry (which_side_to_unfold t0 t1) t0 t1
+    in
+    let unfoldable_head (t:term) : bool =
+      match t.n with
+      | Tm_app _ | Tm_fvar _ | Tm_uinst _ -> true
+      | _ -> false
+    in
+    let abs_vs_unfoldable side t0 t1 =
+      if! unfolding_ok then
+        match maybe_unfold_side' false side t0 t1 with
+        | Some (t0', t1') -> check_relation g rel t0' t1'
+        | None -> fallback t0 t1
+      else fallback t0 t1
     in
     let beta_iota_reduce t =
         let t = Subst.compress t in
@@ -2111,14 +2132,6 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
 
       | Tm_fvar _, Tm_fvar _ ->
         maybe_unfold_and_retry t0 t1
-
-      (* A quantifier left without universes by [TcUtil.close_escaping]; its
-         universe is determined by its arguments, which are related separately. *)
-      | Tm_uinst (f, _), Tm_fvar fv
-      | Tm_fvar fv, Tm_uinst (f, _)
-          when (S.fv_eq_lid fv PC.forall_lid || S.fv_eq_lid fv PC.exists_lid)
-            && equal_term f (S.fv_to_tm fv) ->
-        return ()
 
 
       (* [squash p] is definitionally [_:unit{p}], so relating two squashed
@@ -2259,22 +2272,16 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
             check_relation g rel t0 (U.flatten_refinement rhs)
         )
 
-      (* Eta: [fun x -> e] and [t] are equal if [e] and [t x] are. *)
-      | Tm_abs {b=b0; body=body0}, _ when eta_target t1 ->
-        let! u = universe_of_well_typed_term g b0.binder_bv.sort in
-        let g0 = g in
-        let g, b0, body0 = open_term g b0 body0 in
-        let t1x = S.mk_Tm_app t1 [(S.bv_to_name b0.binder_bv, U.aqual_of_binder b0)] t1.pos in
-        with_binders g0 [b0] [u]
-          (check_relation g EQUALITY body0 t1x)
-
-      | _, Tm_abs {b=b1; body=body1} when eta_target t0 ->
-        let! u = universe_of_well_typed_term g b1.binder_bv.sort in
-        let g0 = g in
-        let g, b1, body1 = open_term g b1 body1 in
-        let t0x = S.mk_Tm_app t0 [(S.bv_to_name b1.binder_bv, U.aqual_of_binder b1)] t0.pos in
-        with_binders g0 [b1] [u]
-          (check_relation g EQUALITY t0x body1)
+      (* An abstraction and a term that is not one: as in [Rel]
+         ([head_matches_delta]), the latter is unfolded, e.g. [non_neg_inv r]
+         to [fun m -> exists v. r == v] (tests/bug-reports/closed/Bug2002).
+         There is no eta rule: [fun (x:a) -> f x] is not equal to [f], whose
+         domain may be larger than [a] (see FStar.FunctionalExtensionality
+         and tests/micro-benchmarks/Test.FunctionalExtensionality). *)
+      | Tm_abs _, _ when unfoldable_head t1 ->
+        abs_vs_unfoldable Right t0 t1
+      | _, Tm_abs _ when unfoldable_head t0 ->
+        abs_vs_unfoldable Left t0 t1
 
       | Tm_uinst _, _
       | Tm_fvar _, _
@@ -3179,7 +3186,7 @@ and do_check (g:env) (e:term)
       let fvs = FStarC.Syntax.Free.names t in
       if xs |> BU.for_some (fun x -> mem x.binder_bv fvs)
       then fail_str "Recursive name escapes its scope"
-      else return (eff, t, letrec_facts xs fb)
+      else return (eff, t, letrec_facts xs us fb)
     )
 
   | _ ->
@@ -3228,7 +3235,7 @@ and check_let (g:env) (lb:letbinding) (body:term) (expected:option typ)
           let! t = let_result_typ g g' lb.lbdef eff_def x u body eff_body t in
           let! eff = join_eff g eff_def eff_body in
           return (eff, t, fbody)) in
-    return (eff, t, let_facts (is_tot_or_ghost_eff eff_def) lb.lbdef x.binder_bv fdef fbody)
+    return (eff, t, let_facts (is_tot_or_ghost_eff eff_def) lb.lbdef x.binder_bv u fdef fbody)
 
 (* The definition [e] of a non-recursive [let]. Returns the effect of [e],
    the type [lbtyp] at which it is bound (its annotation, or else its own
@@ -3711,11 +3718,12 @@ and check_against_typ_synth (g:env) (e:term) (t:typ)
         with_binders g xs us (
           check_letrec_defs g None lbs us ;!
           check_against_typ_synth (push_binders g xs) body t) in
-      let sf = letrec_facts xs fb in
-      (* What the body's own type says about it, which [letrec_facts] drops
-         for mentioning the recursive names (e.g. the [nat] of [g n] in
-         [let rec g (m:nat) : nat = ... in g n]), is said about the whole
-         [let rec] instead, when that type does not mention them. *)
+      let sf = letrec_facts xs us fb in
+      (* What the body's own type says about it, which [letrec_facts] only
+         states under an existential over the recursive names (e.g. the
+         [nat] of [g n] in [let rec g (m:nat) : nat = ... in g n]), is said
+         about the whole [let rec] instead, when that type does not mention
+         them. *)
       (match topt with
        | Some te
            when (let fvs = FStarC.Syntax.Free.names te in
