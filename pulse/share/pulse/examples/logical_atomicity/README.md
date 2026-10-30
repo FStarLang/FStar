@@ -48,7 +48,16 @@ module- and definition-level documentation.
    `SendableTrade` transfers a recipe built from sendable ownership; the winner
    constructs the AU locally. This is a locked protocol, not a lock-free one.
 
-6. **[Concurrent set](concurrent_set/README.md): lock coupling and strong
+6. **[Cached big atomics](cached_wait_free/README.md): speculative cache
+   reads with a committed result.** Adapted from *Big Atomics* and
+   `CachedWaitFree.v`, the load commits at the backup-pointer read, then
+   proves that its validated cache or immutable fallback returns that value.
+   Strong value-CAS and independently interleaved cache installation are
+   verified, including the reference's failure-helping registry. CAS returns
+   false after two lost publication attempts without retrying; saved,
+   caller-local continuations justify failure even across A--B--A changes.
+
+7. **[Concurrent set](concurrent_set/README.md): lock coupling and strong
    concurrent client guarantees.** Start with its public AU interface and
    sequential client, then the Jacobs--Piessens producer/consumer protocol.
    The second removal of a successfully removed key is proved to fail despite
@@ -56,7 +65,7 @@ module- and definition-level documentation.
    This example uses a finite key universe and reusable, per-node-locked
    linked-list nodes. Its guide explains the difference from the paper.
 
-7. **[Michael--Scott FIFO](msqueue/README.md): exact sequence contracts,
+8. **[Michael--Scott FIFO](msqueue/README.md): exact sequence contracts,
    payload transfer, and structural helping.** Start with the owned-state
    clients, then follow the history and snapshot proof through link/head CAS
    linearization and stale-tail helping. The queue guide includes its own
@@ -73,8 +82,8 @@ make -C pulse/share/pulse/examples/logical_atomicity -j$(nproc)
 ```
 
 The first command verifies and installs the foundational libraries and model.
-The second verifies the small examples and both child directories, extracts
-their executable clients, and runs all three OCaml harnesses. The parent
+The second verifies the small examples and all three child directories,
+extracts their executable clients, and runs all four OCaml harnesses. The parent
 `pulse/share/pulse/examples` target also includes this directory; the examples
 are not checked by the library build.
 
@@ -86,9 +95,10 @@ make -C pulse/share/pulse/examples/logical_atomicity -j$(nproc) verify
 
 The `runtime-test` target requests the executable regressions and depends on
 the proofs. Generated artifacts stay in `pulse/build/logical_atomicity`,
-with separate `msqueue/` and `concurrent_set/` cache/output directories.
+with separate `msqueue/`, `concurrent_set/`, and `cached_wait_free/`
+cache/output directories.
 Each child supports its own `all`, `verify`, `runtime-test`, and `clean`
-targets; the parent recurses into both.
+targets; the parent recurses into all three.
 When changing negative cases, use F*'s `--print_expected_failures` option to
 inspect the intended missing resource or mask obligation, not just the error
 number.
@@ -104,14 +114,16 @@ enables admits.
 [`runtime_test.ml`](runtime_test.ml) covers counter CAS failure and wraparound,
 read-only behavior, and 32 two-helper runs. The larger examples have their own
 [queue harness](msqueue/runtime_test.ml) and
-[set harness](concurrent_set/runtime_test.ml); their guides describe the
-corresponding runtime coverage and backend assumptions.
+[set harness](concurrent_set/runtime_test.ml), plus a
+[cached-atomic harness](cached_wait_free/runtime_test.ml) with forced
+interleavings; their guides describe the runtime coverage and backend assumptions.
 
-All three reuse existing native lock, fork, and sleep realizations. The
+The older harnesses reuse existing native lock, fork, and sleep realizations. The
 handwritten harnesses are not verified and must respect erased ownership
 preconditions. Their observations supplement the F* contracts, rather than
-establishing correctness for all schedules. The queue's handwritten atomic
-backend is an additional trust boundary documented in its guide.
+establishing correctness for all schedules. The queue and cached-atomic
+handwritten primitive backends are additional trust boundaries documented
+in their guides.
 
 `Task.teardown_pool` currently establishes logical completion but does not
 stop its native worker threads. The child harnesses reuse task pools;

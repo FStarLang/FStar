@@ -7,6 +7,7 @@
   ],
   "include_dirs": [
     ".",
+    "cached_wait_free",
     "concurrent_set",
     "msqueue",
     "../../../../lib/pulse/logical_atomicity",

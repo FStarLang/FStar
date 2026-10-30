@@ -27,6 +27,10 @@ its proof role, definitions, and limitations.
 * `Triple`: builds an atomic update from a client invariant
   `exists* x. alpha x ** residual x`, captured ownership, and a ghost
   continuation that reestablishes the invariant at the linearization point.
+* `Locality`: opens, aborts, and commits caller-anchored AUs on behalf of another
+  thread. Only alpha and beta must be placeless; captured client ownership and
+  phi need not be sendable. `Masks.localize` proves the underlying ghost-only
+  locality change with distinct initial and final masks.
 
 An atomic update hides a resource state and a reusable pure step witness.
 Each step opens an accessor whose abort restores that state. This existential
@@ -88,9 +92,14 @@ memory safety.
 
 The HoCAP connection concerns allowing clients to refine resource protocols
 by supplying ghost code at synchronization points. The `finish` callback
-captures resources and must reestablish the client invariant. Executing it
-on another thread requires a separate justification for transferring those
-resources; the AU interface does not supply generic sendability or liveness.
+captures resources and must reestablish the client invariant. Helping requires
+a locality justification, not a blanket AU-sendability assumption. `Locality`
+keeps the AU and result anchored to the caller while a helper exchanges
+placeless abstract ownership. The
+[cached big-atomic example](../../../share/pulse/examples/logical_atomicity/cached_wait_free/README.md)
+uses this rule to commit pending callers' failure continuations at another
+caller's successful CAS, including with non-sendable captured state.
+These rules do not supply a generic liveness theorem.
 
 Primary references:
 

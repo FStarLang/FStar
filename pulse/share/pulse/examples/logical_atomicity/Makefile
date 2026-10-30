@@ -66,7 +66,14 @@ msqueue-runtime:
 	$(MAKE) -C msqueue runtime-test
 msqueue-clean:
 	$(MAKE) -C msqueue clean
-verify: concurrent-set-verify msqueue-verify
-runtime-test: concurrent-set-runtime msqueue-runtime
-clean: concurrent-set-clean msqueue-clean
+.PHONY: cached-wait-free-verify cached-wait-free-runtime cached-wait-free-clean
+cached-wait-free-verify:
+	$(MAKE) -C cached_wait_free verify
+cached-wait-free-runtime:
+	$(MAKE) -C cached_wait_free runtime-test
+cached-wait-free-clean:
+	$(MAKE) -C cached_wait_free clean
+verify: concurrent-set-verify msqueue-verify cached-wait-free-verify
+runtime-test: concurrent-set-runtime msqueue-runtime cached-wait-free-runtime
+clean: concurrent-set-clean msqueue-clean cached-wait-free-clean
 all: all-checked runtime-test
