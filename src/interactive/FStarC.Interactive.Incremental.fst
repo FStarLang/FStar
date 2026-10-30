@@ -249,7 +249,7 @@ let reload_deps repl_stack =
 let parse_code st lang (code:string) =
     let rng = initial_range st.repl_fname in
     P.parse lang (Incremental { 
-                         frag_fname = Range.file_of_range rng;
+                         frag_fname = st.repl_fname;
                          frag_text = code;
                          frag_line = Range.line_of_pos (Range.start_of_range rng);
                          frag_col = Range.col_of_pos (Range.start_of_range rng);

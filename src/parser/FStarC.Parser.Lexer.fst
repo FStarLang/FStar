@@ -996,9 +996,9 @@ let rec next_token (st:lstate) : ML token =
     st.cur := e;
     let pos = cur_pos st in
     use_lang st [] name pos sp
-  | RSourceFile -> finish STRING (Filepath.basename st.fname)
+  | RSourceFile -> finish STRING st.fname
   | RLine -> finish INT (show !st.lnum)
-  | RFileLine -> finish STRING (Filepath.basename st.fname ^ "(" ^ show !st.lnum ^ ")")
+  | RFileLine -> finish STRING (st.fname ^ "(" ^ show !st.lnum ^ ")")
   | RWhite -> st.cur := e; next_token st
   | RNewline -> st.cur := e; new_line st; next_token st
   | RCharLit
@@ -1092,7 +1092,7 @@ let lex_all (fname:string) (contents:string) (line col:int)
 = let st = {
     buf = contents;
     len = S.byte_length contents;
-    fname = fname;
+    fname = Find.source_file_name fname;
     cur = mk_ref zero;
     lnum = mk_ref (of_int line);
     bol = mk_ref zero;

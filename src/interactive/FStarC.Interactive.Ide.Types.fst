@@ -44,7 +44,7 @@ open FStarC.Json
 module SS = FStarC.Syntax.Syntax
 
 let initial_range filename : ML _ =
-  Range.mk_range filename (Range.mk_pos 1 0) (Range.mk_pos 1 0)
+  Range.mk_range (Find.source_file_name filename) (Range.mk_pos 1 0) (Range.mk_pos 1 0)
 
 instance showable_push_kind : showable push_kind = {
   show = (function

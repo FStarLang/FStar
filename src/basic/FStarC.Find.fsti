@@ -77,8 +77,16 @@ val full_include_path () : ML (list string)
 (* Directories providing modules, normalized into absolute paths. *)
 val module_include_paths_normalized () : ML (list module_include_path)
 
-(* Try to find a file in the include path with a given basename. *)
-val find_file (basename : string) : ML (option string)
+(* A source path relative to its longest applicable include root. *)
+val relative_source_path (filename : string) : ML (option string)
+
+(* Try to find a file by absolute path or by a path relative to an include root. *)
+val find_file (filename : string) : ML (option string)
+
+(* The relocatable filename stored in source ranges: A/B/C.fst under a
+recursive include root, or the basename for a flat source file. Relative
+names are resolved through the include path, or preserved if not found. *)
+val source_file_name (filename : string) : ML string
 
 (* As above, but also looks in the output directory (--odir). This is useful to find
 plugins that we might have created. *)
@@ -102,6 +110,6 @@ itself, if this installation has one.  A plugin is compiled against it: see
 FStarC.Options and doc/ref/custard.md, section 13.6. *)
 val locate_fstarc_cui () : ML (option string)
 
-(* Try to find a file from a path we might have read in a checked file.
-Essentially find_file(basename f). *)
+(* Try to find a file from an include-relative path we might have read in a
+checked file. Leave the name unchanged if lookup or normalization fails. *)
 val refind_file (f:string) : ML string

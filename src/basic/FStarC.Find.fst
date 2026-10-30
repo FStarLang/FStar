@@ -224,6 +224,24 @@ let module_include_paths_normalized () : ML (list module_include_path) =
     _module_include_paths_normalized := Some paths;
     paths
 
+let relative_source_path (filename:string) : ML (option string) =
+  let filename = Filepath.normalize_file_path filename in
+  let best =
+    module_include_paths_normalized ()
+    |> List.fold_left (fun best path ->
+      if BU.starts_with filename (path.dir ^ "/")
+         && (match path.kind with
+             | Flat -> Filepath.dirname filename = path.dir
+             | Recursive -> true)
+         && (match best with
+             | Some dir -> String.length path.dir > String.length dir
+             | None -> true)
+      then Some path.dir
+      else best) None
+  in
+  best |> Option.map (fun dir ->
+    BU.substring_from filename (String.length dir + 1))
+
 let do_find (paths : list string) (filename : string) : ML (option string) =
   // Stats.record "Find.do_find" fun () ->
   if Filepath.is_path_absolute filename then
@@ -251,6 +269,21 @@ let do_find (paths : list string) (filename : string) : ML (option string) =
 let find_file =
   cached_fun find_file_cache fun s ->
     do_find (full_include_path ()) s
+
+let source_file_name (filename:string) : ML string =
+  // Resolve relative names first: an incremental parser may already have an
+  // include-relative range filename, rather than a path relative to cwd.
+  let filename =
+    match find_file filename with
+    | Some path -> Filepath.normalize_file_path path
+    | None -> filename
+  in
+  if Filepath.is_path_absolute filename then
+    match relative_source_path filename with
+    | Some relative -> relative
+    | None -> Filepath.basename filename
+  else
+    BU.replace_char filename '\\' '/'
 
 let find_file_odir =
   (* NOTE: this function is not cached, since the plugin-building code
@@ -293,18 +326,12 @@ let locate_fstarc_cui () : ML (option string) =
   if Filepath.file_exists f then Some f else None
 
 
-(* When reading checked files, we could obtain ranges where the
-filepath does not make sense any more. For instance if we check
-`a/A.fst`, and then go into `a/` and check `B.fst`, the ranges
-in `A.fst.checked` will still refer to `a/A.fst`, which is not
-a valid path. To palliate this, we
-  1) just take the basename (ignore the path completely); and
-  2) try to find this file in our include path.
-
-This function is called by error reporting (both batch and IDE). *)
-let refind_file (f:string) : ML string =
+(* Resolve include-relative filenames from ranges under the current include
+paths. Error reporting must retain the original name if lookup or normalization
+fails, including when reading checked files from another location. *)
+let refind_file f =
   try
-    match find_file (Filepath.basename f) with
-    | None -> f // Couldn't find file; just return the original path
-    | Some abs -> abs
+    match find_file f with
+    | None -> f
+    | Some path -> Filepath.normalize_file_path path
   with _ -> f
