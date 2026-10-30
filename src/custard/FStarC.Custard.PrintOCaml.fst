@@ -617,9 +617,11 @@ let op_name (o:prim_op) : ML string =
         operand. *)
      | Commented _ ->
        failwith "Custard: a comment is not an OCaml operator"
-     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _ | Dyn _ | PBuf _
+     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
      | ExnRaise | ExnPending | ExnTake | ExnExit ->
-       failwith "Custard: reference counting is not an OCaml operator")
+       failwith "Custard: reference counting is not an OCaml operator"
+     | ClosureNew | ClosureCall ->
+       failwith "Custard: a Pulse closure is not an OCaml operator")
   | None ->
     (match o.po_op with
      | Add -> "Prims.op_Plus" | AddW -> "Prims.op_Plus"
@@ -640,9 +642,11 @@ let op_name (o:prim_op) : ML string =
         operand. *)
      | Commented _ ->
        failwith "Custard: a comment is not an OCaml operator"
-     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | IArr _ | Dyn _ | PBuf _
+     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
      | ExnRaise | ExnPending | ExnTake | ExnExit ->
-       failwith "Custard: reference counting is not an OCaml operator")
+       failwith "Custard: reference counting is not an OCaml operator"
+     | ClosureNew | ClosureCall ->
+       failwith "Custard: a Pulse closure is not an OCaml operator")
 
 (* OCaml has no integer pattern that means what the IR's [PConst (CInt _)]
    means: [Prims.int] is a [Z.t], whose literals are calls to
@@ -906,9 +910,9 @@ let rec term (ind:string) (e:expr) : ML string =
   | EOp ({ po_op = BufIsNull }, [b]) ->
     if TRef? b.ty then "(not (Obj.is_block (Obj.repr " ^ term ind b ^ ")))"
     else "(Array.length (" ^ term ind b ^ ") = 0)"
-  | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
-    "(Array.blit " ^ term ind src ^ " " ^ index ind si ^ " " ^
-    term ind dst ^ " " ^ index ind di ^ " " ^ index ind len ^ ")"
+  | EOp ({ po_op = BufBlit }, [src; dst; len]) ->
+    "(Array.blit " ^ term ind src ^ " 0 " ^
+    term ind dst ^ " 0 " ^ index ind len ^ ")"
   | EOp ({ po_op = BufSub }, _) ->
     "(failwith \"Custard: pointer arithmetic has no OCaml representation\")"
   (* Section 71.  OCaml has an array literal, and no notion of an object with

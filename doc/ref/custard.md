@@ -593,7 +593,8 @@ so v1 shipping the error is not a design commitment.
   §12.8 item 5, not a rare shape.
 
 The *only* bad case is the one above: a value that exists only at runtime
-reaching a `Mono` parameter.  The interesting instance of it is storing a
+reaching a `Mono` parameter.  (§3.2d makes an exception for a parameter of
+function type: a bare variable passed to it is passed at run time.)  The interesting instance of it is storing a
 dictionary in a runtime data structure — a `ref (foo a)`, a dictionary read out
 of a `Poly` list, a dictionary returned from a branch — and then trying to call
 a method on it.  Supporting that would mean falling back to real
@@ -821,6 +822,43 @@ possible but not yet implemented.
 there is no runtime value to pass, so the case (b) rejection above stands and
 only option 2's promotion reaches it.  The diagnostic checks the sort of the
 variable and only suggests `dyn` where it could actually work.
+
+### 3.2d Function arguments: specialize where possible
+
+A `[@@@monomorphize]` binder whose type is a function (an arrow, possibly
+behind abbreviations) is treated more leniently than §3.2(b) describes.  It is
+meant for the function argument of a recursive higher-order function such as
+`List.map_acc` or `List.fold_left`.  Most callers pass a lambda or a partial
+application, and specializing on it turns the closure call in the loop into a
+direct call.  Some callers have only a variable.
+
+Such an argument is keyed and specialized as any other `Mono` argument, with
+three differences:
+
+- A bare variable is not rejected.  It is passed at run time as though it had
+  been written `dyn x` (§3.2c1): the key is the identity skeleton and the
+  variable is a hole.  All variables share one copy of the function.  A bare
+  variable of any other type is still rejected (`MonoPoly`).
+- The key and the substituted value are computed without `UnfoldUntil`.  A
+  partial application such as `abstr vars` would otherwise unfold to its
+  body.  If that body calls the same function on a local recursive function
+  whose arguments grow (`List.map (aux (ix + 1))`), every specialization keys
+  a new one and extraction does not terminate.  Without delta the argument
+  stays `abstr vars` and `vars` is a hole.  A top-level function passed by
+  name is likewise kept as a direct call to it rather than inlined into the
+  copy.
+- The argument is not `unfold_lets`-substituted as a whole.  Only a variable
+  bound by a local `let` to a lambda is replaced by its definition
+  (`unfold_soft`).  Built-in type representation rules (section 93) are not
+  consulted, since the argument is a function and not a type.
+
+A definition that wraps such a function and is inlined by
+`[@@custard_inline]` (`map f l = map_acc f l []`) must also mark its `f`.
+Specialization runs before inlining, so the wrapper's call to `map_acc`
+passes the variable `f`.  With the attribute on the wrapper, `map` is
+specialized first and its copy calls `map_acc` with the lambda.
+
+Test: `tests/custard/CherrySpecializeHO.fst`.
 
 ### 3.3 The extraction loop
 
@@ -1606,6 +1644,39 @@ Beyond that one module, the whole of `tests/custard` has been re-extracted
 under the flag, compiled and run, and every module agrees with the output it
 produces without it.
 
+#### 5.0.2 An instantiation at a type variable is error 399 on Cherry
+
+"Every type is ground" is the premise of the pass, and nothing used to check
+it: `request` happily made a clone at a `TVar`.  In C that is error 368 as
+soon as the clone's fields are printed.  On Cherry a type variable is `any`, so
+it compiled, and that was the bug: `list@'a` has a boxed `hd` and `list@goal`
+does not, both are a `cherry_obj *`, and a value built at one was read at the
+other.  The result was a misread field or a segmentation fault, or an `undyn`
+abort under `-DCHERRY_DEBUG`, and never a diagnostic.
+
+Two constructs reached it:
+
+- A local `let rec` that binds a type of its own, lifted as one polymorphic
+  declaration (§5.10).  §5.10a now copies it per instantiation instead.
+- A polymorphic method of a dictionary passed at runtime (§3.2c1).  A monad
+  instance over `option` has a `bind` at every `a` and `b`, a rank-2 field,
+  and no single instantiation of it agrees with every caller.  The `id`
+  monad happens to work, since `id 'a` is just `any` and the caller boxes to
+  match.  There is no fix short of passing types at runtime, so it is refused.
+  `Tactics.Interpreter`'s check for an `admit` in a stuck tactic was the one
+  use in the compiler, and it now uses the non-monadic `Syntax.Visit`.
+
+So `Monomorphize.request` records each clone whose arguments mention a type
+variable anywhere, and once the layouts are known,
+`Monomorphize.check_tvar_clones` refuses those that kept a layout of their own
+with error 399 (`Error_CustardTypeVarInstantiation`), naming the declaration
+that asked for it.  A clone that collapsed to its one field (§5.2) or was erased
+is no such thing: `Syntax.Visit`'s `id@'a` is just `any`, and the coercions at
+its uses convert it like any other `any` (`tests/custard/DynCurry.fst`).  Only
+on Cherry: the other C backends already reject a type variable, as 368, and the
+OCaml backend has no layouts to disagree.  `tests/custard/CherryDynPolyMethod.fst`
+is the rejected monad, and `CherryLocalPolyRec.fst` is the `let rec`.
+
 ### 5.1 Erasure
 
 A type is erased when it is non-informative.  The existing predicate is
@@ -2325,6 +2396,38 @@ declaration's signature is read off the type.  In
 `tests/bug-reports/closed/Bug1714`, `f : t true = fun src -> ...` with `t` a
 recursive type function, which unfolding abbreviations does not see through,
 stays a closure; lifted, it had result type `int -> p`.
+
+### 5.10a A local `let rec` that binds types is lifted per instantiation
+
+F\* generalizes a local `let rec` as it does a top-level one, so
+`Tactics.V2.Basic.t_apply_lemma`'s
+
+```fstar
+let rec filter' (f : 'a -> list 'a -> ML bool) (xs : list 'a) : ML (list 'a) = ...
+```
+
+binds `#a:Type` itself.  Lifted as above, that binder became one of the
+declaration's `dl_typars`, which no call site passes and which type
+monomorphization (§5.0.1) cannot instantiate.  The body therefore built
+`list@'a` while the caller passed a `list@goal` (§5.0.2).
+
+On Cherry under `--custard_monomorphize_types`, `Extract.instantiate_letrec`
+therefore copies the nest at the F\* term level before anything is lifted.  It
+collects the type arguments each use in the body applies the name to, makes
+one copy of the whole nest per distinct tuple with the type binders
+substituted away, and rewrites each use, `filter' #goal`, to the copy's own
+name.  The copies' recursive calls are rewritten the same way, so a
+polymorphic recursion finds its further instantiations through the same
+worklist.  It is bounded at sixteen, because polymorphic recursion need not
+reach a fixed point, and past that it is error 399.  The copies are then one
+ordinary nest for §5.10: every copy has concrete types, so the calls it makes
+into specializing definitions are concrete as well.  A copy that nothing
+reaches is never made.
+
+The nest is left to §5.10 as it is when no member binds a type, when members
+bind different numbers of them, or when some use does not apply the name to
+its type arguments.  If that leaves a type variable in a datatype,
+§5.0.2 reports it.
 
 ### 5.11 Polymorphic local functions are inlined
 
@@ -3467,6 +3570,15 @@ that no OCaml plugin is needed for them.
 - `[@@custard_c_header "h.h"]` names the C header that declares such a symbol.
   The karamel backend ignores it (karamel takes includes on its command line);
   it is there for the direct-to-C backend of M8.
+- `[@@custard_declare_in_c_header]` on an `assume val` function (or an
+  interface-only `val`) puts its generated `extern` prototype in the direct-C
+  header instead of the source. The prototype follows the generated types
+  and is inside the header's C++ `extern "C"` guard. This does not root the
+  declaration or change its name, erased signature or linkage. It also works
+  with `custard_extern` to choose the foreign name. Definitions, types,
+  non-function values and declarations supplied by `custard_c_header` receive
+  ineffective-attribute warning 371; that header already owns the declaration.
+  This is a C/Cherry emission policy; other backends ignore it.
 - `[@@custard_opaque]` gives `Rule_opaque`.
 - `[@@@custard_inline_field]`, on a constructor's *binder* rather than on a
   definition, asks for that field to be stored in the constructor itself
@@ -4180,9 +4292,39 @@ of `PulseSyntaxExtension.ASTBuilder.fsti` with no `.fst`, so `parse_pulse` is
 an external there and a real definition in the `syntax_extension` unit.
 Exporting it told `syntax_extension` the symbol was already compiled, and that
 unit then skipped the very definition it was there to contribute; the link came
-out with a reference and nothing to resolve it against.  A downstream unit
-derives an external's signature from the source anyway, exactly as the upstream
-one did, so nothing is lost.
+out with a reference and nothing to resolve it against.
+
+Instead, an external contributes a **non-owning foreign binding**, in a
+separate table keyed by the same canonical specialization key. It records the
+post-layout signature and calling convention, target name, supplying header,
+and declaration attributes, but never answers an implementation lookup.
+For direct C, the target is the exact C spelling, including producer-only
+`--custard_c_no_prefix` settings. Ownership and reachability flags are not
+propagated.
+
+This is automatic with `--custard_unit` and `--custard_link`; there is no new
+enable option. The consumer still extracts the source. Only when that leaves
+an external hole does it adopt the linked binding, after checking its own
+post-layout signature (modulo type-parameter names) and calling convention.
+Explicit source targets, headers, declaration attributes, and direct-C
+no-prefix requests must agree with the binding; absent choices inherit it.
+Conflicting linked bindings are rejected in either link order, while
+identical bindings from multiple units are allowed. A local F* implementation
+or an implementation exported by another CUI takes precedence: foreign
+metadata cannot suppress its extraction or ownership lookup.
+
+An external reached by a downstream unit is published again with its adopted
+binding, so further consumers inherit the same contract. This does not
+re-export owned definitions or remove the requirement to supply the complete
+owned-unit dependency closure. Foreign **types** remain ordinary type entries
+carrying their external representation, not value-binding records. Extraction
+without CUIs is unchanged apart from preserving C decoration attributes on
+explicit `custard_extern` values, just as on ordinary assumed values.
+
+The CUI format is now 21; older interfaces must be rebuilt.
+`tests/custard/foreignbindings.py` exercises C/C++ consumers, values and
+specialized functions, chained binding propagation, producer-only naming,
+conflicts, and local and separately compiled real implementations.
 
 Everything else is exported unconditionally, and §12.5 explains why that is
 both possible and necessary.
@@ -8248,6 +8390,54 @@ a drop-in replacement has to come with `CBORDet.h`.
 extension-agnostic on purpose, because the test suite asks for `-o
 _output/Foo.dc` and would otherwise get `Foo.dc.h`.
 
+### 24.0 Header-only C libraries
+
+`--codegen C --custard_static_header` writes a single header instead of a
+header/source pair. All retained function definitions have internal linkage;
+`[@@FStar.Attributes.CInline]` independently requests `inline`. Roots,
+reachability, API names, types and macros are unchanged. Private dependencies,
+generated comparison helpers and required support blocks are emitted in the
+header too, with prototypes before their use and C++ linkage guards.
+
+`-o` must name a `.h` file. Without it, the output is `Custard.h`, or
+`<unit>.h` with `--custard_unit`. No `.c` file is written. A previous source
+file is not deleted; builds switching modes must stop compiling that file.
+
+Foreign functions and values retain `extern` linkage and are declared in the
+header. `custard_c_header` still includes the supplying header instead of
+generating a declaration. An assumed function is not made static: its body
+must come from elsewhere. This is not a replacement for a client-supplied
+static implementation header.
+
+The initial mode rejects non-macro globals and runtime initialization rather
+than silently creating per-translation-unit state. It also rejects
+`--custard_main`, `--custard_split`, Cherry and non-C code generators. Function
+addresses are translation-unit-local; this mode is not an externally linked
+ABI. Unused non-inline static functions may trigger compiler warnings:
+annotate suitable APIs with `CInline` or configure those warnings explicitly.
+The compiler does not silently add `inline`.
+
+Separate C units can include a header-only unit through `--custard_link`;
+the `.cui` records header-only emission without requiring consumers to select
+the same mode. It also exports specialization keys for private definitions
+actually present in that header, with bodies stripped and visibility unchanged.
+Downstream extraction imports those helpers instead of defining them again;
+ordinary C units still do not export their private source-file definitions.
+Foreign declarations remain non-owning holes, not exported implementations.
+
+Static-header interfaces record the final C spellings of all their retained
+definitions, including helpers without reusable specialization keys. Consumers
+adopt the recorded spelling for an imported helper and reserve every recorded
+name, even if that helper is not requested. New private definitions can be
+renamed around those names; an API name that cannot be changed is rejected on
+collision. Linking independent headers that already define the same C name is
+also rejected. CUIs are build artifacts: rebuild older-format interfaces.
+
+Header-only units cannot depend on runtime initializers.
+Generated comparison helpers are prefixed by the output header's stem so
+that a unit comparing an imported type does not redefine its dependency's
+private helper.
+
 ### 24.1 What is public
 
 The IR has had a `Private` flag on declarations since M2, and `PrintC` read
@@ -9918,6 +10108,32 @@ does the work.  A local is named `uniq (ppname b) b.index`, the `'#'` in
 `tests/custard/RenameLet.fst` pins all three: the requested names appear, the
 source spellings do not, and the duplicate is numbered.
 
+On a global declaration, Custard's direct-C backends (`C` and `Cherry`)
+also accept `[@@FStar.Attributes.rename_let "PublicName"]`. This requests
+the **exact C identifier** for a surviving function, global variable, type
+declaration, or assumed external value. Definitions, prototypes, references,
+and compiled-unit consumers use the same name. The F* identity, rooting,
+linkage, inlining and type-abbreviation unfolding rules do not change:
+use `--custard_entry` to export a function, for example. Other backends'
+global naming rules are unchanged.
+
+The argument follows the same literal-string rule as for local bindings;
+an empty or malformed argument produces warning 278. A global C name must
+use ASCII letters, digits and underscores, must not start with a digit, and
+must not be a C11/C++17 keyword or a reserved runtime name such as `main`
+or `NULL`. Invalid identifiers and collisions are error
+374, rather than sanitized names or silently numbered alternatives. This
+also applies to private functions and to multiple surviving specializations
+of a generic declaration: one exact name cannot identify two definitions.
+Give concrete wrappers different names when exporting multiple instances.
+
+An explicit name takes precedence over `--custard_c_no_prefix` and over
+`CMacro`'s usual uppercasing. It must agree with an explicit `custard_extern`
+target; contradictory attributes are error 374. Source attributes on an
+interface and names stored in `.cui` files are honored too.
+`tests/custard/GlobalRename.fst` and `GlobalRenameApp.fst` exercise the C
+boundary and separate compilation.
+
 ## 32 After the attribute
 
 Rounds 36 and 37, and between them they close the question §12.3 opened.
@@ -11523,6 +11739,10 @@ not know which backend will print it. What was missing was entirely a *C*
 question, and it is four questions, not one.
 
 ## 42.1 What a C unit offers: the linking interface, and nothing else
+
+This section describes ordinary header/source units. Header-only units
+(§24.0) also provide their private definitions through the included header
+and therefore export their reusable specialization keys.
 
 The decision that makes the rest fall out: **a C unit's `.cui` describes its
 linking interface**, so it exports what the header file declares and nothing
@@ -17295,6 +17515,19 @@ abbreviations that should keep unfolding.
 Not backend specific.  Naming a monomorphic instance is as meaningful on the
 OCaml path as on the karamel one, and an abbreviation that is emitted is
 always a legal thing for a target to see.
+
+The source-level equivalent is `[@@FStar.Attributes.custard_no_unfold]`:
+
+```fstar
+[@@FStar.Attributes.custard_no_unfold]
+type byte_pair = pair FStar.UInt8.t
+```
+
+The attribute and command-line option set the same `NoUnfold` flag. The
+attribute belongs on a type abbreviation; using it on a value, a non-alias
+type, or a binder reports warning 371. It preserves extraction-time naming,
+not verification-time opacity, and does not root an otherwise unreachable
+declaration or replace `custard_opaque`'s representation controls.
 
 ## Section 78. Unfolding a spine is not eta-expanding it
 
@@ -23917,6 +24150,67 @@ deleted the parameter: issue #4650's `t11` failed on OCaml and on C (error
 of it with an arrow still in hand is `Error_CustardFuelExhausted` (365),
 naming the type and the chain of requests.  It is no longer a guess.
 `tests/custard/ArrowUnfoldLimit.fst` pins the error.
+
+# 136 First-class closures in C: `Pulse.Lib.Closure`
+
+C has function pointers but no closures, and §19.12 lifts only the lambdas
+that capture nothing.  A Pulse program that hands a closure to `pthread_create`
+or builds one inside a combinator needs a value that carries its environment
+with it.  `Pulse.Lib.Closure` provides one without the reference counting that
+Cherry's closures rely on:
+
+```fstar
+val closure (t: Type0) : Type0
+val is_closure (#t: Type0) ([@@@mkey] c: closure t) (#p: perm) : slprop
+fn alloc (#t: Type0) (f: t) returns c: closure t ensures is_closure c
+unobservable fn call (#t: Type0) (c: closure t) (#p: perm)
+  preserves is_closure c #p returns f: t
+fn free (#t: Type0) (c: closure t) requires is_closure c
+```
+
+plus ghost `share` and `gather`.  The permission is fractional so that a
+closure can be shared between threads, and it is not indexed by the boxed
+value: a boxed function's specification is its type.  `t` is any function
+type, of any arity and effect: `U32.t -> U32.t` and
+`ref bool -> ref bool -> stt unit p q` alike.
+
+**On OCaml, F# and Cherry** the library's model is extracted: a closure is
+its function, `call` is the identity, and `free` does nothing.
+
+**On C** every name is a primitive (`Builtins`, guarded by
+`Options.codegen () = Some C`).  A closure is a `custard_closure *`, a
+pointer to a header holding the code pointer.  The captured environment
+follows the header in the same allocation:
+
+```c
+typedef struct custard_closure { void (*code)(void); } custard_closure;
+```
+
+* `alloc f` becomes the IR node `ClosureNew`.  `Simplify.lift_lambdas`
+  converts it.  `f` is flattened and eta-expanded through type abbreviations
+  to the whole spine of `t`, and lifted to a top-level `<def>__clo` that takes
+  the captured variables first and then every parameter.  The node becomes
+  `ClosureNew (<def>__clo :: captures)`.  A named function, a function-typed
+  variable and a partial application are covered by the eta-expansion.  An
+  operand that has to be evaluated is evaluated once and captured.  A Pulse
+  local `fn` arrives let-bound, so `alloc` of it substitutes a fresh copy of
+  the lambda.  A `t` that is not a function is refused (368): box a thunk.
+* `PrintC` generates, per allocation site, `<def>__clo_env` (the header and
+  the non-unit captures) and `<def>__clo_entry (custard_closure *self, ...)`,
+  which unpacks the environment and calls `<def>__clo`.  The allocation is a
+  `malloc` that aborts on `NULL`, a store of the entry point converted to
+  `void (*)(void)` (no `-Wcast-function-type` warning), and stores of the
+  captures.  Its value is `&env->hdr`.
+* `call c` is `ClosureCall`, and `let f = call c` is substituted into its
+  uses.  An application of it to all of `t`'s non-unit arguments is
+  `((R (*)(custard_closure *, A...))c->code)(c, args...)`.  Any other use of
+  the boxed function (passing it on, or applying it partially) is refused
+  (368), since in C it is not a value.
+* `free c` is `free(c)`.
+
+`tests/custard/pulse/PulseClosure.fst` covers the arities, effects and
+captures above, plus a combinator that builds a closure from two others, on
+C, Cherry and OCaml.  `PulseClosureEscape.fst` pins the refusal.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |

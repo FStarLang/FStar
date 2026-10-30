@@ -1105,31 +1105,90 @@ let reduce_decls (prog:program) : ML program =
 
 (* [Inline] declarations are substituted at their fully applied uses.  A use
    that is *not* fully applied keeps the declaration alive, so it is emitted
-   after all; that is rare enough not to be worth eta-expanding. *)
-let rec inline_expr (tbl : HashTable.t string (list binder & expr)) (used : HashTable.t string bool) (x:expr)
+   after all; that is rare enough not to be worth eta-expanding, except
+   under Cherry where one of the arguments is a lambda (below). *)
+(* The type variables of a polymorphic definition, replaced by the type
+   arguments of a call to it.  The monomorphizing backends have none left by
+   now; the ML ones print some operations by the type of their operand, as
+   [!r] for a [BufRead] on a reference, so an inlined body has to say what its
+   variables are at the call. *)
+let rec subst_expr_ty (s:list (string & cty)) (x:expr) : ML expr =
+  let x = map_children (subst_expr_ty s) x in
+  let f = subst_cty s in
+  let fb (b:binder) : ML binder = { b with b_ty = f b.b_ty } in
+  let e = match x.e with
+    | EQual (n, tys) -> EQual (n, List.map f tys)
+    | ELet (v, ty, a, b) -> ELet (v, f ty, a, b)
+    | EFun (bs, b) -> EFun (List.map fb bs, b)
+    | ECoerce (a, t) -> ECoerce (a, f t)
+    | ECast (a, t) -> ECast (a, f t)
+    | e -> e in
+  { x with e = e; ty = f x.ty }
+
+let instantiate (typars:list string) (tys:list cty) (bs:list binder) (body:expr)
+  : ML (list binder & expr) =
+  if Nil? typars || List.length typars <> List.length tys then (bs, body)
+  else
+    let s = List.zip typars tys in
+    (bs |> List.map (fun (b:binder) -> { b with b_ty = subst_cty s b.b_ty }),
+     subst_expr_ty s body)
+
+let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)) (used : HashTable.t string bool) (x:expr)
   : ML expr =
   (* [used] records the [Inline] declarations that had to be kept after all,
      either because a use was not fully applied or because it came before the
      definition (which a mutually recursive group can do). *)
   let g = inline_expr tbl used in
-  match x.e with
-  | EApp ({e = EQual (n, tys)}, args) ->
-    let args = args |> List.map g in
-    (match HashTable.try_find tbl (string_of_name n) with
+  (* [args] have been rewritten already. *)
+  let rec app (n:name) (tys:list cty) (args:list expr) : ML expr =
+    let lookup () : ML (option (list binder & expr)) =
+      match HashTable.try_find tbl (string_of_name n) with
+      | Some (ps, bs, body) -> Some (instantiate ps tys bs body)
+      | None -> None in
+    (match lookup () with
      (* Over-application is common and must be handled: F* stores the
         projector of an arrow-typed field as a one-binder function returning a
         function, so every use of it is applied to one argument too many. *)
      | Some (bs, body) when List.length bs <= List.length args ->
        let given, extra = List.splitAt (List.length bs) args in
        let r = inline_call bs body given (if Nil? extra then x else { x with ty = body.ty }) in
-       (match extra with
-        | [] -> r
+       (match extra, r.e with
+        | [], _ -> r
+        (* An eta-reduced body, [for_some f = existsb f]: the surplus
+           arguments complete its application rather than applying the
+           closure it would build.  Cherry splits an over-application by
+           the callee's arity again; the other backends would see one.
+           The completed call may be to an [Inline] declaration in turn --
+           [( let! ) = bind] is -- which the body, rewritten while still
+           partial, could not inline. *)
+        | _, EApp ({e = EQual (n', tys')}, a) when Options.custard_cherry () ->
+          app n' tys' (a @ extra)
+        | _, EApp (h, a) when Options.custard_cherry () -> { x with e = EApp (h, a @ extra) }
         | _ -> { x with e = EApp (r, extra) })
+     (* Cherry, [@@custard_inline] on a combinator.  [eta_reduce] has made
+        many a caller [add k = apply f], so the lambda only meets its call if
+        the partial application becomes [fun x -> body], whose binders
+        [eta_expand] moves back into the caller's parameters.  It is a
+        closure either way, and one rather than two (the lambda's and the
+        partial application's) when it stays one. *)
+     | Some (bs, body) when Options.custard_cherry () && Cons? args
+                         && args |> List.existsb (fun (a:expr) -> EFun? a.e) ->
+       let given, rest = List.splitAt (List.length args) bs in
+       (* With values for arguments, the bindings [inline_call] makes for
+          them can go inside the lambda, where they do not stop [eta_expand];
+          a lambda bound there and only called is then no closure either. *)
+       if args |> List.for_all (fun (a:expr) -> is_atomic a || EFun? a.e)
+       then { x with e = EFun (rest, inline_call given body args body) }
+       else
+       let lam = { x with e = EFun (rest, body) } in
+       inline_call given lam args x
      | _ -> HashTable.add used (string_of_name n) true;
-            { x with e = EApp ({ x with e = EQual (n, tys) }, args) })
-  | EQual (n, _) ->
+            { x with e = EApp ({ x with e = EQual (n, tys) }, args) }) in
+  match x.e with
+  | EApp ({e = EQual (n, tys)}, args) -> app n tys (args |> List.map g)
+  | EQual (n, tys) ->
     (match HashTable.try_find tbl (string_of_name n) with
-     | Some ([], body) -> inline_call [] body [] x
+     | Some (ps, [], body) -> inline_call [] (snd (instantiate ps tys [] body)) [] x
      | _ -> HashTable.add used (string_of_name n) true; x)
   | _ -> map_children g x
 
@@ -1176,6 +1235,29 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
        eta_reduce bs' body' ret' E_Pure
      | _ -> (bs, body, ret, ef))
   | _ -> (bs, body, ret, ef)
+
+(* The declarations this run links against rather than compiles, as the units
+   that compiled them emitted them.  No pass here decides anything about them
+   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
+   over in a [verdicts] -- but the passes that ask how many constructors a type
+   has, what its fields are called, or what a function's declared argument
+   types are, still have to be able to see them.  The last of those is not
+   optional: a coercion is inserted where a declared type meets a value, and a
+   call to an imported function whose signature is invisible is a boundary
+   that silently disappears.  A [ref] rather than an argument threaded through
+   a dozen functions, for the same reason
+   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
+   program.  Set by {!run}. *)
+let imported_types : ref (list decl) = mk_ref []
+
+(* The program as the *declaration*-inspecting passes should see it.  An
+   imported declaration is visible to a question about a declaration and
+   invisible to everything else: it is not rewritten, not re-decided, and not
+   emitted. *)
+let with_imports (prog:program) : ML program =
+  match !imported_types with
+  | [] -> prog
+  | ds -> ds @ prog
 
 (* -------------------------------------------------------------------- *)
 (* Eta expansion                                                        *)
@@ -1461,7 +1543,10 @@ let eta_expand_decls (prog:program) : ML program =
                                | DLet l -> n + List.length l.dl_binders
                                | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
-    let tbl = decl_arity p in
+    (* With the imports: a wrapper [eta_reduce] shortened to [f out] is
+       expanded back by reading [f]'s arity, and a linked [f] has its
+       declaration only there (#4771). *)
+    let tbl = decl_arity (with_imports p) in
     let uses = use_arity p in
     let p' = p |> List.map (fun d ->
       match d with
@@ -1533,7 +1618,7 @@ let eta_rename_decls (prog:program) : ML program =
                                          then n + 1 else n) n l.dl_binders
       | _ -> n) 0 p in
   let rec go (fuel:int) (p:program) : ML program =
-    let bnames = decl_binder_names p in
+    let bnames = decl_binder_names (with_imports p) in
     let p' = p |> List.map (fun d ->
       match d with
       | DLet l -> DLet (eta_rename_decl bnames l)
@@ -1686,7 +1771,7 @@ let is_identity (dl:dlet) : ML bool =
    | _ -> false)
 
 let inline_decls (prog:program) : ML program =
-  let tbl : HashTable.t string (list binder & expr) = HashTable.create 50 in
+  let tbl : HashTable.t string (list string & list binder & expr) = HashTable.create 50 in
   let used : HashTable.t string bool = HashTable.create 50 in
   let inl : HashTable.t string dlet = HashTable.create 50 in
   prog |> List.iter (fun d ->
@@ -1704,7 +1789,7 @@ let inline_decls (prog:program) : ML program =
         decl_deps (DLet dl) |> List.iter fill;
         let body = inline_expr tbl used dl.dl_body in
         HashTable.add bodies n body;
-        HashTable.add tbl n (dl.dl_binders, body)
+        HashTable.add tbl n (dl.dl_typars, dl.dl_binders, body)
       | None -> ()
     end in
   prog |> List.iter (fun d ->
@@ -2297,29 +2382,6 @@ type ctor_info = {
   ci_realized: bool;             (* realized, and a variant there (section 8.2) *)
   ci_exn: bool;                  (* a [DExn] constructor: its type is [exn] *)
 }
-
-(* The declarations this run links against rather than compiles, as the units
-   that compiled them emitted them.  No pass here decides anything about them
-   -- a type's representation is settled, and {!FStarC.Custard.Layout} hands it
-   over in a [verdicts] -- but the passes that ask how many constructors a type
-   has, what its fields are called, or what a function's declared argument
-   types are, still have to be able to see them.  The last of those is not
-   optional: a coercion is inserted where a declared type meets a value, and a
-   call to an imported function whose signature is invisible is a boundary
-   that silently disappears.  A [ref] rather than an argument threaded through
-   a dozen functions, for the same reason
-   {!FStarC.Custard.PrintOCaml.externals} is one: it is constant for a whole
-   program.  Set by {!run}. *)
-let imported_types : ref (list decl) = mk_ref []
-
-(* The program as the *declaration*-inspecting passes should see it.  An
-   imported declaration is visible to a question about a declaration and
-   invisible to everything else: it is not rewritten, not re-decided, and not
-   emitted. *)
-let with_imports (prog:program) : ML program =
-  match !imported_types with
-  | [] -> prog
-  | ds -> ds @ prog
 
 let ctor_infos (prog:program) : ML (HashTable.t string ctor_info) =
   let m : HashTable.t string ctor_info = HashTable.create 50 in
@@ -3564,7 +3626,17 @@ let coerce_prog (prog:program) : ML program =
        node has it too.  A lifted lambda's result type is its body's. *)
     if Some? exp && pushes_down x then { x with ty = Some?.v exp } else
     match exp, infer env x with
-    | Some e, Some t -> if cty_mismatch t e then coerce x e else x
+    | Some e, Some t ->
+      if cty_mismatch t e then coerce x e
+      (* Cherry types a call by its head, and takes its result out of an
+         [any] when the node says otherwise.  Here the head and the
+         expectation agree, and the node's own type is a leftover: a method
+         of a class with a higher-kinded [m], inlined at a dictionary that is
+         not a constant, is a projection returning [any] where the call it
+         replaced returned [m b] at a known [m]. *)
+      else if Options.custard_cherry () && EApp? x.e && cty_mismatch x.ty e
+      then { x with ty = e }
+      else x
     | Some TAny, None -> if concrete_shape x then coerce x TAny else x
     (* [infer] declined, which for a compound type containing a [TAny] is what
        [trust] always does -- but the node's own type is still [Extract]'s
@@ -3889,13 +3961,38 @@ let lift_lambdas (prog:program) : ML program =
     | DExn d -> HashTable.add taken (string_of_name d.de_name) true
     | DModule d -> HashTable.add taken (string_of_name d.dm_name) true);
   let lifted : ref (list decl) = mk_ref [] in
+  (* Section 136.  What a closure's code is checked against: an abbreviation
+     of an arrow, which is how a boxed function's type is usually written,
+     has to be seen through to count its parameters. *)
+  let abbrevs : HashTable.t string cty = HashTable.create 50 in
+  with_imports prog |> List.iter (fun d ->
+    match d with
+    | DType { dt_name; dt_params = []; dt_body = TAbbrev c } ->
+      HashTable.add abbrevs (string_of_name dt_name) c
+    | _ -> ());
+  let rec unfold_ty (fuel:int) (c:cty) : ML cty =
+    match c with
+    | TApp (n, []) when fuel > 0 ->
+      (match HashTable.try_find abbrevs (string_of_name n) with
+       | Some c' -> unfold_ty (fuel - 1) c'
+       | None -> c)
+    | _ -> c in
+  let arities = decl_arity (with_imports prog) in
+  let is_closure_call (e:expr) : bool =
+    match e.e with
+    | EOp ({ po_op = ClosureCall }, [c]) ->
+      (match c.e with
+       | EVar _ -> true
+       | ECoerce ({ e = EVar _ }, _) -> true
+       | _ -> false)
+    | _ -> false in
   (* One declaration at a time, so that a lifted function is emitted next to
      the definition it came out of and the names stay readable. *)
   let go_decl (dl:dlet) : ML dlet =
     let n = mk_ref 0 in
-    let fresh_name () : ML name =
+    let fresh_name_sfx (sfx:string) : ML name =
       let pick (i:int) : ML string =
-        dl.dl_name.id ^ "__lam" ^ (if i = 0 then "" else "_" ^ show i) in
+        dl.dl_name.id ^ sfx ^ (if i = 0 then "" else "_" ^ show i) in
       let rec first (i:int) : ML name =
         let cand = { dl.dl_name with id = pick i } in
         if Some? (HashTable.try_find taken (string_of_name cand))
@@ -3903,9 +4000,37 @@ let lift_lambdas (prog:program) : ML program =
         else (HashTable.add taken (string_of_name cand) true; cand) in
       let r = first !n in
       n := !n + 1; r in
+    let fresh_name () : ML name = fresh_name_sfx "__lam" in
     let rec go (x:expr) : ML expr =
       let same (e':expr') : expr = { x with e = e' } in
       match x.e with
+      | EOp (po, [f]) when ClosureNew? po.po_op -> closure_new x po f
+      (* Section 136.  A Pulse local [fn] reaches here let-bound, and boxing
+         it boxes the function the binding names: each [alloc] of it gets
+         its own copy, with its own binders, so that it is converted like a
+         lambda written in place.  The binding stays if anything else uses
+         it. *)
+      | ELet (v, t, rhs, rest) when (EFun? rhs.e || EQual? rhs.e) ->
+        let hit = mk_ref false in
+        let rec put (y:expr) : ML expr =
+          match y.e with
+          | EOp (po, [{ e = EVar u }]) when ClosureNew? po.po_op && u = v ->
+            hit := true;
+            { y with e = EOp (po, [sub (HashTable.create 4) rhs]) }
+          | _ -> map_children put y in
+        let rest = put rest in
+        if !hit && not (occurs v rest) then go rest
+        else same (ELet (v, t, go rhs, go rest))
+      (* The boxed function is only ever applied: substituting [call c] for
+         the variable that names it puts it at the head of each application,
+         which is the one place the C backend can compile it (as an indirect
+         call through [c]). *)
+      | ELet (v, _, rhs, rest) when is_closure_call rhs ->
+        let rec put (y:expr) : ML expr =
+          match y.e with
+          | EVar u when u = v -> rhs
+          | _ -> map_children put y in
+        go (put rest)
       | EFun (bs, body) ->
         let body = go body in
         let bound = List.map (fun (b:binder) -> b.b_name) bs in
@@ -3918,7 +4043,101 @@ let lift_lambdas (prog:program) : ML program =
                            dl_eff = body.eff; dl_body = body;
                            dl_flags = [] } :: !lifted;
           { x with e = EQual (nm, dl.dl_typars |> List.map (fun v -> TVar v)) }
-      | _ -> map_children go x in
+      | _ -> map_children go x
+    (* Section 136.  [Pulse.Lib.Closure.alloc f]: [f] becomes a top-level
+       function taking what it captures first and then every parameter of
+       its arrow, and the node becomes [ClosureNew (code :: captures)].  An
+       [f] that is not a lambda is eta-expanded first, so that one shape
+       covers a named function, a function pointer and a partial
+       application; an [f] that has to be evaluated is evaluated once, here,
+       and its value captured. *)
+    and closure_new (x:expr) (po:prim_op) (f:expr) : ML expr =
+      let pre, f =
+        match f.e with
+        | EFun _ | EVar _ | EQual _ -> None, f
+        | _ ->
+          let v = rename "clo_fn" in
+          Some (v, go f), mk (EVar v) f.ty E_Pure in
+      let rec flatten (bs:list binder) (b:expr) : ML (list binder & expr) =
+        match b.e with
+        | EFun (bs', b') -> flatten (bs @ bs') b'
+        | _ -> (bs, b) in
+      let bs, body =
+        match f.e with
+        | EFun (bs, b) -> flatten bs b
+        | _ -> [], f in
+      let body = go body in
+      (* The parameters the body does not take yet, off the boxed type. *)
+      let rec peel (k:int) (t:cty) : ML (option cty) =
+        if k <= 0 then Some t
+        else match unfold_ty 50 t with
+             | TArrow (_, _, r) -> peel (k - 1) r
+             | _ -> None in
+      let rest = match peel (List.length bs) f.ty with
+                 | Some t -> t
+                 | None -> body.ty in
+      let app1 (h:expr) (a:expr) (t:cty) (e:eff) : ML expr =
+        match h.e with
+        | EApp (hd, args)
+            when (match hd.e with
+                  | EQual (g, _) ->
+                    (match HashTable.try_find arities (string_of_name g) with
+                     | Some k -> k > List.length args
+                     | None -> false)
+                  | _ -> false) ->
+          mk (EApp (hd, args @ [a])) t e
+        | _ -> mk (EApp (h, [a])) t e in
+      let rec extend (bs:list binder) (body:expr) (t:cty) (ef:eff)
+        : ML (list binder & expr & cty & eff) =
+        match unfold_ty 50 t with
+        | TArrow (a, e, r) ->
+          let v = rename "clo_arg" in
+          extend (bs @ [{ b_name = v; b_ty = a }])
+                 (app1 body (mk (EVar v) a E_Pure) r e) r e
+        | _ -> (bs, body, t, ef) in
+      let bs, body, ret, ef =
+        if Nil? bs then extend [] body rest E_Pure
+        else
+          (* A lambda whose body is itself a function takes the rest of its
+             parameters the same way. *)
+          extend bs body rest body.eff in
+      let ef = if Nil? bs then ef else join_eff ef body.eff in
+      if Nil? bs then
+        E.raise_error0 E.Error_CustardNoCRepresentation [
+          text ("Custard: Pulse.Lib.Closure.alloc in " ^ string_of_name dl.dl_name ^
+                " boxes a value of type " ^ show f.ty ^ ", which is not a function.");
+          text "Under --codegen C a closure is a code pointer and an environment,                 so what it boxes has to be a function: box a thunk instead." ];
+      (* What the code captures, each once, in order of first occurrence. *)
+      let tys : HashTable.t string cty = HashTable.create 8 in
+      let rec note (e:expr) : ML unit =
+        (match e.e with
+         | EVar v when None? (HashTable.try_find tys v) -> HashTable.add tys v e.ty
+         | _ -> ());
+        iter_children note e in
+      note body;
+      let seen : HashTable.t string bool = HashTable.create 8 in
+      let caps =
+        fvs (List.map (fun (b:binder) -> b.b_name) bs) body
+        |> List.filter (fun v ->
+             if Some? (HashTable.try_find seen v) then false
+             else (HashTable.add seen v true; true))
+        |> List.map (fun v ->
+             { b_name = v;
+               b_ty = (match HashTable.try_find tys v with Some t -> t | None -> TAny) }) in
+      let nm = fresh_name_sfx "__clo" in
+      lifted := DLet { dl_name = nm; dl_typars = dl.dl_typars;
+                       dl_binders = caps @ bs; dl_ret = ret;
+                       dl_eff = ef; dl_body = body;
+                       dl_flags = [] } :: !lifted;
+      let code_ty =
+        arrows (List.map (fun (b:binder) -> b.b_ty) (caps @ bs)) ret in
+      let code = mk (EQual (nm, dl.dl_typars |> List.map (fun v -> TVar v))) code_ty E_Pure in
+      let r = { x with e = EOp (po, code :: List.map (fun (b:binder) ->
+                                         mk (EVar b.b_name) b.b_ty E_Pure) caps) } in
+      match pre with
+      | None -> r
+      | Some (v, fe) -> { x with e = ELet (v, fe.ty, fe, r);
+                                 eff = join_eff fe.eff x.eff } in
     { dl with dl_body = go dl.dl_body } in
   (* A lifted function is emitted *before* the definition that refers to it,
      which is what the C backend's forward declarations expect and what keeps

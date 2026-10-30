@@ -56,6 +56,7 @@ let incr_goal_ctr () : ML int = let v = !goal_ctr in goal_ctr := v + 1; v
 let ret (x:'a) : tac 'a =
   fun _ -> x
 
+[@@FStar.Attributes.custard_inline]
 let bind (t1:tac 'a) (t2:'a -> ML (tac 'b)) : tac 'b =
   fun ps ->
     let x = t1 ps in
@@ -90,10 +91,12 @@ let get : tac proofstate =
 let traise e =
   fun _ -> raise e
 
+[@@FStar.Attributes.custard_inline]
 let do_log ps (f : unit -> ML unit) : ML unit =
   if ps.tac_verb_dbg then
     f ()
 
+[@@FStar.Attributes.custard_inline]
 let log (f : unit -> ML unit) : tac unit =
   fun ps -> do_log (!ps) f
 
@@ -325,12 +328,14 @@ let wrap_err (pref:string) (t : tac 'a) : tac 'a =
 let mlog (f : unit -> ML unit) (cont : unit -> ML (tac 'a)) : tac 'a =
   bind (log f) (fun _ -> cont ())
 
+[@@FStar.Attributes.custard_inline]
 let if_verbose_tac (f : unit -> ML (tac unit)) : tac unit =
   bind get (fun ps ->
   if ps.tac_verb_dbg
   then f ()
   else ret ())
 
+[@@FStar.Attributes.custard_inline]
 let if_verbose (f : unit -> ML unit) = if_verbose_tac (fun _ -> f(); ret ()) 
 
 let compress_implicits : tac unit =

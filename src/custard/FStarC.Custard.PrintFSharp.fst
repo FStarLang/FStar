@@ -974,12 +974,10 @@ let rec term (ind:string) (e:expr) : ML string =
     then let pre = "(isNull (box " in pre ^ term (after ind pre) b ^ "))"
     else let pre = "((Array.length " in
          pre ^ term (after ind pre) b ^ ") = 0)"
-  | EOp ({ po_op = BufBlit }, [src; si; dst; di; len]) ->
+  | EOp ({ po_op = BufBlit }, [src; dst; len]) ->
     let pre = "(Array.blit " in
-    let pre = pre ^ term (after ind pre) src ^ " " in
-    let pre = pre ^ index (after ind pre) si ^ " " in
-    let pre = pre ^ term (after ind pre) dst ^ " " in
-    let pre = pre ^ index (after ind pre) di ^ " " in
+    let pre = pre ^ term (after ind pre) src ^ " 0 " in
+    let pre = pre ^ term (after ind pre) dst ^ " 0 " in
     pre ^ index (after ind pre) len ^ ")"
   | EOp ({ po_op = BufSub }, _) ->
     "(failwith \"Custard: pointer arithmetic has no F# representation\")"

@@ -43,10 +43,7 @@ let extend_post_hint
           q.effect_annot == p.effect_annot
         })
 = let arr = null_var x in
-  let conjunct =
-    (match init with
-    | Some _ -> tm_exists_sl u0 (as_binder (mk_seq u0 init_t)) (mk_array_pts_to init_t arr (null_bvar 0))
-    | None -> mk_array_pts_to_uninit_post init_t arr) in
+  let conjunct = withlocal_array_post init_t arr init in
   let g' = push_binding g x n (mk_array init_t) in
   let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_slprop in
   let res = Pulse.Checker.Base.extend_post_hint g p x n (mk_array init_t) conjunct in

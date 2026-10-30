@@ -293,6 +293,7 @@ let tc_decls_knot : ref (option (Env.env -> list sigelt -> ML (list sigelt & Env
 
 (* Elaborate with TcTerm. Its guards are not proven, so Core's memo table
    must not remember what it checks meanwhile. *)
+[@@FStar.Attributes.custard_inline]
 let elaborating (f:unit -> ML 'a) : ML 'a =
   FStarC.TypeChecker.Core.clear_memo_table();
   let r = f () in

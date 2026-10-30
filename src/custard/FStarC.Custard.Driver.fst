@@ -302,16 +302,19 @@ let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
        another Custard unit does.  Exporting it would tell a downstream unit
        the symbol is already compiled, and that unit would then skip the very
        definition it was there to contribute; the link would come out with a
-       reference and nothing to resolve it against.  A downstream unit derives
-       an external's signature from the source anyway, exactly as this one
-       did, so nothing is lost by leaving it out. *)
+       reference and nothing to resolve it against.  Non-owning bindings are
+       published separately, without answering an implementation lookup. *)
     if DExternal? d then [] else
     (* Section 42.1.  A C unit's interface is its linking interface: what the
        header declares and nothing else.  A [static] definition offered here
-       would be a symbol the consumer cannot name.  Types are all kept, since
+       would be a symbol the consumer cannot name. A static header instead
+       defines its private helpers in the consumer's translation unit, so
+       their keys are reusable without changing visibility or linkage.
+       Types are all kept, since
        the header carries the whole type language -- and because that is what
        keeps two headers from defining one [struct] twice (section 42.2). *)
     if Options.codegen_c ()
+       && not (Options.custard_static_header ())
        && (match d with DLet dl -> not (C.is_public dl) | _ -> false)
     then [] else
     let d, ti =
@@ -346,11 +349,17 @@ let unit_entries (keys:list (string & string)) (homes:HashTable.t string string)
 
 let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
                      (hdr_file:option string) (init:option string)
+                     (targets:list (string & string))
+                     (c_names:list (string & string))
                      (prog:program) (infos:list (name & type_info))
   : ML unit =
   match Options.custard_unit () with
   | None -> ()
   | Some u ->
+    let keys = HashTable.create 100 in
+    Extract.exported_keys st |> List.iter (fun (n, k) -> HashTable.add keys n k);
+    let names = HashTable.create 100 in
+    targets |> List.iter (fun (n, c) -> HashTable.add names n c);
     let i = {
       Unit.ui_header = {
         Unit.uh_version = Unit.current_version;
@@ -376,8 +385,22 @@ let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
         Unit.uh_no_prefix = Options.custard_c_no_prefix ();
         Unit.uh_header  = hdr_file;
         Unit.uh_init    = init;
+        Unit.uh_static_header = Options.custard_static_header ();
+        Unit.uh_c_names = c_names;
       };
       Unit.ui_entries = unit_entries (Extract.exported_keys st) homes prog infos;
+      (* Functor members resolve through their instance, not a source binding. *)
+      Unit.ui_foreign = prog |> List.collect (function
+        | DExternal x when None? (imported_unit (DExternal x)) &&
+                           not (List.existsb Member? x.dx_flags) ->
+          (match HashTable.try_find keys (string_of_name x.dx_name) with
+           | Some k ->
+             let target = match HashTable.try_find names (string_of_name x.dx_name) with
+                          | Some c -> Some c | None -> x.dx_target in
+             [{ Unit.uf_key = k; Unit.uf_decl =
+                 { x with dx_target = target; dx_flags = Unit.foreign_flags x.dx_flags } }]
+           | None -> [])
+        | _ -> []);
     } in
     if Options.custard_dump_cui () then
       Format.print_string (Unit.iface_to_string i);
@@ -389,6 +412,18 @@ let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
 let phase (name:string) (f : unit -> ML 'a) : ML 'a = Prof.timed name f
 
 let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
+  if Options.custard_static_header () then begin
+    if Options.codegen_name () <> "C" then
+      E.raise_error0 E.Fatal_OptionsNotCompatible [
+        text "--custard_static_header requires --codegen C.";
+        text "It is not implemented for Cherry or the other code generators." ];
+    if Some? (Options.custard_main ()) || Options.custard_split () then
+      E.raise_error0 E.Fatal_OptionsNotCompatible [
+        text "--custard_static_header cannot be combined with \
+              --custard_main or --custard_split.";
+        text "Compile library roots into one header; compile an executable \
+              separately." ]
+  end;
   let main = main_entry () in
   (* [--custard_main] is a root too, so that the common case needs only one
      option. *)
@@ -458,6 +493,13 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
   (* Phase 3/4: erasure, newtype collapse and cast elimination (section 5). *)
   let prog, infos, vd =
     phase "layout" (fun () -> Layout.run (imported_type_infos imports) prog) in
+  if Options.custard_monomorphize_types () then Monomorphize.check_tvar_clones infos;
+  let targets =
+    if Options.codegen_c () && Cons? (Options.custard_links ()) then
+      C.foreign_targets { C.no_unit with C.cu_no_prefix = Extract.link_no_prefix st }
+        (List.map fst imports @ prog)
+    else [] in
+  let prog = phase "foreign-bindings" (fun () -> Extract.apply_foreign_bindings st targets prog) in
   (* Effect-guarded simplification (sections 6 and 7.3).  [vd] is the
      representation the analysis above settled on; nothing below decides one. *)
   let prog = phase "simplify" (fun () ->
@@ -536,7 +578,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       Find.prepend_output_dir
         (if Options.codegen_krml () then base ^ ".krml"
          else match backend with
-         | "C" -> base ^ ".c"
+         | "C" -> base ^ (if Options.custard_static_header () then ".h" else ".c")
          | "FSharp" -> base ^ ".fs"
          | _ -> base ^ ".ml")
   in
@@ -557,7 +599,31 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     else { C.cu_name    = Options.custard_unit ();
            C.cu_headers = Extract.link_headers st;
            C.cu_inits   = Extract.link_inits st;
-           C.cu_no_prefix = Extract.link_no_prefix st } in
+           C.cu_no_prefix = Extract.link_no_prefix st;
+           C.cu_c_names = Extract.link_c_names st } in
+  if Options.custard_static_header () then begin
+    if FStarC.Filepath.basename ofile <> stem ^ ".h" then
+      E.raise_error0 E.Fatal_OptionsNotCompatible [
+        text ("--custard_static_header requires a .h output file, not " ^ ofile ^ ".");
+        text ("Use -o " ^ stem ^ ".h.") ];
+    if Cons? cu.C.cu_inits then
+      E.raise_error0 E.Fatal_OptionsNotCompatible [
+        text "--custard_static_header cannot depend on a unit with runtime initialization.";
+        text "Initialize and compile stateful units separately in ordinary C mode." ];
+    prog |> List.iter (fun d -> match d with
+      | DLet l when List.existsb Entrypoint? l.dl_flags ->
+        E.raise_error0 E.Fatal_OptionsNotCompatible [
+          text "--custard_static_header cannot generate an executable entry point." ]
+      | DLet l when Nil? l.dl_binders && not (List.existsb CMacro? l.dl_flags) ->
+        E.raise_error0 E.Fatal_OptionsNotCompatible [
+          text ("--custard_static_header cannot emit the non-macro global " ^
+                string_of_name l.dl_name ^ ".");
+          text "A static definition would create a separate object in every \
+                translation unit, changing its identity or shared state.";
+          text "Use CMacro for a compile-time constant, or ordinary C output \
+                for globals and runtime initialization." ]
+      | _ -> ())
+  end;
   (* Section 115.  An OCaml unit's compilation unit is named by the file it
      is written to, and a consumer qualifies an imported name by the unit
      name in the `.cui` -- so if [-o] and --custard_unit disagree, the
@@ -592,7 +658,13 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
       then Some (stem ^ ".h"), C.init_globals_name cu (List.map fst imports @ prog)
       else None, None in
     let prog = if Some? cherried then Cherry.record_conventions prog else prog in
-    write_unit_iface st homes hdr_file init prog infos);
+    let targets = if backend = "C" && Some? (Options.custard_unit ())
+                  then C.foreign_targets cu (List.map fst imports @ prog) else [] in
+    let c_names =
+      if backend = "C" && Options.custard_static_header () && Some? (Options.custard_unit ())
+      then C.static_header_names cu (List.map fst imports @ prog)
+      else [] in
+    write_unit_iface st homes hdr_file init targets c_names prog infos);
   if Options.custard_dump_ir () then
     Format.print_string (program_to_string prog ^ "\n");
   if Options.custard_warn_any () then warn_any prog;
@@ -623,7 +695,7 @@ let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
     let hdr, src, extras = C.print_program stem cu all in
     let dir = FStarC.Filepath.dirname ofile in
     BU.write_file (FStarC.Filepath.join_paths dir (stem ^ ".h")) hdr;
-    BU.write_file ofile src;
+    if not (Options.custard_static_header ()) then BU.write_file ofile src;
     extras |> List.iter (fun (f, s) -> BU.write_file (FStarC.Filepath.join_paths dir f) s)
   | "OCaml" -> BU.write_file ofile (OCaml.print_program (List.map fst imports @ prog))
   (* Section 122.  One flat module, plus the two files that make the output

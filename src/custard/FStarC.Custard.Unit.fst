@@ -29,7 +29,7 @@ module E   = FStarC.Errors
 module O   = FStarC.Options
 module HashTable = FStarC.HashTable
 
-let current_version = 20
+let current_version = 34
 
 (* The IR is plain first-order data -- no references, no closures, no
    hashconsing -- so the same mechanism that stores checked files stores a
@@ -67,6 +67,38 @@ let write_iface (fn:string) (i:iface) : ML unit =
 let bad (#a:Type) (fn:string) (msg:list document) : ML a =
   E.raise_error0 E.Error_CustardBadUnitInterface
     (text (BU.fmt1 "Cannot link the Custard unit interface %s." fn) :: msg)
+
+let foreign_flag (f:flag) : ML bool =
+  match f with
+  | Root | Private | Entrypoint | Imported _ | Rec _ | Inline | Member _ -> false
+  | _ -> true
+
+let foreign_flags (fs:list flag) : ML (list flag) = List.filter foreign_flag fs
+
+let foreign_signature (x:dexternal) : ML cty =
+  subst_cty (x.dx_typars |> List.mapi (fun i p -> (p, TVar ("foreign_" ^ show i)))) x.dx_ty
+
+let same_signature (a b:dexternal) : ML bool =
+  List.length a.dx_typars = List.length b.dx_typars &&
+  foreign_signature a = foreign_signature b &&
+  List.filter CallArity? a.dx_flags = List.filter CallArity? b.dx_flags
+
+let apply_foreign (u:string) (b:foreign_binding) (x:dexternal)
+                  (target:option string) (header:bool) (flags:list flag) : ML dexternal =
+  let fail (what:string) : ML unit =
+    bad u [text ("Conflicting foreign binding for " ^ b.uf_key ^ ": " ^ what ^ ".");
+           text "Use compatible bindings and signatures; foreign bindings are not implementations."] in
+  if not (same_signature b.uf_decl x) then fail "the consumer signature differs";
+  (match target with
+   | Some t when Some t <> b.uf_decl.dx_target -> fail "the consumer explicitly selects another target"
+   | _ -> ());
+  if header && x.dx_header <> b.uf_decl.dx_header then
+    fail "the consumer explicitly selects another header";
+  if flags |> List.existsb (fun f -> not (List.mem f b.uf_decl.dx_flags)) then
+    fail "the consumer explicitly selects different declaration attributes";
+  { x with dx_target = b.uf_decl.dx_target; dx_header = b.uf_decl.dx_header;
+           dx_flags = (x.dx_flags |> List.filter (fun f -> not (foreign_flag f)))
+                      @ b.uf_decl.dx_flags }
 
 let read_iface (fn:string) : ML iface =
   let i : iface =
@@ -174,11 +206,18 @@ let iface_to_string (i:iface) : ML string =
     match v with Some f -> "\n  " ^ label ^ ": " ^ f | None -> "" in
   BU.fmt4 "unit %s (format %s, backend %s)%s"
     h.uh_name (show h.uh_version) h.uh_backend
-    (opt "header" h.uh_header ^ opt "init" h.uh_init ^ "\n" ^
+    (opt "header" h.uh_header ^ opt "init" h.uh_init ^
+     (if h.uh_static_header then "\n  static-header: true" else "") ^ "\n" ^
+     String.concat "" (h.uh_c_names |> List.map (fun (n, c) ->
+       BU.fmt2 "  C name: %s = %s\n" n c)) ^
      BU.fmt3 "  options: %s\n  %s checked files\n\n%s"
        (String.concat ", " (h.uh_options |> List.map (fun (k, v) -> k ^ "=" ^ v)))
        (show (List.length h.uh_digests))
-       (String.concat "" (i.ui_entries |> List.map entry_to_string)))
+       (String.concat "" (i.ui_entries |> List.map entry_to_string) ^
+        String.concat "" (i.ui_foreign |> List.map (fun b ->
+          "  foreign binding " ^ b.uf_key ^ "\n" ^
+          "    target: " ^ (match b.uf_decl.dx_target with Some t -> t | None -> "<default>") ^ "\n" ^
+          "    header: " ^ (match b.uf_decl.dx_header with Some h -> h | None -> "<declaration>") ^ "\n"))))
 
 (** {1 The index} *)
 
@@ -190,19 +229,24 @@ type unit_ref = {
   ur_header: option string;
   ur_init:   option string;
   ur_no_prefix: list string;
+  ur_c_names: list (string & string);
 }
 
 (* [string & entry]: the unit an entry came from, kept alongside it so a
    backend can qualify the name without a second lookup. *)
 type links = {
   lk_tbl:   HashTable.t string (string & entry);
+  lk_foreign: HashTable.t string (string & foreign_binding);
   lk_units: list unit_ref;   (* in --custard_link order *)
 }
 
-let empty_links : links = { lk_tbl = HashTable.create 1; lk_units = [] }
+let empty_links : links =
+  { lk_tbl = HashTable.create 1; lk_foreign = HashTable.create 1; lk_units = [] }
 
 let load_links (fns:list string) : ML links =
   let tbl : HashTable.t string (string & entry) = HashTable.create 1000 in
+  let foreign : HashTable.t string (string & foreign_binding) = HashTable.create 100 in
+  let c_names : HashTable.t string (string & string) = HashTable.create 100 in
   (* [List.map] rather than a reference, so that [lk_units] comes out in
      --custard_link order without a reversal to get wrong. *)
   let units = fns |> List.map (fun fn ->
@@ -232,16 +276,41 @@ let load_links (fns:list string) : ML links =
           text "Link only one of them, or merge the two units."
         ]
       | _ -> HashTable.add tbl e.ue_key (u, e));
+    i.ui_foreign |> List.iter (fun b ->
+      match HashTable.try_find foreign b.uf_key with
+      | Some (u', b') ->
+        if not (same_signature b.uf_decl b'.uf_decl) ||
+           b.uf_decl.dx_target <> b'.uf_decl.dx_target ||
+           b.uf_decl.dx_header <> b'.uf_decl.dx_header ||
+           b.uf_decl.dx_flags <> b'.uf_decl.dx_flags then
+          bad fn [
+            text (BU.fmt3 "Units %s and %s have conflicting foreign bindings for %s." u' u b.uf_key);
+            text "Link order cannot select a foreign binding; rebuild with compatible bindings."
+          ]
+      | None -> HashTable.add foreign b.uf_key (u, b));
+    i.ui_header.uh_c_names |> List.iter (fun (n, c) ->
+      match HashTable.try_find c_names c with
+      | Some (u', n') when u' <> u ->
+        bad fn [
+          text (BU.fmt3 "Static headers from %s and %s both define the C name `%s'." u' u c);
+          text (BU.fmt2 "The definitions are %s and %s." n' n);
+          text "Rebuild one unit with the other linked, or rename one of the definitions."
+        ]
+      | _ -> HashTable.add c_names c (u, n));
     { ur_name   = u;
       ur_header = i.ui_header.uh_header;
       ur_init   = i.ui_header.uh_init;
-      ur_no_prefix = i.ui_header.uh_no_prefix }) in
+      ur_no_prefix = i.ui_header.uh_no_prefix;
+      ur_c_names = i.ui_header.uh_c_names }) in
   if O.custard_dump_cui () && fns <> [] then
     BU.print1 "Custard: linked %s specializations.\n" (show (List.length (HashTable.keys tbl)));
-  { lk_tbl = tbl; lk_units = units }
+  { lk_tbl = tbl; lk_foreign = foreign; lk_units = units }
 
 let lookup (l:links) (k:string) : ML (option (string & entry)) =
   HashTable.try_find l.lk_tbl k
+
+let lookup_foreign (l:links) (k:string) : ML (option (string & foreign_binding)) =
+  HashTable.try_find l.lk_foreign k
 
 let is_empty (l:links) : ML bool = HashTable.keys l.lk_tbl = [] && Nil? l.lk_units
 
@@ -264,3 +333,6 @@ let link_inits (l:links) : ML (list string) =
 
 let link_no_prefix (l:links) : ML (list string) =
   l.lk_units |> List.collect (fun u -> u.ur_no_prefix)
+
+let link_c_names (l:links) : ML (list (string & list (string & string))) =
+  l.lk_units |> List.map (fun u -> (u.ur_name, u.ur_c_names))

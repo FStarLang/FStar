@@ -365,7 +365,7 @@ type op =
   | BufFree                (** [buf] *)
   | BufNull                (** no arguments; the element type is the node's *)
   | BufIsNull              (** [buf] *)
-  | BufBlit                (** [src; srcidx; dst; dstidx; len] *)
+  | BufBlit                (** [src; dst; len] *)
   (** Section 71.  A run whose contents are known at compile time: the
       arguments are the elements, and the node's type is the [TBuf].
 
@@ -427,6 +427,13 @@ type op =
   | Reset of name & list bool
   | Reuse of name & name
   | ResetFree
+  (** Cherry: a record update (cherry.md, "Record updates").
+      [Update (c, is) (x :: vs)] takes the owned cell [x], built with
+      constructor [c], and the values [vs], and returns a cell of [c] with
+      the fields at the positions [is] (ascending) replaced by [vs] and the
+      others as in [x]: [x] itself if it is unique, which loses the fields
+      it replaces, and otherwise a copy, with its fields counted. *)
+  | Update of name & list int
   (** Cherry: an operation on an immutable array ([FStar.ImmutableArray.Base.t],
       which Cherry represents as a counted cell), named as in that module:
       [of_list], [to_list], [length], [index], [upd] or [push]. *)
@@ -457,6 +464,16 @@ type op =
   | ExnPending
   | ExnTake
   | ExnExit
+  (** C: [Pulse.Lib.Closure] (custard.md, section 136).  [ClosureNew f] boxes
+      the function [f] with what it captures and is a [custard_closure *];
+      [Simplify.lift_lambdas] leaves [f] either a top-level name or a
+      partial application of one to the captured variables.
+      [ClosureCall c], at the boxed function's own arrow type, is the
+      function in the box: it is only meaningful as the head of an
+      application to every argument of that arrow.  A closure is freed with
+      [BufFree]. *)
+  | ClosureNew
+  | ClosureCall
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =
@@ -740,7 +757,8 @@ type flag =
       also monomorphizes [slice uint8] and would otherwise emit a second,
       conflicting [typedef] for it.
 
-      Set by [--custard_no_unfold]; see section 77 of doc/ref/custard.md. *)
+      Set by [--custard_no_unfold] or [@@custard_no_unfold]; see section 77
+      of doc/ref/custard.md. *)
   | Extern of option string & option string
   (** The type is defined outside F*: an abstract [val t : Type0] carrying
       [@@custard_extern] (section 8.1, kind 4).  Custard keeps the declaration
@@ -813,6 +831,14 @@ type flag =
       backend, from its borrow inference, so that a unit linked against it
       calls them the way they were compiled.  A definition imported without
       it is taken to own every parameter. *)
+  | CName of string
+  (** The exact direct-C spelling requested by a global [rename_let].
+      Logical identities and linkage are unchanged.  Kept in compiled units
+      so that consumers use the producer's spelling. *)
+
+  | DeclareInCHeader
+  (** Emit this external function's prototype in the direct-C header,
+      after the types it uses, instead of in the source. *)
 
 type tydef =
   | TAbbrev  of cty
@@ -995,6 +1021,12 @@ val subst_cty : list (string & cty) -> cty -> ML cty
 val mk : expr' -> cty -> eff -> expr
 val unit_expr : expr
 val name_of_decl : decl -> name
+
+(* Ten hex digits that depend only on [s].  For naming a generated helper
+   after what it is, so that its name survives edits elsewhere in the
+   program.  Not [FStarC.Hash.of_string], which differs between the OCaml and
+   the Cherry builds of the compiler: the output must not. *)
+val stable_hash : string -> ML string
 (** The template pieces of an external declaration's target spelling, if it
     has a target and that target mentions any argument.  The one place that
     decides whether a [TApp] of an external type is a template, so that

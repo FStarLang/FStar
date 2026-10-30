@@ -174,16 +174,30 @@ CGREP_NestArr += "static uint32_t NestArr_pfst__t_option_box_t(FStar_Pervasives_
 
 # Section 109.  The rule can be hidden by a type abbreviation, which names it
 # at neither endpoint of the reduction: [pack a = option (array a)] mentions
-# no rule as written, and the reduced form has unfolded past it.
+# no rule as written, and the reduced form has unfolded past it.  Since
+# Pulse.Lib.Array.Core's implementation became a -model.fst, [array] is
+# abstract to extraction and nothing unfolds past it, so every spelling
+# reduces to [option array] -- one specialization per element type, which
+# must still be two.
 C_TESTS += TupAlias
-CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_pack_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_pack_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_psnd__pack_element_t(FStar_Pervasives_Native_tuple2__option_element_ptr_uint32 x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_psnd__pack_bool_t(FStar_Pervasives_Native_tuple2__option_bool_ptr_uint32 x) {"
-# The spelled-out control, and the two-deep chain the fuel is for.
 CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_option_array_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_packed_element(FStar_Pervasives_Native_tuple2__uint32_option_element_ptr x) {"
-CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_packed_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_pfst__t_option_array_bool(FStar_Pervasives_Native_tuple2__uint32_option_bool_ptr x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_psnd__option_array_element_t(FStar_Pervasives_Native_tuple2__option_element_ptr_uint32 x) {"
+CGREP_TupAlias += "static uint32_t TupAlias_psnd__option_array_bool_t(FStar_Pervasives_Native_tuple2__option_bool_ptr_uint32 x) {"
+
+# Section 136.  Pulse.Lib.Closure: a closure is a pointer to a header holding
+# the code pointer, followed by the captured environment, and a call goes
+# through the code pointer.
+C_TESTS += PulseClosure
+CGREP_PulseClosure += "typedef struct custard_closure { void (*code)(void); } custard_closure;"
+CGREP_PulseClosure += "->hdr.code = (void (*)(void))"
+CGREP_PulseClosure += "->code)("
+OCAML_TESTS += PulseClosure
+# The boxed function can only be called, not passed on.
+REJECT_TESTS += PulseClosureEscape
+CODE_PulseClosureEscape = 368
+FLAGS_PulseClosureEscape = --codegen C
+EGREP_PulseClosureEscape += "Pulse.Lib.Closure.call's result other than a call"
 
 # Section 94.  An initializer where C has one, and the loop where it does not:
 # a runtime fill cannot be repeated and a variable-length array may not be
@@ -458,6 +472,12 @@ CGREP_PulseGhostFn += "PulseGhostFn_with_justif(void)"
 # No function-typed local, no unit standing in for one, and no call through it.
 CNOGREP_PulseGhostFn += "*justif"
 CNOGREP_PulseGhostFn += "(justif()"
+
+# Issue #4803.  A method whose implementation erases to a pure [()] keeps the
+# unit thunk of its arrow type, whether bound to a local or passed on; no unit
+# value is ever called.
+C_TESTS += PulseGhostMethod
+CNOGREP_PulseGhostMethod += "custard_unit)0)("
 
 # Section 71.4.  The three ways a static array is not one, and what each says.
 # A run whose contents are a run-time value is a contradiction in terms, so it

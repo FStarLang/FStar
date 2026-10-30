@@ -3,13 +3,19 @@ module FStarC.Class.Monad
 open FStarC
 open FStarC.Effect
 
+(* Every instance's [return] and [bind] is small, and Cherry would otherwise
+   build a closure for the continuation of every [let!]. *)
 class monad (m : Type -> Type) = {
+   [@@@FStar.Attributes.custard_inline]
    return : #a:Type -> a -> ML (m a);
+   [@@@FStar.Attributes.custard_inline]
    bind   : #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b)
 }
 
 (* Aliases. Need to declare a very precise type for them. *)
+[@@FStar.Attributes.custard_inline]
 let ( let! ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b) = bind
+[@@FStar.Attributes.custard_inline]
 let ( >>=  ) : #m:(Type -> Type) -> {| monad m |} -> #a:Type -> #b:Type -> m a -> (a -> ML (m b)) -> ML (m b) = bind
 
 inline_for_extraction

@@ -294,22 +294,28 @@ let is_prim_step cfg fv : ML bool =
 let is_built_in_primop fv : ML bool =
     Some? (PSMap.try_find built_in_primitive_steps (I.string_of_lid fv.fv_name))
 
+[@@FStar.Attributes.custard_inline]
 let log cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.gen then f () else ()
 
+[@@FStar.Attributes.custard_inline]
 let log_top cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.top then f () else ()
 
+[@@FStar.Attributes.custard_inline]
 let log_cfg cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.cfg then f () else ()
 
+[@@FStar.Attributes.custard_inline]
 let log_primops cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.primop then f () else ()
 
 let dbg_unfolding = Debug.get_toggle "Unfolding"
+[@@FStar.Attributes.custard_inline]
 let log_unfolding cfg (f: unit -> ML unit) : ML unit =
   if !dbg_unfolding then f () else ()
 
+[@@FStar.Attributes.custard_inline]
 let log_nbe cfg (f: unit -> ML unit) : ML unit =
     if cfg.debug.debug_nbe then f ()
 

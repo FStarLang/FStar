@@ -569,6 +569,7 @@ let with_guard (#a #b:Type) (x:result a) (f: either (success a) error -> ML (res
     | Success (r, cache') -> f (Inl r) ctx cache'
     | Error err -> f (Inr err) ctx cache
 
+[@@FStar.Attributes.custard_inline]
 let (let?) (#a:Type) (#b:Type) (x:option a) (f: a -> option b)
   : option b
   = match x with

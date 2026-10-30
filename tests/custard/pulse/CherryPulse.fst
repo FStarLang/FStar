@@ -109,7 +109,7 @@ fn blit (l m: list int)
   A.pts_to_len b;
   let p = AP.from_array a;
   let q = AP.from_array b;
-  AP.memcpy p 0sz q 0sz 2sz;
+  AP.memcpy p q 2sz;
   AP.to_array p a;
   AP.to_array q b;
   let x = b.(0sz);

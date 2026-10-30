@@ -68,6 +68,10 @@ GREP_EmptyMatch += "empty match"
 CUSTARD_TESTS += RenameLet
 GREP_RenameLet   = "let renamedA = " "let dupName = " "let dupName1 = "
 NOGREP_RenameLet = "let a = " "let b = " "let c = "
+# Global rename_let is direct-C metadata, not an OCaml name change.
+CUSTARD_TESTS += GlobalRenameOCaml
+GREP_GlobalRenameOCaml = "let globalRenameIface_step" "let globalRenameOCaml_increment"
+NOGREP_GlobalRenameOCaml = "InterfaceStep" "COnlyName"
 GREP_EraseAbbrev = "let eraseAbbrev_add4 (n : Prims.int) (x : Prims.int) (y : Prims.int) : Prims.int"
 # The failure this guards against is [add4] keeping its abbreviated codomain
 # as an arrow instead of taking its binders: [let add4 (n : Prims.int) : ...].
@@ -464,6 +468,21 @@ C_TESTS += CExternStmt
 FLAGS_CExternStmt = --custard_entry_module CExternStmt
 CGREP_CExternStmt = "if (a) {" "else if (x == CEXTERNSTMT_B) {"
 CNOGREP_CExternStmt = "if (a) CS_" "else CS_"
+C_TESTS += DeclareInCHeader
+CUSTARD_TESTS += DeclareInCHeaderOCaml
+FLAGS_DeclareInCHeader += --custard_entry DeclareInCHeader.rooted
+CEXTRA_DeclareInCHeader = DeclareInCHeader_stubs.c
+CHERRY_TESTS += DeclareInCHeaderCherry
+CEXTRA_DeclareInCHeaderCherry = DeclareInCHeaderCherry_stubs.c
+CHGREP_DeclareInCHeader += "extern DeclareInCHeader_pair DeclareInCHeader_swap(DeclareInCHeader_pair);"
+CHGREP_DeclareInCHeader += "extern uint32_t header_named(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeader_erased(uint32_t);"
+CHGREP_DeclareInCHeader += "extern void DeclareInCHeader_tick(void);"
+CHGREP_DeclareInCHeader += "extern const char * DeclareInCHeader_label(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeader_rooted(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeaderIface_ping(uint32_t);"
+CHNOGREP_DeclareInCHeader += "DeclareInCHeader_private_hook"
+CNOGREP_DeclareInCHeader += "DeclareInCHeader_unreachable"
 C_TESTS += Rotate
 KRML_TESTS += Rotate
 # The mask is the whole point of the rule, so the C is pinned as well as run:
@@ -538,7 +557,7 @@ CNOGREP_CVarArity = "CVarArity_e(a);"
 # the leftover arrow in the declared result, so the greps are on the
 # signature.
 C_TESTS += CAbbrevArity
-CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool(bool x, bool x1)"
+CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool_band(bool x, bool b)"
 CNOGREP_CAbbrevArity = "(*CAbbrevArity_mk_eq_test__bool"
 # Section 27.4: a saturated call to a forwarder is the identity on one of its
 # arguments, so the definition becomes a real function instead of a mutable
@@ -778,6 +797,77 @@ NOEGREP_TyFun4 = "Error 365"
 # target type language: it lands on TAny, which --custard_warn_any reports and
 # WARN_ANY escalates.  This is the positive test for section 5.6.
 REJECT_TESTS += WarnAny
+# Global rename_let names are exact, including private helpers, macros,
+# interfaces and specializations; no-prefix must not overwrite them.
+C_TESTS += GlobalRename
+FLAGS_GlobalRename += --custard_entry GlobalRename.add
+FLAGS_GlobalRename += --custard_entry GlobalRename.make
+FLAGS_GlobalRename += --custard_entry GlobalRename.stored
+FLAGS_GlobalRename += --custard_entry GlobalRename.limit
+FLAGS_GlobalRename += --custard_c_no_prefix GlobalRename
+CEXTRA_GlobalRename = GlobalRename_stubs.c
+CGREP_GlobalRename += "static uint32_t privateWorker("
+CGREP_GlobalRename += "static uint32_t CountDown("
+CGREP_GlobalRename += "static int32_t run_test("
+CGREP_GlobalRename += "InterfaceStep("
+CGREP_GlobalRename += "uint32_t privateWorker_1)"
+CHGREP_GlobalRename += "typedef struct ApiPair_s"
+CHGREP_GlobalRename += "uint32_t ApiAdd(ApiPair"
+CHGREP_GlobalRename += "extern uint32_t api_global;"
+CHGREP_GlobalRename += "\#define mixedCaseLimit"
+CGREP_GlobalRename += "uint32_t ExternalStep("
+CHNOGREP_GlobalRename += "privateWorker"
+CNOGREP_GlobalRename += "GlobalRename_add" "GlobalRename_stored"
+CNOGREP_GlobalRename += "GlobalRename_helper" "GlobalRename_countdown"
+CNOGREP_GlobalRename += "GlobalRenameIface_step" "MIXEDCASELIMIT"
+
+C_TESTS += GlobalRenameNoPrefix
+FLAGS_GlobalRenameNoPrefix += --custard_entry GlobalRenameNoPrefix.f --custard_entry ColA.f
+FLAGS_GlobalRenameNoPrefix += --custard_c_no_prefix GlobalRenameNoPrefix --custard_c_no_prefix ColA
+CGREP_GlobalRenameNoPrefix += "uint32_t different_f(" "uint32_t f("
+
+REJECT_TESTS += GlobalRenameCollision GlobalRenameSpecCollision
+CODE_GlobalRenameCollision = 374
+FLAGS_GlobalRenameCollision = --codegen C
+EGREP_GlobalRenameCollision = "same_name" "Two declarations cannot share one C name"
+CODE_GlobalRenameSpecCollision = 374
+FLAGS_GlobalRenameSpecCollision = --codegen C --custard_monomorphize_types true
+EGREP_GlobalRenameSpecCollision = "one_instance" "Two declarations cannot share one C name"
+
+REJECT_TESTS += GlobalRenameInvalid GlobalRenameDigit GlobalRenameKeyword
+CODE_GlobalRenameInvalid = 374
+FLAGS_GlobalRenameInvalid = --codegen C
+EGREP_GlobalRenameInvalid = "available C/C++ identifier"
+CODE_GlobalRenameDigit = 374
+FLAGS_GlobalRenameDigit = --codegen C
+EGREP_GlobalRenameDigit = "available C/C++ identifier"
+CODE_GlobalRenameKeyword = 374
+FLAGS_GlobalRenameKeyword = --codegen C
+EGREP_GlobalRenameKeyword = "available C/C++ identifier"
+
+REJECT_TESTS += GlobalRenameEmpty GlobalRenameExtern GlobalRenameImported
+CODE_GlobalRenameEmpty = 278
+FLAGS_GlobalRenameEmpty = --codegen C --warn_error @278
+EGREP_GlobalRenameEmpty = 'Ignoring ill-formed application of `rename_let`'
+CODE_GlobalRenameExtern = 374
+FLAGS_GlobalRenameExtern = --codegen C
+EGREP_GlobalRenameExtern = "custard_extern" "already specifies"
+CODE_GlobalRenameImported = 374
+FLAGS_GlobalRenameImported = --codegen C --custard_monomorphize_types true \
+  --custard_link $(OUTPUT_DIR)/GlobalRenameIface.cui
+EGREP_GlobalRenameImported = "InterfaceStep" "Two declarations cannot share one C name"
+
+REJECT_TESTS += GlobalRenameMain GlobalRenameTag GlobalRenameCppKeyword
+CODE_GlobalRenameMain = 374
+FLAGS_GlobalRenameMain = --codegen C
+EGREP_GlobalRenameMain = "available C/C++ identifier"
+CODE_GlobalRenameCppKeyword = 374
+FLAGS_GlobalRenameCppKeyword = --codegen C
+EGREP_GlobalRenameCppKeyword = "available C/C++ identifier"
+CODE_GlobalRenameTag = 374
+FLAGS_GlobalRenameTag = --codegen C --custard_entry_module GlobalRenameTag
+EGREP_GlobalRenameTag = "GLOBALRENAMETAG_TAG" "Two declarations cannot share one C name"
+
 # Section 6: the direct-to-C backend has no representation for an unbounded
 # Prims.int, and none for a closure.  Both must be diagnosed, not mistranslated.
 # Sections 31.2 and 31.3.  Round 35 twice reported error 368 as unactionable:
@@ -946,6 +1036,17 @@ NOEGREP_ExistChain += "please report it"
 # written -- so without the report the author has configured nothing and has
 # no way to tell.  The test is the diagnostic; the program itself is fine.
 REJECT_TESTS += AttrPos
+REJECT_TESTS += DeclareInCHeaderInvalid
+CODE_DeclareInCHeaderInvalid = 371
+FLAGS_DeclareInCHeaderInvalid += --codegen C --custard_monomorphize_types true
+FLAGS_DeclareInCHeaderInvalid += --custard_entry DeclareInCHeaderInvalid.abstract_type
+EGREP_DeclareInCHeaderInvalid += "custard_declare_in_c_header"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.definition"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.value"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.abstract_type"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.supplied"
+EGREP_DeclareInCHeaderInvalid += "parameter x of" "DeclareInCHeaderInvalid.binder"
+EGREP_DeclareInCHeaderInvalid += "prototype is supplied by an external header"
 CODE_AttrPos = 371
 FLAGS_AttrPos += --codegen C --custard_monomorphize_types true
 EGREP_AttrPos += "custard_opaque\] on the field contents of AttrPos.Box"
@@ -1043,6 +1144,12 @@ EGREP_FieldAttr = "on the field pimpl_type"
 SUBDIRS += plugin
 
 include $(FSTAR_ROOT)/mk/test.mk
+
+all: $(OUTPUT_DIR)/static-header.checked
+$(OUTPUT_DIR)/static-header.checked: $(addprefix $(CACHE_DIR)/, StaticHeader.fst.checked StaticHeaderOther.fst.checked StaticHeaderCompare.fst.checked StaticHeaderApp.fst.checked StaticHeaderReject.fst.checked StaticHeaderReuse.fst.checked StaticHeader_hidden.fst.checked StaticHeaderReuseApp.fst.checked) $(FSTAR_EXE) staticheader.py StaticHeader_stubs.h StaticHeader_stubs.c StaticHeader_user.c StaticHeader_user.cpp
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 staticheader.py $(OUTPUT_DIR)/static-header -- $(FSTAR)
+	$(Q)touch $@
 
 # Section 62.1.  Finding karamel by name on the PATH is what a dev tree
 # happens to allow and what CI does not: CI never installs krml onto the
@@ -1449,6 +1556,22 @@ $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx $$(CEXTRA_$$*)
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -I$(OUTPUT_DIR) -x c $< $(CEXTRA_$*) -o $@
 
+all: $(OUTPUT_DIR)/DeclareInCHeader.header-linked
+$(OUTPUT_DIR)/DeclareInCHeader.header-linked: $(OUTPUT_DIR)/DeclareInCHeader.dcexe DeclareInCHeader_client.cpp DeclareInCHeader_stubs.c
+	$(Q)grep -q '^extern uint32_t DeclareInCHeader_private_hook(uint32_t);' $(OUTPUT_DIR)/DeclareInCHeader.dc
+	$(Q)test "$$(grep -c '^extern .*;' $(OUTPUT_DIR)/DeclareInCHeader.dc)" = 1
+	$(Q)test "$$(grep -c '^extern uint32_t header_named(uint32_t);' $(OUTPUT_DIR)/DeclareInCHeader.h)" = 1
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -Dmain=declare_header_generated_main \
+	  -x c -c $(OUTPUT_DIR)/DeclareInCHeader.dc -o $(OUTPUT_DIR)/DeclareInCHeader.generated.o
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) \
+	  -c DeclareInCHeader_stubs.c -o $(OUTPUT_DIR)/DeclareInCHeader.stubs.o
+	$(Q)$(CXX) -std=c++17 -Wall -Wextra -Werror -I$(OUTPUT_DIR) DeclareInCHeader_client.cpp \
+	  $(OUTPUT_DIR)/DeclareInCHeader.generated.o $(OUTPUT_DIR)/DeclareInCHeader.stubs.o \
+	  -o $(OUTPUT_DIR)/DeclareInCHeader.client
+	$(Q)$(OUTPUT_DIR)/DeclareInCHeader.dcexe
+	$(Q)$(OUTPUT_DIR)/DeclareInCHeader.client
+	$(Q)touch $@
+
 # Section 47.1.  Every generated unit is also compiled as C++.
 #
 # Not because Custard targets C++, but because CUDA is C++ and a generated
@@ -1597,6 +1720,15 @@ NOGREP_SepApp += "type sepLib_named"
 GREP_SepApp  += "SepLib.sepLib_describe"
 GREP_SepApp  += "SepLib.SepLib_Rect"
 
+$(OUTPUT_DIR)/foreignbindings.ran: foreignbindings.py $(wildcard foreign-bindings/*) $(FSTAR_EXE)
+	$(call msg, "FOREIGN-BINDINGS", CUIs)
+	@mkdir -p $(OUTPUT_DIR)/foreignbindings
+	$(Q)python3 foreignbindings.py --fstar '$(FSTAR)' \
+	  --out $(OUTPUT_DIR)/foreignbindings --cc '$(CC)' --cxx '$(CXX)'
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/foreignbindings.ran
+
 # Section 42: separate compilation for C.  The same shape as SepLib/SepApp
 # above and a different set of assertions, because C is where the questions
 # were: what a unit offers (42.1), what a downstream unit may not define twice
@@ -1682,6 +1814,94 @@ $(OUTPUT_DIR)/NoPrefApp.ran: $(OUTPUT_DIR)/NoPrefLib.c $(OUTPUT_DIR)/NoPrefApp.c
 	$(Q)touch $@
 
 all: $(OUTPUT_DIR)/NoPrefApp.ran
+
+# #4771.  A wrapper that forwards its own parameters to a linked function is
+# eta-reduced to a partial application, and has to be expanded back using the
+# arity the linked unit's interface records.  Before the fix both wrappers
+# were rejected with Error 368 ("the partial application of ...").
+$(OUTPUT_DIR)/TailLinkLib.cui: $(CACHE_DIR)/TailLinkLib.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", TailLinkLib)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true --custard_unit TailLinkLib \
+	  --custard_entry TailLinkLib.add --custard_entry TailLinkLib.between \
+	  --odir $(OUTPUT_DIR) TailLinkLib.fst
+
+$(OUTPUT_DIR)/TailLinkLib.c: $(OUTPUT_DIR)/TailLinkLib.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/TailLinkApp.c: $(CACHE_DIR)/TailLinkApp.fst.checked \
+                             $(OUTPUT_DIR)/TailLinkLib.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", TailLinkApp)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/TailLinkLib.cui \
+	  --custard_main TailLinkApp.main TailLinkApp.fst -o $@
+	$(Q)grep -qF -- "TailLinkLib_add(a, b)" $@ \
+	  || { echo "ERROR: TailLinkApp.add2 does not forward both arguments"; exit 1; }
+	$(Q)grep -qF -- "TailLinkLib_between(lo, x, hi)" $@ \
+	  || { echo "ERROR: TailLinkApp.in_range does not forward all arguments"; exit 1; }
+
+$(OUTPUT_DIR)/TailLinkApp.ran: $(OUTPUT_DIR)/TailLinkLib.c $(OUTPUT_DIR)/TailLinkApp.c
+	$(call msg, "CC", TailLinkApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  $(OUTPUT_DIR)/TailLinkLib.c $(OUTPUT_DIR)/TailLinkApp.c \
+	  -o $(OUTPUT_DIR)/TailLinkApp.exe
+	$(call msg, "RUN-C", TailLinkApp)
+	$(Q)$(OUTPUT_DIR)/TailLinkApp.exe
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/TailLinkApp.ran
+
+$(CACHE_DIR)/GlobalRenameApp.fst.checked: $(CACHE_DIR)/GlobalRenameIface.fst.checked
+$(CACHE_DIR)/GlobalRenameOCaml.fst.checked: $(CACHE_DIR)/GlobalRenameIface.fst.checked
+$(CACHE_DIR)/GlobalRename.fst.checked: $(CACHE_DIR)/GlobalRenameIface.fst.checked
+$(OUTPUT_DIR)/GlobalRenameImported.rejected: $(OUTPUT_DIR)/GlobalRenameIface.cui
+
+$(OUTPUT_DIR)/GlobalRenameIface.cui: $(CACHE_DIR)/GlobalRenameIface.fst.checked $(FSTAR_EXE)
+	$(call msg, "CUSTARD-UNIT-C", GlobalRenameIface)
+	@mkdir -p $(OUTPUT_DIR)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true --custard_unit GlobalRenameIface \
+	  --custard_entry GlobalRenameIface.step --odir $(OUTPUT_DIR) GlobalRenameIface.fst
+	$(Q)grep -qF "uint32_t InterfaceStep(" $(OUTPUT_DIR)/GlobalRenameIface.h
+
+$(OUTPUT_DIR)/GlobalRenameIface.c: $(OUTPUT_DIR)/GlobalRenameIface.cui $(FSTAR_EXE)
+	$(Q)test -f $@
+
+$(OUTPUT_DIR)/GlobalRenameApp.c: $(CACHE_DIR)/GlobalRenameApp.fst.checked \
+                               $(OUTPUT_DIR)/GlobalRenameIface.cui $(FSTAR_EXE)
+	$(call msg, "CUSTARD-LINK-C", GlobalRenameApp)
+	$(FSTAR) --codegen C $(WARN_ANY) \
+	  --custard_monomorphize_types true \
+	  --custard_link $(OUTPUT_DIR)/GlobalRenameIface.cui \
+	  --custard_main GlobalRenameApp.main GlobalRenameApp.fst -o $@
+	$(Q)grep -qF "InterfaceStep(41)" $@
+	$(Q)! grep -qF "GlobalRenameIface_step" $@
+
+$(OUTPUT_DIR)/GlobalRenameApp.ran: $(OUTPUT_DIR)/GlobalRenameIface.c $(OUTPUT_DIR)/GlobalRenameApp.c
+	$(call msg, "CC", GlobalRenameApp)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  $(OUTPUT_DIR)/GlobalRenameIface.c $(OUTPUT_DIR)/GlobalRenameApp.c \
+	  -o $(OUTPUT_DIR)/GlobalRenameApp.exe
+	$(call msg, "RUN-C", GlobalRenameApp)
+	$(Q)$(OUTPUT_DIR)/GlobalRenameApp.exe
+	$(Q)touch $@
+
+# Compile the generated source as C and its consumer as C++, so the header's
+# exact names and C linkage are checked by the linker, not just by greps.
+$(OUTPUT_DIR)/GlobalRename.cxxran: $(OUTPUT_DIR)/GlobalRename.dc GlobalRename_stubs.c
+	$(call msg, "CC/CXX", GlobalRename)
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c \
+	  -c $< -o $(OUTPUT_DIR)/GlobalRename.o
+	$(Q)$(CXX) -std=c++17 -Wall -Wextra -Werror -I$(OUTPUT_DIR) -x c++ \
+	  -c GlobalRename_stubs.c -o $(OUTPUT_DIR)/GlobalRename_stubs.o
+	$(Q)$(CXX) $(OUTPUT_DIR)/GlobalRename.o $(OUTPUT_DIR)/GlobalRename_stubs.o \
+	  -o $(OUTPUT_DIR)/GlobalRename_cxx.exe
+	$(Q)$(OUTPUT_DIR)/GlobalRename_cxx.exe
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/GlobalRenameApp.ran $(OUTPUT_DIR)/GlobalRename.cxxran
 
 # Section 116.  Three units, the middle one's global computed from the first
 # one's.  The generated [main] has to call the initializers in --custard_link
@@ -2356,6 +2576,8 @@ FLAGS_AnyCond = --warn_error -367
 # that to an error would make the cases unwritable.
 FLAGS_SplitAny = --warn_error -367
 FLAGS_RealizedField = --warn_error -367
+# A class over a type constructor, which no target type can name.
+FLAGS_CherryInlineDyn = --warn_error -367
 # Section 116.  The exception payload's dependent field is the [any] under
 # test; escalating it would make the case unwritable.
 FLAGS_AnyException = --warn_error -367
@@ -2810,6 +3032,40 @@ GREP_NoUnfold += "type noUnfold_byte_pair = (FStar_UInt8.t) noUnfold_pair"
 GREP_NoUnfold += "let noUnfold_swap (p : noUnfold_byte_pair) : noUnfold_byte_pair"
 NOGREP_NoUnfold += "noUnfold_flag_pair"
 
+C_TESTS += CNoUnfold
+FLAGS_CNoUnfold = --custard_entry CNoUnfold.swap \
+                 --custard_entry CNoUnfold.swapf \
+                 --custard_entry CNoUnfold.increment \
+                 --custard_entry CNoUnfold.apply \
+                 --custard_entry CNoUnfold.swap_named \
+                 --custard_entry CNoUnfold.cli_identity \
+                 --custard_entry CNoUnfoldIface.identity \
+                 --custard_no_unfold CNoUnfold.cli_word
+CHGREP_CNoUnfold += "typedef uint32_t CNoUnfold_word;"
+CHGREP_CNoUnfold += "typedef CNoUnfold_word (*CNoUnfold_callback)(CNoUnfold_word);"
+CHGREP_CNoUnfold += "CNoUnfold_byte_pair CNoUnfold_swap(CNoUnfold_byte_pair p);"
+CHGREP_CNoUnfold += "CNoUnfold_word CNoUnfold_apply(CNoUnfold_callback f, CNoUnfold_word eta);"
+CHGREP_CNoUnfold += "typedef uint16_t CNoUnfold_cli_word;"
+CHGREP_CNoUnfold += "CNoUnfold_cli_word CNoUnfold_cli_identity(CNoUnfold_cli_word x);"
+CHGREP_CNoUnfold += "typedef uint32_t CNoUnfoldIface_word;"
+CHGREP_CNoUnfold += "CNoUnfoldIface_word CNoUnfoldIface_identity(CNoUnfoldIface_word x);"
+CHGREP_CNoUnfold += "typedef CNoUnfold_pair__uint32 CNoUnfold_named_pair__uint32;"
+CHGREP_CNoUnfold += "CNoUnfold_named_pair__uint32 CNoUnfold_swap_named(CNoUnfold_named_pair__uint32 p);"
+CNOGREP_CNoUnfold += "CNoUnfold_flag_pair" "CNoUnfold_unused_word"
+
+$(OUTPUT_DIR)/CNoUnfold.dc: $(CACHE_DIR)/CNoUnfoldIface.fst.checked
+
+REJECT_TESTS += NoUnfoldAttrValue NoUnfoldAttrBinder NoUnfoldAttrType
+FLAGS_NoUnfoldAttrValue = --codegen C --warn_error @371
+CODE_NoUnfoldAttrValue = 371
+EGREP_NoUnfoldAttrValue = "not a type abbreviation"
+FLAGS_NoUnfoldAttrBinder = --codegen C --warn_error @371
+CODE_NoUnfoldAttrBinder = 371
+EGREP_NoUnfoldAttrBinder = "on the parameter x"
+FLAGS_NoUnfoldAttrType = --codegen C --warn_error @371
+CODE_NoUnfoldAttrType = 371
+EGREP_NoUnfoldAttrType = "not a type abbreviation"
+
 CUSTARD_TESTS += ErasableEff
 # --custard_main alone would root only what [main] reaches, and what this test
 # is about is precisely the definitions that reach nothing because they were
@@ -2966,7 +3222,8 @@ CNOPAIR_DevClosure += "/*EXCL*/@static uint32_t DevClosure_gk" \
 # C compiler is the assertion that nothing escaped the guard.
 C_TESTS += DevGuard
 CGREP_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)" "\#else" "\#if 1" \
-                  "DevGuard_helper__error_copy_escaped_its_guard("
+                  "DevGuard_helper__error_copy_escaped_its_guard(" \
+                  "    (void)x;" "    (void)z;"
 CPAIR_DevGuard += "\#if defined(CUSTARD_TEST_NO_SUCH_ARCH)@\#error seed escaped"
 # A flag used as anything but the whole condition of an [if].
 REJECT_TESTS += DevGuardBad
@@ -3500,6 +3757,15 @@ $(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryMoveFields.chgrep
 
+# Cherry: a record update changes a unique record in place instead of
+# building a new cell.
+$(CHERRY_DIR)/CherryRecordUpdate.chgrep: $(CHERRY_DIR)/CherryRecordUpdate.chc
+	$(Q)for f in set_name push; do \
+	  sed -n "/^static .* CherryRecordUpdate_$$f(.*{$$/,/^}/p" $< > $@.tmp; \
+	  grep -q 'cherry_unshare_' $@.tmp && ! grep -q 'cherry_new_CherryRecordUpdate_env' $@.tmp \
+	    || { echo "ERROR: CherryRecordUpdate_$$f does not update in place"; exit 1; }; done
+	$(Q)rm -f $@.tmp; touch $@
+all: $(CHERRY_DIR)/CherryRecordUpdate.chgrep
 # Cherry: a partial application raises nothing, so it is not tested.
 $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	$(Q)! sed -n '/^static .* CherryPap_make(.*{$$/,/^}/p' $< | grep -q 'CHERRY_EXN_PENDING' \
@@ -3507,10 +3773,42 @@ $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryPap.chgrep
 
+# Cherry: [@@custard_inline] combinators are inlined, so a lambda given to
+# one is no closure, and an eta-reduced one becomes a direct call.
+$(CHERRY_DIR)/CherryInlineHO.chgrep: $(CHERRY_DIR)/CherryInlineHO.chc
+	$(Q)! sed -n '/^static .* CherryInlineHO_add(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_\|CherryInlineHO_apply_plus_one' \
+	  || { echo "ERROR: CherryInlineHO_add builds or applies a closure"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryInlineHO_has_above(.*{$$/,/^}/p' $< | grep -q 'cherry_apply_\|CherryInlineHO_some' \
+	  || { echo "ERROR: CherryInlineHO_has_above does not call existsb directly"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryInlineHO_sum(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_\|bind' \
+	  || { echo "ERROR: CherryInlineHO_sum builds or applies a closure"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryInlineHO.chgrep
+
+# Cherry: a let-bound lambda that is only ever called is no closure.
+$(CHERRY_DIR)/CherryLocalFn.chgrep: $(CHERRY_DIR)/CherryLocalFn.chc
+	$(Q)! sed -n '/^static .* CherryLocalFn_use_twice(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryLocalFn_use_twice builds or applies a closure"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryLocalFn_use_twice_let(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryLocalFn_use_twice_let builds or applies a closure"; exit 1; }
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherryLocalFn.chgrep
+
+# [@@@monomorphize] on a function binder (custard.md, 3.2d): a lambda or a partial
+# application passed to the function builds no closure.
+$(CHERRY_DIR)/CherrySpecializeHO.chgrep: $(CHERRY_DIR)/CherrySpecializeHO.chc
+	$(Q)for f in add_all shift_all scale_all deep rebinds; do \
+	  ! sed -n "/^static .* CherrySpecializeHO_$$f(.*{$$/,/^}/p" $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherrySpecializeHO_$$f builds or applies a closure"; exit 1; }; done
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
+
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryPap
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
@@ -3555,6 +3853,23 @@ CODE_CherryDynEq   = 368
 EGREP_CherryDynEq += "an equality test at FStar.Dyn.dyn, in CherryDynEq.main"
 EGREP_CherryDynEq += "field c of constructor W of"
 EGREP_CherryDynEq += "then field d of CherryDynEq.cell"
+
+# A polymorphic method of a runtime dictionary that builds a polymorphic
+# datatype is refused rather than given a layout at a type variable.
+REJECT_TESTS += CherryDynPolyMethod
+FLAGS_CherryDynPolyMethod  = --codegen Cherry --custard_monomorphize_types true
+CODE_CherryDynPolyMethod   = 399
+EGREP_CherryDynPolyMethod += "FStar.Pervasives.Native.option<'a"
+
+# A local [let rec] that binds a type is lifted once per instantiation.
+CHERRY_TESTS += CherryLocalPolyRec
+$(CHERRY_DIR)/CherryLocalPolyRec.chgrep: $(CHERRY_DIR)/CherryLocalPolyRec.chc
+	$(Q)test $$(grep -cE '^static .* CherryLocalPolyRec_keep__filter.*\(.*\{$$' $<) -eq 2 \
+	  || { echo "ERROR: CherryLocalPolyRec's filter' is not lifted once per type"; exit 1; }
+	$(Q)! grep -qE 'list__[a-z]+_[0-9]+\b' $< \
+	  || { echo "ERROR: CherryLocalPolyRec instantiates list at a type variable"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryLocalPolyRec.chgrep
 
 # Separate compilation under Cherry: a library unit and an application linked
 # against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
@@ -3622,6 +3937,7 @@ all: $(addprefix $(CHERRY_SPLIT_DIR)/, $(addsuffix .chsplit, $(CHERRY_SPLIT_TEST
 # cover yet.  This one hands a Prims.string to hand-written C expecting a
 # [const char *]:
 CHERRY_C_SKIP += PatStr
+CHERRY_C_SKIP += DeclareInCHeader
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \

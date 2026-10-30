@@ -98,6 +98,7 @@ let eq_inj r1 r2 =
   | TEQ.Unknown, _
   | _, TEQ.Unknown -> TEQ.Unknown
 
+[@@FStar.Attributes.custard_inline]
 let eq_and f (g: unit -> ML TEQ.eq_result) : ML TEQ.eq_result =
   match f with
   | TEQ.Equal -> g()

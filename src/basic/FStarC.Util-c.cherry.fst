@@ -343,6 +343,7 @@ let trace_of_exn _ = ""
 
 let stack_dump () = ""
 
+[@@FStar.Attributes.custard_inline]
 let finally h f =
   let r = try f () with | e -> h (); raise e in
   h ();
@@ -766,8 +767,10 @@ let choose_map #a #b #c f state s =
   in
   aux state [] s
 
+[@@FStar.Attributes.custard_inline]
 let for_all f l = L.for_all f l
 
+[@@FStar.Attributes.custard_inline]
 let for_some f l = L.existsb f l
 
 let forall_exists rel l1 l2 = for_all (fun x -> for_some (rel x) l2) l1
@@ -880,6 +883,7 @@ let monitor_wait _ = ()
 let monitor_pulse _ = ()
 
 (* This function only protects against signals *)
+[@@FStar.Attributes.custard_inline]
 private
 let atomically' (#a:Type) (f:unit -> ML a) : ML a =
   finally
@@ -897,6 +901,7 @@ let current_tid _ = 0
 
 let sleep n = c_sleep_ms n
 
+[@@FStar.Attributes.custard_inline]
 let atomically f = atomically' f
 
 let spawn _ = unsupported "spawn"

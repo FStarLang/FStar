@@ -300,6 +300,19 @@ let name_of_decl (d:decl) : name =
   | DExn e -> e.de_name
   | DModule m -> m.dm_name
 
+(* A polynomial hash modulo the Mersenne prime 2^61 - 1, truncated to 40
+   bits.  Collisions are resolved by whoever allocates the name, which numbers
+   them; at 40 bits that does not happen in practice. *)
+let stable_hash (s:string) : ML string =
+  let p = 2305843009213693951 in
+  let h = List.fold_left (fun h c -> (h * 1099511628211 + BU.int_of_char c + 1) % p)
+                         5381 (String.list_of_string s) in
+  let rec hex (n:int) (k:int) : ML string =
+    if k = 0 then "" else
+    let d = n % 16 in
+    hex (n / 16) (k - 1) ^ String.substring "0123456789abcdef" d 1 in
+  hex (h % 1099511627776) 10
+
 (* Section 69. *)
 let extern_template_of_flags (fs : list flag) : ML (option (list tmpl_piece)) =
   match List.tryPick (fun f -> match f with
@@ -450,9 +463,11 @@ let rec is_droppable (e:expr) : ML bool =
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
+  | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnPending }, _)
-  | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _) -> false
+  | EOp ({ po_op = ExnTake }, _) | EOp ({ po_op = ExnExit }, _)
+  | EOp ({ po_op = ClosureNew }, _) -> false
   | EOp (_, es) -> all es
   (* Everything else is deletable exactly when all of it is.  A branch's
      guard and body are children, and its pattern binds nothing that
@@ -514,11 +529,13 @@ let op_to_string (o:prim_op) : string =
    | RcInc -> "rc_inc" | RcDec -> "rc_dec"
    | RefNew -> "ref_new" | RefGet -> "ref_get" | RefSet -> "ref_set"
    | Reset _ -> "reset" | Reuse _ -> "reuse" | ResetFree -> "reset_free"
+   | Update _ -> "update"
    | IArr f -> "iarray_" ^ f
    | Dyn f -> "dyn_" ^ f
    | PBuf f -> "pbuf_" ^ f
    | ExnRaise -> "exn_raise" | ExnPending -> "exn_pending"
-   | ExnTake -> "exn_take" | ExnExit -> "exn_exit") ^
+   | ExnTake -> "exn_take" | ExnExit -> "exn_exit"
+   | ClosureNew -> "closure_new" | ClosureCall -> "closure_call") ^
   (match o.po_ty with
    | None -> ""
    | Some (PInt sw) -> width_to_string sw
@@ -737,6 +754,7 @@ let flag_to_doc (f:flag) : ML document =
   | CIfDef -> text "c_ifdef"
   | CReference -> text "c_reference"
   | CInline -> text "c_inline"
+  | CName s -> text ("c_name " ^ s)
   | Deriving s -> text ("deriving " ^ s)
   | Realized -> text "realized"
   | NoUnfold -> text "no_unfold"
@@ -757,6 +775,7 @@ let flag_to_doc (f:flag) : ML document =
             match b with Some true -> "o" | Some false -> "b" | None -> "?") fs) ^ "]")
   | CherryConv fs ->
     text ("cherry_conv[" ^ String.concat "" (List.map (fun b -> if b then "o" else "b") fs) ^ "]")
+  | DeclareInCHeader -> text "declare_in_c_header"
 
 let flags_to_doc (fs : list flag) : ML document =
   match fs with

@@ -150,6 +150,9 @@ val link_headers : state -> ML (list string)
 (** See {!Unit.link_no_prefix}. *)
 val link_no_prefix : state -> ML (list string)
 
+(** See {!Unit.link_c_names}. *)
+val link_c_names : state -> ML (list (string & list (string & string)))
+
 (** The global initializer of each linked unit, in link order; see
     {!Unit.link_inits}. *)
 val link_inits : state -> ML (list string)
@@ -160,6 +163,9 @@ val link_inits : state -> ML (list string)
     key its own request computes, and that key is a property of the F* term,
     not of any name Custard invented for it (section 12.3). *)
 val exported_keys : state -> ML (list (string & string))
+
+(** Adopt non-owning bindings only for remaining external holes, after layout. *)
+val apply_foreign_bindings : state -> list (string & string) -> program -> ML program
 
 (** See {!FStarC.Custard.Loader.loaded_digests}. *)
 val loaded_digests : state -> ML (list (string & string))
