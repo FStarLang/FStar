@@ -67,6 +67,10 @@ val is_send_across_pts_to_mask #a x f s mask : is_send_across (visibility_of_arr
 
 instance val is_send_pts_to_mask #a r #p n m : is_send (pts_to_mask #a r #p n m)
 
+instance val placeless_empty_pts_to_mask (#t: Type u#a) (arr: array t)
+  (f: perm) (v: Seq.seq (option t))
+  : placeless (pts_to_mask arr #f v (fun _ -> False))
+
 val pts_to_mask_timeless (#a:Type u#a) (x:array a) (p:perm) s mask
   : Lemma (timeless (pts_to_mask x #p s mask))
           [SMTPat (timeless (pts_to_mask x #p s mask))]
@@ -221,6 +225,14 @@ val gsub_null #t (arr: array t) (i: nat) (j: nat { i <= j /\ j <= length arr}) :
 val length_gsub #t arr i j : Lemma (length (gsub #t arr i j) == j - i) [SMTPat (length (gsub arr i j))]
 val offset_of_gsub #t arr i j : Lemma (offset_of (gsub #t arr i j) == offset_of arr + i) [SMTPat (offset_of (gsub arr i j))]
 val base_of_gsub #t arr i j : Lemma (base_of (gsub #t arr i j) == base_of arr) [SMTPat (base_of (gsub arr i j))]
+
+val loc_id_of_array_gsub #t arr i j
+  : Lemma (loc_id_of_array (gsub #t arr i j) == loc_id_of_array arr)
+          [SMTPat (loc_id_of_array (gsub arr i j))]
+
+val visibility_of_array_gsub #t arr i j
+  : Lemma (visibility_of_array (gsub #t arr i j) == visibility_of_array arr)
+          [SMTPat (visibility_of_array (gsub arr i j))]
 
 val same_base_null (#t: Type u#a) (x y: array t)
   : Lemma (requires base_of x == base_of y)

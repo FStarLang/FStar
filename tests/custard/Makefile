@@ -468,6 +468,21 @@ C_TESTS += CExternStmt
 FLAGS_CExternStmt = --custard_entry_module CExternStmt
 CGREP_CExternStmt = "if (a) {" "else if (x == CEXTERNSTMT_B) {"
 CNOGREP_CExternStmt = "if (a) CS_" "else CS_"
+C_TESTS += DeclareInCHeader
+CUSTARD_TESTS += DeclareInCHeaderOCaml
+FLAGS_DeclareInCHeader += --custard_entry DeclareInCHeader.rooted
+CEXTRA_DeclareInCHeader = DeclareInCHeader_stubs.c
+CHERRY_TESTS += DeclareInCHeaderCherry
+CEXTRA_DeclareInCHeaderCherry = DeclareInCHeaderCherry_stubs.c
+CHGREP_DeclareInCHeader += "extern DeclareInCHeader_pair DeclareInCHeader_swap(DeclareInCHeader_pair);"
+CHGREP_DeclareInCHeader += "extern uint32_t header_named(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeader_erased(uint32_t);"
+CHGREP_DeclareInCHeader += "extern void DeclareInCHeader_tick(void);"
+CHGREP_DeclareInCHeader += "extern const char * DeclareInCHeader_label(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeader_rooted(uint32_t);"
+CHGREP_DeclareInCHeader += "extern uint32_t DeclareInCHeaderIface_ping(uint32_t);"
+CHNOGREP_DeclareInCHeader += "DeclareInCHeader_private_hook"
+CNOGREP_DeclareInCHeader += "DeclareInCHeader_unreachable"
 C_TESTS += Rotate
 KRML_TESTS += Rotate
 # The mask is the whole point of the rule, so the C is pinned as well as run:
@@ -542,7 +557,7 @@ CNOGREP_CVarArity = "CVarArity_e(a);"
 # the leftover arrow in the declared result, so the greps are on the
 # signature.
 C_TESTS += CAbbrevArity
-CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool(bool x, bool x1)"
+CGREP_CAbbrevArity = "bool CAbbrevArity_mk_eq_test__bool_band(bool x, bool b)"
 CNOGREP_CAbbrevArity = "(*CAbbrevArity_mk_eq_test__bool"
 # Section 27.4: a saturated call to a forwarder is the identity on one of its
 # arguments, so the definition becomes a real function instead of a mutable
@@ -1021,6 +1036,17 @@ NOEGREP_ExistChain += "please report it"
 # written -- so without the report the author has configured nothing and has
 # no way to tell.  The test is the diagnostic; the program itself is fine.
 REJECT_TESTS += AttrPos
+REJECT_TESTS += DeclareInCHeaderInvalid
+CODE_DeclareInCHeaderInvalid = 371
+FLAGS_DeclareInCHeaderInvalid += --codegen C --custard_monomorphize_types true
+FLAGS_DeclareInCHeaderInvalid += --custard_entry DeclareInCHeaderInvalid.abstract_type
+EGREP_DeclareInCHeaderInvalid += "custard_declare_in_c_header"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.definition"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.value"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.abstract_type"
+EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.supplied"
+EGREP_DeclareInCHeaderInvalid += "parameter x of" "DeclareInCHeaderInvalid.binder"
+EGREP_DeclareInCHeaderInvalid += "prototype is supplied by an external header"
 CODE_AttrPos = 371
 FLAGS_AttrPos += --codegen C --custard_monomorphize_types true
 EGREP_AttrPos += "custard_opaque\] on the field contents of AttrPos.Box"
@@ -1118,6 +1144,12 @@ EGREP_FieldAttr = "on the field pimpl_type"
 SUBDIRS += plugin
 
 include $(FSTAR_ROOT)/mk/test.mk
+
+all: $(OUTPUT_DIR)/static-header.checked
+$(OUTPUT_DIR)/static-header.checked: $(addprefix $(CACHE_DIR)/, StaticHeader.fst.checked StaticHeaderOther.fst.checked StaticHeaderCompare.fst.checked StaticHeaderApp.fst.checked StaticHeaderReject.fst.checked StaticHeaderReuse.fst.checked StaticHeader_hidden.fst.checked StaticHeaderReuseApp.fst.checked) $(FSTAR_EXE) staticheader.py StaticHeader_stubs.h StaticHeader_stubs.c StaticHeader_user.c StaticHeader_user.cpp
+	@mkdir -p $(OUTPUT_DIR)
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 staticheader.py $(OUTPUT_DIR)/static-header -- $(FSTAR)
+	$(Q)touch $@
 
 # Section 62.1.  Finding karamel by name on the PATH is what a dev tree
 # happens to allow and what CI does not: CI never installs krml onto the
@@ -1523,6 +1555,22 @@ $(OUTPUT_DIR)/CExternStmt.dcexe $(OUTPUT_DIR)/CExternStmt.dcxx: CExternStmt_stub
 $(OUTPUT_DIR)/%.dcexe: $(OUTPUT_DIR)/%.dc $(OUTPUT_DIR)/%.dcxx $$(CEXTRA_$$*)
 	$(call msg, "CC", $(basename $(notdir $@)))
 	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(CURDIR) -I$(OUTPUT_DIR) -x c $< $(CEXTRA_$*) -o $@
+
+all: $(OUTPUT_DIR)/DeclareInCHeader.header-linked
+$(OUTPUT_DIR)/DeclareInCHeader.header-linked: $(OUTPUT_DIR)/DeclareInCHeader.dcexe DeclareInCHeader_client.cpp DeclareInCHeader_stubs.c
+	$(Q)grep -q '^extern uint32_t DeclareInCHeader_private_hook(uint32_t);' $(OUTPUT_DIR)/DeclareInCHeader.dc
+	$(Q)test "$$(grep -c '^extern .*;' $(OUTPUT_DIR)/DeclareInCHeader.dc)" = 1
+	$(Q)test "$$(grep -c '^extern uint32_t header_named(uint32_t);' $(OUTPUT_DIR)/DeclareInCHeader.h)" = 1
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -Dmain=declare_header_generated_main \
+	  -x c -c $(OUTPUT_DIR)/DeclareInCHeader.dc -o $(OUTPUT_DIR)/DeclareInCHeader.generated.o
+	$(Q)$(CC) -std=c11 -Wall -Wextra -Werror -I$(OUTPUT_DIR) \
+	  -c DeclareInCHeader_stubs.c -o $(OUTPUT_DIR)/DeclareInCHeader.stubs.o
+	$(Q)$(CXX) -std=c++17 -Wall -Wextra -Werror -I$(OUTPUT_DIR) DeclareInCHeader_client.cpp \
+	  $(OUTPUT_DIR)/DeclareInCHeader.generated.o $(OUTPUT_DIR)/DeclareInCHeader.stubs.o \
+	  -o $(OUTPUT_DIR)/DeclareInCHeader.client
+	$(Q)$(OUTPUT_DIR)/DeclareInCHeader.dcexe
+	$(Q)$(OUTPUT_DIR)/DeclareInCHeader.client
+	$(Q)touch $@
 
 # Section 47.1.  Every generated unit is also compiled as C++.
 #
@@ -2528,6 +2576,8 @@ FLAGS_AnyCond = --warn_error -367
 # that to an error would make the cases unwritable.
 FLAGS_SplitAny = --warn_error -367
 FLAGS_RealizedField = --warn_error -367
+# A class over a type constructor, which no target type can name.
+FLAGS_CherryInlineDyn = --warn_error -367
 # Section 116.  The exception payload's dependent field is the [any] under
 # test; escalating it would make the case unwritable.
 FLAGS_AnyException = --warn_error -367
@@ -3730,13 +3780,35 @@ $(CHERRY_DIR)/CherryInlineHO.chgrep: $(CHERRY_DIR)/CherryInlineHO.chc
 	  || { echo "ERROR: CherryInlineHO_add builds or applies a closure"; exit 1; }
 	$(Q)! sed -n '/^static .* CherryInlineHO_has_above(.*{$$/,/^}/p' $< | grep -q 'cherry_apply_\|CherryInlineHO_some' \
 	  || { echo "ERROR: CherryInlineHO_has_above does not call existsb directly"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryInlineHO_sum(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_\|bind' \
+	  || { echo "ERROR: CherryInlineHO_sum builds or applies a closure"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryInlineHO.chgrep
+
+# Cherry: a let-bound lambda that is only ever called is no closure.
+$(CHERRY_DIR)/CherryLocalFn.chgrep: $(CHERRY_DIR)/CherryLocalFn.chc
+	$(Q)! sed -n '/^static .* CherryLocalFn_use_twice(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryLocalFn_use_twice builds or applies a closure"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryLocalFn_use_twice_let(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryLocalFn_use_twice_let builds or applies a closure"; exit 1; }
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherryLocalFn.chgrep
+
+# [@@@monomorphize] on a function binder (custard.md, 3.2d): a lambda or a partial
+# application passed to the function builds no closure.
+$(CHERRY_DIR)/CherrySpecializeHO.chgrep: $(CHERRY_DIR)/CherrySpecializeHO.chc
+	$(Q)for f in add_all shift_all scale_all deep rebinds; do \
+	  ! sed -n "/^static .* CherrySpecializeHO_$$f(.*{$$/,/^}/p" $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherrySpecializeHO_$$f builds or applies a closure"; exit 1; }; done
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryErasedClosure
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
@@ -3781,6 +3853,23 @@ CODE_CherryDynEq   = 368
 EGREP_CherryDynEq += "an equality test at FStar.Dyn.dyn, in CherryDynEq.main"
 EGREP_CherryDynEq += "field c of constructor W of"
 EGREP_CherryDynEq += "then field d of CherryDynEq.cell"
+
+# A polymorphic method of a runtime dictionary that builds a polymorphic
+# datatype is refused rather than given a layout at a type variable.
+REJECT_TESTS += CherryDynPolyMethod
+FLAGS_CherryDynPolyMethod  = --codegen Cherry --custard_monomorphize_types true
+CODE_CherryDynPolyMethod   = 399
+EGREP_CherryDynPolyMethod += "FStar.Pervasives.Native.option<'a"
+
+# A local [let rec] that binds a type is lifted once per instantiation.
+CHERRY_TESTS += CherryLocalPolyRec
+$(CHERRY_DIR)/CherryLocalPolyRec.chgrep: $(CHERRY_DIR)/CherryLocalPolyRec.chc
+	$(Q)test $$(grep -cE '^static .* CherryLocalPolyRec_keep__filter.*\(.*\{$$' $<) -eq 2 \
+	  || { echo "ERROR: CherryLocalPolyRec's filter' is not lifted once per type"; exit 1; }
+	$(Q)! grep -qE 'list__[a-z]+_[0-9]+\b' $< \
+	  || { echo "ERROR: CherryLocalPolyRec instantiates list at a type variable"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryLocalPolyRec.chgrep
 
 # Separate compilation under Cherry: a library unit and an application linked
 # against it, as SepLibC/SepAppC are for C.  Each unit has its own counting
@@ -3848,6 +3937,7 @@ all: $(addprefix $(CHERRY_SPLIT_DIR)/, $(addsuffix .chsplit, $(CHERRY_SPLIT_TEST
 # cover yet.  This one hands a Prims.string to hand-written C expecting a
 # [const char *]:
 CHERRY_C_SKIP += PatStr
+CHERRY_C_SKIP += DeclareInCHeader
 
 ALL_TEST_NAMES := $(CUSTARD_TESTS) $(REJECT_TESTS) $(ROOT_TESTS) \
                   $(C_TESTS) $(CXX_TESTS) $(CHERRY_TESTS) $(KRML_TESTS) $(RUSTREJECT_TESTS) $(RUST_TESTS) \

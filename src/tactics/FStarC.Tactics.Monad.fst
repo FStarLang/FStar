@@ -91,6 +91,7 @@ let get : tac proofstate =
 let traise e =
   fun _ -> raise e
 
+[@@FStar.Attributes.custard_inline]
 let do_log ps (f : unit -> ML unit) : ML unit =
   if ps.tac_verb_dbg then
     f ()
@@ -327,6 +328,7 @@ let wrap_err (pref:string) (t : tac 'a) : tac 'a =
 let mlog (f : unit -> ML unit) (cont : unit -> ML (tac 'a)) : tac 'a =
   bind (log f) (fun _ -> cont ())
 
+[@@FStar.Attributes.custard_inline]
 let if_verbose_tac (f : unit -> ML (tac unit)) : tac unit =
   bind get (fun ps ->
   if ps.tac_verb_dbg

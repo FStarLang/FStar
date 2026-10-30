@@ -234,6 +234,12 @@ val classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term
                  (demanded:list int)
   : ML (list bclass)
 
+(** Section 3.2d: which binders are marked [@@@monomorphize] and have a
+    function type, read from the same binders {!classify_def} classifies.
+    A call site may pass such a binder a bare variable, which is then passed
+    at run time instead of being rejected. *)
+val soft_binders (env:TcEnv.env) (t:typ) (def:option term) : ML (list bool)
+
 (** True if any binder is [Mono], i.e. uses of this definition have to be
     specialized. *)
 val has_mono (cs:list bclass) : ML bool

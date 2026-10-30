@@ -160,16 +160,18 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         let h_result = t_head_of result in
         let open FStarC.Pprint in
         let maybe_admit_tip : document =
-          (* Use the monadic visitor to check whether the reduced head
-          contains an admit, which is a common error *)
-          let r : option term =
-            Syntax.VisitM.visitM_term false (fun t ->
-              let tn = t.n in
-              match tn with
-              | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> None
-              | _ -> Some t) h_result
+          (* Check whether the reduced head contains an admit, which is a
+          common error.  Not with [VisitM] at the [option] monad: Cherry
+          cannot compile a polymorphic monad passed as a runtime dictionary
+          (error 399). *)
+          let found = mk_ref false in
+          let _ = Syntax.Visit.visit_term false (fun t ->
+              (match t.n with
+               | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> found := true
+               | _ -> ());
+              t) h_result
           in
-          if None? r
+          if !found
           then doc_of_string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
           else empty
         in

@@ -146,6 +146,20 @@ let key_norm_steps : list TcEnv.step = TcEnv.Primops :: norm_steps_base
 let subst_norm_steps : list TcEnv.step =
   TcEnv.SafePrimops :: TcEnv.Weak :: TcEnv.HNF :: norm_steps_base
 
+(* Section 3.2d.  A [Mono] argument of function type is keyed as written:
+   a lambda, or a top-level function applied to some of its arguments.  So
+   nothing is unfolded.  Unfolding the head of [abstr vars] would put
+   [abstr]'s body into the key, and with it every call [abstr] makes to a
+   specializing function, each one keyed by a larger term than the last --
+   specialization would never reach a fixed point. *)
+let rec no_delta (steps:list TcEnv.step) : list TcEnv.step =
+  match steps with
+  | [] -> []
+  | TcEnv.UnfoldUntil _ :: steps -> no_delta steps
+  | s :: steps -> s :: no_delta steps
+let soft_key_norm_steps : list TcEnv.step = no_delta key_norm_steps
+let soft_subst_norm_steps : list TcEnv.step = no_delta subst_norm_steps
+
 (* -------------------------------------------------------------------- *)
 (* The key printer (section 12.3)                                       *)
 (* -------------------------------------------------------------------- *)
@@ -961,6 +975,7 @@ let compile_time_demanded (st:state) (t:term) : ML (list int) =
 let decl_only_attrs : list (Ident.lident & string) = [
   PC.custard_extern_attr,          "custard_extern";
   PC.custard_c_header_attr,        "custard_c_header";
+  PC.custard_declare_in_c_header_attr, "custard_declare_in_c_header";
   PC.custard_opaque_attr,          "custard_opaque";
   PC.custard_no_unfold_attr,       "custard_no_unfold";
   PC.custard_no_monomorphize_attr, "custard_no_monomorphize";
@@ -1133,6 +1148,9 @@ let attr_home (nm:string) : string =
   | "custard_c_header" ->
     "It names the C header that declares an external symbol, so it goes \
      beside the [@@custard_extern] it configures."
+  | "custard_declare_in_c_header" ->
+    "It exports an external function's prototype to the generated C header, \
+     so it goes on an [assume val] function or an interface-only [val]."
   | "custard_opaque" ->
     "It fixes a *type's* representation elsewhere, so it goes on the type."
   | "custard_no_unfold" ->
@@ -1167,6 +1185,26 @@ let report_attr (nm:string) (site:string) (why:string) : ML unit =
     text ("[@@" ^ nm ^ "] on " ^ site ^ " has no effect.");
     text why;
     text (attr_home nm) ]
+
+let with_c_header_declaration (l:Ident.lident) (se:sigelt) (d:decl) : ML decl =
+  let backend = Options.codegen_name () in
+  if (backend <> "C" && backend <> "Cherry") ||
+     not (has_attr PC.custard_declare_in_c_header_attr (source_attrs se l))
+  then d
+  else
+    let complain (why:string) : ML decl =
+      report_attr "custard_declare_in_c_header"
+        ("the declaration " ^ Ident.string_of_lid l) why;
+      d in
+    match se.sigel, d with
+    | Sig_declare_typ _, DExternal x when TArrow? x.dx_ty ->
+      if Some? x.dx_header then
+        complain "The prototype is supplied by an external header, so \
+                  Custard emits no declaration of its own to move."
+      else DExternal { x with dx_flags = DeclareInCHeader :: x.dx_flags }
+    | _ ->
+      complain "This is not an external function declaration: Custard \
+                cannot move its prototype to the header."
 
 (* Cherry's [[@@@cherry_owned]] and [[@@@cherry_borrowed]] (cherry.md,
    "Calling convention") on a list of value binders, by position. *)
@@ -1695,6 +1733,51 @@ let rec apply_result (st:state) (ty:cty) (n:int) : ML cty =
       | Some ty -> apply_result st ty n
       | None -> TAny
 
+(* Issue #4803.  A lambda put where an arrow [expected] is wanted -- bound by
+   an annotated [let], or passed as an argument -- has to have that arrow's
+   arity.  Both come from one F\* type and run the same [Mono.keep_thunk], so
+   they normally agree; but the lambda decides from its own body when its
+   residual comp is gone, which extraction normalization makes the common
+   case, and a Pulse [fn] whose body is all ghost steps erases to a pure [()]
+   although its codomain is [stt].  The arrow then keeps the trailing thunk
+   that the lambda dropped.
+
+   The repair is the binder: when the arrow has one more [unit] parameter
+   after the lambda's own and the body is not itself a function, the lambda
+   gets it back.  Nothing else of that shape is well typed, so nothing else is
+   touched. *)
+let conform_lambda (st:state) (expected:cty) (e:expr) : ML expr =
+  match e.e with
+  | EFun (bs, body) ->
+    let rec peel (n:int) (t:cty) : ML (option cty) =
+      if n <= 0 then Some (head_ty st t 10)
+      else match head_ty st t 10 with
+           | TArrow (_, _, r) -> peel (n - 1) r
+           | _ -> None in
+    (match peel (List.length bs) expected with
+     | Some (TArrow (TUnit, eff, _))
+         when not (TArrow? (head_ty st body.ty 10)) && not (TAny? body.ty) ->
+       let bs = bs @ [{ b_name = uniq "uu__thunk" (GenSym.next_id ()); b_ty = TUnit }] in
+       let rec arrow (bs:list binder) : ML cty =
+         match bs with
+         | [] -> body.ty
+         | [b] -> TArrow (b.b_ty, join_eff eff body.eff, body.ty)
+         | b :: bs -> TArrow (b.b_ty, E_Pure, arrow bs) in
+       { e with e = EFun (bs, body); ty = arrow bs }
+     | _ -> e)
+  | _ -> e
+
+(* {!conform_lambda} for each argument of a call through [hd_ty]. *)
+let conform_args (st:state) (hd_ty:cty) (args:list expr) : ML (list expr) =
+  let rec go (t:cty) (args:list expr) : ML (list expr) =
+    match args with
+    | [] -> []
+    | a :: args ->
+      match head_ty st t 10 with
+      | TArrow (p, _, r) -> conform_lambda st p a :: go r args
+      | _ -> a :: args in
+  go hd_ty args
+
 (* -------------------------------------------------------------------- *)
 (* Requests                                                             *)
 (* -------------------------------------------------------------------- *)
@@ -1762,6 +1845,9 @@ let module_inits (md:S.modul) : ML (list Ident.lident) =
         | Inr fv when not (U.is_pure_or_ghost_effect lb.lbeff) -> [S.lid_of_fv fv]
         | _ -> [])
     | _ -> [])
+
+(* {!instantiate_letrec} gives up. *)
+exception LetrecNotInstantiable
 
 let rec request (st:state) (k:spec_key) : ML name =
   Prof.timed "request" (fun () ->
@@ -2295,6 +2381,11 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
                     | Inr fv -> Ident.lid_equals (S.lid_of_fv fv) l
                     | Inl _ -> false) with
             | Some lb ->
+              (* Section 3.2d: which [Mono] binders have a function type.
+                 Recorded beside the classification, for [split_mono_args]. *)
+              let soft = Mono.soft_binders (tcenv st) lb.lbtyp (Some lb.lbdef) in
+              if List.existsb (fun b -> b) soft
+              then HashTable.add st.bflags ("soft:" ^ key) soft;
               (* Section 19.4: [lbdef] is what makes the classification as
                  long as the definition really is.  [lbtyp] stops at an
                  abbreviation in the codomain; the lambda does not. *)
@@ -3603,7 +3694,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
            let args0 = drop_flagged flags args in
            let ufs = narrow ufs args0 in
            let args = keep ufs args0 in
-           value_args st ufs args in
+           conform_args st hd.ty (value_args st ufs args) in
        (match args with
         | [] -> hd
         | _ ->
@@ -3678,6 +3769,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
        let lty = if erased_lb then e1.ty else
                  let lty = ty_of_typ st lb.lbtyp in
                  if TAny? lty then e1.ty else lty in
+       let e1 = conform_lambda st lty e1 in
        HashTable.add st.lettys (show bv.index) lty;
        let e2 = expr_of_term st body in
        mk (ELet (name_of_bv bv, lty, e1, e2)) e2.ty (join_eff e1.eff e2.eff)
@@ -3809,7 +3901,119 @@ and is_type_bv (st:state) (b:S.bv) : ML bool =
 
 and lift_letrec (st:state) (lbs:list letbinding) (body:term) : ML expr =
   let lbs, body = SS.open_let_rec lbs body in
-  lift_locals st lbs body
+  if Options.custard_cherry () && Options.custard_monomorphize_types () then
+    match instantiate_letrec st lbs body with
+    | Some ([], body) -> expr_of_term st body
+    | Some (lbs, body) -> lift_locals st lbs body
+    | None -> lift_locals st lbs body
+  else lift_locals st lbs body
+
+(* Section 5.10a.  A local [let rec] that binds types of its own is copied once
+   per instantiation it is used at, and each copy is lifted on its own.
+
+   Lifted as one declaration it would be polymorphic, and with type
+   monomorphization there is nothing left for that to mean: its body would
+   build [list@'a] while its caller passes a [list@goal], two layouts that C
+   cannot tell apart.  Instantiating it at the term level, before anything is
+   extracted, gives every copy concrete types, so the calls it makes into
+   specializing definitions are concrete too.
+
+   The instantiations are the type arguments of the uses in [body], and then
+   of the recursive calls in each copy -- the same, unless the recursion is
+   polymorphic, in which case the worklist finds the new ones.  It is bounded,
+   since polymorphic recursion need not reach a fixed point.
+
+   [None] leaves the nest to {!lift_locals} as it is: no member binds a type,
+   the members disagree on how many, or a use does not apply the name to its
+   type arguments. *)
+and instantiate_letrec (st:state) (lbs:list letbinding) (body:term)
+  : ML (option (list letbinding & term)) =
+  let recbvs = lbs |> List.collect (fun lb ->
+                 match lb.lbname with Inl bv -> [bv] | Inr _ -> []) in
+  let ntys (lb:letbinding) : ML int =
+    let xs, _, _ = U.abs_formals lb.lbdef in
+    let rec lead (xs:binders) : ML int =
+      match xs with
+      | x :: xs when is_type_bv st x.binder_bv -> 1 + lead xs
+      | _ -> 0 in
+    lead xs in
+  let ks = lbs |> List.map ntys in
+  match ks with
+  | [] -> None
+  | k :: _ ->
+  if k = 0 || List.length recbvs <> List.length lbs
+     || not (ks |> List.for_all (fun k' -> k' = k)) then None else
+  let insts : ref (list (list term & list S.bv)) = mk_ref [] in
+  let todo : ref (list (list term & list S.bv)) = mk_ref [] in
+  let max_insts = 16 in
+  let inst (tys:list term) : ML (list S.bv) =
+    match !insts |> List.tryFind (fun (tys', _) ->
+            List.forall2 (fun t t' -> U.term_eq t t') tys tys') with
+    | Some (_, bvs) -> bvs
+    | None ->
+      if List.length !insts >= max_insts then
+        custard_error st E.Error_CustardTypeVarInstantiation [
+          text ("Custard: the local recursive function " ^
+                Ident.string_of_id (List.hd recbvs).ppname ^ " is used at more than " ^
+                show max_insts ^ " type instantiations.");
+          text "On Cherry a local function that binds types is copied once per instantiation, so polymorphic recursion cannot be compiled.";
+          text "Make the recursion monomorphic, or move the function to the top level."];
+      let bvs = List.map2 (fun (bv:S.bv) (lb:letbinding) ->
+                  let bs, c = U.arrow_formals_comp lb.lbtyp in
+                  if List.length bs <= k then raise LetrecNotInstantiable;
+                  let tbs, bs = List.splitAt k bs in
+                  let sub = List.map2 (fun (b:S.binder) t -> NT (b.binder_bv, t)) tbs tys in
+                  S.gen_bv (Ident.string_of_id bv.ppname) (Some (Ident.range_of_id bv.ppname))
+                           (SS.subst sub (U.arrow bs c))) recbvs lbs in
+      insts := (tys, bvs) :: !insts;
+      todo := (tys, bvs) :: !todo;
+      bvs in
+  let rec index_of (x:S.bv) (i:int) (l:list S.bv) : option int =
+    match l with
+    | [] -> None
+    | y :: l -> if S.bv_eq x y then Some i else index_of x (i + 1) l in
+  let rewrite (t:term) : ML term =
+    let t = FStarC.Syntax.Visit.visit_term false (fun t ->
+      match (SS.compress t).n with
+      | Tm_app _ ->
+        let hd, args = U.head_and_args_full t in
+        (match (SS.compress hd).n with
+         | Tm_name x ->
+           (match index_of x 0 recbvs with
+            | Some i when List.length args >= k ->
+              let tys, rest = List.splitAt k args in
+              let x' = S.bv_to_name (List.nth (inst (List.map fst tys)) i) in
+              if Nil? rest then x' else S.mk_Tm_app x' rest t.pos
+            | _ -> t)
+         | _ -> t)
+      | _ -> t) t in
+    if elems (Free.names t) |> List.existsb (fun (v:S.bv) ->
+         Some? (index_of v 0 recbvs))
+    then raise LetrecNotInstantiable
+    else t in
+  try
+    let body = rewrite body in
+    let out : ref (list letbinding) = mk_ref [] in
+    let rec go () : ML unit =
+      match !todo with
+      | [] -> ()
+      | (tys, bvs) :: rest ->
+        todo := rest;
+        List.iter2 (fun (bv':S.bv) (lb:letbinding) ->
+          let xs, dbody, rc = U.abs_formals lb.lbdef in
+          let txs, xs = List.splitAt k xs in
+          let sub = List.map2 (fun (b:S.binder) t -> NT (b.binder_bv, t)) txs tys in
+          let def = U.abs (SS.subst_binders sub xs) (SS.subst sub dbody)
+                          (match rc with
+                           | Some rc -> Some (SS.subst_residual_comp sub rc)
+                           | None -> None) in
+          out := { lb with lbname = Inl bv'; lbtyp = bv'.sort; lbdef = rewrite def }
+                 :: !out) bvs lbs;
+        go () in
+    go ();
+    Some (List.rev !out, body)
+  with
+  | LetrecNotInstantiable -> None
 
 (* Lambda-lift the opened local definitions [lbs], which [body] and, for a
    [let rec], the definitions themselves may refer to. *)
@@ -4525,7 +4729,7 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
        this path: [heap_call] extracts the spine itself, and extracting it
        twice is exponential in the nesting depth of calls. *)
     let rest = value_args st (call_unit_flags st l cs args) rest in
-    let rest = hargs @ rest in
+    let rest = conform_args st hd_ty (hargs @ rest) in
     match rest with
     | [] -> hd
     | _ ->
@@ -4733,6 +4937,10 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
   if not (has_mono cs) && not (has_dropped cs) then ([], [], spine, [])
   else
     let n_args = List.length spine in
+    let soft = match HashTable.try_find st.bflags ("soft:" ^ Ident.string_of_lid l) with
+               | Some fs -> fs
+               | None -> [] in
+    let is_soft (i:int) : ML bool = i < List.length soft && List.nth soft i in
     let rec go (i:int) (cs:list bclass) (sp:args) (margs:list (int & term))
                (msubst:list (int & term)) (rest:args)
       : ML (list (int & term) & list (int & term) & args) =
@@ -4742,14 +4950,15 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
       (* Section 5.1: an erased argument is deleted, not passed as unit. *)
       | Dropped :: cs, _ :: sp -> go (i + 1) cs sp margs msubst rest
       | Mono :: cs, a :: sp ->
-        let a0 = unfold_lets st 100 (fst a) in
+        let soft = is_soft i in
+        let a0 = if soft then unfold_soft st (fst a) else unfold_lets st 100 (fst a) in
         let what = "the argument to binder " ^ show i ^ " of " ^
                    Ident.string_of_lid l in
         (* Section 30.17.  Both reductions are optional.  When neither fits
            in the budget the argument is used as written, which is the only
            form of it guaranteed to be small, being the one the programmer
            typed. *)
-        let w_opt = norm_optional st subst_norm_steps a0 in
+        let w_opt = norm_optional st (if soft then soft_subst_norm_steps else subst_norm_steps) a0 in
         let w = match w_opt with Some w -> w | None -> a0 in
         (* Section 30.17.  A key is a full normal form, and computing one
            destroys sharing: a value built by binding its predecessor once and
@@ -4776,7 +4985,7 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
            perfectly good key, and substituting a name preserves exactly the
            sharing that reducing it would have destroyed. *)
         let t =
-          match norm_optional st key_norm_steps a0 with
+          match norm_optional st (if soft then soft_key_norm_steps else key_norm_steps) a0 with
           | Some t -> t
           | None ->
             custard_warning st E.Warning_CustardKeyNotReduced [
@@ -4793,7 +5002,13 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
                                     (TcEnv.dsenv (tcenv st)) a0))
             ];
             w in
-        check_mono_arg st l i t;
+        (* Section 3.2d.  A bare variable passed to a [Mono] binder of
+           function type has no shape to specialize on, and is passed at run time:
+           it becomes a hole like any other runtime value, and the argument
+           abstracts to the identity skeleton -- exactly what writing
+           [FStar.Custard.dyn] at the call site would have done. *)
+        let soft_name = soft && Tm_name? (SS.compress t).n in
+        if not soft_name then check_mono_arg st l i t;
         (* Full reduction can eliminate a free variable that weak reduction
            leaves behind ([fst (x, 1)]); if that happens the two disagree
            about what is a hole, so use the reduced one for both. *)
@@ -4810,7 +5025,12 @@ and split_mono_args (st:state) (l:Ident.lident) (cs:list bclass) (spine:args)
            programmer wrote, for the key and for the substitution alike -- the
            two must agree, and the written form is the one that still says how
            the type is represented. *)
+        (* A [Mono] argument of function type is never a type, so
+           there is no representation rule to keep; and walking it is not
+           free, since every name the walk meets in a partial application is
+           unfolded to look for one. *)
         let t, w =
+          if soft then t, w else
           let before = builtin_type_rules st a0 in
           let after = builtin_type_rules st t in
           if before |> List.existsb (fun r ->
@@ -4931,6 +5151,24 @@ and inlinable_local (st:state) (lb:S.letbinding) : ML bool =
    [let d = { cmp = f } in sort #a #d], the shape [FStarC.Class.Ord.sort_by]
    is written in.  [d] is not a runtime parameter, it is a name for a value
    that section 3.2b can see through. *)
+(* Section 3.2d.  A [Mono] argument of function type is unfolded only when
+   its head is the name of a local function, so that [let f x = ... in
+   List.map f l] specializes on [f]'s body as [List.map (fun x -> ...) l]
+   would.  The head may be applied: Pulse binds a [fn] block as a thunk and
+   passes [body ()], which the normalizer then beta-reduces.  The names a lambda mentions stay names, and become holes: a
+   function body is large and its local [let]s are shared, so substituting
+   them into the key costs time exponential in their nesting and buys a key
+   that identifies nothing more. *)
+and unfold_soft (st:state) (t:term) : ML term =
+  let hd, args = U.head_and_args_full t in
+  match (SS.compress hd).n with
+  | Tm_name bv ->
+    (match HashTable.try_find st.letdefs (show bv.index) with
+     | Some d when Tm_abs? (SS.compress (U.unmeta d)).n ->
+       if Nil? args then d else S.mk_Tm_app d args t.pos
+     | _ -> t)
+  | _ -> t
+
 and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
   if fuel <= 0 then t
   else
@@ -5339,7 +5577,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     if is_inlinable se && not (is_root st l)
     then with_inline d else d) in
   match se with
-  | Some se -> with_global_rename l se d
+  | Some se -> with_c_header_declaration l se (with_global_rename l se d)
   | None -> d
 
 (* [@@FStar.ExtractAs.extract_as impl] replaces a definition's body by [impl]
@@ -6721,6 +6959,10 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
     match se with
     | Some se -> U.has_attribute se.sigattrs PC.custard_boxed_fields_attr
     | None -> false in
+  let is_class =
+    match se with
+    | Some se -> U.has_attribute se.sigattrs PC.tcclass_lid
+    | None -> false in
   (* Cherry: a counted heap cell; the newtype collapse would undo that. *)
   let cherry_boxed =
     match se with
@@ -6751,6 +6993,11 @@ and extract_inductive (st:state) (l:Ident.lident) (nm:name) (params:binders) : M
        obvious thing to try is to write it on the field -- and silence is
        indistinguishable from having fixed it. *)
     bs |> List.iter (fun (b:S.binder) ->
+      (* A field of a class is the exception: [mk_class] copies the field's
+         attributes onto the method it generates, which is a declaration. *)
+      let b = if is_class then { b with binder_attrs = b.binder_attrs |> List.filter
+                                   (fun a -> not (has_attr PC.custard_inline_attr [a])) }
+              else b in
       check_binder_attrs "the field" (Ident.string_of_lid c) b;
       if U.has_attribute b.binder_attrs PC.monomorphize_attr
       then E.log_issue0 E.Warning_CustardIneffectiveAttribute [
@@ -7251,6 +7498,8 @@ let link_homes (st:state) : ML (list string) = Unit.link_homes st.links
 let link_headers (st:state) : ML (list string) = Unit.link_headers st.links
 
 let link_no_prefix (st:state) : ML (list string) = Unit.link_no_prefix st.links
+let link_c_names (st:state) : ML (list (string & list (string & string))) =
+  Unit.link_c_names st.links
 
 let link_inits (st:state) : ML (list string) = Unit.link_inits st.links
 

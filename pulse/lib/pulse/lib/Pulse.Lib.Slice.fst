@@ -338,7 +338,7 @@ ensures
   with v_dst . assert (pts_to dst v_dst);
   unfold pts_to dst v_dst;
   unfold pts_to src #p v;
-  AP.memcpy src.elt 0sz dst.elt 0sz src.len;
+  AP.memcpy src.elt dst.elt src.len;
   fold pts_to src #p v;
   assert pure (v `Seq.equal`
     Seq.append (Seq.slice v 0 (SZ.v src.len))

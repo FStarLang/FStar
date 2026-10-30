@@ -414,4 +414,5 @@ let default_settings : list error_setting =
     Error_CustardRuleArityExceeded                     , CAlwaysError, 396;
     Error_CustardBadFunctor                            , CAlwaysError, 397;
     Error_CustardBadIfDef                              , CAlwaysError, 398;
+    Error_CustardTypeVarInstantiation                  , CAlwaysError, 399;
     ]
