@@ -72,25 +72,31 @@ private ghost fn identity (p:slprop) () preserves p {}
 (** Turn private alpha x into a zero-credit AU whose success returns beta
 at that original x. Abort returns the same privately owned alpha; there is
 no intervening client-invariant state change to hide existentially. *)
+ghost fn from_owned_at (#s #a:Type0) (mask:inames)
+  (alpha:s -> slprop) (beta:s -> a -> slprop) (x:s)
+  requires alpha x
+  ensures A.atomic_update mask mask 0 alpha beta (fun _ y -> beta x y)
+{
+  ghost fn step ()
+    requires alpha x ** later_credit 0
+    ensures A.opened mask mask alpha (alpha x) beta (fun _ y -> beta x y)
+  {
+    drop_ (later_credit 0);
+    slprop_equivs ();
+    A.intro_closing mask mask alpha (alpha x) beta (fun _ y -> beta x y) x emp
+      (fun _ -> M.sub_ghost (emp ** alpha x) (fun _ -> alpha x)
+        (M.lift_ghost mask (identity (alpha x) ())))
+      (fun y -> M.sub_ghost (emp ** beta x y) (fun _ -> beta x y)
+        (M.lift_ghost mask (identity (beta x y) ())));
+    fold A.opened mask mask alpha (alpha x) beta (fun _ y -> beta x y);
+  };
+  A.intro mask mask 0 alpha beta (fun _ y -> beta x y) (alpha x)
+    (fun _ -> M.lift_ghost mask (step ()));
+}
+
 ghost fn from_owned (#s #a:Type0) (alpha:s -> slprop) (beta:s -> a -> slprop) (x:s)
   requires alpha x
   ensures A.atomic_update emp_inames emp_inames 0 alpha beta (fun _ y -> beta x y)
 {
-  // The retry invariant is alpha x itself; both closing branches are
-  // identities on their respective resources at the empty mask.
-  ghost fn step ()
-    requires alpha x ** later_credit 0
-    ensures A.opened emp_inames emp_inames alpha (alpha x) beta (fun _ y -> beta x y)
-  {
-    drop_ (later_credit 0);
-    slprop_equivs ();
-    A.intro_closing emp_inames emp_inames alpha (alpha x) beta (fun _ y -> beta x y) x emp
-      (fun _ -> M.sub_ghost (emp ** alpha x) (fun _ -> alpha x)
-        (M.lift_ghost emp_inames (identity (alpha x) ())))
-      (fun y -> M.sub_ghost (emp ** beta x y) (fun _ -> beta x y)
-        (M.lift_ghost emp_inames (identity (beta x y) ())));
-    fold A.opened emp_inames emp_inames alpha (alpha x) beta (fun _ y -> beta x y);
-  };
-  A.intro emp_inames emp_inames 0 alpha beta (fun _ y -> beta x y) (alpha x)
-    (fun _ -> M.lift_ghost emp_inames (step ()));
+  from_owned_at emp_inames alpha beta x;
 }
