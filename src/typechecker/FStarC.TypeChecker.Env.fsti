@@ -142,6 +142,8 @@ and env = {
   range          :Range.t;                  (* the source location of the term being checked *)
   curmodule      :lident;                       (* Name of this module *)
   gamma          :list binding;                (* Local typing environment *)
+  gamma_binders  :list binding & Thunk.t binders; (* [all_binders] of a gamma, computed when first needed;
+                                                     valid only when that gamma is physically [gamma] *)
   gamma_sig      :list sig_binding;            (* and signature elements *)
   gamma_cache    :HashTable.t string cached_elt;           (* Memo table for the global gamma_sig environment *)
   modules        :list modul;                  (* already fully type checked modules *)
@@ -602,7 +604,7 @@ val update_effect_lattice  : env -> src:lident -> tgt:lident -> ML (env)
 val add_lift              : env -> src:lident -> tgt:lident -> tscheme -> ML (env)
 val lookup_lift           : env -> src:lident -> tgt:lident -> ML (option tscheme)
 
-val push_bv               : env -> bv -> env
+val push_bv               : env -> bv -> ML env
 
 val push_bvs              : env -> list bv -> ML (env)
 
@@ -610,7 +612,7 @@ val pop_bv                : env -> option (bv & env)
 
 val push_binders          : env -> binders -> ML (env)
 
-val push_let_binding      : env -> lbname -> tscheme -> env
+val push_let_binding      : env -> lbname -> tscheme -> ML env
 
 val push_univ_vars        : env -> univ_names -> ML (env)
 
