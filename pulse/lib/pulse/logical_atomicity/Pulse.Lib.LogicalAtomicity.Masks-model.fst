@@ -133,6 +133,23 @@ let sub_ghost #a #m1 #m2 #p #q p' q' f
 (** Equal sets give equal ambient invariant assertions. No resources move. *)
 let reindex_ghost #a #m1 #m2 #p #q before after f = f
 
+let localize #a #before #after #pre #post l
+  (f:gaction a before after pre post)
+  : gaction a before after (on l pre) (fun x -> on l (post x)) =
+  let step : action (erased a) Neutral before after (on l pre)
+      (fun x -> on l (post (reveal x))) =
+    fun frame m0 ->
+    S.sep_laws ();
+    let l0 = S.current_loc m0 in
+    let m1 = S.set_loc m0 l in
+    A.impersonate_lem1 l m0 pre before frame;
+    let x, m2 = ghost_to_action f (S.loc l ** S.on l0 frame) m1 in
+    let m3 = S.set_loc m2 l0 in
+    A.impersonate_lem2 l l0 m2 (post (reveal x)) after frame;
+    assert (FStar.Preorder.transitive S.is_ghost_action);
+    x, m3
+  in hide step
+
 (** Sequence erased cleanup before returning the independently supplied `x`. *)
 let finish_ghost #a #m1 #m2 #p x post f =
   bind (ghost_to_action f) (fun _ -> return m2 x post)

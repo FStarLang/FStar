@@ -130,6 +130,14 @@ val reindex_ghost (#a:Type u#a) (#m1 #m2:inames)
   (f:gaction a m1 m2 p q)
   : gaction a before after p q
 
+(** Execute ghost code at a fixed locality, keeping both ownership and its
+result anchored there. Unlike physical impersonation this cannot execute
+another thread's observable operations. No sendability of p or q is needed. *)
+val localize (#a:Type u#a) (#before #after:inames)
+  (#pre:slprop) (#post:a -> slprop) (l:loc_id)
+  (f:gaction a before after pre post)
+  : gaction a before after (on l pre) (fun x -> on l (post x))
+
 (** Run ghost cleanup, then return an already available runtime value. The
 value is not computed from the erased result of the cleanup action. *)
 inline_for_extraction
