@@ -497,6 +497,22 @@ let tail_groups : ref (HashTable.t string (int & tail_group)) = mk_ref (HashTabl
    as C can tell, and gets voided like one the body never mentions. *)
 let tail_kept : ref (list string) = mk_ref []
 
+(* Cherry: tail recursion modulo constructors (cherry.md, "Tail calls").  In
+   a definition printed with [trmc_on], a self call whose result is stored
+   into a cell that is then returned is a jump as well: the cell is built
+   first, with a hole where the result goes, and the next iteration writes
+   its result into the hole through [custard_dst].  [custard_result] holds
+   the first cell, and every return writes through [custard_dst] and
+   returns it.  [trmc_hook] is what the jump of the call being printed
+   stores: the value to write through [custard_dst], and the cell and field
+   of the next hole.  [trmc_pinned] are the variables only the hook reads. *)
+let trmc_on : ref bool = mk_ref false
+let trmc_hook : ref (option (string & string & dtype & name & string)) = mk_ref None
+let trmc_pinned : ref (list string) = mk_ref []
+let trmc_result = "custard_result"
+let trmc_dst = "custard_dst"
+let trmc_hole = "custard_trmc_hole"
+
 let rec filter_by (#a:Type) (flags:list bool) (xs:list a) : list a =
   match flags, xs with
   | b :: flags, x :: xs -> (if b then [x] else []) @ filter_by flags xs
@@ -2328,6 +2344,145 @@ and is_pure_branch (br:branch) : ML bool =
   let _, g, b = br in
   (match g with Some g -> is_pure g | None -> true) && is_pure b
 
+(* Cherry: tail recursion modulo constructors ({!trmc_on}).
+
+   [let r = f args in k], in tail position of [f], is such a site when [k]
+   stores [r] into a cell and returns: [k] is a run of lets and increments
+   that can run before the call -- they compute nothing that the call could
+   observe or change -- and the first cell that takes [r] is a boxed
+   constructor, [r] one of its fields, whose type is [f]'s result.  A cell
+   built around that one is fine too ([x :: x :: f t]).  A test for an
+   exception after the call goes: the call is a jump, and an exception
+   leaving a later iteration releases the cells built so far.
+
+   [trmc_site] returns either a binding to hoist out of the call's
+   right-hand side first ([let r = (let y = a in b) in k] is
+   [let y = a in let r = b in k]), or [k] rewritten to end in the call, the
+   hole replaced by [trmc_hole], with the hook for the jump. *)
+type trmc_kind =
+  | TrmcPeel of string & cty & expr & expr
+  | TrmcSite of expr & expr & (string & string & dtype & name & string)
+
+let rec reads_cell (e:expr) : ML bool =
+  match e.e with
+  | EOp ({ po_op = BufRead }, _) -> true
+  | _ -> exists_child reads_cell e
+
+let trmc_movable (e:expr) : ML bool =
+  not (reads_cell e) &&
+  (match e.e with
+   | EOp ({ po_op = Reuse _ }, args) -> List.for_all is_pure args
+   | EOp ({ po_op = RcInc }, [{ e = EVar _ }]) -> true
+   | _ -> is_pure e)
+
+let trmc_call (e:expr) : ML (option expr) =
+  let self (h:expr) (args:list expr) : ML bool =
+    match h.e, !tail_targets with
+    | EQual (n, _), [(g, _, _)] -> string_of_name n = g && Some? (tail_target n args)
+    | _ -> false in
+  match e.e with
+  | EApp (h, args) -> if self h args then Some e else None
+  | ELet (r, _, c, { e = EIf ({ e = EOp ({ po_op = ExnPending }, []) }, _, { e = EVar r' }) })
+      when r = r' ->
+    (match c.e with
+     | EApp (h, args) -> if self h args then Some c else None
+     | _ -> None)
+  | _ -> None
+
+let rec trmc_site (ret:cty) (rt:cty) (r:string) (e1 e2:expr) : ML (option trmc_kind) =
+  match trmc_call e1 with
+  | Some call -> trmc_ctx ret r call e2
+  | None ->
+    match e1.e with
+    | ELet (y, t, a, b) when y <> r && not (List.mem y (vars_of e2)) &&
+                             (Some? (trmc_site ret rt r b e2) ||
+                              Some? (trmc_site ret t y a { e1 with e = ELet (r, rt, b, e2) })) ->
+      Some (TrmcPeel (y, t, a, b))
+    | _ -> None
+
+and trmc_ctx (ret:cty) (r:string) (call:expr) (k:expr) : ML (option trmc_kind) =
+  let call_vars = vars_of call in
+  let count (e:expr) : ML int = List.length (List.filter (fun x -> x = r) (vars_of e)) in
+  (* [n] with its field [r] replaced by the hole. *)
+  let place (n:expr) : ML (option (expr & (dtype & name & string))) =
+    let parts = match n.e with
+      | ECtor (cn, es) -> Some (cn, None, es)
+      | EOp ({ po_op = Reuse (_, cn) } , w :: es) -> Some (cn, Some w, es)
+      | _ -> None in
+    match parts with
+    | None -> None
+    | Some (cn, w, es) ->
+      match find_ctor cn with
+      | Some (d, fs) when is_boxed d && List.length fs = List.length es && count n = 1 ->
+        let ies = List.mapi (fun i a -> (i, a)) es in
+        (match List.filter (fun (_, (a:expr)) -> count a > 0) ies with
+         | [(i, { e = EVar _ })] ->
+           let (f, fty) = List.nth fs i in
+           if ty fty <> ty ret then None else
+           let others = ies |> List.filter (fun (j, _) -> j <> i) |> List.map snd in
+           if not (List.for_all is_pure others) then None else
+           let es' = ies |> List.map (fun (j, (a:expr)) ->
+             if j = i then { a with e = EVar trmc_hole } else a) in
+           let e' = match w with
+             | None -> ECtor (cn, es')
+             | Some w -> (match n.e with
+                          | EOp (op, _) -> EOp (op, w :: es')
+                          | _ -> n.e) in
+           Some ({ n with e = e' }, (d, cn, f))
+         | _ -> None)
+      | _ -> None in
+  let v = "custard_trmc_v" in
+  let rec go (hole:option (string & dtype & name & string)) (e:expr)
+    : ML (option (expr & (string & string & dtype & name & string))) =
+    let rebuild (x:option (expr & (string & string & dtype & name & string)))
+                (f:expr -> expr) =
+      match x with Some (b, h) -> Some (f b, h) | None -> None in
+    match e.e with
+    | ELet (y, t, { e = ESeq (a, b) }, rest) ->
+      go hole { e with e = ESeq (a, { e with e = ELet (y, t, b, rest) }) }
+    | ELet (y, t, { e = ELet (z, tz, a, b) }, rest)
+        when z <> y && not (List.mem z (vars_of rest)) ->
+      go hole { e with e = ELet (z, tz, a, { e with e = ELet (y, t, b, rest) }) }
+    | ELet (y, t, a, b) ->
+      if y = r || y = v || List.mem y call_vars || y = trmc_hole then None
+      else if count a > 0 then
+        (if Some? hole then None else
+         match place a with
+         | Some (a', (d, cn, f)) ->
+           rebuild (go (Some (y, d, cn, f)) b) (fun b' -> { e with e = ELet (y, t, a', b') })
+         | None -> None)
+      else if trmc_movable a then
+        rebuild (go hole b) (fun b' -> { e with e = ELet (y, t, a, b') })
+      else None
+    | ESeq (a, b) ->
+      if count a = 0 && trmc_movable a
+      then rebuild (go hole b) (fun b' -> { e with e = ESeq (a, b') })
+      else None
+    | _ ->
+      match hole with
+      | None ->
+        (match place e with
+         | Some (e', (d, cn, f)) ->
+           Some ({ e with e = ELet (v, e.ty, e', call) }, (v, v, d, cn, f))
+         | None -> None)
+      | Some (c, d, cn, f) ->
+        if count e > 0 || not (trmc_movable e) then None else
+        (match e.e with
+         | EVar x -> Some (call, (x, c, d, cn, f))
+         | _ -> Some ({ e with e = ELet (v, e.ty, e, call) }, (v, c, d, cn, f))) in
+  match go None k with
+  | Some (k', h) -> Some (TrmcSite (call, k', h))
+  | None -> None
+
+(* Does the body of the definition being printed have a site? *)
+let rec has_trmc_site (ret:cty) (e:expr) : ML bool =
+  match e.e with
+  | ELet (r, rt, e1, e2) -> Some? (trmc_site ret rt r e1 e2) || has_trmc_site ret e2
+  | ESeq (_, b) -> has_trmc_site ret b
+  | EIf (_, b, c) -> has_trmc_site ret b || has_trmc_site ret c
+  | EMatch (_, brs) -> brs |> List.existsb (fun (_, _, b) -> has_trmc_site ret b)
+  | _ -> false
+
 (* Section 19.8.  A cell that is written and never read.  Pulse's loop measure
    is one: [fn while] carries a decreasing value the checker needs and the
    program does not, so it arrives as a [let mut] whose type has erased to
@@ -3103,6 +3258,8 @@ and finish (ind:string) (d:dest) (s:string) : ML string =
      which is where it was going anyway. *)
   | D_Return when !void_ret ->
     if s = unit_value then "" else ind ^ "(void)" ^ group s ^ ";\n"
+  | D_Return when !trmc_on ->
+    ind ^ "*" ^ trmc_dst ^ " = " ^ s ^ ";\n" ^ ind ^ "return " ^ trmc_result ^ ";\n"
   | D_Return -> ind ^ "return " ^ s ^ ";\n"
   | D_Assign x -> ind ^ x ^ " = " ^ s ^ ";\n"
   (* The value is computed for its effect; the cast silences the warning that
@@ -3110,9 +3267,38 @@ and finish (ind:string) (d:dest) (s:string) : ML string =
   | D_Ignore ->
     if s = unit_value then "" else ind ^ "(void)" ^ group s ^ ";\n"
 
+(* Cherry: leaving a definition printed with [trmc_on] with an exception
+   pending.  The hole gets a value that needs no release, and the cells
+   built so far are released; the caller never reads the result. *)
+and trmc_unwind (ind:string) : ML string =
+  match !cur_ret with
+  | Some t ->
+    ind ^ "*" ^ trmc_dst ^ " = (" ^ ty t ^ ")CHERRY_SCALAR(0);\n" ^
+    ind ^ rc_call "dec" t trmc_result ^ ";\n"
+  | None -> ""
+
 and emit (ind:string) (d:dest) (e:expr) : ML string =
   let ind' = ind ^ "  " in
   match e.e with
+  (* Cherry: tail recursion modulo constructors ({!trmc_site}). *)
+  | ELet (r, t, e1, e2)
+      when D_Return? d && !trmc_on && Some? (trmc_site (Some?.v !cur_ret) t r e1 e2) ->
+    (match trmc_site (Some?.v !cur_ret) t r e1 e2 with
+     | Some (TrmcPeel (y, ty', a, b)) ->
+       emit ind d { e with e = ELet (y, ty', a, { e with e = ELet (r, t, b, e2) }) }
+     | Some (TrmcSite (_, k, hook)) ->
+       let (v, c, _, _, _) = hook in
+       let saved = !scope in
+       let pinned = !trmc_pinned in
+       bind_alias trmc_hole (c_postfix "NULL");
+       trmc_hook := Some hook;
+       trmc_pinned := v :: c :: pinned;
+       let s = emit ind d k in
+       trmc_hook := None;
+       trmc_pinned := pinned;
+       scope := saved;
+       s
+     | None -> failwith "impossible")
   (* [e1] is elaborated before [x] is bound: the IR scopes [x] over [e2] only,
      and a name reused between the two must not capture. *)
   (* A [unit] binding names the only value of its type, so there is nothing to
@@ -3228,7 +3414,8 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      does nothing observable -- which is exactly the case the report hit,
      [_letpattern] bound to a cell.  So: no calls, no writes, no allocation,
      no loops, and reads are free. *)
-  | ELet (x, _, e1, e2) when is_droppable e1 && not (List.mem x (vars_of e2)) ->
+  | ELet (x, _, e1, e2) when is_droppable e1 && not (List.mem x (vars_of e2)) &&
+                             not (List.mem x !trmc_pinned) ->
     emit ind d e2
 
   | ELet (x, t, e1, e2) ->
@@ -3284,7 +3471,15 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
       (x, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
     if not (List.existsb (fun l -> l = label) !tail_used) then
       tail_used := label :: !tail_used;
-    !out ^ ind ^ "{\n" ^
+    (* The cell of a site of tail recursion modulo constructors goes where
+       the result goes, and the result of the next iteration into its hole. *)
+    let fill = match !trmc_hook with
+      | Some (v, c, dt, cn, fld) ->
+        trmc_hook := None;
+        ind ^ "*" ^ trmc_dst ^ " = " ^ lookup_var v ^ ";\n" ^
+        ind ^ trmc_dst ^ " = &" ^ cell_field (lookup_var c) dt cn fld ^ ";\n"
+      | None -> "" in
+    !out ^ fill ^ ind ^ "{\n" ^
     String.concat "" (tmps |> List.map (fun (_, _, s) -> s)) ^
     String.concat "" (tmps |> List.map (fun (x, t, _) ->
       ind ^ "  " ^ x ^ " = " ^ t ^ ";\n")) ^
@@ -3465,6 +3660,9 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     (match !cur_ret with
      | None -> ind ^ "cherry_exn_uncaught();\n"
      | Some _ when !void_ret -> ind ^ "return;\n"
+     | Some t when !trmc_on ->
+       trmc_unwind ind ^
+       ind ^ "{ " ^ decl_of t "cherry_dummy" ^ "; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }\n"
      | Some t -> ind ^ "{ " ^ decl_of t "cherry_dummy" ^ "; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }\n")
 
   | EOp ({ po_op = RcInc }, [a]) | EOp ({ po_op = RcDec }, [a]) ->
@@ -3545,6 +3743,17 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      the target can make it one (cherry.md, "Tail calls"), so that mutual
      recursion, and recursion through a closure, run in constant stack as
      they do in OCaml. *)
+  (* Cherry: a call that may raise, returned from a definition printed with
+     [trmc_on].  Its caller tests for the exception, but the cells built so
+     far are released here, since the caller only sees the first. *)
+  | EApp _ when D_Return? d && !trmc_on && Cherry.may_raise e ->
+    let out = mk_ref "" in
+    let s = c_rvalue out ind e.ty e in
+    !out ^ ind ^ "*" ^ trmc_dst ^ " = " ^ s ^ ";\n" ^
+    ind ^ "if (CHERRY_EXN_PENDING()) {\n" ^ trmc_unwind (ind ^ "  ") ^
+    ind ^ "  return " ^ trmc_result ^ ";\n" ^ ind ^ "}\n" ^
+    ind ^ "return " ^ trmc_result ^ ";\n"
+
   | EApp (hd, args) when D_Return? d && Some? (musttail_head hd args e.ty) ->
     let head = Some?.v (musttail_head hd args e.ty) in
     let out = mk_ref "" in
@@ -4512,16 +4721,25 @@ let let_decl (l:dlet) : ML string =
     (if ok then [(string_of_name l.dl_name, "custard_tail",
                   kept_binders l |> List.map (fun b -> (b, lookup_var b.b_name)))]
      else []);
-  musttail_ok := ok;
+  (* Tail recursion modulo constructors: every return writes through
+     [custard_dst], so no call returns directly and none is a [musttail]. *)
+  let trmc = ok && is_boxed_ty l.dl_ret && has_trmc_site l.dl_ret l.dl_body in
+  trmc_on := trmc;
+  musttail_ok := ok && not trmc;
   let body = emit "  " D_Return l.dl_body in
   tail_targets := [];
   musttail_ok := false;
+  trmc_on := false;
   let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
     let v = lookup_var b.b_name in
     if List.existsb (fun y -> y = b.b_name) used &&
        not (List.mem v !tail_kept) then []
     else ["  (void)" ^ v ^ ";\n"])) in
   signature l ^ " {\n" ^ voids ^
+  (if trmc
+   then "  " ^ decl_of l.dl_ret trmc_result ^ " = NULL;\n" ^
+        "  " ^ decl_of l.dl_ret ("*" ^ trmc_dst) ^ " = &" ^ trmc_result ^ ";\n"
+   else "") ^
   (if Cons? !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
 
 (* Cherry: the C function a tail group is printed as (cherry.md, "Tail
