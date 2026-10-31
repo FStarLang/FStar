@@ -55,10 +55,10 @@ val discriminator : attribute
 (** This attribute can be used on type binders to make unifier attempt
     to unrefine them before instantiating them. This is useful in polymorphic
     definitions where the type does not change the result type, for example
-    eq2 below. Using the attribute, an equality between two nats will happen
-    at type int, which is more canonical.
-
-    This feature is experimental and only enabled with "--ext __unrefine" *)
+    eq2 below. By default only refinements written on the type itself are
+    dropped (e.g. [r:int{r > 0}]); abbreviations such as [nat] are kept.
+    With "--ext __unrefine" definitions are unfolded too, so two nats are
+    compared at int; "--ext __unrefine=off" disables the feature. *)
 assume
 val unrefine : attribute
 

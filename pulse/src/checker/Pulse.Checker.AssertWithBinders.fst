@@ -47,7 +47,7 @@ let rec open_binders_with_uvars (g:env) (bs:list binder) (v:term) (body:st_term)
   match bs with
   | [] -> (| List.rev us, v, body |)
   | {binder_ty; binder_ppname}::bs ->
-    let binder_ty, _ = PC.tc_type_phase1 g binder_ty in
+    let binder_ty, _ = PC.tc_type_elab g binder_ty in
     let u = RU.new_implicit_var ("value for with-variable " ^ show binder_ppname)
       binder_ppname.range (elab_env g) binder_ty false in
     let ss = [ RT.DT 0 u ] in
@@ -146,11 +146,29 @@ let warn_nop (g:env) (goal:term) : T.Tac unit =
       indent (pp <| canon_slprop_print goal);
   ]
 
+(* The elaborator annotates a match without a [returns] annotation with the
+   type its branches were checked against, so two occurrences of the same
+   source match (e.g. an [if]) checked at different types differ in it. *)
+let strip_match_returns (t:R.term) : T.Tac R.term =
+  FStar.Tactics.Visit.visit_tm
+    (fun t ->
+      match R.inspect_ln t with
+      | R.Tv_Match sc (Some _) brs -> R.pack_ln (R.Tv_Match sc None brs)
+      | _ -> t)
+    t
+
 let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
   let open FStar.Reflection.TermEq in
   let lhs, rhs = p in
+  (* Match occurrences of [lhs] up to the [returns] annotations of matches:
+     an annotation does not change the value of a match, and the equality
+     of [lhs] and [rhs] is checked separately. *)
+  let lhs_stripped = strip_match_returns lhs in
+  let lhs_has_returns = not (term_eq lhs lhs_stripped) in
   let visitor (t:R.term) : T.Tac R.term =
-    if term_eq t lhs then rhs else t
+    if term_eq t lhs then rhs
+    else if lhs_has_returns && term_eq (strip_match_returns t) lhs_stripped then rhs
+    else t
   in
   match R.inspect_ln lhs with
   | R.Tv_Var n -> (
@@ -504,7 +522,7 @@ let check
     let ctxt = Pulse.Checker.ImpureSpec.({ctxt_now = pre; ctxt_old = None}) in
     let v =
       if elaborated then
-        fst (PC.tc_term_phase1_with_type g v tm_slprop)
+        fst (PC.tc_term_elab_with_type g v tm_slprop)
       else
         ImpureSpec.purify_spec g ctxt v in
     let (| g1, pre', k_frame |) = Prover.prove st.range g pre v false in
@@ -528,7 +546,7 @@ let check
 
     let v = purify_term g { ctxt_now = pre; ctxt_old = None } v in
     let v =
-      let v, t, _ = PC.tc_term_phase1 g v in
+      let v, t, _ = PC.tc_term_elab g v in
       add_rem_uvs g t v in
 
     let lhs, rhs =

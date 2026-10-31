@@ -74,11 +74,6 @@ type escape_cause =
 val check_no_escape : escape_cause -> env -> list bv -> term -> ML (term & guard_t)
 
 val bind: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
-(* [bind_no_capture] is [bind] for a term whose result type must not be
-   restated in the composite's result type: an implicit argument of [squash]
-   type, above all, which is the image of a precondition and carries an
-   obligation discharged at the call rather than a fact about a result. *)
-val bind_no_capture: Range.t -> is_let_binding:bool -> env -> option term -> (comp & guard_t) -> comp_with_binder -> ML (comp & guard_t)
 
 val weaken_guard: guard_formula -> guard_formula -> ML guard_formula
 
@@ -141,6 +136,13 @@ val maybe_monadic: env -> term -> lident -> typ -> ML term
 
 val maybe_coerce_lc : env -> term -> comp -> typ -> ML (term & comp & guard_t)
 
+(* The type [t] a computation [lc] is checked against, refined, when [lc] is
+   effectful, with what [lc]'s more precise (refined) result type says, e.g.
+   [x:unit{False}] for [fail ""] against [unit]: the continuation of the
+   computation, e.g. the [n >= 0] after [if n < 0 then fail ""], may need it.
+   Its own result is all an effectful computation's continuation knows of it. *)
+val effectful_res_typ_at (env:env) (lc:comp) (t:typ) : ML typ
+
 (*
  * weaken_result_type env e lc t use_eq
  *   precondition: env |- e : lc
@@ -154,7 +156,6 @@ val maybe_coerce_lc : env -> term -> comp -> typ -> ML (term & comp & guard_t)
  *               (c) env.use_eq_strict is true, then checking that lc.result_typ = t
  *
  *)
-val keep_res_typ : env -> typ -> typ -> ML bool
 val weaken_result_typ: env -> term -> (comp & guard_t) -> typ -> bool -> ML (term & comp & guard_t)
 
 val pure_or_ghost_pre_and_post: env -> comp -> ML (option typ & typ)
@@ -257,3 +258,11 @@ val make_record_fields_in_order
        (not_found : (ident -> is_imp:bool -> ML (option 'a)))
        (rng : Range.t)
   : ML (list ('a & bool))
+
+(* Whether elaboration is to run [synth_by_tactic], and if so, whether the
+   tactics are to run with [admit] set (in a lax module). Set by
+   [Tc.tc_sig_let] around the elaboration of a top-level definition: other
+   callers of TcTerm leave the synthesis to their caller, as the goals may
+   still mention unification variables that are only solved later. *)
+val synth_mode : unit -> ML (option bool)
+val with_synth : admit:bool -> (unit -> ML 'a) -> ML 'a

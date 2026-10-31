@@ -23,6 +23,7 @@ open FStarC.Class.Show
 open FStarC.Class.Monoid
 open FStarC.CList
 open FStarC.Range.Type
+include FStarC.TypeChecker.CommonBase
 
 module S = FStarC.Syntax.Syntax
 
@@ -41,14 +42,16 @@ type rank_t =
     | Rigid_flex
     | Flex_flex
 
-type problem 'a = {                  //Try to prove: lhs rel rhs ~ guard
+(* A unification problem: lhs rel rhs.  Rel computes no logical guard for a
+   problem: it is only an elaborator, and Core, which re-checks everything Rel
+   elaborates, computes the verification conditions. *)
+type problem 'a = {
     pid:int;
     lhs:'a;
     relation:rel;
     rhs:'a;
-    element:option bv;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard)
-    logical_guard:term;               //the condition under which this problem is solveable; (?u v1..vn)
-    logical_guard_uvar:ctx_uvar;
+    ctx_gamma:gamma;                 //the context in which the problem is posed
+    ctx_binders:binders;             //the variables of ctx_gamma, as binders, outermost first
     reason: list string;             //why we generated this problem, for error reporting
     loc: range;                 //and the source location where this arose
     rank: option rank_t;
@@ -63,12 +66,6 @@ type prob_t = prob
 val as_tprob : prob -> ML (problem typ)
 
 type probs = list prob
-
-type guard_formula =
-  | Trivial
-  | NonTrivial of formula
-
-instance val showable_guard_formula : showable guard_formula
 
 type deferred_reason =
   | Deferred_univ_constraint
@@ -120,11 +117,6 @@ type id_info_table = {
 
 val check_uvar_ctx_invariant : string -> range -> bool -> gamma -> binders -> ML unit
 
-val mk_by_tactic : term -> term -> ML term
-
-val delta_depth_greater_than : delta_depth -> delta_depth -> bool
-val decr_delta_depth : delta_depth -> option delta_depth
-
 val insert_col_info : int -> identifier_info -> list (int & identifier_info) -> ML (list (int & identifier_info))
 val find_nearest_preceding_col_info : int -> list (int & identifier_info) -> option identifier_info
 
@@ -174,9 +166,6 @@ val conj_guards   : list guard_t -> ML guard_t
 val split_guard   : guard_t -> guard_t & guard_t
 
 val weaken_guard_formula: guard_t -> typ -> ML guard_t
-
-val check_positivity_qual (subtyping:bool) (p0 p1:option positivity_qualifier)
-  : bool
 
 (* [one_point_defn x hyp] returns [Some (v, rest)] when [hyp] is a conjunction
    one of whose conjuncts is a defining equation [x == v] (or [v == x]) with [x]

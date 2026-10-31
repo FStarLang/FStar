@@ -96,7 +96,7 @@ let check
         (| Some init, init_u, init_t |)
 
       | _, Some init ->
-        let ty, _ = tc_type_phase1 g ty in
+        let ty, _ = tc_type_elab g ty in
         let u = check_universe g ty in
         let init = check_term g init T.E_Total ty in
         (| Some init, u, ty |)
@@ -106,7 +106,7 @@ let check
           "allocating a local variable: type must be specified when there is no initializer"
 
       | _, None ->
-        let ty, _ = tc_type_phase1 g ty in
+        let ty, _ = tc_type_elab g ty in
         let u = check_universe g ty in
         (| None, u, ty |)
     in

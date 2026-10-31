@@ -414,7 +414,7 @@ let tc_unifier_solved_implicits env (must_tot:bool) (allow_guards:bool) (uvs:lis
             text "to" ^/^ pp sol ^/^ text "because" ^/^ doc_of_string (Core.print_error failed)
           ]
   in
-  if env.phase1 //phase1 is untrusted
+  if env.admit //nothing to check
   then return ()
   else uvs |> iter_tac aux
 
@@ -455,10 +455,28 @@ let __do_unify_wflags
       catch (//restore UF graph in case anything fails
         let! gopt = trytac cur_goal in
         try
+          let tx = UF.new_transaction () in
           let res =
             if allow_guards
             then Rel.try_teq true env t1 t2
             else Rel.teq_nosmt env t1 t2
+          in
+          (* Rel computes no logical guard: when it is allowed to leave a
+             proof obligation, it only solves the unification variables, and
+             Core computes the obligation for the terms so instantiated. *)
+          let res =
+            match res with
+            | Some g when allow_guards && not env.admit ->
+              (match Core.check_term_equality true true env t1 t2 with
+               | Inl None -> UF.commit tx; Some g
+               | Inl (Some (f, _)) -> UF.commit tx; Some {g with guard_f = NonTrivial f}
+               | Inr err ->
+                 if dbg then
+                   Format.print1 "%%%%%%%%do_unify: Core rejected the unifier's solution: %s\n"
+                     (Core.print_error err);
+                 UF.rollback tx;
+                 None)
+            | _ -> UF.commit tx; res
           in
           if dbg then
             Format.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
@@ -711,17 +729,29 @@ let curms ()  : ML (tac int) =
     return (Time.get_time_of_day_ms ())
 
 (* Annoying duplication here *)
+(* Typecheck [t] for a tactic: TcTerm elaborates it, without proving
+   anything, and Core checks the elaboration and computes its logical guard
+   (see [CoreCheck]). The implicits and deferred problems of the elaboration
+   are returned in the guard, for the caller to process. *)
+let tc_with_core (e : env) (t : term) (must_tot : bool) : ML (term & typ & guard_t) =
+    let t, typ, g = TcTerm.typeof_tot_or_gtot_term {e with admit=true} t must_tot in
+    let g = {g with guard_f = TcComm.Trivial} in
+    if e.admit then t, typ, g else
+    let e = {e with top_level=false; letrecs=[]} in
+    match Core.check_term e t typ must_tot with
+    | Inl None -> t, typ, g
+    | Inl (Some (f, _)) -> t, typ, {g with guard_f = TcComm.NonTrivial f}
+    | Inr err -> FStarC.TypeChecker.CoreCheck.raise_core_error e "this term" err
+
 let __tc (e : env) (t : term)  : ML (tac (term & typ & guard_t)) =
     let! ps = get in
     log (fun () -> Format.print1 "Tac> __tc(%s)\n" (show t));!
-    return (TcTerm.typeof_tot_or_gtot_term e t true)
+    return (tc_with_core e t true)
 
 let __tc_ghost (e : env) (t : term)  : ML (tac (term & typ & guard_t)) =
     let! ps = get in
     log (fun () -> Format.print1 "Tac> __tc_ghost(%s)\n" (show t));!
-    let e = {e with letrecs=[]} in
-    let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
-    return (t, (U.comp_result lc), g)
+    return (tc_with_core e t false)
 
 let __tc_lax (e : env) (t : term)  : ML (tac (term & comp & guard_t)) =
     let! ps = get in
@@ -2853,7 +2883,7 @@ let refl_tc_term (g:env) (e:term)  : ML (tac (option (term & (Core.tot_or_ghost 
     // lax check to elaborate
     //
     let e =
-      let g = {g with phase1 = true; admit = true} in
+      let g = {g with admit = true} in
       //
       // AR: we are lax checking to infer implicits,
       //     ghost is ok
@@ -2981,7 +3011,7 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
       | None -> Env.clear_expected_typ g |> fst
       | Some typ -> Env.set_expected_typ g typ
     in
-    let g = {g with instantiate_imp=inst_extra; phase1=true; admit=true} in
+    let g = {g with instantiate_imp=inst_extra; admit=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     //
     // We don't worry about the logical payload,
@@ -3074,7 +3104,7 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
       PIMap.add tbl uv_id (ctx_u.ctx_uvar_head, bv)
     ) (Env.trivial_guard, [], (PIMap.empty ())) uvs in
     let t0, t1 = SS.subst ss t0, SS.subst ss t1 in
-    let g = { g with phase1=true; admit=true } in
+    let g = { g with admit=true } in
     let guard_eq =
       let smt_ok = true in
       Rel.try_teq smt_ok g t0 t1 in

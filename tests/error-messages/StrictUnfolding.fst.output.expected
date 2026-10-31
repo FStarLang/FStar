@@ -7,7 +7,7 @@
   - In context:
       sw: FStar.Integers.signed_width
       x:
-      (match sw with
+      (match sw as _ returns Type0 with
           | FStar.Integers.Unsigned FStar.Integers.W8 -> FStar.UInt8.t
           | FStar.Integers.Unsigned FStar.Integers.W16 -> FStar.UInt16.t
           | FStar.Integers.Unsigned FStar.Integers.W32 -> FStar.UInt32.t
@@ -22,7 +22,7 @@
         <:
         Type0
       y:
-      (match sw with
+      (match sw as _ returns Type0 with
           | FStar.Integers.Unsigned FStar.Integers.W8 -> FStar.UInt8.t
           | FStar.Integers.Unsigned FStar.Integers.W16 -> FStar.UInt16.t
           | FStar.Integers.Unsigned FStar.Integers.W32 -> FStar.UInt32.t

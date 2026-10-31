@@ -61,7 +61,7 @@
           | false -> 4)
   - In context:
       b: Prims.bool
-      ~(b = true) /\ ~(b = false) ==> Prims.l_False
+      b = true ==> PostconditionLocalization.p 1
   - See also PostconditionLocalization.fst(46,78-46,81)
 
 * Warning 240 at PostconditionLocalization.fst(46,4-46,22):

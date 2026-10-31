@@ -1,6 +1,6 @@
 * Info at Bug3102.fst(24,90-24,91):
   - Expected failure:
-  - Failed to resolve implicit argument ?52
+  - Failed to resolve implicit argument ?7
     of type
 
             g: FStar.Stubs.Reflection.Types.env ->
@@ -12,5 +12,5 @@
 
 * Info at Bug3102.fst(33,4-33,27):
   - Expected failure:
-  - (*?u31*)_ is not equal to the expected type e2
+  - (*?u9*)_ is not equal to the expected type e2
 

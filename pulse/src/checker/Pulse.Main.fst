@@ -39,7 +39,7 @@ let rec elab_slprop_defn (g: env) (binders: list (option qualifier & binder & bv
   | [] ->
     Pulse.Checker.ImpureSpec.purify_spec g { ctxt_now = tm_emp; ctxt_old = None } body
   | (quals, b, bv)::binders ->
-    let b_ty, b_u = Pulse.Checker.Pure.tc_type_phase1 g b.binder_ty in
+    let b_ty, b_u = Pulse.Checker.Pure.tc_type_elab g b.binder_ty in
     assume freshv g bv.bv_index;
     let g' = push_binding g bv.bv_index b.binder_ppname b_ty in
     let body = elab_slprop_defn g' binders body in
