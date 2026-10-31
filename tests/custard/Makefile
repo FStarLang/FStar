@@ -3798,7 +3798,7 @@ all: $(CHERRY_DIR)/CherryLocalFn.chgrep
 # [@@@monomorphize] on a function binder (custard.md, 3.2d): a lambda or a partial
 # application passed to the function builds no closure.
 $(CHERRY_DIR)/CherrySpecializeHO.chgrep: $(CHERRY_DIR)/CherrySpecializeHO.chc
-	$(Q)for f in add_all shift_all scale_all deep rebinds; do \
+	$(Q)for f in add_all shift_all scale_all deep rebinds tot_ops; do \
 	  ! sed -n "/^static .* CherrySpecializeHO_$$f(.*{$$/,/^}/p" $< | grep -q 'cherry_pap_\|cherry_apply_' \
 	  || { echo "ERROR: CherrySpecializeHO_$$f builds or applies a closure"; exit 1; }; done
 	$(Q)touch $@
