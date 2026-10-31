@@ -13,6 +13,7 @@ FSTAR_OPTIONS += --include build/ocaml/installed/lib/pulse
 endif
 FSTAR_OPTIONS += --include build/lib.common.checked
 FSTAR_OPTIONS += --include lib/common
+FSTAR_OPTIONS += --include lib/core
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 DEPFLAGS += --already_cached 'Prims,FStar,FStarC'
 TAG=pulse

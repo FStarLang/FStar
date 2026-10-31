@@ -16,6 +16,15 @@
 
 module PulseCore.Atomic
 
+(**
+Implementation of the core atomic effect over PulseCore.Action.
+
+For logical atomicity, the representation bridges below expose the existing
+definition rather than assuming a new effect coercion. Their identity bodies
+are verified against the interface. All mask-changing composition and its
+balanced-runner proof remain in the separate LogicalAtomicity.Masks model.
+*)
+
 open FStar.Ghost
 open PulseCore.Observability
 open Pulse.Lib.Loc
@@ -33,6 +42,11 @@ let r_of_obs = function
 
 let stt_atomic a #obs opens pre post =
   A.act a (r_of_obs obs) opens pre post
+
+(** Unfold the existing representation; no semantic state change occurs. *)
+let as_action #a #obs #opens #pre #post f = f
+(** Refold that same representation after the caller proves an action. *)
+let of_action #a #obs #opens #pre #post f = f
 
 let pure_equiv (p q:prop) (_:squash (p <==> q))
   : slprop_equiv (pure p) (pure q)

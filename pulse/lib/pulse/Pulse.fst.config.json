@@ -13,6 +13,7 @@
 		"../common",
 		"../core",
 		"c",
-		"lib"
+		"lib",
+		"logical_atomicity"
 	]
 }
