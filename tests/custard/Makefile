@@ -3808,7 +3808,7 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
@@ -3820,6 +3820,9 @@ CHERRY_RUN_CherryIArray = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryExn = -O2
 CHERRY_RUN_CherryExn = ulimit -s 1024 &&
 CHERRY_CFLAGS_CherryDyn = -O2
+# Tail recursion modulo constructors with a 1 MB stack, at -O0 so that the
+# C compiler cannot turn the recursion into a loop itself.
+CHERRY_RUN_CherryTRMC = ulimit -s 1024 &&
 
 # Cherry: integer literals of 2^30 and more are static cells, never built
 # at run time.
