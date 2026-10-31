@@ -9,7 +9,15 @@ let failure_of (f : FStarC_Custard_Syntax.name) : (FStarC_Custard_Syntax.name) o
     id = "Failure";
     spec = None })) else None)
 
-let rec raise_failures__go (used : (((FStarC_Custard_Syntax.name * FStarC_Custard_Syntax.cty)) list ref)) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+let is_effect_fn (f : FStarC_Custard_Syntax.name) (id : string) : bool =
+  (((=) (f).FStarC_Custard_Syntax.id id) && (((=) (f).FStarC_Custard_Syntax.ns ("FStar" :: ("All" :: []))) || ((=) (f).FStarC_Custard_Syntax.ns ("FStarC" :: ("Effect" :: [])))))
+
+let cherry_exit_name : FStarC_Custard_Syntax.name =
+  { FStarC_Custard_Syntax.ns = ("FStarC" :: ("Effect" :: []));
+    id = "cherry_exit";
+    spec = None }
+
+let rec raise_failures__go (exit_ty : ((FStarC_Custard_Syntax.cty) option ref)) (use : (FStarC_Custard_Syntax.name -> (FStarC_Custard_Syntax.cty -> unit))) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
   (match (e).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.EApp ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EQual (f, tmp)); ty = tmp1; eff = tmp2; _ }, (s :: []))) when (match (failure_of f) with
       | (Some (v)) -> true
@@ -17,25 +25,43 @@ let rec raise_failures__go (used : (((FStarC_Custard_Syntax.name * FStarC_Custar
     ) -> (let x = (match (failure_of f) with
           | (Some (v)) -> v
         ) in
-      let s1 = ((raise_failures__go used) s) in
-      let tmp3 = (!(used)) in
-      let tmp4 = (BatList.exists (fun tmp4 -> (match tmp4 with
-          | (y, tmp5) -> (let tmp6 = (FStarC_Custard_Syntax.string_of_name y) in
-            let tmp7 = (FStarC_Custard_Syntax.string_of_name x) in
-            ((=) tmp6 tmp7))
-        )) tmp3) in
-      let tmp5 = (not tmp4) in
-      (if tmp5 then (let tmp6 = (!(used)) in
-      let tmp7 = ((x, (s1).FStarC_Custard_Syntax.ty) :: tmp6) in
-      ((used) := tmp7)) else ());
+      let s1 = ((raise_failures__go exit_ty use) s) in
+      (use x (s1).FStarC_Custard_Syntax.ty);
       (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ERaise ((FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECtor (x, (s1 :: []))) FStarC_Custard_Syntax.TExn FStarC_Custard_Syntax.E_Pure))) (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure))
-    | tmp -> (FStarC_Custard_Syntax.map_children (raise_failures__go used) e)
+    | (FStarC_Custard_Syntax.EApp ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EQual (f, tmp)); ty = tmp1; eff = tmp2; _ }, (x :: []))) when (is_effect_fn f "raise_notrace") -> (let tmp3 = ((raise_failures__go exit_ty use) x) in
+      let tmp4 = (FStarC_Custard_Syntax.ERaise (tmp3)) in
+      (FStarC_Custard_Syntax.mk tmp4 (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure))
+    | (FStarC_Custard_Syntax.EApp ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EQual (f, tmp)); ty = tmp1; eff = tmp2; _ }, (n :: []))) when (is_effect_fn f "exit") -> (let n1 = ((raise_failures__go exit_ty use) n) in
+      ((exit_ty) := (Some ((n1).FStarC_Custard_Syntax.ty)));
+      let failure = { FStarC_Custard_Syntax.ns = ("FStarC" :: ("Effect" :: []));
+          id = "Failure";
+          spec = None } in
+      let str = (FStarC_Custard_Syntax.TApp ({ FStarC_Custard_Syntax.ns = ("Prims" :: []);
+          id = "string";
+          spec = None }, [])) in
+      (use failure str);
+      let fty = (FStarC_Custard_Syntax.TArrow ((n1).FStarC_Custard_Syntax.ty, FStarC_Custard_Syntax.E_Impure, FStarC_Custard_Syntax.TUnit)) in
+      let call_ = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EApp ((FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EQual (cherry_exit_name, [])) fty FStarC_Custard_Syntax.E_Pure), (n1 :: []))) FStarC_Custard_Syntax.TUnit FStarC_Custard_Syntax.E_Impure) in
+      let msg = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EConst ((FStarC_Custard_Syntax.CString ("exit")))) str FStarC_Custard_Syntax.E_Pure) in
+      (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ESeq (call_, (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ERaise ((FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECtor (failure, (msg :: []))) FStarC_Custard_Syntax.TExn FStarC_Custard_Syntax.E_Pure))) (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure))) (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure))
+    | tmp -> (FStarC_Custard_Syntax.map_children (raise_failures__go exit_ty use) e)
   )
 
 let raise_failures (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) list =
   (let used = (ref []) in
+  let exit_ty = (ref None) in
+  let use = (fun x t -> (let tmp = (!(used)) in
+    let tmp1 = (BatList.exists (fun tmp1 -> (match tmp1 with
+        | (y, tmp2) -> (let tmp3 = (FStarC_Custard_Syntax.string_of_name y) in
+          let tmp4 = (FStarC_Custard_Syntax.string_of_name x) in
+          ((=) tmp3 tmp4))
+      )) tmp) in
+    let tmp2 = (not tmp1) in
+    (if tmp2 then (let tmp3 = (!(used)) in
+    let tmp4 = ((x, t) :: tmp3) in
+    ((used) := tmp4)) else ()))) in
   let p1 = (BatList.map (fun d -> (match d with
-      | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp = ((raise_failures__go used) (l).FStarC_Custard_Syntax.dl_body) in
+      | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp = ((raise_failures__go exit_ty use) (l).FStarC_Custard_Syntax.dl_body) in
         let tmp1 = { FStarC_Custard_Syntax.dl_name = (l).FStarC_Custard_Syntax.dl_name;
             dl_typars = (l).FStarC_Custard_Syntax.dl_typars;
             dl_binders = (l).FStarC_Custard_Syntax.dl_binders;
@@ -57,12 +83,22 @@ let raise_failures (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syn
       | (x, tmp2) -> (let tmp3 = (declared x) in
         (not tmp3))
     )) tmp) in
-  let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
+  let tmp1 = (!(exit_ty)) in
+  let exit_decl = (match tmp1 with
+      | None -> []
+      | (Some (t)) -> ((FStarC_Custard_Syntax.DExternal ({ FStarC_Custard_Syntax.dx_name = cherry_exit_name;
+          dx_typars = [];
+          dx_ty = (FStarC_Custard_Syntax.TArrow (t, FStarC_Custard_Syntax.E_Impure, FStarC_Custard_Syntax.TUnit));
+          dx_target = (Some ("cherry_exit"));
+          dx_header = (Some ("cherry.h"));
+          dx_flags = [] })) :: [])
+    ) in
+  let tmp2 = (BatList.map (fun tmp2 -> (match tmp2 with
       | (x, t) -> (FStarC_Custard_Syntax.DExn ({ FStarC_Custard_Syntax.de_name = x;
           de_args = (t :: []);
           de_flags = [] }))
     )) missing) in
-  (BatList.append tmp1 p1))
+  (BatList.append tmp2 (BatList.append exit_decl p1)))
 
 let rec tv_any (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_Syntax.cty =
   (match t with
@@ -212,8 +248,9 @@ let boxed_types (p : (FStarC_Custard_Syntax.decl) list) : (string) list =
       | (FStarC_Custard_Syntax.TRecord (u__0)) -> true
       | tmp -> false
     )) -> (let k = (FStarC_Custard_Syntax.string_of_name (dt).FStarC_Custard_Syntax.dt_name) in
-      let tmp = (field_types (dt).FStarC_Custard_Syntax.dt_body) in
-      let tmp1 = (BatList.exists (reaches tbl k) tmp) in
+      let tmp = (FStarC_Custard_Syntax.has_flag (dt).FStarC_Custard_Syntax.dt_flags FStarC_Custard_Syntax.CherryBoxed) in
+      let tmp1 = (if tmp then true else (let tmp1 = (field_types (dt).FStarC_Custard_Syntax.dt_body) in
+        (BatList.exists (reaches tbl k) tmp1))) in
       (if tmp1 then (k :: []) else []))
     | tmp -> []
   )) p))
@@ -368,7 +405,7 @@ let derecord (bx : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (
   )) p))))
 
 let runtime_externals : ((string * string * (bool) list)) list =
-  (("Prims.op_Plus", "cherry_int_add", []) :: (("Prims.op_Minus", "cherry_int_sub", []) :: (("Prims.op_Star", "cherry_int_mul", []) :: (("Prims.op_Slash", "cherry_int_div", []) :: (("Prims.op_Percent", "cherry_int_mod", []) :: (("Prims.op_Tilde_Minus", "cherry_int_neg", []) :: (("Prims.op_Minus_Minus", "cherry_int_neg", []) :: (("Prims.op_Less", "cherry_int_lt", []) :: (("Prims.op_Less_Equals", "cherry_int_le", []) :: (("Prims.op_Greater", "cherry_int_gt", []) :: (("Prims.op_Greater_Equals", "cherry_int_ge", []) :: (("Prims.strcat", "cherry_str_append", (true :: [])) :: (("Prims.string_of_int", "cherry_string_of_int", []) :: (("Prims.string_of_bool", "cherry_string_of_bool", []) :: (("FStar.String.strlen", "cherry_str_length", []) :: (("FStar.String.index", "cherry_str_index", []) :: (("FStar.String.sub", "cherry_str_sub", []) :: (("FStar.String.compare", "cherry_str_compare", []) :: (("FStar.IO.print_string", "cherry_print_string", []) :: [])))))))))))))))))))
+  (("Prims.op_Plus", "cherry_int_add", []) :: (("Prims.op_Minus", "cherry_int_sub", []) :: (("Prims.op_Star", "cherry_int_mul", []) :: (("Prims.op_Slash", "cherry_int_div", []) :: (("Prims.op_Percent", "cherry_int_mod", []) :: (("Prims.op_Tilde_Minus", "cherry_int_neg", []) :: (("Prims.op_Minus_Minus", "cherry_int_neg", []) :: (("Prims.op_Less", "cherry_int_lt", []) :: (("Prims.op_Less_Equals", "cherry_int_le", []) :: (("Prims.op_Greater", "cherry_int_gt", []) :: (("Prims.op_Greater_Equals", "cherry_int_ge", []) :: (("Prims.strcat", "cherry_str_append", (true :: [])) :: (("Prims.string_of_int", "cherry_string_of_int", []) :: (("Prims.string_of_bool", "cherry_string_of_bool", []) :: (("FStar.String.strlen", "cherry_str_length", []) :: (("FStar.String.length", "cherry_str_length", []) :: (("FStar.String.index", "cherry_str_index", []) :: (("FStar.String.sub", "cherry_str_sub", []) :: (("FStar.String.compare", "cherry_str_compare", []) :: (("FStar.String.make", "cherry_str_make", []) :: (("FStar.Char.u32_of_char", "cherry_u32_of_char", []) :: (("FStar.Char.char_of_u32", "cherry_char_of_u32", []) :: (("FStar.Char.int_of_char", "cherry_int_of_char", []) :: (("FStar.Char.char_of_int", "cherry_char_of_int", []) :: (("FStar.Char.lowercase", "cherry_char_lowercase", []) :: (("FStar.Char.uppercase", "cherry_char_uppercase", []) :: (("FStar.Pprint.byte_size", "cherry_str_byte_size", []) :: (("FStar.Pprint.byte_at", "cherry_str_byte_at", []) :: (("FStar.Pprint.byte_sub", "cherry_str_byte_sub", []) :: (("FStar.IO.print_string", "cherry_print_string", []) :: []))))))))))))))))))))))))))))))
 
 let ctor_tbl : ((((string * FStarC_Custard_Syntax.cty)) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
   (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
@@ -381,6 +418,80 @@ let record_tbl : ((((string * FStarC_Custard_Syntax.cty)) list) FStarC_HashTable
 let extern_tbl : (((bool) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
   (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
   (ref tmp))
+
+let same_boxed (a : FStarC_Custard_Syntax.cty) (b : FStarC_Custard_Syntax.cty) : bool =
+  (match (a, b) with
+    | ((FStarC_Custard_Syntax.TApp (m, [])), (FStarC_Custard_Syntax.TApp (n, []))) -> (let tmp = (FStarC_Custard_Syntax.string_of_name m) in
+      let tmp1 = (FStarC_Custard_Syntax.string_of_name n) in
+      let tmp2 = ((=) tmp tmp1) in
+      (if tmp2 then (let tmp3 = (!(boxed_tbl)) in
+      let tmp4 = (FStarC_Custard_Syntax.string_of_name m) in
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp3 tmp4)) else false))
+    | tmp -> false
+  )
+
+let rec record_updates__go (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+  (let e1 = (FStarC_Custard_Syntax.map_children record_updates__go e) in
+  (match (e1).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.ECtor (cn, args)) when (match args with
+      | (hd :: tl) -> true
+      | tmp -> false
+    ) -> (let tmp = (!(ctor_tbl)) in
+      let tmp1 = (FStarC_Custard_Syntax.string_of_name cn) in
+      let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp tmp1) in
+      (match tmp2 with
+        | (Some (fs)) when (if ((=) ((fun l -> Z.of_int (BatList.length l)) fs) ((fun l -> Z.of_int (BatList.length l)) args)) then (same_boxed (e1).FStarC_Custard_Syntax.ty (e1).FStarC_Custard_Syntax.ty) else false) -> (let src = (fun f a -> (match (a).FStarC_Custard_Syntax.e with
+              | (FStarC_Custard_Syntax.EProj ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EVar (x)); ty = t; eff = tmp3; _ }, tmp4, g)) when (if ((=) g f) then (same_boxed t (e1).FStarC_Custard_Syntax.ty) else false) -> (Some (x))
+              | tmp3 -> None
+            )) in
+          let srcs = (BatList.map2 (fun tmp3 a -> (match tmp3 with
+              | (f, tmp4) -> (src f a)
+            )) fs args) in
+          let tmp3 = (List.find_opt Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_uu___is_Some srcs) in
+          (match tmp3 with
+            | (Some ((Some (x)))) -> (let kept = (BatList.map (fun s -> ((=) s (Some (x)))) srcs) in
+              let tmp4 = (BatList.filter (fun k -> k) kept) in
+              let nk = ((fun l -> Z.of_int (BatList.length l)) tmp4) in
+              (if (Prims.op_Less (Prims.op_Star (Prims.of_int (2)) nk) ((fun l -> Z.of_int (BatList.length l)) kept)) then e1 else (let tmp5 = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp5 -> i) args) in
+              let tmp6 = (BatList.combine (BatList.combine kept args) tmp5) in
+              let changed = (BatList.filter (fun tmp7 -> (match tmp7 with
+                  | ((k, tmp8), tmp9) -> (not k)
+                )) tmp6) in
+              let tmp7 = (BatList.map (fun x1 -> (match x1 with
+                  | (u__1, u__2) -> u__2
+                )) changed) in
+              let tmp8 = (cn, tmp7) in
+              let tmp9 = (FStarC_Custard_Syntax.Update ((match tmp8 with (custard_tup, _) -> custard_tup), (match tmp8 with (_, custard_tup) -> custard_tup))) in
+              let tmp10 = { FStarC_Custard_Syntax.po_op = tmp9; po_ty = None } in
+              let tmp11 = (BatList.map (fun tmp11 -> (match tmp11 with
+                  | ((tmp12, a), tmp13) -> a
+                )) changed) in
+              let tmp12 = ((FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar (x)) (e1).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Pure) :: tmp11) in
+              let tmp13 = (tmp10, tmp12) in
+              let tmp14 = (FStarC_Custard_Syntax.EOp ((match tmp13 with (custard_tup, _) -> custard_tup), (match tmp13 with (_, custard_tup) -> custard_tup))) in
+              { FStarC_Custard_Syntax.e = tmp14;
+                ty = (e1).FStarC_Custard_Syntax.ty;
+                eff = (e1).FStarC_Custard_Syntax.eff })))
+            | tmp4 -> e1
+          ))
+        | tmp3 -> e1
+      ))
+    | tmp -> e1
+  ))
+
+let record_updates (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) list =
+  (BatList.map (fun d -> (match d with
+    | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp = (record_updates__go (l).FStarC_Custard_Syntax.dl_body) in
+      let tmp1 = { FStarC_Custard_Syntax.dl_name = (l).FStarC_Custard_Syntax.dl_name;
+          dl_typars = (l).FStarC_Custard_Syntax.dl_typars;
+          dl_binders = (l).FStarC_Custard_Syntax.dl_binders;
+          dl_ret = (l).FStarC_Custard_Syntax.dl_ret;
+          dl_eff = (l).FStarC_Custard_Syntax.dl_eff;
+          dl_body = tmp;
+          dl_flags = (l).FStarC_Custard_Syntax.dl_flags } in
+      (FStarC_Custard_Syntax.DLet (tmp1)))
+    | d1 -> d1
+  )) p)
 
 let fn_tbl : ((((FStarC_Custard_Syntax.binder) list * FStarC_Custard_Syntax.cty)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
   (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
@@ -404,20 +515,36 @@ let extern_arity : (((Prims.int * (FStarC_Custard_Syntax.cty) option)) FStarC_Ha
 let counter : (Prims.int ref) =
   (ref Prims.int_zero)
 
-let rec unguard__go__split (pre : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) (brs : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) : ((((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list * FStarC_Custard_Syntax.pat * FStarC_Custard_Syntax.expr * FStarC_Custard_Syntax.expr * ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list)) option =
+let has_guard (brs : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) : bool =
+  (BatList.exists (fun tmp -> (match tmp with
+    | (tmp1, g, tmp2) -> (match g with
+        | (Some (v)) -> true
+        | tmp3 -> false
+      )
+  )) brs)
+
+let co_fresh (tmp : unit) : string =
+  (let tmp1 = (!(co_counter)) in
+  let tmp2 = (Prims.op_Plus tmp1 Prims.int_one) in
+  ((co_counter) := tmp2);
+  let tmp3 = (!(co_counter)) in
+  let tmp4 = (Prims.string_of_int tmp3) in
+  (Prims.strcat "cherry_co" tmp4))
+
+let rec unguard_node__go__split (pre : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) (brs : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) : ((((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list * FStarC_Custard_Syntax.pat * FStarC_Custard_Syntax.expr * FStarC_Custard_Syntax.expr * ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list)) option =
   (match brs with
     | [] -> None
     | ((p, (Some (g)), b) :: rest) -> (Some (((BatList.rev pre), p, g, b, rest)))
-    | (br :: rest) -> (unguard__go__split (br :: pre) rest)
+    | (br :: rest) -> (unguard_node__go__split (br :: pre) rest)
   )
 
-let rec unguard__go (e : FStarC_Custard_Syntax.expr) (scv : FStarC_Custard_Syntax.expr) (brs : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) : FStarC_Custard_Syntax.expr =
-  (match (unguard__go__split [] brs) with
+let rec unguard_node__go (e : FStarC_Custard_Syntax.expr) (scv : FStarC_Custard_Syntax.expr) (brs : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) : FStarC_Custard_Syntax.expr =
+  (match (unguard_node__go__split [] brs) with
     | None -> (if (match brs with
         | [] -> true
         | tmp -> false
       ) then (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EAbort ("match failure")) (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure) else (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EMatch (scv, brs)) (e).FStarC_Custard_Syntax.ty (e).FStarC_Custard_Syntax.eff))
-    | (Some ((pre, p, g, b, rest))) -> (let after = ((unguard__go e) scv rest) in
+    | (Some ((pre, p, g, b, rest))) -> (let after = ((unguard_node__go e) scv rest) in
       let irrefutable = (match p with
           | (FStarC_Custard_Syntax.PVar (tmp)) -> true
           | FStarC_Custard_Syntax.PWild -> true
@@ -432,32 +559,29 @@ let rec unguard__go (e : FStarC_Custard_Syntax.expr) (scv : FStarC_Custard_Synta
       ) then k else (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EMatch (scv, (BatList.append pre ((FStarC_Custard_Syntax.PWild, None, k) :: [])))) (e).FStarC_Custard_Syntax.ty (e).FStarC_Custard_Syntax.eff)))
   )
 
-let co_fresh (tmp : unit) : string =
-  (let tmp1 = (!(co_counter)) in
-  let tmp2 = (Prims.op_Plus tmp1 Prims.int_one) in
-  ((co_counter) := tmp2);
-  let tmp3 = (!(co_counter)) in
-  let tmp4 = (Prims.string_of_int tmp3) in
-  (Prims.strcat "cherry_co" tmp4))
-
-let rec unguard (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
-  (let e1 = (FStarC_Custard_Syntax.map_children unguard e) in
-  (match (e1).FStarC_Custard_Syntax.e with
-    | (FStarC_Custard_Syntax.EMatch (sc, brs)) when (BatList.exists (fun tmp -> (match tmp with
-      | (tmp1, g, tmp2) -> (match g with
-          | (Some (v)) -> true
-          | tmp3 -> false
-        )
-    )) brs) -> (match (sc).FStarC_Custard_Syntax.e with
-        | (FStarC_Custard_Syntax.EVar (tmp)) -> ((unguard__go e1) sc brs)
+let rec unguard_node (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+  (match (e).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.ETry (s, brs)) when (has_guard brs) -> (let x = (co_fresh ()) in
+      let xv = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar (x)) FStarC_Custard_Syntax.TExn FStarC_Custard_Syntax.E_Pure) in
+      let again = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ERaise (xv)) (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure) in
+      let h = (unguard_node (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EMatch (xv, (BatList.append brs ((FStarC_Custard_Syntax.PWild, None, again) :: [])))) (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure)) in
+      { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.ETry (s, (((FStarC_Custard_Syntax.PVar (x)), None, h) :: [])));
+        ty = (e).FStarC_Custard_Syntax.ty;
+        eff = (e).FStarC_Custard_Syntax.eff })
+    | (FStarC_Custard_Syntax.EMatch (sc, brs)) when (has_guard brs) -> (match (sc).FStarC_Custard_Syntax.e with
+        | (FStarC_Custard_Syntax.EVar (tmp)) -> ((unguard_node__go e) sc brs)
         | tmp -> (let x = (co_fresh ()) in
-          let tmp1 = ((unguard__go e1) (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar (x)) (sc).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Pure) brs) in
+          let tmp1 = ((unguard_node__go e) (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar (x)) (sc).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Pure) brs) in
           let tmp2 = (x, (sc).FStarC_Custard_Syntax.ty, sc, tmp1) in
           let tmp3 = (FStarC_Custard_Syntax.ELet ((match tmp2 with (custard_tup, _, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _, _) -> custard_tup), (match tmp2 with (_, _, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, _, custard_tup) -> custard_tup))) in
-          (FStarC_Custard_Syntax.mk tmp3 (e1).FStarC_Custard_Syntax.ty (e1).FStarC_Custard_Syntax.eff))
+          (FStarC_Custard_Syntax.mk tmp3 (e).FStarC_Custard_Syntax.ty (e).FStarC_Custard_Syntax.eff))
       )
-    | tmp -> e1
-  ))
+    | tmp -> e
+  )
+
+let rec unguard (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+  (let tmp = (FStarC_Custard_Syntax.map_children unguard e) in
+  (unguard_node tmp))
 
 let rec pat_binds_opt (p : FStarC_Custard_Syntax.pat) (t : FStarC_Custard_Syntax.cty) : ((string * FStarC_Custard_Syntax.cty)) list =
   (match (p, t) with
@@ -510,36 +634,105 @@ let rec mentions_any (t : FStarC_Custard_Syntax.cty) : bool =
     | tmp -> false
   )
 
+let rec pat_vars (p : FStarC_Custard_Syntax.pat) : (string) list =
+  (match p with
+    | FStarC_Custard_Syntax.PWild -> []
+    | (FStarC_Custard_Syntax.PConst (tmp)) -> []
+    | (FStarC_Custard_Syntax.PVar (x)) -> (x :: [])
+    | (FStarC_Custard_Syntax.PCtor (tmp, ps)) -> ((fun f l -> BatList.flatten (BatList.map f l)) pat_vars ps)
+    | (FStarC_Custard_Syntax.PTuple (ps)) -> ((fun f l -> BatList.flatten (BatList.map f l)) pat_vars ps)
+    | (FStarC_Custard_Syntax.PRecord (tmp, fs)) -> ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp1 -> (match tmp1 with
+        | (tmp2, q) -> (pat_vars q)
+      )) fs)
+    | (FStarC_Custard_Syntax.POr ((q :: tmp))) -> (pat_vars q)
+    | (FStarC_Custard_Syntax.POr ([])) -> []
+  )
+
 let rec retype_vars (env : ((string * FStarC_Custard_Syntax.cty)) list) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
   (match (e).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.EVar (x)) -> (let tmp = (List.find_opt (fun tmp -> (match tmp with
           | (y, tmp1) -> ((=) y x)
         )) env) in
       (match tmp with
-        | (Some ((tmp1, t))) -> { FStarC_Custard_Syntax.e = (e).FStarC_Custard_Syntax.e;
+        | (Some ((tmp1, t))) when (mentions_any t) -> { FStarC_Custard_Syntax.e = (e).FStarC_Custard_Syntax.e;
             ty = t;
             eff = (e).FStarC_Custard_Syntax.eff }
-        | None -> e
+        | (Some ((tmp1, t))) when ((=) (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.TAny) -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECoerce ({ FStarC_Custard_Syntax.e = (e).FStarC_Custard_Syntax.e;
+            ty = t;
+            eff = (e).FStarC_Custard_Syntax.eff }, FStarC_Custard_Syntax.TAny)) FStarC_Custard_Syntax.TAny (e).FStarC_Custard_Syntax.eff)
+        | tmp1 -> e
       ))
+    | (FStarC_Custard_Syntax.ELet (x, t, a, b)) -> (let env' = (BatList.filter (fun tmp -> (match tmp with
+          | (y, tmp1) -> ((<>) y x)
+        )) env) in
+      let tmp = (retype_vars env a) in
+      let tmp1 = (retype_vars env' b) in
+      let tmp2 = (x, t, tmp, tmp1) in
+      let tmp3 = (FStarC_Custard_Syntax.ELet ((match tmp2 with (custard_tup, _, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _, _) -> custard_tup), (match tmp2 with (_, _, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, _, custard_tup) -> custard_tup))) in
+      { FStarC_Custard_Syntax.e = tmp3;
+        ty = (e).FStarC_Custard_Syntax.ty;
+        eff = (e).FStarC_Custard_Syntax.eff })
+    | (FStarC_Custard_Syntax.EFun (bs, b)) -> (let env' = (BatList.filter (fun tmp -> (match tmp with
+          | (y, tmp1) -> (let tmp2 = (BatList.exists (fun c -> ((=) (c).FStarC_Custard_Syntax.b_name y)) bs) in
+            (not tmp2))
+        )) env) in
+      let tmp = (retype_vars env' b) in
+      let tmp1 = (bs, tmp) in
+      let tmp2 = (FStarC_Custard_Syntax.EFun ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      { FStarC_Custard_Syntax.e = tmp2;
+        ty = (e).FStarC_Custard_Syntax.ty;
+        eff = (e).FStarC_Custard_Syntax.eff })
+    | (FStarC_Custard_Syntax.EMatch (sc, brs)) -> (let sub = (fun br -> (match br with
+          | (p, g, b) -> (let vs = (pat_vars p) in
+            let env' = (BatList.filter (fun tmp -> (match tmp with
+                | (y, tmp1) -> (not (BatList.mem y vs))
+              )) env) in
+            let tmp = (match g with
+                | (Some (g1)) -> (let tmp = (retype_vars env' g1) in
+                  (Some (tmp)))
+                | None -> None
+              ) in
+            let tmp1 = (retype_vars env' b) in
+            (p, tmp, tmp1))
+        )) in
+      let tmp = (retype_vars env sc) in
+      let tmp1 = (BatList.map sub brs) in
+      let tmp2 = (tmp, tmp1) in
+      let tmp3 = (FStarC_Custard_Syntax.EMatch ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+      { FStarC_Custard_Syntax.e = tmp3;
+        ty = (e).FStarC_Custard_Syntax.ty;
+        eff = (e).FStarC_Custard_Syntax.eff })
     | tmp -> (FStarC_Custard_Syntax.map_children (retype_vars env) e)
   )
 
 let retype_branch (st : FStarC_Custard_Syntax.cty) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr) =
   (match br with
-    | (p, g, b) -> (let tmp = (pat_binds_opt p st) in
-      let env = (BatList.filter (fun tmp1 -> (match tmp1 with
-          | (tmp2, t) -> (mentions_any t)
-        )) tmp) in
+    | (p, g, b) -> (let env = (pat_binds_opt p st) in
       (if (match env with
         | [] -> true
-        | tmp1 -> false
-      ) then br else (let tmp1 = (match g with
-          | (Some (g1)) -> (let tmp1 = (retype_vars env g1) in
-            (Some (tmp1)))
+        | tmp -> false
+      ) then br else (let tmp = (match g with
+          | (Some (g1)) -> (let tmp = (retype_vars env g1) in
+            (Some (tmp)))
           | None -> None
         ) in
-      let tmp2 = (retype_vars env b) in
-      (p, tmp1, tmp2))))
+      let tmp1 = (retype_vars env b) in
+      (p, tmp, tmp1))))
+  )
+
+let at_signature (a : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+  (match (a).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.EQual (n, tmp)) -> (let tmp1 = (!(fn_tbl)) in
+      let tmp2 = (FStarC_Custard_Syntax.string_of_name n) in
+      let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp1 tmp2) in
+      (match tmp3 with
+        | (Some ((bs, r))) -> (let tmp4 = (BatList.fold_right (fun b r1 -> (FStarC_Custard_Syntax.TArrow ((b).FStarC_Custard_Syntax.b_ty, FStarC_Custard_Syntax.E_Impure, r1))) bs r) in
+          { FStarC_Custard_Syntax.e = (a).FStarC_Custard_Syntax.e;
+            ty = tmp4;
+            eff = (a).FStarC_Custard_Syntax.eff })
+        | None -> a
+      ))
+    | tmp -> a
   )
 
 let rec arrow_parts (t : FStarC_Custard_Syntax.cty) : (((FStarC_Custard_Syntax.cty * FStarC_Custard_Syntax.eff)) list * FStarC_Custard_Syntax.cty) =
@@ -560,19 +753,7 @@ let uniform_arrow (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_Syntax.cty =
   ))
 
 let rec coerce_any (a : FStarC_Custard_Syntax.expr) (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_Syntax.expr =
-  (let a1 = (match (a).FStarC_Custard_Syntax.e with
-      | (FStarC_Custard_Syntax.EQual (n, tmp)) -> (let tmp1 = (!(fn_tbl)) in
-        let tmp2 = (FStarC_Custard_Syntax.string_of_name n) in
-        let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp1 tmp2) in
-        (match tmp3 with
-          | (Some ((bs, r))) -> (let tmp4 = (BatList.fold_right (fun b r1 -> (FStarC_Custard_Syntax.TArrow ((b).FStarC_Custard_Syntax.b_ty, FStarC_Custard_Syntax.E_Impure, r1))) bs r) in
-            { FStarC_Custard_Syntax.e = (a).FStarC_Custard_Syntax.e;
-              ty = tmp4;
-              eff = (a).FStarC_Custard_Syntax.eff })
-          | None -> a
-        ))
-      | tmp -> a
-    ) in
+  (let a1 = (at_signature a) in
   (if ((=) (a1).FStarC_Custard_Syntax.ty t) then a1 else (match (a1).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Dyn ("mk")); po_ty = tmp; _ }, (x :: []))) when ((=) (x).FStarC_Custard_Syntax.ty t) -> x
     | tmp -> (match ((a1).FStarC_Custard_Syntax.ty, t) with
@@ -616,6 +797,32 @@ let rec coerce_any (a : FStarC_Custard_Syntax.expr) (t : FStarC_Custard_Syntax.c
                       let call_ = (FStarC_Custard_Syntax.mk tmp6 tr FStarC_Custard_Syntax.E_Impure) in
                       let lam = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EFun (bs, call_)) t FStarC_Custard_Syntax.E_Pure) in
                       (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ELet (f, (a1).FStarC_Custard_Syntax.ty, a1, lam)) t (a1).FStarC_Custard_Syntax.eff))
+                  )) else (if (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) ss) ((fun l -> Z.of_int (BatList.length l)) ts)) then (let f = (co_fresh ()) in
+                  let fv_ = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar (f)) (a1).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Pure) in
+                  let n = ((fun l -> Z.of_int (BatList.length l)) ts) in
+                  let tmp3 = ((fun n l -> BatList.split_at (Z.to_int n) l) n ss) in
+                  (match tmp3 with
+                    | (ss1, ss2) -> (let bs1 = (BatList.map (fun tmp4 -> (match tmp4 with
+                          | (ty, tmp5) -> (let tmp6 = (co_fresh ()) in
+                            { FStarC_Custard_Syntax.b_name = tmp6; b_ty = ty })
+                        )) ts) in
+                      let bs2 = (BatList.map (fun tmp4 -> (match tmp4 with
+                          | (ty, tmp5) -> (let tmp6 = (co_fresh ()) in
+                            { FStarC_Custard_Syntax.b_name = tmp6; b_ty = ty })
+                        )) ss2) in
+                      let args1 = (BatList.map2 (fun b tmp4 -> (match tmp4 with
+                          | (s, tmp5) -> (coerce_any (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ((b).FStarC_Custard_Syntax.b_name)) (b).FStarC_Custard_Syntax.b_ty FStarC_Custard_Syntax.E_Pure) s)
+                        )) bs1 ss1) in
+                      let args2 = (BatList.map (fun b -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ((b).FStarC_Custard_Syntax.b_name)) (b).FStarC_Custard_Syntax.b_ty FStarC_Custard_Syntax.E_Pure)) bs2) in
+                      let rest_ty = (BatList.fold_right (fun tmp4 r -> (match tmp4 with
+                          | (x, ef) -> (FStarC_Custard_Syntax.TArrow (x, ef, r))
+                        )) ss2 sr) in
+                      let inner_ = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EFun (bs2, (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EApp (fv_, (BatList.append args1 args2))) sr FStarC_Custard_Syntax.E_Impure))) rest_ty FStarC_Custard_Syntax.E_Pure) in
+                      let tmp4 = (coerce_any inner_ tr) in
+                      let tmp5 = (bs1, tmp4) in
+                      let tmp6 = (FStarC_Custard_Syntax.EFun ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))) in
+                      let lam = (FStarC_Custard_Syntax.mk tmp6 t FStarC_Custard_Syntax.E_Pure) in
+                      (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ELet (f, (a1).FStarC_Custard_Syntax.ty, a1, lam)) t (a1).FStarC_Custard_Syntax.eff))
                   )) else (if ((<>) ((fun l -> Z.of_int (BatList.length l)) ss) ((fun l -> Z.of_int (BatList.length l)) ts)) then (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECoerce (a1, t)) t (a1).FStarC_Custard_Syntax.eff) else (let f = (co_fresh ()) in
                   let fv_ = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar (f)) (a1).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Pure) in
                   let bs = (BatList.map (fun tmp3 -> (match tmp3 with
@@ -630,7 +837,7 @@ let rec coerce_any (a : FStarC_Custard_Syntax.expr) (t : FStarC_Custard_Syntax.c
                   let tmp4 = (bs, tmp3) in
                   let tmp5 = (FStarC_Custard_Syntax.EFun ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
                   let lam = (FStarC_Custard_Syntax.mk tmp5 t FStarC_Custard_Syntax.E_Pure) in
-                  (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ELet (f, (a1).FStarC_Custard_Syntax.ty, a1, lam)) t (a1).FStarC_Custard_Syntax.eff))))
+                  (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ELet (f, (a1).FStarC_Custard_Syntax.ty, a1, lam)) t (a1).FStarC_Custard_Syntax.eff)))))
               ))
           ))
         | tmp1 -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.ECoerce (a1, t)) t (a1).FStarC_Custard_Syntax.eff)
@@ -642,6 +849,38 @@ let rec lower_any__peel (n : Prims.int) (t : FStarC_Custard_Syntax.cty) : (FStar
     | (FStarC_Custard_Syntax.TArrow (tmp, tmp1, b)) -> (lower_any__peel (Prims.op_Minus n Prims.int_one) b)
     | tmp -> None
   ))
+
+let rec mentions_tvar (t : FStarC_Custard_Syntax.cty) : bool =
+  (match t with
+    | (FStarC_Custard_Syntax.TVar (tmp)) -> true
+    | (FStarC_Custard_Syntax.TArrow (a, tmp, b)) -> (let tmp1 = (mentions_tvar a) in
+      (if tmp1 then true else (mentions_tvar b)))
+    | (FStarC_Custard_Syntax.TApp (tmp, ts)) -> (BatList.exists mentions_tvar ts)
+    | (FStarC_Custard_Syntax.TTuple (ts)) -> (BatList.exists mentions_tvar ts)
+    | (FStarC_Custard_Syntax.TBuf (c)) -> (mentions_tvar c)
+    | (FStarC_Custard_Syntax.TRef (tmp, c)) -> (mentions_tvar c)
+    | (FStarC_Custard_Syntax.TInline (c)) -> (mentions_tvar c)
+    | tmp -> false
+  )
+
+let rec common_mk__go (acc : (FStarC_Custard_Syntax.cty) option) (brs : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) : (FStarC_Custard_Syntax.cty) option =
+  (match brs with
+    | [] -> acc
+    | ((tmp, tmp1, b) :: rest) -> (match (b).FStarC_Custard_Syntax.e with
+        | (FStarC_Custard_Syntax.EAbort (tmp2)) -> (common_mk__go acc rest)
+        | (FStarC_Custard_Syntax.EUnreachable (tmp2)) -> (common_mk__go acc rest)
+        | (FStarC_Custard_Syntax.ERaise (tmp2)) -> (common_mk__go acc rest)
+        | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Dyn ("mk")); po_ty = tmp2; _ }, (x :: []))) when (let tmp3 = (mentions_any (x).FStarC_Custard_Syntax.ty) in
+        (not tmp3)) -> (match acc with
+            | None -> (common_mk__go (Some ((x).FStarC_Custard_Syntax.ty)) rest)
+            | (Some (t)) -> (if ((=) t (x).FStarC_Custard_Syntax.ty) then (common_mk__go acc rest) else None)
+          )
+        | tmp2 -> None
+      )
+  )
+
+let common_mk (brs : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) : (FStarC_Custard_Syntax.cty) option =
+  (common_mk__go None brs)
 
 let arm_to (t : FStarC_Custard_Syntax.cty) (a : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
   (match (a).FStarC_Custard_Syntax.e with
@@ -671,15 +910,54 @@ let rec lower_any (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr 
   (match (e2).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.ECoerce (a, t)) when (if ((<>) (a).FStarC_Custard_Syntax.ty t) then (let tmp = (mentions_any (a).FStarC_Custard_Syntax.ty) in
     (if tmp then true else (mentions_any t))) else false) -> (coerce_any a t)
-    | (FStarC_Custard_Syntax.EApp (hd, args)) -> (match (lower_any__peel ((fun l -> Z.of_int (BatList.length l)) args) (hd).FStarC_Custard_Syntax.ty) with
-        | None -> e2
-        | (Some (r)) -> (if ((=) r (e2).FStarC_Custard_Syntax.ty) then e2 else (let tmp = (mentions_any r) in
-          (if tmp then (coerce_any { FStarC_Custard_Syntax.e = (e2).FStarC_Custard_Syntax.e;
-            ty = r;
-            eff = (e2).FStarC_Custard_Syntax.eff } (e2).FStarC_Custard_Syntax.ty) else (if ((=) (e2).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.TAny) then { FStarC_Custard_Syntax.e = (e2).FStarC_Custard_Syntax.e;
-            ty = r;
-            eff = (e2).FStarC_Custard_Syntax.eff } else e2))))
-      )
+    | (FStarC_Custard_Syntax.EApp (hd, args)) -> (let tmp = (at_signature hd) in
+      let tmp1 = (tmp).FStarC_Custard_Syntax.ty in
+      let tmp2 = (arrow_parts tmp1) in
+      (match tmp2 with
+        | (ps, tmp3) -> (let args1 = (if (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) ps) ((fun l -> Z.of_int (BatList.length l)) args)) then args else (BatList.map2 (fun a tmp4 -> (match tmp4 with
+              | (p, tmp5) -> (let tmp6 = (if ((<>) (a).FStarC_Custard_Syntax.ty p) then (let tmp6 = (mentions_any (a).FStarC_Custard_Syntax.ty) in
+                  (if tmp6 then true else (mentions_any p))) else false) in
+                let tmp7 = (if tmp6 then (let tmp7 = (mentions_tvar p) in
+                  (not tmp7)) else false) in
+                (if tmp7 then (coerce_any a p) else a))
+            )) args (match ((fun n l -> BatList.split_at (Z.to_int n) l) ((fun l -> Z.of_int (BatList.length l)) args) ps) with
+              | (u__1, u__2) -> u__1
+            ))) in
+          let e3 = { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EApp (hd, args1));
+              ty = (e2).FStarC_Custard_Syntax.ty;
+              eff = (e2).FStarC_Custard_Syntax.eff } in
+          (match (lower_any__peel ((fun l -> Z.of_int (BatList.length l)) args1) (hd).FStarC_Custard_Syntax.ty) with
+            | None -> e3
+            | (Some (r)) -> (if ((=) r (e3).FStarC_Custard_Syntax.ty) then e3 else (let tmp4 = (mentions_any r) in
+              (if tmp4 then (coerce_any { FStarC_Custard_Syntax.e = (e3).FStarC_Custard_Syntax.e;
+                ty = r;
+                eff = (e3).FStarC_Custard_Syntax.eff } (e3).FStarC_Custard_Syntax.ty) else (if ((=) (e3).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.TAny) then { FStarC_Custard_Syntax.e = (e3).FStarC_Custard_Syntax.e;
+                ty = r;
+                eff = (e3).FStarC_Custard_Syntax.eff } else e3))))
+          ))
+      ))
+    | (FStarC_Custard_Syntax.EMatch (sc, brs)) when (((=) (e2).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.TAny) && (match (common_mk brs) with
+      | (Some (v)) -> true
+      | tmp -> false
+    )) -> (let t = (match (common_mk brs) with
+          | (Some (v)) -> v
+        ) in
+      let unmk = (fun b -> (match (b).FStarC_Custard_Syntax.e with
+          | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Dyn ("mk")); po_ty = tmp; _ }, (x :: []))) -> x
+          | tmp -> { FStarC_Custard_Syntax.e = (b).FStarC_Custard_Syntax.e;
+              ty = t;
+              eff = (b).FStarC_Custard_Syntax.eff }
+        )) in
+      let tmp = (BatList.map (fun tmp -> (match tmp with
+          | (p, g, b) -> (p, g, (unmk b))
+        )) brs) in
+      let tmp1 = (sc, tmp) in
+      let tmp2 = (FStarC_Custard_Syntax.EMatch ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      let m = { FStarC_Custard_Syntax.e = tmp2;
+          ty = t;
+          eff = (e2).FStarC_Custard_Syntax.eff } in
+      (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Dyn ("mk"));
+        po_ty = None }, (m :: []))) FStarC_Custard_Syntax.TAny (e2).FStarC_Custard_Syntax.eff))
     | (FStarC_Custard_Syntax.EIf (c, a, b)) when (let tmp = (mentions_any (e2).FStarC_Custard_Syntax.ty) in
     let tmp1 = (if tmp then true else (mentions_any (a).FStarC_Custard_Syntax.ty)) in
     (if tmp1 then true else (mentions_any (b).FStarC_Custard_Syntax.ty))) -> (let tmp = (arm_to (e2).FStarC_Custard_Syntax.ty a) in
@@ -706,7 +984,8 @@ let rec lower_any (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr 
 
 let lower_any_decl (d : FStarC_Custard_Syntax.decl) : FStarC_Custard_Syntax.decl =
   (match d with
-    | (FStarC_Custard_Syntax.DLet (l)) -> (let b = (lower_any (l).FStarC_Custard_Syntax.dl_body) in
+    | (FStarC_Custard_Syntax.DLet (l)) -> (((co_counter) := Prims.int_zero);
+      let b = (lower_any (l).FStarC_Custard_Syntax.dl_body) in
       let tmp = (if ((<>) (b).FStarC_Custard_Syntax.ty (l).FStarC_Custard_Syntax.dl_ret) then (let tmp = (mentions_any (b).FStarC_Custard_Syntax.ty) in
         (if tmp then true else (mentions_any (l).FStarC_Custard_Syntax.dl_ret))) else false) in
       let b1 = (if tmp then (coerce_any b (l).FStarC_Custard_Syntax.dl_ret) else b) in
@@ -822,22 +1101,17 @@ let eta_extern (hd : FStarC_Custard_Syntax.expr) : (FStarC_Custard_Syntax.expr) 
     | tmp -> None
   )
 
+let rec called_with (v : string) (n : Prims.int) (x : FStarC_Custard_Syntax.expr) : bool =
+  (let tmp = (FStarC_Custard_Syntax.occurs v x) in
+  let tmp1 = (not tmp) in
+  (if tmp1 then true else (match (x).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.EVar (tmp2)) -> false
+    | (FStarC_Custard_Syntax.EApp ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EVar (w)); ty = tmp2; eff = tmp3; _ }, es)) when ((=) w v) -> (if ((=) ((fun l -> Z.of_int (BatList.length l)) es) n) then (BatList.for_all (called_with v n) es) else false)
+    | tmp2 -> (FStarC_Custard_Syntax.for_all_children (called_with v n) x)
+  )))
+
 let without (xs : (string) list) (eta : (string) list) : (string) list =
   (BatList.filter (fun y -> (not (BatList.mem y xs))) eta)
-
-let rec pat_vars (p : FStarC_Custard_Syntax.pat) : (string) list =
-  (match p with
-    | FStarC_Custard_Syntax.PWild -> []
-    | (FStarC_Custard_Syntax.PConst (tmp)) -> []
-    | (FStarC_Custard_Syntax.PVar (x)) -> (x :: [])
-    | (FStarC_Custard_Syntax.PCtor (tmp, ps)) -> ((fun f l -> BatList.flatten (BatList.map f l)) pat_vars ps)
-    | (FStarC_Custard_Syntax.PTuple (ps)) -> ((fun f l -> BatList.flatten (BatList.map f l)) pat_vars ps)
-    | (FStarC_Custard_Syntax.PRecord (tmp, fs)) -> ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp1 -> (match tmp1 with
-        | (tmp2, q) -> (pat_vars q)
-      )) fs)
-    | (FStarC_Custard_Syntax.POr ((q :: tmp))) -> (pat_vars q)
-    | (FStarC_Custard_Syntax.POr ([])) -> []
-  )
 
 let rec fv_branch (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) : (string) list =
   (match br with
@@ -887,7 +1161,53 @@ let rec arrows (ts : (FStarC_Custard_Syntax.cty) list) (r : FStarC_Custard_Synta
       (FStarC_Custard_Syntax.TArrow ((match tmp1 with (custard_tup, _, _) -> custard_tup), (match tmp1 with (_, custard_tup, _) -> custard_tup), (match tmp1 with (_, _, custard_tup) -> custard_tup))))
   )
 
-let rec lift_branch (env : ((string * FStarC_Custard_Syntax.cty)) list) (st : FStarC_Custard_Syntax.cty) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr) =
+let rec binders_in (x : FStarC_Custard_Syntax.expr) : (string) list =
+  (let here = (match (x).FStarC_Custard_Syntax.e with
+      | (FStarC_Custard_Syntax.ELet (v, tmp, tmp1, tmp2)) -> (v :: [])
+      | (FStarC_Custard_Syntax.EFun (bs, tmp)) -> (BatList.map (fun b -> (b).FStarC_Custard_Syntax.b_name) bs)
+      | (FStarC_Custard_Syntax.EMatch (tmp, brs)) -> ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp1 -> (match tmp1 with
+          | (p, tmp2, tmp3) -> (pat_vars p)
+        )) brs)
+      | (FStarC_Custard_Syntax.ETry (tmp, brs)) -> ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp1 -> (match tmp1 with
+          | (p, tmp2, tmp3) -> (pat_vars p)
+        )) brs)
+      | tmp -> []
+    ) in
+  let tmp = (FStarC_Custard_Syntax.children x) in
+  let tmp1 = ((fun f l -> BatList.flatten (BatList.map f l)) binders_in tmp) in
+  (BatList.append here tmp1))
+
+let rec call_direct (v : string) (hd : FStarC_Custard_Syntax.expr) (caps : (FStarC_Custard_Syntax.expr) list) (x : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+  (match (x).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.EApp ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EVar (w)); ty = tmp; eff = tmp1; _ }, es)) when ((=) w v) -> (let tmp2 = (BatList.map (call_direct v hd caps) es) in
+      let tmp3 = (BatList.append caps tmp2) in
+      let tmp4 = (hd, tmp3) in
+      let tmp5 = (FStarC_Custard_Syntax.EApp ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
+      { FStarC_Custard_Syntax.e = tmp5;
+        ty = (x).FStarC_Custard_Syntax.ty;
+        eff = (x).FStarC_Custard_Syntax.eff })
+    | tmp -> (FStarC_Custard_Syntax.map_children (call_direct v hd caps) x)
+  )
+
+let rec lift_lambda (env : ((string * FStarC_Custard_Syntax.cty)) list) (bs : (FStarC_Custard_Syntax.binder) list) (body : FStarC_Custard_Syntax.expr) (t : FStarC_Custard_Syntax.cty) : (FStarC_Custard_Syntax.expr * (FStarC_Custard_Syntax.binder) list) =
+  (let tmp = (BatList.map (fun b -> ((b).FStarC_Custard_Syntax.b_name, (b).FStarC_Custard_Syntax.b_ty)) bs) in
+  let tmp1 = (BatList.append tmp env) in
+  let body1 = (lift tmp1 body) in
+  let tmp2 = (BatList.map (fun b -> (b).FStarC_Custard_Syntax.b_name) bs) in
+  let tmp3 = (fv body1) in
+  let tmp4 = (without tmp2 tmp3) in
+  let tmp5 = (dedup tmp4) in
+  let caps = (BatList.map (fun x -> (match (FStarC_List.assoc x env) with
+      | (Some (t1)) -> { FStarC_Custard_Syntax.b_name = x; b_ty = t1 }
+      | None -> (unsupported (Prims.strcat "a lambda capturing " (Prims.strcat x ", whose type is unknown")))
+    )) tmp5) in
+  let n = (new_fn (BatList.append caps bs) body1) in
+  let tmp6 = (BatList.map (fun b -> (b).FStarC_Custard_Syntax.b_ty) caps) in
+  let tmp7 = (arrows tmp6 t) in
+  let tmp8 = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EQual (n, [])) tmp7 FStarC_Custard_Syntax.E_Pure) in
+  (tmp8, caps))
+
+and lift_branch (env : ((string * FStarC_Custard_Syntax.cty)) list) (st : FStarC_Custard_Syntax.cty) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr) =
   (match br with
     | (p, g, b) -> (let tmp = (pat_binds_opt p st) in
       let env1 = (BatList.append tmp env) in
@@ -909,6 +1229,35 @@ and lift (env : ((string * FStarC_Custard_Syntax.cty)) list) (e : FStarC_Custard
       (match tmp with
         | (Some (e')) -> e'
         | None -> e
+      ))
+    | (FStarC_Custard_Syntax.ELet (x, t, a, b)) when (match (a).FStarC_Custard_Syntax.e with
+      | (FStarC_Custard_Syntax.EFun (bs, tmp)) -> (called_with x ((fun l -> Z.of_int (BatList.length l)) bs) b)
+      | tmp -> false
+    ) -> (let tmp = (a).FStarC_Custard_Syntax.e in
+      (match tmp with
+        | (FStarC_Custard_Syntax.EFun (bs, body)) -> (let tmp1 = (lift_lambda env bs body (a).FStarC_Custard_Syntax.ty) in
+          (match tmp1 with
+            | (hd, caps) -> (let bound = (binders_in b) in
+              let tmp2 = (BatList.exists (fun c -> (BatList.mem (c).FStarC_Custard_Syntax.b_name bound)) caps) in
+              let tmp3 = (if tmp2 then true else (BatList.mem x bound)) in
+              (if tmp3 then (let lam = (if (match caps with
+                  | [] -> true
+                  | tmp4 -> false
+                ) then { FStarC_Custard_Syntax.e = (hd).FStarC_Custard_Syntax.e;
+                  ty = (a).FStarC_Custard_Syntax.ty;
+                  eff = (hd).FStarC_Custard_Syntax.eff } else (let tmp4 = (BatList.map (fun c -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ((c).FStarC_Custard_Syntax.b_name)) (c).FStarC_Custard_Syntax.b_ty FStarC_Custard_Syntax.E_Pure)) caps) in
+                let tmp5 = (hd, tmp4) in
+                let tmp6 = (FStarC_Custard_Syntax.EApp ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))) in
+                (FStarC_Custard_Syntax.mk tmp6 (a).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure))) in
+              let tmp4 = (lift ((x, t) :: env) b) in
+              let tmp5 = (x, t, lam, tmp4) in
+              let tmp6 = (FStarC_Custard_Syntax.ELet ((match tmp5 with (custard_tup, _, _, _) -> custard_tup), (match tmp5 with (_, custard_tup, _, _) -> custard_tup), (match tmp5 with (_, _, custard_tup, _) -> custard_tup), (match tmp5 with (_, _, _, custard_tup) -> custard_tup))) in
+              { FStarC_Custard_Syntax.e = tmp6;
+                ty = (e).FStarC_Custard_Syntax.ty;
+                eff = (e).FStarC_Custard_Syntax.eff }) else (let capv = (BatList.map (fun c -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ((c).FStarC_Custard_Syntax.b_name)) (c).FStarC_Custard_Syntax.b_ty FStarC_Custard_Syntax.E_Pure)) caps) in
+              let tmp4 = (call_direct x hd capv b) in
+              (lift env tmp4))))
+          ))
       ))
     | (FStarC_Custard_Syntax.ELet (x, t, a, b)) -> (let tmp = (lift env a) in
       let tmp1 = (lift ((x, t) :: env) b) in
@@ -965,28 +1314,18 @@ and lift (env : ((string * FStarC_Custard_Syntax.cty)) list) (e : FStarC_Custard
             ty = t1;
             eff = (e).FStarC_Custard_Syntax.eff })
       ))
-    | (FStarC_Custard_Syntax.EFun (bs, body)) -> (let tmp = (BatList.map (fun b -> ((b).FStarC_Custard_Syntax.b_name, (b).FStarC_Custard_Syntax.b_ty)) bs) in
-      let tmp1 = (BatList.append tmp env) in
-      let body1 = (lift tmp1 body) in
-      let tmp2 = (BatList.map (fun b -> (b).FStarC_Custard_Syntax.b_name) bs) in
-      let tmp3 = (fv body1) in
-      let tmp4 = (without tmp2 tmp3) in
-      let tmp5 = (dedup tmp4) in
-      let caps = (BatList.map (fun x -> (match (FStarC_List.assoc x env) with
-          | (Some (t)) -> { FStarC_Custard_Syntax.b_name = x; b_ty = t }
-          | None -> (unsupported (Prims.strcat "a lambda capturing " (Prims.strcat x ", whose type is unknown")))
-        )) tmp5) in
-      let n = (new_fn (BatList.append caps bs) body1) in
-      (if (match caps with
-        | [] -> true
-        | tmp6 -> false
-      ) then (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EQual (n, [])) (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Pure) else (let tmp6 = (BatList.map (fun b -> (b).FStarC_Custard_Syntax.b_ty) caps) in
-      let tmp7 = (arrows tmp6 (e).FStarC_Custard_Syntax.ty) in
-      let hd = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EQual (n, [])) tmp7 FStarC_Custard_Syntax.E_Pure) in
-      let tmp8 = (BatList.map (fun b -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ((b).FStarC_Custard_Syntax.b_name)) (b).FStarC_Custard_Syntax.b_ty FStarC_Custard_Syntax.E_Pure)) caps) in
-      let tmp9 = (hd, tmp8) in
-      let tmp10 = (FStarC_Custard_Syntax.EApp ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))) in
-      (FStarC_Custard_Syntax.mk tmp10 (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure))))
+    | (FStarC_Custard_Syntax.EFun (bs, body)) -> (let tmp = (lift_lambda env bs body (e).FStarC_Custard_Syntax.ty) in
+      (match tmp with
+        | (hd, caps) -> (if (match caps with
+            | [] -> true
+            | tmp1 -> false
+          ) then { FStarC_Custard_Syntax.e = (hd).FStarC_Custard_Syntax.e;
+            ty = (e).FStarC_Custard_Syntax.ty;
+            eff = (hd).FStarC_Custard_Syntax.eff } else (let tmp1 = (BatList.map (fun b -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ((b).FStarC_Custard_Syntax.b_name)) (b).FStarC_Custard_Syntax.b_ty FStarC_Custard_Syntax.E_Pure)) caps) in
+          let tmp2 = (hd, tmp1) in
+          let tmp3 = (FStarC_Custard_Syntax.EApp ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+          (FStarC_Custard_Syntax.mk tmp3 (e).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.E_Impure)))
+      ))
     | (FStarC_Custard_Syntax.EApp (hd, args)) -> (let args1 = (BatList.map (lift env) args) in
       let hd1 = (match (hd).FStarC_Custard_Syntax.e with
           | (FStarC_Custard_Syntax.EQual (f, tmp)) -> (let tmp1 = (!(extern_arity)) in
@@ -1030,6 +1369,7 @@ let lift_decl (d : FStarC_Custard_Syntax.decl) : (FStarC_Custard_Syntax.decl) li
       ((current) := tmp);
       ((lift_parent) := (Some (l)));
       ((lifted) := []);
+      ((counter) := Prims.int_zero);
       let tmp1 = (BatList.map (fun b -> ((b).FStarC_Custard_Syntax.b_name, (b).FStarC_Custard_Syntax.b_ty)) (l).FStarC_Custard_Syntax.dl_binders) in
       let body = (lift tmp1 (l).FStarC_Custard_Syntax.dl_body) in
       let tmp2 = (!(lifted)) in
@@ -1074,6 +1414,10 @@ let rec set_nth (i : Prims.int) (x : bool) (l : (bool) list) : (bool) list =
       (y :: tmp)))
   )
 
+let rec infer_borrows__own_from (own : (string -> (Prims.int -> unit))) (f : string) (k : Prims.int) (n : Prims.int) : unit =
+  (if (Prims.op_Less k n) then ((own f k);
+  ((infer_borrows__own_from own) f (Prims.op_Plus k Prims.int_one) n)) else ())
+
 let rec infer_borrows__go'__root (a : FStarC_Custard_Syntax.expr) : (string) option =
   (match (a).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.EProj (b, tmp, tmp1)) -> (match (b).FStarC_Custard_Syntax.e with
@@ -1083,14 +1427,16 @@ let rec infer_borrows__go'__root (a : FStarC_Custard_Syntax.expr) : (string) opt
     | tmp -> None
   )
 
-let same_boxed (a : FStarC_Custard_Syntax.cty) (b : FStarC_Custard_Syntax.cty) : bool =
-  (match (a, b) with
-    | ((FStarC_Custard_Syntax.TApp (m, [])), (FStarC_Custard_Syntax.TApp (n, []))) -> (let tmp = (FStarC_Custard_Syntax.string_of_name m) in
-      let tmp1 = (FStarC_Custard_Syntax.string_of_name n) in
-      let tmp2 = ((=) tmp tmp1) in
-      (if tmp2 then (let tmp3 = (!(boxed_tbl)) in
-      let tmp4 = (FStarC_Custard_Syntax.string_of_name m) in
-      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp3 tmp4)) else false))
+let unboxed_record (t : FStarC_Custard_Syntax.cty) : bool =
+  (match t with
+    | (FStarC_Custard_Syntax.TApp (n, [])) -> (let tmp = (is_np t) in
+      let tmp1 = (if tmp then (let tmp1 = (!(boxed_tbl)) in
+        let tmp2 = (FStarC_Custard_Syntax.string_of_name n) in
+        let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp1 tmp2) in
+        (not tmp3)) else false) in
+      (if tmp1 then (let tmp2 = (!(record_tbl)) in
+      let tmp3 = (FStarC_Custard_Syntax.string_of_name n) in
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp2 tmp3)) else false))
     | tmp -> false
   )
 
@@ -1125,6 +1471,35 @@ let rec builds (t : FStarC_Custard_Syntax.cty) (e : FStarC_Custard_Syntax.expr) 
     | tmp -> false
   ))
 
+let rec dies_building (y : string) (t : FStarC_Custard_Syntax.cty) (e : FStarC_Custard_Syntax.expr) : bool =
+  (let tmp = (fv e) in
+  let tmp1 = (BatList.mem y tmp) in
+  let tmp2 = (not tmp1) in
+  (if tmp2 then (builds t e) else (match (e).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.ELet (z, tmp3, a, b)) -> (let tmp4 = (fv b) in
+      let tmp5 = (without (z :: []) tmp4) in
+      let tmp6 = (BatList.mem y tmp5) in
+      (if tmp6 then (dies_building y t b) else (dies_building y t a)))
+    | (FStarC_Custard_Syntax.ESeq (a, b)) -> (let tmp3 = (fv b) in
+      let tmp4 = (BatList.mem y tmp3) in
+      (if tmp4 then (dies_building y t b) else (dies_building y t a)))
+    | (FStarC_Custard_Syntax.EIf (tmp3, a, b)) -> (let tmp4 = (dies_building y t a) in
+      (if tmp4 then true else (dies_building y t b)))
+    | (FStarC_Custard_Syntax.EMatch (tmp3, brs)) -> (BatList.exists (fun tmp4 -> (match tmp4 with
+        | (p, tmp5, b) -> (let tmp6 = (pat_vars p) in
+          let tmp7 = (BatList.mem y tmp6) in
+          let tmp8 = (not tmp7) in
+          (if tmp8 then (dies_building y t b) else false))
+      )) brs)
+    | tmp3 -> false
+  )))
+
+let is_ml_ref (t : FStarC_Custard_Syntax.cty) : bool =
+  (match t with
+    | (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RGc, tmp)) -> true
+    | tmp -> false
+  )
+
 let dyn_owns (f : string) : (bool) list =
   (if ((=) f "mk") then (true :: []) else [])
 
@@ -1135,8 +1510,8 @@ let iarr_owns (f : string) : (bool) list =
     | tmp -> []
   )
 
-let rec infer_borrows__go' (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (own : (string -> (Prims.int -> unit))) (param_ix : (string -> (Prims.int) option)) (is_owned_var : ((string) list -> (string -> bool))) (own_arg : (FStarC_Custard_Syntax.expr -> unit)) (bf : (string) list) (tail_ : bool) (e : FStarC_Custard_Syntax.expr) : unit =
-  (let go = ((infer_borrows__go' tbl own param_ix is_owned_var own_arg) bf) in
+let rec infer_borrows__go' (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (own : (string -> (Prims.int -> unit))) (param_ix : (string -> (Prims.int) option)) (is_owned_var : ((string) list -> (string -> bool))) (fields_of : (((string * Prims.int)) list ref)) (own_arg : (FStarC_Custard_Syntax.expr -> unit)) (bf : (string) list) (tail_ : bool) (e : FStarC_Custard_Syntax.expr) : unit =
+  (let go = ((infer_borrows__go' tbl own param_ix is_owned_var fields_of own_arg) bf) in
   (match (e).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.EApp (hd, args)) -> ((match (hd).FStarC_Custard_Syntax.e with
         | (FStarC_Custard_Syntax.EQual (g, tmp)) -> (let gs = (FStarC_Custard_Syntax.string_of_name g) in
@@ -1155,7 +1530,8 @@ let rec infer_borrows__go' (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTabl
                       (if tmp9 then (own gs i) else ()))
                     | (FStarC_Custard_Syntax.EQual (u__1, u__2)) -> ()
                     | tmp9 -> (own gs i)
-                  ) else ())))) args) else (BatList.iter own_arg args))
+                  ) else ())))) args) else ((BatList.iter own_arg args);
+                  ((infer_borrows__own_from own) gs ((fun l -> Z.of_int (BatList.length l)) args) ((fun l -> Z.of_int (BatList.length l)) bs))))
                 | tmp7 -> (let tmp8 = (!(global_tbl)) in
                   let tmp9 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp8 gs) in
                   (if tmp9 then (BatList.iter own_arg args) else ()))
@@ -1173,7 +1549,21 @@ let rec infer_borrows__go' (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTabl
           (not tmp1)) else false)) -> (x :: bf1)
           | tmp -> bf1
         ) in
-      ((infer_borrows__go' tbl own param_ix is_owned_var own_arg) bf2 tail_ b))
+      (match (a).FStarC_Custard_Syntax.e with
+        | (FStarC_Custard_Syntax.EProj ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EVar (y)); ty = yt; eff = tmp; _ }, tmp1, tmp2)) when (let tmp3 = (is_np t) in
+        let tmp4 = (if tmp3 then (unboxed_record yt) else false) in
+        (if tmp4 then (let tmp5 = (fv b) in
+        let tmp6 = (BatList.mem y tmp5) in
+        (not tmp6)) else false)) -> (let tmp3 = (param_ix y) in
+          (match tmp3 with
+            | (Some (i)) -> (let tmp4 = (!(fields_of)) in
+              let tmp5 = ((x, i) :: tmp4) in
+              ((fields_of) := tmp5))
+            | None -> ()
+          ))
+        | tmp -> ()
+      );
+      ((infer_borrows__go' tbl own param_ix is_owned_var fields_of own_arg) bf2 tail_ b))
     | (FStarC_Custard_Syntax.ESeq (a, b)) -> ((go false a);
       (go tail_ b))
     | (FStarC_Custard_Syntax.EIf (c, t, f)) -> ((go false c);
@@ -1192,15 +1582,53 @@ let rec infer_borrows__go' (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTabl
             | tmp3 -> ""
           ) in
         (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp2 tmp3)) else false)) -> (let tmp = (BatList.exists (fun tmp -> (match tmp with
-              | (p, tmp1, b) -> (let tmp2 = (if (match p with
-                    | (FStarC_Custard_Syntax.PCtor (tmp2, (tmp3 :: tmp4))) -> true
-                    | tmp2 -> false
-                  ) then (let tmp2 = (fv b) in
-                  let tmp3 = (BatList.mem y tmp2) in
-                  (not tmp3)) else false) in
-                (if tmp2 then (builds (sc).FStarC_Custard_Syntax.ty b) else false))
+              | (p, tmp1, b) -> (if (match p with
+                  | (FStarC_Custard_Syntax.PCtor (tmp2, (tmp3 :: tmp4))) -> true
+                  | tmp2 -> false
+                ) then (dies_building y (sc).FStarC_Custard_Syntax.ty b) else false)
             )) brs) in
           (if tmp then (own_arg sc) else ()))
+        | tmp -> ()
+      );
+      (match ((sc).FStarC_Custard_Syntax.e, (sc).FStarC_Custard_Syntax.ty) with
+        | ((FStarC_Custard_Syntax.EVar (y)), (FStarC_Custard_Syntax.TApp (n, []))) when (let tmp = (is_np (sc).FStarC_Custard_Syntax.ty) in
+        let tmp1 = (if tmp then (let tmp1 = (!(boxed_tbl)) in
+          let tmp2 = (FStarC_Custard_Syntax.string_of_name n) in
+          let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp1 tmp2) in
+          (not tmp3)) else false) in
+        (if tmp1 then (not (is_ml_ref (sc).FStarC_Custard_Syntax.ty)) else false)) -> (let tmp = (param_ix y) in
+          (match tmp with
+            | (Some (i)) -> (BatList.iter (fun tmp1 -> (match tmp1 with
+                | (p, tmp2, b) -> (let flat = (match p with
+                      | (FStarC_Custard_Syntax.PCtor (tmp3, ps)) -> (BatList.for_all (fun q -> ((match q with
+                          | (FStarC_Custard_Syntax.PVar (u__0)) -> true
+                          | tmp4 -> false
+                        ) || (match q with
+                          | FStarC_Custard_Syntax.PWild -> true
+                          | tmp4 -> false
+                        ))) ps)
+                      | (FStarC_Custard_Syntax.PRecord (tmp3, fps)) -> (BatList.for_all (fun tmp4 -> (match tmp4 with
+                          | (tmp5, q) -> ((match q with
+                              | (FStarC_Custard_Syntax.PVar (u__0)) -> true
+                              | tmp6 -> false
+                            ) || (match q with
+                              | FStarC_Custard_Syntax.PWild -> true
+                              | tmp6 -> false
+                            ))
+                        )) fps)
+                      | tmp3 -> false
+                    ) in
+                  let tmp3 = (if flat then (let tmp3 = (fv b) in
+                    let tmp4 = (BatList.mem y tmp3) in
+                    (not tmp4)) else false) in
+                  (if tmp3 then (let tmp4 = (pat_vars p) in
+                  let tmp5 = (BatList.map (fun v -> (v, i)) tmp4) in
+                  let tmp6 = (!(fields_of)) in
+                  let tmp7 = (BatList.append tmp5 tmp6) in
+                  ((fields_of) := tmp7)) else ()))
+              )) brs)
+            | None -> ()
+          ))
         | tmp -> ()
       );
       let borrowed_sc = (match (sc).FStarC_Custard_Syntax.e with
@@ -1214,10 +1642,10 @@ let rec infer_borrows__go' (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTabl
           let bf1 = (BatList.filter (fun y -> (not (BatList.mem y vs))) bf) in
           let bf2 = (if borrowed_sc then (BatList.append vs bf1) else bf1) in
           (match g with
-            | (Some (g1)) -> ((infer_borrows__go' tbl own param_ix is_owned_var own_arg) bf2 false g1)
+            | (Some (g1)) -> ((infer_borrows__go' tbl own param_ix is_owned_var fields_of own_arg) bf2 false g1)
             | None -> ()
           );
-          ((infer_borrows__go' tbl own param_ix is_owned_var own_arg) bf2 tail_ b))
+          ((infer_borrows__go' tbl own param_ix is_owned_var fields_of own_arg) bf2 tail_ b))
       )) brs))
     | (FStarC_Custard_Syntax.EWhile (a, b)) -> ((go false a);
       (go false b))
@@ -1243,15 +1671,23 @@ let rec infer_borrows__go' (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTabl
         | (FStarC_Custard_Syntax.EOp (tmp3, es)) -> (BatList.iter (go false) es)
         | tmp3 -> ()
       ))
-    | (FStarC_Custard_Syntax.EOp (tmp, es)) -> (BatList.iter (go false) es)
+    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Update (u__1, u__2)); po_ty = tmp; _ }, es)) -> ((BatList.iter own_arg es);
+      (BatList.iter (go false) es))
     | (FStarC_Custard_Syntax.ECtor (tmp, es)) -> ((BatList.iter own_arg es);
       (BatList.iter (go false) es))
     | (FStarC_Custard_Syntax.ETuple (es)) -> ((BatList.iter own_arg es);
       (BatList.iter (go false) es))
+    | (FStarC_Custard_Syntax.EOp (tmp, es)) -> (BatList.iter (go false) es)
     | (FStarC_Custard_Syntax.ERecord (tmp, fs)) -> (BatList.iter (fun tmp1 -> (match tmp1 with
         | (tmp2, x) -> ((own_arg x);
           (go false x))
       )) fs)
+    | (FStarC_Custard_Syntax.EProj (a, tmp, tmp1)) when (let tmp2 = (if tail_ then (is_np (e).FStarC_Custard_Syntax.ty) else false) in
+    let tmp3 = (if tmp2 then (match (a).FStarC_Custard_Syntax.e with
+        | (FStarC_Custard_Syntax.EVar (u__0)) -> true
+        | tmp3 -> false
+      ) else false) in
+    (if tmp3 then (unboxed_record (a).FStarC_Custard_Syntax.ty) else false)) -> (own_arg a)
     | (FStarC_Custard_Syntax.EProj (a, tmp, tmp1)) -> (go false a)
     | (FStarC_Custard_Syntax.EDiscrim (a, tmp)) -> (go false a)
     | (FStarC_Custard_Syntax.ECast (a, tmp)) -> (go false a)
@@ -1262,6 +1698,18 @@ let rec infer_borrows__go' (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTabl
         | (tmp1, tmp2, b) -> (go false b)
       )) brs))
     | (FStarC_Custard_Syntax.ERaise (a)) -> (go false a)
+    | (FStarC_Custard_Syntax.EQual (g, tmp)) -> (let tmp1 = (!(fn_tbl)) in
+      let tmp2 = (FStarC_Custard_Syntax.string_of_name g) in
+      let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp1 tmp2) in
+      (match tmp3 with
+        | (Some ((bs, tmp4))) -> (let tmp5 = (FStarC_Custard_Syntax.string_of_name g) in
+          ((infer_borrows__own_from own) tmp5 Prims.int_zero ((fun l -> Z.of_int (BatList.length l)) bs)))
+        | None -> ()
+      ))
+    | (FStarC_Custard_Syntax.EVar (y)) when (if tail_ then (let tmp = (!(fields_of)) in
+    (BatList.exists (fun tmp1 -> (match tmp1 with
+      | (z, tmp2) -> ((=) z y)
+    )) tmp)) else false) -> (own_arg e)
     | tmp -> ()
   ))
 
@@ -1349,17 +1797,37 @@ let infer_borrows (p : (FStarC_Custard_Syntax.decl) list) (pinned : (FStarC_Cust
             | None -> true
           ))
       )))) in
+    let fields_of = (ref []) in
     let own_arg = (fun a -> (match (a).FStarC_Custard_Syntax.e with
         | (FStarC_Custard_Syntax.EVar (y)) -> (let tmp = (param_ix y) in
           (match tmp with
             | (Some (i)) -> (own me i)
-            | None -> ()
+            | None -> (let tmp1 = (!(fields_of)) in
+              let tmp2 = (List.find_opt (fun tmp2 -> (match tmp2 with
+                  | (z, tmp3) -> ((=) z y)
+                )) tmp1) in
+              (match tmp2 with
+                | (Some ((tmp3, i))) -> (own me i)
+                | None -> ()
+              ))
           ))
         | tmp -> ()
       )) in
-    ((infer_borrows__go' tbl own param_ix is_owned_var own_arg) [] true (l).FStarC_Custard_Syntax.dl_body))) in
+    ((infer_borrows__go' tbl own param_ix is_owned_var fields_of own_arg) [] true (l).FStarC_Custard_Syntax.dl_body))) in
   ((infer_borrows__loop defs changed visit) (Prims.of_int (10000)));
   ((param_owned) := tbl))
+
+let is_pap (node : FStarC_Custard_Syntax.expr) : bool =
+  (match (node).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.EApp ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EQual (f, tmp)); ty = tmp1; eff = tmp2; _ }, args)) -> (let tmp3 = (!(fn_tbl)) in
+      let tmp4 = (FStarC_Custard_Syntax.string_of_name f) in
+      let tmp5 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp3 tmp4) in
+      (match tmp5 with
+        | (Some ((bs, tmp6))) -> (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) args) ((fun l -> Z.of_int (BatList.length l)) bs))
+        | None -> false
+      ))
+    | tmp -> false
+  )
 
 let infer_raises__may_raise_in (tbl : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (tbl1 : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (e : FStarC_Custard_Syntax.expr) (hd : FStarC_Custard_Syntax.expr) : bool =
   (match (hd).FStarC_Custard_Syntax.e with
@@ -1375,6 +1843,7 @@ let rec infer_raises__raises (tbl : (bool) FStarC_HashTable.FStarC_HashTable_has
   (match (e).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.ERaise (tmp)) -> true
     | (FStarC_Custard_Syntax.ETry (u__1, u__2)) -> true
+    | (FStarC_Custard_Syntax.EApp (tmp, args)) when (is_pap e) -> (BatList.exists (infer_raises__raises tbl) args)
     | (FStarC_Custard_Syntax.EApp (hd, args)) -> (let tmp = ((infer_raises__may_raise_in tbl) tbl e hd) in
       (if tmp then true else (BatList.exists (infer_raises__raises tbl) args)))
     | tmp -> (FStarC_Custard_Syntax.exists_child (infer_raises__raises tbl) e)
@@ -1383,10 +1852,10 @@ let rec infer_raises__raises (tbl : (bool) FStarC_HashTable.FStarC_HashTable_has
 let rec infer_raises__settle (p : (FStarC_Custard_Syntax.decl) list) (tbl : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (tmp : unit) : unit =
   (let changed = (ref false) in
   (BatList.iter (fun d -> (match d with
-    | (FStarC_Custard_Syntax.DLet (l)) when (let tmp1 = (if (not (FStarC_Custard_Syntax.is_pure (l).FStarC_Custard_Syntax.dl_eff)) then (let tmp1 = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
-      let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tbl tmp1) in
-      (not tmp2)) else false) in
-    (if tmp1 then ((infer_raises__raises tbl) (l).FStarC_Custard_Syntax.dl_body) else false)) -> (let tmp1 = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
+    | (FStarC_Custard_Syntax.DLet (l)) when (let tmp1 = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
+    let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tbl tmp1) in
+    let tmp3 = (not tmp2) in
+    (if tmp3 then ((infer_raises__raises tbl) (l).FStarC_Custard_Syntax.dl_body) else false)) -> (let tmp1 = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tbl tmp1 true);
       ((changed) := true))
     | tmp1 -> ()
@@ -1424,6 +1893,7 @@ let is_pbuf (t : FStarC_Custard_Syntax.cty) : bool =
 
 let may_raise (node : FStarC_Custard_Syntax.expr) : bool =
   (match (node).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.EApp (u__1, u__2)) when (is_pap node) -> false
     | (FStarC_Custard_Syntax.EApp ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EQual (f, tmp)); ty = tmp1; eff = tmp2; _ }, tmp3)) when (let tmp4 = (!(global_tbl)) in
     let tmp5 = (FStarC_Custard_Syntax.string_of_name f) in
     let tmp6 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp4 tmp5) in
@@ -1460,18 +1930,9 @@ let var (x : string) (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_Syntax.exp
 let rc_op (op : FStarC_Custard_Syntax.op) (x : string) (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_Syntax.expr =
   (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = op; po_ty = None }, ((var x t) :: []))) FStarC_Custard_Syntax.TUnit FStarC_Custard_Syntax.E_Impure)
 
-let small_int_bound : Prims.int =
-  (Prims.parse_int "1073741824")
-
-let is_big_literal (c : FStarC_Custard_Syntax.constant) : bool =
-  (match c with
-    | (FStarC_Custard_Syntax.CInt (v, tmp, None)) -> ((Prims.op_Greater_Equals v small_int_bound) || (Prims.op_Less_Equals v (Prims.op_Tilde_Minus small_int_bound)))
-    | tmp -> false
-  )
-
 let is_atom (a : FStarC_Custard_Syntax.expr) : bool =
   (match (a).FStarC_Custard_Syntax.e with
-    | (FStarC_Custard_Syntax.EConst (c)) -> (not (is_big_literal c))
+    | (FStarC_Custard_Syntax.EConst (tmp)) -> true
     | (FStarC_Custard_Syntax.EVar (tmp)) -> true
     | (FStarC_Custard_Syntax.EQual (u__1, u__2)) -> true
     | tmp -> (let tmp1 = (touches a) in
@@ -1546,10 +2007,85 @@ let decs (o : ((string * FStarC_Custard_Syntax.cty)) list) (eta : FStarC_Custard
     | (x, t) -> (seq (rc_op FStarC_Custard_Syntax.RcDec x t) e)
   )) o eta)
 
-let incs (o : ((string * FStarC_Custard_Syntax.cty)) list) (eta : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
-  (BatList.fold_right (fun tmp e -> (match tmp with
-    | (x, t) -> (seq (rc_op FStarC_Custard_Syntax.RcInc x t) e)
-  )) o eta)
+let take_fields (p : FStarC_Custard_Syntax.pat) : ((FStarC_Custard_Syntax.pat * ((string * FStarC_Custard_Syntax.cty)) list)) option =
+  (let flat = (fun q -> ((match q with
+      | (FStarC_Custard_Syntax.PVar (u__0)) -> true
+      | tmp -> false
+    ) || (match q with
+      | FStarC_Custard_Syntax.PWild -> true
+      | tmp -> false
+    ))) in
+  let bind = (fun q t -> (match q with
+      | (FStarC_Custard_Syntax.PVar (v)) -> (let tmp = (is_np t) in
+        let tmp1 = (if tmp then (Some ((v, t))) else None) in
+        (tmp1, q))
+      | tmp -> (let tmp1 = (is_np t) in
+        (if tmp1 then (let v = (fresh ()) in
+        ((Some ((v, t))), (FStarC_Custard_Syntax.PVar (v)))) else (None, q)))
+    )) in
+  (match p with
+    | (FStarC_Custard_Syntax.PCtor (c, ps)) when (BatList.for_all flat ps) -> (let tmp = (!(ctor_tbl)) in
+      let tmp1 = (FStarC_Custard_Syntax.string_of_name c) in
+      let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp tmp1) in
+      (match tmp2 with
+        | (Some (fs)) when ((=) ((fun l -> Z.of_int (BatList.length l)) fs) ((fun l -> Z.of_int (BatList.length l)) ps)) -> (let bs = (BatList.map2 (fun tmp3 q -> (match tmp3 with
+              | (tmp4, t) -> (bind q t)
+            )) fs ps) in
+          let tmp3 = (BatList.map (fun x -> (match x with
+              | (u__1, u__2) -> u__2
+            )) bs) in
+          let tmp4 = (c, tmp3) in
+          let tmp5 = (FStarC_Custard_Syntax.PCtor ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
+          let tmp6 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp6 -> (match tmp6 with
+              | (b, tmp7) -> (match b with
+                  | (Some (b1)) -> (b1 :: [])
+                  | None -> []
+                )
+            )) bs) in
+          let tmp7 = (tmp5, tmp6) in
+          (Some (tmp7)))
+        | tmp3 -> None
+      ))
+    | (FStarC_Custard_Syntax.PRecord (tn, fps)) when (BatList.for_all (fun tmp -> (match tmp with
+      | (tmp1, q) -> (flat q)
+    )) fps) -> (let tmp = (!(record_tbl)) in
+      let tmp1 = (FStarC_Custard_Syntax.string_of_name tn) in
+      let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp tmp1) in
+      (match tmp2 with
+        | (Some (fs)) -> (let bs = (BatList.map (fun tmp3 -> (match tmp3 with
+              | (f, t) -> (let tmp4 = (List.find_opt (fun tmp4 -> (match tmp4 with
+                    | (g, tmp5) -> ((=) g f)
+                  )) fps) in
+                let q = (match tmp4 with
+                    | (Some ((tmp5, q))) -> q
+                    | None -> FStarC_Custard_Syntax.PWild
+                  ) in
+                let tmp5 = (bind q t) in
+                (match tmp5 with
+                  | (b, q1) -> (b, (f, q1))
+                ))
+            )) fs) in
+          let tmp3 = (BatList.filter (fun tmp3 -> (match tmp3 with
+              | (tmp4, (tmp5, q)) -> (match q with
+                  | (FStarC_Custard_Syntax.PVar (u__0)) -> true
+                  | tmp6 -> false
+                )
+            )) bs) in
+          let fps1 = (BatList.map (fun x -> (match x with
+              | (u__1, u__2) -> u__2
+            )) tmp3) in
+          let tmp4 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp4 -> (match tmp4 with
+              | (b, tmp5) -> (match b with
+                  | (Some (b1)) -> (b1 :: [])
+                  | None -> []
+                )
+            )) bs) in
+          let tmp5 = ((FStarC_Custard_Syntax.PRecord (tn, fps1)), tmp4) in
+          (Some (tmp5)))
+        | None -> None
+      ))
+    | tmp -> None
+  ))
 
 let rec free_on_exit (w : string) (wt : FStarC_Custard_Syntax.cty) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
   (match (e).FStarC_Custard_Syntax.e with
@@ -1644,6 +2180,89 @@ let rec reuse_in (w : string) (wt : FStarC_Custard_Syntax.cty) (old : FStarC_Cus
       (Some (tmp4)))))
     | tmp -> None
   ))
+
+let rec reuse_at_death (x : string) (wt : FStarC_Custard_Syntax.cty) (old : FStarC_Custard_Syntax.name) (ps : (FStarC_Custard_Syntax.pat) list) (e : FStarC_Custard_Syntax.expr) : (FStarC_Custard_Syntax.expr) option =
+  (let go = (reuse_at_death x wt old ps) in
+  (match (e).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.ESeq ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.RcDec; po_ty = tmp; _ }, ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EVar (y)); ty = tmp1; eff = tmp2; _ } :: []))); ty = tmp3; eff = tmp4; _ }, rest)) when ((=) y x) -> (let w = (fresh ()) in
+      let tmp5 = (reuse_in w wt old rest) in
+      (match tmp5 with
+        | (Some (rest')) -> (let kept = (BatList.map (fun tmp6 -> false) ps) in
+          let reset = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Reset (old, kept));
+              po_ty = None }, ((var x wt) :: []))) wt FStarC_Custard_Syntax.E_Impure) in
+          (Some ((let__ w wt reset rest'))))
+        | None -> None
+      ))
+    | (FStarC_Custard_Syntax.ESeq (a, b)) -> (let tmp = (go b) in
+      (match tmp with
+        | (Some (b')) -> (Some ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.ESeq (a, b'));
+            ty = (e).FStarC_Custard_Syntax.ty;
+            eff = FStarC_Custard_Syntax.E_Impure }))
+        | None -> (let tmp1 = (go a) in
+          (match tmp1 with
+            | (Some (a')) -> (Some ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.ESeq (a', b));
+                ty = (e).FStarC_Custard_Syntax.ty;
+                eff = FStarC_Custard_Syntax.E_Impure }))
+            | None -> None
+          ))
+      ))
+    | (FStarC_Custard_Syntax.ELet (y, t, a, b)) -> (let tmp = (go b) in
+      (match tmp with
+        | (Some (b')) -> (Some ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.ELet (y, t, a, b'));
+            ty = (e).FStarC_Custard_Syntax.ty;
+            eff = FStarC_Custard_Syntax.E_Impure }))
+        | None -> (let tmp1 = (go a) in
+          (match tmp1 with
+            | (Some (a')) -> (Some ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.ELet (y, t, a', b));
+                ty = (e).FStarC_Custard_Syntax.ty;
+                eff = FStarC_Custard_Syntax.E_Impure }))
+            | None -> None
+          ))
+      ))
+    | (FStarC_Custard_Syntax.EIf (c, t, f)) -> (let tmp = (go t) in
+      let tmp1 = (go f) in
+      let tmp2 = (tmp, tmp1) in
+      (match tmp2 with
+        | (None, None) -> None
+        | (t', f') -> (Some ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EIf (c, (match t' with
+              | (Some (t1)) -> t1
+              | None -> t
+            ), (match f' with
+              | (Some (f1)) -> f1
+              | None -> f
+            )));
+            ty = (e).FStarC_Custard_Syntax.ty;
+            eff = FStarC_Custard_Syntax.E_Impure }))
+      ))
+    | (FStarC_Custard_Syntax.EMatch (sc, brs)) -> (let rs = (BatList.map (fun tmp -> (match tmp with
+          | (p, g, b) -> (let tmp1 = (go b) in
+            (p, g, b, tmp1))
+        )) brs) in
+      let tmp = (BatList.for_all (fun tmp -> (match tmp with
+          | (tmp1, tmp2, tmp3, r) -> (match r with
+              | None -> true
+              | tmp4 -> false
+            )
+        )) rs) in
+      (if tmp then None else (let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
+          | (p, g, b, r) -> (p, g, (match r with
+              | (Some (b')) -> b'
+              | None -> b
+            ))
+        )) rs) in
+      let tmp2 = (sc, tmp1) in
+      let tmp3 = (FStarC_Custard_Syntax.EMatch ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+      let tmp4 = { FStarC_Custard_Syntax.e = tmp3;
+          ty = (e).FStarC_Custard_Syntax.ty;
+          eff = FStarC_Custard_Syntax.E_Impure } in
+      (Some (tmp4)))))
+    | tmp -> None
+  ))
+
+let incs (o : ((string * FStarC_Custard_Syntax.cty)) list) (eta : FStarC_Custard_Syntax.expr) : FStarC_Custard_Syntax.expr =
+  (BatList.fold_right (fun tmp e -> (match tmp with
+    | (x, t) -> (seq (rc_op FStarC_Custard_Syntax.RcInc x t) e)
+  )) o eta)
 
 let rec typ_of__drop (n : Prims.int) (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_Syntax.cty =
   (if ((=) n Prims.int_zero) then t else (match t with
@@ -1753,12 +2372,6 @@ let call (o : ((string * FStarC_Custard_Syntax.cty)) list) (owns : ((bool) list)
   let tmp4 = (decs left (var r (node1).FStarC_Custard_Syntax.ty)) in
   (let__ r (node1).FStarC_Custard_Syntax.ty call_ tmp4)))))
 
-let is_ml_ref (t : FStarC_Custard_Syntax.cty) : bool =
-  (match t with
-    | (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RGc, tmp)) -> true
-    | tmp -> false
-  )
-
 let pbuf_owns (f : string) : (bool) list =
   (match f with
     | "alloc" -> (true :: (false :: []))
@@ -1807,46 +2420,78 @@ let rec rc_branch (o : ((string * FStarC_Custard_Syntax.cty)) list) (sc : ((stri
                   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp4 tmp5)) -> []
                   | tmp3 -> dead_x
                 ) in
-              let body = (rc (BatList.append keep fields) b) in
-              let plain = (fun tmp3 -> (let tmp4 = (decs dead_x1 body) in
-                let tmp5 = (incs fields tmp4) in
-                let tmp6 = (decs dead_other tmp5) in
-                (p, g, tmp6))) in
-              (match p with
-                | (FStarC_Custard_Syntax.PCtor (c, ps)) when (let tmp3 = (if ((match dead_x1 with
-                    | (hd :: tl) -> true
-                    | tmp3 -> false
-                  ) && (match ps with
-                    | (hd :: tl) -> true
-                    | tmp3 -> false
-                  )) then (BatList.for_all (fun q -> (if (match q with
-                    | (FStarC_Custard_Syntax.PVar (u__0)) -> true
-                    | tmp3 -> false
-                  ) then true else (let tmp3 = (pat_vars q) in
-                  (match tmp3 with
-                    | [] -> true
-                    | tmp4 -> false
-                  )))) ps) else false) in
-                (if tmp3 then (let tmp4 = (!(boxed_tbl)) in
-                let tmp5 = (match st with
-                    | (FStarC_Custard_Syntax.TApp (n, [])) -> (FStarC_Custard_Syntax.string_of_name n)
-                    | tmp5 -> ""
-                  ) in
-                (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp4 tmp5)) else false)) -> (let w = (fresh ()) in
-                  let tmp3 = (reuse_in w st c body) in
-                  (match tmp3 with
-                    | (Some (body')) -> (let kept = (BatList.map (fun q -> (match q with
-                          | (FStarC_Custard_Syntax.PVar (v)) -> (let tmp4 = (names fields) in
-                            (BatList.mem v tmp4))
-                          | tmp4 -> false
-                        )) ps) in
-                      let reset = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Reset (c, kept));
-                          po_ty = None }, ((var x st) :: []))) st FStarC_Custard_Syntax.E_Impure) in
-                      let tmp4 = (decs dead_other (let__ w st reset body')) in
-                      (p, g, tmp4))
-                    | None -> (plain ())
+              let tmp3 = (!(boxed_tbl)) in
+              let tmp4 = (match st with
+                  | (FStarC_Custard_Syntax.TApp (n, [])) -> (FStarC_Custard_Syntax.string_of_name n)
+                  | tmp4 -> ""
+                ) in
+              let boxed_st = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp3 tmp4) in
+              let tmp5 = (if ((((match dead_x1 with
+                  | (hd :: tl) -> true
+                  | tmp5 -> false
+                ) && (not boxed_st)) && (match st with
+                  | (FStarC_Custard_Syntax.TApp (u__1, u__2)) -> true
+                  | tmp5 -> false
+                )) && (not (is_ml_ref st))) then (take_fields p) else None) in
+              (match tmp5 with
+                | (Some ((p', taken))) -> (let tmp6 = (rc (BatList.append keep taken) b) in
+                  let tmp7 = (decs dead_other tmp6) in
+                  (p', g, tmp7))
+                | None -> (let body = (rc (BatList.append keep fields) b) in
+                  let body1 = (match p with
+                      | (FStarC_Custard_Syntax.PCtor (c, ps)) when ((((match dead_x1 with
+                        | [] -> true
+                        | tmp6 -> false
+                      ) && (match ps with
+                        | (hd :: tl) -> true
+                        | tmp6 -> false
+                      )) && boxed_st) && (BatList.mem x live)) -> (let tmp6 = (reuse_at_death x st c ps body) in
+                        (match tmp6 with
+                          | (Some (body')) -> body'
+                          | None -> body
+                        ))
+                      | tmp6 -> body
+                    ) in
+                  let plain = (fun tmp6 -> (let tmp7 = (decs dead_x1 body1) in
+                    let tmp8 = (incs fields tmp7) in
+                    let tmp9 = (decs dead_other tmp8) in
+                    (p, g, tmp9))) in
+                  (match p with
+                    | (FStarC_Custard_Syntax.PCtor (c, ps)) when (let tmp6 = (if ((match dead_x1 with
+                        | (hd :: tl) -> true
+                        | tmp6 -> false
+                      ) && (match ps with
+                        | (hd :: tl) -> true
+                        | tmp6 -> false
+                      )) then (BatList.for_all (fun q -> (if (match q with
+                        | (FStarC_Custard_Syntax.PVar (u__0)) -> true
+                        | tmp6 -> false
+                      ) then true else (let tmp6 = (pat_vars q) in
+                      (match tmp6 with
+                        | [] -> true
+                        | tmp7 -> false
+                      )))) ps) else false) in
+                    (if tmp6 then (let tmp7 = (!(boxed_tbl)) in
+                    let tmp8 = (match st with
+                        | (FStarC_Custard_Syntax.TApp (n, [])) -> (FStarC_Custard_Syntax.string_of_name n)
+                        | tmp8 -> ""
+                      ) in
+                    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp7 tmp8)) else false)) -> (let w = (fresh ()) in
+                      let tmp6 = (reuse_in w st c body1) in
+                      (match tmp6 with
+                        | (Some (body')) -> (let kept = (BatList.map (fun q -> (match q with
+                              | (FStarC_Custard_Syntax.PVar (v)) -> (let tmp7 = (names fields) in
+                                (BatList.mem v tmp7))
+                              | tmp7 -> false
+                            )) ps) in
+                          let reset = (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Reset (c, kept));
+                              po_ty = None }, ((var x st) :: []))) st FStarC_Custard_Syntax.E_Impure) in
+                          let tmp7 = (decs dead_other (let__ w st reset body')) in
+                          (p, g, tmp7))
+                        | None -> (plain ())
+                      ))
+                    | tmp6 -> (plain ())
                   ))
-                | tmp3 -> (plain ())
               ))
           ))
       )))
@@ -2143,8 +2788,8 @@ and rc_live (o : ((string * FStarC_Custard_Syntax.cty)) list) (e : FStarC_Custar
           po_ty = None }, (b :: [])));
         ty = (e).FStarC_Custard_Syntax.ty;
         eff = (e).FStarC_Custard_Syntax.eff })
-    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp1; _ }, (s :: (si :: (d :: (di :: (n :: []))))))) when (is_pbuf (s).FStarC_Custard_Syntax.ty) -> (rc_live o { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.PBuf ("blit"));
-          po_ty = None }, (s :: (si :: (d :: (di :: (n :: [])))))));
+    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp1; _ }, (s :: (d :: (n :: []))))) when (is_pbuf (s).FStarC_Custard_Syntax.ty) -> (rc_live o { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.PBuf ("blit"));
+          po_ty = None }, (s :: (d :: (n :: [])))));
         ty = (e).FStarC_Custard_Syntax.ty;
         eff = (e).FStarC_Custard_Syntax.eff })
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufLit; po_ty = tmp1; _ }, es)) when (BatList.exists (fun a -> (is_np (a).FStarC_Custard_Syntax.ty)) es) -> (unsupported "a constant array of reference-counted values")
@@ -2165,6 +2810,18 @@ and rc_live (o : ((string * FStarC_Custard_Syntax.cty)) list) (e : FStarC_Custar
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.ExnTake; po_ty = tmp1; _ }, [])) -> (call o (Some ([])) [] { FStarC_Custard_Syntax.e = (e).FStarC_Custard_Syntax.e;
         ty = (e).FStarC_Custard_Syntax.ty;
         eff = FStarC_Custard_Syntax.E_Impure })
+    | (FStarC_Custard_Syntax.EOp (op, args)) when (match (op).FStarC_Custard_Syntax.po_op with
+      | (FStarC_Custard_Syntax.Update (u__1, u__2)) -> true
+      | tmp1 -> false
+    ) -> (let tmp1 = (bind_first args) in
+      (match tmp1 with
+        | (Some ((x, a, args'))) -> (rc_live o (let__ x (a).FStarC_Custard_Syntax.ty a { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EOp (op, args'));
+            ty = (e).FStarC_Custard_Syntax.ty;
+            eff = (e).FStarC_Custard_Syntax.eff }))
+        | None -> (call o None args { FStarC_Custard_Syntax.e = (e).FStarC_Custard_Syntax.e;
+            ty = (e).FStarC_Custard_Syntax.ty;
+            eff = FStarC_Custard_Syntax.E_Impure })
+      ))
     | (FStarC_Custard_Syntax.EOp (tmp1, tmp2)) when (is_np (e).FStarC_Custard_Syntax.ty) -> (unsupported "a primitive operation returning a reference-counted value")
     | (FStarC_Custard_Syntax.EOp (op, args)) -> (let tmp1 = (bind_first args) in
       (match tmp1 with
@@ -2201,11 +2858,39 @@ and rc_live (o : ((string * FStarC_Custard_Syntax.cty)) list) (e : FStarC_Custar
               | tmp3 -> false
             ) then (let tmp3 = (is_np (e).FStarC_Custard_Syntax.ty) in
             (not tmp3)) else false) in
-          (if tmp3 then e else (let r = (fresh ()) in
-          let body = (decs o (var r (e).FStarC_Custard_Syntax.ty)) in
-          let tmp4 = (is_np (e).FStarC_Custard_Syntax.ty) in
-          let body1 = (if tmp4 then (seq (rc_op FStarC_Custard_Syntax.RcInc r (e).FStarC_Custard_Syntax.ty) body) else body) in
-          (let__ r (e).FStarC_Custard_Syntax.ty e body1))))
+          (if tmp3 then e else (let moved = (match ((a).FStarC_Custard_Syntax.e, (a).FStarC_Custard_Syntax.ty) with
+              | ((FStarC_Custard_Syntax.EVar (y)), (FStarC_Custard_Syntax.TApp (n, []))) when (let tmp4 = (is_np (e).FStarC_Custard_Syntax.ty) in
+              let tmp5 = (if tmp4 then (is_owned y) else false) in
+              (if tmp5 then (let tmp6 = (!(boxed_tbl)) in
+              let tmp7 = (FStarC_Custard_Syntax.string_of_name n) in
+              let tmp8 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.mem tmp6 tmp7) in
+              (not tmp8)) else false)) -> (let tmp4 = (!(record_tbl)) in
+                let tmp5 = (FStarC_Custard_Syntax.string_of_name n) in
+                let tmp6 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp4 tmp5) in
+                (FStarC_Option.map (fun fs -> (y, fs)) tmp6))
+              | tmp4 -> None
+            ) in
+          (match moved with
+            | (Some ((y, fs))) -> (let r = (fresh ()) in
+              let rest = (BatList.filter (fun tmp4 -> (match tmp4 with
+                  | (z, tmp5) -> ((<>) z y)
+                )) o) in
+              let body = (decs rest (var r (e).FStarC_Custard_Syntax.ty)) in
+              let body1 = (BatList.fold_left (fun body1 tmp4 -> (match tmp4 with
+                  | (g, gt) -> (let tmp5 = (if ((=) g f) then true else (let tmp5 = (is_np gt) in
+                      (not tmp5))) in
+                    (if tmp5 then body1 else (let z = (fresh ()) in
+                    (let__ z gt { FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EProj (a, tn, g));
+                      ty = gt;
+                      eff = (e).FStarC_Custard_Syntax.eff } (seq (rc_op FStarC_Custard_Syntax.RcDec z gt) body1)))))
+                )) body fs) in
+              (let__ r (e).FStarC_Custard_Syntax.ty e body1))
+            | None -> (let r = (fresh ()) in
+              let body = (decs o (var r (e).FStarC_Custard_Syntax.ty)) in
+              let tmp4 = (is_np (e).FStarC_Custard_Syntax.ty) in
+              let body1 = (if tmp4 then (seq (rc_op FStarC_Custard_Syntax.RcInc r (e).FStarC_Custard_Syntax.ty) body) else body) in
+              (let__ r (e).FStarC_Custard_Syntax.ty e body1))
+          ))))
       ))
     | (FStarC_Custard_Syntax.EWhile (c, b)) -> (let w = (inner o (fun tmp1 -> (let tmp2 = (rc [] c) in
         let tmp3 = (rc [] b) in
@@ -2275,6 +2960,7 @@ and rc (o : ((string * FStarC_Custard_Syntax.cty)) list) (e : FStarC_Custard_Syn
 let run_let (l : FStarC_Custard_Syntax.dlet) : FStarC_Custard_Syntax.dlet =
   (let tmp = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
   ((current) := tmp);
+  ((counter) := Prims.int_zero);
   let tmp1 = (!(param_owned)) in
   let tmp2 = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
   let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp1 tmp2) in
@@ -2356,6 +3042,7 @@ let run (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) l
   ((ctor_tbl) := ct);
   ((record_tbl) := rt);
   ((extern_tbl) := xt);
+  let p4 = (record_updates p3) in
   let ft = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
   (BatList.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DLet (l)) when (match (l).FStarC_Custard_Syntax.dl_binders with
@@ -2364,7 +3051,7 @@ let run (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) l
     ) -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace ft tmp2 ((l).FStarC_Custard_Syntax.dl_binders, (l).FStarC_Custard_Syntax.dl_ret)))
     | tmp2 -> ()
-  )) p3);
+  )) p4);
   ((fn_tbl) := ft);
   let gt = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
   (BatList.iter (fun d -> (match d with
@@ -2374,7 +3061,7 @@ let run (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) l
     ) -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace gt tmp2 true))
     | tmp2 -> ()
-  )) p3);
+  )) p4);
   ((global_tbl) := gt);
   let xa = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
   (BatList.iter (fun d -> (match d with
@@ -2386,10 +3073,10 @@ let run (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) l
         ) then (Some ((x).FStarC_Custard_Syntax.dx_ty)) else None)) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace xa tmp2 tmp4))
     | tmp2 -> ()
-  )) p3);
+  )) p4);
   ((extern_arity) := xa);
   ((counter) := Prims.int_zero);
-  let p4 = (BatList.map (fun d -> (match d with
+  let p5 = (BatList.map (fun d -> (match d with
       | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp2 = (unguard (l).FStarC_Custard_Syntax.dl_body) in
         let tmp3 = { FStarC_Custard_Syntax.dl_name = (l).FStarC_Custard_Syntax.dl_name;
             dl_typars = (l).FStarC_Custard_Syntax.dl_typars;
@@ -2400,9 +3087,9 @@ let run (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) l
             dl_flags = (l).FStarC_Custard_Syntax.dl_flags } in
         (FStarC_Custard_Syntax.DLet (tmp3)))
       | tmp2 -> d
-    )) p3) in
-  let p5 = (BatList.map lower_any_decl p4) in
-  let p6 = ((fun f l -> BatList.flatten (BatList.map f l)) lift_decl p5) in
+    )) p4) in
+  let p6 = (BatList.map lower_any_decl p5) in
+  let p7 = ((fun f l -> BatList.flatten (BatList.map f l)) lift_decl p6) in
   let pinned = (fun l -> (let tmp2 = (BatList.exists FStarC_Custard_Syntax.uu___is_Imported (l).FStarC_Custard_Syntax.dl_flags) in
     let tmp3 = (not tmp2) in
     (if tmp3 then None else (let tmp4 = (List.find_opt FStarC_Custard_Syntax.uu___is_CherryConv (l).FStarC_Custard_Syntax.dl_flags) in
@@ -2411,8 +3098,8 @@ let run (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) l
       | tmp5 -> (let tmp6 = (BatList.map (fun tmp6 -> true) (l).FStarC_Custard_Syntax.dl_binders) in
         (Some (tmp6)))
     ))))) in
-  (infer_borrows p6 pinned);
-  (infer_raises p6);
+  (infer_borrows p7 pinned);
+  (infer_raises p7);
   ((counter) := Prims.int_zero);
   (BatList.map (fun d -> (match d with
     | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp2 = (run_let l) in
@@ -2431,7 +3118,7 @@ let run (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) l
         | None -> d
       ))
     | tmp2 -> d
-  )) p6))
+  )) p7))
 
 let record_conventions (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_Syntax.decl) list =
   (BatList.map (fun d -> (match d with

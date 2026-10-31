@@ -1309,7 +1309,7 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
   ))
 
 let normalize (psteps : (FStarC_TypeChecker_Primops_Base.primitive_step) list) (steps : (FStarC_TypeChecker_Env.step) list) (env : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let cfg = (FStarC_TypeChecker_Cfg.config' psteps steps env) in
+  (let cfg = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Cfg_config' psteps steps env) in
   let cfg1 = { FStarC_TypeChecker_Cfg.steps = (let tmp = (cfg).FStarC_TypeChecker_Cfg.steps in
       { FStarC_TypeChecker_Cfg.beta = (tmp).FStarC_TypeChecker_Cfg.beta;
         iota = (tmp).FStarC_TypeChecker_Cfg.iota;

@@ -4,7 +4,7 @@
 let core_check (env : FStarC_TypeChecker_Env.env) (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (must_tot : bool) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (unit -> unit))) option, (bool -> string)) FStar_Pervasives.either =
   (let tmp = (FStarC_Options.compat_pre_core_should_check ()) in
   let tmp1 = (not tmp) in
-  (if tmp1 then (FStar_Pervasives.Inl (None)) else (let tmp2 = (FStarC_TypeChecker_Core.check_term env tm t must_tot) in
+  (if tmp1 then (FStar_Pervasives.Inl (None)) else (let tmp2 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Core_check_term env tm t must_tot) in
   (match tmp2 with
     | (FStar_Pervasives.Inl (None)) -> (FStar_Pervasives.Inl (None))
     | (FStar_Pervasives.Inl ((Some (g)))) -> (let tmp3 = (FStarC_Options.compat_pre_core_set ()) in
@@ -25,7 +25,7 @@ let init_env (deps : FStarC_Parser_Dep.deps) : FStarC_TypeChecker_Env.env =
       refresh = (FStarC_SMTEncoding_Solver.solver).FStarC_TypeChecker_Env.refresh } in
   let tmp = (FStarC_Tactics_Interpreter.primitive_steps ()) in
   let tmp1 = (FStarC_TypeChecker_NBE.normalize tmp) in
-  let env = (FStarC_TypeChecker_Env.initial_env deps FStarC_TypeChecker_TcTerm.tc_term FStarC_TypeChecker_TcTerm.typeof_tot_or_gtot_term FStarC_TypeChecker_TcTerm.typeof_tot_or_gtot_term_fastpath FStarC_TypeChecker_TcTerm.universe_of FStarC_TypeChecker_Rel.teq_nosmt_force FStarC_TypeChecker_Rel.subtype_nosmt_force solver FStarC_Parser_Const.prims_lid tmp1 core_check) in
+  let env = (FStarC_TypeChecker_Env.initial_env deps FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_term FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_typeof_tot_or_gtot_term FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_typeof_tot_or_gtot_term_fastpath FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_universe_of FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_teq_nosmt_force FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_subtype_nosmt_force solver FStarC_Parser_Const.prims_lid tmp1 core_check) in
   let env1 = { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
       range = (env).FStarC_TypeChecker_Env.range;
       curmodule = (env).FStarC_TypeChecker_Env.curmodule;

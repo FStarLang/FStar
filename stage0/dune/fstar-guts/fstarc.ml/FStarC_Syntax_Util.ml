@@ -248,7 +248,7 @@ let mk_lazy (t : 'u___a) (typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Synta
       | (Some (r1)) -> r1
       | None -> FStarC_Range_Type.dummyRange
     ) in
-  let i = ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn t);
+  let i = ({ FStarC_Syntax_Syntax.blob = (Obj.magic (t));
       lkind = k;
       ltyp = typ;
       rng = rng } : FStarC_Syntax_Syntax.lazyinfo) in
@@ -1019,6 +1019,9 @@ let rec unrefine (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) 
     | tmp -> t1
   ))
 
+let eq_aqual (a1 : (FStarC_Syntax_Syntax.arg_qualifier) option) (a2 : (FStarC_Syntax_Syntax.arg_qualifier) option) : bool =
+  (aqual_eq_dbg false a1 a2)
+
 let hua (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.fv * (FStarC_Syntax_Syntax.universe) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list)) option =
   (let t1 = (unmeta t) in
   let tmp = (head_and_args_full t1) in
@@ -1268,7 +1271,7 @@ let unlazy_as_t (k : FStarC_Syntax_Syntax.lazy_kind) (t : (FStarC_Syntax_Syntax.
   let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
   (match tmp1 with
     | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = v; lkind = k'; ltyp = tmp2; rng = tmp3; _ })) -> (let tmp4 = (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__lazy_kind k k') in
-      (if tmp4 then (FStar_Dyn.undyn v) else (let tmp5 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__lazy_kind k) in
+      (if tmp4 then (Obj.magic (v)) else (let tmp5 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__lazy_kind k) in
       let tmp6 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__lazy_kind k') in
       let tmp7 = (FStarC_Format.fmt2 "Expected Tm_lazy of kind %s, got %s" tmp5 tmp6) in
       (FStarC_Effect.failwith tmp7))))
@@ -2145,9 +2148,6 @@ let rec name_function_binders_from (i : Prims.int) (t : (FStarC_Syntax_Syntax.te
 let name_function_binders (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (name_function_binders_from Prims.int_zero t)
 
-let attr_substitute : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_fvar ((FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.attr_substitute_lid None))) FStarC_Range_Type.dummyRange)
-
 let quals_of_sigelt (x : FStarC_Syntax_Syntax.sigelt) : (FStarC_Syntax_Syntax.qualifier) list =
   (x).FStarC_Syntax_Syntax.sigquals
 
@@ -2162,6 +2162,9 @@ let is_eqtype_no_unrefine (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax
 let remove_attr (attr : FStarC_Ident.lident) (eta : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list =
   (BatList.filter (fun a -> (let tmp = (is_fvar attr a) in
   (not tmp))) eta)
+
+let attr_substitute : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_fvar ((FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.attr_substitute_lid None))) FStarC_Range_Type.dummyRange)
 
 let arrow_formals_ln (k : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (let tmp = (arrow_formals_comp_ln k) in

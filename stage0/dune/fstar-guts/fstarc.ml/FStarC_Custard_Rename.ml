@@ -6,11 +6,23 @@ type scope = {
   used : (string) list;
 }
 
+let keeps_uu_prefix (tmp : unit) : bool =
+  (let tmp1 = (FStarC_Options.codegen_name ()) in
+  (match tmp1 with
+    | "KrmlC" -> true
+    | "KrmlRust" -> true
+    | tmp2 -> false
+  ))
+
 let preferred (x : string) : string =
   (let b = (FStarC_Custard_Syntax.base_name x) in
   let tmp = (if (Prims.op_Greater_Equals ((fun s -> Z.of_int (BatUTF8.length s)) b) (Prims.of_int (4))) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) b Prims.int_zero (Prims.of_int (4))) in
     ((=) tmp "uu__")) else false) in
-  let b1 = (if tmp then "tmp" else b) in
+  let b1 = (if tmp then (let tmp1 = (keeps_uu_prefix ()) in
+    (if tmp1 then b else (let rest = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) b (Prims.of_int (4)) (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) b) (Prims.of_int (4)))) in
+    let digits = ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) "_0123456789") in
+    let anonymous = (BatList.for_all (fun c -> (BatList.mem c digits)) ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) rest)) in
+    (if anonymous then "tmp" else rest)))) else b) in
   (if ((=) b1 "") then "x" else b1))
 
 let taken (s : scope) (x : string) : bool =

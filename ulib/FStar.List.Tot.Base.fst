@@ -164,7 +164,7 @@ let rec flatten l = match l with
 of results, in the order of the original elements in [l]. Requires, at
 type-checking time, [f] to be a pure total function. Named as in: OCaml, Coq, F# *)
 val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
-let rec map f x = match x with
+let rec map ([@@@FStar.Attributes.monomorphize] f) x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
@@ -173,7 +173,7 @@ element of [l] and returns the list of results, in the order of the
 original elements in [l]. Requires, at type-checking time, [f] to be a
 pure total function. *)
 val mapi_init: (int -> 'a -> Tot 'b) -> list 'a -> int -> Tot (list 'b)
-let rec mapi_init f l i = match l with
+let rec mapi_init ([@@@FStar.Attributes.monomorphize] f) l i = match l with
     | [] -> []
     | hd::tl -> (f i hd)::(mapi_init f tl (i+1))
 
@@ -182,14 +182,14 @@ let rec mapi_init f l i = match l with
 elements in [l]. Requires, at type-checking time, [f] to be a pure
 total function. Named as in: OCaml *)
 val mapi: (int -> 'a -> Tot 'b) -> list 'a -> Tot (list 'b)
-let mapi f l = mapi_init f l 0
+let mapi ([@@@FStar.Attributes.monomorphize] f) l = mapi_init f l 0
 
 (** [concatMap f l] applies [f] to each element of [l] and returns the
 concatenation of the results, in the order of the original elements of
 [l]. This is equivalent to [flatten (map f l)]. Requires, at
 type-checking time, [f] to be a pure total function. *)
 val concatMap: ('a -> Tot (list 'b)) -> list 'a -> Tot (list 'b)
-let rec concatMap f = function
+let rec concatMap ([@@@FStar.Attributes.monomorphize] f) = function
   | [] -> []
   | a::tl ->
     let fa = f a in
@@ -200,7 +200,7 @@ let rec concatMap f = function
 ... yn). Requires, at type-checking time, [f] to be a pure total
 function. Named as in: OCaml, Coq. *)
 val fold_left: ('a -> 'b -> Tot 'a) -> 'a -> l:list 'b -> Tot 'a (decreases l)
-let rec fold_left f x l = match l with
+let rec fold_left ([@@@FStar.Attributes.monomorphize] f) x l = match l with
   | [] -> x
   | hd::tl -> fold_left f (f x hd) tl
 
@@ -208,7 +208,7 @@ let rec fold_left f x l = match l with
 y)) ... )). Requires, at type-checking time, [f] to be a pure total
 function. Named as in: OCaml, Coq *)
 val fold_right: ('a -> 'b -> Tot 'b) -> list 'a -> 'b -> Tot 'b
-let rec fold_right f l x = match l with
+let rec fold_right ([@@@FStar.Attributes.monomorphize] f) l x = match l with
   | [] -> x
   | hd::tl -> f hd (fold_right f tl x)
 
@@ -231,7 +231,7 @@ let map_gtot #a #b (f:a -> GTot b) (x:list a)
 [z1; z2; ...; zn] to have the same lengths. Named as in: OCaml *)
 val fold_left2 : f:('a -> 'b -> 'c -> Tot 'a) -> accu:'a -> l1:(list 'b) -> l2:(list 'c) ->
   Pure 'a (requires (length l1 == length l2)) (ensures (fun _ -> True)) (decreases l1)
-let rec fold_left2 f accu l1 l2 =
+let rec fold_left2 ([@@@FStar.Attributes.monomorphize] f) accu l1 l2 =
   match (l1, l2) with
   | ([], []) -> accu
   | (a1::l1, a2::l2) -> fold_left2 f (f accu a1 a2) l1 l2
@@ -269,7 +269,7 @@ val existsb: #a:Type
        -> f:(a -> Tot bool)
        -> list a
        -> Tot bool
-let rec existsb #a f l = match l with
+let rec existsb #a ([@@@FStar.Attributes.monomorphize] f) l = match l with
  | [] -> false
  | hd::tl -> if f hd then true else existsb f tl
 
@@ -279,7 +279,7 @@ val find: #a:Type
         -> f:(a -> Tot bool)
         -> list a
         -> Tot (option (x:a{f x}))
-let rec find #a f l = match l with
+let rec find #a ([@@@FStar.Attributes.monomorphize] f) l = match l with
   | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
   | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 
@@ -290,7 +290,7 @@ predicate [f] *)
 does not hold removed. Requires, at type-checking time, [f] to be a
 pure total function.  Named as in: OCaml, Coq *)
 val filter : #a: Type -> f:(a -> Tot bool) -> l: list a -> Tot (list a)
-let rec filter #a f = function
+let rec filter #a ([@@@FStar.Attributes.monomorphize] f) = function
   | [] -> []
   | hd::tl -> if f hd then hd::filter f tl else filter f tl
 
@@ -317,7 +317,7 @@ appearing in [l], [f x] holds. Requires, at type-checking time, [f] to
 be a pure total function. Named as in: OCaml. Similar to: List.forallb
 in Coq *)
 val for_all: ('a -> Tot bool) -> list 'a -> Tot bool
-let rec for_all f l = match l with
+let rec for_all ([@@@FStar.Attributes.monomorphize] f) l = match l with
     | [] -> true
     | hd::tl -> if f hd then for_all f tl else false
 
@@ -358,7 +358,7 @@ concatenation of the results, in the order of the original elements of
 type-checking time, [f] to be a pure total function. TODO: what is
 the difference with [concatMap]? *)
 val collect: ('a -> Tot (list 'b)) -> list 'a -> Tot (list 'b)
-let rec collect f l = match l with
+let rec collect ([@@@FStar.Attributes.monomorphize] f) l = match l with
     | [] -> []
     | hd::tl -> append (f hd) (collect f tl)
 
@@ -368,7 +368,7 @@ exists. Requires, at type-checking time, [f] to be a pure total
 function. Contrary to [find], [tryFind] provides no postcondition on
 its result. *)
 val tryFind: ('a -> Tot bool) -> list 'a -> Tot (option 'a)
-let rec tryFind p l = match l with
+let rec tryFind ([@@@FStar.Attributes.monomorphize] p) l = match l with
     | [] -> None
     | hd::tl -> if p hd then Some hd else tryFind p tl
 
@@ -377,7 +377,7 @@ such that [f x = Some y] for some y, or [None] only if [f x = None]
 for all elements [x] of [l]. Requires, at type-checking time, [f] to
 be a pure total function. *)
 val tryPick: ('a -> Tot (option 'b)) -> list 'a -> Tot (option 'b)
-let rec tryPick f l = match l with
+let rec tryPick ([@@@FStar.Attributes.monomorphize] f) l = match l with
     | [] -> None
     | hd::tl ->
        match f hd with
@@ -388,7 +388,7 @@ let rec tryPick f l = match l with
 appearing in [l] such that [f x = Some y] for some [y]. Requires, at
 type-checking time, [f] to be a pure total function. *)
 val choose: ('a -> Tot (option 'b)) -> list 'a -> Tot (list 'b)
-let rec choose f l = match l with
+let rec choose ([@@@FStar.Attributes.monomorphize] f) l = match l with
     | [] -> []
     | hd::tl ->
        match f hd with
@@ -401,7 +401,7 @@ otherwise. Both [l1] and [l2] retain the original order of
 [l]. Requires, at type-checking time, [f] to be a pure total
 function. *)
 val partition: f:('a -> Tot bool) -> list 'a -> Tot (list 'a & list 'a)
-let rec partition f = function
+let rec partition ([@@@FStar.Attributes.monomorphize] f) = function
   | [] -> [], []
   | hd::tl ->
      let l1, l2 = partition f tl in
@@ -533,7 +533,7 @@ let rec partition_length f l = match l with
     OCaml and F#, where sorting is performed in ascending order.
 *)
 val bool_of_compare : #a:Type -> (a -> a -> Tot int) -> a -> a -> Tot bool
-let bool_of_compare #a f x y = f x y < 0
+let bool_of_compare #a ([@@@FStar.Attributes.monomorphize] f) x y = f x y < 0
 
 (** [compare_of_bool] turns a strict order into a comparison
 function. More precisely, [compare_of_bool rel x y] returns a positive
@@ -543,7 +543,7 @@ infix operator are such that [compare x y] is positive if, and only
 if, x > y. Requires, at type-checking time, [rel] to be a pure total
 function.  *)
 val compare_of_bool : #a:eqtype -> (a -> a -> Tot bool) -> a -> a -> Tot int
-let compare_of_bool #a rel x y =
+let compare_of_bool #a ([@@@FStar.Attributes.monomorphize] rel) x y =
     if x `rel` y  then -1
     else if x = y then 0
     else 1
@@ -557,7 +557,7 @@ let compare_of_bool_of_compare (#a:eqtype) (f:a -> a -> Tot bool)
     way that if [compare x y > 0], then [x] appears before [y] in
     [l']. Sorts in ascending order *)
 val sortWith: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
-let rec sortWith f = function
+let rec sortWith ([@@@FStar.Attributes.monomorphize] f) = function
   | [] -> []
   | pivot::tl ->
      let hi, lo = partition (bool_of_compare f pivot) tl in

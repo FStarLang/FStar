@@ -85,7 +85,7 @@ let e_lazy (k : FStarC_Syntax_Syntax.lazy_kind) (ty : (FStarC_Syntax_Syntax.term
   let uu = (fun t u__norm -> (let tmp = (FStarC_Syntax_Subst.compress t) in
     let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
     (match tmp1 with
-      | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = b; lkind = lkind; ltyp = tmp2; rng = tmp3; _ })) when (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__lazy_kind lkind k) -> (let tmp4 = (FStar_Dyn.undyn b) in
+      | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = b; lkind = lkind; ltyp = tmp2; rng = tmp3; _ })) when (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__lazy_kind lkind k) -> (let tmp4 = (Obj.magic (b)) in
         (Some (tmp4)))
       | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = b; lkind = lkind; ltyp = tmp2; rng = tmp3; _ })) -> (let tmp4 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__lazy_kind k) in
         let tmp5 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__lazy_kind lkind) in

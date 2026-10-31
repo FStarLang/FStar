@@ -351,3 +351,11 @@ let scan_deps_and_check_cache_validity (file : string) : (((string) list * FStar
       ))
   ))))
 
+let is_validated_in_cache (fn : string) : bool =
+  (let tmp = (FStarC_Parser_Dep.cache_file_name fn) in
+  let tmp1 = (try_find_in_cache tmp) in
+  (match tmp1 with
+    | (Some (((Valid (tmp2)), tmp3))) -> true
+    | tmp2 -> false
+  ))
+

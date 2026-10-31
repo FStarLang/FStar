@@ -1222,7 +1222,7 @@ let run_compute (st : FStarC_Interactive_Ide_Types.repl_state) (term : string) (
       | (Some (rules1)) -> rules1
       | None -> (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.Zeta :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))))
     ) (FStarC_TypeChecker_Env.Inlining :: (FStarC_TypeChecker_Env.Eager_unfolding :: ((FStarC_TypeChecker_Env.DontUnfoldAttr ((FStarC_Parser_Const.tac_opaque_attr :: []))) :: (FStarC_TypeChecker_Env.Primops :: []))))) in
-  let normalize_term = (fun tcenv rules2 t -> (FStarC_TypeChecker_Normalize.normalize rules2 tcenv t)) in
+  let normalize_term = (fun tcenv rules2 t -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize rules2 tcenv t)) in
   (run_with_parsed_and_tc_term st term Prims.int_zero Prims.int_zero (fun tcenv def -> (let normalized = (normalize_term tcenv rules1 def) in
   let tmp = (FStarC_Interactive_QueryHelper.term_to_string tcenv normalized) in
   let tmp1 = (FStarC_Json.JsonStr (tmp)) in

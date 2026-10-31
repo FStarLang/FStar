@@ -12,12 +12,6 @@ FSTAR_OPTIONS += --warn_error -272 # top-level effects
 ROOTS :=
 ROOTS += $(SRC)/fstar/FStarC.Main.fst
 
-# The OCaml implementations of interfaces (doc/ref/targets.md).  The stage0
-# compiler's --dep full only follows untagged files, so the target-specific
-# ones are listed here.  Newer compilers find them by themselves (as in
-# mk/fstar-12.mk): drop this after the next stage0 bump.
-ROOTS += $(wildcard $(SRC)/*/*-ocaml.fst ulib/*-ocaml.fst ulib/experimental/*-ocaml.fst)
-
 # The implementation of FStar.Stubs.Tactics.V2.Builtins for compiled
 # metaprograms; nothing in the compiler refers to it.
 ROOTS += $(SRC)/tactics/FStarC.Tactics.V2.Builtins.fst

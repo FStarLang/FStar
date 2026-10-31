@@ -239,6 +239,26 @@ let fStarC_Class_Ord_op_Greater_Question__ctx_uvar (x : FStarC_Syntax_Syntax.ctx
   (let tmp = (fStarC_Class_Ord_cmp__ctx_uvar x y) in
   ((=) tmp FStarC_Order.Gt))
 
+let rec fStarC_RBSet_add__add'__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (s : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset) : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset =
+  (match s with
+    | FStarC_RBSet.L -> (FStarC_RBSet.N (FStarC_RBSet.R, FStarC_RBSet.L, x, FStarC_RBSet.L))
+    | (FStarC_RBSet.N (c, a, y, b)) -> (let tmp = (fStarC_Class_Ord_op_Less_Question__ctx_uvar x y) in
+      (if tmp then (let tmp1 = ((fStarC_RBSet_add__add'__ctx_uvar x) a) in
+      (FStarC_RBSet.balance c tmp1 y b)) else (let tmp1 = (fStarC_Class_Ord_op_Greater_Question__ctx_uvar x y) in
+      (if tmp1 then (let tmp2 = ((fStarC_RBSet_add__add'__ctx_uvar x) b) in
+      (FStarC_RBSet.balance c a y tmp2)) else s))))
+  )
+
+let fStarC_RBSet_add__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (s : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset) : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset =
+  (let tmp = ((fStarC_RBSet_add__add'__ctx_uvar x) s) in
+  (FStarC_RBSet.blackroot tmp))
+
+let fStarC_RBSet_from_list__ctx_uvar (xs : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset =
+  (BatList.fold_left (fun s e -> (fStarC_RBSet_add__ctx_uvar e s)) FStarC_RBSet.L xs)
+
+let fStarC_Class_Setlike_from_list__ctx_uvar_rbset_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset =
+  (fStarC_RBSet_from_list__ctx_uvar tmp)
+
 let univ_equiv (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
   (let tmp = (get_univ_graph ()) in
   let tmp1 = (chk_v_u u) in

@@ -75,6 +75,10 @@ let rec fStarC_Class_Listlike_to_list__universe_clist_universe (l : (FStarC_Synt
       (x :: tmp))
   )
 
+let fStarC_Class_Show_show__clist_universe (tmp : (FStarC_Syntax_Syntax.universe) clist) : string =
+  (let tmp1 = (fStarC_Class_Listlike_to_list__universe_clist_universe tmp) in
+  (FStarC_Syntax_Print.fStarC_Class_Show_show__list_universe tmp1))
+
 let rec collect (f : ('u___a -> ('u___b) clist)) (l : ('u___a) clist) : ('u___b) clist =
   (match l with
     | CNil -> CNil

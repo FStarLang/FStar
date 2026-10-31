@@ -129,15 +129,6 @@ let fStarC_Class_Show_show__option_list_lident (tmp : ((lident) list) option) : 
       (Prims.strcat "Some " tmp1))
   )
 
-let fStarC_Class_Setlike_empty__ident_list_ident (tmp : unit) : (ident) list =
-  (FStarC_FlatSet.empty ())
-
-let fStarC_FlatSet_singleton__ident (x : ident) : (ident) list =
-  (x :: [])
-
-let fStarC_Class_Setlike_singleton__ident_list_ident (tmp : ident) : (ident) list =
-  (fStarC_FlatSet_singleton__ident tmp)
-
 let qual_id (lid : lident) (id : ident) : lident =
   (let tmp = (lid_of_ids (BatList.append (lid).ns ((lid).ident :: (id :: [])))) in
   (set_lid_range tmp (range_of_id id)))
@@ -263,12 +254,6 @@ let fStarC_Class_Show_show__option_list_ident (tmp : ((ident) list) option) : st
     | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__list_ident_112 x) in
       (Prims.strcat "Some " tmp1))
   )
-
-let fStarC_Class_Setlike_empty__ident_list_ident_7 (tmp : unit) : (ident) list =
-  (FStarC_FlatSet.empty ())
-
-let fStarC_Class_Setlike_is_empty__ident_list_ident (tmp : (ident) list) : bool =
-  (FStarC_FlatSet.is_empty tmp)
 
 let id_as_lid (id : ident) : lident =
   (lid_of_ns_and_id [] id)

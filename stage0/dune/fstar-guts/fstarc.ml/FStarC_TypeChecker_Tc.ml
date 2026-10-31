@@ -5,7 +5,7 @@ let compress_and_norm (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syn
   (let tmp = (FStarC_Syntax_Compress.deep_compress_if_no_uvars t) in
   (match tmp with
     | None -> None
-    | (Some (t1)) -> (let tmp1 = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.CheckNoUvars :: (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.DoNotUnfoldPureLets :: (FStarC_TypeChecker_Env.CompressUvars :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Iota)) :: (FStarC_TypeChecker_Env.NoFullNorm :: [])))))))) env t1) in
+    | (Some (t1)) -> (let tmp1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.CheckNoUvars :: (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.DoNotUnfoldPureLets :: (FStarC_TypeChecker_Env.CompressUvars :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Iota)) :: (FStarC_TypeChecker_Env.NoFullNorm :: [])))))))) env t1) in
       (Some (tmp1)))
   ))
 
@@ -187,11 +187,11 @@ let set_hint_correlator (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_S
 
 let tc_decl_attributes (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt =
   (let tmp = (FStarC_TypeChecker_Env.lid_exists env FStarC_Parser_Const.attr_substitute_lid) in
-  let tmp1 = (if tmp then ([], (se).FStarC_Syntax_Syntax.sigattrs) else (BatList.partition (fun tmp1 -> ((=) FStarC_Syntax_Util.attr_substitute tmp1)) (se).FStarC_Syntax_Syntax.sigattrs)) in
+  let tmp1 = (if tmp then ([], (se).FStarC_Syntax_Syntax.sigattrs) else (BatList.partition (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.attr_substitute_lid) (se).FStarC_Syntax_Syntax.sigattrs)) in
   (match tmp1 with
-    | (blacklisted_attrs, other_attrs) -> (let tmp2 = (FStarC_TypeChecker_TcTerm.tc_attributes env other_attrs) in
+    | (blacklisted_attrs, other_attrs) -> (let tmp2 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_attributes env other_attrs) in
       (match tmp2 with
-        | (g, other_attrs1) -> ((FStarC_TypeChecker_Rel.force_trivial_guard env g);
+        | (g, other_attrs1) -> ((FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard env g);
           { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
             sigrng = (se).FStarC_Syntax_Syntax.sigrng;
             sigquals = (se).FStarC_Syntax_Syntax.sigquals;
@@ -245,7 +245,7 @@ let tc_inductive' (env : FStarC_TypeChecker_Env.env) (ses : (FStarC_Syntax_Synta
   let ses1 = (BatList.map (tc_decl_attributes env) ses) in
   let tmp1 = (FStarC_TypeChecker_TcInductive.check_inductive_well_typedness env ses1 quals lids) in
   (match tmp1 with
-    | (sig_bndle, tcs, datas) -> (let sig_bndle1 = (FStarC_TypeChecker_Positivity.mark_uniform_type_parameters env sig_bndle) in
+    | (sig_bndle, tcs, datas) -> (let sig_bndle1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Positivity_mark_uniform_type_parameters env sig_bndle) in
       let attrs' = (FStarC_Syntax_Util.remove_attr FStarC_Parser_Const.erasable_attr attrs) in
       let tmp2 = (BatList.map (FStarC_TypeChecker_TcInductive.mk_data_operations quals attrs' env tcs) datas) in
       let data_ops_ses = (BatList.flatten tmp2) in
@@ -253,7 +253,7 @@ let tc_inductive' (env : FStarC_TypeChecker_Env.env) (ses : (FStarC_Syntax_Synta
       let tmp4 = (if tmp3 then true else (let tmp4 = (FStarC_TypeChecker_Env.should_verify env) in
         (not tmp4))) in
       (if tmp4 then () else (let env2 = (FStarC_TypeChecker_Env.push_sigelt env sig_bndle1) in
-      (BatList.iter (fun ty -> (let b = (FStarC_TypeChecker_Positivity.check_strict_positivity env2 lids ty) in
+      (BatList.iter (fun ty -> (let b = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Positivity_check_strict_positivity env2 lids ty) in
       (if (not b) then (let tmp5 = (match (ty).FStarC_Syntax_Syntax.sigel with
           | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = lid; us = tmp5; params = tmp6; num_uniform_params = tmp7; t = tmp8; mutuals = tmp9; ds = tmp10; injective_type_params = tmp11; _ })) -> (lid, (ty).FStarC_Syntax_Syntax.sigrng)
           | tmp5 -> (FStarC_Effect.failwith "Impossible!")
@@ -266,7 +266,7 @@ let tc_inductive' (env : FStarC_TypeChecker_Env.env) (ses : (FStarC_Syntax_Synta
           | tmp5 -> (FStarC_Effect.failwith "Impossible")
         ) in
       (match tmp5 with
-        | (data_lid, ty_lid) -> (let tmp6 = (if (FStarC_Ident.lid_equals ty_lid FStarC_Parser_Const.exn_lid) then (let tmp6 = (FStarC_TypeChecker_Positivity.check_exn_strict_positivity env2 data_lid) in
+        | (data_lid, ty_lid) -> (let tmp6 = (if (FStarC_Ident.lid_equals ty_lid FStarC_Parser_Const.exn_lid) then (let tmp6 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Positivity_check_exn_strict_positivity env2 data_lid) in
             (not tmp6)) else false) in
           (if tmp6 then (FStarC_Errors.fStarC_Errors_log_issue__sigelt_string d FStarC_Errors_Codes.Error_InductiveTypeNotSatisfyPositivityCondition (Prims.strcat "Exception " (Prims.strcat (FStarC_Ident.string_of_lid data_lid) " does not satisfy the positivity condition"))) else ()))
       ))) datas)));
@@ -329,7 +329,7 @@ let process_pragma (env : FStarC_TypeChecker_Env.env) (p : FStarC_Syntax_Syntax.
     | (FStarC_Syntax_Syntax.Check (t0)) -> (let env' = (push_context env "#check") in
       let tx = (FStarC_Syntax_Unionfind.new_transaction ()) in
       (FStarC_Util.finally (fun tmp -> ((ignore (pop_context env' "#check"));
-      (FStarC_Syntax_Unionfind.rollback tx))) (fun tmp -> (let tmp1 = (FStarC_TypeChecker_TcTerm.tc_term { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+      (FStarC_Syntax_Unionfind.rollback tx))) (fun tmp -> (let tmp1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_term { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
           range = (env).FStarC_TypeChecker_Env.range;
           curmodule = (env).FStarC_TypeChecker_Env.curmodule;
           gamma = (env).FStarC_TypeChecker_Env.gamma;
@@ -404,7 +404,7 @@ let process_pragma (env : FStarC_TypeChecker_Env.env) (p : FStarC_Syntax_Syntax.
     | (FStarC_Syntax_Syntax.Eval (t0)) -> (let env' = (push_context env "#eval") in
       let tx = (FStarC_Syntax_Unionfind.new_transaction ()) in
       (FStarC_Util.finally (fun tmp -> ((ignore (pop_context env' "#eval"));
-      (FStarC_Syntax_Unionfind.rollback tx))) (fun tmp -> (let tmp1 = (FStarC_TypeChecker_TcTerm.tc_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
+      (FStarC_Syntax_Unionfind.rollback tx))) (fun tmp -> (let tmp1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
           range = (env').FStarC_TypeChecker_Env.range;
           curmodule = (env').FStarC_TypeChecker_Env.curmodule;
           gamma = (env').FStarC_TypeChecker_Env.gamma;
@@ -462,10 +462,10 @@ let process_pragma (env : FStarC_TypeChecker_Env.env) (p : FStarC_Syntax_Syntax.
           iface_lids = (env').FStarC_TypeChecker_Env.iface_lids;
           iface_val_lids = (env').FStarC_TypeChecker_Env.iface_val_lids } t0) in
       (match tmp1 with
-        | (t_elab, tmp2, g1) -> (let tmp3 = (FStarC_TypeChecker_Rel.guard_to_string env' g1) in
+        | (t_elab, tmp2, g1) -> (let tmp3 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_guard_to_string env' g1) in
           (FStarC_Format.print1 "Guard = %s\n" tmp3);
-          (FStarC_TypeChecker_Rel.force_trivial_guard env' g1);
-          let tmp4 = (FStarC_TypeChecker_TcTerm.tc_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
+          (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard env' g1);
+          let tmp4 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
               range = (env').FStarC_TypeChecker_Env.range;
               curmodule = (env').FStarC_TypeChecker_Env.curmodule;
               gamma = (env').FStarC_TypeChecker_Env.gamma;
@@ -523,7 +523,7 @@ let process_pragma (env : FStarC_TypeChecker_Env.env) (p : FStarC_Syntax_Syntax.
               iface_lids = (env').FStarC_TypeChecker_Env.iface_lids;
               iface_val_lids = (env').FStarC_TypeChecker_Env.iface_val_lids } t_elab) in
           (match tmp4 with
-            | (t, lc, g) -> (let t1 = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.Zeta :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Inlining :: (FStarC_TypeChecker_Env.Unmeta :: (FStarC_TypeChecker_Env.Unascribe :: []))))))))) env' t) in
+            | (t, lc, g) -> (let t1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.Zeta :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Inlining :: (FStarC_TypeChecker_Env.Unmeta :: (FStarC_TypeChecker_Env.Unascribe :: []))))))))) env' t) in
               let tmp5 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t0) in
               let tmp6 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' t1) in
               let tmp7 = (PPrint.(^/^) (FStarC_Errors_Msg.text "==>") tmp6) in
@@ -541,12 +541,12 @@ let tc_type_common (env : FStarC_TypeChecker_Env.env) (ts : ((FStarC_Ident.ident
     | (uvs, t) -> (let tmp = (FStarC_Syntax_Subst.open_univ_vars uvs t) in
       (match tmp with
         | (uvs1, t1) -> (let env1 = (FStarC_TypeChecker_Env.push_univ_vars env uvs1) in
-          let t2 = (FStarC_TypeChecker_TcTerm.tc_check_trivial_guard env1 t1 expected_typ) in
-          (if ((=) uvs1 []) then (let tmp1 = (FStarC_TypeChecker_Generalize.generalize_universes env1 t2) in
+          let t2 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_check_trivial_guard env1 t1 expected_typ) in
+          (if ((=) uvs1 []) then (let tmp1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Generalize_generalize_universes env1 t2) in
           (match tmp1 with
             | (uvs2, t3) -> ((FStarC_TypeChecker_Util.check_uvars r t3);
               (uvs2, t3))
-          )) else (let tmp1 = (FStarC_TypeChecker_Normalize.remove_uvar_solutions env1 t2) in
+          )) else (let tmp1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_remove_uvar_solutions env1 t2) in
           let tmp2 = (FStarC_Syntax_Subst.close_univ_vars uvs1 tmp1) in
           (uvs1, tmp2))))
       ))
@@ -572,7 +572,7 @@ let declares_type_constructor (env : FStarC_TypeChecker_Env.env) (uvs : (FStarC_
               | tmp5 -> false
             ) in
           (if tmp5 then true else (let env1 = (FStarC_TypeChecker_Env.push_binders env bs) in
-          let tmp6 = (FStarC_TypeChecker_Normalize.unfold_whnf env1 res) in
+          let tmp6 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf env1 res) in
           let tmp7 = (FStarC_Syntax_Util.unrefine tmp6) in
           let tmp8 = (FStarC_Syntax_Subst.compress tmp7) in
           let tmp9 = (tmp8).FStarC_Syntax_Syntax.n in
@@ -941,7 +941,7 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.range) 
                 | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = true; lbs1 = lbs1; body = tmp11; _ })) -> ((FStarC_Syntax_Util.check_mutual_universes lbs1);
                   e_lax)
               ))) in
-            let e1 = (FStarC_Profiling.profile (fun tmp9 -> (let tmp10 = (FStarC_TypeChecker_TcTerm.tc_maybe_toplevel_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
+            let e1 = (FStarC_Profiling.profile (fun tmp9 -> (let tmp10 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_maybe_toplevel_term { FStarC_TypeChecker_Env.solver = (env').FStarC_TypeChecker_Env.solver;
                   range = (env').FStarC_TypeChecker_Env.range;
                   curmodule = (env').FStarC_TypeChecker_Env.curmodule;
                   gamma = (env').FStarC_TypeChecker_Env.gamma;
@@ -1005,7 +1005,7 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.range) 
             let tmp10 = (if tmp9 then true else (!(dbg_TwoPhases))) in
             (if tmp10 then (let tmp11 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' e1) in
             (FStarC_Format.print1 "Let binding after phase 1, before removing uvars: %s\n" tmp11)) else ());
-            let tmp11 = (FStarC_TypeChecker_Normalize.remove_uvar_solutions env' e1) in
+            let tmp11 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_remove_uvar_solutions env' e1) in
             let e2 = (drop_lbtyp tmp11) in
             let tmp12 = (FStarC_Debug.medium ()) in
             let tmp13 = (if tmp12 then true else (!(dbg_TwoPhases))) in
@@ -1028,7 +1028,7 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.range) 
           (FStarC_Errors.stop_if_err ());
           let tmp10 = (do_two_phases env'1) in
           let should_generalize1 = (not tmp10) in
-          let r1 = (FStarC_Profiling.profile (fun tmp11 -> (FStarC_TypeChecker_TcTerm.tc_maybe_toplevel_term { FStarC_TypeChecker_Env.solver = (env'1).FStarC_TypeChecker_Env.solver;
+          let r1 = (FStarC_Profiling.profile (fun tmp11 -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_maybe_toplevel_term { FStarC_TypeChecker_Env.solver = (env'1).FStarC_TypeChecker_Env.solver;
               range = (env'1).FStarC_TypeChecker_Env.range;
               curmodule = (env'1).FStarC_TypeChecker_Env.curmodule;
               gamma = (env'1).FStarC_TypeChecker_Env.gamma;
@@ -1229,9 +1229,9 @@ let tc_sig_let (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.range) 
                 | (t, tmp18) -> (let tmp19 = (FStarC_Syntax_Subst.open_univ_vars (lb).FStarC_Syntax_Syntax.lbunivs (lb).FStarC_Syntax_Syntax.lbtyp) in
                   (match tmp19 with
                     | (uvs, lbtyp) -> (let tmp20 = (FStarC_TypeChecker_Env.push_univ_vars env'2 uvs) in
-                      let tmp21 = (FStarC_TypeChecker_TcTerm.tc_check_tot_or_gtot_term tmp20 lbtyp t (Some ("checking no_subtype annotation"))) in
+                      let tmp21 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_check_tot_or_gtot_term tmp20 lbtyp t (Some ("checking no_subtype annotation"))) in
                       (match tmp21 with
-                        | (tmp22, tmp23, g) -> (FStarC_TypeChecker_Rel.force_trivial_guard env'2 g)
+                        | (tmp22, tmp23, g) -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard env'2 g)
                       ))
                   ))
               ))))))) (match lbs1 with
@@ -1442,7 +1442,7 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sige
         let tmp5 = (match tmp4 with
             | (u__1, u__2) -> u__1
           ) in
-        let tmp6 = (FStarC_TypeChecker_Normalize.elim_uvars env tmp5) in
+        let tmp6 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_elim_uvars env tmp5) in
         let ses1 = (FStarC_Syntax_Util.ses_of_sigbundle tmp6) in
         let tmp7 = (FStarC_Debug.medium ()) in
         let tmp8 = (if tmp7 then true else (!(dbg_TwoPhases))) in
@@ -1540,7 +1540,7 @@ let tc_decl' (env0 : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sige
             sigattrs = (se2).FStarC_Syntax_Syntax.sigattrs;
             sigopens_and_abbrevs = (se2).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
             sigopts = (se2).FStarC_Syntax_Syntax.sigopts } in
-        let tmp6 = (FStarC_TypeChecker_Normalize.elim_uvars env0 tmp5) in
+        let tmp6 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_elim_uvars env0 tmp5) in
         let ne1 = (FStarC_Syntax_Util.eff_decl_of_new_effect tmp6) in
         let tmp7 = (FStarC_Debug.medium ()) in
         let tmp8 = (if tmp7 then true else (!(dbg_TwoPhases))) in
@@ -2372,7 +2372,7 @@ let check_subsumes_iface_val (env : FStarC_TypeChecker_Env.env) (iface_se : FSta
               (match tmp2 with
                 | (tmp3, impl_t1) -> (let env1 = (FStarC_TypeChecker_Env.push_univ_vars env us) in
                   let env2 = (FStarC_TypeChecker_Env.set_range env1 (FStarC_Syntax_Util.range_of_sigelt impl)) in
-                  let tmp4 = (FStarC_TypeChecker_Rel.get_subtyping_predicate env2 impl_t1 iface_t1) in
+                  let tmp4 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_get_subtyping_predicate env2 impl_t1 iface_t1) in
                   (match tmp4 with
                     | None -> (let tmp5 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
                       let tmp6 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "The implementation of") tmp5) in
@@ -2387,7 +2387,7 @@ let check_subsumes_iface_val (env : FStarC_TypeChecker_Env.env) (iface_se : FSta
                       (FStarC_Errors.fStarC_Errors_raise_error__sigelt_list_ocaml_document impl FStarC_Errors_Codes.Fatal_InterfaceNotImplementedByModule tmp14))
                     | (Some (g)) -> (let tmp5 = (FStarC_Syntax_Syntax.fvar l None) in
                       let tmp6 = (FStarC_TypeChecker_Env.apply_guard g tmp5) in
-                      (FStarC_TypeChecker_Rel.force_trivial_guard env2 tmp6))
+                      (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard env2 tmp6))
                   ))
               ))
           ))
@@ -2419,11 +2419,11 @@ let tc_decls__process_one_decl (ses_env : ((FStarC_Syntax_Syntax.sigelt) list * 
             | (ses', ses_elaborated, env2) -> (let ses'1 = (BatList.map (fun se1 -> (let tmp9 = (!(dbg_UF)) in
                 (if tmp9 then (let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt se1) in
                 (FStarC_Format.print1 "About to elim vars from %s\n" tmp10)) else ());
-                (FStarC_TypeChecker_Normalize.elim_uvars env2 se1))) ses') in
+                (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_elim_uvars env2 se1))) ses') in
               let ses_elaborated1 = (BatList.map (fun se1 -> (let tmp9 = (!(dbg_UF)) in
                 (if tmp9 then (let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__sigelt se1) in
                 (FStarC_Format.print1 "About to elim vars from (elaborated) %s\n" tmp10)) else ());
-                (FStarC_TypeChecker_Normalize.elim_uvars env2 se1))) ses_elaborated) in
+                (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_elim_uvars env2 se1))) ses_elaborated) in
               (FStarC_TypeChecker_Env.promote_id_info env2 (compress_and_norm env2));
               let ses'2 = (BatList.map (FStarC_Syntax_Compress.deep_compress_se false false) ses'1) in
               let ses'3 = (BatList.map (mark_karamel_private env2) ses'2) in
@@ -2818,7 +2818,7 @@ let check_module (env0 : FStarC_TypeChecker_Env.env) (m : FStarC_Syntax_Syntax.m
       let tmp6 = (FStarC_Options.dump_module (FStarC_Ident.string_of_lid (m1).FStarC_Syntax_Syntax.name)) in
       let tmp7 = (if tmp6 then (!(dbg_Normalize)) else false) in
       (if tmp7 then (let normalize_toplevel_lets = (fun se -> (match (se).FStarC_Syntax_Syntax.sigel with
-          | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (b, lbs); lids = ids; _ })) -> (let n = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Reify :: (FStarC_TypeChecker_Env.Inlining :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.AllowUnboundUniverses :: [])))))))) in
+          | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (b, lbs); lids = ids; _ })) -> (let n = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Reify :: (FStarC_TypeChecker_Env.Inlining :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.AllowUnboundUniverses :: [])))))))) in
             let update = (fun lb -> (let tmp8 = (FStarC_Syntax_Subst.open_univ_vars (lb).FStarC_Syntax_Syntax.lbunivs (lb).FStarC_Syntax_Syntax.lbdef) in
               (match tmp8 with
                 | (univnames, e) -> (let tmp9 = (FStarC_TypeChecker_Env.push_univ_vars env2 univnames) in

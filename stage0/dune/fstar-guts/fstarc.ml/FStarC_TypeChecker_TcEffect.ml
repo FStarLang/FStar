@@ -22,7 +22,7 @@ let u_type (r : FStarC_Range_Type.range) (u : FStarC_Ident.ident) : (FStarC_Synt
 
 let check_comb (env : FStarC_TypeChecker_Env.env) (us : (FStarC_Ident.ident) list) (expected : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (let env1 = (FStarC_TypeChecker_Env.push_univ_vars env us) in
-  let t1 = (FStarC_TypeChecker_TcTerm.tc_check_trivial_guard env1 t expected) in
+  let t1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_check_trivial_guard env1 t expected) in
   let tmp = (FStarC_Syntax_Subst.close_univ_vars us t1) in
   (us, tmp))
 
@@ -41,7 +41,7 @@ let check_total_repr (env : FStarC_TypeChecker_Env.env) (mname : FStarC_Ident.li
       let env2 = (FStarC_TypeChecker_Env.push_bv env1 bv_a) in
       let tmp2 = (FStarC_Syntax_Syntax.bv_to_name bv_a) in
       let t = (repr_app repr_ts u_a tmp2 r) in
-      let t1 = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Eager_unfolding :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))) env2 t) in
+      let t1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Eager_unfolding :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))) env2 t) in
       let tmp3 = (FStarC_Syntax_Subst.compress t1) in
       let t2 = (FStarC_Syntax_Util.unascribe tmp3) in
       (match (t2).FStarC_Syntax_Syntax.n with
@@ -66,7 +66,7 @@ let repr_universe (env : FStarC_TypeChecker_Env.env) (repr_ts : ((FStarC_Ident.i
       let env2 = (FStarC_TypeChecker_Env.push_bv env1 bv_a) in
       let tmp2 = (FStarC_Syntax_Syntax.bv_to_name bv_a) in
       let tmp3 = (repr_app repr_ts u_a tmp2 r) in
-      let u = (FStarC_TypeChecker_TcTerm.universe_of env2 tmp3) in
+      let u = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_universe_of env2 tmp3) in
       let tmp4 = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_type (u)) r) in
       let tmp5 = (FStarC_Syntax_Subst.close_univ_vars (u_a :: []) tmp4) in
       ((u_a :: []), tmp5))

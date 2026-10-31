@@ -260,7 +260,7 @@ and lazy_kind =
 
 
 and lazyinfo = {
-  blob : FStar_Dyn.dyn;
+  blob : Obj.t;
   lkind : lazy_kind;
   ltyp : (term') syntax;
   rng : FStarC_Range_Type.range;
@@ -814,7 +814,7 @@ type sig_metadata = {
   sigmeta_spliced : bool;
   sigmeta_already_checked : bool;
   sigmeta_extension_decl : bool;
-  sigmeta_extension_data : ((string * FStar_Dyn.dyn)) list;
+  sigmeta_extension_data : ((string * Obj.t)) list;
   sigmeta_type_constructor : bool;
 }
 

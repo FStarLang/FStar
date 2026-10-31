@@ -54,6 +54,23 @@ let deep (l: list int) : ML (list int) =
 let rebinds (env: int) (l: list int) : ML (list int & int) =
   fold (fun (acc, env) x -> (x + env) :: acc, env + 1) ([], env) l
 
+(* [FStar.List.Tot]'s higher-order functions mark their function binders
+   too. *)
+module LT = FStar.List.Tot
+
+let tot_ops (k: int) (l: list int) : list int & int & bool & option int =
+  let m = LT.map (fun x -> x + k) l in
+  let mi = LT.mapi (fun i x -> i + x + k) m in
+  let f = LT.filter (fun x -> x % 2 = k % 2) mi in
+  let c = LT.concatMap (fun x -> [x; k]) f in
+  let ch = LT.choose (fun x -> if x > k then Some (x - k) else None) c in
+  let s = LT.sortWith (fun x y -> y - x + k - k) ch in
+  let lo, hi = LT.partition (fun x -> x < k) s in
+  let sum = LT.fold_left (fun a x -> a + x + k) 0 lo + LT.fold_right (fun x a -> a + x - k) hi 0 in
+  let b = LT.for_all (fun x -> x >= 0 - k) s && LT.existsb (fun x -> x = k + 1) s in
+  let t = LT.tryFind (fun x -> x > k) s in
+  s, sum, b, t
+
 let main () : ML U32.t =
   if add_all 1 [1; 2] = [2; 3]
   && apply_all (fun x -> x * 2) [1; 2] = [2; 4]
@@ -61,4 +78,5 @@ let main () : ML U32.t =
   && shift_all 2 [1; 2] = [3; 4]
   && deep [1; 2] = [7; 11]
   && rebinds 10 [1; 2] = ([13; 11], 12)
+  && tot_ops 1 [1; 2; 3] = ([6; 4; 2], 9, true, Some 6)
   then 0ul else 1ul
