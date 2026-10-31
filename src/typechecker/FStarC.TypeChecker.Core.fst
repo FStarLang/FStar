@@ -1119,6 +1119,8 @@ let with_binder_unrefined (#a:Type) (initial_env:env) (x:binder) (u:universe) (f
           let xb = { x with binder_bv = { x.binder_bv with sort = y.sort } } in
           (* Not twice, e.g. for [x:t{phi}] related to [t{psi}], whose guard
              is already [phi ==> psi]. *)
+          //NS REVIEW: This is ugly, a very specific optimization. Why is it needed?
+          //The duplicated hypothesis, if any, could be caught by simplification anyway
           let already =
             match FStarC.Syntax.Formula.destruct_typ_as_formula form with
             | Some (FStarC.Syntax.Formula.BaseConn (l, [(p, _); _])) -> I.lid_equals l PC.imp_lid && U.term_eq p phi
@@ -1638,6 +1640,9 @@ let push_branch_hypothesis (g:env) (hyp:typ) : ML env =
    branches include both constant patterns `true` and `false` (without
    when clauses) is exhaustive, so its residual path condition is false
    and needs no SMT query. Pulse's elaborated `if`s produce many of these. *)
+//NS REVIEW: This is very specific to bool. We should have syntactic exhaustiveness
+//checking of matches for all types. I.e., if the branches all have simple patterns
+//and mention all the constructors of the scrutinee's type
 let match_covers_bool (g:env) (t_sc:typ) (brs:list branch) : ML bool =
   let has b =
     List.existsb
@@ -2441,6 +2446,8 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
             (* In [g_x1]: [x1] is free in the guard, as the witness, and
                binders opened while relating the domains (e.g. those of
                the branches of a [match]) must not reuse its index. *)
+            //NS REVIEW: Why is the relation on the domain checked in a context g_x1?
+            //It should just be checked in g
             check_relation g_x1 rel_arg x1.binder_bv.sort x0.binder_bv.sort ;!
             with_context "check_subcomp" None (fun _ ->
               check_relation_comp g_x1 rel_comp c0 c1
@@ -2480,7 +2487,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                   with_context "relate_branch" None (fun _ ->
                     with_binders g bs0 us
                       (weaken_branch g' hyp (check_relation g'' rel body0 body1)))
-             | _ -> fail_str "raw_pat_as_exp failed in check_equality match rule"
+                | _ -> fail_str "raw_pat_as_exp failed in check_equality match rule"
              end
             | _ -> fail_str "Core does not support branches with when"
         in
@@ -2892,7 +2899,9 @@ and do_check (g:env) (e:term)
       in
       (* A function argument is checked against its formal arrow type, as
          TcTerm does, rather than having its type synthesized and then
-         related to the formal: what the body proves (e.g. the typing of
+         related to the formal: 
+         NS REVIEW: The remainder of this comment does not make sense to me. Clarify.
+         what the body proves (e.g. the typing of
          [join w1 w3] in [introduce p ==> exists w3. q w3 with (let w3 =
          ... in lemma (join w1 w3))]) then scopes over the goal it is
          proven for. *)
@@ -2910,6 +2919,8 @@ and do_check (g:env) (e:term)
               | _ -> true)
         | _ -> false
       in
+      //NS REVIEW: Why can we not always check the argument against the type of the formal, 
+      //rather than synthesizing in some cases?
       let abs_checked =
         unannotated_match
         || (Tm_abs? (Subst.compress arg).n
@@ -3036,6 +3047,7 @@ and do_check (g:env) (e:term)
       (* [TcUtil] closes variables escaping the type of a [let] with
          quantifiers that it leaves without universes; their universe is
          that of the domain. *)
+      //NS REVIEW: This is compensating for a bug in TcUtil. Fix the bug there rather than patching it here
       let! _, t_a = check "quantifier domain" g a in
       let! u = is_type g t_a in
       check_app (S.mk_Tm_uinst hd [u]) args
@@ -3066,6 +3078,7 @@ and do_check (g:env) (e:term)
   | Tm_ascribed {tm=e; asc=(Inl t, tac, eq)} ->
     let! _, t' = check "ascription type" g t in
     is_type g t';!
+    //NS REVIEW: We don't check that tac is itself well-typed?
     let! eff, fe =
       with_ascription_tactic g tac (fun _ ->
         if eq
@@ -3080,6 +3093,7 @@ and do_check (g:env) (e:term)
 
   | Tm_ascribed {tm=e; asc=(Inr c, tac, _)} ->
     let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
+    //NS REVIEW: We don't check that tac is itself well-typed?
     let! fe =
       with_ascription_tactic g tac (fun _ ->
         with_context "ascription subtyping (comp)" None (fun _ -> check_against_comp_f g e c)) in
@@ -3136,7 +3150,7 @@ and do_check (g:env) (e:term)
             weaken_branch g hyp
             (with_binders g_h bs us
               (weaken_branch g'0 pat_sc_eq
-                 (let! eff_br, tbr, fb = check_f "branch" g' b in
+                 (let! eff_br, tbr, fb = check_f "branch" g' b in //NS REVIEW: Why can't we check the branch against returns_ty, instead of synthesize & then check?
                   (* As in [TcTerm.tc_eqn], the branch is expected to have the
                      annotation at the pattern, rather than at the scrutinee:
                      e.g., a recursive function in it applied to the
@@ -3479,26 +3493,38 @@ and let_result_typ (g g':env) (e:term) (eff_def:eff) (x:binder) (u:universe)
 (* A [match] without a return annotation, whose branches are checked against
    [expected] if given, or else against the type of the first one (or the
    residual type recorded by the elaborator, if any). *)
+//NS REVIEW: check_match is a mess. It relies on many implicit relation between the elaborator
+//and this core checker, notably in its treatment of the residual_comp that the elaborator
+//may fill in on the match. There is also a ton of duplication between this and the
+//case of check_match with returns annotations. It would be much cleaner to force the 
+//elaborator to always elaborate a source match to a match with a returns clause (and not necessarily an `as` binder in case there is no dependence),
+//and to consolidate the core checker around that. The elaborator should also take care to
+//augment that return clause with whatever information the continuation may need, so that the
+//core checker can really just be a checker, rather than all this complex logic around
+//sub-facts & scoping of those facts mingled in with the core typechecking logic 
 and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option residual_comp) (expected:option typ)
   : ML (result (eff & typ & sub_facts))
   = let! eff_sc, t_sc = check "scrutinee" g sc in
     let branches0 = branches in
     let! u_sc = universe_of_well_typed_term g t_sc in
     (* With no expected type, the match's type is the residual type the
-       elaborator recorded, which is typically unrefined. As in [TcUtil.bind_cases], it is
+       elaborator recorded, which is typically unrefined. 
+       NS REVIEW: I don't understand the rest of this comment. 
+       As in [TcUtil.bind_cases], it is
        refined with what each branch's own type says under the condition that
        the branch is taken (otherwise, e.g., [if b then fail "" else (); e]
        forgets [not b] when checking [e]). [res_x] names the match's result. *)
     let res_x : option bv =
       match expected, rc_opt with
       | None, Some ({ residual_typ = Some t }) when is_tot_or_ghost_eff eff_sc ->
+      //NS REVIEW: This trusts the well-formedness of `t` from the elaborator. We should check it.
         Some (S.new_bv None t)
       | _ -> None
     in
     let! u_res : universe =
       match res_x with
-      | None -> return U_zero
-      | Some x -> universe_of g x.sort
+      | None -> return U_zero //NS REVIEW: But it defaults to u#0??
+      | Some x -> universe_of g x.sort //NS REVIEW: Ok, it is checked here
     in
     (* [w] is the branch itself, when it is pure: the match's result is then
        equal to it. Facts that mention the pattern variables [bs] are
