@@ -1629,6 +1629,28 @@ and elaborated_match_returns (env:env) (c1:comp) (cres:comp) (res_t:typ) (guard_
        | _ -> U.t_true)
     | _ -> U.t_true
   in
+  (* [let _ = e1 in e2], for a pure [e1], is [e2]: as the right-hand side of
+     an equation, [e2] does not need [e1]'s precondition to hold, e.g. [p]
+     for [assert p; v], which may rely on facts (e.g. an [assume] before the
+     match) that do not hold where the annotation is checked, or where
+     [annotation_hypothesis] lifts it to. *)
+  let rec drop_unused_pure_lets' (e:term) : ML (option term) =
+    match (SS.compress e).n with
+    | Tm_let {lbs=(false, [lb]); body}
+        when Inl? lb.lbname && U.is_pure_or_ghost_effect lb.lbeff ->
+      let xb, body = SS.open_term [S.mk_binder (Inl?.v lb.lbname)] body in
+      if mem (List.hd xb).binder_bv (Free.names body) then None
+      else Some (match drop_unused_pure_lets' body with | Some e -> e | None -> body)
+    (* E.g., the lift of a pure branch to the effect of the match, or the
+       marker of [e1; e2]. *)
+    | Tm_meta {tm} -> drop_unused_pure_lets' tm
+    | _ -> None
+  in
+  let drop_unused_pure_lets (e:term) : ML term =
+    match drop_unused_pure_lets' e with
+    | Some e -> e
+    | None -> e
+  in
   let t =
     if U.is_pure_or_ghost_comp cres
        || BU.for_some (fun ((_, w, _), _, _, _, _, _, _) -> Some? w) t_eqns
@@ -1651,7 +1673,7 @@ and elaborated_match_returns (env:env) (c1:comp) (cres:comp) (res_t:typ) (guard_
             (* The result of a pure branch is the branch itself. *)
             let phi =
               if VCUtil.should_return env (Some br) c
-              then U.mk_conj_simp phi (U.mk_eq2 (Thunk.force u_res) res_t (S.bv_to_name x) br)
+              then U.mk_conj_simp phi (U.mk_eq2 (Thunk.force u_res) res_t (S.bv_to_name x) (drop_unused_pure_lets br))
               else phi in
             SS.subst [NT (guard_x, sc)] phi) t_eqns pats in
       if BU.for_all U.is_t_true phis then res_t

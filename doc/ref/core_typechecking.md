@@ -430,7 +430,9 @@ Core used to serve tactics only (`core_check`) and only knew `Tot` and
     the result type of the branches; for an effectful match, that type is
     refined with `match sc with | p_i -> phi_i`, where `phi_i` is what the
     type of branch `i` says about the result (plus `x == b_i` for a pure
-    `b_i` that may be returned). So whatever the continuation of the match
+    `b_i` that may be returned, with the unused pure `let`s of `b_i`, e.g.
+    `assert p;`, dropped: `p` may rely on facts, e.g. an `assume`, that do
+    not hold where the annotation is checked). So whatever the continuation of the match
     needs to know is in its annotation, and Core no longer computes a type
     for a match from its branches.
   * A branch is checked against `t` with the *pattern* substituted for the
