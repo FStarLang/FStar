@@ -5,7 +5,7 @@ let z3url : string =
   "https://github.com/Z3Prover/z3/releases"
 
 let packaged_z3_versions : (string) list =
-  ("4.8.5" :: ("4.13.3" :: ("4.15.3" :: [])))
+  ("4.8.5" :: ("4.13.3" :: ("4.15.3" :: ("5.3.0" :: []))))
 
 let z3_install_suggestion (v : string) : (PPrint.document) list =
   ((PPrint.(^/^) (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Please download version %s of Z3 from" v)) (PPrint.url z3url)) (PPrint.group (PPrint.(^/^) (FStarC_Errors_Msg.text "and install it into your $PATH as") (PPrint.(^^) (FStarC_Errors_Msg.fquotes (PPrint.string (FStarC_Platform.exe (Prims.strcat "z3-" v)))) PPrint.dot)))) :: ((if (BatList.mem v packaged_z3_versions) then (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Version %s of Z3 should be included in binary packages of F*. If you are using a binary package and are seeing\n              this error, please file a bug report." v)) else PPrint.empty) :: []))

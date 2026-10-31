@@ -89,17 +89,17 @@ let u___do_rewrite (g0 : FStarC_Tactics_Types.goal) (rewriter : ((FStarC_Tactics
     | None -> (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn tm)
     | (Some ((tmp2, comp, g))) -> (let tmp3 = (FStarC_Syntax_Util.is_pure_or_ghost_comp comp) in
       let tmp4 = (not tmp3) in
-      (if tmp4 then (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn tm) else ((ignore (FStarC_TypeChecker_Rel.solve_deferred_constraints env g));
+      (if tmp4 then (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn tm) else ((ignore (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_solve_deferred_constraints env g));
       let typ = (FStarC_Syntax_Util.comp_result comp) in
       let tmp5 = (FStarC_Options_Ext.enabled "__unrefine") in
-      let typ1 = (if tmp5 then (let typ_norm = (FStarC_TypeChecker_Normalize.unfold_whnf' ((FStarC_TypeChecker_Env.DontUnfoldAttr ((FStarC_Parser_Const.do_not_unrefine_attr :: []))) :: []) env typ) in
+      let typ1 = (if tmp5 then (let typ_norm = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' ((FStarC_TypeChecker_Env.DontUnfoldAttr ((FStarC_Parser_Const.do_not_unrefine_attr :: []))) :: []) env typ) in
         let tmp6 = (FStarC_Syntax_Subst.compress typ_norm) in
         let tmp7 = (tmp6).FStarC_Syntax_Syntax.n in
         let tmp8 = (match tmp7 with
             | (FStarC_Syntax_Syntax.Tm_refine (u__0)) -> true
             | tmp8 -> false
           ) in
-        (if tmp8 then (FStarC_TypeChecker_Normalize.unfold_whnf' ((FStarC_TypeChecker_Env.DontUnfoldAttr ((FStarC_Parser_Const.do_not_unrefine_attr :: []))) :: (FStarC_TypeChecker_Env.Unrefine :: [])) env typ_norm) else typ)) else typ) in
+        (if tmp8 then (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' ((FStarC_TypeChecker_Env.DontUnfoldAttr ((FStarC_Parser_Const.do_not_unrefine_attr :: []))) :: (FStarC_TypeChecker_Env.Unrefine :: [])) env typ_norm) else typ)) else typ) in
       let tmp6 = (FStarC_Syntax_Util.is_total_comp comp) in
       let should_check = (if tmp6 then None else (Some ((FStarC_Syntax_Syntax.Allow_ghost ("do_rewrite.lhs"))))) in
       let tmp7 = (FStarC_Tactics_Monad.goal_typedness_deps g0) in
@@ -110,7 +110,7 @@ let u___do_rewrite (g0 : FStarC_Tactics_Types.goal) (rewriter : ((FStarC_Tactics
           (FStarC_Format.print2 "do_rewrite: making equality\n\t%s ==\n\t%s\n" tmp11 tmp12)))) (fun tmp10 -> (let tmp11 = ((env).FStarC_TypeChecker_Env.universe_of env typ1) in
           let tmp12 = (FStarC_Syntax_Util.mk_eq2 tmp11 typ1 tm ut) in
           let tmp13 = (FStarC_Tactics_Monad.add_irrelevant_goal g0 "do_rewrite.eq" env tmp12 None) in
-          (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn tmp13 (fun tmp14 -> (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn (FStarC_Tactics_Monad.focus rewriter) (fun tmp15 -> (let ut1 = (FStarC_TypeChecker_Normalize.reduce_uvar_solutions env ut) in
+          (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn tmp13 (fun tmp14 -> (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn (FStarC_Tactics_Monad.focus rewriter) (fun tmp15 -> (let ut1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_reduce_uvar_solutions env ut) in
           (FStarC_Tactics_Monad.fStarC_Class_Monad_op_let_Bang__fn (FStarC_Tactics_Monad.if_verbose (fun tmp16 -> (let tmp17 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tm) in
           let tmp18 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ut1) in
           (FStarC_Format.print2 "rewrite_rec: succeeded rewriting\n\t%s to\n\t%s\n" tmp17 tmp18)))) (fun tmp16 -> (FStarC_Tactics_Monad.fStarC_Class_Monad_return__fn ut1)))))))))))

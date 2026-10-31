@@ -288,7 +288,10 @@ let z3_options (ver : string) : string =
   let tmp = (FStarC_Misc.version_ge ver "4.12.3") in
   let tmp1 = (if tmp then ("(set-option :rewriter.enable_der false)" :: ("(set-option :rewriter.sort_disjunctions false)" :: ("(set-option :pi.decompose_patterns false)" :: ("(set-option :smt.arith.solver 6)" :: [])))) else ("(set-option :smt.arith.solver 2)" :: [])) in
   let opts1 = (BatList.append opts tmp1) in
-  (Prims.strcat (BatString.concat "\n" opts1) "\n"))
+  let tmp2 = (FStarC_Misc.version_ge ver "4.15.4") in
+  let tmp3 = (if tmp2 then ("(set-option :smt.arith.nl.grobner_expand_terms false)" :: []) else []) in
+  let opts2 = (BatList.append opts1 tmp3) in
+  (Prims.strcat (BatString.concat "\n" opts2) "\n"))
 
 let context_profile (theory : (FStarC_SMTEncoding_Term.decl) list) : unit =
   (let tmp = (BatList.fold_left (fun tmp d -> (match tmp with

@@ -26,7 +26,7 @@ let e_term : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_T
   (e_term_aq (Prims.int_zero, []))
 
 let mk_lazy (cb : FStarC_TypeChecker_NBETerm.nbe_cbs) (obj : 'tmp) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (kind : FStarC_Syntax_Syntax.lazy_kind) : FStarC_TypeChecker_NBETerm.t =
-  (let li = ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn obj);
+  (let li = ({ FStarC_Syntax_Syntax.blob = (Obj.magic (obj));
       lkind = kind;
       ltyp = ty;
       rng = FStarC_Range_Type.dummyRange } : FStarC_Syntax_Syntax.lazyinfo) in
@@ -40,7 +40,7 @@ let mk_emb' (x : (FStarC_TypeChecker_NBETerm.nbe_cbs -> ('tmp -> FStarC_TypeChec
 let e_fv : (FStarC_Syntax_Syntax.fv) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_fv = (fun cb fv -> (mk_lazy cb fv FStarC_Reflection_V2_Constants.fstar_refl_fv FStarC_Syntax_Syntax.Lazy_fvar)) in
   let unembed_fv = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_fvar; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_fvar; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded fvar: %s" tmp1) in
@@ -55,7 +55,7 @@ let mkConstruct (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.unive
 let e_bv : (FStarC_Syntax_Syntax.bv) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_bv = (fun cb bv -> (mk_lazy cb bv FStarC_Reflection_V2_Constants.fstar_refl_bv FStarC_Syntax_Syntax.Lazy_bv)) in
   let unembed_bv = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_bv; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_bv; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded bv: %s" tmp1) in
@@ -67,7 +67,7 @@ let e_bv : (FStarC_Syntax_Syntax.bv) FStarC_TypeChecker_NBETerm.embedding =
 let e_universe : (FStarC_Syntax_Syntax.universe) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_universe = (fun cb u -> (mk_lazy cb u FStarC_Reflection_V2_Constants.fstar_refl_universe FStarC_Syntax_Syntax.Lazy_universe)) in
   let unembed_universe = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_universe; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_universe; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded universe: %s" tmp1) in
@@ -103,7 +103,7 @@ let e_argv_aq (aq : (Prims.int * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syn
 let e_binder : (FStarC_Syntax_Syntax.binder) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_binder = (fun cb b -> (mk_lazy cb b FStarC_Reflection_V2_Constants.fstar_refl_binder FStarC_Syntax_Syntax.Lazy_binder)) in
   let unembed_binder = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_binder; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_binder; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded binder: %s" tmp1) in
@@ -115,7 +115,7 @@ let e_binder : (FStarC_Syntax_Syntax.binder) FStarC_TypeChecker_NBETerm.embeddin
 let e_comp : ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_comp = (fun cb c -> (mk_lazy cb c FStarC_Reflection_V2_Constants.fstar_refl_comp FStarC_Syntax_Syntax.Lazy_comp)) in
   let unembed_comp = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_comp; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_comp; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded comp: %s" tmp1) in
@@ -295,7 +295,7 @@ let e_argv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC
 
 let unlazy_as_t (k : FStarC_Syntax_Syntax.lazy_kind) (t : FStarC_TypeChecker_NBETerm.t) : 'tmp =
   (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-    | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = v; lkind = k'; ltyp = tmp; rng = tmp1; _ })), tmp2)) when (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__lazy_kind k k') -> (FStar_Dyn.undyn v)
+    | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = v; lkind = k'; ltyp = tmp; rng = tmp1; _ })), tmp2)) when (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__lazy_kind k k') -> (Obj.magic (v))
     | tmp -> (FStarC_Effect.failwith "Not a Lazy of the expected kind (NBE)")
   )
 
@@ -575,7 +575,7 @@ let e_comp_view : (FStarC_Reflection_V2_Data.comp_view) FStarC_TypeChecker_NBETe
 let e_ident : (FStarC_Ident.ident) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_ident = (fun cb se -> (mk_lazy cb se FStarC_Reflection_V2_Constants.fstar_refl_ident FStarC_Syntax_Syntax.Lazy_ident)) in
   let unembed_ident = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_ident; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_ident; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded ident: %s" tmp1) in
@@ -632,7 +632,7 @@ let e_universe_view : (FStarC_Reflection_V2_Data.universe_view) FStarC_TypeCheck
 let e_sigelt : (FStarC_Syntax_Syntax.sigelt) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_sigelt = (fun cb se -> (mk_lazy cb se FStarC_Reflection_V2_Constants.fstar_refl_sigelt FStarC_Syntax_Syntax.Lazy_sigelt)) in
   let unembed_sigelt = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_sigelt; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_sigelt; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded sigelt: %s" tmp1) in
@@ -644,7 +644,7 @@ let e_sigelt : (FStarC_Syntax_Syntax.sigelt) FStarC_TypeChecker_NBETerm.embeddin
 let e_letbinding : (FStarC_Syntax_Syntax.letbinding) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_letbinding = (fun cb lb -> (mk_lazy cb lb FStarC_Reflection_V2_Constants.fstar_refl_letbinding FStarC_Syntax_Syntax.Lazy_letbinding)) in
   let unembed_letbinding = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = lb; lkind = FStarC_Syntax_Syntax.Lazy_letbinding; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn lb) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = lb; lkind = FStarC_Syntax_Syntax.Lazy_letbinding; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (lb)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded letbinding: %s" tmp1) in
@@ -760,7 +760,7 @@ let e_lb_view : (FStarC_Reflection_V2_Data.lb_view) FStarC_TypeChecker_NBETerm.e
 let e_namedv : (FStarC_Syntax_Syntax.bv) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_namedv = (fun cb namedv -> (mk_lazy cb namedv FStarC_Reflection_V2_Constants.fstar_refl_namedv FStarC_Syntax_Syntax.Lazy_namedv)) in
   let unembed_namedv = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_namedv; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_namedv; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded namedv: %s" tmp1) in
@@ -1012,7 +1012,7 @@ let e_subst : ((FStarC_Syntax_Syntax.subst_elt) list) FStarC_TypeChecker_NBETerm
 let e_env : (FStarC_TypeChecker_Env.env) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_env = (fun cb e -> (mk_lazy cb e FStarC_Reflection_V2_Constants.fstar_refl_env FStarC_Syntax_Syntax.Lazy_env)) in
   let unembed_env = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_env; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_env; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded env: %s" tmp1) in

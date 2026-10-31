@@ -24,20 +24,44 @@ type norm_step =
   | ReduceProjections
 
 
-let iota : norm_step =
-  Iota
-
-let zeta : norm_step =
-  Zeta
-
 let delta : norm_step =
   Delta
+
+let delta_attr (s : (string) list) : norm_step =
+  (UnfoldAttr (s))
+
+let delta_fully (s : (string) list) : norm_step =
+  (UnfoldFully (s))
+
+let delta_namespace (s : (string) list) : norm_step =
+  (UnfoldNamespace (s))
+
+let delta_once (s : (string) list) : norm_step =
+  (UnfoldOnce (s))
 
 let delta_only (s : (string) list) : norm_step =
   (UnfoldOnly (s))
 
+let delta_qualifier (s : (string) list) : norm_step =
+  (UnfoldQual (s))
+
+let hnf : norm_step =
+  HNF
+
+let iota : norm_step =
+  Iota
+
+let nbe : norm_step =
+  NBE
+
+let norm_debug : norm_step =
+  NormDebug
+
 let primops : norm_step =
   Primops
+
+let reduce_projections : norm_step =
+  ReduceProjections
 
 let reify_ : norm_step =
   Reify
@@ -45,12 +69,18 @@ let reify_ : norm_step =
 let simplify : norm_step =
   Simpl
 
+let unascribe : norm_step =
+  Unascribe
+
 let unmeta : norm_step =
   Unmeta
 
-let hnf : norm_step =
-  HNF
+let weak : norm_step =
+  Weak
 
-let delta_qualifier (s : (string) list) : norm_step =
-  (UnfoldQual (s))
+let zeta : norm_step =
+  Zeta
+
+let zeta_full : norm_step =
+  ZetaFull
 

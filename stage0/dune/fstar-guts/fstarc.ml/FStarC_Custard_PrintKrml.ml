@@ -315,7 +315,7 @@ let prim_type (n : FStarC_Custard_Syntax.name) : (FStarC_Custard_KrmlAst.typ) op
     | "Prims.unit" -> (Some (FStarC_Custard_KrmlAst.TUnit))
     | "Prims.bool" -> (Some (FStarC_Custard_KrmlAst.TBool))
     | "Prims.int" -> (Some ((FStarC_Custard_KrmlAst.TInt (FStarC_Custard_KrmlAst.CInt))))
-    | "Prims.string" -> (Some ((FStarC_Custard_KrmlAst.TQualified ((("Prims" :: []), "string")))))
+    | "Prims.string" -> (Some ((FStarC_Custard_KrmlAst.TQualified (("Prims" :: []), "string"))))
     | "FStar.Char.char" -> (Some ((FStarC_Custard_KrmlAst.TInt (FStarC_Custard_KrmlAst.UInt32))))
     | tmp -> None
   )
@@ -381,7 +381,7 @@ let lident_of_name (n : FStarC_Custard_Syntax.name) : ((string) list * string) =
       let tmp2 = (FStarC_Custard_Syntax.string_of_name n) in
       let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp1 tmp2) in
       let tmp4 = ((=) (Some (true)) tmp3) in
-      let ns1 = (if tmp4 then ("Custard" :: ns) else ns) in
+      let ns1 = (if tmp4 then (BatList.map BatString.lowercase_ascii ns) else ns) in
       (ns1, id1))
   ))
 
@@ -413,7 +413,7 @@ let rec krml_typ (env : kenv) (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_K
     | (FStarC_Custard_Syntax.TArrow (a, tmp, b)) -> (let tmp1 = (krml_typ env a) in
       let tmp2 = (krml_typ env b) in
       let tmp3 = (tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.TArrow (tmp3)))
+      (FStarC_Custard_KrmlAst.TArrow ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.TTuple (ts)) -> (let tmp = (BatList.map (krml_typ env) ts) in
       (FStarC_Custard_KrmlAst.TTuple (tmp)))
     | (FStarC_Custard_Syntax.TRef (FStarC_Custard_Syntax.RGc, tmp)) -> (krml_reject_with "a garbage-collected reference (FStar.All.ref or FStarC.Effect.ref)" "Nothing would free it: use a Pulse reference, which is freed explicitly, or --codegen Cherry, which counts references.")
@@ -437,14 +437,14 @@ let rec krml_typ (env : kenv) (t : FStarC_Custard_Syntax.cty) : FStarC_Custard_K
     | (FStarC_Custard_Syntax.TApp (n, [])) -> (match (prim_type n) with
         | (Some (t1)) -> t1
         | None -> (let tmp = (type_lident_of_name n) in
-          (FStarC_Custard_KrmlAst.TQualified (tmp)))
+          (FStarC_Custard_KrmlAst.TQualified ((match tmp with (custard_tup, _) -> custard_tup), (match tmp with (_, custard_tup) -> custard_tup))))
       )
     | (FStarC_Custard_Syntax.TApp (n, args)) when (is_tuple_type_name n) -> (let tmp = (BatList.map (krml_typ env) args) in
       (FStarC_Custard_KrmlAst.TTuple (tmp)))
     | (FStarC_Custard_Syntax.TApp (n, args)) -> (let tmp = (type_lident_of_name n) in
       let tmp1 = (BatList.map (krml_typ env) args) in
       let tmp2 = (tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.TApp (tmp2)))
+      (FStarC_Custard_KrmlAst.TApp ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
   )
 
 let krml_flags (fs : (FStarC_Custard_Syntax.flag) list) : (FStarC_Custard_KrmlAst.flag) list =
@@ -457,6 +457,7 @@ let krml_flags (fs : (FStarC_Custard_Syntax.flag) list) : (FStarC_Custard_KrmlAs
     | FStarC_Custard_Syntax.CInline -> (FStarC_Custard_KrmlAst.CInline :: [])
     | FStarC_Custard_Syntax.CMacro -> (FStarC_Custard_KrmlAst.Macro :: [])
     | FStarC_Custard_Syntax.CIfDef -> (FStarC_Custard_KrmlAst.IfDef :: [])
+    | (FStarC_Custard_Syntax.IfDef (tmp)) -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardBadIfDef ((FStarC_Errors_Msg.text "Custard: [@@custard_c_ifdef] is supported by the direct-to-C backend only.") :: ((FStarC_Errors_Msg.text "With karamel, use [@@CIfDef], whose condition is the name.") :: [])))
     | tmp -> []
   )) fs)
 
@@ -498,18 +499,18 @@ let krml_const (c : FStarC_Custard_Syntax.constant) : FStarC_Custard_KrmlAst.exp
     | (FStarC_Custard_Syntax.CString (s)) -> (FStarC_Custard_KrmlAst.EString (s))
     | (FStarC_Custard_Syntax.CInt (v, b, None)) -> (let tmp = (krml_int_lit v b) in
       let tmp1 = (FStarC_Custard_KrmlAst.CInt, tmp) in
-      (FStarC_Custard_KrmlAst.EConstant (tmp1)))
+      (FStarC_Custard_KrmlAst.EConstant ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.CInt (v, b, (Some (sw)))) -> (let tmp = (krml_width sw) in
       let tmp1 = (krml_int_lit v b) in
       let tmp2 = (tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.EConstant (tmp2)))
+      (FStarC_Custard_KrmlAst.EConstant ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.CFloat (v, fw)) -> (let tmp = (krml_fwidth fw) in
       let tmp1 = (krml_float_lit fw v) in
       let tmp2 = (tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.EConstant (tmp2)))
+      (FStarC_Custard_KrmlAst.EConstant ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.CChar (c1)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStar_Char.int_of_char c1)) in
       let tmp1 = (FStarC_Custard_KrmlAst.UInt32, tmp) in
-      (FStarC_Custard_KrmlAst.EConstant (tmp1)))
+      (FStarC_Custard_KrmlAst.EConstant ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
   )
 
 let find (env : kenv) (x : string) : Prims.int =
@@ -618,16 +619,16 @@ and krml_pat (env : kenv) (p : FStarC_Custard_Syntax.pat) : (kenv * FStarC_Custa
     | (FStarC_Custard_Syntax.PConst ((FStarC_Custard_Syntax.CBool (b)))) -> (env, (FStarC_Custard_KrmlAst.PBool (b)))
     | (FStarC_Custard_Syntax.PConst ((FStarC_Custard_Syntax.CInt (v, b, None)))) -> (let tmp = (krml_int_lit v b) in
       let tmp1 = (FStarC_Custard_KrmlAst.CInt, tmp) in
-      let tmp2 = (FStarC_Custard_KrmlAst.PConstant (tmp1)) in
+      let tmp2 = (FStarC_Custard_KrmlAst.PConstant ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
       (env, tmp2))
     | (FStarC_Custard_Syntax.PConst ((FStarC_Custard_Syntax.CInt (v, b, (Some (sw)))))) -> (let tmp = (krml_width sw) in
       let tmp1 = (krml_int_lit v b) in
       let tmp2 = (tmp, tmp1) in
-      let tmp3 = (FStarC_Custard_KrmlAst.PConstant (tmp2)) in
+      let tmp3 = (FStarC_Custard_KrmlAst.PConstant ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
       (env, tmp3))
     | (FStarC_Custard_Syntax.PConst ((FStarC_Custard_Syntax.CChar (c)))) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStar_Char.int_of_char c)) in
       let tmp1 = (FStarC_Custard_KrmlAst.UInt32, tmp) in
-      let tmp2 = (FStarC_Custard_KrmlAst.PConstant (tmp1)) in
+      let tmp2 = (FStarC_Custard_KrmlAst.PConstant ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
       (env, tmp2))
     | (FStarC_Custard_Syntax.PConst ((FStarC_Custard_Syntax.CString (tmp)))) -> (let tmp1 = (FStarC_Options.codegen ()) in
       let tmp2 = ((=) tmp1 (Some (FStarC_Options.KrmlRust))) in
@@ -642,7 +643,7 @@ and krml_pat (env : kenv) (p : FStarC_Custard_Syntax.pat) : (kenv * FStarC_Custa
       (match tmp with
         | (env1, ps1) -> (let tmp1 = (ctor_name n) in
           let tmp2 = (tmp1, ps1) in
-          let tmp3 = (FStarC_Custard_KrmlAst.PCons (tmp2)) in
+          let tmp3 = (FStarC_Custard_KrmlAst.PCons ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
           (env1, tmp3))
       ))
     | (FStarC_Custard_Syntax.PRecord (tmp, fs)) -> (let tmp1 = (BatList.map (fun x -> (match x with
@@ -713,6 +714,7 @@ let krml_op (o : FStarC_Custard_Syntax.op) : FStarC_Custard_KrmlAst.op =
     | (FStarC_Custard_Syntax.Reset (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | (FStarC_Custard_Syntax.Reuse (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | FStarC_Custard_Syntax.ResetFree -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
+    | (FStarC_Custard_Syntax.Update (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | (FStarC_Custard_Syntax.IArr (tmp)) -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | (FStarC_Custard_Syntax.Dyn (tmp)) -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | (FStarC_Custard_Syntax.PBuf (tmp)) -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
@@ -720,6 +722,8 @@ let krml_op (o : FStarC_Custard_Syntax.op) : FStarC_Custard_KrmlAst.op =
     | FStarC_Custard_Syntax.ExnPending -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | FStarC_Custard_Syntax.ExnTake -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | FStarC_Custard_Syntax.ExnExit -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
+    | FStarC_Custard_Syntax.ClosureNew -> (FStarC_Effect.failwith "Custard: a Pulse closure is not a karamel operator")
+    | FStarC_Custard_Syntax.ClosureCall -> (FStarC_Effect.failwith "Custard: a Pulse closure is not a karamel operator")
   )
 
 let rec string_match__chain (x : string) (st : FStarC_Custard_KrmlAst.typ) (env' : kenv) (brs : ((FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) list) : FStarC_Custard_KrmlAst.expr =
@@ -731,16 +735,16 @@ let rec string_match__chain (x : string) (st : FStarC_Custard_KrmlAst.typ) (env'
       let tmp3 = (FStarC_Custard_KrmlAst.EBound (tmp2)) in
       let tmp4 = (krml_expr (extend env' y) body) in
       let tmp5 = (yb, tmp3, tmp4) in
-      (FStarC_Custard_KrmlAst.ELet (tmp5)))
+      (FStarC_Custard_KrmlAst.ELet ((match tmp5 with (custard_tup, _, _) -> custard_tup), (match tmp5 with (_, custard_tup, _) -> custard_tup), (match tmp5 with (_, _, custard_tup) -> custard_tup))))
     | (((FStarC_Custard_Syntax.PConst ((FStarC_Custard_Syntax.CString (v)))), tmp, body) :: rest) -> (let tmp1 = (find env' x) in
       let tmp2 = (FStarC_Custard_KrmlAst.EBound (tmp1)) in
       let tmp3 = (tmp2 :: ((FStarC_Custard_KrmlAst.EString (v)) :: [])) in
-      let tmp4 = ((FStarC_Custard_KrmlAst.ETypApp (((FStarC_Custard_KrmlAst.EOp ((FStarC_Custard_KrmlAst.Eq, FStarC_Custard_KrmlAst.Bool))), (st :: [])))), tmp3) in
-      let tmp5 = (FStarC_Custard_KrmlAst.EApp (tmp4)) in
+      let tmp4 = ((FStarC_Custard_KrmlAst.ETypApp ((FStarC_Custard_KrmlAst.EOp (FStarC_Custard_KrmlAst.Eq, FStarC_Custard_KrmlAst.Bool)), (st :: []))), tmp3) in
+      let tmp5 = (FStarC_Custard_KrmlAst.EApp ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
       let tmp6 = (krml_expr env' body) in
       let tmp7 = ((string_match__chain x st env') rest) in
       let tmp8 = (tmp5, tmp6, tmp7) in
-      (FStarC_Custard_KrmlAst.EIfThenElse (tmp8)))
+      (FStarC_Custard_KrmlAst.EIfThenElse ((match tmp8 with (custard_tup, _, _) -> custard_tup), (match tmp8 with (_, custard_tup, _) -> custard_tup), (match tmp8 with (_, _, custard_tup) -> custard_tup))))
     | tmp -> (krml_reject "a string pattern")
   )
 
@@ -752,7 +756,7 @@ and string_match (env : kenv) (scrut : FStarC_Custard_Syntax.expr) (brs : ((FSta
   let tmp = (krml_expr env scrut) in
   let tmp1 = ((string_match__chain x st env') brs) in
   let tmp2 = (b, tmp, tmp1) in
-  (FStarC_Custard_KrmlAst.ELet (tmp2)))
+  (FStarC_Custard_KrmlAst.ELet ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))))
 
 and krml_branch (env : kenv) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) : (FStarC_Custard_KrmlAst.pattern * FStarC_Custard_KrmlAst.expr) =
   (match br with
@@ -766,50 +770,59 @@ and krml_branch (env : kenv) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_
       ))
   )
 
+and krml_index (env : kenv) (b : FStarC_Custard_Syntax.expr) (i : FStarC_Custard_Syntax.expr) : FStarC_Custard_KrmlAst.expr =
+  (match ((b).FStarC_Custard_Syntax.ty, (i).FStarC_Custard_Syntax.e) with
+    | ((FStarC_Custard_Syntax.TRef (tmp, tmp1)), (FStarC_Custard_Syntax.EConst ((FStarC_Custard_Syntax.CInt (u__iconst0, tmp2, w))))) when u__iconst0 = Prims.int_zero -> (FStarC_Custard_KrmlAst.EZeroForDeref ((match w with
+        | (Some ((FStarC_Const.Unsigned, FStarC_Custard_Syntax.WSizet))) -> FStarC_Custard_KrmlAst.SizeT
+        | tmp3 -> FStarC_Custard_KrmlAst.UInt32
+      )))
+    | tmp -> (krml_expr env i)
+  )
+
 and krml_expr (env : kenv) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_KrmlAst.expr =
   (match (e).FStarC_Custard_Syntax.e with
     | (FStarC_Custard_Syntax.EConst (c)) -> (krml_const c)
     | (FStarC_Custard_Syntax.EVar (x)) -> (let tmp = (find env x) in
       (FStarC_Custard_KrmlAst.EBound (tmp)))
     | (FStarC_Custard_Syntax.EQual (n, [])) -> (let tmp = (value_lident_of_name n) in
-      (FStarC_Custard_KrmlAst.EQualified (tmp)))
+      (FStarC_Custard_KrmlAst.EQualified ((match tmp with (custard_tup, _) -> custard_tup), (match tmp with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EQual (n, tys)) -> (let tmp = (value_lident_of_name n) in
-      let tmp1 = (FStarC_Custard_KrmlAst.EQualified (tmp)) in
+      let tmp1 = (FStarC_Custard_KrmlAst.EQualified ((match tmp with (custard_tup, _) -> custard_tup), (match tmp with (_, custard_tup) -> custard_tup))) in
       let tmp2 = (BatList.map (krml_typ env) tys) in
       let tmp3 = (tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.ETypApp (tmp3)))
+      (FStarC_Custard_KrmlAst.ETypApp ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.ELet (x, t, e1, e2)) -> (let tmp = (krml_typ env t) in
       let b = { FStarC_Custard_KrmlAst.name = x; typ = tmp; mut = false; meta = [] } in
       let tmp1 = (krml_expr env e1) in
       let tmp2 = (krml_expr (extend env x) e2) in
       let tmp3 = (b, tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.ELet (tmp3)))
+      (FStarC_Custard_KrmlAst.ELet ((match tmp3 with (custard_tup, _, _) -> custard_tup), (match tmp3 with (_, custard_tup, _) -> custard_tup), (match tmp3 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EApp (hd, args)) -> (let tmp = (krml_expr env hd) in
       let tmp1 = (BatList.map (krml_expr env) args) in
       let tmp2 = (tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.EApp (tmp2)))
+      (FStarC_Custard_KrmlAst.EApp ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EFun (bs, body)) -> (let env' = (BatList.fold_left (fun env1 b -> (extend env1 (b).FStarC_Custard_Syntax.b_name)) env bs) in
       let tmp = (BatList.map (binder_of env) bs) in
       let tmp1 = (krml_expr env' body) in
       let tmp2 = (krml_typ env (body).FStarC_Custard_Syntax.ty) in
       let tmp3 = (tmp, tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.EFun (tmp3)))
+      (FStarC_Custard_KrmlAst.EFun ((match tmp3 with (custard_tup, _, _) -> custard_tup), (match tmp3 with (_, custard_tup, _) -> custard_tup), (match tmp3 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EMatch (scrut, brs)) when (is_string_match scrut brs) -> (string_match env scrut brs)
     | (FStarC_Custard_Syntax.EMatch (scrut, brs)) -> (let tmp = (krml_expr env scrut) in
       let tmp1 = (BatList.map (krml_branch env) brs) in
       let tmp2 = (tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.EMatch (tmp2)))
+      (FStarC_Custard_KrmlAst.EMatch ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EIf (c, t, f)) -> (let tmp = (krml_expr env c) in
       let tmp1 = (krml_expr env t) in
       let tmp2 = (krml_expr env f) in
       let tmp3 = (tmp, tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.EIfThenElse (tmp3)))
+      (FStarC_Custard_KrmlAst.EIfThenElse ((match tmp3 with (custard_tup, _, _) -> custard_tup), (match tmp3 with (_, custard_tup, _) -> custard_tup), (match tmp3 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.ESeq (e1, e2)) when ((=) (e1).FStarC_Custard_Syntax.ty FStarC_Custard_Syntax.TUnit) -> (let tmp = (krml_expr env e1) in
       let tmp1 = (krml_expr env e2) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (FStarC_Custard_KrmlAst.ESequence (tmp3)))
-    | (FStarC_Custard_Syntax.ESeq (e1, e2)) -> (let x = (fresh_local env "discarded") in
+    | (FStarC_Custard_Syntax.ESeq (e1, e2)) -> (let x = (fresh_local env "uu__discarded") in
       let t = (match (e1).FStarC_Custard_Syntax.ty with
           | (FStarC_Custard_Syntax.TBuf (tmp)) -> (krml_typ env (e1).FStarC_Custard_Syntax.ty)
           | (FStarC_Custard_Syntax.TRef (tmp, tmp1)) -> (krml_typ env (e1).FStarC_Custard_Syntax.ty)
@@ -819,14 +832,14 @@ and krml_expr (env : kenv) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Krm
       let tmp = (krml_expr env e1) in
       let tmp1 = (krml_expr (extend env x) e2) in
       let tmp2 = (b, tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.ELet (tmp2)))
+      (FStarC_Custard_KrmlAst.ELet ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.ECtor (n, args)) when (is_tuple_ctor_name n) -> (let tmp = (BatList.map (krml_expr env) args) in
       (FStarC_Custard_KrmlAst.ETuple (tmp)))
     | (FStarC_Custard_Syntax.ECtor (n, args)) -> (let tmp = (krml_typ env (e).FStarC_Custard_Syntax.ty) in
       let tmp1 = (ctor_name n) in
       let tmp2 = (BatList.map (krml_expr env) args) in
       let tmp3 = (tmp, tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.ECons (tmp3)))
+      (FStarC_Custard_KrmlAst.ECons ((match tmp3 with (custard_tup, _, _) -> custard_tup), (match tmp3 with (_, custard_tup, _) -> custard_tup), (match tmp3 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.ETuple (es)) -> (let tmp = (BatList.map (krml_expr env) es) in
       (FStarC_Custard_KrmlAst.ETuple (tmp)))
     | (FStarC_Custard_Syntax.ERecord (tmp, fs)) -> (let tmp1 = (krml_typ env (e).FStarC_Custard_Syntax.ty) in
@@ -835,11 +848,11 @@ and krml_expr (env : kenv) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Krm
             (f, tmp3))
         )) fs) in
       let tmp3 = (tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.EFlat (tmp3)))
+      (FStarC_Custard_KrmlAst.EFlat ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EProj (e1, tmp, f)) -> (let tmp1 = (krml_typ env (e1).FStarC_Custard_Syntax.ty) in
       let tmp2 = (krml_expr env e1) in
       let tmp3 = (tmp1, tmp2, f) in
-      (FStarC_Custard_KrmlAst.EField (tmp3)))
+      (FStarC_Custard_KrmlAst.EField ((match tmp3 with (custard_tup, _, _) -> custard_tup), (match tmp3 with (_, custard_tup, _) -> custard_tup), (match tmp3 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EDiscrim (e1, n)) -> (let tmp = (FStarC_Custard_Syntax.mangled_name n) in
       let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (env).ctor_arity tmp) in
       let arity = (match tmp1 with
@@ -851,39 +864,39 @@ and krml_expr (env : kenv) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Krm
       let tmp3 = (krml_expr env e1) in
       let tmp4 = (ctor_name n) in
       let tmp5 = (tmp4, wilds) in
-      let tmp6 = (FStarC_Custard_KrmlAst.PCons (tmp5)) in
+      let tmp6 = (FStarC_Custard_KrmlAst.PCons ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))) in
       let tmp7 = (tmp6, (FStarC_Custard_KrmlAst.EBool (true))) in
       let tmp8 = (tmp7 :: (((FStarC_Custard_KrmlAst.PVar ((dummy_binder "_"))), (FStarC_Custard_KrmlAst.EBool (false))) :: [])) in
       let tmp9 = (tmp3, tmp8) in
-      (FStarC_Custard_KrmlAst.EMatch (tmp9)))
+      (FStarC_Custard_KrmlAst.EMatch ((match tmp9 with (custard_tup, _) -> custard_tup), (match tmp9 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.ECast (e1, t)) -> (let tmp = (krml_expr env e1) in
       let tmp1 = (krml_typ env t) in
       let tmp2 = (tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.ECast (tmp2)))
+      (FStarC_Custard_KrmlAst.ECast ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.ECoerce (e1, t)) -> (let tmp = (krml_expr env e1) in
       let tmp1 = (krml_typ env t) in
       let tmp2 = (tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.ECast (tmp2)))
+      (FStarC_Custard_KrmlAst.ECast ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.BufCreate (l)); po_ty = tmp; _ }, (init :: (len :: [])))) -> (let tmp1 = (krml_expr env init) in
       let tmp2 = (krml_expr env len) in
       let tmp3 = ((match l with
           | FStarC_Custard_Syntax.LStack -> FStarC_Custard_KrmlAst.Stack
           | FStarC_Custard_Syntax.LHeap -> FStarC_Custard_KrmlAst.ManuallyManaged
         ), tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.EBufCreate (tmp3)))
+      (FStarC_Custard_KrmlAst.EBufCreate ((match tmp3 with (custard_tup, _, _) -> custard_tup), (match tmp3 with (_, custard_tup, _) -> custard_tup), (match tmp3 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufRead; po_ty = tmp; _ }, (b :: (i :: [])))) -> (let tmp1 = (krml_expr env b) in
-      let tmp2 = (krml_expr env i) in
+      let tmp2 = (krml_index env b i) in
       let tmp3 = (tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.EBufRead (tmp3)))
+      (FStarC_Custard_KrmlAst.EBufRead ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufWrite; po_ty = tmp; _ }, (b :: (i :: (v :: []))))) -> (let tmp1 = (krml_expr env b) in
-      let tmp2 = (krml_expr env i) in
+      let tmp2 = (krml_index env b i) in
       let tmp3 = (krml_expr env v) in
       let tmp4 = (tmp1, tmp2, tmp3) in
-      (FStarC_Custard_KrmlAst.EBufWrite (tmp4)))
+      (FStarC_Custard_KrmlAst.EBufWrite ((match tmp4 with (custard_tup, _, _) -> custard_tup), (match tmp4 with (_, custard_tup, _) -> custard_tup), (match tmp4 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufSub; po_ty = tmp; _ }, (b :: (i :: [])))) -> (let tmp1 = (krml_expr env b) in
-      let tmp2 = (krml_expr env i) in
+      let tmp2 = (krml_index env b i) in
       let tmp3 = (tmp1, tmp2) in
-      (FStarC_Custard_KrmlAst.EBufSub (tmp3)))
+      (FStarC_Custard_KrmlAst.EBufSub ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufFree; po_ty = tmp; _ }, (b :: []))) -> (let tmp1 = (krml_expr env b) in
       (FStarC_Custard_KrmlAst.EBufFree (tmp1)))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufNull; po_ty = tmp; _ }, [])) -> (let tmp1 = (match (e).FStarC_Custard_Syntax.ty with
@@ -900,23 +913,22 @@ and krml_expr (env : kenv) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Krm
       let pt = (FStarC_Custard_KrmlAst.TBuf (t)) in
       let tmp1 = (krml_expr env b) in
       let tmp2 = (tmp1 :: ((FStarC_Custard_KrmlAst.EBufNull (t)) :: [])) in
-      let tmp3 = ((FStarC_Custard_KrmlAst.ETypApp (((FStarC_Custard_KrmlAst.EOp ((FStarC_Custard_KrmlAst.Eq, FStarC_Custard_KrmlAst.Bool))), (pt :: [])))), tmp2) in
-      (FStarC_Custard_KrmlAst.EApp (tmp3)))
-    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp; _ }, (src :: (srci :: (dst :: (dsti :: (len :: []))))))) -> (let tmp1 = (krml_expr env src) in
-      let tmp2 = (krml_expr env srci) in
-      let tmp3 = (krml_expr env dst) in
-      let tmp4 = (krml_expr env dsti) in
-      let tmp5 = (krml_expr env len) in
-      let tmp6 = (tmp1, tmp2, tmp3, tmp4, tmp5) in
-      (FStarC_Custard_KrmlAst.EBufBlit (tmp6)))
+      let tmp3 = ((FStarC_Custard_KrmlAst.ETypApp ((FStarC_Custard_KrmlAst.EOp (FStarC_Custard_KrmlAst.Eq, FStarC_Custard_KrmlAst.Bool)), (pt :: []))), tmp2) in
+      (FStarC_Custard_KrmlAst.EApp ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))
+    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp; _ }, (src :: (dst :: (len :: []))))) -> (let zero = (FStarC_Custard_KrmlAst.EConstant (FStarC_Custard_KrmlAst.SizeT, "0")) in
+      let tmp1 = (krml_expr env src) in
+      let tmp2 = (krml_expr env dst) in
+      let tmp3 = (krml_expr env len) in
+      let tmp4 = (tmp1, zero, tmp2, zero, tmp3) in
+      (FStarC_Custard_KrmlAst.EBufBlit ((match tmp4 with (custard_tup, _, _, _, _) -> custard_tup), (match tmp4 with (_, custard_tup, _, _, _) -> custard_tup), (match tmp4 with (_, _, custard_tup, _, _) -> custard_tup), (match tmp4 with (_, _, _, custard_tup, _) -> custard_tup), (match tmp4 with (_, _, _, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufLit; po_ty = tmp; _ }, elems)) -> (let tmp1 = (BatList.map (krml_expr env) elems) in
       let tmp2 = (FStarC_Custard_KrmlAst.Eternal, tmp1) in
-      (FStarC_Custard_KrmlAst.EBufCreateL (tmp2)))
+      (FStarC_Custard_KrmlAst.EBufCreateL ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufUnconst; po_ty = tmp; _ }, (b :: []))) -> (krml_expr env b)
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Commented (before, "")); po_ty = tmp; _ }, ({ FStarC_Custard_Syntax.e = (FStarC_Custard_Syntax.EConst (FStarC_Custard_Syntax.CUnit)); ty = tmp1; eff = tmp2; _ } :: []))) -> (FStarC_Custard_KrmlAst.EStandaloneComment (before))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = (FStarC_Custard_Syntax.Commented (before, after)); po_ty = tmp; _ }, (b :: []))) -> (let tmp1 = (krml_expr env b) in
       let tmp2 = (before, tmp1, after) in
-      (FStarC_Custard_KrmlAst.EComment (tmp2)))
+      (FStarC_Custard_KrmlAst.EComment ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = o; po_ty = None; _ }, args)) when (let tmp = (if (((match o with
         | FStarC_Custard_Syntax.Eq -> true
         | tmp -> false
@@ -947,12 +959,12 @@ and krml_expr (env : kenv) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Krm
         ) in
       let tmp = (krml_op o) in
       let tmp1 = (tmp, FStarC_Custard_KrmlAst.Bool) in
-      let tmp2 = (FStarC_Custard_KrmlAst.EOp (tmp1)) in
+      let tmp2 = (FStarC_Custard_KrmlAst.EOp ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
       let tmp3 = (tmp2, (t :: [])) in
-      let tmp4 = (FStarC_Custard_KrmlAst.ETypApp (tmp3)) in
+      let tmp4 = (FStarC_Custard_KrmlAst.ETypApp ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))) in
       let tmp5 = (BatList.map (krml_expr env) args) in
       let tmp6 = (tmp4, tmp5) in
-      (FStarC_Custard_KrmlAst.EApp (tmp6)))
+      (FStarC_Custard_KrmlAst.EApp ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EOp (o, args)) -> (let w = (match (o).FStarC_Custard_Syntax.po_ty with
           | (Some ((FStarC_Custard_Syntax.PInt (u__1, u__2)))) -> (krml_width (u__1, u__2))
           | (Some ((FStarC_Custard_Syntax.PFloat (fw)))) -> (krml_fwidth fw)
@@ -967,14 +979,14 @@ and krml_expr (env : kenv) (e : FStarC_Custard_Syntax.expr) : FStarC_Custard_Krm
         ) in
       let tmp = (krml_op (o).FStarC_Custard_Syntax.po_op) in
       let tmp1 = (tmp, w) in
-      let tmp2 = (FStarC_Custard_KrmlAst.EOp (tmp1)) in
+      let tmp2 = (FStarC_Custard_KrmlAst.EOp ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
       let tmp3 = (BatList.map (krml_expr env) args) in
       let tmp4 = (tmp2, tmp3) in
-      (FStarC_Custard_KrmlAst.EApp (tmp4)))
+      (FStarC_Custard_KrmlAst.EApp ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.EWhile (c, body)) -> (let tmp = (krml_expr env c) in
       let tmp1 = (krml_expr env body) in
       let tmp2 = (tmp, tmp1) in
-      (FStarC_Custard_KrmlAst.EWhile (tmp2)))
+      (FStarC_Custard_KrmlAst.EWhile ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
     | FStarC_Custard_Syntax.EAny -> FStarC_Custard_KrmlAst.EAny
     | (FStarC_Custard_Syntax.EAbort (s)) -> (FStarC_Custard_KrmlAst.EAbortS (s))
     | (FStarC_Custard_Syntax.EUnreachable (s)) -> (FStarC_Custard_KrmlAst.EAbortS (s))
@@ -1034,12 +1046,12 @@ let krml_decl (env : kenv) (d : FStarC_Custard_Syntax.decl) : (FStarC_Custard_Kr
       let tmp = (krml_typ env1 (l).FStarC_Custard_Syntax.dl_ret) in
       let ty = (BatList.fold_right (fun b acc -> (let tmp1 = (krml_typ env1 (b).FStarC_Custard_Syntax.b_ty) in
         let tmp2 = (tmp1, acc) in
-        (FStarC_Custard_KrmlAst.TArrow (tmp2)))) (l).FStarC_Custard_Syntax.dl_binders tmp) in
+        (FStarC_Custard_KrmlAst.TArrow ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))) (l).FStarC_Custard_Syntax.dl_binders tmp) in
       let tmp1 = (krml_flags (l).FStarC_Custard_Syntax.dl_flags) in
       let tmp2 = (lident_of_name (l).FStarC_Custard_Syntax.dl_name) in
       let tmp3 = (BatList.map (fun b -> (b).FStarC_Custard_Syntax.b_name) (l).FStarC_Custard_Syntax.dl_binders) in
       let tmp4 = (None, tmp1, tmp2, ty, tmp3) in
-      let tmp5 = (FStarC_Custard_KrmlAst.DExternal (tmp4)) in
+      let tmp5 = (FStarC_Custard_KrmlAst.DExternal ((match tmp4 with (custard_tup, _, _, _, _) -> custard_tup), (match tmp4 with (_, custard_tup, _, _, _) -> custard_tup), (match tmp4 with (_, _, custard_tup, _, _) -> custard_tup), (match tmp4 with (_, _, _, custard_tup, _) -> custard_tup), (match tmp4 with (_, _, _, _, custard_tup) -> custard_tup))) in
       (Some (tmp5)))
     | (FStarC_Custard_Syntax.DLet (l)) -> (let env1 = (with_typars env (l).FStarC_Custard_Syntax.dl_typars) in
       let n_t = ((fun l -> Z.of_int (BatList.length l)) (l).FStarC_Custard_Syntax.dl_typars) in
@@ -1050,13 +1062,13 @@ let krml_decl (env : kenv) (d : FStarC_Custard_Syntax.decl) : (FStarC_Custard_Kr
         | [] -> (let tmp = (lident_of_name (l).FStarC_Custard_Syntax.dl_name) in
           let tmp1 = (krml_typ env1 (l).FStarC_Custard_Syntax.dl_ret) in
           let tmp2 = (flags, tmp, n_t, tmp1, body) in
-          let tmp3 = (FStarC_Custard_KrmlAst.DGlobal (tmp2)) in
+          let tmp3 = (FStarC_Custard_KrmlAst.DGlobal ((match tmp2 with (custard_tup, _, _, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _, _, _) -> custard_tup), (match tmp2 with (_, _, custard_tup, _, _) -> custard_tup), (match tmp2 with (_, _, _, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, _, _, custard_tup) -> custard_tup))) in
           (Some (tmp3)))
         | bs -> (let tmp = (krml_typ env1 (l).FStarC_Custard_Syntax.dl_ret) in
           let tmp1 = (lident_of_name (l).FStarC_Custard_Syntax.dl_name) in
           let tmp2 = (BatList.map (binder_of env1) bs) in
           let tmp3 = (None, flags, n_t, tmp, tmp1, tmp2, body) in
-          let tmp4 = (FStarC_Custard_KrmlAst.DFunction (tmp3)) in
+          let tmp4 = (FStarC_Custard_KrmlAst.DFunction ((match tmp3 with (custard_tup, _, _, _, _, _, _) -> custard_tup), (match tmp3 with (_, custard_tup, _, _, _, _, _) -> custard_tup), (match tmp3 with (_, _, custard_tup, _, _, _, _) -> custard_tup), (match tmp3 with (_, _, _, custard_tup, _, _, _) -> custard_tup), (match tmp3 with (_, _, _, _, custard_tup, _, _) -> custard_tup), (match tmp3 with (_, _, _, _, _, custard_tup, _) -> custard_tup), (match tmp3 with (_, _, _, _, _, _, custard_tup) -> custard_tup))) in
           (Some (tmp4)))
       ))
     | (FStarC_Custard_Syntax.DType (t)) when (FStarC_Custard_Syntax.has_flag (t).FStarC_Custard_Syntax.dt_flags FStarC_Custard_Syntax.Modelled) -> None
@@ -1077,7 +1089,7 @@ let krml_decl (env : kenv) (d : FStarC_Custard_Syntax.decl) : (FStarC_Custard_Kr
       (match (t).FStarC_Custard_Syntax.dt_body with
         | (FStarC_Custard_Syntax.TAbbrev (c)) -> (let tmp6 = (krml_typ env1 c) in
           let tmp7 = (lid, flags, n_t, tmp6) in
-          let tmp8 = (FStarC_Custard_KrmlAst.DTypeAlias (tmp7)) in
+          let tmp8 = (FStarC_Custard_KrmlAst.DTypeAlias ((match tmp7 with (custard_tup, _, _, _) -> custard_tup), (match tmp7 with (_, custard_tup, _, _) -> custard_tup), (match tmp7 with (_, _, custard_tup, _) -> custard_tup), (match tmp7 with (_, _, _, custard_tup) -> custard_tup))) in
           (Some (tmp8)))
         | (FStarC_Custard_Syntax.TRecord (fs)) -> (let tmp6 = (BatList.map (fun tmp6 -> (match tmp6 with
               | (f, c) -> (let tmp7 = (krml_typ env1 c) in
@@ -1085,7 +1097,7 @@ let krml_decl (env : kenv) (d : FStarC_Custard_Syntax.decl) : (FStarC_Custard_Kr
                 (f, tmp8))
             )) fs) in
           let tmp7 = (lid, flags, n_t, tmp6) in
-          let tmp8 = (FStarC_Custard_KrmlAst.DTypeFlat (tmp7)) in
+          let tmp8 = (FStarC_Custard_KrmlAst.DTypeFlat ((match tmp7 with (custard_tup, _, _, _) -> custard_tup), (match tmp7 with (_, custard_tup, _, _) -> custard_tup), (match tmp7 with (_, _, custard_tup, _) -> custard_tup), (match tmp7 with (_, _, _, custard_tup) -> custard_tup))) in
           (Some (tmp8)))
         | (FStarC_Custard_Syntax.TVariant (cs)) -> (let tmp6 = (BatList.map (fun tmp6 -> (match tmp6 with
               | (cn, fs) -> (let tmp7 = (ctor_name cn) in
@@ -1097,10 +1109,10 @@ let krml_decl (env : kenv) (d : FStarC_Custard_Syntax.decl) : (FStarC_Custard_Kr
                 (tmp7, tmp8))
             )) cs) in
           let tmp7 = (lid, flags, n_t, tmp6) in
-          let tmp8 = (FStarC_Custard_KrmlAst.DTypeVariant (tmp7)) in
+          let tmp8 = (FStarC_Custard_KrmlAst.DTypeVariant ((match tmp7 with (custard_tup, _, _, _) -> custard_tup), (match tmp7 with (_, custard_tup, _, _) -> custard_tup), (match tmp7 with (_, _, custard_tup, _) -> custard_tup), (match tmp7 with (_, _, _, custard_tup) -> custard_tup))) in
           (Some (tmp8)))
         | FStarC_Custard_Syntax.TAbstract -> (let tmp6 = (BatList.exists FStarC_Custard_Syntax.uu___is_Extern (t).FStarC_Custard_Syntax.dt_flags) in
-          (if tmp6 then None else (Some ((FStarC_Custard_KrmlAst.DTypeAbstractStruct (lid))))))
+          (if tmp6 then None else (Some ((FStarC_Custard_KrmlAst.DTypeAbstractStruct ((match lid with (custard_tup, _) -> custard_tup), (match lid with (_, custard_tup) -> custard_tup)))))))
       ))
     | (FStarC_Custard_Syntax.DExternal (x)) when (if (match (x).FStarC_Custard_Syntax.dx_target with
       | None -> true
@@ -1131,7 +1143,7 @@ let krml_decl (env : kenv) (d : FStarC_Custard_Syntax.decl) : (FStarC_Custard_Kr
         )) in
       let tmp4 = (krml_typ env1 (x).FStarC_Custard_Syntax.dx_ty) in
       let tmp5 = (None, flags, lid, tmp4, []) in
-      let tmp6 = (FStarC_Custard_KrmlAst.DExternal (tmp5)) in
+      let tmp6 = (FStarC_Custard_KrmlAst.DExternal ((match tmp5 with (custard_tup, _, _, _, _) -> custard_tup), (match tmp5 with (_, custard_tup, _, _, _) -> custard_tup), (match tmp5 with (_, _, custard_tup, _, _) -> custard_tup), (match tmp5 with (_, _, _, custard_tup, _) -> custard_tup), (match tmp5 with (_, _, _, _, custard_tup) -> custard_tup))) in
       (Some (tmp6)))
     | (FStarC_Custard_Syntax.DExn (e)) -> (let tmp = (FStarC_Custard_Syntax.string_of_name (e).FStarC_Custard_Syntax.de_name) in
       let tmp1 = (Prims.strcat tmp " has no karamel counterpart and was dropped.") in
@@ -1181,8 +1193,7 @@ let print_split (fs : ((string * (FStarC_Custard_Syntax.decl) list)) list) : ((s
   )) fs1))
 
 let write_files (fn : string) (fs : ((string * (FStarC_Custard_KrmlAst.decl) list)) list) : unit =
-  (let bin = (FStarC_Custard_KrmlAst.current_version, fs) in
-  (FStarC_Util.save_value_to_file fn bin))
+  (FStarC_Custard_KrmlJson.write_file fn (FStarC_Custard_KrmlAst.current_version, fs))
 
 let decls_of (p : (FStarC_Custard_Syntax.decl) list) : (FStarC_Custard_KrmlAst.decl) list =
   (let tmp = (ctor_table p) in

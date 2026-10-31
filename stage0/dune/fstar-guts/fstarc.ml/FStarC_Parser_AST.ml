@@ -687,11 +687,11 @@ type dep_scan_callbacks = {
 
 type to_be_desugared = {
   lang_name : string;
-  blob : FStar_Dyn.dyn;
+  blob : Obj.t;
   idents : (FStarC_Ident.ident) list;
-  to_string : (FStar_Dyn.dyn -> string);
-  eq : (FStar_Dyn.dyn -> (FStar_Dyn.dyn -> bool));
-  dep_scan : (dep_scan_callbacks -> (FStar_Dyn.dyn -> unit));
+  to_string : (Obj.t -> string);
+  eq : (Obj.t -> (Obj.t -> bool));
+  dep_scan : (dep_scan_callbacks -> (Obj.t -> unit));
 }
 
 type qualifier =

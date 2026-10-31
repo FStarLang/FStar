@@ -353,7 +353,10 @@ and pat_to_string (x : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo
       let tmp5 = (BatString.concat " " tmp4) in
       (FStarC_Format.fmt3 "(%s%s%s)" tmp tmp3 tmp5))
     | (FStarC_Syntax_Syntax.Pat_dot_term (topt)) -> (let tmp = (FStarC_Options.print_bound_var_types ()) in
-      (if tmp then (let tmp1 = (if ((=) topt None) then "_" else (let tmp1 = (FStarC_Option.must topt) in
+      (if tmp then (let tmp1 = (if (match topt with
+          | None -> true
+          | tmp1 -> false
+        ) then "_" else (let tmp1 = (FStarC_Option.must topt) in
         (term_to_string tmp1))) in
       (FStarC_Format.fmt1 ".%s" tmp1)) else "._"))
     | (FStarC_Syntax_Syntax.Pat_var (x1)) -> (let tmp = (FStarC_Options.print_bound_var_types ()) in

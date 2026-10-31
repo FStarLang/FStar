@@ -134,7 +134,7 @@ and equal_flag (c : bool) (f1 : FStarC_Syntax_Syntax.cflag) (f2 : FStarC_Syntax_
   (match (f1, f2) with
     | ((FStarC_Syntax_Syntax.DECREASES (t1)), (FStarC_Syntax_Syntax.DECREASES (t2))) -> (equal_decreases_order c t1 t2)
     | ((FStarC_Syntax_Syntax.SMTPAT (p1)), (FStarC_Syntax_Syntax.SMTPAT (p2))) -> (equal_term_c c p1 p2)
-    | tmp -> ((=) f1 f2)
+    | tmp -> false
   )
 
 and equal_rc (c : bool) (r1 : FStarC_Syntax_Syntax.residual_comp) (r2 : FStarC_Syntax_Syntax.residual_comp) : bool =

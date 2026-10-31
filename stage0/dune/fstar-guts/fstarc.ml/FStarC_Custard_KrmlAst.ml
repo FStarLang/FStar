@@ -40,15 +40,15 @@ type typ =
   | TInt of width
   | TBuf of typ
   | TUnit
-  | TQualified of ((string) list * string)
+  | TQualified of (string) list * string
   | TBool
   | TAny
-  | TArrow of (typ * typ)
+  | TArrow of typ * typ
   | TBound of Prims.int
-  | TApp of (((string) list * string) * (typ) list)
+  | TApp of ((string) list * string) * (typ) list
   | TTuple of (typ) list
   | TConstBuf of typ
-  | TArray of (typ * (width * string))
+  | TArray of typ * (width * string)
 
 
 type binder = {
@@ -68,10 +68,10 @@ type pattern =
   | PUnit
   | PBool of bool
   | PVar of binder
-  | PCons of (string * (pattern) list)
+  | PCons of string * (pattern) list
   | PTuple of (pattern) list
   | PRecord of ((string * pattern)) list
-  | PConstant of (width * string)
+  | PConstant of width * string
 
 
 type op =
@@ -104,48 +104,49 @@ type op =
 
 type expr =
   | EBound of Prims.int
-  | EQualified of ((string) list * string)
-  | EConstant of (width * string)
+  | EQualified of (string) list * string
+  | EConstant of width * string
   | EUnit
-  | EApp of (expr * (expr) list)
-  | ETypApp of (expr * (typ) list)
-  | ELet of (binder * expr * expr)
-  | EIfThenElse of (expr * expr * expr)
+  | EApp of expr * (expr) list
+  | ETypApp of expr * (typ) list
+  | ELet of binder * expr * expr
+  | EIfThenElse of expr * expr * expr
   | ESequence of (expr) list
-  | EAssign of (expr * expr)
-  | EBufCreate of (lifetime * expr * expr)
-  | EBufRead of (expr * expr)
-  | EBufWrite of (expr * expr * expr)
-  | EBufSub of (expr * expr)
-  | EBufBlit of (expr * expr * expr * expr * expr)
-  | EMatch of (expr * ((pattern * expr)) list)
-  | EOp of (op * width)
-  | ECast of (expr * typ)
+  | EAssign of expr * expr
+  | EBufCreate of lifetime * expr * expr
+  | EBufRead of expr * expr
+  | EBufWrite of expr * expr * expr
+  | EBufSub of expr * expr
+  | EBufBlit of expr * expr * expr * expr * expr
+  | EMatch of expr * ((pattern * expr)) list
+  | EOp of op * width
+  | ECast of expr * typ
   | EPushFrame
   | EPopFrame
   | EBool of bool
   | EAny
   | EAbort
   | EReturn of expr
-  | EFlat of (typ * ((string * expr)) list)
-  | EField of (typ * expr * string)
-  | EWhile of (expr * expr)
-  | EBufCreateL of (lifetime * (expr) list)
+  | EFlat of typ * ((string * expr)) list
+  | EField of typ * expr * string
+  | EWhile of expr * expr
+  | EBufCreateL of lifetime * (expr) list
   | ETuple of (expr) list
-  | ECons of (typ * string * (expr) list)
-  | EBufFill of (expr * expr * expr)
+  | ECons of typ * string * (expr) list
+  | EBufFill of expr * expr * expr
   | EString of string
-  | EFun of ((binder) list * expr * typ)
+  | EFun of (binder) list * expr * typ
   | EAbortS of string
   | EBufFree of expr
-  | EBufCreateNoInit of (lifetime * expr)
-  | EAbortT of (string * typ)
-  | EComment of (string * expr * string)
+  | EBufCreateNoInit of lifetime * expr
+  | EAbortT of string * typ
+  | EComment of string * expr * string
   | EStandaloneComment of string
   | EAddrOf of expr
   | EBufNull of typ
-  | EBufDiff of (expr * expr)
+  | EBufDiff of expr * expr
   | ESizeof of typ
+  | EZeroForDeref of width
 
 
 type cc =
@@ -155,15 +156,15 @@ type cc =
 
 
 type decl =
-  | DGlobal of ((flag) list * ((string) list * string) * Prims.int * typ * expr)
-  | DFunction of ((cc) option * (flag) list * Prims.int * typ * ((string) list * string) * (binder) list * expr)
-  | DTypeAlias of (((string) list * string) * (flag) list * Prims.int * typ)
-  | DTypeFlat of (((string) list * string) * (flag) list * Prims.int * ((string * (typ * bool))) list)
-  | DUnusedRetainedForBackwardsCompat of ((cc) option * (flag) list * ((string) list * string) * typ)
-  | DTypeVariant of (((string) list * string) * (flag) list * Prims.int * ((string * ((string * (typ * bool))) list)) list)
-  | DTypeAbstractStruct of ((string) list * string)
-  | DExternal of ((cc) option * (flag) list * ((string) list * string) * typ * (string) list)
-  | DUntaggedUnion of (((string) list * string) * (flag) list * Prims.int * ((string * typ)) list)
+  | DGlobal of (flag) list * ((string) list * string) * Prims.int * typ * expr
+  | DFunction of (cc) option * (flag) list * Prims.int * typ * ((string) list * string) * (binder) list * expr
+  | DTypeAlias of ((string) list * string) * (flag) list * Prims.int * typ
+  | DTypeFlat of ((string) list * string) * (flag) list * Prims.int * ((string * (typ * bool))) list
+  | DUnusedRetainedForBackwardsCompat of (cc) option * (flag) list * ((string) list * string) * typ
+  | DTypeVariant of ((string) list * string) * (flag) list * Prims.int * ((string * ((string * (typ * bool))) list)) list
+  | DTypeAbstractStruct of (string) list * string
+  | DExternal of (cc) option * (flag) list * ((string) list * string) * typ * (string) list
+  | DUntaggedUnion of ((string) list * string) * (flag) list * Prims.int * ((string * typ)) list
 
 
 let ctor (n : string) (args : (PPrint.document) list) : PPrint.document =
@@ -235,13 +236,13 @@ let rec typ_to_doc (t : typ) : PPrint.document =
       let tmp1 = (tmp :: []) in
       (ctor "TBuf" tmp1))
     | TUnit -> (PPrint.string "TUnit")
-    | (TQualified (x)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__tuple2_list_string_string x) in
+    | (TQualified (u__1, u__2)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__tuple2_list_string_string (u__1, u__2)) in
       let tmp1 = (PPrint.string tmp) in
       let tmp2 = (tmp1 :: []) in
       (ctor "TQualified" tmp2))
     | TBool -> (PPrint.string "TBool")
     | TAny -> (PPrint.string "TAny")
-    | (TArrow ((t1, t2))) -> (let tmp = (typ_to_doc t1) in
+    | (TArrow (t1, t2)) -> (let tmp = (typ_to_doc t1) in
       let tmp1 = (typ_to_doc t2) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
@@ -249,7 +250,7 @@ let rec typ_to_doc (t : typ) : PPrint.document =
     | (TBound (x)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__int x) in
       let tmp1 = (tmp :: []) in
       (ctor "TBound" tmp1))
-    | (TApp ((x, xs))) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__tuple2_list_string_string x) in
+    | (TApp (x, xs)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__tuple2_list_string_string x) in
       let tmp1 = (PPrint.string tmp) in
       let tmp2 = (pp_list' typ_to_doc xs) in
       let tmp3 = (tmp2 :: []) in
@@ -261,7 +262,7 @@ let rec typ_to_doc (t : typ) : PPrint.document =
     | (TConstBuf (t1)) -> (let tmp = (typ_to_doc t1) in
       let tmp1 = (tmp :: []) in
       (ctor "TConstBuf" tmp1))
-    | (TArray ((t1, c))) -> (let tmp = (typ_to_doc t1) in
+    | (TArray (t1, c)) -> (let tmp = (typ_to_doc t1) in
       let tmp1 = (fStarC_Class_PP_pp__width (match c with
           | (u__1, u__2) -> u__1
         )) in
@@ -332,7 +333,7 @@ let rec pattern_to_doc (p : pattern) : PPrint.document =
     | (PVar (b)) -> (let tmp = (fStarC_Class_PP_pp__binder b) in
       let tmp1 = (tmp :: []) in
       (ctor "PVar" tmp1))
-    | (PCons ((x, ps))) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__string x) in
+    | (PCons (x, ps)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__string x) in
       let tmp1 = (pp_list' pattern_to_doc ps) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
@@ -347,7 +348,7 @@ let rec pattern_to_doc (p : pattern) : PPrint.document =
       let tmp1 = (record tmp) in
       let tmp2 = (tmp1 :: []) in
       (ctor "PRecord" tmp2))
-    | (PConstant (c)) -> (let tmp = (fStarC_Class_PP_pp__tuple2_width_string c) in
+    | (PConstant (u__1, u__2)) -> (let tmp = (fStarC_Class_PP_pp__tuple2_width_string (u__1, u__2)) in
       let tmp1 = (tmp :: []) in
       (ctor "PConstant" tmp1))
   )
@@ -398,31 +399,31 @@ and expr_to_doc (e : expr) : PPrint.document =
     | (EBound (x)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__int x) in
       let tmp1 = (tmp :: []) in
       (ctor "EBound" tmp1))
-    | (EQualified (x)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
+    | (EQualified (u__1, u__2)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string (u__1, u__2)) in
       let tmp1 = (tmp :: []) in
       (ctor "EQualified" tmp1))
-    | (EConstant (x)) -> (let tmp = (fStarC_Class_PP_pp__tuple2_width_string x) in
+    | (EConstant (u__1, u__2)) -> (let tmp = (fStarC_Class_PP_pp__tuple2_width_string (u__1, u__2)) in
       let tmp1 = (tmp :: []) in
       (ctor "EConstant" tmp1))
     | EUnit -> (PPrint.string "EUnit")
-    | (EApp ((x, xs))) -> (let tmp = (expr_to_doc x) in
+    | (EApp (x, xs)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (pp_list' expr_to_doc xs) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EApp" tmp3))
-    | (ETypApp ((x, xs))) -> (let tmp = (expr_to_doc x) in
+    | (ETypApp (x, xs)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (fStarC_Class_PP_pp__list_typ xs) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "ETypApp" tmp3))
-    | (ELet ((x, y, z))) -> (let tmp = (fStarC_Class_PP_pp__binder x) in
+    | (ELet (x, y, z)) -> (let tmp = (fStarC_Class_PP_pp__binder x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (expr_to_doc z) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "ELet" tmp5))
-    | (EIfThenElse ((x, y, z))) -> (let tmp = (expr_to_doc x) in
+    | (EIfThenElse (x, y, z)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (expr_to_doc z) in
       let tmp3 = (tmp2 :: []) in
@@ -432,36 +433,36 @@ and expr_to_doc (e : expr) : PPrint.document =
     | (ESequence (xs)) -> (let tmp = (pp_list' expr_to_doc xs) in
       let tmp1 = (tmp :: []) in
       (ctor "ESequence" tmp1))
-    | (EAssign ((x, y))) -> (let tmp = (expr_to_doc x) in
+    | (EAssign (x, y)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EAssign" tmp3))
-    | (EBufCreate ((x, y, z))) -> (let tmp = (fStarC_Class_PP_pp__lifetime x) in
+    | (EBufCreate (x, y, z)) -> (let tmp = (fStarC_Class_PP_pp__lifetime x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (expr_to_doc z) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "EBufCreate" tmp5))
-    | (EBufRead ((x, y))) -> (let tmp = (expr_to_doc x) in
+    | (EBufRead (x, y)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EBufRead" tmp3))
-    | (EBufWrite ((x, y, z))) -> (let tmp = (expr_to_doc x) in
+    | (EBufWrite (x, y, z)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (expr_to_doc z) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "EBufWrite" tmp5))
-    | (EBufSub ((x, y))) -> (let tmp = (expr_to_doc x) in
+    | (EBufSub (x, y)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EBufSub" tmp3))
-    | (EBufBlit ((x, y, z, a, b))) -> (let tmp = (expr_to_doc x) in
+    | (EBufBlit (x, y, z, a, b)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (expr_to_doc z) in
       let tmp3 = (expr_to_doc a) in
@@ -472,17 +473,17 @@ and expr_to_doc (e : expr) : PPrint.document =
       let tmp8 = (tmp1 :: tmp7) in
       let tmp9 = (tmp :: tmp8) in
       (ctor "EBufBlit" tmp9))
-    | (EMatch ((x, bs))) -> (let tmp = (expr_to_doc x) in
+    | (EMatch (x, bs)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (pp_list' pp_branch bs) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EMatch" tmp3))
-    | (EOp ((x, y))) -> (let tmp = (fStarC_Class_PP_pp__op x) in
+    | (EOp (x, y)) -> (let tmp = (fStarC_Class_PP_pp__op x) in
       let tmp1 = (fStarC_Class_PP_pp__width y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EOp" tmp3))
-    | (ECast ((x, y))) -> (let tmp = (expr_to_doc x) in
+    | (ECast (x, y)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (fStarC_Class_PP_pp__typ y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
@@ -497,7 +498,7 @@ and expr_to_doc (e : expr) : PPrint.document =
     | (EReturn (x)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (tmp :: []) in
       (ctor "EReturn" tmp1))
-    | (EFlat ((x, xs))) -> (let tmp = (fStarC_Class_PP_pp__typ x) in
+    | (EFlat (x, xs)) -> (let tmp = (fStarC_Class_PP_pp__typ x) in
       let tmp1 = (BatList.map (fun tmp1 -> (match tmp1 with
           | (s, e1) -> (let tmp2 = (expr_to_doc e1) in
             (fld s tmp2))
@@ -506,19 +507,19 @@ and expr_to_doc (e : expr) : PPrint.document =
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp :: tmp3) in
       (ctor "EFlat" tmp4))
-    | (EField ((x, y, z))) -> (let tmp = (fStarC_Class_PP_pp__typ x) in
+    | (EField (x, y, z)) -> (let tmp = (fStarC_Class_PP_pp__typ x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__string z) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "EField" tmp5))
-    | (EWhile ((x, y))) -> (let tmp = (expr_to_doc x) in
+    | (EWhile (x, y)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EWhile" tmp3))
-    | (EBufCreateL ((x, xs))) -> (let tmp = (fStarC_Class_PP_pp__lifetime x) in
+    | (EBufCreateL (x, xs)) -> (let tmp = (fStarC_Class_PP_pp__lifetime x) in
       let tmp1 = (pp_list' expr_to_doc xs) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
@@ -526,14 +527,14 @@ and expr_to_doc (e : expr) : PPrint.document =
     | (ETuple (xs)) -> (let tmp = (pp_list' expr_to_doc xs) in
       let tmp1 = (tmp :: []) in
       (ctor "ETuple" tmp1))
-    | (ECons ((x, y, xs))) -> (let tmp = (fStarC_Class_PP_pp__typ x) in
+    | (ECons (x, y, xs)) -> (let tmp = (fStarC_Class_PP_pp__typ x) in
       let tmp1 = (FStarC_Class_PP.fStarC_Class_PP_pp__string y) in
       let tmp2 = (pp_list' expr_to_doc xs) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "ECons" tmp5))
-    | (EBufFill ((x, y, z))) -> (let tmp = (expr_to_doc x) in
+    | (EBufFill (x, y, z)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (expr_to_doc z) in
       let tmp3 = (tmp2 :: []) in
@@ -543,7 +544,7 @@ and expr_to_doc (e : expr) : PPrint.document =
     | (EString (x)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__string x) in
       let tmp1 = (tmp :: []) in
       (ctor "EString" tmp1))
-    | (EFun ((xs, y, z))) -> (let tmp = (pp_list' fStarC_Class_PP_pp__binder xs) in
+    | (EFun (xs, y, z)) -> (let tmp = (pp_list' fStarC_Class_PP_pp__binder xs) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (fStarC_Class_PP_pp__typ z) in
       let tmp3 = (tmp2 :: []) in
@@ -556,17 +557,17 @@ and expr_to_doc (e : expr) : PPrint.document =
     | (EBufFree (x)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (tmp :: []) in
       (ctor "EBufFree" tmp1))
-    | (EBufCreateNoInit ((x, y))) -> (let tmp = (fStarC_Class_PP_pp__lifetime x) in
+    | (EBufCreateNoInit (x, y)) -> (let tmp = (fStarC_Class_PP_pp__lifetime x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EBufCreateNoInit" tmp3))
-    | (EAbortT ((x, y))) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__string x) in
+    | (EAbortT (x, y)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__string x) in
       let tmp1 = (fStarC_Class_PP_pp__typ y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "EAbortT" tmp3))
-    | (EComment ((x, y, z))) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__string x) in
+    | (EComment (x, y, z)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__string x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__string z) in
       let tmp3 = (tmp2 :: []) in
@@ -582,7 +583,7 @@ and expr_to_doc (e : expr) : PPrint.document =
     | (EBufNull (x)) -> (let tmp = (fStarC_Class_PP_pp__typ x) in
       let tmp1 = (tmp :: []) in
       (ctor "EBufNull" tmp1))
-    | (EBufDiff ((x, y))) -> (let tmp = (expr_to_doc x) in
+    | (EBufDiff (x, y)) -> (let tmp = (expr_to_doc x) in
       let tmp1 = (expr_to_doc y) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
@@ -590,6 +591,9 @@ and expr_to_doc (e : expr) : PPrint.document =
     | (ESizeof (t)) -> (let tmp = (fStarC_Class_PP_pp__typ t) in
       let tmp1 = (tmp :: []) in
       (ctor "ESizeof" tmp1))
+    | (EZeroForDeref (w)) -> (let tmp = (fStarC_Class_PP_pp__width w) in
+      let tmp1 = (tmp :: []) in
+      (ctor "EZeroForDeref" tmp1))
   )
 
 let fStarC_Class_PP_pp__cc (tmp : cc) : PPrint.document =
@@ -666,7 +670,7 @@ let fStarC_Class_PP_pp__list_tuple2_string_typ (tmp : ((string * typ)) list) : P
 
 let decl_to_doc (d : decl) : PPrint.document =
   (match d with
-    | (DGlobal ((fs, x, i, t, e))) -> (let tmp = (fStarC_Class_PP_pp__list_flag fs) in
+    | (DGlobal (fs, x, i, t, e)) -> (let tmp = (fStarC_Class_PP_pp__list_flag fs) in
       let tmp1 = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__int i) in
       let tmp3 = (fStarC_Class_PP_pp__typ t) in
@@ -677,7 +681,7 @@ let decl_to_doc (d : decl) : PPrint.document =
       let tmp8 = (tmp1 :: tmp7) in
       let tmp9 = (tmp :: tmp8) in
       (ctor "DGlobal" tmp9))
-    | (DFunction ((cc, fs, i, t, x, bs, e))) -> (let tmp = (fStarC_Class_PP_pp__option_cc cc) in
+    | (DFunction (cc, fs, i, t, x, bs, e)) -> (let tmp = (fStarC_Class_PP_pp__option_cc cc) in
       let tmp1 = (fStarC_Class_PP_pp__list_flag fs) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__int i) in
       let tmp3 = (fStarC_Class_PP_pp__typ t) in
@@ -692,7 +696,7 @@ let decl_to_doc (d : decl) : PPrint.document =
       let tmp12 = (tmp1 :: tmp11) in
       let tmp13 = (tmp :: tmp12) in
       (ctor "DFunction" tmp13))
-    | (DTypeAlias ((x, fs, i, t))) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
+    | (DTypeAlias (x, fs, i, t)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
       let tmp1 = (fStarC_Class_PP_pp__list_flag fs) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__int i) in
       let tmp3 = (fStarC_Class_PP_pp__typ t) in
@@ -701,7 +705,7 @@ let decl_to_doc (d : decl) : PPrint.document =
       let tmp6 = (tmp1 :: tmp5) in
       let tmp7 = (tmp :: tmp6) in
       (ctor "DTypeAlias" tmp7))
-    | (DTypeFlat ((x, fs, i, f))) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
+    | (DTypeFlat (x, fs, i, f)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
       let tmp1 = (fStarC_Class_PP_pp__list_flag fs) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__int i) in
       let tmp3 = (fStarC_Class_PP_pp__list_tuple2_string_tuple2 f) in
@@ -710,7 +714,7 @@ let decl_to_doc (d : decl) : PPrint.document =
       let tmp6 = (tmp1 :: tmp5) in
       let tmp7 = (tmp :: tmp6) in
       (ctor "DTypeFlat" tmp7))
-    | (DUnusedRetainedForBackwardsCompat ((cc, fs, x, t))) -> (let tmp = (fStarC_Class_PP_pp__option_cc cc) in
+    | (DUnusedRetainedForBackwardsCompat (cc, fs, x, t)) -> (let tmp = (fStarC_Class_PP_pp__option_cc cc) in
       let tmp1 = (fStarC_Class_PP_pp__list_flag fs) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
       let tmp3 = (fStarC_Class_PP_pp__typ t) in
@@ -719,7 +723,7 @@ let decl_to_doc (d : decl) : PPrint.document =
       let tmp6 = (tmp1 :: tmp5) in
       let tmp7 = (tmp :: tmp6) in
       (ctor "DUnusedRetainedForBackwardsCompat" tmp7))
-    | (DTypeVariant ((x, fs, i, bs))) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
+    | (DTypeVariant (x, fs, i, bs)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
       let tmp1 = (fStarC_Class_PP_pp__list_flag fs) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__int i) in
       let tmp3 = (fStarC_Class_PP_pp__list_tuple2_string_list bs) in
@@ -728,10 +732,10 @@ let decl_to_doc (d : decl) : PPrint.document =
       let tmp6 = (tmp1 :: tmp5) in
       let tmp7 = (tmp :: tmp6) in
       (ctor "DTypeVariant" tmp7))
-    | (DTypeAbstractStruct (x)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
+    | (DTypeAbstractStruct (u__1, u__2)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string (u__1, u__2)) in
       let tmp1 = (tmp :: []) in
       (ctor "DTypeAbstractStruct" tmp1))
-    | (DExternal ((cc, fs, x, t, xs))) -> (let tmp = (fStarC_Class_PP_pp__option_cc cc) in
+    | (DExternal (cc, fs, x, t, xs)) -> (let tmp = (fStarC_Class_PP_pp__option_cc cc) in
       let tmp1 = (fStarC_Class_PP_pp__list_flag fs) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
       let tmp3 = (fStarC_Class_PP_pp__typ t) in
@@ -742,7 +746,7 @@ let decl_to_doc (d : decl) : PPrint.document =
       let tmp8 = (tmp1 :: tmp7) in
       let tmp9 = (tmp :: tmp8) in
       (ctor "DExternal" tmp9))
-    | (DUntaggedUnion ((x, fs, i, xs))) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
+    | (DUntaggedUnion (x, fs, i, xs)) -> (let tmp = (FStarC_Class_PP.fStarC_Class_PP_pp__tuple2_list_string_string x) in
       let tmp1 = (fStarC_Class_PP_pp__list_flag fs) in
       let tmp2 = (FStarC_Class_PP.fStarC_Class_PP_pp__int i) in
       let tmp3 = (fStarC_Class_PP_pp__list_tuple2_string_typ xs) in
@@ -761,5 +765,5 @@ let fStarC_Class_Show_show__decl_157 (tmp : decl) : string =
   (FStar_Pprint.render tmp1))
 
 let current_version : Prims.int =
-  (Prims.of_int (32))
+  (Prims.of_int (33))
 

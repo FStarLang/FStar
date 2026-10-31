@@ -160,7 +160,7 @@ let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Synta
   )) else ())))
 
 let rec is_arity (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
-  (let tmp = (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: []) env t) in
+  (let tmp = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: []) env t) in
   let t1 = (FStarC_Syntax_Util.unrefine tmp) in
   let tmp1 = (FStarC_Syntax_Subst.compress t1) in
   let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
@@ -176,7 +176,7 @@ let rec is_arity (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.t
 
 let non_info_norm_weak (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (let steps = ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.EraseUniverses :: (FStarC_TypeChecker_Env.Primops :: (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.HNF :: (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.Unascribe :: (FStarC_TypeChecker_Env.ForExtraction :: [])))))))))) in
-  let tmp = (FStarC_TypeChecker_Normalize.normalize steps env t) in
+  let tmp = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize steps env t) in
   (FStarC_TypeChecker_Env.non_informative env tmp))
 
 let check_erasable (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qualifier) list) (r : FStarC_Range_Type.range) (se : FStarC_Syntax_Syntax.sigelt) : unit =
@@ -239,7 +239,7 @@ let check_erasable (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Sy
     | (FStarC_Syntax_Syntax.Sig_fail (tmp1)) -> ()
     | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (false, (lb :: [])); lids = tmp1; _ })) -> (let tmp2 = (FStarC_Syntax_Util.abs_formals (lb).FStarC_Syntax_Syntax.lbdef) in
       (match tmp2 with
-        | (tmp3, body, tmp4) -> (let tmp5 = (FStarC_TypeChecker_Normalize.non_info_norm env body) in
+        | (tmp3, body, tmp4) -> (let tmp5 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_non_info_norm env body) in
           let tmp6 = (not tmp5) in
           (if tmp6 then (let tmp7 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' body) in
           let tmp8 = (PPrint.(^/^) tmp7 (FStarC_Errors_Msg.text "is considered informative.")) in
