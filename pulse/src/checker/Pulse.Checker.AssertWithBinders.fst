@@ -146,11 +146,29 @@ let warn_nop (g:env) (goal:term) : T.Tac unit =
       indent (pp <| canon_slprop_print goal);
   ]
 
+(* The elaborator annotates a match without a [returns] annotation with the
+   type its branches were checked against, so two occurrences of the same
+   source match (e.g. an [if]) checked at different types differ in it. *)
+let strip_match_returns (t:R.term) : T.Tac R.term =
+  FStar.Tactics.Visit.visit_tm
+    (fun t ->
+      match R.inspect_ln t with
+      | R.Tv_Match sc (Some _) brs -> R.pack_ln (R.Tv_Match sc None brs)
+      | _ -> t)
+    t
+
 let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
   let open FStar.Reflection.TermEq in
   let lhs, rhs = p in
+  (* Match occurrences of [lhs] up to the [returns] annotations of matches:
+     an annotation does not change the value of a match, and the equality
+     of [lhs] and [rhs] is checked separately. *)
+  let lhs_stripped = strip_match_returns lhs in
+  let lhs_has_returns = not (term_eq lhs lhs_stripped) in
   let visitor (t:R.term) : T.Tac R.term =
-    if term_eq t lhs then rhs else t
+    if term_eq t lhs then rhs
+    else if lhs_has_returns && term_eq (strip_match_returns t) lhs_stripped then rhs
+    else t
   in
   match R.inspect_ln lhs with
   | R.Tv_Var n -> (
