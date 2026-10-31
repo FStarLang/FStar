@@ -136,6 +136,13 @@ val maybe_monadic: env -> term -> lident -> typ -> ML term
 
 val maybe_coerce_lc : env -> term -> comp -> typ -> ML (term & comp & guard_t)
 
+(* The type [t] a computation [lc] is checked against, refined, when [lc] is
+   effectful, with what [lc]'s more precise (refined) result type says, e.g.
+   [x:unit{False}] for [fail ""] against [unit]: the continuation of the
+   computation, e.g. the [n >= 0] after [if n < 0 then fail ""], may need it.
+   Its own result is all an effectful computation's continuation knows of it. *)
+val effectful_res_typ_at (env:env) (lc:comp) (t:typ) : ML typ
+
 (*
  * weaken_result_type env e lc t use_eq
  *   precondition: env |- e : lc

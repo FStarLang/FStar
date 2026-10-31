@@ -775,20 +775,7 @@ let close_guard_with_definition (x:binder) (u:universe) (t:term) (g:precondition
        U.mk_forall u x.binder_bv t'
       )
 
-(* [exists (x:t). body], with the refinement of [t], if any, stated as a
-   conjunct of the body instead of in the sort of the binder. [l_Exists]
-   repeats the sort (as its type argument and in the abstraction's binder),
-   and the type of an effectful [let] is closed existentially over its
-   definition's own type, which is itself such an existential for a chain
-   of [let]s (e.g., [hide b && c1 && ... && cn]): keeping the refinement in
-   the sort would double the type at every [let]. *)
-let mk_exists_unrefined (u:universe) (x:bv) (body:term) : ML term =
-  match (Subst.compress (U.flatten_refinement x.sort)).n with
-  | Tm_refine {b=y; phi} ->
-    let bs, phi = Subst.open_term [S.mk_binder y] phi in
-    let phi = Subst.subst [NT((List.hd bs).binder_bv, S.bv_to_name x)] phi in
-    U.mk_exists u { x with sort = y.sort } (U.mk_conj phi body)
-  | _ -> U.mk_exists u x body
+let mk_exists_unrefined = U.mk_exists_unrefined
 
 let abs (g:env) (a:typ) (f: binder -> term) : ML term =
   let g, xb = new_binder g a a.pos in
@@ -1117,16 +1104,7 @@ let with_binder_unrefined (#a:Type) (initial_env:env) (x:binder) (u:universe) (f
         | Inl (res, Some form) ->
           let phi = Subst.subst [DB(0, x.binder_bv)] phi in
           let xb = { x with binder_bv = { x.binder_bv with sort = y.sort } } in
-          (* Not twice, e.g. for [x:t{phi}] related to [t{psi}], whose guard
-             is already [phi ==> psi]. *)
-          //NS REVIEW: This is ugly, a very specific optimization. Why is it needed?
-          //The duplicated hypothesis, if any, could be caught by simplification anyway
-          let already =
-            match FStarC.Syntax.Formula.destruct_typ_as_formula form with
-            | Some (FStarC.Syntax.Formula.BaseConn (l, [(p, _); _])) -> I.lid_equals l PC.imp_lid && U.term_eq p phi
-            | _ -> false
-          in
-          let form = mk_forall_l [u] [xb] (if already then form else U.mk_imp phi form) in
+          let form = mk_forall_l [u] [xb] (U.mk_imp phi form) in
           reemit_guard initial_env form ;!
           return res)
     | _ -> with_binders initial_env [x] [u] f
@@ -1634,29 +1612,44 @@ let branch_conditions (path_condition:typ) (branch_condition:option term) (eq:ty
 let push_branch_hypothesis (g:env) (hyp:typ) : ML env =
   if U.is_t_true hyp then g else push_hypothesis g hyp
 
+(* A match is syntactically exhaustive, so that its residual path condition
+   needs no SMT query, when it has no when clauses and either some branch is a
+   variable pattern, or the scrutinee's type is (up to refinement) [bool] and
+   both [true] and [false] are covered, or it is an inductive type each of
+   whose constructors is covered by a pattern whose arguments are all variables
+   (or dot patterns). Pulse's elaborated [if]s produce many of these. *)
+let match_is_syntactically_exhaustive (g:env) (t_sc:typ) (brs:list branch) : ML bool =
+  let pats = List.map (fun (p, _, _) -> p) brs in
+  let is_var_pat (p:pat) = match p.v with | Pat_var _ -> true | _ -> false in
+  let simple_args (args:list (pat & bool)) =
+    List.for_all (fun (p, _) -> match p.v with | Pat_var _ | Pat_dot_term _ -> true | _ -> false) args
+  in
+  let has_bool b =
+    List.existsb (fun p -> match p.v with
+                          | Pat_constant (FStarC.Const.Const_bool b') -> b = b'
+                          | _ -> false) pats
+  in
+  let covers_datacon (d:I.lident) =
+    List.existsb (fun p -> match p.v with
+                          | Pat_cons (fv, _, args) -> S.fv_eq_lid fv d && simple_args args
+                          | _ -> false) pats
+  in
+  List.for_all (fun (_, w, _) -> None? w) brs &&
+  (List.existsb is_var_pat pats ||
+   (let t = t_sc |> N.normalize_refinement N.whnf_steps g.tcenv |> U.unrefine in
+    let head = U.leftmost_head t |> U.un_uinst in
+    match (Subst.compress head).n with
+    | Tm_fvar fv ->
+      if S.fv_eq_lid fv PC.bool_lid
+      then has_bool true && has_bool false
+      else (
+        let is_induc, ds = Env.datacons_of_typ g.tcenv (S.lid_of_fv fv) in
+        is_induc && List.for_all covers_datacon ds
+      )
+    | _ -> false))
+
 (* The obligation that no branch is missing, given the path condition after
    the last branch, labeled as by TcTerm. *)
-(* A match whose scrutinee has type bool (up to refinement) and whose
-   branches include both constant patterns `true` and `false` (without
-   when clauses) is exhaustive, so its residual path condition is false
-   and needs no SMT query. Pulse's elaborated `if`s produce many of these. *)
-//NS REVIEW: This is very specific to bool. We should have syntactic exhaustiveness
-//checking of matches for all types. I.e., if the branches all have simple patterns
-//and mention all the constructors of the scrutinee's type
-let match_covers_bool (g:env) (t_sc:typ) (brs:list branch) : ML bool =
-  let has b =
-    List.existsb
-      (fun (p, w, _) ->
-        None? w &&
-        (match p.v with
-         | Pat_constant (FStarC.Const.Const_bool b') -> b = b'
-         | _ -> false))
-      brs
-  in
-  has true && has false &&
-  U.is_fvar PC.bool_lid
-    (t_sc |> N.normalize_refinement N.whnf_steps g.tcenv |> U.unrefine)
-
 let exhaustiveness_obligation (r:R.t) (path_condition:typ) : ML (option typ) =
   if U.is_t_false path_condition then None
   else Some (VCUtil.label Err.exhaustiveness_check r (U.mk_imp path_condition U.t_false))
@@ -2171,8 +2164,39 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
           let f1 = Subst.subst [DB(0, b.binder_bv)] f1 in
             (match! guard_not_allowed with
              | true ->
+               (* Or else equal once normalized, e.g. when a tactic
+                  normalized one of them (with [compute ()]) but not the
+                  other, which is too costly to try first. *)
+               let normalized_equal () : ML bool =
+                 let n (t:term) : ML term =
+                   N.normalize [Env.Beta; Env.Iota; Env.Zeta; Env.Primops;
+                                Env.UnfoldUntil S.delta_constant; Env.Unascribe]
+                               (Env.push_bv g.tcenv b.binder_bv) t in
+                 (* Up to ascriptions (e.g. the [prop] ascription in
+                    unfolded [b2t]) and the association of conjunctions,
+                    which [U.flatten_refinement] and the normalizer differ on. *)
+                 let rec conjuncts (phi:term) : ML (list term) =
+                   let hd, args = U.head_and_args_full phi in
+                   match (U.un_uinst hd).n, args with
+                   | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv PC.and_lid ->
+                     conjuncts a @ conjuncts b
+                   | _ -> [phi]
+                 in
+                 let strip = Visit.visit_term false (fun t ->
+                   match t.n with
+                   | Tm_ascribed {tm} -> tm
+                   | Tm_meta {tm} -> tm
+                   | _ -> t) in
+                 let cs0, cs1 = conjuncts (strip (n f0)), conjuncts (strip (n f1)) in
+                 List.length cs0 = List.length cs1 &&
+                 List.forall2 equal_term cs0 cs1
+               in
                with_binders g0 [b] [u]
-                 (check_relation g EQUALITY f0 f1)
+                 (handle_with
+                    (check_relation g EQUALITY f0 f1)
+                    (fun _ ->
+                      if normalized_equal () then return ()
+                      else check_relation g EQUALITY f0 f1))
 
              | _ ->
                match rel with
@@ -2416,15 +2440,18 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
         with_context "subtype arrow" None (fun _ ->
           let! _ = check_bqual x0.binder_qual x1.binder_qual in
           check_positivity_qual rel x0.binder_positivity x1.binder_positivity;!
+          (* The domains are related (contravariantly) in [g]: they do not
+             mention the bound variable. *)
+          let rel_arg =
+            match rel with
+            | EQUALITY -> EQUALITY
+            | _ -> SUBTYPING None
+          in
+          check_relation g rel_arg x1.binder_bv.sort x0.binder_bv.sort ;!
           let! u1 = universe_of_well_typed_term g x1.binder_bv.sort in
           let g_x1, x1, c1 = open_comp g x1 c1 in
           let c0 = Subst.subst_comp [DB(0, x1.binder_bv)] c0 in
           with_binder_unrefined g x1 u1 (
-            let rel_arg =
-              match rel with
-              | EQUALITY -> EQUALITY
-              | _ -> SUBTYPING (Some (S.bv_to_name x1.binder_bv, no_facts_l ()))
-            in
             let rel_comp =
               match rel with
               | EQUALITY -> EQUALITY
@@ -2443,12 +2470,6 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                             Some (S.mk_Tm_app e (snd (U.args_of_binders [x1])) R.dummyRange, no_facts_l ())
                    else None)
             in
-            (* In [g_x1]: [x1] is free in the guard, as the witness, and
-               binders opened while relating the domains (e.g. those of
-               the branches of a [match]) must not reuse its index. *)
-            //NS REVIEW: Why is the relation on the domain checked in a context g_x1?
-            //It should just be checked in g
-            check_relation g_x1 rel_arg x1.binder_bv.sort x0.binder_bv.sort ;!
             with_context "check_subcomp" None (fun _ ->
               check_relation_comp g_x1 rel_comp c0 c1
             )
@@ -2897,44 +2918,25 @@ and do_check (g:env) (e:term)
                   reemit_guard g (U.mk_imp (U.mk_conj_l facts) form) ;!
                   return res)
       in
-      (* A function argument is checked against its formal arrow type, as
-         TcTerm does, rather than having its type synthesized and then
-         related to the formal: 
-         NS REVIEW: The remainder of this comment does not make sense to me. Clarify.
-         what the body proves (e.g. the typing of
-         [join w1 w3] in [introduce p ==> exists w3. q w3 with (let w3 =
-         ... in lemma (join w1 w3))]) then scopes over the goal it is
-         proven for. *)
-      (* Likewise a match with neither a return annotation nor a residual
-         type, as built by tactics (e.g. Pulse's join of the postconditions
-         of a conditional, [pts_to r (match b with true -> 0ul | false ->
-         f x)]): synthesized, its type would be its first branch's, e.g.
-         [x:U32.t{v x = 0}], which the other branches need not have. *)
-      let unannotated_match =
-        match (Subst.compress arg).n with
-        | Tm_match {ret_opt=None; brs; rc_opt} ->
-          List.for_all (fun (_, w, _) -> None? w) brs
-          && (match rc_opt with
-              | Some ({ residual_typ = Some _ }) -> false
-              | _ -> true)
-        | _ -> false
-      in
-      //NS REVIEW: Why can we not always check the argument against the type of the formal, 
-      //rather than synthesizing in some cases?
-      let abs_checked =
-        unannotated_match
-        || (Tm_abs? (Subst.compress arg).n
-            && Some? (abs_against_arrow g arg x.binder_bv.sort))
-      in
-      let! eff_arg, t_arg, f_arg =
-        if abs_checked
-        then (
-          let! eff, f_arg = with_context "app arg" (Some (CtxTerm arg)) (fun _ ->
-                              with_deps (fun _ -> check_against_typ g arg x.binder_bv.sort)) in
-          return (eff, x.binder_bv.sort, f_arg)
-        )
-        else check_f "app arg" g arg
-      in
+      (* Every argument is checked against its formal, as by TcTerm, which
+         typechecks an argument with the formal as its expected type. The
+         formal is then pushed into a function, a [let] or a [match] (see
+         [check_against_typ_synth]), so that, e.g., what the body of
+         [fun _ -> (let w3 = ... in lemma (join w1 w3))] proves (in
+         [introduce p ==> exists w3. q w3 with ...]) is in scope where the
+         body's type is related to the formal's; and the branches of a match
+         built by a tactic (e.g. Pulse's join of the postconditions of a
+         conditional, [pts_to r (match b with true -> 0ul | false -> f x)])
+         are each checked against the formal, rather than against the type of
+         the first one, [x:U32.t{v x = 0}]. Other arguments have their type
+         synthesized and related to the formal by subtyping, with the
+         argument as the witness when it is pure. The obligations of the
+         formal, e.g. a termination refinement, are about this argument:
+         they are located at it, as by TcTerm. *)
+      let formal = Subst.set_use_range arg.pos x.binder_bv.sort in
+      let! eff_arg, _, f_arg =
+        with_context "app arg" (Some (CtxTerm arg)) (fun _ ->
+          with_deps (fun _ -> check_against_typ_synth g arg formal)) in
       (* A ghost argument for a non-informative formal, e.g. a total
          function for an [a -> GTot b], is total, as by TcTerm, which checks
          it against the formal. *)
@@ -2944,13 +2946,6 @@ and do_check (g:env) (e:term)
         | _ -> eff_arg
       in
       let pure_arg = is_tot_or_ghost_eff eff_arg in
-      let subtyping () =
-        (* The obligations of the formal, e.g. a termination refinement,
-           are about this argument: locate them at it, as TcTerm does. *)
-        check_subtype g (if pure_arg then Some (arg, f_arg.f_sub) else None) t_arg
-          (Subst.set_use_range arg.pos x.binder_bv.sort) in
-      (if abs_checked then return ()
-       else with_context "app subtyping" (Some (CtxTerm arg)) (fun _ -> with_deps subtyping)) ;!
       with_context "app arg qual" None (fun _ -> check_arg_qual arg_qual x.binder_qual) ;!
       let! eff = join_eff_l g [eff_hd; eff_arr; eff_arg] in
       let dependent = mem x.binder_bv (FStarC.Syntax.Free.names t') in
@@ -3042,16 +3037,6 @@ and do_check (g:env) (e:term)
       return (eff, Subst.subst [NT(y.binder_bv, t2)] s2,
               { no_sub_facts () with s_sub = facts_concat [f1.f_term; f2] })
 
-    | Tm_fvar fv, [(a, Some ({ aqual_implicit = true })); (_, None)]
-        when S.fv_eq_lid fv PC.forall_lid || S.fv_eq_lid fv PC.exists_lid ->
-      (* [TcUtil] closes variables escaping the type of a [let] with
-         quantifiers that it leaves without universes; their universe is
-         that of the domain. *)
-      //NS REVIEW: This is compensating for a bug in TcUtil. Fix the bug there rather than patching it here
-      let! _, t_a = check "quantifier domain" g a in
-      let! u = is_type g t_a in
-      check_app (S.mk_Tm_uinst hd [u]) args
-
     | _, [(t, Some ({ aqual_implicit = true })); (tau, None)]
         when U.is_synth_by_tactic hd ->
       (* [synth_by_tactic #t tau] is left for Core by [TcTerm.tc_synth]
@@ -3078,7 +3063,7 @@ and do_check (g:env) (e:term)
   | Tm_ascribed {tm=e; asc=(Inl t, tac, eq)} ->
     let! _, t' = check "ascription type" g t in
     is_type g t';!
-    //NS REVIEW: We don't check that tac is itself well-typed?
+    check_ascription_tactic g tac;!
     let! eff, fe =
       with_ascription_tactic g tac (fun _ ->
         if eq
@@ -3093,7 +3078,7 @@ and do_check (g:env) (e:term)
 
   | Tm_ascribed {tm=e; asc=(Inr c, tac, _)} ->
     let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
-    //NS REVIEW: We don't check that tac is itself well-typed?
+    check_ascription_tactic g tac;!
     let! fe =
       with_ascription_tactic g tac (fun _ ->
         with_context "ascription subtyping (comp)" None (fun _ -> check_against_comp_f g e c)) in
@@ -3103,74 +3088,18 @@ and do_check (g:env) (e:term)
   | Tm_let {lbs=(false, [lb]); body} ->
     check_let g lb body None
 
-  | Tm_match {brs}
-      when BU.for_some (fun (_, w, _) -> Some? w) brs ->
-    (* As in [TcTerm.tc_eqn], which rejects them when verifying *)
-    let w = List.tryPick (fun (_, w, _) -> w) brs |> Option.must in
-    with_context "when clause" (Some (CtxTerm w)) (fun _ ->
-      fail_code Errors.Fatal_WhenClauseNotSupported
-        (Errors.mkmsg "When clauses are not yet supported in --verify mode; they will be some day"))
-
   | Tm_match {scrutinee=sc; ret_opt=None; brs=branches; rc_opt} ->
-    check_match g e.pos sc branches rc_opt None
+    (* Not built by the elaborator, which annotates every match: see
+       [check_match]. *)
+    let ret =
+      match rc_opt with
+      | Some ({ residual_typ = Some t }) -> Some (S.mk_binder (S.new_bv None S.tun), t, false)
+      | _ -> None
+    in
+    check_match g e.pos sc ret branches
 
-  | Tm_match {scrutinee=sc; ret_opt=Some (as_x, (Inl returns_ty, None, eq)); brs=branches; rc_opt} ->
-    let! eff_sc, t_sc = check "scrutinee" g sc in
-    let all_branches = branches in
-    let! u_sc = universe_of_well_typed_term g t_sc in
-    let as_x = {as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
-    let g_as_x, as_x, returns_ty = open_term g as_x returns_ty in
-    let! _eff_t, returns_ty_t =
-      with_binders g [as_x] [u_sc] (check "return type" g_as_x returns_ty) in
-    let! _u_ty = is_type g_as_x returns_ty_t in
-    let rec check_branches (path_condition: typ)
-                           (branches: list S.branch)
-                           (acc_eff: eff)
-      : ML (result eff)
-      = match branches with
-        | [] ->
-          if match_covers_bool g t_sc all_branches then return acc_eff else
-          (match exhaustiveness_obligation e.pos path_condition with
-           | None -> return acc_eff
-           | Some phi -> guard g phi ;! return acc_eff)
-
-        | (p, None, b) :: rest ->
-          let _, (p, _, b) = open_branch g (p, None, b) in
-          let! (bs, us) = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
-          let! branch_condition = pattern_branch_condition g sc p in
-          let pat_exp = PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst in
-          let pat_sc_eq = U.mk_eq2 u_sc t_sc sc pat_exp in
-          let hyp, _, next_path_condition =
-              branch_conditions path_condition branch_condition pat_sc_eq
-          in
-          let g_h = push_branch_hypothesis g hyp in
-          let g'0 = push_binders g_h bs in
-          let g' = push_hypothesis g'0 pat_sc_eq in
-          let! eff_br, tbr =
-            weaken_branch g hyp
-            (with_binders g_h bs us
-              (weaken_branch g'0 pat_sc_eq
-                 (let! eff_br, tbr, fb = check_f "branch" g' b in //NS REVIEW: Why can't we check the branch against returns_ty, instead of synthesize & then check?
-                  (* As in [TcTerm.tc_eqn], the branch is expected to have the
-                     annotation at the pattern, rather than at the scrutinee:
-                     e.g., a recursive function in it applied to the
-                     pattern reduces. *)
-                  let expect_tbr = Subst.subst [NT(as_x.binder_bv, pat_exp)] returns_ty in
-                  let rel =
-                    if eq
-                    then EQUALITY
-                    else SUBTYPING (if is_tot_or_ghost_eff eff_br then Some (b, fb.f_sub) else None)
-                  in
-                  with_context "branch check relation" None (fun _ -> check_relation g' rel tbr expect_tbr);!
-                  let! eff = join_eff g eff_br acc_eff in
-                  return (eff, expect_tbr)))) in
-          (* Branches after a wildcard are dead code, checked, as by TcTerm,
-             under the (false) path condition. *)
-          check_branches next_path_condition rest eff_br in
-
-    let! eff = check_branches U.t_true branches ETot in
-    let ty = Subst.subst [NT(as_x.binder_bv, sc)] returns_ty in
-    return (eff, ty, no_tail_facts ())
+  | Tm_match {scrutinee=sc; ret_opt=Some (as_x, (Inl returns_ty, None, eq)); brs=branches} ->
+    check_match g e.pos sc (Some (as_x, returns_ty, eq)) branches
 
   | Tm_match {scrutinee=sc; ret_opt=Some (as_x, (Inr c, None, eq)); brs; rc_opt} ->
     (* [returns C] is [returns t], where [t] is [C]'s result type, with an
@@ -3490,85 +3419,128 @@ and let_result_typ (g g':env) (e:term) (eff_def:eff) (x:binder) (u:universe)
           return (U.refine r (mk_exists_unrefined u x.binder_bv (U.mk_conj_l (phi_t @ eq))))
     )
 
-(* A [match] without a return annotation, whose branches are checked against
-   [expected] if given, or else against the type of the first one (or the
-   residual type recorded by the elaborator, if any). *)
-//NS REVIEW: check_match is a mess. It relies on many implicit relation between the elaborator
-//and this core checker, notably in its treatment of the residual_comp that the elaborator
-//may fill in on the match. There is also a ton of duplication between this and the
-//case of check_match with returns annotations. It would be much cleaner to force the 
-//elaborator to always elaborate a source match to a match with a returns clause (and not necessarily an `as` binder in case there is no dependence),
-//and to consolidate the core checker around that. The elaborator should also take care to
-//augment that return clause with whatever information the continuation may need, so that the
-//core checker can really just be a checker, rather than all this complex logic around
-//sub-facts & scoping of those facts mingled in with the core typechecking logic 
-and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option residual_comp) (expected:option typ)
+(* The rule for [match]. Every [match] the elaborator produces carries a
+   [returns t] annotation (see [TcTerm.tc_match]), and is checked by this rule
+   alone, with [ret = Some (as_x, t, eq)]:
+
+     G |- sc : t_sc        G, as_x:t_sc |- t : Type
+     for each branch [p_i -> b_i], under the path condition (no earlier
+     pattern matched, and [p_i] does), with the variables of [p_i] in scope
+     and [sc == p_i] assumed:
+       G, bs_i, sc == p_i |- b_i : t[p_i/as_x]     (or [=] when [eq])
+     the patterns are exhaustive
+     -----------------------------------------------------------------------
+     G |- match sc as as_x returns t with ... : t[sc/as_x]
+
+   The branch is checked against the annotation at the pattern, rather than at
+   the scrutinee, as in [TcTerm.tc_eqn]: e.g., a recursive function in it,
+   applied to the pattern, reduces.
+
+   Whatever the continuation of the match needs to know about it is in [t]: for
+   an effectful match, the elaborator refines its result type with what each
+   branch's type says about it (see [TcTerm.elaborated_match_returns]).
+
+   Matches built by tactics and by Pulse may lack an annotation. They are
+   checked by the same rule, with [t] the expected type, if any (see
+   [check_against_typ_synth]), else the residual type recorded on the match, if
+   any (see [do_check]), else (when [ret = None]) the type of the first
+   branch, which must not mention the pattern's variables. *)
+and check_match (g:env) (r:R.t) (sc:term) (ret:option (binder & typ & bool)) (branches:list branch)
   : ML (result (eff & typ & sub_facts))
   = let! eff_sc, t_sc = check "scrutinee" g sc in
-    let branches0 = branches in
     let! u_sc = universe_of_well_typed_term g t_sc in
-    (* With no expected type, the match's type is the residual type the
-       elaborator recorded, which is typically unrefined. 
-       NS REVIEW: I don't understand the rest of this comment. 
-       As in [TcUtil.bind_cases], it is
-       refined with what each branch's own type says under the condition that
-       the branch is taken (otherwise, e.g., [if b then fail "" else (); e]
-       forgets [not b] when checking [e]). [res_x] names the match's result. *)
-    let res_x : option bv =
-      match expected, rc_opt with
-      | None, Some ({ residual_typ = Some t }) when is_tot_or_ghost_eff eff_sc ->
-      //NS REVIEW: This trusts the well-formedness of `t` from the elaborator. We should check it.
-        Some (S.new_bv None t)
-      | _ -> None
+    (* The annotation, opened, and its universe. *)
+    let! ret =
+      match ret with
+      | None -> return None
+      | Some (as_x, returns_ty, eq) ->
+        let as_x = { as_x with binder_bv = { as_x.binder_bv with sort = t_sc } } in
+        let g_as_x, as_x, returns_ty = open_term g as_x returns_ty in
+        let dependent = mem as_x.binder_bv (FStarC.Syntax.Free.names returns_ty) in
+        if dependent && not (is_tot_or_ghost_eff eff_sc)
+        then fail [
+               text "The return annotation of this match depends on its scrutinee"
+               ^/^ fquotes (pp sc) ^/^ text "which has effect" ^/^ pp (eff_to_lid eff_sc)
+             ]
+        else
+          let! _ =
+            if dependent
+            then with_binders g [as_x] [u_sc] (
+                   let! _, k = check "return type" g_as_x returns_ty in
+                   is_type g_as_x k)
+            else (let! _, k = check "return type" g returns_ty in
+                  is_type g k)
+          in
+          return (Some (as_x, returns_ty, eq))
     in
-    let! u_res : universe =
-      match res_x with
-      | None -> return U_zero //NS REVIEW: But it defaults to u#0??
-      | Some x -> universe_of g x.sort //NS REVIEW: Ok, it is checked here
-    in
-    (* [w] is the branch itself, when it is pure: the match's result is then
-       equal to it. Facts that mention the pattern variables [bs] are
-       quantified existentially, together with the equation relating the
-       scrutinee to the pattern, e.g., [PH? h ==> exists p. h == PH p /\ x == p]. *)
-    let branch_fact (bs:binders) (us:list universe) (pat_sc_eq:term)
-                    (cond:term) (tbr:typ) (w:option term) : ML (list term) =
-      match res_x with
-      | None -> []
-      | Some x ->
-        let rec conjuncts (t:term) : ML (list term) =
-          let hd, args = U.head_and_args_full t in
-          match (U.un_uinst hd).n, args with
-          | Tm_fvar fv, [(a, _); (b, _)] when S.fv_eq_lid fv PC.and_lid ->
-            conjuncts a @ conjuncts b
-          | _ -> [t] in
-        let mentions_bs (f:term) : ML bool =
-          let fvs = FStarC.Syntax.Free.names f in
-          BU.for_some (fun (b:binder) -> mem b.binder_bv fvs) bs
-        in
-        let phi =
-          U.refinement_hypothesis (N.normalize_refinement N.whnf_steps g.tcenv tbr) (S.bv_to_name x)
-          |> conjuncts
-          |> List.filter (fun (f:term) -> not (U.is_t_true f))
-        in
-        let phi =
-          match w with
-          | None -> phi
-          | Some b -> phi @ [U.mk_eq2 u_res x.sort (S.bv_to_name x) b]
-        in
-        let phi_free, phi_bound = List.partition (fun f -> not (mentions_bs f)) phi in
-        let phi_bound =
-          match phi_bound with
-          | [] -> []
+    (* The type the branch with pattern [p] (and expression [pat_exp]) is
+       checked against, where [prev] are the patterns of the branches before
+       it: [returns_ty], at [pat_exp].
+
+       The annotation TcTerm elaborates for an effectful match (see
+       [TcTerm.elaborated_match_returns]) is [x:t{match sc with | p_1 ->
+       phi_1 ... | _ -> True}], with the patterns of the match itself. The
+       branch is checked knowing that [p] is the first pattern to match [sc],
+       so the formula is then that of its branch, [phi_i] (at the variables
+       of [p]); and the branch is checked against [x:t{phi_i}]. That is not
+       only simpler: for a pure branch [b_i], [phi_i] includes [x == b_i],
+       which is then proved syntactically, whereas the SMT solver may not
+       see two occurrences of [b_i] to be equal (e.g., when they contain
+       lambdas), and no longer has to reduce the match. *)
+    let at_pattern (g:env) (as_x:binder) (returns_ty:typ) (prev:list pat) (p:pat) (pat_exp:term) : ML typ =
+      let t = Subst.subst [NT(as_x.binder_bv, pat_exp)] returns_ty in
+      (* A renaming of the variables of [pf] to those of [p], if they are the
+         same pattern. *)
+      let rec pat_rename (pf p:pat) : ML (option (list subst_elt)) =
+        match pf.v, p.v with
+        | Pat_constant c1, Pat_constant c2 ->
+          if FStarC.Const.eq_const c1 c2 then Some [] else None
+        | Pat_var y, Pat_var z -> Some [NT(y, S.bv_to_name z)]
+        | Pat_dot_term _, Pat_dot_term _ -> Some []
+        | Pat_cons (f1, _, args1), Pat_cons (f2, _, args2) ->
+          if S.fv_eq f1 f2 && List.length args1 = List.length args2
+          then
+            List.fold_left2
+              (fun (acc:option (list subst_elt)) ((pf, b1):(pat & bool)) ((p, b2):(pat & bool)) ->
+                match acc with
+                | None -> None
+                | Some s ->
+                  if b1 <> b2 then None
+                  else (match pat_rename pf p with
+                        | None -> None
+                        | Some s' -> Some (s @ s')))
+              (Some []) args1 args2
+          else None
+        | _ -> None
+      in
+      let rec branch_formula (prev:list pat) (fbrs:list branch) : ML (option term) =
+        match fbrs with
+        | [] -> None
+        | fbr :: fbrs ->
+          let pf, wf, phif = Subst.open_branch fbr in
+          if Some? wf then None
+          else match pf.v with
+          | Pat_var y -> Some (Subst.subst [NT(y, sc)] phif)
           | _ ->
-            if List.length bs <> List.length us then [] else
-            [List.fold_right2
-              (fun (b:binder) (u:universe) (body:term) -> U.mk_exists u b.binder_bv body)
-              bs us
-              (U.mk_conj_l (pat_sc_eq :: phi_bound))]
-        in
-        match phi_free @ phi_bound with
-        | [] -> []
-        | phi -> [U.mk_imp cond (U.mk_conj_l phi)]
+            match prev with
+            | q :: prev ->
+              if Some? (pat_rename pf q) then branch_formula prev fbrs else None
+            | [] ->
+              (match pat_rename pf p with
+               | Some s -> Some (Subst.subst s phif)
+               | None -> None)
+      in
+      match (Subst.compress t).n with
+      | Tm_refine {b=x; phi} ->
+        let x, phi = Subst.open_term_bv x phi in
+        (match (Subst.compress (U.unmeta phi)).n with
+         | Tm_match {scrutinee=sf; brs=fbrs}
+             when TEQ.eq_tm g.tcenv sf sc = TEQ.Equal ->
+           (match branch_formula prev fbrs with
+            | Some phi -> U.refine x phi
+            | None -> t)
+         | _ -> t)
+      | _ -> t
     in
     (* The facts [fb] about the branch [b] taken under [cond], or else
        [this], the equation [pat_sc_eq] relating the scrutinee to the
@@ -3592,100 +3564,79 @@ and check_match (g:env) (r:R.t) (sc:term) (branches:list branch) (rc_opt:option 
          | [] -> []
          | _ -> [mk_forall_l us bs (U.mk_imp this (U.mk_conj_l fb_bound))]))
     in
-    (* Returns the effect and type of the match, the facts for its type (see
-       [branch_fact]), and the facts about its branches. *)
-    let rec check_branches path_condition
-                           branch_typ_opt
-                           branches
-      : ML (result (eff & typ & list term & list (Thunk.t (list term))))
+    let branches0 = branches in
+    (* Returns the effect of the branches, the annotation (which the first
+       branch provides when there is none), and the facts about the branches. *)
+    let rec check_branches (prev:list pat) (path_condition:typ) (ret:option (binder & typ & bool))
+                           (acc_eff:eff) (branches:list branch)
+      : ML (result (eff & option (binder & typ & bool) & list (Thunk.t (list term))))
       = match branches with
         | [] ->
-          (match branch_typ_opt with
-           | None ->
-             fail_str "could not compute a type for the match"
-
-           | Some (eff, t) ->
-             if match_covers_bool g t_sc branches0 then return (eff, t, [], []) else
-             match exhaustiveness_obligation r path_condition with
-             | None -> return (eff, t, [], [])
-             | Some phi -> guard g phi ;! return (eff, t, [], []))
+          if match_is_syntactically_exhaustive g t_sc branches0 then return (acc_eff, ret, []) else
+          (match exhaustiveness_obligation r path_condition with
+           | None -> return (acc_eff, ret, [])
+           | Some phi -> guard g phi ;! return (acc_eff, ret, []))
 
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
           let! (bs, us) = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
           let! branch_condition = pattern_branch_condition g sc p in
-          let pat_sc_eq =
-            U.mk_eq2 u_sc t_sc sc
-            (PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst) in
+          let pat_exp = PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst in
+          let pat_sc_eq = U.mk_eq2 u_sc t_sc sc pat_exp in
           let hyp, this, next_path_condition =
               branch_conditions path_condition branch_condition pat_sc_eq
           in
           let g_h = push_branch_hypothesis g hyp in
           let g'0 = push_binders g_h bs in
           let g' = push_hypothesis g'0 pat_sc_eq in
-          let! eff_br, tbr, facts, fb =
+          let! eff_br, tbr, fb =
             weaken_branch g hyp
             (with_binders g_h bs us
               (weaken_branch g'0 pat_sc_eq
-                 (match branch_typ_opt with
+                 (with_context "branch" (Some (CtxTerm b)) (fun _ ->
+                  match ret with
                   | None ->
-                    let! eff_br, tbr, fb = with_context "branch" (Some (CtxTerm b)) (fun _ -> check_f "branch" g' b) in
+                    let! eff_br, tbr, fb = check_f "branch" g' b in
                     check_no_escape bs tbr;!
-                    return (eff_br, tbr, [], fb)
-
-                  | Some (acc_eff, expect_tbr) ->
-                    let against () : ML (result (eff & typ & list term & facts)) =
-                      let! eff_br, fb =
-                        with_context "branch" (Some (CtxTerm b)) (fun _ ->
-                          check_against_typ g' b expect_tbr) in
-                      let! eff = join_eff g eff_br acc_eff in
-                      return (eff, expect_tbr, [], fb)
-                    in
-                    if None? res_x then against () else
-                    handle_with
-                      (let! eff_br, tbr, fb = check_f "branch" g' b in
-                       check_no_escape bs tbr;!
-                       let w = if is_tot_or_ghost_eff eff_br then Some b else None in
-                       check_subtype g' (Option.map (fun b -> (b, fb.f_sub)) w) tbr expect_tbr;!
-                       let! eff = join_eff g eff_br acc_eff in
-                       (* The branch is taken under [hyp], which does not
-                          mention the pattern variables. *)
-                       return (eff, expect_tbr, branch_fact bs us pat_sc_eq hyp tbr w, fb))
-                      against))) in
+                    return (eff_br, tbr, fb)
+                  | Some (as_x, returns_ty, eq) ->
+                    let expected = at_pattern g' as_x returns_ty prev p pat_exp in
+                    if eq
+                    then (
+                      let! eff_br, tbr, fb = check_f "branch" g' b in
+                      with_context "branch type equality" None (fun _ ->
+                        check_relation g' EQUALITY tbr expected) ;!
+                      return (eff_br, expected, fb)
+                    )
+                    else (
+                      let! eff_br, fb = check_against_typ g' b expected in
+                      return (eff_br, expected, fb)
+                    ))))) in
+          let ret =
+            match ret with
+            | None -> Some (S.mk_binder (S.new_bv None t_sc), tbr, false)
+            | Some _ -> ret
+          in
+          let! acc_eff = join_eff g eff_br acc_eff in
           let fb = branch_facts bs us hyp this fb in
           (* Branches after a wildcard are dead code, checked, as by TcTerm,
              under the (false) path condition: their facts are not needed. *)
-          let! eff, t, more, more_fb = check_branches next_path_condition (Some (eff_br, tbr)) rest in
+          let! eff, ret, more_fb = check_branches (prev @ [p]) next_path_condition ret acc_eff rest in
           let more_fb = match p.v with | Pat_var _ -> [] | _ -> more_fb in
-          return (eff, t, facts @ more, fb :: more_fb)
-    in
+          return (eff, ret, fb :: more_fb)
 
-    let! branch_typ_opt =
-        match expected, rc_opt with
-        | Some t, _ -> return (Some (ETot, t))
-        | None, Some ({ residual_typ = Some t }) ->
-          universe_of g t ;!
-          return (Some (ETot, t))
-
-        | _, _ ->
-          return None
+        | (_, Some w, _) :: _ ->
+          with_context "when clause" (Some (CtxTerm w)) (fun _ ->
+            fail_code Errors.Fatal_WhenClauseNotSupported
+              (Errors.mkmsg "When clauses are not yet supported in --verify mode; they will be some day"))
     in
-    let! eff_br, t_br, facts, fbs =
-      let ctx =
-        match branch_typ_opt with
-        | None -> None
-        | Some (_, t) -> Some (CtxTerm t)
-      in
-      with_context "check_branches" ctx
-        (fun _ -> check_branches U.t_true branch_typ_opt branches)
-    in
+    let! eff_br, ret, fbs = check_branches [] U.t_true ret ETot branches in
     let! eff = join_eff g eff_sc eff_br in
-    let t_br =
-      match res_x, facts with
-      | Some x, _::_ when not (is_tot_or_ghost_eff eff) -> U.refine x (U.mk_conj_l facts)
-      | _ -> t_br
-    in
-    return (eff, t_br, { s_sub = facts_concat fbs; s_tail = Some (no_facts_l ()) })
+    match ret with
+    | None -> fail_str "could not compute a type for the match"
+    | Some (as_x, returns_ty, _) ->
+      return (eff, Subst.subst [NT(as_x.binder_bv, sc)] returns_ty,
+              { s_sub = facts_concat fbs; s_tail = Some (no_facts_l ()) })
 
 (* Check [e] against the type [t], returning the effect of [e]. The expected
    type is pushed into [let]s and [match]es, as [TcTerm] does: a guard is then
@@ -3700,6 +3651,58 @@ and check_against_typ (g:env) (e:term) (t:typ)
    [e] is not one that the expected type is pushed into: that type is then
    related to [t] by subtyping, and may say more about [e] than [t] does. *)
 and check_against_typ_synth (g:env) (e:term) (t:typ)
+  : ML (result (eff & option typ & facts))
+  = (* [e] checked against [x:t0{... /\ x == e /\ ...}] (e.g., a pure branch
+       of a match against what [at_pattern] specializes its annotation to),
+       with [e] total or ghost: the equation holds by reflexivity, so it is
+       dropped and [e] is checked against the rest. The SMT solver may not
+       prove it otherwise, e.g., when [e] contains a lambda, or a [let] that
+       Core checks [e] by and the SMT encoding inlines. *)
+    let drop_self_eq (t:typ) : ML (option typ) =
+      match (Subst.compress t).n with
+      | Tm_refine {b=x; phi} ->
+        let x, phi = Subst.open_term_bv x phi in
+        let rec conjuncts (phi:term) : ML (list term) =
+          let hd, args = U.head_and_args_full (U.unmeta phi) in
+          match (U.un_uinst hd).n, args with
+          | Tm_fvar fv, [(p, None); (q, None)] when S.fv_eq_lid fv PC.and_lid ->
+            conjuncts p @ conjuncts q
+          | _ -> [phi]
+        in
+        let is_self_eq (phi:term) : ML bool =
+          let hd, args = U.head_and_args_full (U.unmeta phi) in
+          match (U.un_uinst hd).n, args with
+          | Tm_fvar fv, [_; (l, None); (r, None)] when S.fv_eq_lid fv PC.eq2_lid ->
+            (match (Subst.compress l).n with
+             | Tm_name y ->
+               S.bv_eq x y &&
+               (TEQ.eq_tm g.tcenv r e = TEQ.Equal ||
+                (* Syntactically, but for the effect annotations TcTerm
+                   adds to some (but not all) copies of [e]. *)
+                (let strip = Visit.visit_term false (fun t ->
+                   match t.n with
+                   | Tm_meta {tm; meta=Meta_monadic _}
+                   | Tm_meta {tm; meta=Meta_monadic_lift _} -> tm
+                   | _ -> t) in
+                 U.term_eq (strip r) (strip e)))
+             | _ -> false)
+          | _ -> false
+        in
+        let cs = conjuncts phi in
+        let rest = List.filter (fun c -> not (is_self_eq c)) cs in
+        if List.length rest = List.length cs then None
+        else if Nil? rest then Some x.sort
+        else Some (U.refine x (U.mk_conj_l rest))
+      | _ -> None
+    in
+    match drop_self_eq t with
+    | Some t' ->
+      let! eff, topt, f = check_against_typ_synth g e t' in
+      if is_tot_or_ghost_eff eff then return (eff, topt, f)
+      else check_against_typ_synth_aux g e t
+    | None -> check_against_typ_synth_aux g e t
+
+and check_against_typ_synth_aux (g:env) (e:term) (t:typ)
   : ML (result (eff & option typ & facts))
   = (* As in [do_check_and_promote]: e.g. [let z = ghost_f y in ()] is
        total, and may be composed with [Div]. *)
@@ -3729,9 +3732,9 @@ and check_against_typ_synth (g:env) (e:term) (t:typ)
     | Tm_let {lbs=(false, [lb]); body} ->
       let! eff, _, sf = check_let g lb body (Some t) in
       checked eff sf
-    | Tm_match {scrutinee=sc; ret_opt=None; brs; rc_opt}
-        when List.for_all (fun (_, w, _) -> None? w) brs ->
-      let! eff, _, sf = check_match g e.pos sc brs rc_opt (Some t) in
+    | Tm_match {scrutinee=sc; ret_opt=None; brs} ->
+      (* An unannotated match (see [check_match]) is checked against [t]. *)
+      let! eff, _, sf = check_match g e.pos sc (Some (S.mk_binder (S.new_bv None S.tun), t, false)) brs in
       checked eff sf
     | Tm_let {lbs=(true, lbs); body} ->
       (* The SMT encoding knows nothing of a local recursive function, so the
@@ -3801,6 +3804,18 @@ and check_against_typ_synth (g:env) (e:term) (t:typ)
       return (ETot, None, no_facts ())
       end
     | _ -> check_against_typ_by_subtyping g e t
+
+(* The tactic of an ascription [e <: t by tac] is a total [unit -> Tac unit]
+   (see [TcTerm.tc_tactic]). *)
+and check_ascription_tactic (g:env) (tac:option term) : ML (result unit) =
+  match tac with
+  | None -> return ()
+  | Some tac ->
+    let! eff_tac, _ =
+      with_context "ascription tactic" (Some (CtxTerm tac)) (fun _ ->
+        check_against_typ g tac (S.t_tac_of S.t_unit S.t_unit)) in
+    if is_tot_or_ghost_eff eff_tac then return ()
+    else fail_str "Expected the tactic of an ascription to be a total term"
 
 (* [e <: t by tac]: as in [TcTerm], the guard of checking [e] against [t] is
    left to [tac], even when trivial (so that [e <: t by fail ""] fails). *)

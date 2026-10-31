@@ -662,6 +662,15 @@ val ctx_uvar_typedness_deps (u:ctx_uvar) : ML (list ctx_uvar)
 
 val flatten_refinement : term -> ML term
 
+(* [exists (x:t). body], with the refinement of [t], if any, stated as a
+   conjunct of the body instead of in the sort of the binder: the SMT solver
+   finds a witness for the former more easily, e.g. from a hypothesis of the
+   same shape; and the type of an effectful [let], closed existentially over
+   its definition's own type, which is itself such an existential for a chain
+   of [let]s (e.g., [hide b && c1 && ... && cn]), would otherwise double at
+   every [let] ([l_Exists] repeats the sort). *)
+val mk_exists_unrefined (u:universe) (x:bv) (body:term) : ML term
+
 val contains_strictly_positive_attribute (attrs:list attribute) : ML bool
 
 val contains_unused_attribute (attrs:list attribute) : ML bool

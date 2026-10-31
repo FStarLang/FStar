@@ -1319,6 +1319,8 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
     //the logical variable for the scrutinee
     let guard_x = S.new_bv (Some e1.pos) (U.comp_result c1) in
     let t_eqns = eqns |> List.map (tc_eqn guard_x env_branches ret_opt) in
+    let branch_pats = t_eqns |> List.map (fun (_, _, _, _, _, _, _, p) -> p) in
+    let t_eqns = t_eqns |> List.map (fun (b, f, l, fl, c, g, e, _) -> (b, f, l, fl, c, g, e)) in
 
     (* Discharge the branches' obligations under [guard_x == e1] and eliminate
        [guard_x].  A computation type has no precondition to carry the branch
@@ -1471,6 +1473,19 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
           c, g_c, g, erasable
     in
 
+    (* The [returns] annotation of a match without one (see
+       [elaborated_match_returns]). *)
+    let elab_ret =
+      match ret_opt with
+      | None when Cons? t_eqns ->
+        (* The branches' expected type, rather than [c_branches]'s result type,
+           which may be one the branches share, mentioning [guard_x]. *)
+        let res_t = Env.expected_typ env_branches |> Option.must |> fst in
+        (* The scrutinee, as the match will have it (see [mk_match] below). *)
+        let sc = if U.is_pure_or_ghost_effect (U.comp_effect_name c1) then e1 else S.bv_to_name guard_x in
+        Some (elaborated_match_returns env c1 c_branches res_t guard_x sc t_eqns branch_pats)
+      | _ -> None in
+
     //bind with e1's computation type
     let cres, g_cres = TcUtil.bind e1.pos false env (Some e1) (c1, mzero) (Some guard_x, c_branches, g_c_branches) in
 
@@ -1487,7 +1502,8 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
       //repack the returns ascription
       let ret_opt =
         match ret_opt with
-        | None -> None
+        | None when Nil? t_eqns -> None
+        | None -> elab_ret
         | Some (b, asc) ->
           let asc = SS.close_ascription [b] asc in
           let b = List.hd (SS.close_binders [b]) in
@@ -1505,14 +1521,8 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
                      residual_flags = (U.comp_flags cres) } in
           mk (Tm_match {scrutinee; ret_opt; brs=branches; rc_opt=Some rc}) top.pos in
         let e = TcUtil.maybe_monadic env e (U.comp_effect_name cres) (U.comp_result cres) in
-        //The ascription with the result type is useful for re-checking a term, translating it to Lean etc.
-        //AR: revisit, for now doing only if return annotation is not provided
-        (* Not in general: elaboration runs with [admit] set, so the result type
-           computed here lacks the per-branch refinements (see
-           [TcUtil.combine_branch_res_typs]) and may be coarser than the match's
-           actual type.  An ascription is *explicit* and therefore authoritative:
-           Core, which checks this very term, would coarsen the match's type down
-           to it.  Without one, Core computes the match's type itself. *)
+        (* A non-empty match is annotated with its type (see
+           [elaborated_match_returns]), which is what Core checks it against. *)
         match ret_opt with
         (* An empty match constrains nothing, so [(U.comp_result cres)] is an unsolved
            metavariable.  Ascribe it: generalization turns it into a
@@ -1560,6 +1570,113 @@ and tc_match (env : Env.env) (top : term) : ML (term & comp & guard_t) =
 
   | _ ->
     failwith (Format.fmt1 "tc_match called on %s\n" (tag_of top))
+
+(* The [returns] annotation the elaborator puts on a non-empty match without
+   one, so that Core checks it against its type, as it does any other
+   annotated match, rather than computing a type for it:
+   [match e as y returns t with ...].
+
+   For a pure (or ghost) match, [t] is [res_t], the type its branches were
+   checked against: the facts about the
+   branch taken are those about the match itself, since the match reduces to it.
+
+   An effectful match does not: whatever its continuation is to know of the
+   branch taken is in [t]. E.g., in [if n < 0 then fail ""; e], [e] needs to
+   know that [n >= 0], which [fail]'s type, [_:unit{False}], says of the first
+   branch. So, for branches [p_i -> b_i] whose types are [x:t_i{phi_i}] (with
+   [phi_i] mentioning the variables of [p_i], and, for a pure branch,
+   including [x == b_i]), [t] is
+
+     x:res_t{match e returns prop with | p_1 -> phi_1 | ... | p_n -> phi_n | _ -> True}
+
+   where each branch [b_i] is checked against [t] at [p_i] (see
+   [Core.check_match]). Trailing branches whose formula is [True] are
+   omitted, and so is the final wildcard when some pattern left is a
+   variable.
+
+   The formula matches on the scrutinee [e] itself ([sc]: the name it is
+   let-bound to when it is effectful), not on [y]: [phi_i] is only
+   well-typed under the conditions of its branch, e.g. [x == b_i], for a
+   [b_i] that relies on the patterns before [p_i] having failed to match
+   [e], and those conditions are on [e]. So [t] does not depend on [y]. *)
+and elaborated_match_returns (env:env) (c1:comp) (cres:comp) (res_t:typ) (guard_x:bv) (sc:term)
+                             (t_eqns:list (S.branch & formula & lident & option (list cflag)
+                                           & option (bool -> ML (comp & guard_t)) & guard_t & bool))
+                             (pats:list (pat & term))
+  : ML match_returns_ascription =
+  let y = S.new_bv None (U.comp_result c1) in
+  (* What the [returns] annotation of a match that [e] ends with, elaborated
+     (by this function) before [e] is, says of [v]. The type of an effectful
+     match is not refined by it (in particular, nor is the type of a branch
+     ending with one): a refinement of an elaborated type does not stay
+     local, e.g. it flows into the implicit arguments of an application of
+     the name the match is let-bound to, which may be out of its scope. *)
+  let rec annotation_hypothesis (e:term) (v:term) : ML term =
+    match (SS.compress e).n with
+    | Tm_meta {tm} -> annotation_hypothesis tm v
+    | Tm_match {ret_opt=Some (b, (Inl t, None, _))} ->
+      let bs, asc = SS.open_ascription [b] (Inl t, None, false) in
+      (match asc with
+       | Inl t, _, _ when not (mem (List.hd bs).binder_bv (Free.names t)) ->
+         U.refinement_hypothesis t v
+       | _ -> U.t_true)
+    | Tm_let {lbs=(false, [lb]); body} ->
+      (match lb.lbname with
+       | Inl xl ->
+         let xb, body = SS.open_term [S.mk_binder xl] body in
+         let phi = annotation_hypothesis body v in
+         if mem (List.hd xb).binder_bv (Free.names phi) then U.t_true else phi
+       | _ -> U.t_true)
+    | _ -> U.t_true
+  in
+  let t =
+    if U.is_pure_or_ghost_comp cres
+       || BU.for_some (fun ((_, w, _), _, _, _, _, _, _) -> Some? w) t_eqns
+    then res_t
+    else (
+      let x = S.new_bv None res_t in
+      let u_res = Thunk.mk (fun () -> env.universe_of env res_t) in
+      let phis =
+        List.map2 (fun (eqn : (S.branch & formula & lident & option (list cflag)
+                                & option (bool -> ML (comp & guard_t)) & guard_t & bool))
+                       ((_, br) : (pat & term)) ->
+          let (_, _, _, _, c, _, _) = eqn in
+          match c with
+          | None -> U.t_true
+          | Some c ->
+            let c, _ = c true in
+            let t = N.normalize_refinement N.whnf_steps env (U.comp_result c) in
+            let phi = U.refinement_hypothesis t (S.bv_to_name x) in
+            let phi = if U.is_t_true phi then annotation_hypothesis br (S.bv_to_name x) else phi in
+            (* The result of a pure branch is the branch itself. *)
+            let phi =
+              if VCUtil.should_return env (Some br) c
+              then U.mk_conj_simp phi (U.mk_eq2 (Thunk.force u_res) res_t (S.bv_to_name x) br)
+              else phi in
+            SS.subst [NT (guard_x, sc)] phi) t_eqns pats in
+      if BU.for_all U.is_t_true phis then res_t
+      else
+        (* The branches up to the last with a non-trivial formula. *)
+        let pat_phis =
+          let rec drop_trivial (l:list (pat & term)) : ML (list (pat & term)) =
+            match l with
+            | (_, phi) :: rest when U.is_t_true phi -> drop_trivial rest
+            | _ -> l in
+          List.zip (List.map fst pats) phis |> List.rev |> drop_trivial |> List.rev in
+        let brs = List.map (fun (p, phi) -> SS.close_branch (p, None, phi)) pat_phis in
+        let brs =
+          if BU.for_some (fun ((p:pat), _) -> Pat_var? p.v) pat_phis then brs
+          else
+            let w = S.withinfo (Pat_var (S.new_bv None S.tun)) res_t.pos in
+            brs @ [SS.close_branch (w, None, U.t_true)] in
+        let fml =
+          let ret = Some (S.mk_binder (S.new_bv None S.tun), (Inl S.t_prop, None, false)) in
+          mk (Tm_match {scrutinee=sc; ret_opt=ret; brs; rc_opt=None}) res_t.pos in
+        U.refine x fml
+    ) in
+  let b = List.hd (SS.close_binders [S.mk_binder y]) in
+  let asc = SS.close_ascription [S.mk_binder y] (Inl t, None, false) in
+  ({b with binder_bv={b.binder_bv with sort=S.tun}}, asc)
 
 and tc_synth head env args rng : ML _ =
     let tau, atyp =
@@ -3595,7 +3712,10 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
         & option (bool -> ML (comp & guard_t))       (* computation type of the branch, with or without a "return" equation,
                                          None if typechecked with a returns comp annotation *)
         & guard_t                    (* guard for well-typedness of the branch *)
-        & bool)                      (* true if the pattern matches an erasable type *)
+        & bool                       (* true if the pattern matches an erasable type *)
+        & (pat & term))              (* the checked pattern and branch, open: the variables
+                                        the pattern binds are those free in the computation
+                                        type above *)
         =
   let pattern, when_clause, branch_exp = SS.open_branch branch in
   let cpat, _, cbr = branch in
@@ -4002,9 +4122,10 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
   branch_guard,   //expressed in terms of discriminators and projectors on scrutinee---does not contain the pattern-bound variables
   effect_label,
   cflags,
-  maybe_return_c, //closed already---does not contain free pattern-bound variables
+  maybe_return_c, //may mention the pattern-bound variables, bound by the last component
   TcUtil.close_guard_implicits env false (List.map S.mk_binder pat_bvs) guard,
-  erasable
+  erasable,
+  (pattern, branch_exp)
 
 (******************************************************************************)
 (* Check that a type is provably inhabited.                                   *)
@@ -4279,10 +4400,10 @@ and check_inner_let env e : ML _ =
              then Format.print2 "Got expected type from env %s\(U.comp_result ncres)=%s\n"
                         (show tt)
                         (show (U.comp_result cres));
-             (* [e2] was checked against [tt], so [tt] is the type of this let:
-                the more precise type [e2] happened to have may mention [x],
-                which is out of scope outside the let. *)
-             let cres = U.set_result_typ cres tt in
+             (* [e2] was checked against [tt], so [tt] is the type of this let,
+                refined, for an effectful let, with what its more precise type
+                (from which [bind] eliminated [x]) says about its result. *)
+             let cres = U.set_result_typ cres (TcUtil.effectful_res_typ_at env cres tt) in
              e, cres, guard)
        else (* no expected type; check that x doesn't escape it's scope *)
             (let t, g_ex = TcUtil.check_no_escape TcUtil.Escapes_let env [x] (U.comp_result cres) in

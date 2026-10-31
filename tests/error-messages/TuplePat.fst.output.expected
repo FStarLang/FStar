@@ -32,11 +32,11 @@ Module after type checking:
 module TuplePat
 Declarations: [
 let mult x y =
-  match x, y with
+  match x, y as _ returns Prims.int with
   | 0, 0 -> 0
   | x, y -> x * y
 let mult2 x y =
-  match x, y with
+  match x, y as _ returns Prims.int with
   | FStar.Pervasives.Native.Some x, FStar.Pervasives.Native.Some y -> x * y
   | FStar.Pervasives.Native.None , _ -> 0
   | _, FStar.Pervasives.Native.None  -> 0

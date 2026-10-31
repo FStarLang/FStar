@@ -976,7 +976,7 @@ let eliminate_binder_from_typ (env:Env.env) (x:bv) (e1opt:option term) (lc1:comp
   | Tm_refine {b=z; phi} when not (mem x (Free.names z.sort)) ->
     let z, phi = SS.open_term_bv z phi in
     let u_x = env.universe_of env x.sort in
-    U.refine z (U.mk_exists u_x x phi), mzero
+    U.refine z (U.mk_exists_unrefined u_x x phi), mzero
   | _ ->
     (* [x] occurs in the type itself, not only in a refinement of it, so
        there is nothing to existentially close. *)
@@ -2000,16 +2000,27 @@ let maybe_coerce_lc env (e:term) (lc:comp) (exp_t:term) : ML (term & comp & guar
    [let x = ppname_default, fresh g in ...] gets its freshness from.
    Elaboration records this type on the let-binding it elaborates, and Core
    reads it back as an authoritative annotation. *)
-let keep_effectful_res_typ env (lc:comp) (t:typ) : ML bool =
+let keep_effectful_res_typ_refinement env (lc:comp) (t:typ) : ML bool =
   let is_refinement (t:typ) : ML bool =
     match (N.normalize_refinement N.whnf_steps env t).n with
     | Tm_refine _ -> true
     | _ -> false in
   not (U.is_pure_or_ghost_comp lc) &&
   TEQ.eq_tm env t (U.comp_result lc) <> TEQ.Equal &&
-  is_empty (Free.uvars (U.comp_result lc)) &&
   is_refinement (U.comp_result lc) &&
   not (is_refinement t)
+
+let keep_effectful_res_typ env (lc:comp) (t:typ) : ML bool =
+  keep_effectful_res_typ_refinement env lc t &&
+  is_empty (Free.uvars (U.comp_result lc))
+
+let effectful_res_typ_at env (lc:comp) (t:typ) : ML typ =
+  if keep_effectful_res_typ_refinement env lc t
+  then
+    let x = S.new_bv None t in
+    let phi = U.refinement_hypothesis (N.normalize_refinement N.whnf_steps env (U.comp_result lc)) (S.bv_to_name x) in
+    U.refine x phi
+  else t
 
 (* A precondition is a *trailing implicit* binder of squash type, so an arrow
    that has one has exactly one binder more than an otherwise identical arrow
@@ -2173,7 +2184,10 @@ let weaken_result_typ env (e:term) (lc_g : comp & guard_t) (t:typ) (use_eq:bool)
       e, lc, Env.conj_guard g_lc g
     end
     else
-      e, U.set_result_typ lc t, Env.conj_guard g_lc g
+      (* E.g., the precise result type mentions a unification variable, that
+         of the implicit [a] of [fail #a "" : x:a{False}], solved later by a
+         deferred constraint relating it to [t]. *)
+      e, U.set_result_typ lc (effectful_res_typ_at env lc t), Env.conj_guard g_lc g
 
 (* A computation carries no specification any more: its precondition is an
    implicit binder on the arrow it came from, and its postcondition is part of

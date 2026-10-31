@@ -59,7 +59,9 @@
       PostconditionLocalization.p (match b  returns Prims.int with
           | true -> 1
           | false -> 4)
-  - In context: b: Prims.bool
+  - In context:
+      b: Prims.bool
+      b = true ==> PostconditionLocalization.p 1
   - See also PostconditionLocalization.fst(46,78-46,81)
 
 * Warning 240 at PostconditionLocalization.fst(46,4-46,22):

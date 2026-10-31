@@ -117,10 +117,41 @@ val lemma_serialize_result_bytes
   : Lemma (requires be_to_n (Seq.slice b 1 5) == x)
           (ensures serialize_response (Result x) `Seq.equal` b)
 
+(* Spelled out, rather than left to nonlinear SMT reasoning, which is
+   unstable here. *)
+let lemma_n_to_be_be_to_n (s:bytes{Seq.length s == 4})
+  : Lemma (n_to_be (be_to_n s) `Seq.equal` s)
+  = let open FStar.Math.Lemmas in
+    let b0 = U8.v (Seq.index s 0) in
+    let b1 = U8.v (Seq.index s 1) in
+    let b2 = U8.v (Seq.index s 2) in
+    let b3 = U8.v (Seq.index s 3) in
+    let x = be_to_n s in
+    let hi = b0 * 65536 + b1 * 256 + b2 in
+    assert (x == b3 + hi * 256);
+    lemma_mod_plus b3 hi 256;
+    lemma_div_plus b3 hi 256;
+    small_mod b3 256;
+    small_div b3 256;
+    assert (x % 256 == b3 /\ x / 256 == hi);
+    let lo2 = b2 * 256 + b3 in
+    let hi2 = b0 * 256 + b1 in
+    assert (x == lo2 + hi2 * 65536);
+    lemma_div_plus lo2 hi2 65536;
+    small_div lo2 65536;
+    lemma_mod_plus b2 (b0 * 256 + b1) 256;
+    small_mod b2 256;
+    lemma_mod_plus b1 b0 256;
+    small_mod b1 256;
+    let lo3 = b1 * 65536 + lo2 in
+    assert (x == lo3 + b0 * 16777216);
+    lemma_div_plus lo3 b0 16777216;
+    small_div lo3 16777216;
+    small_mod b0 256
+
 let lemma_serialize_result_bytes x b =
   let sr = serialize_response (Result x) in
+  lemma_n_to_be_be_to_n (Seq.slice b 1 5);
   assert (Seq.index sr 0 == 1uy);
   assert (Seq.slice sr 1 5 `Seq.equal` n_to_be x);
-  assert (be_to_n (Seq.slice sr 1 5) == x);
-  assert (be_to_n (Seq.slice b 1 5) == x);
   assert (n_to_be x `Seq.equal` Seq.slice b 1 5)

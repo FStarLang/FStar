@@ -220,7 +220,9 @@ produces is trusted. There are two cases, decided by
   with no obligation.
 
 For `e <: t by tac`, Core wraps the guard of the ascription with the tactic
-(`with_ascription_tactic`), even when the guard is trivial.
+(`with_ascription_tactic`), even when the guard is trivial. The tactic is
+checked to be a total `unit -> Tac unit` (`check_ascription_tactic`), as by
+`TcTerm.tc_tactic`.
 
 **Known gap: synthesis outside `let`.** Only the definitions of top-level
 `let`s are elaborated with synthesis (`Tc.tc_sig_let`). A
@@ -422,22 +424,39 @@ Core used to serve tactics only (`core_check`) and only knew `Tot` and
     between the scrutinee and the pattern) are separate implications, in
     that order, as tactics that address hypotheses by position expect.
   * `when` clauses are rejected (Error 236), as TcTerm rejects them.
-  * A `match` with no return annotation and no residual type, passed as an
-    argument (e.g. built by Pulse's join of postconditions), is checked
-    against the type of the formal, like a `fun`.
+  * One rule (`check_match`) checks every `match`, against a `returns t`
+    annotation. The elaborator annotates every non-empty match
+    (`TcTerm.elaborated_match_returns`): with the expected type, or with
+    the result type of the branches; for an effectful match, that type is
+    refined with `match sc with | p_i -> phi_i`, where `phi_i` is what the
+    type of branch `i` says about the result (plus `x == b_i` for a pure
+    `b_i` that may be returned). So whatever the continuation of the match
+    needs to know is in its annotation, and Core no longer computes a type
+    for a match from its branches.
+  * A branch is checked against `t` with the *pattern* substituted for the
+    `as` binder, as in `TcTerm.tc_eqn`
+    (`bug-reports/closed/Phase2CoreReturnsAtPattern`). When `t` is a
+    refinement by a `match` on the scrutinee with the same patterns as the
+    match itself, the branch is checked against the formula of its own
+    branch (`at_pattern`), rather than leaving the SMT solver to reduce the
+    match.
+  * A total or ghost `e` checked against `x:t{... /\ x == e /\ ...}` is
+    checked against the rest of the refinement: the equation holds by
+    reflexivity, which the SMT solver may not see, e.g. when `e` contains a
+    lambda.
+  * A `match` without an annotation (built by tactics, or by Pulse, e.g.
+    its join of postconditions) is checked by the same rule against the
+    expected type (e.g. the type of the formal it is passed to), else its
+    residual type, else the type of its first branch, which must not
+    mention the pattern's variables.
   * `match ... returns C` is checked like `returns t`, where `t` is `C`'s
     result type, plus a check of the effect.
-  * `match ... returns t`: a branch is checked against `t` with the
-    *pattern* substituted for the `as` binder, as in `TcTerm.tc_eqn`
-    (`bug-reports/closed/Phase2CoreReturnsAtPattern`).
-  * The type of an unannotated effectful match is refined with what each
-    branch's type says under that branch's condition, as in
-    `TcUtil.bind_cases`, with facts on pattern variables quantified
-    existentially.
   * The scrutinee's type is unrefined through any number of refinements and
     abbreviations before it is compared with a pattern's type.
-  * Exhaustiveness is checked with the negated path condition. Branches
-    after a wildcard are checked as dead code.
+  * Exhaustiveness is checked with the negated path condition, unless the
+    patterns are syntactically exhaustive (e.g. a wildcard, or all the
+    constructors of the scrutinee's type). Branches after a wildcard are
+    checked as dead code.
 * **Effectful `let`.** An effectful `let x = e1 in v`, with `v` pure, has
   the type `r:t{r == v}`, closed existentially over `x` when `v` mentions
   `x`. In `let x = e1 in e2` with `e1` pure and `e2` effectful, what `x`'s
@@ -662,8 +681,8 @@ files to test changes that affect recorded types.
 * **Not handled.** Core rejects `when` clauses (Error 236) and `match ...
   returns` annotations with tactic handlers.
 * **Elaborated terms.** Terms that tactics inspect and that are printed are
-  the elaboration. It ascribes a `match` its result type only when the
-  match is empty (`TcTerm.tc_match`), and it creates fewer fresh names
+  the elaboration. It annotates every non-empty `match` with a `returns`
+  type (see above), which is printed, and it creates fewer fresh names
   than a second TcTerm run did (`error-messages/TuplePat`, `Monoid`,
   `ide/emacs/Fib.compute`, `tactics/Postprocess`, `tests/tactics/DeltaDepth`).
 * **Brittle proofs.** A proof close to its rlimit may flip, because Core's
