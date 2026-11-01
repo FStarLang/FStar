@@ -1034,6 +1034,7 @@ let op_name (o : FStarC_Custard_Syntax.prim_op) : string =
           | (FStarC_Custard_Syntax.Reset (u__11, u__21)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | (FStarC_Custard_Syntax.Reuse (u__11, u__21)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | FStarC_Custard_Syntax.ResetFree -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
+          | (FStarC_Custard_Syntax.Update (u__11, u__21)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | (FStarC_Custard_Syntax.IArr (tmp1)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | (FStarC_Custard_Syntax.Dyn (tmp1)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | (FStarC_Custard_Syntax.PBuf (tmp1)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
@@ -1041,6 +1042,8 @@ let op_name (o : FStarC_Custard_Syntax.prim_op) : string =
           | FStarC_Custard_Syntax.ExnPending -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | FStarC_Custard_Syntax.ExnTake -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | FStarC_Custard_Syntax.ExnExit -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
+          | FStarC_Custard_Syntax.ClosureNew -> (FStarC_Effect.failwith "Custard: a Pulse closure is not an OCaml operator")
+          | FStarC_Custard_Syntax.ClosureCall -> (FStarC_Effect.failwith "Custard: a Pulse closure is not an OCaml operator")
         ) in
       let tmp2 = (Prims.strcat "." tmp1) in
       (Prims.strcat tmp tmp2))
@@ -1088,6 +1091,7 @@ let op_name (o : FStarC_Custard_Syntax.prim_op) : string =
         | (FStarC_Custard_Syntax.Reset (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | (FStarC_Custard_Syntax.Reuse (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | FStarC_Custard_Syntax.ResetFree -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
+        | (FStarC_Custard_Syntax.Update (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | (FStarC_Custard_Syntax.IArr (tmp)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | (FStarC_Custard_Syntax.Dyn (tmp)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | (FStarC_Custard_Syntax.PBuf (tmp)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
@@ -1095,6 +1099,8 @@ let op_name (o : FStarC_Custard_Syntax.prim_op) : string =
         | FStarC_Custard_Syntax.ExnPending -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | FStarC_Custard_Syntax.ExnTake -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | FStarC_Custard_Syntax.ExnExit -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
+        | FStarC_Custard_Syntax.ClosureNew -> (FStarC_Effect.failwith "Custard: a Pulse closure is not an OCaml operator")
+        | FStarC_Custard_Syntax.ClosureCall -> (FStarC_Effect.failwith "Custard: a Pulse closure is not an OCaml operator")
       )
   )
 
@@ -1427,21 +1433,15 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       (Prims.strcat "(not (Obj.is_block (Obj.repr " tmp2)) else (let tmp1 = (term ind b) in
       let tmp2 = (Prims.strcat tmp1 ") = 0)") in
       (Prims.strcat "(Array.length (" tmp2)))
-    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp; _ }, (src :: (si :: (dst :: (di :: (len :: []))))))) -> (let tmp1 = (term ind src) in
-      let tmp2 = (index ind si) in
-      let tmp3 = (term ind dst) in
-      let tmp4 = (index ind di) in
-      let tmp5 = (index ind len) in
-      let tmp6 = (Prims.strcat tmp5 ")") in
-      let tmp7 = (Prims.strcat " " tmp6) in
-      let tmp8 = (Prims.strcat tmp4 tmp7) in
-      let tmp9 = (Prims.strcat " " tmp8) in
-      let tmp10 = (Prims.strcat tmp3 tmp9) in
-      let tmp11 = (Prims.strcat " " tmp10) in
-      let tmp12 = (Prims.strcat tmp2 tmp11) in
-      let tmp13 = (Prims.strcat " " tmp12) in
-      let tmp14 = (Prims.strcat tmp1 tmp13) in
-      (Prims.strcat "(Array.blit " tmp14))
+    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp; _ }, (src :: (dst :: (len :: []))))) -> (let tmp1 = (term ind src) in
+      let tmp2 = (term ind dst) in
+      let tmp3 = (index ind len) in
+      let tmp4 = (Prims.strcat tmp3 ")") in
+      let tmp5 = (Prims.strcat " 0 " tmp4) in
+      let tmp6 = (Prims.strcat tmp2 tmp5) in
+      let tmp7 = (Prims.strcat " 0 " tmp6) in
+      let tmp8 = (Prims.strcat tmp1 tmp7) in
+      (Prims.strcat "(Array.blit " tmp8))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufSub; po_ty = tmp; _ }, tmp1)) -> "(failwith \"Custard: pointer arithmetic has no OCaml representation\")"
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufLit; po_ty = tmp; _ }, elems)) -> (let tmp1 = (BatList.map (term ind) elems) in
       let tmp2 = (BatString.concat "; " tmp1) in

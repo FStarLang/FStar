@@ -405,7 +405,7 @@ let boxBool (t : term) : term =
   ) t)
 
 let isInjective (s : string) : bool =
-  (if (Prims.op_Greater_Equals (FStar_String.strlen s) (Prims.of_int (3))) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero (Prims.of_int (3))) in
+  (if (Prims.op_Greater_Equals ((fun s -> Z.of_int (BatUTF8.length s)) s) (Prims.of_int (3))) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s Prims.int_zero (Prims.of_int (3))) in
   let tmp1 = ((=) tmp "Box") in
   (if tmp1 then (let tmp2 = (BatList.exists (fun c -> ((=) c 46)) ((fun s -> BatList.init (BatUTF8.length s) (fun i -> BatUChar.code (BatUTF8.get s i))) s)) in
   (not tmp2)) else false)) else false)

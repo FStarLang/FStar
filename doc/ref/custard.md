@@ -858,6 +858,13 @@ Specialization runs before inlining, so the wrapper's call to `map_acc`
 passes the variable `f`.  With the attribute on the wrapper, `map` is
 specialized first and its copy calls `map_acc` with the lambda.
 
+An external (a `Rule_extern`, or a value of a realized module) has no body to
+specialize, so on it the attribute is ignored for a binder of function type
+and the argument is passed at run time; the binder does not make the types its
+type mentions `Mono` either.  This is what lets `FStar.List.Tot.Base` mark its
+higher-order functions: Cherry compiles it from source, while the OCaml
+backend uses its realization.
+
 Test: `tests/custard/CherrySpecializeHO.fst`.
 
 ### 3.3 The extraction loop

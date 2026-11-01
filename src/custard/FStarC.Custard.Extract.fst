@@ -2384,6 +2384,14 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
               (* Section 3.2d: which [Mono] binders have a function type.
                  Recorded beside the classification, for [split_mono_args]. *)
               let soft = Mono.soft_binders (tcenv st) lb.lbtyp (Some lb.lbdef) in
+              (* An external has no body to specialize, so its function
+                 arguments are passed at run time: the attribute is dropped
+                 before classifying, so that rule 5 does not make the types
+                 they mention [Mono] either.  [FStar.List.Tot.Base] is
+                 compiled under Cherry and realized for OCaml. *)
+              let ext = List.existsb (fun b -> b) soft && is_external_value st l se in
+              let lb = if ext then strip_soft_mono soft lb else lb in
+              let soft = if ext then [] else soft in
               if List.existsb (fun b -> b) soft
               then HashTable.add st.bflags ("soft:" ^ key) soft;
               (* Section 19.4: [lbdef] is what makes the classification as
@@ -5453,6 +5461,40 @@ and reference_flags (l:Ident.lident) (attrs:list S.term) (is_extern:bool)
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
 
+(* A [Sig_let] of a realized module that {!extract_lid} turns into an
+   external rather than compiling; its comment there says which ones stay. *)
+and is_realized_value (st:state) (l:Ident.lident) (se:sigelt) : ML bool =
+  Sig_let? se.sigel && not (is_inlinable se)
+  && not (is_inline_for_extraction st se)
+  && not (Builtins.is_type_only_realized_module
+            (Builtins.no_fstar_stubs
+               (Ident.ns_of_lid l |> List.map Ident.string_of_id)))
+
+(* Whether the definition [se] of [l] is extracted as an external value. *)
+and is_external_value (st:state) (l:Ident.lident) (se:sigelt) : ML bool =
+  let rule = match Builtins.rule_of_attributes se.sigattrs with
+             | Some r -> Some r
+             | None -> Builtins.lookup_rule l in
+  match rule with
+  | Some (Builtins.Rule_extern _) -> true
+  | Some Builtins.Rule_realized -> is_realized_value st l se
+  | _ -> false
+
+(* [lb] without [@@@monomorphize] on the binders [soft] marks, in both its
+   type and its definition. *)
+and strip_soft_mono (soft:list bool) (lb:letbinding) : ML letbinding =
+  let strip (bs:binders) : ML binders =
+    bs |> List.mapi (fun i (b:S.binder) ->
+      if i < List.length soft && List.nth soft i
+      then { b with binder_attrs =
+               b.binder_attrs |> List.filter (fun a ->
+                 not (U.is_fvar PC.monomorphize_attr a)) }
+      else b) in
+  let bs, body, rc = U.abs_formals lb.lbdef in
+  let tbs, c = U.arrow_formals_comp lb.lbtyp in
+  { lb with lbdef = U.abs (strip bs) body rc;
+            lbtyp = (if Nil? tbs then lb.lbtyp else U.arrow (strip tbs) c) }
+
 and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                 (n_holes:int) : ML decl =
   let se = Prof.timed "sigelt"
@@ -5521,11 +5563,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     custard_error st E.Error_CustardEntryNotFound [
       text ("Custard cannot find a definition for " ^ Ident.string_of_lid l ^ ".")
     ]
-  | Some se when is_realized && Sig_let? se.sigel && not (is_inlinable se)
-              && not (is_inline_for_extraction st se)
-              && not (Builtins.is_type_only_realized_module
-                        (Builtins.no_fstar_stubs
-                           (Ident.ns_of_lid l |> List.map Ident.string_of_id))) ->
+  | Some se when is_realized && is_realized_value st l se ->
     (* Section 8.2: a realization replaces the F* module, values included.
        The F* definition is a model -- often written for proof rather than for
        execution, and free to describe a representation the realization does

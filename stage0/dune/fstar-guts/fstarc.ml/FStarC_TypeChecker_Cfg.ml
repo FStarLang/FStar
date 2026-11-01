@@ -1469,10 +1469,6 @@ let prim_from_list (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) :
   (let tmp = (empty_prim_steps ()) in
   (add_steps tmp l))
 
-let env_dependent_ops (env : FStarC_TypeChecker_Env.env) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
-  (let tmp = (FStarC_TypeChecker_Primops.env_dependent_ops env) in
-  (prim_from_list tmp))
-
 let extendable_primops_dirty : (bool ref) =
   (ref true)
 
@@ -1510,21 +1506,6 @@ let retrieve_extra_steps (tmp : unit) : (string, FStarC_TypeChecker_Primops_Base
 let merge_steps (s1 : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) (acc : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (FStarC_PSMap.merge s1 acc)
 
-let built_in_primitive_steps : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
-  (prim_from_list FStarC_TypeChecker_Primops.built_in_primitive_steps_list)
-
-let cached_steps : (unit -> (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) =
-  (let tmp = (empty_prim_steps ()) in
-  let memo = (ref tmp) in
-  (fun tmp1 -> (let tmp2 = (!(extendable_primops_dirty)) in
-  (if tmp2 then (let tmp3 = (retrieve_plugins ()) in
-  let tmp4 = (retrieve_extra_steps ()) in
-  let tmp5 = (merge_steps tmp3 tmp4) in
-  let steps = (merge_steps built_in_primitive_steps tmp5) in
-  ((memo) := steps);
-  ((extendable_primops_dirty) := false);
-  steps) else (!(memo))))))
-
 let dbg_Norm : (bool ref) =
   (FStarC_Debug.get_toggle "Norm")
 
@@ -1557,66 +1538,6 @@ let dbg_NBE : (bool ref) =
 
 let dbg_UNSOUND_EraseErasableArgs : (bool ref) =
   (FStarC_Debug.get_toggle "UNSOUND_EraseErasableArgs")
-
-let config' (psteps : (FStarC_TypeChecker_Primops_Base.primitive_step) list) (s : (FStarC_TypeChecker_Env.step) list) (e : FStarC_TypeChecker_Env.env) : cfg =
-  (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp -> (match tmp with
-      | (FStarC_TypeChecker_Env.UnfoldUntil (k)) -> ((FStarC_TypeChecker_Env.Unfold (k)) :: [])
-      | FStarC_TypeChecker_Env.Eager_unfolding -> (FStarC_TypeChecker_Env.Eager_unfolding_only :: [])
-      | (FStarC_TypeChecker_Env.UnfoldQual (l)) when (BatList.mem "unfold" l) -> (FStarC_TypeChecker_Env.Eager_unfolding_only :: [])
-      | FStarC_TypeChecker_Env.Inlining -> (FStarC_TypeChecker_Env.InliningDelta :: [])
-      | (FStarC_TypeChecker_Env.UnfoldQual (l)) when (BatList.mem "inline_for_extraction" l) -> (FStarC_TypeChecker_Env.InliningDelta :: [])
-      | tmp1 -> []
-    )) s) in
-  let d = ((fun l -> BatList.unique l) tmp) in
-  let d1 = (match d with
-      | [] -> (FStarC_TypeChecker_Env.NoDelta :: [])
-      | tmp1 -> d
-    ) in
-  let tmp1 = (to_fsteps s) in
-  let steps = (add_nbe tmp1) in
-  let tmp2 = (env_dependent_ops e) in
-  let tmp3 = (cached_steps ()) in
-  let tmp4 = (merge_steps tmp2 tmp3) in
-  let psteps1 = (add_steps tmp4 psteps) in
-  let dbg_flag = (BatList.mem FStarC_TypeChecker_Env.NormDebug s) in
-  let tmp5 = (!(dbg_Norm)) in
-  let tmp6 = (if tmp5 then true else dbg_flag) in
-  let tmp7 = (!(dbg_NormTop)) in
-  let tmp8 = (if tmp7 then true else dbg_flag) in
-  let tmp9 = (!(dbg_NormCfg)) in
-  let tmp10 = (!(dbg_Primops)) in
-  let tmp11 = (!(dbg_Unfolding)) in
-  let tmp12 = (!(dbg_380)) in
-  let tmp13 = (!(dbg_WPE)) in
-  let tmp14 = (!(dbg_NormDelayed)) in
-  let tmp15 = (!(dbg_print_normalized)) in
-  let tmp16 = (!(dbg_NBE)) in
-  let tmp17 = (!(dbg_UNSOUND_EraseErasableArgs)) in
-  (if tmp17 then (FStarC_TypeChecker_Env.fStarC_Errors_log_issue__env_string e FStarC_Errors_Codes.Warning_WarnOnUse "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound") else ());
-  let tmp18 = (!(dbg_UNSOUND_EraseErasableArgs)) in
-  let tmp19 = { gen = tmp6;
-      top = tmp8;
-      cfg = tmp9;
-      primop = tmp10;
-      unfolding = tmp11;
-      b380 = tmp12;
-      wpe = tmp13;
-      norm_delayed = tmp14;
-      print_normalized = tmp15;
-      debug_nbe = tmp16;
-      erase_erasable_args = tmp18 } in
-  let tmp20 = (if (not (steps).pure_subterms_within_computations) then true else (FStarC_Options.normalize_pure_terms_for_extraction ())) in
-  let tmp21 = (FStarC_Options_Ext.enabled "compat:normalizer_memo_ignore_cfg") in
-  { steps = steps;
-    tcenv = e;
-    debug = tmp19;
-    delta_level = d1;
-    primitive_steps = psteps1;
-    strong = false;
-    memoize_lazy = true;
-    normalize_pure_lets = tmp20;
-    reifying = false;
-    compat_memo_ignore_cfg = tmp21 })
 
 let log_top (cfg : cfg) (f : (unit -> unit)) : unit =
   (if ((cfg).debug).top then (f ()) else ())
@@ -1759,10 +1680,6 @@ let find_prim_step (cfg : cfg) (fv : FStarC_Syntax_Syntax.fv) : (FStarC_TypeChec
 let log_primops (cfg : cfg) (f : (unit -> unit)) : unit =
   (if ((cfg).debug).primop then (f ()) else ())
 
-let simplification_steps (env : FStarC_TypeChecker_Env.env) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
-  (let tmp = (FStarC_TypeChecker_Primops.simplification_ops_list env) in
-  (prim_from_list tmp))
-
 let dbg_unfolding : (bool ref) =
   (FStarC_Debug.get_toggle "Unfolding")
 
@@ -1814,9 +1731,6 @@ let translate_norm_steps (s : (FStarC_NormSteps.norm_step) list) : (FStarC_TypeC
   let s3 = (add_exclude s2 FStarC_TypeChecker_Env.Zeta) in
   (add_exclude s3 FStarC_TypeChecker_Env.Iota))
 
-let config (s : (FStarC_TypeChecker_Env.step) list) (e : FStarC_TypeChecker_Env.env) : cfg =
-  (config' [] s e)
-
 let should_reduce_local_let (cfg : cfg) (lb : FStarC_Syntax_Syntax.letbinding) : bool =
   (if ((cfg).steps).do_not_unfold_pure_lets then false else (let tmp = (if ((cfg).steps).pure_subterms_within_computations then (FStarC_Syntax_Util.has_attribute (lb).FStarC_Syntax_Syntax.lbattrs FStarC_Parser_Const.inline_let_attr) else false) in
   (if tmp then true else (let tmp1 = (FStarC_Syntax_Util.has_attribute (lb).FStarC_Syntax_Syntax.lbattrs FStarC_Parser_Const.no_inline_let_attr) in
@@ -1828,12 +1742,6 @@ let register_plugin (p : FStarC_TypeChecker_Primops_Base.primitive_step) : unit 
   ((match plugins with
     | (u__1, u__2) -> u__1
   ) p)
-
-let is_built_in_primop (fv : FStarC_Syntax_Syntax.fv) : bool =
-  (match (FStarC_PSMap.try_find built_in_primitive_steps (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) with
-    | (Some (v)) -> true
-    | tmp -> false
-  )
 
 let list_plugins (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (let tmp1 = (retrieve_plugins ()) in

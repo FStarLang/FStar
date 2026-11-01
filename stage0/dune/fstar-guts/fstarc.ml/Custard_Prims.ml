@@ -7,6 +7,9 @@ let rec prims_pow2 (x : Prims.int) : Prims.int =
     | tmp -> (Prims.op_Star (Prims.of_int (2)) (prims_pow2 (Prims.op_Minus x Prims.int_one)))
   )
 
+let prims_abs (x : Prims.int) : Prims.int =
+  (if (Prims.op_Greater_Equals x Prims.int_zero) then x else (Prims.op_Tilde_Minus x))
+
 let prims_min (x : Prims.int) (y : Prims.int) : Prims.int =
   (if (Prims.op_Less_Equals x y) then x else y)
 

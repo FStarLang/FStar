@@ -271,6 +271,12 @@ let locate_lib (tmp : unit) : (string) option =
   (let tmp1 = (lib_root ()) in
   (FStarC_Option.map FStarC_Filepath.normalize_file_path tmp1))
 
+let is_library_file (path : string) : bool =
+  (let p = (FStarC_Filepath.normalize_file_path path) in
+  let tmp = (lib_roots ()) in
+  (BatList.exists (fun r -> (let tmp1 = (FStarC_Filepath.normalize_file_path r) in
+  (path_is_at_or_below tmp1 p))) tmp))
+
 let prepend_output_dir (fname : string) : string =
   (let tmp = (!(u__odir)) in
   (match tmp with

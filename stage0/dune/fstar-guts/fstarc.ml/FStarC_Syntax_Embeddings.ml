@@ -102,7 +102,7 @@ let lazy_unembed (pa : ('u___a -> string)) (et : (unit -> FStarC_Syntax_Syntax.e
             (Prims.strcat "Some " tmp7))
         ) in
       (FStarC_Format.print3 "Unembed cancellation failed\n\t%s <> %s\nvalue is %s\n" tmp5 tmp6 tmp7)) else ());
-      res) else (let a = (FStar_Dyn.undyn b) in
+      res) else (let a = (Obj.magic (b)) in
       let tmp3 = (!(FStarC_Options.debug_embedding)) in
       (if tmp3 then (let tmp4 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__emb_typ et1) in
       let tmp5 = (pa a) in

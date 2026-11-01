@@ -38,6 +38,38 @@ let ctx_doc (ctx : (string) list) : PPrint.document =
   (if tmp then (let tmp1 = (BatList.map (fun s -> (PPrint.(^^) PPrint.hardline (PPrint.(^^) (PPrint.string "> ") (PPrint.string s)))) ctx) in
   (PPrint.concat tmp1)) else PPrint.empty))
 
+let with_ctxs (ctxs : (string) list) (f : (unit -> 'u___a)) : 'u___a =
+  (match ctxs with
+    | [] -> (f ())
+    | tmp -> ((BatList.iter (error_context).push (BatList.rev ctxs));
+      let tmp1 = (FStarC_Options.trace_error ()) in
+      (if tmp1 then (let r = (f ()) in
+      (BatList.iter (fun tmp2 -> ((ignore ((error_context).pop ()));
+      ())) ctxs);
+      r) else (let r = (try (let tmp2 = (f ()) in
+        (FStar_Pervasives.Inr (tmp2))) with
+          | u__cexn -> (FStar_Pervasives.Inl (u__cexn))
+        ) in
+      let r1 = (BatList.fold_left (fun r1 tmp2 -> (let r2 = (match r1 with
+            | (FStar_Pervasives.Inl ((FStarC_Effect.Failure (msg)))) -> (let tmp3 = ((error_context).get ()) in
+              let tmp4 = (ctx_doc tmp3) in
+              let tmp5 = (tmp4 :: []) in
+              let tmp6 = (FStarC_Errors_Msg.rendermsg tmp5) in
+              let tmp7 = (Prims.strcat msg tmp6) in
+              let tmp8 = (FStarC_Effect.Failure (tmp7)) in
+              (FStar_Pervasives.Inl (tmp8)))
+            | r2 -> r2
+          ) in
+        (try ((ignore ((error_context).pop ()));
+        r2) with
+          | u__cexn -> (FStar_Pervasives.Inl (u__cexn))
+        ))) r ctxs) in
+      (match r1 with
+        | (FStar_Pervasives.Inr (r2)) -> r2
+        | (FStar_Pervasives.Inl (e)) -> (raise e)
+      ))))
+  )
+
 let with_ctx (ctx : string) (f : (unit -> 'u___a)) : 'u___a =
   (((error_context).push ctx);
   let tmp = (FStarC_Options.trace_error ()) in
@@ -801,10 +833,10 @@ let print_expected_failures (issues : (FStarC_Errors_Issue.issue) list) : unit =
       issue_ctx = (i).FStarC_Errors_Issue.issue_ctx }) issues) in
   (add_issues issues1))
 
-let rec find_multiset_discrepancy__collect (u_'a : unit) (l : ('u___a) list) : (('u___a * Prims.int)) list =
+let rec find_multiset_discrepancy__collect (l : (Prims.int) list) : ((Prims.int * Prims.int)) list =
   (match l with
     | [] -> []
-    | (hd :: tl) -> (match (find_multiset_discrepancy__collect () tl) with
+    | (hd :: tl) -> (match (find_multiset_discrepancy__collect tl) with
         | [] -> ((hd, Prims.int_one) :: [])
         | ((h, n) :: t) -> (if ((=) h hd) then ((h, (Prims.op_Plus n Prims.int_one)) :: t) else ((hd, Prims.int_one) :: ((h, n) :: t)))
       )
@@ -821,9 +853,9 @@ let rec find_multiset_discrepancy__aux (l1 : ((Prims.int * Prims.int)) list) (l2
 let find_multiset_discrepancy (l1 : (Prims.int) list) (l2 : (Prims.int) list) : ((Prims.int * Prims.int * Prims.int)) option =
   (let sort = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun x y -> (Prims.op_Minus x y))) in
   let tmp = (sort l1) in
-  let l11 = (find_multiset_discrepancy__collect () tmp) in
+  let l11 = (find_multiset_discrepancy__collect tmp) in
   let tmp1 = (sort l2) in
-  let l21 = (find_multiset_discrepancy__collect () tmp1) in
+  let l21 = (find_multiset_discrepancy__collect tmp1) in
   (find_multiset_discrepancy__aux l11 l21))
 
 let with_ctx_if (cond : bool) (ctx : string) (f : (unit -> 'u___a)) : 'u___a =

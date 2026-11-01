@@ -221,23 +221,6 @@ let mk2' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_S
     )) in
   (as_primitive_step_nbecbs true (name, (Prims.of_int (2)), u_arity, interp, nbe_interp)))
 
-let mk1' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('r) option)) (f1 : ('na -> ('nr) option)) : primitive_step =
-  (let interp = (fun psc cb us args -> (match args with
-      | ((a, tmp4) :: []) -> (let tmp5 = (try_unembed_simple tmp a) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun a1 -> (let r = (f a1) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp6 = (embed_simple tmp2 (psc).psc_range r1) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp6))))))))
-      | tmp4 -> (FStarC_Effect.failwith "arity")
-    )) in
-  let nbe_interp = (fun cbs us args -> (match args with
-      | ((a, tmp4) :: []) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun a1 -> (let r = (f1 a1) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.embed tmp3 cbs r1) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp6))))))))
-      | tmp4 -> (FStarC_Effect.failwith "arity")
-    )) in
-  (as_primitive_step_nbecbs true (name, Prims.int_one, u_arity, interp, nbe_interp)))
-
 let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('b) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nb) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('c) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('nc) FStarC_TypeChecker_NBETerm.embedding) (tmp6 : ('d) FStarC_Syntax_Embeddings_Base.embedding) (tmp7 : ('nd) FStarC_TypeChecker_NBETerm.embedding) (tmp8 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp9 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('b -> ('c -> ('d -> ('r) option))))) (f1 : ('na -> ('nb -> ('nc -> ('nd -> ('nr) option))))) : primitive_step =
   (let interp = (fun psc cb us args -> (match args with
       | ((a, tmp10) :: ((b, tmp11) :: ((c, tmp12) :: ((d, tmp13) :: [])))) -> (let tmp14 = (try_unembed_simple tmp a) in
@@ -260,6 +243,23 @@ let mk4' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_S
       | tmp10 -> (FStarC_Effect.failwith "arity")
     )) in
   (as_primitive_step_nbecbs true (name, (Prims.of_int (4)), u_arity, interp, nbe_interp)))
+
+let mk1' (u_arity : Prims.int) (name : FStarC_Ident.lident) (tmp : ('a) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('na) FStarC_TypeChecker_NBETerm.embedding) (tmp2 : ('r) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('nr) FStarC_TypeChecker_NBETerm.embedding) (f : ('a -> ('r) option)) (f1 : ('na -> ('nr) option)) : primitive_step =
+  (let interp = (fun psc cb us args -> (match args with
+      | ((a, tmp4) :: []) -> (let tmp5 = (try_unembed_simple tmp a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun a1 -> (let r = (f a1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp6 = (embed_simple tmp2 (psc).psc_range r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp6))))))))
+      | tmp4 -> (FStarC_Effect.failwith "arity")
+    )) in
+  let nbe_interp = (fun cbs us args -> (match args with
+      | ((a, tmp4) :: []) -> (let tmp5 = (FStarC_TypeChecker_NBETerm.unembed tmp1 cbs a) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun a1 -> (let r = (f1 a1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option r (fun r1 -> (let tmp6 = (FStarC_TypeChecker_NBETerm.embed tmp3 cbs r1) in
+        (FStarC_Class_Monad.fStarC_Class_Monad_return__option tmp6))))))))
+      | tmp4 -> (FStarC_Effect.failwith "arity")
+    )) in
+  (as_primitive_step_nbecbs true (name, Prims.int_one, u_arity, interp, nbe_interp)))
 
 let psc_subst (psc : psc) : (FStarC_Syntax_Syntax.subst_elt) list =
   ((psc).psc_subst ())

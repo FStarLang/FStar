@@ -252,7 +252,7 @@ let by_tactic_interp (pol : pol) (e : FStarC_TypeChecker_Env.env) (t : (FStarC_S
               let goal = (FStarC_Syntax_Util.mk_squash tmp7) in
               let tmp8 = (run_tactic_on_typ (tactic).FStarC_Syntax_Syntax.pos (tm).FStarC_Syntax_Syntax.pos tactic e goal) in
               (match tmp8 with
-                | (gs, tmp9) -> (let tagged_imps = (FStarC_TypeChecker_Rel.resolve_implicits_tac e g_imp) in
+                | (gs, tmp9) -> (let tagged_imps = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_resolve_implicits_tac e g_imp) in
                   (FStarC_Tactics_Interpreter.report_implicits (tm).FStarC_Syntax_Syntax.pos tagged_imps);
                   (Simplified (uvtm, gs)))
               ))
@@ -262,7 +262,7 @@ let by_tactic_interp (pol : pol) (e : FStarC_TypeChecker_Env.env) (t : (FStarC_S
   ))
 
 let getprop (e : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
-  (let tn = (FStarC_TypeChecker_Normalize.normalize (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.HNF :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))) e t) in
+  (let tn = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.HNF :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))) e t) in
   (FStarC_Syntax_Util.un_squash tn))
 
 let preprocess (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (bool * ((FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (string, FStarC_Options.option_val) FStarC_AVLMap.tree)) list) =
@@ -359,7 +359,7 @@ let synthesize (env : FStarC_TypeChecker_Env.env) (typ : (FStarC_Syntax_Syntax.t
           (if tmp4 then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
           (FStarC_Format.print1 "Synthesis left a goal: %s\n" tmp5)) else ());
           let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_Common.NonTrivial (vc))) in
-          (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
+          (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
         | None -> (FStarC_Errors.fStarC_Errors_raise_error__syntax_term'_string typ FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "synthesis left open goals")
       ))) gs);
       w)
@@ -388,7 +388,7 @@ let solve_implicits (env : FStarC_TypeChecker_Env.env) (tau : (FStarC_Syntax_Syn
       (if tmp5 then (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
       (FStarC_Format.print1 "Synthesis left a goal: %s\n" tmp6)) else ());
       (if (not (env).FStarC_TypeChecker_Env.admit) then (let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_Common.NonTrivial (vc))) in
-      (FStarC_Profiling.profile (fun tmp6 -> (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard)) None "FStarC.TypeChecker.Hooks.force_trivial_guard")) else ()))
+      (FStarC_Profiling.profile (fun tmp6 -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard)) None "FStarC.TypeChecker.Hooks.force_trivial_guard")) else ()))
     | None -> (FStarC_TypeChecker_Env.fStarC_Errors_raise_error__env_string env FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "synthesis left open goals")
   ))) gs))))))))
 
@@ -402,9 +402,9 @@ let rec us_equals (us : (FStarC_Ident.ident) list) (vs : (FStarC_Ident.ident) li
   )
 
 let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qualifier) list) (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (is_typed : bool) (lids : (FStarC_Ident.lident) list) (tau : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (rng : FStarC_Range_Type.range) : (FStarC_Syntax_Syntax.sigelt) list =
-  (FStarC_Errors.with_ctx "While running splice with a tactic" (fun tmp -> (if (env).FStarC_TypeChecker_Env.flychecking then [] else (let tmp1 = (if is_typed then (FStarC_TypeChecker_TcTerm.tc_check_tot_or_gtot_term env tau FStarC_Syntax_Util.t_dsl_tac_typ None) else (FStarC_TypeChecker_TcTerm.tc_tactic FStarC_Syntax_Syntax.t_unit FStarC_Syntax_Syntax.t_decls env tau)) in
+  (FStarC_Errors.with_ctx "While running splice with a tactic" (fun tmp -> (if (env).FStarC_TypeChecker_Env.flychecking then [] else (let tmp1 = (if is_typed then (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_check_tot_or_gtot_term env tau FStarC_Syntax_Util.t_dsl_tac_typ None) else (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_tactic FStarC_Syntax_Syntax.t_unit FStarC_Syntax_Syntax.t_decls env tau)) in
   (match tmp1 with
-    | (tau1, tmp2, g) -> ((FStarC_TypeChecker_Rel.force_trivial_guard env g);
+    | (tau1, tmp2, g) -> ((FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard env g);
       let ps = (FStarC_Tactics_V2_Basic.proofstate_of_goals (tau1).FStarC_Syntax_Syntax.pos env [] []) in
       let ps1 = { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
           all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
@@ -519,7 +519,7 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
                           sigmeta_already_checked = checked;
                           sigmeta_extension_decl = (tmp6).FStarC_Syntax_Syntax.sigmeta_extension_decl;
                           sigmeta_extension_data = (match blob_opt with
-                            | (Some ((s, blob))) -> ((s, (FStar_Dyn.mkdyn blob)) :: [])
+                            | (Some ((s, blob))) -> ((s, (Obj.magic (blob))) :: [])
                             | None -> []
                           );
                           sigmeta_type_constructor = (tmp6).FStarC_Syntax_Syntax.sigmeta_type_constructor });
@@ -568,7 +568,7 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
               (if tmp7 then (let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
               (FStarC_Format.print1 "Splice left a goal: %s\n" tmp8)) else ());
               let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_Common.NonTrivial (vc))) in
-              (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g1) guard))
+              (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard (FStarC_Tactics_Types.goal_env g1) guard))
             | None -> (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "splice left open goals")
           ))) gs)));
           let lids' = ((fun f l -> BatList.flatten (BatList.map f l)) FStarC_Syntax_Util.lids_of_sigelt sigelts1) in
@@ -638,10 +638,10 @@ let postprocess (env : FStarC_TypeChecker_Env.env) (tau : (FStarC_Syntax_Syntax.
               (if tmp7 then (let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
               (FStarC_Format.print1 "Postprocessing left a goal: %s\n" tmp8)) else ());
               let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_Common.NonTrivial (vc))) in
-              (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
+              (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
             | None -> (FStarC_Errors.fStarC_Errors_raise_error__syntax_term'_string typ FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "postprocessing left open goals")
           ))) gs);
-          let tagged_imps = (FStarC_TypeChecker_Rel.resolve_implicits_tac env g_imp) in
+          let tagged_imps = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_resolve_implicits_tac env g_imp) in
           (FStarC_Tactics_Interpreter.report_implicits (tm).FStarC_Syntax_Syntax.pos tagged_imps);
           uvtm)
       ))

@@ -136,11 +136,11 @@ let dbg_SMTEncoding : (bool ref) =
   (FStarC_Debug.get_toggle "SMTEncoding")
 
 let norm_with_steps (steps : (FStarC_TypeChecker_Env.step) list) (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Normalize.normalize steps env t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.SMTEncoding.Encode.norm")
+  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize steps env t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.SMTEncoding.Encode.norm")
 
 let norm_before_encoding (env : FStarC_SMTEncoding_Env.env_t) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (let steps = (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Simplify :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: [])))) in
-  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Normalize.normalize steps (env).FStarC_SMTEncoding_Env.tcenv t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module (env).FStarC_SMTEncoding_Env.tcenv)))) "FStarC.SMTEncoding.Encode.norm_before_encoding"))
+  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize steps (env).FStarC_SMTEncoding_Env.tcenv t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module (env).FStarC_SMTEncoding_Env.tcenv)))) "FStarC.SMTEncoding.Encode.norm_before_encoding"))
 
 let smt_arity_attribute (env : FStarC_SMTEncoding_Env.env_t) (lid : FStarC_Ident.lident) : (Prims.int) option =
   (let tmp = (FStarC_TypeChecker_Env.lookup_attrs_of_lid (env).FStarC_SMTEncoding_Env.tcenv lid) in
@@ -1391,7 +1391,7 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t) (tmp : (bool * (FS
             let tmp4 = (if tmp3 then (let eff_name = (FStarC_Syntax_Util.comp_effect_name comp) in
               let comp1 = (FStarC_TypeChecker_Env.reify_comp tcenv1 comp FStarC_Syntax_Syntax.U_unknown) in
               let tmp4 = (FStarC_Syntax_Util.mk_reify body (Some (eff_name))) in
-              let body1 = (FStarC_TypeChecker_Util.norm_reify tcenv1 [] tmp4) in
+              let body1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Util_norm_reify tcenv1 [] tmp4) in
               let tmp5 = (aux comp1 body1) in
               (match tmp5 with
                 | (more_binders, body2, comp2) -> ((BatList.append binders more_binders), body2, comp2)
@@ -1420,7 +1420,7 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t) (tmp : (bool * (FS
                     current_module_name = (env1).FStarC_SMTEncoding_Env.current_module_name;
                     encoding_quantifier = (env1).FStarC_SMTEncoding_Env.encoding_quantifier;
                     global_cache = (env1).FStarC_SMTEncoding_Env.global_cache } in
-                let t_norm = (if is_rec then (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: []) (env2).FStarC_SMTEncoding_Env.tcenv t) else (norm_before_encoding env2 t)) in
+                let t_norm = (if is_rec then (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: []) (env2).FStarC_SMTEncoding_Env.tcenv t) else (norm_before_encoding env2 t)) in
                 let tmp6 = (declare_top_level_let env2 (match (lb).FStarC_Syntax_Syntax.lbname with
                     | (FStar_Pervasives.Inr (v)) -> v
                   ) us t t_norm) in
@@ -2208,7 +2208,7 @@ let encode_datacon (env : FStarC_SMTEncoding_Env.env_t) (se : FStarC_Syntax_Synt
                                                                 let tmp48 = (match tmp47 with
                                                                     | (tmp48, formals') -> (let tmp49 = (FStarC_Util.first_N n_tps vars) in
                                                                       (match tmp49 with
-                                                                        | (tmp50, vars') -> (let norm = (fun t3 -> (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.Unascribe :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env').FStarC_SMTEncoding_Env.tcenv t3)) in
+                                                                        | (tmp50, vars') -> (let norm = (fun t3 -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.Unascribe :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env').FStarC_SMTEncoding_Env.tcenv t3)) in
                                                                           let warn_compat = (fun tmp51 -> (FStarC_Errors.fStarC_Errors_log_issue__fv_list_ocaml_document fv FStarC_Errors_Codes.Warning_DeprecatedGeneric ((FStarC_Errors_Msg.text "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.") :: ((FStarC_Errors_Msg.text "This is deprecated and will be removed in a future version of F*.") :: [])))) in
                                                                           let tmp51 = (BatList.fold_left2 (fun tmp51 formal var -> (match tmp51 with
                                                                               | (codomain_prec_l, cod_decls) -> (let tmp52 = ((encode_datacon__binder_and_codomain_type mutuals env2 norm warn_compat) ((formal).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
@@ -2310,7 +2310,7 @@ let encode_datacon (env : FStarC_SMTEncoding_Env.env_t) (se : FStarC_Syntax_Synt
                                                                 let tmp45 = (match tmp44 with
                                                                     | (tmp45, formals') -> (let tmp46 = (FStarC_Util.first_N n_tps vars) in
                                                                       (match tmp46 with
-                                                                        | (tmp47, vars') -> (let norm = (fun t3 -> (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.Unascribe :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env').FStarC_SMTEncoding_Env.tcenv t3)) in
+                                                                        | (tmp47, vars') -> (let norm = (fun t3 -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.Unascribe :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env').FStarC_SMTEncoding_Env.tcenv t3)) in
                                                                           let warn_compat = (fun tmp48 -> (FStarC_Errors.fStarC_Errors_log_issue__fv_list_ocaml_document fv FStarC_Errors_Codes.Warning_DeprecatedGeneric ((FStarC_Errors_Msg.text "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.") :: ((FStarC_Errors_Msg.text "This is deprecated and will be removed in a future version of F*.") :: [])))) in
                                                                           let tmp48 = (BatList.fold_left2 (fun tmp48 formal var -> (match tmp48 with
                                                                               | (codomain_prec_l, cod_decls) -> (let tmp49 = ((fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env2 norm warn_compat) ((formal).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in

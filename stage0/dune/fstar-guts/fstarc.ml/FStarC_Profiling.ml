@@ -77,6 +77,7 @@ let report (tag : string) (c : counter) : unit =
   (let tmp = (FStarC_Options.message_format ()) in
   (match tmp with
     | FStarC_Options.Human -> (report_human tag c)
+    | FStarC_Options.Github -> (report_human tag c)
     | FStarC_Options.Json -> (report_json tag c)
   ))
 

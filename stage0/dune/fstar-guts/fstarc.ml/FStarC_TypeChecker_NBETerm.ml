@@ -58,7 +58,7 @@ and t' =
   | Refinement of (t -> t) * (unit -> (t * (FStarC_Syntax_Syntax.arg_qualifier) option))
   | Reflect of t
   | Quote of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Syntax_Syntax.quoteinfo
-  | Lazy of (FStarC_Syntax_Syntax.lazyinfo, (FStar_Dyn.dyn * FStarC_Syntax_Syntax.emb_typ)) FStar_Pervasives.either * (((unit -> t), t) FStar_Pervasives.either ref)
+  | Lazy of (FStarC_Syntax_Syntax.lazyinfo, (Obj.t * FStarC_Syntax_Syntax.emb_typ)) FStar_Pervasives.either * (((unit -> t), t) FStar_Pervasives.either ref)
   | Meta of t * (((unit -> FStarC_Syntax_Syntax.metadata), FStarC_Syntax_Syntax.metadata) FStar_Pervasives.either ref)
   | TopLevelLet of FStarC_Syntax_Syntax.letbinding * Prims.int * ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list
   | TopLevelRec of FStarC_Syntax_Syntax.letbinding * Prims.int * (bool) list * ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list
@@ -245,7 +245,7 @@ let e_string : (string) embedding =
 
 let e_document : (PPrint.document) embedding =
   (let t_document = (FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_document) in
-  let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
+  let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (Obj.magic (blob));
       lkind = FStarC_Syntax_Syntax.Lazy_doc;
       ltyp = t_document;
       rng = rng } : FStarC_Syntax_Syntax.lazyinfo)) in
@@ -253,7 +253,7 @@ let e_document : (PPrint.document) embedding =
     let tmp1 = ((FStar_Pervasives.Inl ((li doc FStarC_Range_Type.dummyRange))), tmp) in
     (Lazy ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))) in
   let un = (fun cb t -> (match t with
-      | (Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_doc; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn blob) in
+      | (Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_doc; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (blob)) in
         (Some (tmp3)))
       | tmp -> None
     )) in
@@ -267,7 +267,7 @@ let lazy_embed (et : (unit -> FStarC_Syntax_Syntax.emb_typ)) (x : 'u___a) (f : (
   let tmp1 = (!(FStarC_Options.eager_embedding)) in
   (if tmp1 then (f ()) else (let thunk = (FStarC_Thunk.mk f) in
   let tmp2 = (et ()) in
-  let li = ((FStar_Dyn.mkdyn x), tmp2) in
+  let li = ((Obj.magic (x)), tmp2) in
   (mk_t (Lazy ((FStar_Pervasives.Inr (li)), thunk))))))
 
 let type_of (e : ('u___a) embedding) : t =
@@ -299,7 +299,7 @@ let lazy_unembed (et : (unit -> FStarC_Syntax_Syntax.emb_typ)) (x : t) (f : (t -
       let tmp6 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__emb_typ tmp5) in
       let tmp7 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__emb_typ et') in
       (FStarC_Format.print2 "Unembed cancellation failed\n\t%s <> %s\n" tmp6 tmp7)) else ());
-      res) else (let a = (FStar_Dyn.undyn b) in
+      res) else (let a = (Obj.magic (b)) in
       let tmp3 = (!(FStarC_Options.debug_embedding)) in
       (if tmp3 then (let tmp4 = (et ()) in
       let tmp5 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__emb_typ tmp4) in
@@ -527,7 +527,7 @@ let arg_as_int (a : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) : (Prims.
 
 let e_issue : (FStarC_Errors_Issue.issue) embedding =
   (let t_issue = (FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_issue) in
-  let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
+  let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (Obj.magic (blob));
       lkind = FStarC_Syntax_Syntax.Lazy_issue;
       ltyp = t_issue;
       rng = rng } : FStarC_Syntax_Syntax.lazyinfo)) in
@@ -535,7 +535,7 @@ let e_issue : (FStarC_Errors_Issue.issue) embedding =
     let tmp1 = ((FStar_Pervasives.Inl ((li iss FStarC_Range_Type.dummyRange))), tmp) in
     (Lazy ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))) in
   let un = (fun cb t -> (match t with
-      | (Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_issue; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn blob) in
+      | (Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_issue; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (blob)) in
         (Some (tmp3)))
       | tmp -> None
     )) in
@@ -616,7 +616,7 @@ let rec args_eq (as1 : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list)
   (match (as1, as2) with
     | ([], []) -> true
     | (((x, qx) :: xs), ((y, qy) :: ys)) -> (let tmp = (term_eq x y) in
-      let tmp1 = (if tmp then ((=) qx qy) else false) in
+      let tmp1 = (if tmp then (FStarC_Syntax_Util.eq_aqual qx qy) else false) in
       (if tmp1 then (args_eq xs ys) else false))
     | (tmp, tmp1) -> false
   )
