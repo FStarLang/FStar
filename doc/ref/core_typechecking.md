@@ -29,6 +29,14 @@ In lax mode (a lax module, `--admit_smt_queries true`, or while
 elaborating), `env.admit` is set and Core does not run: terms are only
 elaborated (`CoreCheck.enabled`, `CoreCheck.check_or_elaborate`).
 
+The checker proper, one mutually recursive definition, is in
+`FStarC.TypeChecker.Core`. Its support code is in submodules, each with a
+documented interface: `Core.Base` (environments, effects, errors),
+`Core.Monad` (the `result` monad), `Core.Binders`, `Core.Effects`,
+`Core.Util`, `Core.Facts`, `Core.Cache` (the term and guard caches) and
+`Core.Guard` (emitting and transforming guards). The header of `Core.fst`
+describes them.
+
 Contents:
 
 1. [The driver](#1-the-driver)
