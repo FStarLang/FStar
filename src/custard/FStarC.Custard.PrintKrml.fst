@@ -413,23 +413,15 @@ let ctor_name (n:name) : ML string =
   | None -> n.id
   | Some s -> n.id ^ "__" ^ s
 
-(* Section 38.  karamel's [width] carries the two float formats itself, so
-   this is a rename and nothing more. *)
+(* Section 38.  karamel's [width] carries the float formats itself, so this
+   is a rename and nothing more.  Kuiper's karamel also has the two 16-bit
+   ones (CUDA's [half] and [__nv_bfloat16]). *)
 let krml_fwidth (fw:fwidth) : ML K.width =
   match fw with
   | Float32 -> K.Float32
   | Float64 -> K.Float64
-  (* Section 66.  karamel's [width] has no 16-bit float, and inventing one
-     here would mean emitting a [K.Float32] that is not one. *)
-  | Float16 | BFloat16 ->
-    FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardNoCRepresentation [
-      FStarC.Errors.Msg.text
-        ("Custard: " ^ fwidth_to_string fw ^ " has no krml representation.");
-      FStarC.Errors.Msg.text
-        "karamel's IR has no 16-bit floating-point width (section 66).";
-      FStarC.Errors.Msg.text
-        "Extract with --codegen C, which emits these as a two-byte \
-         struct with the arithmetic in the support header." ]
+  | Float16 -> K.Float16
+  | BFloat16 -> K.BFloat16
 
 (* Section 43.2.  karamel's [EConstant] carries the literal as text, and what
    may go in that text depends on who reads it back.
