@@ -122,12 +122,16 @@ and expr =
   | EBufDiff of expr & expr
   | ESizeof of typ
   | EZeroForDeref of width
+  | EGFor of expr & expr & expr & expr // C-style for loops: init, cond, incr, body
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
   | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
   | Eq | Neq | Lt | Lte | Gt | Gte
   | And | Or | Xor | Not
+  | Assign | PreIncr | PreDecr | PostIncr | PostDecr
+  | Comma
+  | Neg
 
 and branches =
   list branch
@@ -150,7 +154,7 @@ and width =
   | Bool
   | CInt
   | SizeT | PtrdiffT
-  | Float32 | Float64
+  | Float32 | Float64 | Float16 | BFloat16
 
 and constant = width & string
 
@@ -199,6 +203,8 @@ instance pretty_width = { pp = function
   | PtrdiffT -> doc_of_string "PtrdiffT"
   | Float32 -> doc_of_string "Float32"
   | Float64 -> doc_of_string "Float64"
+  | Float16 -> doc_of_string "Float16"
+  | BFloat16 -> doc_of_string "BFloat16"
 }
 instance showable_width : showable width = showable_from_pretty
 
@@ -296,6 +302,13 @@ instance pretty_op = { pp = function
   | Or -> doc_of_string "Or"
   | Xor -> doc_of_string "Xor"
   | Not -> doc_of_string "Not"
+  | Assign -> doc_of_string "Assign"
+  | PreIncr -> doc_of_string "PreIncr"
+  | PreDecr -> doc_of_string "PreDecr"
+  | PostIncr -> doc_of_string "PostIncr"
+  | PostDecr -> doc_of_string "PostDecr"
+  | Comma -> doc_of_string "Comma"
+  | Neg -> doc_of_string "Neg"
 }
 instance showable_op : showable op = showable_from_pretty
 
@@ -377,6 +390,7 @@ and expr_to_doc (e:expr) : ML document =
   | EBufDiff (x, y) -> ctor "EBufDiff" [expr_to_doc x; expr_to_doc y]
   | ESizeof t -> ctor "ESizeof" [pp t]
   | EZeroForDeref w -> ctor "EZeroForDeref" [pp w]
+  | EGFor (i, c, st, bd) -> ctor "EGFor" [expr_to_doc i; expr_to_doc c; expr_to_doc st; expr_to_doc bd]
 
 and pp_branch (b:branch) : ML document =
   let (p, e) = b in
