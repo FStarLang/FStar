@@ -108,11 +108,12 @@ val datacon_params_of_pat (g:env) (fv:fv) (sub_pats:list (pat & bool))
    inductive type in [t_sc], as the implicit arguments of its discriminators
    and projectors. Only looked up for an indexed type ([None] otherwise): the
    parameters alone are the pattern's dot terms. *)
-val inductive_type_args (g:env) (t_sc:option typ) (fv:fv)
+val inductive_type_args (g:env) (t_sc:Thunk.t (option typ)) (fv:fv)
   : ML (option (option universes & list term))
 
 (* The [i]th field of [scrutinee], matched by the constructor pattern
-   [fv sub_pats] (at [pat_p]), and its type, if known. It is an
+   [fv sub_pats] (at [pat_p]), and its type, if known (computed on demand:
+   it is only needed for an indexed type). It is an
    application of the field's projector to its implicit arguments (from
    [type_args], see [inductive_type_args], or else the parameters recorded
    as dot patterns in [sub_pats]) and to [scrutinee], whose type is that of
@@ -127,4 +128,4 @@ val inductive_type_args (g:env) (t_sc:option typ) (fv:fv)
 val pat_field_projection (g:env) (scrutinee:term) (pat_p:Range.t) (fv:fv) (us_opt:option universes)
                          (type_args:option (option universes & list term))
                          (sub_pats:list (pat & bool)) (i:int)
-  : ML (term & option typ)
+  : ML (term & Thunk.t (option typ))

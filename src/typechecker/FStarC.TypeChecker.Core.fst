@@ -2662,11 +2662,11 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
    projections of the scrutinee. *)
 and pattern_branch_condition (g:env) (scrutinee:term) (t_sc:typ) (pat:pat)
   : ML (result (option term))
-  = let! bc = pattern_branch_condition' g scrutinee (Some t_sc) pat in
+  = let! bc = pattern_branch_condition' g scrutinee (Thunk.mkv (Some t_sc)) pat in
     match bc with
     | None -> return None
     | Some bc ->
-      let projs = pattern_var_projections g scrutinee (Some t_sc) pat in
+      let projs = pattern_var_projections g scrutinee (Thunk.mkv (Some t_sc)) pat in
       let sub =
         List.fold_left
           (fun (sub:list subst_elt) (x, t) -> sub @ [NT(x, Subst.subst sub t)])
@@ -2675,7 +2675,7 @@ and pattern_branch_condition (g:env) (scrutinee:term) (t_sc:typ) (pat:pat)
 
 (* Each variable of [pat], as a projection of [scrutinee] (of type [t_sc],
    if known), in the order they are bound. *)
-and pattern_var_projections (g:env) (scrutinee:term) (t_sc:option typ) (pat:pat)
+and pattern_var_projections (g:env) (scrutinee:term) (t_sc:Thunk.t (option typ)) (pat:pat)
   : ML (list (bv & term))
   = match pat.v with
     | Pat_var x -> [(x, scrutinee)]
@@ -2691,7 +2691,7 @@ and pattern_var_projections (g:env) (scrutinee:term) (t_sc:option typ) (pat:pat)
 
 and pattern_branch_condition' (g:env)
                              (scrutinee:term)
-                             (t_sc:option typ)
+                             (t_sc:Thunk.t (option typ))
                              (pat:pat)
   : ML (result (option term))
   = match pat.v with

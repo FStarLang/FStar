@@ -340,7 +340,7 @@ let datacon_params_of_pat (g:env) (fv:fv) (sub_pats:list (pat & bool))
       aux (fst (List.splitAt n sub_pats))
     | _ -> None
 
-let inductive_type_args (g:env) (t_sc:option typ) (fv:fv)
+let inductive_type_args (g:env) (t_sc:Thunk.t (option typ)) (fv:fv)
   : ML (option (option universes & list term))
   = let tc_lid = Env.typ_of_datacon g.tcenv fv.fv_name in
     (* Looking up the type's arguments is not free, e.g. for nested
@@ -352,8 +352,9 @@ let inductive_type_args (g:env) (t_sc:option typ) (fv:fv)
         not (Nil? (fst (U.arrow_formals t)))
       | _ -> true
     in
-    match t_sc with
-    | Some t_sc when has_indices () ->
+    if not (has_indices ()) then None else
+    match Thunk.force t_sc with
+    | Some t_sc ->
       let rec aux (n:int) (t:typ) : ML (option (option universes & list term)) =
         let t = U.unrefine (N.unfold_whnf g.tcenv t) in
         let head, args = U.head_and_args_full t in
@@ -371,7 +372,7 @@ let inductive_type_args (g:env) (t_sc:option typ) (fv:fv)
 let pat_field_projection (g:env) (scrutinee:term) (pat_p:Range.t) (fv:fv) (us_opt:option universes)
                          (type_args:option (option universes & list term))
                          (sub_pats:list (pat & bool)) (i:int)
-  : ML (term & option typ)
+  : ML (term & Thunk.t (option typ))
   = let proj = Env.lookup_projector g.tcenv fv.fv_name i in
     let us_opt, imp_args =
       match type_args with
@@ -381,7 +382,7 @@ let pat_field_projection (g:env) (scrutinee:term) (pat_p:Range.t) (fv:fv) (us_op
     (* [proj #imp_args scrutinee], as [TcTerm] builds branch conditions:
        unlike a [match], the SMT encoding of a projector carries the field's
        type. *)
-    let projector_app () : ML (option (term & option typ)) =
+    let projector_app () : ML (option (term & Thunk.t (option typ))) =
       match imp_args, Env.try_lookup_lid g.tcenv proj with
       | Some imp_args, Some ((uvs, t_proj), _) ->
         let n = List.length imp_args in
@@ -398,13 +399,13 @@ let pat_field_projection (g:env) (scrutinee:term) (pat_p:Range.t) (fv:fv) (us_op
         let head = match us_opt with | Some us -> S.mk_Tm_uinst head us | None -> head in
         let args = List.map S.iarg imp_args @ [S.as_arg scrutinee] in
         let app = S.mk_Tm_app head args scrutinee.pos in
-        let t_head =
-          match uvs, us_opt with
-          | [], _ -> Some t_proj
-          | _, Some us -> Option.map fst (Env.try_lookup_and_inst_lid g.tcenv us proj)
-          | _, None -> None
-        in
-        let typ =
+        let typ = Thunk.mk (fun () ->
+          let t_head =
+            match uvs, us_opt with
+            | [], _ -> Some t_proj
+            | _, Some us -> Option.map fst (Env.try_lookup_and_inst_lid g.tcenv us proj)
+            | _, None -> None
+          in
           match t_head with
           | None -> None
           | Some t_head ->
@@ -412,7 +413,7 @@ let pat_field_projection (g:env) (scrutinee:term) (pat_p:Range.t) (fv:fv) (us_op
             if List.length formals <= n then None else
             let formals, rest = List.splitAt (n + 1) formals in
             let t = match rest with | [] -> U.comp_result c | _ -> U.arrow rest c in
-            Some (Subst.subst (U.subst_of_list formals args) t)
+            Some (Subst.subst (U.subst_of_list formals args) t))
         in
         Some (app, typ)
       | _ -> None
@@ -433,4 +434,4 @@ let pat_field_projection (g:env) (scrutinee:term) (pat_p:Range.t) (fv:fv) (us_op
       let pat = S.withinfo (Pat_cons(fv, us_opt, sub_pats)) pat_p in
       let branch = S.bv_to_name ith_pat_var in
       let eqn = Subst.close_branch (pat, None, branch) in
-      S.mk (Tm_match {scrutinee; ret_opt=None; brs=[eqn]; rc_opt=None}) scrutinee.pos, None
+      S.mk (Tm_match {scrutinee; ret_opt=None; brs=[eqn]; rc_opt=None}) scrutinee.pos, Thunk.mkv None
