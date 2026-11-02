@@ -95,15 +95,6 @@ void cherry_free_closure(cherry_obj *f, int mode) {
   free(f);
 }
 
-/* A big integer cell: sign and magnitude, in 32-bit limbs, least
-   significant first.  CHERRY_INT_LIT (cherry.h) builds one statically. */
-typedef struct cherry_bigint {
-  cherry_obj hdr;
-  uint32_t neg;
-  uint32_t len;
-  uint32_t d[];
-} cherry_bigint;
-
 /* A read-only view of either representation. */
 typedef struct {
   bool neg;

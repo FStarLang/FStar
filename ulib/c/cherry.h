@@ -248,9 +248,19 @@ static inline bool cherry_int_both_small(cherry_int a, cherry_int b) {
   return ((uintptr_t)a & (uintptr_t)b & 1u) != 0;
 }
 
+/* A big integer cell: sign and magnitude, in 32-bit limbs, least
+   significant first.  Big integers are canonical: a value that fits a small
+   integer is never a cell. */
+typedef struct cherry_bigint {
+  cherry_obj hdr;
+  uint32_t neg;
+  uint32_t len;
+  uint32_t d[];
+} cherry_bigint;
+
 /* An integer literal too large to be a small integer on a 32-bit target: a
    persistent cell (a reference count of zero) in static storage, built at
-   compile time with the layout of [cherry_bigint] (cherry.c), so that evaluating the
+   compile time with the layout of [cherry_bigint], so that evaluating the
    literal allocates nothing.  [CHERRY_INT_WIDE] is a literal that is small
    where small integers have 63 bits, and that cell elsewhere: values stay
    canonical either way. */
@@ -350,6 +360,12 @@ static inline int cherry_int_cmp(cherry_int a, cherry_int b) {
     intptr_t x = cherry_int_val(a), y = cherry_int_val(b);
     return (x > y) - (x < y);
   }
+  /* Being canonical, a big integer is further from zero than any small one.
+     (Testing both explicitly lets GCC see that [b] is not small here.) */
+  if (cherry_is_scalar(a) && !cherry_is_scalar(b))
+    return ((const cherry_bigint *)b)->neg ? 1 : -1;
+  if (cherry_is_scalar(b) && !cherry_is_scalar(a))
+    return ((const cherry_bigint *)a)->neg ? -1 : 1;
   return cherry_big_cmp(a, b);
 }
 

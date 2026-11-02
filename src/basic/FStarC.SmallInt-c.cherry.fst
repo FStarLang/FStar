@@ -26,15 +26,22 @@ module IA = FStar.ImmutableArray.Base
 
 type t = U64.t
 
-(* Defined before this module's [<] shadows the one on [int]. *)
-private let int_cmp (a b:int) : int = if a < b then -1 else if a = b then 0 else 1
+(* Defined before this module's [<] shadows the one on [int].  A three-way
+   comparison as a [t] directly, without going through [of_int]. *)
+private let int_cmp (a b:int) : U64.t =
+  if a < b then 0xffffffffffffffffUL else if a = b then 0UL else 1UL
 
-(* Wraps modulo 2^64 if the argument does not fit. *)
-let of_int x = U64.uint_to_t (x % 0x10000000000000000)
+(* Wraps modulo 2^64 if the argument does not fit.  A negative argument is
+   negated rather than reduced modulo 2^64, which would make it a big
+   integer in Cherry. *)
+let of_int x =
+  if x >= 0 then U64.uint_to_t (x % 0x10000000000000000)
+  else U64.sub_mod 0UL (U64.uint_to_t ((- x) % 0x10000000000000000))
 
+(* Likewise, no arithmetic on integers beyond 2^62 unless the result is. *)
 let to_int x =
-  let n = U64.v x in
-  if n >= 0x8000000000000000 then n - 0x10000000000000000 else n
+  if U64.gte x 0x8000000000000000UL then - (U64.v (U64.sub_mod 0UL x))
+  else U64.v x
 
 let of_char c = Cast.uint32_to_uint64 (FStar.Char.u32_of_char c)
 
@@ -71,6 +78,6 @@ let array_index arr i =
   assume (U64.v i < IA.length arr);
   IA.index arr (U64.v i)
 
-let int_compare a b = of_int (int_cmp a b)
+let int_compare a b = int_cmp a b
 
-let string_compare a b = of_int (FStar.String.compare a b)
+let string_compare a b = int_cmp (FStar.String.compare a b) 0
