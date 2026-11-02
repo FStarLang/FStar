@@ -706,7 +706,7 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_main $*.main \
+	  --custard_main $*.main \
 	  $(EXTRA_$*) $*.fst -o $@
 	@# Section 35.3.  These were set here for two rounds and consulted by
 	@# nothing, which is M10-phi-phi's bug in a second directory: an
@@ -766,7 +766,7 @@ $(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CHERRY", $(basename $(notdir $@)))
 	@mkdir -p $(CHERRY_DIR)
 	$(Q)$(FSTAR) $(WARN_ANY) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main $*.main \
+	  --custard_main $*.main \
 	  $(EXTRA_$*) $*.fst -o $@
 
 $(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc

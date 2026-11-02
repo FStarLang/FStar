@@ -159,7 +159,7 @@ CHERRY_CFLAGS ?= -std=c11 -g -DCHERRY_DEBUG -fsanitize=address,undefined -fno-sa
 
 $(OUTPUT_DIR)/%.cherry.c:
 	$(call msg, "EXTRACT CHERRY", $(basename $(notdir $@)))
-	$(FSTAR) --codegen Cherry --custard_monomorphize_types true \
+	$(FSTAR) --codegen Cherry \
 	  --custard_main $(subst .fst.checked,,$(notdir $<)) $< -o $@
 
 $(OUTPUT_DIR)/%.cherry-exe: $(OUTPUT_DIR)/%.cherry.c
