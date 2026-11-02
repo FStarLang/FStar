@@ -326,66 +326,111 @@ let match_is_syntactically_exhaustive (g:env) (t_sc:typ) (brs:list branch) : ML 
       )
     | _ -> false))
 
+let datacon_params_of_pat (g:env) (fv:fv) (sub_pats:list (pat & bool))
+  : ML (option (list term))
+  = match Env.num_datacon_ty_params g.tcenv fv.fv_name with
+    | Some n when n <= List.length sub_pats ->
+      let rec aux (ps:list (pat & bool)) : option (list term) =
+        match ps with
+        | [] -> Some []
+        | ({v=Pat_dot_term (Some t)}, _) :: ps ->
+          (match aux ps with None -> None | Some ts -> Some (t :: ts))
+        | _ -> None
+      in
+      aux (fst (List.splitAt n sub_pats))
+    | _ -> None
+
+let inductive_type_args (g:env) (t_sc:option typ) (fv:fv)
+  : ML (option (option universes & list term))
+  = let tc_lid = Env.typ_of_datacon g.tcenv fv.fv_name in
+    (* Looking up the type's arguments is not free, e.g. for nested
+       dependent tuples, the type of each nested projection contains the one
+       above it, twice. *)
+    let has_indices () =
+      match Env.lookup_qname g.tcenv tc_lid with
+      | Some (Inr ({ sigel = Sig_inductive_typ {t} }, _), _) ->
+        not (Nil? (fst (U.arrow_formals t)))
+      | _ -> true
+    in
+    match t_sc with
+    | Some t_sc when has_indices () ->
+      let rec aux (n:int) (t:typ) : ML (option (option universes & list term)) =
+        let t = U.unrefine (N.unfold_whnf g.tcenv t) in
+        let head, args = U.head_and_args_full t in
+        match (Subst.compress head).n with
+        | Tm_uinst ({n=Tm_fvar hfv}, us) when S.fv_eq_lid hfv tc_lid -> Some (Some us, List.map fst args)
+        | Tm_fvar hfv when S.fv_eq_lid hfv tc_lid -> Some (None, List.map fst args)
+        | _ when n > 0 ->
+          let t' = N.normalize_refinement N.whnf_steps g.tcenv t in
+          if U.term_eq t t' then None else aux (n - 1) t'
+        | _ -> None
+      in
+      aux 4 t_sc
+    | _ -> None
+
 let pat_field_projection (g:env) (scrutinee:term) (pat_p:Range.t) (fv:fv) (us_opt:option universes)
                          (type_args:option (option universes & list term))
                          (sub_pats:list (pat & bool)) (i:int)
-  : ML term
-  = let wild_pat pos = S.withinfo (Pat_var (wild_bv S.tun pos)) pos in
-      (* The [i]th field of the scrutinee, as an application of its
-         projector, as [TcTerm] builds branch conditions: unlike a [match],
-         the SMT encoding of a projector carries the field's type. The
-         projector's type arguments are the constructor's parameters, which
-         the elaborated pattern records as dot patterns. *)
-      let ith_projector_app (i:int) : ML (option term) =
-        (* The projector's implicit arguments are the parameters and the
-           indices of the scrutinee's type; failing to find the latter,
-           e.g. for a type with no indices, the parameters are those the
-           elaborated pattern records as dot patterns. *)
-        let us_opt, params =
-          match type_args with
-          | Some (us, args) -> (match us with | Some _ -> us | None -> us_opt), Some args
-          | None ->
-          (us_opt, (match Env.num_inductive_ty_params g.tcenv (Env.typ_of_datacon g.tcenv fv.fv_name) with
+  : ML (term & option typ)
+  = let proj = Env.lookup_projector g.tcenv fv.fv_name i in
+    let us_opt, imp_args =
+      match type_args with
+      | Some (us, args) -> (match us with | Some _ -> us | None -> us_opt), Some args
+      | None -> us_opt, datacon_params_of_pat g fv sub_pats
+    in
+    (* [proj #imp_args scrutinee], as [TcTerm] builds branch conditions:
+       unlike a [match], the SMT encoding of a projector carries the field's
+       type. *)
+    let projector_app () : ML (option (term & option typ)) =
+      match imp_args, Env.try_lookup_lid g.tcenv proj with
+      | Some imp_args, Some ((uvs, t_proj), _) ->
+        let n = List.length imp_args in
+        let formals, _ = U.arrow_formals_comp_ln_strict t_proj in
+        if List.length formals <= n then None else
+        let imps, rest = List.splitAt n formals in
+        (* The projector's implicit binders are the parameters and the
+           indices of its type: e.g. for an indexed type whose indices were
+           not found, the parameters alone do not do. *)
+        if not (List.for_all (fun b -> is_bqual_implicit_or_meta b.binder_qual) imps)
+        || is_bqual_implicit_or_meta (List.hd rest).binder_qual
+        then None else
+        let head = S.fvar (I.set_lid_range proj scrutinee.pos) None in
+        let head = match us_opt with | Some us -> S.mk_Tm_uinst head us | None -> head in
+        let args = List.map S.iarg imp_args @ [S.as_arg scrutinee] in
+        let app = S.mk_Tm_app head args scrutinee.pos in
+        let t_head =
+          match uvs, us_opt with
+          | [], _ -> Some t_proj
+          | _, Some us -> Option.map fst (Env.try_lookup_and_inst_lid g.tcenv us proj)
+          | _, None -> None
+        in
+        let typ =
+          match t_head with
           | None -> None
-          | Some n ->
-            if n > List.length sub_pats then None else
-            let ps, _ = List.splitAt n sub_pats in
-            let rec aux (ps:list (S.pat & bool)) : option (list term) =
-              match ps with
-              | [] -> Some []
-              | ({v=Pat_dot_term (Some t)}, _) :: ps ->
-                (match aux ps with None -> None | Some ts -> Some (t :: ts))
-              | _ -> None
-            in
-            aux ps))
+          | Some t_head ->
+            let formals, c = U.arrow_formals_comp_strict t_head in
+            if List.length formals <= n then None else
+            let formals, rest = List.splitAt (n + 1) formals in
+            let t = match rest with | [] -> U.comp_result c | _ -> U.arrow rest c in
+            Some (Subst.subst (U.subst_of_list formals args) t)
         in
-        match params with
-        | None -> None
-        | Some params ->
-          let proj = Env.lookup_projector g.tcenv fv.fv_name i in
-          match Env.try_lookup_lid g.tcenv proj with
-          | None -> None //e.g., we are typechecking the projector itself
-          | Some _ ->
-            let head = S.fvar (I.set_lid_range proj scrutinee.pos) None in
-            let head = match us_opt with | Some us -> S.mk_Tm_uinst head us | None -> head in
-            Some (S.mk_Tm_app head (List.map S.iarg params @ [S.as_arg scrutinee]) scrutinee.pos)
+        Some (app, typ)
+      | _ -> None
+    in
+    match projector_app () with
+    | Some r -> r
+    | None ->
+      let wild_pat pos = S.withinfo (Pat_var (wild_bv S.tun pos)) pos in
+      let ith_pat_var, ith_pat =
+          // NOTE: This variable must have an ID distinct from all the other
+          // wildcards below (constantly 0). Otherwise, the close_branch call
+          // below will wrongly turn this bv in the branch expression to @0,
+          // the 0th DB index.
+          let bv = { wild_bv S.tun scrutinee.pos with index = 1 } in
+          bv, S.withinfo (Pat_var bv) scrutinee.pos
       in
-      let mk_ith_projector i =
-        match ith_projector_app i with
-        | Some t -> t
-        | None ->
-        let ith_pat_var, ith_pat =
-            // NOTE: This variable must have an ID distinct from all the other
-            // wildcards below (constantly 0). Otherwise, the close_branch call
-            // below will wrongly turn this bv in the branch expression to @0,
-            // the 0th DB index.
-            let bv = { wild_bv S.tun scrutinee.pos with index = 1 } in
-            bv, S.withinfo (Pat_var bv) scrutinee.pos
-        in
-        let sub_pats = List.mapi (fun j (s,b) -> if i <> j then wild_pat s.p,b else ith_pat,b) sub_pats in
-        let pat = S.withinfo (Pat_cons(fv, us_opt, sub_pats)) pat_p in
-        let branch = S.bv_to_name ith_pat_var in
-        let eqn = Subst.close_branch (pat, None, branch) in
-        S.mk (Tm_match {scrutinee; ret_opt=None; brs=[eqn]; rc_opt=None}) scrutinee.pos
-      in
-      mk_ith_projector i
+      let sub_pats = List.mapi (fun j (s,b) -> if i <> j then wild_pat s.p,b else ith_pat,b) sub_pats in
+      let pat = S.withinfo (Pat_cons(fv, us_opt, sub_pats)) pat_p in
+      let branch = S.bv_to_name ith_pat_var in
+      let eqn = Subst.close_branch (pat, None, branch) in
+      S.mk (Tm_match {scrutinee; ret_opt=None; brs=[eqn]; rc_opt=None}) scrutinee.pos, None

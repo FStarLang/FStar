@@ -580,9 +580,15 @@ annotation (§5):
   projectors applied to the scrutinee with the parameters and indices of
   its type (`inductive_type_args`), e.g. `TEq? #a #b #c s`, rather than a
   `match` on `s`, about which the SMT solver knows much less. The
-  scrutinee's type is looked up only for an indexed type; otherwise the
-  parameters are the pattern's dot terms (looking up the type means
-  normalizing it, which can be slow). A pattern variable that a dot term
+  arguments are found in the scrutinee's type only for an indexed type;
+  otherwise the parameters are the pattern's dot terms (finding them means
+  normalizing the type, which can be slow). For a nested pattern, the
+  scrutinee is a projection (`pat_field_projection`), whose type is the
+  projector's result type; only if the projector or its arguments cannot
+  be found is it a single-branch `match`, of unknown type. A projection is
+  only well-typed when the enclosing discriminator holds, and it is only
+  used under it: e.g. `C? s /\ P (C?.f s)` is false when `C? s` is,
+  whatever `C?.f s` means (its SMT encoding is total). A pattern variable that a dot term
   mentions is replaced by the corresponding projection of the scrutinee
   (`pattern_var_projections`). A `()` pattern, a variable, or the only
   constructor of a type (with sub-patterns without conditions) has no
@@ -748,8 +754,11 @@ place its postcondition lives.
   entry found would be the one the sub-computation just inserted, and the
   guard would be silently dropped, which is unsound.
 * **`quietly`** drops the guard of a computation whose guards have already
-  been emitted (e.g. `type_of_checked`, a universe of a type Core
-  computed), and keeps its cache only when it had no guard.
+  been emitted (e.g. a universe of a type Core computed), and keeps its
+  cache only when it had no guard. `type_of_for_hypothesis` similarly drops
+  the guard of typing a term only used in a hypothesis that holds anyway,
+  e.g. `e0 == p` on the branch where the scrutinee `e0` matches `p`, when
+  relating two matches.
 * **Relation failures.** Failures to decide a relation without a guard are
   remembered for the rest of a top-level check
   (`with_relation_failure_memo`), keyed on the relation, the terms, the

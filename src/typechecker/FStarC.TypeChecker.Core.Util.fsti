@@ -98,12 +98,33 @@ val abs_against_arrow (g:env) (e:term) (t:typ)
    condition needs no SMT query. *)
 val match_is_syntactically_exhaustive (g:env) (t_sc:typ) (brs:list branch) : ML bool
 
+(* The parameters of the constructor [fv]'s type, as recorded by the dot
+   patterns of the elaborated pattern [fv sub_pats], if they all are. *)
+val datacon_params_of_pat (g:env) (fv:fv) (sub_pats:list (pat & bool))
+  : ML (option (list term))
+
+(* For a scrutinee of type [t_sc] matched by a pattern of the constructor
+   [fv]: the universes and arguments (parameters and indices) of [fv]'s
+   inductive type in [t_sc], as the implicit arguments of its discriminators
+   and projectors. Only looked up for an indexed type ([None] otherwise): the
+   parameters alone are the pattern's dot terms. *)
+val inductive_type_args (g:env) (t_sc:option typ) (fv:fv)
+  : ML (option (option universes & list term))
+
 (* The [i]th field of [scrutinee], matched by the constructor pattern
-   [fv sub_pats] (at [pat_p]): an application of the field's projector if
-   the projector's type arguments are known (from [type_args], the
-   universes and arguments of the type of the scrutinee, or from the dot
-   patterns of the parameters in [sub_pats]), and a [match] otherwise. *)
+   [fv sub_pats] (at [pat_p]), and its type, if known. It is an
+   application of the field's projector to its implicit arguments (from
+   [type_args], see [inductive_type_args], or else the parameters recorded
+   as dot patterns in [sub_pats]) and to [scrutinee], whose type is that of
+   the projector's result. Only when the projector or its implicit
+   arguments cannot be found is it a single-branch [match], of unknown
+   type.
+
+   The term is only well-typed if [scrutinee] is an instance of [fv]: it is
+   meant to be used under that condition, e.g. conjoined with [fv]'s
+   discriminator in a branch condition. The SMT encoding of projectors and
+   matches is total, so it is meaningful, if unspecified, otherwise. *)
 val pat_field_projection (g:env) (scrutinee:term) (pat_p:Range.t) (fv:fv) (us_opt:option universes)
                          (type_args:option (option universes & list term))
                          (sub_pats:list (pat & bool)) (i:int)
-  : ML term
+  : ML (term & option typ)

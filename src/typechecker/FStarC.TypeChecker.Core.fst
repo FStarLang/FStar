@@ -986,7 +986,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                      e.g. [y:t{x == Unknown u}] when relating
                      [dsum_type_of_unknown_tag s] to [t]. *)
                   let! sc_eq =
-                    match! type_of_checked g e0 with
+                    match! type_of_for_hypothesis g e0 with
                     | None -> return None
                     | Some (_, t_sc) ->
                       let! u_sc = quietly (universe_of_well_typed_term g t_sc) in
@@ -1175,10 +1175,12 @@ and do_check_and_promote (g:env) (e:term)
       | _ -> eff in
     return (eff, t, mk_facts g e eff t sf)
 
-(* The type of a term that has already been checked, whose typing guard has
-   hence already been emitted and may be dropped. The cache is kept only when
-   there was no guard: its entries claim their guards have been emitted. *)
-and type_of_checked (g:env) (e:term)
+(* The type of [e], if it can be found, for stating a hypothesis about [e]:
+   the guard of [e]'s typing is dropped, so the type may only be used in a
+   hypothesis that holds whatever the guard, e.g. [e == p] on a branch where
+   [e] matches [p]. The cache is kept only when there was no guard: its
+   entries claim their guards have been emitted. *)
+and type_of_for_hypothesis (g:env) (e:term)
   : ML (result (option (eff & typ)))
   = fun ctx cache ->
       match check "checked term" g e ctx cache with
@@ -2472,7 +2474,7 @@ and check_match (g:env) (r:R.t) (sc:term) (ret:option (binder & typ & bool)) (br
         | (p, None, b) :: rest ->
           let _, (p, _, b) = open_branch g (p, None, b) in
           let! (bs, us) = with_context "check_pat" None (fun _ -> check_pat g p t_sc) in
-          let! branch_condition = pattern_branch_condition g sc p in
+          let! branch_condition = pattern_branch_condition g sc t_sc p in
           let pat_exp = PatternUtils.raw_pat_as_exp g.tcenv p |> Option.must |> fst in
           let pat_sc_eq = U.mk_eq2 u_sc t_sc sc pat_exp in
           let hyp, this, next_path_condition =
@@ -2658,74 +2660,38 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
    the variables of the pattern: those that the pattern's dot terms (e.g. the
    parameters of a constructor) mention are replaced by the corresponding
    projections of the scrutinee. *)
-and pattern_branch_condition (g:env) (scrutinee:term) (pat:pat)
+and pattern_branch_condition (g:env) (scrutinee:term) (t_sc:typ) (pat:pat)
   : ML (result (option term))
-  = let! bc = pattern_branch_condition' g scrutinee pat in
+  = let! bc = pattern_branch_condition' g scrutinee (Some t_sc) pat in
     match bc with
     | None -> return None
     | Some bc ->
-      let! projs = pattern_var_projections g scrutinee pat in
+      let projs = pattern_var_projections g scrutinee (Some t_sc) pat in
       let sub =
         List.fold_left
           (fun (sub:list subst_elt) (x, t) -> sub @ [NT(x, Subst.subst sub t)])
           [] projs in
       return (Some (Subst.subst sub bc))
 
-(* Each variable of [pat], as a projection of [scrutinee], in the order
-   they are bound. *)
-and pattern_var_projections (g:env) (scrutinee:term) (pat:pat)
-  : ML (result (list (bv & term)))
+(* Each variable of [pat], as a projection of [scrutinee] (of type [t_sc],
+   if known), in the order they are bound. *)
+and pattern_var_projections (g:env) (scrutinee:term) (t_sc:option typ) (pat:pat)
+  : ML (list (bv & term))
   = match pat.v with
-    | Pat_var x -> return [(x, scrutinee)]
+    | Pat_var x -> [(x, scrutinee)]
     | Pat_cons (fv, us_opt, sub_pats) ->
-      let! type_args = inductive_type_args g scrutinee fv in
-      let! projs =
-        mapi (fun i (pi, _) ->
-          match pi.v with
-          | Pat_var _ | Pat_cons _ ->
-            pattern_var_projections g (pat_field_projection g scrutinee pat.p fv us_opt type_args sub_pats i) pi
-          | _ -> return []) sub_pats
-      in
-      return (List.flatten projs)
-    | _ -> return []
-
-(* The universes and arguments (parameters and indices) of the inductive
-   type of the constructor [fv] of which [scrutinee] is an instance, as the
-   implicit arguments of its discriminators and projectors. *)
-and inductive_type_args (g:env) (scrutinee:term) (fv:fv)
-  : ML (result (option (option universes & list term)))
-  = let tc_lid = Env.typ_of_datacon g.tcenv fv.fv_name in
-    (* Only an indexed type needs its arguments looked up in the scrutinee's
-       type: the parameters are the pattern's dot terms (see
-       [pat_field_projection]). Looking them up is not free, e.g. for nested
-       dependent tuples, the type of each nested projection contains the one
-       above it, twice. *)
-    let has_indices =
-      match Env.lookup_qname g.tcenv tc_lid with
-      | Some (Inr ({ sigel = Sig_inductive_typ {t} }, _), _) ->
-        not (Nil? (fst (U.arrow_formals t)))
-      | _ -> true
-    in
-    if not has_indices then return None else
-    let! t_sc = type_of_checked g scrutinee in
-    match t_sc with
-    | None -> return None
-    | Some (_, t_sc) ->
-      let rec aux (n:int) (t:typ) : ML (option (option universes & list term)) =
-        let t = U.unrefine (N.unfold_whnf g.tcenv t) in
-        let head, args = U.head_and_args_full t in
-        match (Subst.compress head).n with
-        | Tm_uinst ({n=Tm_fvar hfv}, us) when S.fv_eq_lid hfv tc_lid -> Some (Some us, List.map fst args)
-        | Tm_fvar hfv when S.fv_eq_lid hfv tc_lid -> Some (None, List.map fst args)
-        | _ when n > 0 ->
-          let t' = N.normalize_refinement N.whnf_steps g.tcenv t in
-          if U.term_eq t t' then None else aux (n - 1) t'
-        | _ -> None
-      in
-      return (aux 4 t_sc)
+      let type_args = inductive_type_args g t_sc fv in
+      List.flatten (List.mapi (fun i (pi, _) ->
+        match pi.v with
+        | Pat_var _ | Pat_cons _ ->
+          let proj, t_proj = pat_field_projection g scrutinee pat.p fv us_opt type_args sub_pats i in
+          pattern_var_projections g proj t_proj pi
+        | _ -> []) sub_pats)
+    | _ -> []
 
 and pattern_branch_condition' (g:env)
                              (scrutinee:term)
+                             (t_sc:option typ)
                              (pat:pat)
   : ML (result (option term))
   = match pat.v with
@@ -2757,7 +2723,7 @@ and pattern_branch_condition' (g:env)
         let branch2 = (S.withinfo (Pat_var (wild_bv S.tun pat.p)) pat.p, None, U.exp_false_bool) in
         S.mk (Tm_match {scrutinee; ret_opt=None; brs=[branch1; branch2]; rc_opt=None}) scrutinee.pos
       in
-      let! type_args = inductive_type_args g scrutinee fv in
+      let type_args = inductive_type_args g t_sc fv in
       let mk_ith_projector i = pat_field_projection g scrutinee pat.p fv us_opt type_args sub_pats i in
       let discrimination =
         let is_induc, datacons = Env.datacons_of_typ g.tcenv (Env.typ_of_datacon g.tcenv fv.fv_name) in
@@ -2786,20 +2752,9 @@ and pattern_branch_condition' (g:env)
             match type_args with
             | Some _ -> type_args
             | None ->
-              match Env.num_inductive_ty_params g.tcenv (Env.typ_of_datacon g.tcenv fv.fv_name) with
-              | Some n when n <= List.length sub_pats ->
-                let ps, _ = List.splitAt n sub_pats in
-                let rec aux (ps:list (S.pat & bool)) : option (list term) =
-                  match ps with
-                  | [] -> Some []
-                  | ({v=Pat_dot_term (Some t)}, _) :: ps ->
-                    (match aux ps with None -> None | Some ts -> Some (t :: ts))
-                  | _ -> None
-                in
-                (match aux ps with
-                 | Some ts -> Some (us_opt, ts)
-                 | None -> None)
-              | _ -> None
+              match datacon_params_of_pat g fv sub_pats with
+              | Some ts -> Some (us_opt, ts)
+              | None -> None
           in
           let app =
             match type_args with
@@ -2821,8 +2776,8 @@ and pattern_branch_condition' (g:env)
             | Pat_var _ ->
               return None
             | _ ->
-              let scrutinee_sub_term = mk_ith_projector i in
-              pattern_branch_condition' g scrutinee_sub_term pi)
+              let sub_term, t_sub_term = mk_ith_projector i in
+              pattern_branch_condition' g sub_term t_sub_term pi)
           sub_pats
       in
       let guards = List.collect (function None -> [] | Some t -> [t]) (discrimination :: sub_term_guards) in
