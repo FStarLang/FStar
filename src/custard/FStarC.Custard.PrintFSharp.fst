@@ -639,6 +639,7 @@ let binop (at_width:bool) (o:op) : ML (option string) =
 let unop (at_width:bool) (o:op) : ML (option string) =
   match o with
   | BNot -> Some "~~~"
+  | Neg -> Some "-"
   | Not -> Some (if at_width then "~~~" else "not")
   | _ -> None
 

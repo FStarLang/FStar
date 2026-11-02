@@ -1996,6 +1996,11 @@ let prefix_op (o:prim_op) : ML (option string) =
   match o.po_op with
   | Not -> Some (if at_int_width o then "~" else "!")
   | BNot -> Some "~"
+  (* At [Float16]/[BFloat16] the operand is a struct with no C operator. *)
+  | Neg ->
+    (match o.po_ty with
+     | Some (PFloat Float16) | Some (PFloat BFloat16) -> None
+     | _ -> Some "-")
   | _ -> None
 
 (* Section 66.  At the two narrow widths the operand type is a struct, so

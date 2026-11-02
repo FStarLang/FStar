@@ -539,6 +539,7 @@ let krml_op (o:op) : ML K.op =
   | Mod -> K.Mod
   | BOr -> K.BOr | BAnd -> K.BAnd | BXor -> K.BXor
   | BShiftL -> K.BShiftL | BShiftR -> K.BShiftR | BNot -> K.BNot
+  | Neg -> K.Neg
   | Eq -> K.Eq | Neq -> K.Neq | Lt -> K.Lt | Lte -> K.Lte
   | Gt -> K.Gt | Gte -> K.Gte
   | And -> K.And | Or -> K.Or | Not -> K.Not
