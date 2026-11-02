@@ -354,6 +354,10 @@ type op =
   | Add | AddW | Sub | SubW | Mult | MultW | Div | DivW | Mod
   (** The [W] variants wrap around instead of being undefined on overflow. *)
   | BOr | BAnd | BXor | BShiftL | BShiftR | BNot
+  (** Arithmetic negation of one operand.  No F* operator becomes this; it
+      is for plugin rules (Kuiper's float [neg]), and only the KrmlC, C and
+      F# backends print it (C and F# only at the wide types). *)
+  | Neg
   | Eq | Neq | Lt | Lte | Gt | Gte
   | And | Or | Not
   (** The buffer operations (section 8.4).  All of them are impure except

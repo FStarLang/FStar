@@ -594,6 +594,7 @@ let op_name (o:prim_op) : ML string =
     (match o.po_op with
      | Add | AddW -> "( +. )" | Sub | SubW -> "( -. )"
      | Mult | MultW -> "( *. )" | Div | DivW -> "( /. )"
+     | Neg -> "( ~-. )"
      | Eq -> "( = )" | Neq -> "( <> )"
      | Lt -> "( < )" | Lte -> "( <= )" | Gt -> "( > )" | Gte -> "( >= )"
      | _ -> failwith "Custard: no OCaml float operator for this operation")
@@ -604,6 +605,7 @@ let op_name (o:prim_op) : ML string =
      | Mult -> "mul" | MultW -> "mul_mod" | Div -> "div" | DivW -> "div"
      | Mod -> "rem"
      | BOr -> "logor" | BAnd -> "logand" | BXor -> "logxor" | BNot -> "lognot"
+     | Neg -> "neg"
      | BShiftL -> "shift_left" | BShiftR -> "shift_right"
      | Eq -> "eq" | Neq -> "ne" | Lt -> "lt" | Lte -> "lte"
      | Gt -> "gt" | Gte -> "gte"
@@ -633,6 +635,7 @@ let op_name (o:prim_op) : ML string =
      | Gt -> "(>)" | Gte -> "(>=)"
      | And -> "(&&)" | Or -> "(||)" | Not -> "not"
      | BOr -> "(lor)" | BAnd -> "(land)" | BXor -> "(lxor)" | BNot -> "lnot"
+     | Neg -> "(~-)"
      | BShiftL -> "(lsl)" | BShiftR -> "(lsr)"
      (* Section 49.1.  See the [PInt] case above. *)
      | BufRead | BufWrite | BufSub | BufFree | BufNull | BufIsNull
