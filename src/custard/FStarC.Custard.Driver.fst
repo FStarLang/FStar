@@ -412,6 +412,10 @@ let write_unit_iface (st:Extract.state) (homes:HashTable.t string string)
 let phase (name:string) (f : unit -> ML 'a) : ML 'a = Prof.timed name f
 
 let run_phases (deps:Dep.deps) (env:TcEnv.env) : ML unit =
+  if Options.custard_hoist_locals () && Options.codegen_name () <> "C" then
+    E.raise_error0 E.Fatal_OptionsNotCompatible [
+      text "--custard_hoist_locals requires --codegen C.";
+      text "It is not implemented for Cherry or the other code generators." ];
   if Options.custard_static_header () then begin
     if Options.codegen_name () <> "C" then
       E.raise_error0 E.Fatal_OptionsNotCompatible [

@@ -198,6 +198,7 @@ let defaults = [
   ("custard_entry_module"                      , List []);
   ("custard_c_no_prefix"                       , List []);
   ("custard_static_header"                     , Bool false);
+  ("custard_hoist_locals"                      , Bool false);
   ("custard_main"                              , Unset);
   ("target"                                    , Unset);
   ("custard_dump_ir"                           , Bool false);
@@ -471,6 +472,7 @@ let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      
 let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
 let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      (as_list as_string)
 let get_custard_static_header   ()      = lookup_opt "custard_static_header"    as_bool
+let get_custard_hoist_locals    ()      = lookup_opt "custard_hoist_locals"     as_bool
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_target                  ()      = lookup_opt "target"                   (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
@@ -889,6 +891,15 @@ specialization: a specialized name carries a hint (section 30.15) that is \
 free to change when the monomorphizer's input changes, and is not something \
 another translation unit may depend on. Two public definitions that would \
 share an unqualified name is an error.");
+
+  ( noshort,
+    "custard_hoist_locals",
+    Const (Bool true),
+    text "With --codegen C, place all automatic local declarations at the \
+beginning of each function, keeping initialization at its original execution \
+point. Unsafe moves of variable-length arrays or C++ reference bindings are \
+errors. This does not enable C89 compatibility or initialize uninitialized \
+locals. Not implemented for Cherry or other code generators.");
 
   ( noshort,
     "custard_static_header",
@@ -2279,6 +2290,7 @@ let custard_entrypoint_files     () = get_custard_entrypoints ()
 let custard_entry_modules        () = get_custard_entry_module ()
 let custard_c_no_prefix          () = get_custard_c_no_prefix ()
 let custard_static_header        () = get_custard_static_header ()
+let custard_hoist_locals         () = get_custard_hoist_locals ()
 let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()

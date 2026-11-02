@@ -1145,6 +1145,11 @@ SUBDIRS += plugin
 
 include $(FSTAR_ROOT)/mk/test.mk
 
+all: $(OUTPUT_DIR)/hoist-locals.checked
+$(OUTPUT_DIR)/hoist-locals.checked: $(addprefix $(CACHE_DIR)/, HoistLocals.fst.checked RefBind.fst.checked CShortCircuit.fst.checked) $(FSTAR_EXE) hoistlocals.py HoistLocals_stubs.h RefBind_stubs.h
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 hoistlocals.py $(OUTPUT_DIR)/hoist-locals -- $(FSTAR)
+	$(Q)touch $@
+
 all: $(OUTPUT_DIR)/static-header.checked
 $(OUTPUT_DIR)/static-header.checked: $(addprefix $(CACHE_DIR)/, StaticHeader.fst.checked StaticHeaderOther.fst.checked StaticHeaderCompare.fst.checked StaticHeaderApp.fst.checked StaticHeaderReject.fst.checked StaticHeaderReuse.fst.checked StaticHeader_hidden.fst.checked StaticHeaderReuseApp.fst.checked) $(FSTAR_EXE) staticheader.py StaticHeader_stubs.h StaticHeader_stubs.c StaticHeader_user.c StaticHeader_user.cpp
 	@mkdir -p $(OUTPUT_DIR)

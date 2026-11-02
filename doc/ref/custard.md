@@ -3071,6 +3071,53 @@ Emission:
 
 ---
 
+### 6.1 Function-level C local declarations
+
+`--custard_hoist_locals` is an opt-in, no-argument option of `--codegen C`.
+It places every automatic local declaration in the outermost function block,
+before executable statements, including temporaries, allocation storage and
+fill-loop counters introduced by the printer. Without the option, emission is
+unchanged. Cherry and the other backends reject the option.
+
+Initialized declarations already in the leading declaration zone retain their
+initializers. Later declarations move without an initializer; assignments stay
+at the original execution points. In particular, branch initializers remain
+conditional, loop initializers run on the original iterations, and short-circuit
+operands remain short-circuited. Heap allocation, size-overflow and failure
+checks do not move. An uninitialized Pulse slot remains uninitialized.
+
+Fixed-size stack arrays move as storage declarations, with typed fill loops at
+their original initialization points when an initializer list can no longer be
+used. Arrays are never assigned as values, and zero filling does not assume
+that a null pointer has an all-bits-zero representation. A variable-length
+array may remain in the leading declaration zone, but moving one out of a
+branch or loop, or across preceding statements, is an error (368). Its bound
+evaluation and allocation scope must not change.
+
+Likewise, a `custard_c_reference` handle whose initialization would have to be
+split is rejected: C++ references cannot be declared and later rebound. Foreign
+types used with this C option must have ordinary, assignable C object semantics;
+it does not support arbitrary C++ constructors and destructors.
+
+Preprocessor guards travel with declarations, and initializers keep their
+original guards. This avoids introducing unused locals, or mentioning a type
+outside the configuration that declares it. The option also applies to
+generated initialization functions and definitions emitted into static
+headers. Linked units are not rewritten and no `.cui` format or ABI changes.
+External headers and opaque statement macros are outside the printer's control.
+
+Implementation: the C printer retains a small structured function-body
+document until rendering, distinguishing local declarations, blocks, `for`
+initializers, comments and preprocessor alternatives. A late traversal collects
+declarations after all C temporaries exist and checks that none remain in the
+residual body. This is separate from the printer's expression `hoist`, which
+turns a statement-shaped expression into a temporary.
+
+This option is not C89 mode, does not zero-initialize locals, and does not
+promise lower stack usage: widening storage scopes can increase a function's
+stack requirements. Use fixed-size assignable storage, or omit the option,
+when a declaration cannot be moved safely.
+
 ## 7. Effects and purity
 
 The custom-rule table of §8 is a *value*-level mechanism: it says what a call
