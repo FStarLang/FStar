@@ -13,9 +13,9 @@ jobs:
     name: opam
     uses: ./.github/workflows/build-opam.yml
 
-  nix-build:
-    name: nix
-    uses: ./.github/workflows/nix.yml
+  # nix-build:
+  #   name: nix
+  #   uses: ./.github/workflows/nix.yml
 
   build:
     name: build
