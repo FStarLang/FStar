@@ -25,7 +25,7 @@ let rec curried_arrow_formals_comp (k : (FStarC_Syntax_Syntax.term') FStarC_Synt
   ))
 
 let norm_with_steps (steps : (FStarC_TypeChecker_Env.step) list) (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Normalize.normalize steps env t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.SMTEncoding.EncodeTerm.norm_with_steps")
+  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize steps env t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.SMTEncoding.EncodeTerm.norm_with_steps")
 
 let norm (env : FStarC_SMTEncoding_Env.env_t) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (norm_with_steps (FStarC_TypeChecker_Env.Beta :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: (FStarC_TypeChecker_Env.Eager_unfolding :: []))) (env).FStarC_SMTEncoding_Env.tcenv t)
@@ -236,7 +236,7 @@ let mkForall_fuel (mname : string) (r : FStarC_Range_Type.range) : ((((FStarC_SM
   (mkForall_fuel' mname r Prims.int_one)
 
 let normalize_refinement (steps : (FStarC_TypeChecker_Env.step) list) (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Normalize.normalize_refinement steps env t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.SMTEncoding.EncodeTerm.normalize_refinement")
+  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize_refinement steps env t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.SMTEncoding.EncodeTerm.normalize_refinement")
 
 let is_arithmetic_primitive (head : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (args : ('tmp) list) : bool =
   (match ((head).FStarC_Syntax_Syntax.n, args) with
@@ -1315,7 +1315,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                             ))
                         ) in
                       (match tmp11 with
-                        | (guards, guard_decls) -> (let tmp12 = (FStarC_TypeChecker_Normalize.maybe_ghost_to_pure (env).FStarC_SMTEncoding_Env.tcenv res) in
+                        | (guards, guard_decls) -> (let tmp12 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_maybe_ghost_to_pure (env).FStarC_SMTEncoding_Env.tcenv res) in
                           let is_pure = (FStarC_Syntax_Util.is_pure_comp tmp12) in
                           let tmp13 = (FStarC_SMTEncoding_Util.mkImp (guards, res_pred)) in
                           let tmp14 = (((app :: []) :: []), vars, tmp13) in
@@ -1338,7 +1338,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                           let tsym = (Prims.strcat prefix tmp20) in
                           let cvar_sorts = (BatList.map FStarC_SMTEncoding_Term.fv_sort cvars1) in
                           let tmp21 = (FStarC_Options.log_queries ()) in
-                          let caption = (if tmp21 then (let tmp22 = (FStarC_TypeChecker_Normalize.term_to_string (env).FStarC_SMTEncoding_Env.tcenv t1) in
+                          let caption = (if tmp21 then (let tmp22 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_term_to_string (env).FStarC_SMTEncoding_Env.tcenv t1) in
                             let tmp23 = ((fun s c1 c2 -> let c1 = BatUChar.chr c1 and c2 = BatUChar.chr c2 in BatUTF8.map (fun x -> if BatUChar.eq x c1 then c2 else x) s) tmp22 10 32) in
                             (Some (tmp23))) else None) in
                           let tdecl = (FStarC_SMTEncoding_Term.DeclFun (tsym, cvar_sorts, FStarC_SMTEncoding_Term.Term_sort, caption)) in
@@ -1710,7 +1710,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
               (match tmp4 with
                 | (vars, guards, envbody, decls, tmp5) -> (let tmp6 = (FStarC_SMTEncoding_Util.is_smt_reifiable_rc (env).FStarC_SMTEncoding_Env.tcenv rc) in
                   let body1 = (if tmp6 then (let tmp7 = (FStarC_Syntax_Util.mk_reify body (Some ((rc).FStarC_Syntax_Syntax.residual_effect))) in
-                    (FStarC_TypeChecker_Util.norm_reify (envbody).FStarC_SMTEncoding_Env.tcenv [] tmp7)) else body) in
+                    (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Util_norm_reify (envbody).FStarC_SMTEncoding_Env.tcenv [] tmp7)) else body) in
                   let tmp7 = (encode_term body1 envbody) in
                   (match tmp7 with
                     | (body2, decls') -> (let is_pure = (FStarC_Syntax_Util.is_pure_effect (rc).FStarC_Syntax_Syntax.residual_effect) in

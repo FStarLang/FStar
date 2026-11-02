@@ -1725,6 +1725,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               match s with
               | Match _ :: _
               | Arg _ :: _
+              | Projector _ :: _
               | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
               | MemoLazy _ :: _ when cfg.steps.beta ->
                 true

@@ -140,6 +140,33 @@ ghost fn is_send_pts_to_mask' u#a (#t: Type u#a) a #f v mask : is_send (pts_to_m
 }
 let is_send_pts_to_mask = is_send_pts_to_mask'
 
+ghost fn placeless_empty_pts_to_mask' u#a (#t: Type u#a)
+    (arr: array t) (f: perm) (v: Seq.seq (option t))
+    : placeless (pts_to_mask arr #f v (fun _ -> False)) = l1 l2 {
+  ghost_impersonate l1
+    (on l1 (pts_to_mask arr #f v (fun _ -> False)))
+    (on l2 (pts_to_mask arr #f v (fun _ -> False)))
+    fn _ {
+      on_elim (pts_to_mask arr #f v (fun _ -> False));
+      unfold pts_to_mask;
+      with l'. _;
+      loc_gather l1 #l';
+      assert pure (
+        mk_carrier' arr f v (fun _ -> False) (arr.vis l1) `Map.equal`
+        mk_carrier' arr f v (fun _ -> False) (arr.vis l2));
+      ghost_impersonate l2
+        (pcm_pts_to (lptr_of arr)
+          (mk_carrier' arr f v (fun _ -> False) (arr.vis l2)) **
+          pure (Seq.length v == reveal arr.length))
+        (on l2 (pts_to_mask arr #f v (fun _ -> False)))
+        fn _ {
+          fold pts_to_mask arr #f v (fun _ -> False);
+          on_intro (pts_to_mask arr #f v (fun _ -> False));
+        };
+    };
+}
+let placeless_empty_pts_to_mask = placeless_empty_pts_to_mask'
+
 let aux #t (a: array t) f (v: Seq.seq (option t)) mask =
   (Seq.length v == reveal a.length /\ (mask_nonempty mask a.length ==> f <=. 1.0R))
 let pts_to_mask_timeless #t a f v mask =
@@ -556,6 +583,9 @@ let gsub_null arr i j = ()
 let length_gsub #t arr i j = ()
 let offset_of_gsub #t arr i j = ()
 let base_of_gsub #t arr i j = ()
+
+let loc_id_of_array_gsub #t arr i j = ()
+let visibility_of_array_gsub #t arr i j = ()
 
 let same_base_null #t x y = ()
 

@@ -85,12 +85,14 @@ let unit_entries (keys : ((string * string)) list) (homes : (string) FStarC_Hash
     | (FStarC_Custard_Syntax.DExternal (u__0)) -> true
     | tmp2 -> false
   ) then [] else (let tmp2 = (FStarC_Options.codegen_c ()) in
-  let tmp3 = (if tmp2 then (match d with
-      | (FStarC_Custard_Syntax.DLet (dl)) -> (let tmp3 = (FStarC_Custard_PrintC.is_public dl) in
-        (not tmp3))
-      | tmp3 -> false
+  let tmp3 = (if tmp2 then (let tmp3 = (FStarC_Options.custard_static_header ()) in
+    (not tmp3)) else false) in
+  let tmp4 = (if tmp3 then (match d with
+      | (FStarC_Custard_Syntax.DLet (dl)) -> (let tmp4 = (FStarC_Custard_PrintC.is_public dl) in
+        (not tmp4))
+      | tmp4 -> false
     ) else false) in
-  (if tmp3 then [] else (let tmp4 = (match d with
+  (if tmp4 then [] else (let tmp5 = (match d with
       | (FStarC_Custard_Syntax.DLet (dl)) -> ((FStarC_Custard_Syntax.DLet ({ FStarC_Custard_Syntax.dl_name = (dl).FStarC_Custard_Syntax.dl_name;
           dl_typars = (dl).FStarC_Custard_Syntax.dl_typars;
           dl_binders = (dl).FStarC_Custard_Syntax.dl_binders;
@@ -98,63 +100,106 @@ let unit_entries (keys : ((string * string)) list) (homes : (string) FStarC_Hash
           dl_eff = (dl).FStarC_Custard_Syntax.dl_eff;
           dl_body = FStarC_Custard_Syntax.unit_expr;
           dl_flags = (dl).FStarC_Custard_Syntax.dl_flags })), None)
-      | (FStarC_Custard_Syntax.DType (dt)) -> (let tmp4 = (info_of (dt).FStarC_Custard_Syntax.dt_name) in
-        (d, tmp4))
-      | tmp4 -> (d, None)
+      | (FStarC_Custard_Syntax.DType (dt)) -> (let tmp5 = (info_of (dt).FStarC_Custard_Syntax.dt_name) in
+        (d, tmp5))
+      | tmp5 -> (d, None)
     ) in
-  (match tmp4 with
-    | (d1, ti) -> (let key_of1 = (fun n -> (let tmp5 = (key_of n) in
-        let tmp6 = (tmp5, d1) in
-        (match tmp6 with
-          | (None, (FStarC_Custard_Syntax.DType (tmp7))) -> (let tmp8 = (FStarC_Custard_Unit.type_key n) in
-            (Some (tmp8)))
-          | (k, tmp7) -> k
+  (match tmp5 with
+    | (d1, ti) -> (let key_of1 = (fun n -> (let tmp6 = (key_of n) in
+        let tmp7 = (tmp6, d1) in
+        (match tmp7 with
+          | (None, (FStarC_Custard_Syntax.DType (tmp8))) -> (let tmp9 = (FStarC_Custard_Unit.type_key n) in
+            (Some (tmp9)))
+          | (k, tmp8) -> k
         ))) in
-      let tmp5 = (key_of1 (FStarC_Custard_Syntax.name_of_decl d1)) in
-      (match tmp5 with
+      let tmp6 = (key_of1 (FStarC_Custard_Syntax.name_of_decl d1)) in
+      (match tmp6 with
         | None -> []
-        | (Some (k)) -> (let tmp6 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d1)) in
-          let tmp7 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt homes tmp6) in
-          let tmp8 = { FStarC_Custard_Unit.ue_key = k;
+        | (Some (k)) -> (let tmp7 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d1)) in
+          let tmp8 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt homes tmp7) in
+          let tmp9 = { FStarC_Custard_Unit.ue_key = k;
               ue_decl = d1;
               ue_type = ti;
-              ue_home = tmp7 } in
-          (tmp8 :: []))
+              ue_home = tmp8 } in
+          (tmp9 :: []))
       ))
   )))))))) prog))
 
-let write_unit_iface (st : FStarC_Custard_Extract.state) (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (hdr_file : (string) option) (init : (string) option) (prog : (FStarC_Custard_Syntax.decl) list) (infos : ((FStarC_Custard_Syntax.name * FStarC_Custard_Syntax.type_info)) list) : unit =
+let write_unit_iface (st : FStarC_Custard_Extract.state) (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (hdr_file : (string) option) (init : (string) option) (targets : ((string * string)) list) (c_names : ((string * string)) list) (prog : (FStarC_Custard_Syntax.decl) list) (infos : ((FStarC_Custard_Syntax.name * FStarC_Custard_Syntax.type_info)) list) : unit =
   (let tmp = (FStarC_Options.custard_unit ()) in
   (match tmp with
     | None -> ()
-    | (Some (u)) -> (let tmp1 = (FStarC_Options.codegen_name ()) in
-      let tmp2 = (FStarC_Custard_Unit.layout_options ()) in
-      let tmp3 = (FStarC_Custard_Extract.loaded_digests st) in
-      let tmp4 = (FStarC_Options.file_list ()) in
-      let tmp5 = (BatList.map (fun f -> (let tmp5 = (FStarC_Util.digest_of_file f) in
-        (f, tmp5))) tmp4) in
-      let tmp6 = (BatList.append tmp3 tmp5) in
-      let tmp7 = (BatList.map (fun tmp7 -> (match tmp7 with
-          | (f, d) -> (let tmp8 = (FStarC_Filepath.normalize_file_path f) in
-            (tmp8, d))
-        )) tmp6) in
-      let tmp8 = (FStarC_Options.custard_c_no_prefix ()) in
-      let tmp9 = { FStarC_Custard_Unit.uh_version = FStarC_Custard_Unit.current_version;
+    | (Some (u)) -> (let keys = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+      let tmp1 = (FStarC_Custard_Extract.exported_keys st) in
+      (BatList.iter (fun tmp2 -> (match tmp2 with
+        | (n, k) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace keys n k)
+      )) tmp1);
+      let names = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+      (BatList.iter (fun tmp2 -> (match tmp2 with
+        | (n, c) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace names n c)
+      )) targets);
+      let tmp2 = (FStarC_Options.codegen_name ()) in
+      let tmp3 = (FStarC_Custard_Unit.layout_options ()) in
+      let tmp4 = (FStarC_Custard_Extract.loaded_digests st) in
+      let tmp5 = (FStarC_Options.file_list ()) in
+      let tmp6 = (BatList.map (fun f -> (let tmp6 = (FStarC_Util.digest_of_file f) in
+        (f, tmp6))) tmp5) in
+      let tmp7 = (BatList.append tmp4 tmp6) in
+      let tmp8 = (BatList.map (fun tmp8 -> (match tmp8 with
+          | (f, d) -> (let tmp9 = (FStarC_Filepath.normalize_file_path f) in
+            (tmp9, d))
+        )) tmp7) in
+      let tmp9 = (FStarC_Options.custard_c_no_prefix ()) in
+      let tmp10 = (FStarC_Options.custard_static_header ()) in
+      let tmp11 = { FStarC_Custard_Unit.uh_version = FStarC_Custard_Unit.current_version;
           uh_name = u;
-          uh_backend = tmp1;
-          uh_options = tmp2;
-          uh_digests = tmp7;
-          uh_no_prefix = tmp8;
+          uh_backend = tmp2;
+          uh_options = tmp3;
+          uh_digests = tmp8;
+          uh_no_prefix = tmp9;
           uh_header = hdr_file;
-          uh_init = init } in
-      let tmp10 = (FStarC_Custard_Extract.exported_keys st) in
-      let tmp11 = (unit_entries tmp10 homes prog infos) in
-      let i = { FStarC_Custard_Unit.ui_header = tmp9; ui_entries = tmp11 } in
-      let tmp12 = (FStarC_Options.custard_dump_cui ()) in
-      (if tmp12 then (let tmp13 = (FStarC_Custard_Unit.iface_to_string i) in
-      (FStarC_Format.print_string tmp13)) else ());
-      let tmp13 = (FStarC_Find.prepend_output_dir (Prims.strcat u ".cui")) in
-      (FStarC_Custard_Unit.write_iface tmp13 i))
+          uh_init = init;
+          uh_static_header = tmp10;
+          uh_c_names = c_names } in
+      let tmp12 = (FStarC_Custard_Extract.exported_keys st) in
+      let tmp13 = (unit_entries tmp12 homes prog infos) in
+      let tmp14 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp14 -> (match tmp14 with
+          | (FStarC_Custard_Syntax.DExternal (x)) when (let tmp15 = (FStarC_Custard_Syntax.imported_unit (FStarC_Custard_Syntax.DExternal (x))) in
+          let tmp16 = (match tmp15 with
+              | None -> true
+              | tmp16 -> false
+            ) in
+          (if tmp16 then (let tmp17 = (BatList.exists FStarC_Custard_Syntax.uu___is_Member (x).FStarC_Custard_Syntax.dx_flags) in
+          (not tmp17)) else false)) -> (let tmp15 = (FStarC_Custard_Syntax.string_of_name (x).FStarC_Custard_Syntax.dx_name) in
+            let tmp16 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt keys tmp15) in
+            (match tmp16 with
+              | (Some (k)) -> (let tmp17 = (FStarC_Custard_Syntax.string_of_name (x).FStarC_Custard_Syntax.dx_name) in
+                let tmp18 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt names tmp17) in
+                let target = (match tmp18 with
+                    | (Some (c)) -> (Some (c))
+                    | None -> (x).FStarC_Custard_Syntax.dx_target
+                  ) in
+                let tmp19 = (FStarC_Custard_Unit.foreign_flags (x).FStarC_Custard_Syntax.dx_flags) in
+                let tmp20 = { FStarC_Custard_Syntax.dx_name = (x).FStarC_Custard_Syntax.dx_name;
+                    dx_typars = (x).FStarC_Custard_Syntax.dx_typars;
+                    dx_ty = (x).FStarC_Custard_Syntax.dx_ty;
+                    dx_target = target;
+                    dx_header = (x).FStarC_Custard_Syntax.dx_header;
+                    dx_flags = tmp19 } in
+                let tmp21 = { FStarC_Custard_Unit.uf_key = k; uf_decl = tmp20 } in
+                (tmp21 :: []))
+              | None -> []
+            ))
+          | tmp15 -> []
+        )) prog) in
+      let i = { FStarC_Custard_Unit.ui_header = tmp11;
+          ui_entries = tmp13;
+          ui_foreign = tmp14 } in
+      let tmp15 = (FStarC_Options.custard_dump_cui ()) in
+      (if tmp15 then (let tmp16 = (FStarC_Custard_Unit.iface_to_string i) in
+      (FStarC_Format.print_string tmp16)) else ());
+      let tmp16 = (FStarC_Find.prepend_output_dir (Prims.strcat u ".cui")) in
+      (FStarC_Custard_Unit.write_iface tmp16 i))
   ))
 
 let rec warn_any__any_cty (cherry : bool) (c : FStarC_Custard_Syntax.cty) : bool =
@@ -303,253 +348,336 @@ let warn_any (prog : (FStarC_Custard_Syntax.decl) list) : unit =
   ))) prog))
 
 let run_phases (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) : unit =
-  (let main = (main_entry ()) in
-  let tmp = (entrypoints ()) in
-  let roots = (BatList.append tmp (match main with
+  (let tmp = (FStarC_Options.custard_static_header ()) in
+  (if tmp then (let tmp1 = (FStarC_Options.codegen_name ()) in
+  let tmp2 = ((<>) tmp1 "C") in
+  (if tmp2 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "--custard_static_header requires --codegen C.") :: ((FStarC_Errors_Msg.text "It is not implemented for Cherry or the other code generators.") :: []))) else ());
+  let tmp3 = (FStarC_Options.custard_main ()) in
+  let tmp4 = (match tmp3 with
+      | (Some (v)) -> true
+      | tmp4 -> false
+    ) in
+  let tmp5 = (if tmp4 then true else (FStarC_Options.custard_split ())) in
+  (if tmp5 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "--custard_static_header cannot be combined with --custard_main or --custard_split.") :: ((FStarC_Errors_Msg.text "Compile library roots into one header; compile an executable separately.") :: []))) else ())) else ());
+  let main = (main_entry ()) in
+  let tmp1 = (entrypoints ()) in
+  let roots = (BatList.append tmp1 (match main with
       | (Some (l)) -> (l :: [])
       | None -> []
     )) in
-  let tmp1 = (if (match roots with
-      | [] -> true
-      | tmp1 -> false
-    ) then (let tmp1 = (FStarC_Options.custard_entry_modules ()) in
-    (match tmp1 with
+  let tmp2 = (if (match roots with
       | [] -> true
       | tmp2 -> false
-    )) else false) in
-  (if tmp1 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "--codegen requires at least one --custard_entry, --custard_entry_module or --custard_main.") :: ((FStarC_Errors_Msg.text "Custard is a whole-program compiler: it extracts exactly the definitions reachable from the entry points.") :: []))) else ());
-  (phase "entrypoints" (fun tmp2 -> (check_entrypoints deps env roots)));
-  let tmp2 = (FStarC_Options.custard_unit ()) in
-  let tmp3 = (match tmp2 with
-      | (Some (v)) -> true
+    ) then (let tmp2 = (FStarC_Options.custard_entry_modules ()) in
+    (match tmp2 with
+      | [] -> true
       | tmp3 -> false
+    )) else false) in
+  (if tmp2 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "--codegen requires at least one --custard_entry, --custard_entry_module or --custard_main.") :: ((FStarC_Errors_Msg.text "Custard is a whole-program compiler: it extracts exactly the definitions reachable from the entry points.") :: []))) else ());
+  (phase "entrypoints" (fun tmp3 -> (check_entrypoints deps env roots)));
+  let tmp3 = (FStarC_Options.custard_unit ()) in
+  let tmp4 = (match tmp3 with
+      | (Some (v)) -> true
+      | tmp4 -> false
     ) in
-  let tmp4 = (if tmp3 then true else (let tmp4 = (FStarC_Options.custard_links ()) in
-    (match tmp4 with
+  let tmp5 = (if tmp4 then true else (let tmp5 = (FStarC_Options.custard_links ()) in
+    (match tmp5 with
       | (hd :: tl) -> true
-      | tmp5 -> false
+      | tmp6 -> false
     ))) in
-  let tmp5 = (if tmp4 then (let tmp5 = (FStarC_Options.codegen ()) in
-    ((=) tmp5 (Some (FStarC_Options.KrmlRust)))) else false) in
-  (if tmp5 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "Separate compilation (--custard_unit, --custard_link) is not implemented for --codegen KrmlRust.") :: ((FStarC_Errors_Msg.text "karamel's Rust backend has no form for a declaration without a definition: it assumes a function is defined elsewhere in the crate and emits nothing for it, and it cannot translate a global at all.") :: ((FStarC_Errors_Msg.text "Use --codegen KrmlC, OCaml or C, or compile the whole program at once.") :: [])))) else ());
+  let tmp6 = (if tmp5 then (let tmp6 = (FStarC_Options.codegen ()) in
+    ((=) tmp6 (Some (FStarC_Options.KrmlRust)))) else false) in
+  (if tmp6 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "Separate compilation (--custard_unit, --custard_link) is not implemented for --codegen KrmlRust.") :: ((FStarC_Errors_Msg.text "karamel's Rust backend has no form for a declaration without a definition: it assumes a function is defined elsewhere in the crate and emits nothing for it, and it cannot translate a global at all.") :: ((FStarC_Errors_Msg.text "Use --codegen KrmlC, OCaml or C, or compile the whole program at once.") :: [])))) else ());
   let st = (FStarC_Custard_Extract.init deps env) in
   (FStarC_Custard_Extract.install_chain_reporter st);
-  let prog = (phase "extract" (fun tmp6 -> (FStarC_Syntax_Unionfind.with_uf_enabled (fun tmp7 -> (let tmp8 = (FStarC_Options.custard_entry_modules ()) in
-    let tmp9 = (BatList.map FStarC_Ident.lid_of_str tmp8) in
-    let requested = (BatList.append roots tmp9) in
+  (FStarC_Custard_Extract.set_embedding_hook FStarC_Custard_RegEmb.plugin_embedding_expr);
+  let prog = (phase "extract" (fun tmp7 -> (FStarC_Syntax_Unionfind.with_uf_enabled (fun tmp8 -> (let tmp9 = (FStarC_Options.custard_entry_modules ()) in
+    let tmp10 = (BatList.map FStarC_Ident.lid_of_str tmp9) in
+    let requested = (BatList.append roots tmp10) in
     (FStarC_Custard_Extract.run st roots main (FStarC_Custard_RegEmb.handle_module st requested))))))) in
   (ignore (FStarC_Custard_Extract.imports st));
-  let prog1 = (phase "anf" (fun tmp6 -> (FStarC_Custard_Simplify.anf prog))) in
-  let tmp6 = (FStarC_Options.custard_monomorphize_types ()) in
-  let prog2 = (if tmp6 then (phase "monomorphize" (fun tmp7 -> (FStarC_Custard_Monomorphize.run prog1))) else prog1) in
-  let prog3 = (phase "adopt" (fun tmp7 -> (FStarC_Custard_Extract.adopt_type_clones st prog2))) in
+  let prog1 = (phase "anf" (fun tmp7 -> (FStarC_Custard_Simplify.anf prog))) in
+  let tmp7 = (FStarC_Options.custard_monomorphize_types ()) in
+  let prog2 = (if tmp7 then (phase "monomorphize" (fun tmp8 -> (FStarC_Custard_Monomorphize.run prog1))) else prog1) in
+  let prog3 = (phase "adopt" (fun tmp8 -> (FStarC_Custard_Extract.adopt_type_clones st prog2))) in
   let imports = (FStarC_Custard_Extract.imports st) in
-  let tmp7 = (phase "layout" (fun tmp7 -> (let tmp8 = (imported_type_infos imports) in
-    (FStarC_Custard_Layout.run tmp8 prog3)))) in
-  (match tmp7 with
-    | (prog4, infos, vd) -> (let prog5 = (phase "simplify" (fun tmp8 -> (let tmp9 = (imported_decls imports) in
-        (FStarC_Custard_Simplify.run tmp9 vd prog4)))) in
-      let tmp8 = (phase "rename" (fun tmp8 -> (FStarC_Custard_Rename.run infos prog5))) in
-      (match tmp8 with
-        | (prog6, infos1) -> (let split_backends = ("OCaml" :: ("FSharp" :: ("KrmlC" :: ("KrmlRust" :: [])))) in
-          let tmp9 = (FStarC_Options.custard_split ()) in
-          let tmp10 = (if tmp9 then (let tmp10 = (FStarC_Options.codegen_name ()) in
-            (BatList.mem tmp10 split_backends)) else false) in
-          let files = (if tmp10 then (let tmp11 = (phase "split" (fun tmp11 -> (let tmp12 = (FStarC_Custard_Extract.link_homes st) in
-              let tmp13 = (BatList.map (fun x -> (match x with
+  let tmp8 = (phase "layout" (fun tmp8 -> (let tmp9 = (imported_type_infos imports) in
+    (FStarC_Custard_Layout.run tmp9 prog3)))) in
+  (match tmp8 with
+    | (prog4, infos, vd) -> (let tmp9 = (FStarC_Options.custard_monomorphize_types ()) in
+      (if tmp9 then (FStarC_Custard_Monomorphize.check_tvar_clones infos) else ());
+      let tmp10 = (FStarC_Options.codegen_c ()) in
+      let tmp11 = (if tmp10 then (let tmp11 = (FStarC_Options.custard_links ()) in
+        (match tmp11 with
+          | (hd :: tl) -> true
+          | tmp12 -> false
+        )) else false) in
+      let targets = (if tmp11 then (let tmp12 = (FStarC_Custard_Extract.link_no_prefix st) in
+        let tmp13 = { FStarC_Custard_PrintC.cu_name = (FStarC_Custard_PrintC.no_unit).FStarC_Custard_PrintC.cu_name;
+            cu_headers = (FStarC_Custard_PrintC.no_unit).FStarC_Custard_PrintC.cu_headers;
+            cu_inits = (FStarC_Custard_PrintC.no_unit).FStarC_Custard_PrintC.cu_inits;
+            cu_no_prefix = tmp12;
+            cu_c_names = (FStarC_Custard_PrintC.no_unit).FStarC_Custard_PrintC.cu_c_names } in
+        let tmp14 = (BatList.map (fun x -> (match x with
+            | (u__1, u__2) -> u__1
+          )) imports) in
+        let tmp15 = (BatList.append tmp14 prog4) in
+        (FStarC_Custard_PrintC.foreign_targets tmp13 tmp15)) else []) in
+      let prog5 = (phase "foreign-bindings" (fun tmp12 -> (FStarC_Custard_Extract.apply_foreign_bindings st targets prog4))) in
+      let prog6 = (phase "simplify" (fun tmp12 -> (let tmp13 = (imported_decls imports) in
+        (FStarC_Custard_Simplify.run tmp13 vd prog5)))) in
+      let tmp12 = (phase "rename" (fun tmp12 -> (FStarC_Custard_Rename.run infos prog6))) in
+      (match tmp12 with
+        | (prog7, infos1) -> (let split_backends = ("OCaml" :: ("FSharp" :: ("KrmlC" :: ("KrmlRust" :: [])))) in
+          let tmp13 = (FStarC_Options.custard_split ()) in
+          let tmp14 = (if tmp13 then (let tmp14 = (FStarC_Options.codegen_name ()) in
+            (BatList.mem tmp14 split_backends)) else false) in
+          let files = (if tmp14 then (let tmp15 = (phase "split" (fun tmp15 -> (let tmp16 = (FStarC_Custard_Extract.link_homes st) in
+              let tmp17 = (BatList.map (fun x -> (match x with
                   | (u__1, u__2) -> u__1
                 )) imports) in
-              let tmp14 = (BatList.append tmp13 prog6) in
-              (FStarC_Custard_Split.run deps tmp12 tmp14)))) in
-            (Some (tmp11))) else None) in
+              let tmp18 = (BatList.append tmp17 prog7) in
+              (FStarC_Custard_Split.run deps tmp16 tmp18)))) in
+            (Some (tmp15))) else None) in
           let homes = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
           (match files with
             | None -> ()
-            | (Some (fs)) -> (BatList.iter (fun tmp11 -> (match tmp11 with
-                | (m, ds) -> (BatList.iter (fun d -> (let tmp12 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
-                  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace homes tmp12 m))) ds)
+            | (Some (fs)) -> (BatList.iter (fun tmp15 -> (match tmp15 with
+                | (m, ds) -> (BatList.iter (fun d -> (let tmp16 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
+                  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace homes tmp16 m))) ds)
               )) fs)
           );
-          let tmp11 = (FStarC_Options.custard_cherry ()) in
-          let backend = (if tmp11 then "C" else (FStarC_Options.codegen_name ())) in
-          let tmp12 = (FStarC_Options.custard_sizet_32 ()) in
-          let tmp13 = (if tmp12 then ((<>) backend "C") else false) in
-          let tmp14 = (if tmp13 then ((<>) backend "FSharp") else false) in
-          (if tmp14 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text (Prims.strcat "--custard_sizet_width 32 is an option of the direct-to-C and F# backends, but this run uses --codegen " (Prims.strcat backend "."))) :: ((FStarC_Errors_Msg.text "karamel decides the width of size_t for itself, and the OCaml backend has no say in it at all.") :: []))) else ());
-          let tmp15 = (if ((=) backend "FSharp") then (let tmp15 = (FStarC_Options.custard_unit ()) in
-            (match tmp15 with
+          let tmp15 = (FStarC_Options.custard_cherry ()) in
+          let backend = (if tmp15 then "C" else (FStarC_Options.codegen_name ())) in
+          let tmp16 = (FStarC_Options.custard_sizet_32 ()) in
+          let tmp17 = (if tmp16 then ((<>) backend "C") else false) in
+          let tmp18 = (if tmp17 then ((<>) backend "FSharp") else false) in
+          (if tmp18 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text (Prims.strcat "--custard_sizet_width 32 is an option of the direct-to-C and F# backends, but this run uses --codegen " (Prims.strcat backend "."))) :: ((FStarC_Errors_Msg.text "karamel decides the width of size_t for itself, and the OCaml backend has no say in it at all.") :: []))) else ());
+          let tmp19 = (if ((=) backend "FSharp") then (let tmp19 = (FStarC_Options.custard_unit ()) in
+            (match tmp19 with
               | (Some (v)) -> true
-              | tmp16 -> false
+              | tmp20 -> false
             )) else false) in
-          (if tmp15 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "--custard_unit is not implemented for --codegen FSharp.") :: ((FStarC_Errors_Msg.text "Linking two separately extracted units means one .NET assembly referencing another, which the generated project would have to express; the F# backend compiles one whole program today (section 122.12).") :: []))) else ());
-          let tmp16 = (FStarC_Options.output_to ()) in
-          let ofile = (match tmp16 with
+          (if tmp19 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "--custard_unit is not implemented for --codegen FSharp.") :: ((FStarC_Errors_Msg.text "Linking two separately extracted units means one .NET assembly referencing another, which the generated project would have to express; the F# backend compiles one whole program today (section 122.12).") :: []))) else ());
+          let tmp20 = (FStarC_Options.output_to ()) in
+          let ofile = (match tmp20 with
               | (Some (fn)) -> fn
-              | None -> (let tmp17 = (FStarC_Options.custard_unit ()) in
-                let base = (match tmp17 with
+              | None -> (let tmp21 = (FStarC_Options.custard_unit ()) in
+                let base = (match tmp21 with
                     | (Some (u)) -> (if ((=) backend "C") then u else (FStarC_Custard_PrintOCaml.module_name_of_unit u))
                     | None -> "Custard"
                   ) in
-                let tmp18 = (FStarC_Options.codegen_krml ()) in
-                let tmp19 = (if tmp18 then (Prims.strcat base ".krml") else (match backend with
-                    | "C" -> (Prims.strcat base ".c")
+                let tmp22 = (FStarC_Options.codegen_krml ()) in
+                let tmp23 = (if tmp22 then (Prims.strcat base ".krml") else (match backend with
+                    | "C" -> (let tmp23 = (FStarC_Options.custard_static_header ()) in
+                      let tmp24 = (if tmp23 then ".h" else ".c") in
+                      (Prims.strcat base tmp24))
                     | "FSharp" -> (Prims.strcat base ".fs")
-                    | tmp19 -> (Prims.strcat base ".ml")
+                    | tmp23 -> (Prims.strcat base ".ml")
                   )) in
-                (FStarC_Find.prepend_output_dir tmp19))
+                (FStarC_Find.prepend_output_dir tmp23))
             ) in
           let b = (FStarC_Filepath.basename ofile) in
           let parts = (FStarC_String.split (46 :: []) b) in
           let stem = (if (Prims.op_Less_Equals ((fun l -> Z.of_int (BatList.length l)) parts) Prims.int_one) then b else (BatString.concat "." (BatList.rev (BatList.tl (BatList.rev parts))))) in
-          let cu = (if ((<>) backend "C") then FStarC_Custard_PrintC.no_unit else (let tmp17 = (FStarC_Options.custard_unit ()) in
-            let tmp18 = (FStarC_Custard_Extract.link_headers st) in
-            let tmp19 = (FStarC_Custard_Extract.link_inits st) in
-            let tmp20 = (FStarC_Custard_Extract.link_no_prefix st) in
-            { FStarC_Custard_PrintC.cu_name = tmp17;
-              cu_headers = tmp18;
-              cu_inits = tmp19;
-              cu_no_prefix = tmp20 })) in
-          (if ((=) backend "OCaml") then (let tmp17 = (FStarC_Options.custard_unit ()) in
-          (match tmp17 with
-            | (Some (u)) when (let tmp18 = (FStarC_Custard_PrintOCaml.module_name_of_unit u) in
-            let tmp19 = (FStarC_Custard_PrintOCaml.module_name_of_unit stem) in
-            ((<>) tmp18 tmp19)) -> (let tmp18 = (FStarC_Custard_PrintOCaml.module_name_of_unit u) in
-              let tmp19 = (FStarC_Custard_PrintOCaml.module_name_of_unit stem) in
-              let tmp20 = (Prims.strcat tmp19 ".") in
-              let tmp21 = (Prims.strcat " defines the module " tmp20) in
-              let tmp22 = (Prims.strcat ofile tmp21) in
-              let tmp23 = (Prims.strcat ", but the output file " tmp22) in
-              let tmp24 = (Prims.strcat tmp18 tmp23) in
-              let tmp25 = (Prims.strcat " names the OCaml module " tmp24) in
-              let tmp26 = (Prims.strcat u tmp25) in
-              let tmp27 = (Prims.strcat "Custard: --custard_unit " tmp26) in
-              let tmp28 = (FStarC_Errors_Msg.text tmp27) in
-              let tmp29 = (FStarC_Custard_PrintOCaml.module_name_of_unit u) in
-              let tmp30 = (Prims.strcat tmp29 (Prims.strcat ".ml, or pass --custard_unit " (Prims.strcat stem "."))) in
-              let tmp31 = (Prims.strcat "Write it to " tmp30) in
-              let tmp32 = (FStarC_Errors_Msg.text tmp31) in
-              let tmp33 = (tmp32 :: []) in
-              let tmp34 = ((FStarC_Errors_Msg.text "A unit that links against this one qualifies its imports by the unit name, so the two have to agree.") :: tmp33) in
-              let tmp35 = (tmp28 :: tmp34) in
-              (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible tmp35))
-            | tmp18 -> ()
+          let cu = (if ((<>) backend "C") then FStarC_Custard_PrintC.no_unit else (let tmp21 = (FStarC_Options.custard_unit ()) in
+            let tmp22 = (FStarC_Custard_Extract.link_headers st) in
+            let tmp23 = (FStarC_Custard_Extract.link_inits st) in
+            let tmp24 = (FStarC_Custard_Extract.link_no_prefix st) in
+            let tmp25 = (FStarC_Custard_Extract.link_c_names st) in
+            { FStarC_Custard_PrintC.cu_name = tmp21;
+              cu_headers = tmp22;
+              cu_inits = tmp23;
+              cu_no_prefix = tmp24;
+              cu_c_names = tmp25 })) in
+          let tmp21 = (FStarC_Options.custard_static_header ()) in
+          (if tmp21 then ((if ((<>) (FStarC_Filepath.basename ofile) (Prims.strcat stem ".h")) then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text (Prims.strcat "--custard_static_header requires a .h output file, not " (Prims.strcat ofile "."))) :: ((FStarC_Errors_Msg.text (Prims.strcat "Use -o " (Prims.strcat stem ".h."))) :: []))) else ());
+          (if (match (cu).FStarC_Custard_PrintC.cu_inits with
+            | (hd :: tl) -> true
+            | tmp22 -> false
+          ) then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "--custard_static_header cannot depend on a unit with runtime initialization.") :: ((FStarC_Errors_Msg.text "Initialize and compile stateful units separately in ordinary C mode.") :: []))) else ());
+          (BatList.iter (fun d -> (match d with
+            | (FStarC_Custard_Syntax.DLet (l)) when (BatList.exists FStarC_Custard_Syntax.uu___is_Entrypoint (l).FStarC_Custard_Syntax.dl_flags) -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text "--custard_static_header cannot generate an executable entry point.") :: []))
+            | (FStarC_Custard_Syntax.DLet (l)) when (if (match (l).FStarC_Custard_Syntax.dl_binders with
+              | [] -> true
+              | tmp22 -> false
+            ) then (let tmp22 = (BatList.exists FStarC_Custard_Syntax.uu___is_CMacro (l).FStarC_Custard_Syntax.dl_flags) in
+            (not tmp22)) else false) -> (let tmp22 = (FStarC_Custard_Syntax.string_of_name (l).FStarC_Custard_Syntax.dl_name) in
+              let tmp23 = (Prims.strcat tmp22 ".") in
+              let tmp24 = (Prims.strcat "--custard_static_header cannot emit the non-macro global " tmp23) in
+              let tmp25 = (FStarC_Errors_Msg.text tmp24) in
+              let tmp26 = (tmp25 :: ((FStarC_Errors_Msg.text "A static definition would create a separate object in every translation unit, changing its identity or shared state.") :: ((FStarC_Errors_Msg.text "Use CMacro for a compile-time constant, or ordinary C output for globals and runtime initialization.") :: []))) in
+              (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible tmp26))
+            | tmp22 -> ()
+          )) prog7)) else ());
+          (if ((=) backend "OCaml") then (let tmp22 = (FStarC_Options.custard_unit ()) in
+          (match tmp22 with
+            | (Some (u)) when (let tmp23 = (FStarC_Custard_PrintOCaml.module_name_of_unit u) in
+            let tmp24 = (FStarC_Custard_PrintOCaml.module_name_of_unit stem) in
+            ((<>) tmp23 tmp24)) -> (let tmp23 = (FStarC_Custard_PrintOCaml.module_name_of_unit u) in
+              let tmp24 = (FStarC_Custard_PrintOCaml.module_name_of_unit stem) in
+              let tmp25 = (Prims.strcat tmp24 ".") in
+              let tmp26 = (Prims.strcat " defines the module " tmp25) in
+              let tmp27 = (Prims.strcat ofile tmp26) in
+              let tmp28 = (Prims.strcat ", but the output file " tmp27) in
+              let tmp29 = (Prims.strcat tmp23 tmp28) in
+              let tmp30 = (Prims.strcat " names the OCaml module " tmp29) in
+              let tmp31 = (Prims.strcat u tmp30) in
+              let tmp32 = (Prims.strcat "Custard: --custard_unit " tmp31) in
+              let tmp33 = (FStarC_Errors_Msg.text tmp32) in
+              let tmp34 = (FStarC_Custard_PrintOCaml.module_name_of_unit u) in
+              let tmp35 = (Prims.strcat tmp34 (Prims.strcat ".ml, or pass --custard_unit " (Prims.strcat stem "."))) in
+              let tmp36 = (Prims.strcat "Write it to " tmp35) in
+              let tmp37 = (FStarC_Errors_Msg.text tmp36) in
+              let tmp38 = (tmp37 :: []) in
+              let tmp39 = ((FStarC_Errors_Msg.text "A unit that links against this one qualifies its imports by the unit name, so the two have to agree.") :: tmp38) in
+              let tmp40 = (tmp33 :: tmp39) in
+              (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible tmp40))
+            | tmp23 -> ()
           )) else ());
-          let tmp17 = (if ((=) backend "C") then (FStarC_Options.custard_cherry ()) else false) in
-          let cherried = (if tmp17 then (let tmp18 = (phase "cherry" (fun tmp18 -> (let tmp19 = (BatList.map (fun x -> (match x with
+          let tmp22 = (if ((=) backend "C") then (FStarC_Options.custard_cherry ()) else false) in
+          let cherried = (if tmp22 then (let tmp23 = (phase "cherry" (fun tmp23 -> (let tmp24 = (BatList.map (fun x -> (match x with
                   | (u__1, u__2) -> u__1
                 )) imports) in
-              let tmp20 = (BatList.append tmp19 prog6) in
-              (FStarC_Custard_Cherry.run tmp20)))) in
-            (Some (tmp18))) else None) in
-          (phase "iface" (fun tmp18 -> (let tmp19 = (if ((=) backend "C") then (let tmp19 = (BatList.map (fun x -> (match x with
+              let tmp25 = (BatList.append tmp24 prog7) in
+              (FStarC_Custard_Cherry.run tmp25)))) in
+            (Some (tmp23))) else None) in
+          (phase "iface" (fun tmp23 -> (let tmp24 = (if ((=) backend "C") then (let tmp24 = (BatList.map (fun x -> (match x with
                 | (u__1, u__2) -> u__1
               )) imports) in
-            let tmp20 = (BatList.append tmp19 prog6) in
-            let tmp21 = (FStarC_Custard_PrintC.init_globals_name cu tmp20) in
-            ((Some ((Prims.strcat stem ".h"))), tmp21)) else (None, None)) in
-          (match tmp19 with
-            | (hdr_file, init) -> (let prog7 = (if (match cherried with
+            let tmp25 = (BatList.append tmp24 prog7) in
+            let tmp26 = (FStarC_Custard_PrintC.init_globals_name cu tmp25) in
+            ((Some ((Prims.strcat stem ".h"))), tmp26)) else (None, None)) in
+          (match tmp24 with
+            | (hdr_file, init) -> (let prog8 = (if (match cherried with
                   | (Some (v)) -> true
-                  | tmp20 -> false
-                ) then (FStarC_Custard_Cherry.record_conventions prog6) else prog6) in
-              (write_unit_iface st homes hdr_file init prog7 infos1))
+                  | tmp25 -> false
+                ) then (FStarC_Custard_Cherry.record_conventions prog7) else prog7) in
+              let tmp25 = (if ((=) backend "C") then (let tmp25 = (FStarC_Options.custard_unit ()) in
+                (match tmp25 with
+                  | (Some (v)) -> true
+                  | tmp26 -> false
+                )) else false) in
+              let targets1 = (if tmp25 then (let tmp26 = (BatList.map (fun x -> (match x with
+                    | (u__1, u__2) -> u__1
+                  )) imports) in
+                let tmp27 = (BatList.append tmp26 prog8) in
+                (FStarC_Custard_PrintC.foreign_targets cu tmp27)) else []) in
+              let tmp26 = (if ((=) backend "C") then (FStarC_Options.custard_static_header ()) else false) in
+              let tmp27 = (if tmp26 then (let tmp27 = (FStarC_Options.custard_unit ()) in
+                (match tmp27 with
+                  | (Some (v)) -> true
+                  | tmp28 -> false
+                )) else false) in
+              let c_names = (if tmp27 then (let tmp28 = (BatList.map (fun x -> (match x with
+                    | (u__1, u__2) -> u__1
+                  )) imports) in
+                let tmp29 = (BatList.append tmp28 prog8) in
+                (FStarC_Custard_PrintC.static_header_names cu tmp29)) else []) in
+              (write_unit_iface st homes hdr_file init targets1 c_names prog8 infos1))
           ))));
-          let tmp18 = (FStarC_Options.custard_dump_ir ()) in
-          (if tmp18 then (let tmp19 = (FStarC_Custard_Syntax.program_to_string prog6) in
-          let tmp20 = (Prims.strcat tmp19 "\n") in
-          (FStarC_Format.print_string tmp20)) else ());
-          let tmp19 = (FStarC_Options.custard_warn_any ()) in
-          (if tmp19 then (warn_any prog6) else ());
+          let tmp23 = (FStarC_Options.custard_dump_ir ()) in
+          (if tmp23 then (let tmp24 = (FStarC_Custard_Syntax.program_to_string prog7) in
+          let tmp25 = (Prims.strcat tmp24 "\n") in
+          (FStarC_Format.print_string tmp25)) else ());
+          let tmp24 = (FStarC_Options.custard_warn_any ()) in
+          (if tmp24 then (warn_any prog7) else ());
           (match backend with
             | "OCaml" when (match files with
               | (Some (v)) -> true
-              | tmp20 -> false
-            ) -> (phase "print" (fun tmp20 -> (let tmp21 = (FStarC_Custard_PrintOCaml.print_split (match files with
+              | tmp25 -> false
+            ) -> (phase "print" (fun tmp25 -> (let tmp26 = (FStarC_Custard_PrintOCaml.print_split (match files with
                   | (Some (v)) -> v
                 )) in
-              (BatList.iter (fun tmp22 -> (match tmp22 with
-                | (m, src) -> (let tmp23 = (FStarC_Find.prepend_output_dir (Prims.strcat m ".ml")) in
-                  (FStarC_Util.write_file tmp23 src))
-              )) tmp21))))
+              (BatList.iter (fun tmp27 -> (match tmp27 with
+                | (m, src) -> (let tmp28 = (FStarC_Find.prepend_output_dir (Prims.strcat m ".ml")) in
+                  (FStarC_Util.write_file tmp28 src))
+              )) tmp26))))
             | "KrmlC" when (match files with
               | (Some (v)) -> true
-              | tmp20 -> false
-            ) -> (phase "print" (fun tmp20 -> (let tmp21 = (FStarC_Custard_PrintKrml.print_split (match files with
+              | tmp25 -> false
+            ) -> (phase "print" (fun tmp25 -> (let tmp26 = (FStarC_Custard_PrintKrml.print_split (match files with
                   | (Some (v)) -> v
                 )) in
-              (FStarC_Custard_PrintKrml.write_files ofile tmp21))))
+              (FStarC_Custard_PrintKrml.write_files ofile tmp26))))
             | "KrmlRust" when (match files with
               | (Some (v)) -> true
-              | tmp20 -> false
-            ) -> (phase "print" (fun tmp20 -> (let tmp21 = (FStarC_Custard_PrintKrml.print_split (match files with
+              | tmp25 -> false
+            ) -> (phase "print" (fun tmp25 -> (let tmp26 = (FStarC_Custard_PrintKrml.print_split (match files with
                   | (Some (v)) -> v
                 )) in
-              (FStarC_Custard_PrintKrml.write_files ofile tmp21))))
-            | "KrmlC" -> (let tmp20 = (BatList.map (fun x -> (match x with
+              (FStarC_Custard_PrintKrml.write_files ofile tmp26))))
+            | "KrmlC" -> (let tmp25 = (BatList.map (fun x -> (match x with
                   | (u__1, u__2) -> u__1
                 )) imports) in
-              let tmp21 = (BatList.append tmp20 prog6) in
-              (FStarC_Custard_PrintKrml.write_program ofile tmp21))
-            | "KrmlRust" -> (let tmp20 = (BatList.map (fun x -> (match x with
+              let tmp26 = (BatList.append tmp25 prog7) in
+              (FStarC_Custard_PrintKrml.write_program ofile tmp26))
+            | "KrmlRust" -> (let tmp25 = (BatList.map (fun x -> (match x with
                   | (u__1, u__2) -> u__1
                 )) imports) in
-              let tmp21 = (BatList.append tmp20 prog6) in
-              (FStarC_Custard_PrintKrml.write_program ofile tmp21))
+              let tmp26 = (BatList.append tmp25 prog7) in
+              (FStarC_Custard_PrintKrml.write_program ofile tmp26))
             | "C" -> (let all = (match cherried with
-                  | (Some (all)) -> (let tmp20 = (FStarC_Options.custard_dump_ir ()) in
-                    (if tmp20 then (let tmp21 = (FStarC_Custard_Syntax.program_to_string all) in
-                    let tmp22 = (Prims.strcat tmp21 "\n") in
-                    let tmp23 = (Prims.strcat "(* After Cherry *)\n" tmp22) in
-                    (FStarC_Format.print_string tmp23)) else ());
+                  | (Some (all)) -> (let tmp25 = (FStarC_Options.custard_dump_ir ()) in
+                    (if tmp25 then (let tmp26 = (FStarC_Custard_Syntax.program_to_string all) in
+                    let tmp27 = (Prims.strcat tmp26 "\n") in
+                    let tmp28 = (Prims.strcat "(* After Cherry *)\n" tmp27) in
+                    (FStarC_Format.print_string tmp28)) else ());
                     all)
-                  | None -> (let tmp20 = (BatList.map (fun x -> (match x with
+                  | None -> (let tmp25 = (BatList.map (fun x -> (match x with
                         | (u__1, u__2) -> u__1
                       )) imports) in
-                    (BatList.append tmp20 prog6))
+                    (BatList.append tmp25 prog7))
                 ) in
-              let tmp20 = (FStarC_Custard_PrintC.print_program stem cu all) in
-              (match tmp20 with
-                | (hdr, src) -> ((FStarC_Util.write_file ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) (Filename.dirname ofile) (Prims.strcat stem ".h")) hdr);
-                  (FStarC_Util.write_file ofile src))
+              let tmp25 = (FStarC_Custard_PrintC.print_program stem cu all) in
+              (match tmp25 with
+                | (hdr, src, extras) -> (let dir = (Filename.dirname ofile) in
+                  (FStarC_Util.write_file ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) dir (Prims.strcat stem ".h")) hdr);
+                  let tmp26 = (FStarC_Options.custard_static_header ()) in
+                  let tmp27 = (not tmp26) in
+                  (if tmp27 then (FStarC_Util.write_file ofile src) else ());
+                  (BatList.iter (fun tmp28 -> (match tmp28 with
+                    | (f, s) -> (FStarC_Util.write_file ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) dir f) s)
+                  )) extras))
               ))
-            | "OCaml" -> (let tmp20 = (BatList.map (fun x -> (match x with
+            | "OCaml" -> (let tmp25 = (BatList.map (fun x -> (match x with
                   | (u__1, u__2) -> u__1
                 )) imports) in
-              let tmp21 = (BatList.append tmp20 prog6) in
-              let tmp22 = (FStarC_Custard_PrintOCaml.print_program tmp21) in
-              (FStarC_Util.write_file ofile tmp22))
+              let tmp26 = (BatList.append tmp25 prog7) in
+              let tmp27 = (FStarC_Custard_PrintOCaml.print_program tmp26) in
+              (FStarC_Util.write_file ofile tmp27))
             | "FSharp" when (match files with
               | (Some (v)) -> true
-              | tmp20 -> false
-            ) -> (phase "print" (fun tmp20 -> (let rendered = (FStarC_Custard_PrintFSharp.print_split (match files with
+              | tmp25 -> false
+            ) -> (phase "print" (fun tmp25 -> (let rendered = (FStarC_Custard_PrintFSharp.print_split (match files with
                   | (Some (v)) -> v
                 )) in
-              (BatList.iter (fun tmp21 -> (match tmp21 with
-                | (m, src) -> (let tmp22 = (FStarC_Find.prepend_output_dir (Prims.strcat m ".fs")) in
-                  (FStarC_Util.write_file tmp22 src))
+              (BatList.iter (fun tmp26 -> (match tmp26 with
+                | (m, src) -> (let tmp27 = (FStarC_Find.prepend_output_dir (Prims.strcat m ".fs")) in
+                  (FStarC_Util.write_file tmp27 src))
               )) rendered);
-              let tmp21 = (BatList.map (fun x -> (match x with
+              let tmp26 = (BatList.map (fun x -> (match x with
                   | (u__1, u__2) -> u__1
                 )) imports) in
-              let tmp22 = (BatList.append tmp21 prog6) in
-              let tmp23 = (BatList.map (fun tmp23 -> (match tmp23 with
-                  | (m, tmp24) -> (Prims.strcat m ".fs")
+              let tmp27 = (BatList.append tmp26 prog7) in
+              let tmp28 = (BatList.map (fun tmp28 -> (match tmp28 with
+                  | (m, tmp29) -> (Prims.strcat m ".fs")
                 )) rendered) in
-              let tmp24 = (FStarC_Custard_PrintFSharp.project_files stem tmp22 tmp23) in
-              (BatList.iter (fun tmp25 -> (match tmp25 with
-                | (f, src) -> (let tmp26 = (FStarC_Find.prepend_output_dir f) in
-                  (FStarC_Util.write_file tmp26 src))
-              )) tmp24))))
-            | "FSharp" -> (let tmp20 = (BatList.map (fun x -> (match x with
+              let tmp29 = (FStarC_Custard_PrintFSharp.project_files stem tmp27 tmp28) in
+              (BatList.iter (fun tmp30 -> (match tmp30 with
+                | (f, src) -> (let tmp31 = (FStarC_Find.prepend_output_dir f) in
+                  (FStarC_Util.write_file tmp31 src))
+              )) tmp29))))
+            | "FSharp" -> (let tmp25 = (BatList.map (fun x -> (match x with
                   | (u__1, u__2) -> u__1
                 )) imports) in
-              let p = (BatList.append tmp20 prog6) in
-              let tmp21 = (FStarC_Custard_PrintFSharp.print_program stem p) in
-              (FStarC_Util.write_file ofile tmp21);
-              let tmp22 = (FStarC_Custard_PrintFSharp.project_files stem p ((FStarC_Filepath.basename ofile) :: [])) in
-              (BatList.iter (fun tmp23 -> (match tmp23 with
+              let p = (BatList.append tmp25 prog7) in
+              let tmp26 = (FStarC_Custard_PrintFSharp.print_program stem p) in
+              (FStarC_Util.write_file ofile tmp26);
+              let tmp27 = (FStarC_Custard_PrintFSharp.project_files stem p ((FStarC_Filepath.basename ofile) :: [])) in
+              (BatList.iter (fun tmp28 -> (match tmp28 with
                 | (f, src) -> (FStarC_Util.write_file ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) (Filename.dirname ofile) f) src)
-              )) tmp22))
+              )) tmp27))
             | b1 -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_OptionsNotCompatible ((FStarC_Errors_Msg.text (Prims.strcat "Unknown --codegen " (Prims.strcat b1 "."))) :: ((FStarC_Errors_Msg.text "The backends are OCaml, FSharp, KrmlC, KrmlRust, C and Cherry.") :: [])))
           ))
       ))

@@ -442,9 +442,6 @@ let load_3rd_value_from_file3 (fname : string) : ('u___c) option =
   ((fun c len -> Stdlib.seek_in c (Stdlib.pos_in c + len)) channel len);
   (Stdlib.input_value channel))))
 
-let load_value_from_file (fname : string) : ('u___a) option =
-  (with_in_channel_opt fname (fun channel -> (Stdlib.input_value channel)))
-
 let with_sigint_handler (handler : Sys.signal_behavior) (f : (unit -> 'u___a)) : 'u___a =
   (let original_handler = (!(cur_sigint_handler)) in
   (finally (fun tmp -> ((fun h -> Sys.set_signal Sys.sigint h) original_handler)) (fun tmp -> ((set_sigint_handler handler);
@@ -492,6 +489,9 @@ let save_3values_to_file (fname : string) (value1 : 'u___a) (value2 : 'u___b) (v
     | u__cexn -> (((fun f -> try Sys.remove f with _ -> ()) fname);
       (raise u__cexn))
   )
+
+let load_value_from_file (fname : string) : ('u___a) option =
+  (with_in_channel_opt fname (fun channel -> (Stdlib.input_value channel)))
 
 let save_value_to_file (fname : string) (value : 'u___a) : unit =
   (with_out_channel_atomic fname (fun channel -> (Stdlib.output_value channel value)))

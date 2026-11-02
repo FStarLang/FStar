@@ -34,6 +34,45 @@ let module_is_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_E
     )) else false) in
   (loaded env m want_impl))
 
+let loading : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
+
+let cache_primed : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
+
+let rec prime_cache (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) : (string -> unit) =
+  (prime_cache' true deps env)
+
+and prime_cache' (load_self : bool) (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) (fn : string) : unit =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cache_primed fn) in
+  (match tmp with
+    | (Some (tmp1)) -> ()
+    | None when (FStarC_CheckedFiles.is_validated_in_cache fn) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cache_primed fn ())
+    | None -> ((if load_self then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cache_primed fn ()) else ());
+      let tmp1 = (FStarC_Parser_Dep.is_implementation fn) in
+      (if tmp1 then (let tmp2 = (FStarC_Parser_Dep.module_key_of_file fn) in
+      let tmp3 = (FStarC_Parser_Dep.interface_of deps tmp2) in
+      (match tmp3 with
+        | (Some (i)) -> (prime_cache deps env i)
+        | None -> ()
+      )) else ());
+      let tmp2 = (FStarC_Parser_Dep.deps_of deps fn) in
+      (BatList.iter (prime_cache deps env) tmp2);
+      (if load_self then (FStarC_Custard_Prof.timed "cachefile" (fun tmp3 -> ((ignore (FStarC_CheckedFiles.load_module_from_cache env fn));
+      ()))) else ()))
+  ))
+
+let rec ensure_loaded__first_usable (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) (m : string) (fns : (string) list) : (string * FStarC_CheckedFiles.tc_result) =
+  (match fns with
+    | [] -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardEntryNotFound ((FStarC_Errors_Msg.text (Prims.strcat "Custard needs module " (Prims.strcat m ", but no usable checked file for it is in the dependency graph."))) :: ((FStarC_Errors_Msg.text "Verify the module first, or pass --already_cached appropriately.") :: [])))
+    | (fn :: fns1) -> ((prime_cache' false deps env fn);
+      let tmp = (FStarC_Custard_Prof.timed "cachefile" (fun tmp -> (FStarC_CheckedFiles.load_module_from_cache env fn))) in
+      (match tmp with
+        | None -> ((ensure_loaded__first_usable deps env m) fns1)
+        | (Some (tcr)) -> (fn, tcr)
+      ))
+  )
+
 let candidate_files (deps : FStarC_Parser_Dep.deps) (m : string) : (string) list =
   (let tmp = (FStarC_Options.codegen_target ()) in
   let m1 = (FStarC_Parser_Dep.module_key_for_target deps tmp m) in
@@ -48,41 +87,6 @@ let candidate_files (deps : FStarC_Parser_Dep.deps) (m : string) : (string) list
         | None -> []
       )
   ))
-
-let loading : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
-
-let cache_primed : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
-
-let rec prime_cache (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) (fn : string) : unit =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cache_primed fn) in
-  (match tmp with
-    | (Some (tmp1)) -> ()
-    | None -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cache_primed fn ());
-      let tmp1 = (FStarC_Parser_Dep.is_implementation fn) in
-      (if tmp1 then (let tmp2 = (FStarC_Parser_Dep.module_key_of_file fn) in
-      let tmp3 = (FStarC_Parser_Dep.interface_of deps tmp2) in
-      (match tmp3 with
-        | (Some (i)) -> (prime_cache deps env i)
-        | None -> ()
-      )) else ());
-      let tmp2 = (FStarC_Parser_Dep.deps_of deps fn) in
-      (BatList.iter (prime_cache deps env) tmp2);
-      (FStarC_Custard_Prof.timed "cachefile" (fun tmp3 -> ((ignore (FStarC_CheckedFiles.load_module_from_cache env fn));
-      ()))))
-  ))
-
-let rec ensure_loaded__first_usable (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) (m : string) (fns : (string) list) : (string * FStarC_CheckedFiles.tc_result) =
-  (match fns with
-    | [] -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_CustardEntryNotFound ((FStarC_Errors_Msg.text (Prims.strcat "Custard needs module " (Prims.strcat m ", but no usable checked file for it is in the dependency graph."))) :: ((FStarC_Errors_Msg.text "Verify the module first, or pass --already_cached appropriately.") :: [])))
-    | (fn :: fns1) -> ((prime_cache deps env fn);
-      let tmp = (FStarC_Custard_Prof.timed "cachefile" (fun tmp -> (FStarC_CheckedFiles.load_module_from_cache env fn))) in
-      (match tmp with
-        | None -> ((ensure_loaded__first_usable deps env m) fns1)
-        | (Some (tcr)) -> (fn, tcr)
-      ))
-  )
 
 let loaded_files : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
@@ -179,6 +183,19 @@ let rec ensure_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_
       ())) (FStarC_Syntax_Util.lids_of_sigelt se));
       env4)) env2 ((tcr).FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.declarations)))))
   ))))))
+
+let impl_is_checked (deps : FStarC_Parser_Dep.deps) (m : string) : bool =
+  (let tmp = (FStarC_Options.codegen_target ()) in
+  let tmp1 = (FStarC_Parser_Dep.module_key_for_target deps tmp m) in
+  let tmp2 = (FStarC_Parser_Dep.implementation_of deps tmp1) in
+  (match tmp2 with
+    | None -> false
+    | (Some (fn)) -> (let tmp3 = (FStarC_Find.find_file (Prims.strcat (FStarC_Filepath.basename fn) ".checked")) in
+      (match tmp3 with
+        | (Some (v)) -> true
+        | tmp4 -> false
+      ))
+  ))
 
 let loaded_digests (tmp : unit) : ((string * string)) list =
   (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp1 acc -> (key :: acc)) loaded_files []) in

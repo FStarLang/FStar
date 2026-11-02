@@ -203,15 +203,48 @@ let emits (d : FStarC_Custard_Syntax.decl) : bool =
     | tmp2 -> true
   ) else false))
 
+let unit_prefix (tmp : unit) : (string) option =
+  (let tmp1 = (FStarC_Options.custard_unit ()) in
+  (match tmp1 with
+    | (Some (u)) when (let tmp2 = (FStarC_Options.codegen_name ()) in
+    ((=) tmp2 "OCaml")) -> (Some (u))
+    | tmp2 -> None
+  ))
+
+let mangle_prefix (tmp : unit) : string =
+  (let tmp1 = (unit_prefix ()) in
+  (match tmp1 with
+    | (Some (u)) -> (Prims.strcat u ".")
+    | None -> "Custard."
+  ))
+
 let rec avoid__go (foreign : (string) list) (f : string) (fuel : Prims.int) : string =
-  (if (((=) fuel Prims.int_zero) || (not (BatList.mem f foreign))) then f else ((avoid__go foreign) (Prims.strcat "Custard." f) (Prims.op_Minus fuel Prims.int_one)))
+  (if (((=) fuel Prims.int_zero) || (not (BatList.mem f foreign))) then f else (let tmp = (mangle_prefix ()) in
+  let tmp1 = (Prims.strcat tmp f) in
+  ((avoid__go foreign) tmp1 (Prims.op_Minus fuel Prims.int_one))))
 
-let file_of (m : string) : string =
+let is_shared_library_module (deps : FStarC_Parser_Dep.deps) (m : string) : bool =
+  (let tmp = (unit_prefix ()) in
+  let tmp1 = (match tmp with
+      | (Some (v)) -> true
+      | tmp1 -> false
+    ) in
+  let tmp2 = (if tmp1 then (let tmp2 = (FStarC_Options.custard_links ()) in
+    (match tmp2 with
+      | (hd :: tl) -> true
+      | tmp3 -> false
+    )) else false) in
+  (if tmp2 then (let tmp3 = (FStarC_Custard_Loader.candidate_files deps m) in
+  (BatList.exists FStarC_Find.is_library_file tmp3)) else false))
+
+let file_of (deps : FStarC_Parser_Dep.deps) (m : string) : string =
   (let tmp = (FStarC_Custard_Builtins.is_realized_module (FStarC_String.split (46 :: []) m)) in
-  (if tmp then (Prims.strcat "Custard." m) else m))
+  let tmp1 = (if tmp then true else (is_shared_library_module deps m)) in
+  (if tmp1 then (let tmp2 = (mangle_prefix ()) in
+  (Prims.strcat tmp2 m)) else m))
 
-let avoid (foreign : (string) list) (m : string) : string =
-  (let tmp = (file_of m) in
+let avoid (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (m : string) : string =
+  (let tmp = (file_of deps m) in
   ((avoid__go foreign) tmp (Prims.of_int (10))))
 
 let run (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (prog : (FStarC_Custard_Syntax.decl) list) : ((string * (FStarC_Custard_Syntax.decl) list)) list =
@@ -282,7 +315,7 @@ let run (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (prog : (FStar
           (BatList.rev tmp1))
         | None -> []
       ) in
-    (if ((=) ds []) then [] else (let tmp1 = (avoid foreign m) in
+    (if ((=) ds []) then [] else (let tmp1 = (avoid deps foreign m) in
     let tmp2 = (tmp1, ds) in
     (tmp2 :: []))))) names1) in
   let have = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in

@@ -1439,27 +1439,19 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let tmp2 = (term tmp1 b) in
       let tmp3 = (Prims.strcat tmp2 ") = 0)") in
       (Prims.strcat pre tmp3)))
-    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp; _ }, (src :: (si :: (dst :: (di :: (len :: []))))))) -> (let pre = "(Array.blit " in
+    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp; _ }, (src :: (dst :: (len :: []))))) -> (let pre = "(Array.blit " in
       let tmp1 = (after ind pre) in
       let tmp2 = (term tmp1 src) in
-      let tmp3 = (Prims.strcat tmp2 " ") in
+      let tmp3 = (Prims.strcat tmp2 " 0 ") in
       let pre1 = (Prims.strcat pre tmp3) in
       let tmp4 = (after ind pre1) in
-      let tmp5 = (index tmp4 si) in
-      let tmp6 = (Prims.strcat tmp5 " ") in
+      let tmp5 = (term tmp4 dst) in
+      let tmp6 = (Prims.strcat tmp5 " 0 ") in
       let pre2 = (Prims.strcat pre1 tmp6) in
       let tmp7 = (after ind pre2) in
-      let tmp8 = (term tmp7 dst) in
-      let tmp9 = (Prims.strcat tmp8 " ") in
-      let pre3 = (Prims.strcat pre2 tmp9) in
-      let tmp10 = (after ind pre3) in
-      let tmp11 = (index tmp10 di) in
-      let tmp12 = (Prims.strcat tmp11 " ") in
-      let pre4 = (Prims.strcat pre3 tmp12) in
-      let tmp13 = (after ind pre4) in
-      let tmp14 = (index tmp13 len) in
-      let tmp15 = (Prims.strcat tmp14 ")") in
-      (Prims.strcat pre4 tmp15))
+      let tmp8 = (index tmp7 len) in
+      let tmp9 = (Prims.strcat tmp8 ")") in
+      (Prims.strcat pre2 tmp9))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufSub; po_ty = tmp; _ }, tmp1)) -> "(failwith \"Custard: pointer arithmetic has no F# representation\")"
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufLit; po_ty = tmp; _ }, elems)) -> (let tmp1 = (join_at ind "[| " "; " term elems) in
       (Prims.strcat tmp1 " |]"))

@@ -32,6 +32,7 @@ open FStarC.SMTEncoding.Term
 open FStarC.SMTEncoding.Env
 
 let dbg = Debug.get_toggle "CheckedFiles"
+[@@FStar.Attributes.custard_inline]
 let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
 
 (*

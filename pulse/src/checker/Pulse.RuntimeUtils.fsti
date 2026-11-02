@@ -75,6 +75,9 @@ val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }
 val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
 val float_one : FStar.Float64.float64
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
+(* Is [t] the head of a field projection [e.f] that ToSyntax left
+   unresolved?  Such a head only has a meaningful type once applied to [e]. *)
+val is_unresolved_projector (t:T.term) : bool
 val new_implicit_var : reason:string -> range -> env -> typ -> unrefine:bool -> Dv term
 val try_solve_single_valued_implicits : env -> list term -> Dv unit
 module T = FStar.Tactics.V2

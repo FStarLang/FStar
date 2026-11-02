@@ -774,21 +774,22 @@ let deps_from_parsing_data (pd : parsing_data) (original_map : (((string) option
     let tmp10 = (d :: tmp9) in
     ((deps) := tmp10)) else ()))) in
   let dep_edge = (fun module_name is_friend -> (if is_friend then (FriendImplementation (module_name)) else (PreferInterface (module_name)))) in
-  let resolve_dep = (Obj.magic ((fun map lid key is_friend -> (let tmp6 = (module_of_key map tgt key) in
+  let resolve_dep = (Obj.magic ((fun map lid key is_friend -> (let r1 = (FStarC_Ident.range_of_lid lid) in
+    let has_range = ((<>) (FStarC_Range_Ops.file_of_range r1) (FStarC_Range_Ops.file_of_range FStarC_Range_Type.dummyRange)) in
+    let rng = (Some ((if has_range then r1 else file_range))) in
+    let from = (if has_range then (FStarC_Range_Ops.file_of_range r1) else filename) in
+    let tgt1 = (if ((=) from filename) then tgt else (target_of_file from)) in
+    let tmp6 = (module_of_key map tgt1 key) in
     (match tmp6 with
       | None -> None
-      | (Some (m)) -> (let r1 = (FStarC_Ident.range_of_lid lid) in
-        let has_range = ((<>) (FStarC_Range_Ops.file_of_range r1) (FStarC_Range_Ops.file_of_range FStarC_Range_Type.dummyRange)) in
-        let rng = (Some ((if has_range then r1 else file_range))) in
-        let from = (if has_range then (FStarC_Range_Ops.file_of_range r1) else filename) in
-        (if ((<>) m own_module) then (let i = (select_or_fail rng m KIntf tgt) in
-        (check_stable rng from m KIntf tgt i);
+      | (Some (m)) -> ((if ((<>) m own_module) then (let i = (select_or_fail rng m KIntf tgt1) in
+        (check_stable rng from m KIntf tgt1 i);
         (if (is_friend || (match i with
           | None -> true
           | tmp7 -> false
-        )) then (let tmp7 = (select_or_fail rng m KImpl tgt) in
-        (check_stable rng from m KImpl tgt tmp7)) else ())) else ());
-        (key_in_context original_map rng m tgt))
+        )) then (let tmp7 = (select_or_fail rng m KImpl tgt1) in
+        (check_stable rng from m KImpl tgt1 tmp7)) else ())) else ());
+        (key_in_context original_map rng m tgt1))
     ))))) in
   let add_dependence_edge = (fun original_or_working_map lid is_friend -> (let key = (lowercase_join_longident lid true) in
     let tmp6 = (!(dbg)) in
@@ -1571,23 +1572,38 @@ let rec build_dep_graph_for_files__discover_one (all_cmd_line_files : (string) l
       let dep_node = { edges = ((fun l -> BatList.unique l) deps1); color = White } in
       (deps_add_dep dep_graph file_name dep_node);
       let tmp6 = (peek_past_interfaces ()) in
-      let target_impls = (if tmp6 then ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (match d with
-          | (UseInterface (k)) -> (let tmp7 = (implementation_of_internal file_system_map k) in
-            let tmp8 = (match tmp7 with
-                | (Some (v)) -> true
-                | tmp8 -> false
-              ) in
-            (if tmp8 then ((UseImplementation (k)) :: []) else []))
-          | (PreferInterface (k)) -> (let tmp7 = (implementation_of_internal file_system_map k) in
-            let tmp8 = (match tmp7 with
-                | (Some (v)) -> true
-                | tmp8 -> false
-              ) in
-            (if tmp8 then ((UseImplementation (k)) :: []) else []))
-          | tmp7 -> []
+      let impls_in_context = (if tmp6 then ((fun f l -> BatList.flatten (BatList.map f l)) (fun tmp7 -> (match tmp7 with
+          | (UseInterface (k)) -> (let tmp8 = (implementation_of_internal file_system_map k) in
+            (match tmp8 with
+              | (Some (f)) when ((<>) f file_name) -> (f :: [])
+              | tmp9 -> []
+            ))
+          | (PreferInterface (k)) -> (let tmp8 = (implementation_of_internal file_system_map k) in
+            (match tmp8 with
+              | (Some (f)) when ((<>) f file_name) -> (f :: [])
+              | tmp9 -> []
+            ))
+          | tmp8 -> []
         )) deps1) else []) in
-      let tmp7 = (BatList.map (file_of_dep file_system_map all_cmd_line_files) (BatList.append deps1 (BatList.append mo_roots target_impls))) in
-      (BatList.iter (build_dep_graph_for_files__discover_one all_cmd_line_files file_system_map dep_graph parse_results get_parsing_data_from_cache add_interface_for_inlining) tmp7))
+      let tmp7 = (FStarC_Options.dep ()) in
+      let tmp8 = (match tmp7 with
+          | (Some (v)) -> true
+          | tmp8 -> false
+        ) in
+      let tmp9 = (if tmp8 then (peek_past_interfaces ()) else false) in
+      let other_variants = (if tmp9 then (let tmp10 = (lowercase_module_name file_name) in
+        let tmp11 = (variants_of tmp10) in
+        let tmp12 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun v -> (BatList.append (match (v).v_intf with
+            | (Some (f)) -> (f :: [])
+            | None -> []
+          ) (match (v).v_impl with
+            | (Some (f)) -> (f :: [])
+            | None -> []
+          ))) tmp11) in
+        (BatList.filter (fun f -> ((<>) f file_name)) tmp12)) else []) in
+      let tmp10 = (BatList.map (file_of_dep file_system_map all_cmd_line_files) (BatList.append deps1 mo_roots)) in
+      let tmp11 = (BatList.append tmp10 (BatList.append impls_in_context other_variants)) in
+      (BatList.iter (build_dep_graph_for_files__discover_one all_cmd_line_files file_system_map dep_graph parse_results get_parsing_data_from_cache add_interface_for_inlining) tmp11))
   )) else ()))
 
 let profile (f : (unit -> 'tmp)) (component_name : string) : 'tmp =

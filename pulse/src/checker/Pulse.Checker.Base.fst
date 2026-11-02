@@ -606,6 +606,17 @@ let is_stateful_application (g:env) (e:term)
 : T.Tac (option st_term) = 
   RU.record_stats "Pulse.is_stateful_application" fun _ -> 
   let head, args = T.collect_app_ln e in
+  (* For a projection [r.f args], the type of the bare head is that of the
+     field name [f] as written (e.g. a typeclass method), not of the projector
+     chosen once the type of [r] is known; so check [r.f] as the head. *)
+  let head, args =
+    if RU.is_unresolved_projector head then
+      match args with
+      | (r, T.Q_Explicit) :: rest ->
+        RU.mk_app_flat head [(r, T.Q_Explicit)] (T.range_of_term e), rest
+      | _ -> head, args
+    else head, args
+  in
   match args with
   | _ :: _ -> (
     match RU.tc_term_phase1 (elab_env g) head false with
@@ -760,7 +771,10 @@ let rec maybe_hoist (g:env) (arg:T.argv)
     let g, binders, args = maybe_hoist_args g args in
     if Cons? args 
     then (
-      let st_app = as_stateful_application t head args  in
+      (* Rebuild from the hoisted arguments, not from t: t still contains
+         the nested stateful subterms just bound in binders, which would
+         otherwise be elaborated, and run, once more at each level (#4791). *)
+      let st_app = as_stateful_application (RU.mk_app_flat head args (T.range_of_term t)) head args in
       let g, b, x, t = bind_st_term g st_app in
       let arg = t, q in
       g, binders@[b, x, st_app], arg

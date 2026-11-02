@@ -270,6 +270,12 @@ let lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term
     | Some (Some x) -> Some (co x)
     | _ -> None)
 
+let is_unresolved_projector (t:T.term) : bool =
+  ml_tot (fun () ->
+    match (FStarC.Syntax.Subst.compress (co t)).n with
+    | S.Tm_fvar { fv_qual = Some (S.Unresolved_projector _) } -> true
+    | _ -> false)
+
 let phase1 (g:env) : TcEnv.env =
   { (co g <: TcEnv.env) with TcEnv.phase1 = true; admit = true }
 

@@ -761,14 +761,7 @@ let is_type_carrying_binder (env:TcEnv.env) (b:binder) : ML bool =
      | _ -> false)
   | _ -> false
 
-(* [demanded] is section 30.11's rule 4c: names that something marked
-   [@@custard_compile_time] is applied to, computed from the *body* and so
-   supplied by the caller, since a classification otherwise only sees a type.
-   They are seeded as [Mono] before rule 5's fixpoint, which is the point --
-   the demand has to propagate to whatever the demanded binder's type mentions
-   exactly as a written annotation would. *)
-let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
-                    (def:option term) (demanded:list int) : ML (list bclass) =
+let def_binders (env:TcEnv.env) (t:typ) (def:option term) : ML (binders & comp) =
   let bs, comp = arrow_formals_unfold env t in
   (* Section 33.3.  An attribute written on a binder can reach a
      classification by two routes, and only one of them is always open.  The
@@ -797,6 +790,17 @@ let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
               if Nil? bd.binder_attrs then b
               else { b with binder_attrs = b.binder_attrs @ bd.binder_attrs })
         else b) in
+  bs, comp
+
+(* [demanded] is section 30.11's rule 4c: names that something marked
+   [@@custard_compile_time] is applied to, computed from the *body* and so
+   supplied by the caller, since a classification otherwise only sees a type.
+   They are seeded as [Mono] before rule 5's fixpoint, which is the point --
+   the demand has to propagate to whatever the demanded binder's type mentions
+   exactly as a written annotation would. *)
+let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
+                    (def:option term) (demanded:list int) : ML (list bclass) =
+  let bs, comp = def_binders env t def in
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
   let init (i:int) (b:binder) : ML bclass =
@@ -993,6 +997,12 @@ let classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term
         if n > 0 then extra (n - 1) bs
         else (if is_erased_binder env b then Dropped else Poly) :: extra 0 bs in
     cs @ extra (List.length cs) bs
+
+let soft_binders (env:TcEnv.env) (t:typ) (def:option term) : ML (list bool) =
+  let bs, _ = def_binders env t def in
+  bs |> List.map (fun (b:binder) ->
+    U.has_attribute b.binder_attrs PC.monomorphize_attr &&
+    Cons? (fst (arrow_formals_unfold env b.binder_bv.sort)))
 
 let has_mono (cs:list bclass) : ML bool =
   cs |> List.existsb Mono?

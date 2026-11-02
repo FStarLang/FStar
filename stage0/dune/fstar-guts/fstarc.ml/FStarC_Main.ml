@@ -209,7 +209,7 @@ let go_normal (tmp : unit) : unit =
           let path = (match tmp10 with
               | (Some (v)) -> v
             ) in
-          let tmp11 = (FStarC_Util.load_value_from_file path) in
+          let tmp11 = (FStarC_Custard_KrmlJson.read_file path) in
           (match tmp11 with
             | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ((PPrint.(^/^) (FStarC_Errors_Msg.text "Could not read krml file:") (PPrint.string path)) :: []))
             | (Some ((version, files))) -> (let tmp12 = (FStarC_Class_Show.fStarC_Class_Show_show__int version) in

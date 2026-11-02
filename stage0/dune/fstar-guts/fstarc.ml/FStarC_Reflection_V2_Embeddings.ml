@@ -908,7 +908,7 @@ let e_binding : (FStarC_Reflection_V2_Data.binding) FStarC_Syntax_Embeddings_Bas
   (mk_emb embed_ unembed FStarC_Reflection_V2_Constants.fstar_refl_binding_fv))
 
 let unfold_lazy_bv (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let bv = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let bv = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let tmp = (FStarC_Reflection_V2_Builtins.inspect_bv bv) in
   let tmp1 = (embed e_bv_view ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng tmp) in
   let tmp2 = (FStarC_Syntax_Syntax.as_arg tmp1) in
@@ -916,7 +916,7 @@ let unfold_lazy_bv (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.t
   (FStarC_Syntax_Syntax.mk_Tm_app (FStarC_Reflection_V2_Constants.fstar_refl_pack_bv).FStarC_Reflection_V2_Constants.t tmp3 ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng))
 
 let unfold_lazy_namedv (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let namedv = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let namedv = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let tmp = (FStarC_Reflection_V2_Builtins.inspect_namedv namedv) in
   let tmp1 = (embed e_namedv_view ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng tmp) in
   let tmp2 = (FStarC_Syntax_Syntax.as_arg tmp1) in
@@ -924,7 +924,7 @@ let unfold_lazy_namedv (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Synt
   (FStarC_Syntax_Syntax.mk_Tm_app (FStarC_Reflection_V2_Constants.fstar_refl_pack_namedv).FStarC_Reflection_V2_Constants.t tmp3 ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng))
 
 let unfold_lazy_binder (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let binder = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let binder = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let tmp = (FStarC_Reflection_V2_Builtins.inspect_binder binder) in
   let tmp1 = (embed e_binder_view ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng tmp) in
   let tmp2 = (FStarC_Syntax_Syntax.as_arg tmp1) in
@@ -932,7 +932,7 @@ let unfold_lazy_binder (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Synt
   (FStarC_Syntax_Syntax.mk_Tm_app (FStarC_Reflection_V2_Constants.fstar_refl_pack_binder).FStarC_Reflection_V2_Constants.t tmp3 ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng))
 
 let unfold_lazy_letbinding (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let lb = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let lb = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let lbv = (FStarC_Reflection_V2_Builtins.inspect_lb lb) in
   let tmp = (embed e_fv ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng (lbv).FStarC_Reflection_V2_Data.lb_fv) in
   let tmp1 = (FStarC_Syntax_Syntax.as_arg tmp) in
@@ -952,7 +952,7 @@ let unfold_lazy_optionstate (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax
   FStarC_Syntax_Util.exp_unit
 
 let unfold_lazy_fvar (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let fv = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let fv = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
   let tmp1 = (embed FStarC_Syntax_Embeddings.e_string_list ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng tmp) in
   let tmp2 = (FStarC_Syntax_Syntax.as_arg tmp1) in
@@ -960,7 +960,7 @@ let unfold_lazy_fvar (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax
   (FStarC_Syntax_Syntax.mk_Tm_app (FStarC_Reflection_V2_Constants.fstar_refl_pack_fv).FStarC_Reflection_V2_Constants.t tmp3 ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng))
 
 let unfold_lazy_comp (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let comp = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let comp = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let tmp = (FStarC_Reflection_V2_Builtins.inspect_comp comp) in
   let tmp1 = (embed e_comp_view ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng tmp) in
   let tmp2 = (FStarC_Syntax_Syntax.as_arg tmp1) in
@@ -971,7 +971,7 @@ let unfold_lazy_env (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.
   FStarC_Syntax_Util.exp_unit
 
 let unfold_lazy_sigelt (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let sigelt = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let sigelt = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let tmp = (FStarC_Reflection_V2_Builtins.inspect_sigelt sigelt) in
   let tmp1 = (embed e_sigelt_view ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng tmp) in
   let tmp2 = (FStarC_Syntax_Syntax.as_arg tmp1) in
@@ -979,14 +979,14 @@ let unfold_lazy_sigelt (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Synt
   (FStarC_Syntax_Syntax.mk_Tm_app (FStarC_Reflection_V2_Constants.fstar_refl_pack_sigelt).FStarC_Reflection_V2_Constants.t tmp3 ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng))
 
 let unfold_lazy_universe (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let u = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let u = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let tmp = (embed e_universe_view ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng (FStarC_Reflection_V2_Builtins.inspect_universe u)) in
   let tmp1 = (FStarC_Syntax_Syntax.as_arg tmp) in
   let tmp2 = (tmp1 :: []) in
   (FStarC_Syntax_Syntax.mk_Tm_app (FStarC_Reflection_V2_Constants.fstar_refl_pack_universe).FStarC_Reflection_V2_Constants.t tmp2 ((i : FStarC_Syntax_Syntax.lazyinfo)).FStarC_Syntax_Syntax.rng))
 
 let unfold_lazy_doc (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let d = (FStar_Dyn.undyn (i).FStarC_Syntax_Syntax.blob) in
+  (let d = (Obj.magic ((i).FStarC_Syntax_Syntax.blob)) in
   let lid = (FStarC_Ident.lid_of_str "FStar.Pprint.arbitrary_string") in
   let s = (FStar_Pprint.render d) in
   let tmp = (FStarC_Syntax_Syntax.fvar lid None) in
