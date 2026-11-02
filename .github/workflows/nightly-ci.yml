@@ -52,7 +52,7 @@ jobs:
           - fstar-src.tar.gz
         os:
           - ubuntu-24.04
-          - ubuntu-latest
+          - ubuntu-26.04
     runs-on: ${{ matrix.os }}
     steps:
       - name: Get fstar package

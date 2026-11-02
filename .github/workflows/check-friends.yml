@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   build-steel:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Sparse checkout of F*, just to get the setup action and the
       # helper scripts it uses.
@@ -45,7 +45,7 @@ jobs:
           hometag: STEEL
 
   build-steel-proofs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs:
       - build-steel
     steps:
@@ -75,7 +75,7 @@ jobs:
         run: make -C steel -skj$(nproc) verify-proofs
 
   test-steel:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs:
       - build-steel
     steps:
@@ -105,7 +105,7 @@ jobs:
         run: make -C steel -skj$(nproc) test
 
   build-everparse:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Sparse checkout of F*, just to get the setup action and the
       # helper scripts it uses.
@@ -149,7 +149,7 @@ jobs:
           hometag: EVERPARSE
 
   test-everparse:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs:
       - build-everparse
     steps:
@@ -200,7 +200,7 @@ jobs:
         run: make -C everparse -skj$(nproc) test EVERPARSE_NO_DIFF=1
 
   starmalloc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs:
       - build-steel
     steps:
@@ -238,7 +238,7 @@ jobs:
         run: make -C starmalloc all -skj$(nproc)
 
   secrefstar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Sparse checkout of F*, just to get the setup action and the
       # helper scripts it uses.
@@ -269,7 +269,7 @@ jobs:
         run: make -C repo/secrefstar -skj$(nproc) build-all
 
   sciostar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Sparse checkout of F*, just to get the setup action and the
       # helper scripts it uses.
@@ -301,7 +301,7 @@ jobs:
         run: make -C repo/sciostar/case-studies/webserver -skj$(nproc) build
 
   c2pulse:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Sparse checkout of F*, just to get the setup action and the
       # helper scripts it uses.
@@ -349,7 +349,7 @@ jobs:
         run: make -C c2pulse -j$(nproc) test
 
   algostar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Sparse checkout of F*, just to get the setup action and the
       # helper scripts it uses.
@@ -387,7 +387,7 @@ jobs:
         run: make -C algostar -j$(nproc)
 
   pulse-verified-gc:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       # Sparse checkout of F*, just to get the setup action and the
       # helper scripts it uses.
