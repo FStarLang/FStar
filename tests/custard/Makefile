@@ -3835,8 +3835,11 @@ $(CHERRY_DIR)/CherryInt.chgrep: $(CHERRY_DIR)/CherryInt.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryInt.chgrep
 
-# Locals of different initializers share one C function.
+# Locals of different initializers share one C function.  Built at -O2 as
+# well (issue 4814): dropping a string literal once inlined must not trip
+# GCC's -Wfree-nonheap-object.
 CHERRY_TESTS += CherryInitScope
+CHERRY_CFLAGS_CherryInitScope = -O2
 
 # A local function whose type is an arrow only through a recursive type
 # function is not lambda-lifted, which would read its result type off its
