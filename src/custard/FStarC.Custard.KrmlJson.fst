@@ -102,7 +102,8 @@ let width_ (b:w) (x:width) : ML unit =
     | UInt8 -> "UInt8" | UInt16 -> "UInt16" | UInt32 -> "UInt32" | UInt64 -> "UInt64"
     | Int8 -> "Int8" | Int16 -> "Int16" | Int32 -> "Int32" | Int64 -> "Int64"
     | Bool -> "Bool" | CInt -> "CInt" | SizeT -> "SizeT" | PtrdiffT -> "PtrdiffT"
-    | Float32 -> "Float32" | Float64 -> "Float64")
+    | Float32 -> "Float32" | Float64 -> "Float64"
+    | Float16 -> "Float16" | BFloat16 -> "BFloat16")
 
 let constant_ (b:w) (c:constant) : ML unit =
   let (wd, s) = c in
@@ -115,7 +116,9 @@ let oper_ (b:w) (x:op) : ML unit =
     | BOr -> "BOr" | BAnd -> "BAnd" | BXor -> "BXor"
     | BShiftL -> "BShiftL" | BShiftR -> "BShiftR" | BNot -> "BNot"
     | Eq -> "Eq" | Neq -> "Neq" | Lt -> "Lt" | Lte -> "Lte" | Gt -> "Gt" | Gte -> "Gte"
-    | And -> "And" | Or -> "Or" | Xor -> "Xor" | Not -> "Not")
+    | And -> "And" | Or -> "Or" | Xor -> "Xor" | Not -> "Not"
+    | Assign -> "Assign" | PreIncr -> "PreIncr" | PreDecr -> "PreDecr"
+    | PostIncr -> "PostIncr" | PostDecr -> "PostDecr" | Comma -> "Comma" | Neg -> "Neg")
 
 let flag_ (b:w) (f:flag) : ML unit =
   let s1 (n s:string) : ML unit = (c1 b n; str b s; e1 b) in
@@ -239,6 +242,8 @@ let rec expr_ (b:w) (e:expr) : ML unit =
   | EBufDiff (x, y) -> cn b "EBufDiff"; ex x; comma b; ex y; en b
   | ESizeof t -> c1 b "ESizeof"; typ_ b t; e1 b
   | EZeroForDeref wd -> c1 b "EZeroForDeref"; width_ b wd; e1 b
+  | EGFor (i, c, st, bd) ->
+    cn b "EGFor"; ex i; comma b; ex c; comma b; ex st; comma b; ex bd; en b
 
 let fields_ (b:w) (fs:fields_t) : ML unit =
   list_ b (fun (n, (t, m)) ->
@@ -348,6 +353,7 @@ let width_of (j:json) : ML width =
   | "Int8" -> Int8 | "Int16" -> Int16 | "Int32" -> Int32 | "Int64" -> Int64
   | "Bool" -> Bool | "CInt" -> CInt | "SizeT" -> SizeT | "PtrdiffT" -> PtrdiffT
   | "Float32" -> Float32 | "Float64" -> Float64
+  | "Float16" -> Float16 | "BFloat16" -> BFloat16
   | n -> bad ("unknown width " ^ n)
 
 let constant_of (j:json) : ML constant =
@@ -361,6 +367,8 @@ let op_of (j:json) : ML op =
   | "BShiftL" -> BShiftL | "BShiftR" -> BShiftR | "BNot" -> BNot
   | "Eq" -> Eq | "Neq" -> Neq | "Lt" -> Lt | "Lte" -> Lte | "Gt" -> Gt | "Gte" -> Gte
   | "And" -> And | "Or" -> Or | "Xor" -> Xor | "Not" -> Not
+  | "Assign" -> Assign | "PreIncr" -> PreIncr | "PreDecr" -> PreDecr
+  | "PostIncr" -> PostIncr | "PostDecr" -> PostDecr | "Comma" -> Comma | "Neg" -> Neg
   | n -> bad ("unknown operator " ^ n)
 
 let flag_of (j:json) : ML flag =
@@ -491,6 +499,7 @@ let rec expr_of (j:json) : ML expr =
     | "EAbortT", [s; t] -> EAbortT (as_str s, typ_of t)
     | "EComment", [s1; x; s2] -> EComment (as_str s1, expr_of x, as_str s2)
     | "EBufDiff", [x; y] -> EBufDiff (expr_of x, expr_of y)
+    | "EGFor", [i; c; st; bd] -> EGFor (expr_of i, expr_of c, expr_of st, expr_of bd)
     | _ -> bad ("unknown expression " ^ n)
 
 let fields_of (j:json) : ML fields_t =
