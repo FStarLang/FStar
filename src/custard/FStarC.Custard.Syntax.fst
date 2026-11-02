@@ -518,7 +518,7 @@ let op_to_string (o:prim_op) : string =
    | Add -> "+" | AddW -> "+." | Sub -> "-" | SubW -> "-."
    | Mult -> "*" | MultW -> "*." | Div -> "/" | DivW -> "/." | Mod -> "%"
    | BOr -> "|" | BAnd -> "&" | BXor -> "^" | BShiftL -> "<<"
-   | BShiftR -> ">>" | BNot -> "~"
+   | BShiftR -> ">>" | BNot -> "~" | Neg -> "neg"
    | Eq -> "=" | Neq -> "<>" | Lt -> "<" | Lte -> "<=" | Gt -> ">" | Gte -> ">="
    | And -> "&&" | Or -> "||" | Not -> "not"
    | BufCreate LStack -> "alloca" | BufCreate LHeap -> "malloc"
