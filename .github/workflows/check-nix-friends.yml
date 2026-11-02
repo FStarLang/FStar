@@ -11,7 +11,7 @@ defaults:
 
 jobs:
   comparse:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -26,7 +26,7 @@ jobs:
           nix flake check
 
   dy-star:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -41,7 +41,7 @@ jobs:
           nix flake check
 
   mls-star:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
