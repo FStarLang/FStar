@@ -134,16 +134,9 @@ let parse (fly_deps:bool) (env:TcEnv.env) (fn:string)
 let core_check : TcEnv.core_check_t =
   fun env tm t must_tot ->
     let open FStarC.TypeChecker.Core in
-    if not (Options.compat_pre_core_should_check ())
-    then Inl None
-    else match check_term env tm t must_tot with
-         | Inl None -> Inl None
-         | Inl (Some g) ->
-           if Options.compat_pre_core_set ()
-           then Inl None
-           else Inl (Some g)
-         | Inr err ->
-           Inr (fun b -> if b then print_error_short err else print_error err)
+    match check_term env tm t must_tot with
+    | Inl g -> Inl g
+    | Inr err -> Inr (fun b -> if b then print_error_short err else print_error err)
     
 
 (***********************************************************************)

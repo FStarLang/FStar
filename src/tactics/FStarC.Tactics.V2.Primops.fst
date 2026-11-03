@@ -183,12 +183,6 @@ let ops = [
   mk_tac_step_1 0 "comp_to_doc" comp_to_doc comp_to_doc;
   mk_tac_step_1 0 "range_to_string" range_to_string range_to_string;
 
-  mk_tac_step_3 1 "with_compat_pre_core"
-    #e_any #e_int #(TI.e_tactic_thunk e_any) #e_any
-    #NBET.e_any #NBET.e_int #(TI.e_tactic_nbe_thunk NBET.e_any) #NBET.e_any
-    (fun _ -> with_compat_pre_core)
-    (fun _ -> with_compat_pre_core);
-
   mk_tac_step_1 0 "get_vconfig" get_vconfig get_vconfig;
   mk_tac_step_1 0 "set_vconfig" set_vconfig set_vconfig;
   mk_tac_step_1 0 "t_smt_sync" t_smt_sync t_smt_sync;

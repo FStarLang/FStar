@@ -359,7 +359,6 @@ let is_goal_safe_as_well_typed (g:goal) : ML bool =
   all_deps_resolved
 
 let register_goal (g:goal) : ML unit =
-  if not (Options.compat_pre_core_should_register()) then () else
   let env = goal_env g in
   if env.admit || Options.admit_smt_queries () then () else
   let uv = g.goal_ctx_uvar in

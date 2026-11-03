@@ -82,22 +82,13 @@ let compress_univ (u:universe)  : ML (tac universe) =
 
 let core_check env sol t must_tot
   : ML (either (option Core.guard_and_tok_t) Core.error)
-  = if not (Options.compat_pre_core_should_check()) then Inl None else
-    let debug (f : unit -> ML unit) : ML unit =
+  = let debug (f : unit -> ML unit) : ML unit =
         if Debug.any()
         then f ()
         else ()
     in
     match FStarC.TypeChecker.Core.check_term env sol t must_tot with
-    | Inl None ->
-      Inl None
-
-    | Inl (Some g) ->
-      if Options.compat_pre_core_set ()  //core check the solution, but drop the guard, pre_core
-      then Inl None
-      else Inl (Some g)
-
-
+    | Inl g -> Inl g
     | Inr err ->
       debug (fun _ ->
                Format.print5 "(%s) Core checking failed (%s) on term %s and type %s\n%s\n"
@@ -458,18 +449,8 @@ let __do_unify_wflags
         try
           (* Rel solves the unification variables, and Core decides the
              equality of the terms so instantiated, computing its proof
-             obligation if [allow_guards] (see [CoreRel]). With
-             [--compat_pre_core 0|1], tactics do not have Core check their
-             terms ([core_check]), nor decide an equality with no guard. *)
-          let res =
-            if not allow_guards && not (Options.compat_pre_core_should_check ())
-            then
-              let tx = UF.new_transaction () in
-              match Rel.teq_nosmt env t1 t2 with
-              | None -> UF.rollback tx; None
-              | r -> UF.commit tx; r
-            else CoreRel.try_teq allow_guards env t1 t2
-          in
+             obligation if [allow_guards] (see [CoreRel]). *)
+          let res = CoreRel.try_teq allow_guards env t1 t2 in
           if dbg then
             Format.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStarC.Common.string_of_option (Rel.guard_to_string env) res)
@@ -1631,7 +1612,6 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term)  : ML (tac unit) =
     let should_register_trefl g =
       let should_register = true in
       let skip_register = false in
-      if not (Options.compat_pre_core_should_register()) then skip_register else
       //Sending a goal t1 == t2 to the core for registration can be expensive
       //particularly if the terms are big, e.g., when they are WPs etc
       //This function decides which goals to register, using two criteria
@@ -2304,12 +2284,6 @@ let comp_to_doc (c:comp) : ML (tac Pprint.document)
 
 let range_to_string (r:FStarC.Range.t) : ML (tac string)
   = return (show r)
-
-let with_compat_pre_core (n:int) (f:tac 'a)  : ML (tac 'a) =
-    mk_tac (fun ps ->
-      Options.with_saved_options (fun () ->
-        let _res = FStarC.Options.set_options ("--compat_pre_core 0") in
-        run f ps))
 
 let get_vconfig ()  : ML (tac vconfig) =
   let! g = cur_goal in
