@@ -49,6 +49,13 @@ val guard (g:env) (guard:typ) : result unit
    bypassing the cache. *)
 val reemit_guard (g:env) (guard:typ) : result unit
 
+(* Where no guard is allowed: [f], or else [f] allowing a guard, provided
+   that guard simplifies to [True] ([VCUtil.simplify_vc]), as Rel's
+   [teq_nosmt] discharges its own; e.g. [hide (reveal x) == x], which only a
+   primitive step decides. If both fail, [f]'s error. Where guards are
+   allowed, this is [f]. *)
+val guard_if_trivial (g:env) (f:result unit) : result unit
+
 (* The guard [phi] about the witness of a refinement subtyping, whose
    subterms have the facts [fs], which are assumed. *)
 val witness_guard (g:env) (fs:Thunk.t (list term)) (phi:typ) : ML (result unit)

@@ -125,6 +125,24 @@ let reemit_guard (g:env) (guard:typ)
     (insert_guard g guard ;!
      return_with_guard () (Some guard)) ctx cache
 
+let guard_if_trivial (g:env) (f:result unit)
+  : result unit
+  = fun ctx cache ->
+    if not ctx.no_guard then f ctx cache else
+    match f ctx cache with
+    | Error e ->
+      begin match f { ctx with no_guard = false } cache with
+      | Success (((), None), cache') -> Success (((), None), cache')
+      | Success (((), Some p), _)
+          when FStarC.TypeChecker.Common.Trivial?
+                 (FStarC.TypeChecker.Common.check_trivial (VCUtil.simplify_vc true g.tcenv p)) ->
+        (* The cache of [f] is dropped: its entries claim their guards were
+           emitted. *)
+        Success (((), None), cache)
+      | _ -> Error e
+      end
+    | r -> r
+
 (* The guard [phi] about the witness of a refinement subtyping, whose
    subterms have the facts [fs]. The type synthesized for an application is
    its head's result type, which says nothing about its arguments; so also

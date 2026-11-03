@@ -3092,7 +3092,7 @@ let check_term_equality guard_ok unfolding_ok g t0 t1
          (show t0) (show t1) (show guard_ok) (show unfolding_ok);
     clear_relation_failures ();
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Eq", None)] } in
-    let r = check_relation g EQUALITY t0 t1 ctx initial_cache in
+    let r = guard_if_trivial g (check_relation g EQUALITY t0 t1) ctx initial_cache in
     if !dbg_Top then
        Format.print3 "} Exiting check_term_equality (%s, %s). Result = %s.\n" (show t0) (show t1) (show r);
     let r =
@@ -3106,6 +3106,6 @@ let check_term_subtyping guard_ok unfolding_ok g t0 t1
   = let g = initial_env g in
     clear_relation_failures ();
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Subtyping", None)] } in
-    match check_relation g (SUBTYPING None) t0 t1 ctx initial_cache with
+    match guard_if_trivial g (check_relation g (SUBTYPING None) t0 t1) ctx initial_cache with
     | Success ((_, g), cache) -> Inl (return_my_guard_and_tok_t g cache)
     | Error err -> Inr err

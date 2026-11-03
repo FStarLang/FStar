@@ -119,7 +119,9 @@ val open_binders_in_term (g:Env.env) (bs:binders) (t:term)
 val open_binders_in_comp (g:Env.env) (bs:binders) (c:comp)
   : ML (Env.env & binders & comp)
 
-(* For unit testing, and exposed to tactics *)
+(* For unit testing, and exposed to tactics. Without [guard_ok], the result
+   has no guard: the relation must hold without one, or with one that
+   simplifies to [True] ([Core.Guard.guard_if_trivial]). *)
 val check_term_equality (guard_ok:bool) (unfolding_ok:bool) (g:Env.env) (t0 t1:typ)
   : ML (either (option guard_and_tok_t) error)
 

@@ -26,7 +26,6 @@ open FStarC.Syntax.Print {}
 module Rel = FStarC.TypeChecker.Rel
 module Core = FStarC.TypeChecker.Core
 module UF = FStarC.Syntax.Unionfind
-module VCUtil = FStarC.TypeChecker.VCUtil
 
 let dbg = Debug.get_toggle "CoreRel"
 
@@ -35,13 +34,10 @@ let dbg = Debug.get_toggle "CoreRel"
 let decide (guard_ok:bool) (subtyping:bool) (env:env) (t1 t2:typ) (g:guard_t)
   : ML (option guard_t)
   = if env.admit then Some g else
-    (* Core is always allowed a guard: when the caller is not, the guard
-       must simplify to [True] (e.g. [hide (reveal x) == x], which Rel
-       decides with a primitive step, and Core only by its guard). *)
     let r =
       if subtyping
-      then Core.check_term_subtyping true true env t1 t2
-      else Core.check_term_equality true true env t1 t2
+      then Core.check_term_subtyping guard_ok true env t1 t2
+      else Core.check_term_equality guard_ok true env t1 t2
     in
     let reject (why:string) : ML (option guard_t) =
       if !dbg then
@@ -51,12 +47,12 @@ let decide (guard_ok:bool) (subtyping:bool) (env:env) (t1 t2:typ) (g:guard_t)
     in
     match r with
     | Inl None -> Some g
-    | Inl (Some (f, tok)) ->
+    | Inl (Some (f, _)) ->
+      (* Without [guard_ok], Core returns no guard (one that simplifies to
+         [True] is dropped by Core itself). *)
       if guard_ok
       then Some { g with guard_f = NonTrivial f }
-      else if Trivial? (check_trivial (VCUtil.simplify_vc true env f))
-      then (Core.commit_guard tok; Some g)
-      else reject ("it needs a proof of " ^ show f)
+      else reject ("unexpected guard " ^ show f)
     | Inr err -> reject (Core.print_error err)
 
 (* Run [f] in a transaction, rolled back unless it returns [Some _]. *)
