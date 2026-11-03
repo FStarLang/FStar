@@ -32,8 +32,14 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
       v
 
 (* caches *)
+type normalized_include_path_cache = {
+  paths: list module_include_path;
+  source_roots: list (module_include_path & string);
+  has_flat_root: bool;
+}
+
 let _full_include : ref (option (list string)) = mk_ref None
-let _module_include_paths_normalized : ref (option (list module_include_path)) = mk_ref None
+let _module_include_paths_normalized : ref (option normalized_include_path_cache) = mk_ref None
 let find_file_cache : HashTable.t string (option string) = HashTable.create 100
 let source_file_name_cache : HashTable.t string string = HashTable.create 100
 
@@ -215,7 +221,7 @@ let full_include_path () : ML _ =
     _full_include := Some res;
     res
 
-let module_include_paths_normalized () : ML (list module_include_path) =
+let normalized_module_include_paths () : ML normalized_include_path_cache =
   match !_module_include_paths_normalized with
   | Some paths -> paths
   | None ->
@@ -223,17 +229,28 @@ let module_include_paths_normalized () : ML (list module_include_path) =
       |> List.map (fun path ->
         { path with dir = Filepath.normalize_file_path path.dir })
     in
-    _module_include_paths_normalized := Some paths;
-    paths
+    let normalized = {
+      paths;
+      source_roots = List.map (fun path -> path, path.dir ^ "/") paths;
+      has_flat_root = List.existsb (fun path -> path.kind = Flat) paths;
+    } in
+    _module_include_paths_normalized := Some normalized;
+    normalized
 
-let relative_source_path (filename:string) : ML (option string) =
-  let filename = Filepath.normalize_file_path filename in
+let module_include_paths_normalized () : ML (list module_include_path) =
+  (normalized_module_include_paths ()).paths
+
+let relative_source_path_normalized (filename:string) : ML (option string) =
+  let paths = normalized_module_include_paths () in
+  let filename_dir =
+    if paths.has_flat_root then Some (Filepath.dirname filename) else None
+  in
   let best =
-    module_include_paths_normalized ()
-    |> List.fold_left (fun best path ->
-      if BU.starts_with filename (path.dir ^ "/")
+    paths.source_roots
+    |> List.fold_left (fun best (path, prefix) ->
+      if BU.starts_with filename prefix
          && (match path.kind with
-             | Flat -> Filepath.dirname filename = path.dir
+             | Flat -> filename_dir = Some path.dir
              | Recursive -> true)
          && (match best with
              | Some dir -> String.length path.dir > String.length dir
@@ -243,6 +260,9 @@ let relative_source_path (filename:string) : ML (option string) =
   in
   best |> Option.map (fun dir ->
     BU.substring_from filename (String.length dir + 1))
+
+let relative_source_path (filename:string) : ML (option string) =
+  relative_source_path_normalized (Filepath.normalize_file_path filename)
 
 let do_find (paths : list string) (filename : string) : ML (option string) =
   // Stats.record "Find.do_find" fun () ->
@@ -272,21 +292,22 @@ let find_file =
   cached_fun find_file_cache fun s ->
     do_find (full_include_path ()) s
 
+let source_file_name_of_normalized (filename:string) : ML string =
+  match relative_source_path_normalized filename with
+  | Some relative -> relative
+  | None -> Filepath.basename filename
+
 let source_file_name =
   cached_fun source_file_name_cache fun filename ->
     // Resolve relative names first: an incremental parser may already have an
     // include-relative range filename, rather than a path relative to cwd.
-    let filename =
-      match find_file filename with
-      | Some path -> Filepath.normalize_file_path path
-      | None -> filename
-    in
-    if Filepath.is_path_absolute filename then
-      match relative_source_path filename with
-      | Some relative -> relative
-      | None -> Filepath.basename filename
-    else
-      BU.replace_char filename '\\' '/'
+    match find_file filename with
+    | Some path ->
+      source_file_name_of_normalized (Filepath.normalize_file_path path)
+    | None ->
+      if Filepath.is_path_absolute filename
+      then source_file_name_of_normalized (Filepath.normalize_file_path filename)
+      else BU.replace_char filename '\\' '/'
 
 let find_file_odir =
   (* NOTE: this function is not cached, since the plugin-building code

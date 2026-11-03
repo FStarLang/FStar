@@ -49,6 +49,9 @@ def main():
         source = fixture / "a/b/c.fst"
         source.parent.mkdir(parents=True)
         source.write_text("module A.B.C\n")
+        sibling = fixture / "ab/c.fst"
+        sibling.parent.mkdir(parents=True)
+        sibling.write_text("module AB.C\n")
         process = subprocess.run(
             [str(executable), str(fixture)],
             text=True,
