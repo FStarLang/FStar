@@ -428,7 +428,7 @@ cherry_string cherry_str_append(cherry_string a, cherry_string b) {
   cherry_string_cell *x = (cherry_string_cell *)a;
   const cherry_string_cell *y = (const cherry_string_cell *)b;
   size_t ys = y->size, n = x->size + ys;
-  if (cherry_is_unique(&x->hdr)) {
+  if (cherry_claim(&x->hdr)) {
     /* Functional but in place: nobody else can see [a] -- except [b], which
        may be [a] itself, borrowed, and moves with it. */
     bool same = x == y;

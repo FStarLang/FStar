@@ -154,6 +154,21 @@ static inline bool cherry_is_sole_shared(const cherry_obj *o) {
   return __atomic_load_n(&o->rc, __ATOMIC_ACQUIRE) == -1;
 }
 
+/* Whether the caller holds the only reference, so that the cell can be
+   updated or reused in place; a shared cell with a single reference
+   ([cherry_is_sole_shared]) becomes this thread's own again (rc = 1).  What
+   it reaches stays shared, which a cell of this thread's may point to.  The
+   fence pairs with the release in the decrements of the threads that have
+   dropped their references. */
+static inline bool cherry_claim(cherry_obj *o) {
+  int32_t rc = cherry_rc_load(o);
+  if (rc == 1) return true;
+  if (rc != -1) return false;
+  __atomic_thread_fence(__ATOMIC_ACQUIRE);
+  cherry_rc_store(o, 1);
+  return true;
+}
+
 static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
   cherry_obj *o = (cherry_obj *)malloc(size);
   if (o == NULL) abort();
