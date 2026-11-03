@@ -46,6 +46,7 @@ CUSTARD_TESTS += NewtypeInline
 CUSTARD_TESTS += SortBy
 CUSTARD_TESTS += LocalPoly
 CUSTARD_TESTS += MonoHoles
+CUSTARD_TESTS += MonoPolyCaller
 CUSTARD_TESTS += DepParams
 CUSTARD_TESTS += MonoDyn
 CUSTARD_TESTS += MatchGuard
@@ -296,6 +297,11 @@ NOGREP_MonoState   = "Obj"
 # all.
 GREP_MonoHoles     = "monoHoles_render__int" "monoHoles_twice__op_Plus"
 NOGREP_MonoHoles   = "set_tag" "fun y"
+
+# Section 3.2b, uniform compilation: a caller's runtime type parameter reaching
+# a [Mono] binder is left free in the specialization.  [reset]'s callback is
+# inlined into [iter], which must still see a [ref].
+NOGREP_MonoPolyCaller = "(0) <- " "fun _"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.
