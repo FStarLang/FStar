@@ -684,9 +684,15 @@ explicit closure-conversion pass to get here.
 
 **Two things are still rejected**, and deliberately.
 
-- *A hole whose sort is a type.*  Types are erased under uniform compilation
-  (§5.0), so there would be nothing to pass at runtime.  This stays the case
-  (b) rejection it has always been, and option 2's promotion is the fix.
+- *A hole whose sort is a type*, under `--custard_monomorphize_types`.  There
+  every type is specialized, so a runtime type parameter has no
+  representation to pass.  This stays the case (b) rejection it has always
+  been, and option 2's promotion is the fix.  Without the option, types are
+  compiled uniformly (§5.0): the specialization does not depend on the type,
+  so a runtime type parameter — bare, or inside a larger argument — is not a
+  hole at all but stays a free type variable of the specialization.  The
+  renaming pass binds such variables after the definition's own, so that a
+  caller's `'k` and the callee's `'k` cannot be confused.
 - *An argument that is nothing but a hole* — a bare variable.  Here the
   skeleton is the identity function, so nothing is specialized: the value is
   simply passed at runtime.  That is not unsound, it is **dictionary
