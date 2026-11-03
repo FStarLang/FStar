@@ -452,6 +452,12 @@ GREP_PulseGlobalArray += "FStar_UInt8.uint_to_t (Prims.of_int (2))"
 NOGREP_PulseGlobalArray += "squares"
 KRML_TESTS += PulseGlobalArray
 
+# Issue #4828.  An argument in a position extraction erases is not normalized,
+# so the 2^14-conjunct slprop and prop passed in such positions fit a budget
+# that normalizing either of them exhausts.
+GREP_TESTS += PulseSpecArgNorm
+GREP_PulseSpecArgNorm += "let pulseSpecArgNorm_main (x : Prims.int) : Prims.int"
+FLAGS_PulseSpecArgNorm = --custard_norm_budget 100000
 # Section 72.2.  A [ghost fn] parameter is erased, and the one binder
 # [keep_thunk] puts back is there for the arity alone.  The failure was in the
 # C compiler, not in Custard, so compiling is the test.
@@ -635,7 +641,7 @@ WARN_ANY = --custard_warn_any --warn_error @367
 $(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen OCaml $(WARN_ANY) --custard_main $*.main $*.fst -o $@
+	$(Q)$(FSTAR) --codegen OCaml $(WARN_ANY) $(FLAGS_$*) --custard_main $*.main $*.fst -o $@
 
 $(OUTPUT_DIR)/%.grepped: $(OUTPUT_DIR)/%.custard.ml
 	$(call msg, "GREP", $(basename $(notdir $@)))

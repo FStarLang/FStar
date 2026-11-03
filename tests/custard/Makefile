@@ -87,6 +87,10 @@ CUSTARD_TESTS += NormForExtraction
 GREP_NormForExtraction += "normForExtraction_step"
 NOGREP_NormForExtraction += "normForExtraction_eval"
 NOGREP_NormForExtraction += "normForExtraction_prog"
+# Issue #4828: an argument extraction erases is not normalized, so a huge
+# [prop] passed to it does not exhaust a small budget.
+CUSTARD_TESTS += SpecArgNorm
+FLAGS_SpecArgNorm = --custard_norm_budget 20000
 NOGREP_NormForExtraction += "type normForExtraction_ast"
 CUSTARD_TESTS += Mymon
 CUSTARD_TESTS += Reify
