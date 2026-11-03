@@ -36,9 +36,16 @@ open FStarC.Class.Hashable
 module A = FStarC.Array
 module SI = FStarC.SmallInt
 
+(* [used] lists the buckets that became non-empty since the table was
+   created, resized or cleared, so that [clear] empties just those and not
+   every bucket.  It may name a bucket that has since been emptied, or name
+   one twice.  [nused] is its length; past the number of buckets, [used] is
+   no longer kept, and [clear] replaces the whole array instead. *)
 noeq type tbl (k v:Type0) = {
   size: ref int;
   data: ref (A.array (list (k & v)));
+  used: ref (list SI.t);
+  nused: ref int;
 }
 
 inline_for_extraction
@@ -51,6 +58,14 @@ let rec buckets_for (want:int) (n:int) : Tot int (decreases (if want <= n then 0
 
 let index (#k:Type0) {| hashable k |} (n:int) (key:k) : ML SI.t =
   SI.of_int (Hash.to_int (hash key) % n)
+
+(* [n] is the number of buckets. *)
+let note_used (#k #v:Type0) (m:tbl k v) (n:int) (i:SI.t) : ML unit =
+  let c = !m.nused in
+  if c <= n then begin
+    m.used := i :: !m.used;
+    m.nused := c + 1
+  end
 
 let rec find_in (#k #v:Type0) {| deq k |} (key:k) (l:list (k & v)) : ML (option v) =
   match l with
@@ -90,21 +105,30 @@ let resize (#k #v:Type0) {| hashable k |} (m:tbl k v) : ML unit =
   let n = nbuckets m in
   let n' = n + n in
   let d = A.make (SI.of_int n') [] in
+  m.used := [];
+  m.nused := 0;
   iter_buckets old 0 n (fun l ->
     FStarC.List.iter (fun (key, value) ->
       let i = index n' key in
-      A.set d i (FStarC.List.append (A.get d i) [(key, value)])) l);
+      let b = A.get d i in
+      if Nil? b then note_used m n' i;
+      A.set d i (FStarC.List.append b [(key, value)])) l);
   m.data := d
 
 inline_for_extraction
 let create (#k:Type0) {| deq k |} {| hashable k |} (#v:Type0) (n:int) : ML (t k v) =
-  { size = mk_ref 0; data = mk_ref (A.make (SI.of_int (buckets_for n 16)) []) }
+  { size = mk_ref 0; data = mk_ref (A.make (SI.of_int (buckets_for n 16)) []);
+    used = mk_ref []; nused = mk_ref 0 }
 
 inline_for_extraction
 let clear (#k:Type0) {| deq k |} {| hashable k |} (#v:Type0) (m:t k v) : ML unit =
   if !m.size > 0 then begin
     m.size := 0;
-    m.data := A.make (A.length !m.data) []
+    if !m.nused <= nbuckets m
+    then FStarC.List.iter (fun i -> A.set !m.data i []) !m.used
+    else m.data := A.make (A.length !m.data) [];
+    m.used := [];
+    m.nused := 0
   end
 
 let rec copy_buckets (#k #v:Type0) (src dst:A.array (list (k & v))) (i n:int) : ML unit =
@@ -115,7 +139,7 @@ let copy (#k:Type0) {| deq k |} {| hashable k |} (#v:Type0) (m:t k v) : ML (t k 
   let n = nbuckets m in
   let d = A.make (SI.of_int n) [] in
   copy_buckets !m.data d 0 n;
-  { size = mk_ref !m.size; data = mk_ref d }
+  { size = mk_ref !m.size; data = mk_ref d; used = mk_ref !m.used; nused = mk_ref !m.nused }
 
 (* Replaces the current binding of the key, if any. *)
 inline_for_extraction
@@ -125,6 +149,7 @@ let add (#k:Type0) {| deq k |} {| hashable k |} (#v:Type0) (m:t k v) (key:k) (va
   match replace_in key value l with
   | Some l -> A.set !m.data i l
   | None ->
+    if Nil? l then note_used m (nbuckets m) i;
     A.set !m.data i ((key, value) :: l);
     m.size := !m.size + 1;
     if !m.size > nbuckets m + nbuckets m then resize m

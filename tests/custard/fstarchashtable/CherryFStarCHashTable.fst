@@ -52,6 +52,25 @@ let main () : ML unit =
   line ("clear " ^ show_int (HT.size m) ^ " [" ^ show_keys m ^ "]");
   L.iter (fun i -> HT.add m (i * 64) (show_int i)) (range 0 40);
   line ("after " ^ show_keys m);
+  (* [clear] empties only the buckets used since the last clear, unless
+     more were noted than there are buckets: here bucket 0 is emptied and
+     refilled 40 times in a table of 16. *)
+  let z : HT.t int string = HT.create 1 in
+  L.iter (fun i -> HT.add z (i * 16) "x"; HT.remove z (i * 16)) (range 0 40);
+  HT.add z 1 "a"; HT.add z 32 "b";
+  HT.clear z;
+  HT.add z 2 "c";
+  line ("reclear " ^ show_int (HT.size z) ^ " [" ^ show_keys z ^ "] "
+        ^ (if HT.mem z 1 || HT.mem z 32 then "stale" else "ok"));
+  (* A copy keeps its own record of used buckets. *)
+  let big : HT.t int string = HT.create 4000 in
+  HT.add big 7 "a"; HT.add big 4103 "b";
+  let bc = HT.copy big in
+  HT.clear big;
+  HT.add bc 9 "c";
+  HT.clear bc;
+  line ("bigclear " ^ show_int (HT.size big) ^ " " ^ show_int (HT.size bc) ^ " "
+        ^ (if HT.mem big 7 || HT.mem bc 4103 || HT.mem bc 9 then "stale" else "ok"));
   let l = HT.of_list [(3, "a"); (1, "b"); (3, "c"); (35, "d")] in
   line ("of_list " ^ show_iter l);
   (* String keys hash differently in the two builds, so only what does not
