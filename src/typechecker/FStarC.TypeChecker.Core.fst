@@ -980,8 +980,12 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                 match PatternUtils.raw_pat_as_exp g.tcenv p0 with
                 | Some (pe, bvs0) ->
                   let bs0 = List.map S.mk_binder bvs0 in
-                  // We need universes for the binders
-                  let! us = check_binders g bs0 in
+                  (* The universes of the binders: as the matches are
+                     well-typed, so are their sorts, which are not re-checked
+                     (as in the other rules, e.g. for [Tm_abs]); re-checking
+                     them could need a guard, e.g. when the branches differ
+                     only in the names of their pattern variables. *)
+                  let! us = universes_of_well_typed_binders g bs0 in
                   (* The bodies are related knowing which branch is taken,
                      e.g. [y:t{x == Unknown u}] when relating
                      [dsum_type_of_unknown_tag s] to [t]. *)
@@ -1617,6 +1621,22 @@ and universe_of_well_typed_term (g:env) (t:typ)
       return u
     with
     | _ -> universe_of g t
+
+and universes_of_well_typed_binders (g_initial:env) (xs:binders)
+  : ML (result (list universe))
+  = let rec aux g xs : ML _ =
+      match xs with
+      | [] ->
+        return []
+
+      | x ::xs ->
+        let! u = universe_of_well_typed_term g x.binder_bv.sort in
+        with_binders g [x] [u] (
+          let! us = aux (push_binder g x) xs in
+          return (u::us)
+        )
+    in
+    aux g_initial xs
 
 and check_binders (g_initial:env) (xs:binders)
   : ML (result (list universe))
