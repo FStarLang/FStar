@@ -11,6 +11,11 @@ FSTAR_EXE ?= $(FSTAR_ROOT)/stage3/out/bin/fstar.exe
 
 include $(PULSE_ROOT)/mk/test.mk
 
+all: $(OUTPUT_DIR)/hoist-locals.checked
+$(OUTPUT_DIR)/hoist-locals.checked: $(addprefix $(CACHE_DIR)/, HoistArrays.fst.checked HoistVla.fst.checked HoistVlaLate.fst.checked PulseBasic.fst.checked PulseClosure.fst.checked AllocOverflow.fst.checked ArrInit.fst.checked) $(FSTAR_EXE) ../hoistlocals.py
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 ../hoistlocals.py $(OUTPUT_DIR)/hoist-locals -- $(FSTAR)
+	$(Q)touch $@
+
 # Section 62.1.  Same discovery as tests/custard and for the same reason:
 # CI passes KRML_EXE= and never puts krml on the PATH, so a `command -v
 # krml` guard silently skipped both karamel legs of this suite.
