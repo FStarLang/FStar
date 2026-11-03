@@ -146,6 +146,14 @@ static inline bool cherry_is_unique(const cherry_obj *o) {
   return cherry_rc_load(o) == 1;
 }
 
+/* Whether a shared cell has a single reference, the caller's: no other
+   thread can reach it, so it can be updated in place all the same, as long
+   as what is stored in it is made shared too.  The acquire load pairs with
+   the release in the other threads' decrements, which may have read it. */
+static inline bool cherry_is_sole_shared(const cherry_obj *o) {
+  return __atomic_load_n(&o->rc, __ATOMIC_ACQUIRE) == -1;
+}
+
 static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
   cherry_obj *o = (cherry_obj *)malloc(size);
   if (o == NULL) abort();
@@ -180,15 +188,18 @@ static inline bool cherry_dec_ref(cherry_obj *o) {
 #define CHERRY_PERSIST 1
 
 /* Mark a cell; true when that changed it, so that its fields have to be
-   marked too.  Only a cell of this thread's own (a positive count) changes.
-   A shared one is left shared even when persisting: other threads may be
-   counting it already, so zeroing its count would race with them.  It is
-   kept alive all the same, by the reference the global never drops, and
-   what it reaches is already shared. */
+   marked too.  Sharing changes only a cell of this thread's own (a positive
+   count).  Persisting changes every cell not persistent yet, shared ones
+   too: a global's value is read without an inc, so it must never be freed
+   nor taken for a sole reference ([cherry_is_sole_shared]), however many
+   times the reference the global holds is given away.  Zeroing a shared
+   count with a plain store assumes that no other thread is counting the
+   cell at the same time: globals are initialized before the program starts
+   any thread. */
 static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
   if (cherry_is_scalar(o)) return false;
   int32_t rc = cherry_rc_load(o);
-  if (rc <= 0) return false;
+  if (rc == 0 || (rc < 0 && mode == CHERRY_SHARE)) return false;
   cherry_rc_store(o, mode == CHERRY_PERSIST ? 0 : -rc);
   return true;
 }
