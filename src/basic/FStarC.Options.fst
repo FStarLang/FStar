@@ -207,7 +207,7 @@ let defaults = [
   ("custard_fuel"                              , Int 100000);
   ("custard_max_specializations"               , Int 1000);
   ("custard_norm_budget"                       , Int 10000000);
-  ("custard_monomorphize_types"                , Bool false);
+  ("custard_monomorphize_types"                , Unset);
   ("custard_int128"                            , Bool true);
   ("custard_sizet_width"                       , String "native");
   ("custard_split"                             , Bool false);
@@ -480,7 +480,7 @@ let get_custard_warn_any ()             = lookup_opt "custard_warn_any"         
 let get_custard_fuel            ()      = lookup_opt "custard_fuel"             as_int
 let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
 let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
-let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
+let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" (as_option as_bool)
 let get_custard_int128          ()      = lookup_opt "custard_int128"           as_bool
 let get_custard_sizet_width     ()      = lookup_opt "custard_sizet_width"      as_string
 let get_custard_split           ()      = lookup_opt "custard_split"           as_bool
@@ -985,7 +985,8 @@ reduction: building a closure's term is charged for every node it copies \
     "custard_monomorphize_types",
     BoolStr,
     text "Monomorphize type binders too, not just type-class dictionaries and \
-binders explicitly marked [@@monomorphize] (default false)");
+binders explicitly marked [@@monomorphize] (default true for --codegen C \
+and --codegen Cherry, which require it, and false otherwise)");
 
   ( noshort,
     "custard_int128",
@@ -2287,7 +2288,10 @@ let custard_warn_any ()             = get_custard_warn_any ()
 let custard_fuel                 () = get_custard_fuel ()
 let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_norm_budget          () = get_custard_norm_budget ()
-let custard_monomorphize_types   () = get_custard_monomorphize_types ()
+let custard_monomorphize_types   () =
+  match get_custard_monomorphize_types () with
+  | Some b -> b
+  | None -> (match codegen () with Some C | Some Cherry -> true | _ -> false)
 let custard_int128               () = get_custard_int128 ()
 let custard_sizet_32             () = get_custard_sizet_width () = "32"
 let codegen_c                    () = match codegen () with

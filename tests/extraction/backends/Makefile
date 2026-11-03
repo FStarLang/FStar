@@ -230,8 +230,7 @@ $(OUTPUT_DIR)/custard/%.ml: $(CACHE_DIR)/%.fst.checked
 $(OUTPUT_DIR)/custard/%.c: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD c", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(FSTAR) $< $(CUSTARD) --codegen C \
-	    --custard_monomorphize_types true -o $@
+	$(Q)$(FSTAR) $< $(CUSTARD) --codegen C -o $@
 	@# The invariant of tests/custard and pulse/test: a block with nothing in
 	@# it is a branch the backend failed to notice was empty.
 	$(Q)awk '/\{$$/ { open = NR; next } \
@@ -299,8 +298,7 @@ CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
 $(OUTPUT_DIR)/custard/%.cherry.c: $(CACHE_DIR)/%.fst.checked
 	$(call msg, "CUSTARD cherry", $*)
 	$(Q)mkdir -p $(dir $@)
-	$(Q)$(FSTAR) $< $(CUSTARD) --codegen Cherry \
-	    --custard_monomorphize_types true -o $@
+	$(Q)$(FSTAR) $< $(CUSTARD) --codegen Cherry -o $@
 
 $(OUTPUT_DIR)/cch/%.exe: $(OUTPUT_DIR)/custard/%.cherry.c
 	$(call msg, "CC cherry", $*)

@@ -875,7 +875,7 @@ let int_type (sw : signedness & iwidth) : ML string =
 let mono_advice_for (n:option name) : ML (list string) =
   if not (Options.custard_monomorphize_types ())
   then ["The direct-to-C backend requires --custard_monomorphize_types true \
-         (section 5.0.1)."]
+         (section 5.0.1), its default; do not pass false."]
   else
     (* Section 100.  Rule 4 freezes only on the OCaml path now, so this
        explanation is true only there.  On a C backend a type that is still
