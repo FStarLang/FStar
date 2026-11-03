@@ -28,7 +28,11 @@ let eq_restriction (restriction1 : FStarC_Syntax_Syntax.restriction) (restrictio
     | ((FStarC_Syntax_Syntax.AllowList (l1)), (FStarC_Syntax_Syntax.AllowList (l2))) -> (eq_list (fun p1 p2 -> (match p1 with
         | (a, b) -> (match p2 with
             | (c, d) -> (let tmp = (eq_ident a c) in
-              (if tmp then (eq_option eq_ident b d) else false))
+              (if tmp then (match (b, d) with
+                | (None, None) -> true
+                | ((Some (t1)), (Some (t2))) -> (eq_ident t1 t2)
+                | tmp1 -> false
+              ) else false))
           )
       )) l1 l2)
     | tmp -> false
@@ -50,8 +54,8 @@ let eq_sconst (c1 : FStarC_Const.sconst) (c2 : FStarC_Const.sconst) : bool =
     | tmp -> false
   )
 
-let rec eq_terms (t1 : (FStarC_Parser_AST.term) list) : ((FStarC_Parser_AST.term) list -> bool) =
-  (eq_list eq_term t1)
+let rec eq_terms (t1 : (FStarC_Parser_AST.term) list) (t2 : (FStarC_Parser_AST.term) list) : bool =
+  (eq_list eq_term t1 t2)
 
 and eq_imp (i1 : FStarC_Parser_AST.imp) (i2 : FStarC_Parser_AST.imp) : bool =
   (match (i1, i2) with
@@ -78,7 +82,11 @@ and eq_branch (br1 : (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) optio
   (match br1 with
     | (p1, o1, t1) -> (match br2 with
         | (p2, o2, t2) -> (let tmp = (eq_pattern p1 p2) in
-          let tmp1 = (if tmp then (eq_option eq_term o1 o2) else false) in
+          let tmp1 = (if tmp then (match (o1, o2) with
+              | (None, None) -> true
+              | ((Some (t11)), (Some (t21))) -> (eq_term t11 t21)
+              | tmp1 -> false
+            ) else false) in
           (if tmp1 then (eq_term t1 t2) else false))
       )
   )
@@ -86,7 +94,11 @@ and eq_branch (br1 : (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) optio
 and eq_match_returns_annotation (a1 : ((FStarC_Ident.ident) option * FStarC_Parser_AST.term * bool)) (a2 : ((FStarC_Ident.ident) option * FStarC_Parser_AST.term * bool)) : bool =
   (match a1 with
     | (i1, t1, b1) -> (match a2 with
-        | (i2, t2, b2) -> (let tmp = (eq_option eq_ident i1 i2) in
+        | (i2, t2, b2) -> (let tmp = (match (i1, i2) with
+              | (None, None) -> true
+              | ((Some (t11)), (Some (t21))) -> (eq_ident t11 t21)
+              | tmp -> false
+            ) in
           let tmp1 = (if tmp then (eq_term t1 t2) else false) in
           (if tmp1 then ((=) b1 b2) else false))
       )
@@ -133,7 +145,11 @@ and eq_term' (t1 : FStarC_Parser_AST.term') (t2 : FStarC_Parser_AST.term') : boo
       let tmp1 = (if tmp then (eq_term t11 t21) else false) in
       (if tmp1 then (eq_imp i1 i2) else false))
     | ((FStarC_Parser_AST.Let (lq1, defs1, t11)), (FStarC_Parser_AST.Let (lq2, defs2, t21))) -> (let tmp = (if ((=) lq1 lq2) then (eq_list (fun tmp tmp1 -> (match (tmp, tmp1) with
-          | ((o1, (p1, t12)), (o2, (p2, t22))) -> (let tmp2 = (eq_option eq_terms o1 o2) in
+          | ((o1, (p1, t12)), (o2, (p2, t22))) -> (let tmp2 = (match (o1, o2) with
+                | (None, None) -> true
+                | ((Some (t13)), (Some (t23))) -> (eq_terms t13 t23)
+                | tmp2 -> false
+              ) in
             let tmp3 = (if tmp2 then (eq_pattern p1 p2) else false) in
             (if tmp3 then (eq_term t12 t22) else false))
         )) defs1 defs2) else false) in
@@ -153,21 +169,45 @@ and eq_term' (t1 : FStarC_Parser_AST.term') (t2 : FStarC_Parser_AST.term') : boo
     | ((FStarC_Parser_AST.Bind (i1, t11, t21)), (FStarC_Parser_AST.Bind (i2, t3, t4))) -> (let tmp = (if (FStarC_Ident.ident_equals i1 i2) then (eq_term t11 t3) else false) in
       (if tmp then (eq_term t21 t4) else false))
     | ((FStarC_Parser_AST.If (t11, i1, mra1, t21, t3)), (FStarC_Parser_AST.If (t4, i2, mra2, t5, t6))) -> (let tmp = (eq_term t11 t4) in
-      let tmp1 = (if tmp then (eq_option eq_ident i1 i2) else false) in
-      let tmp2 = (if tmp1 then (eq_option eq_match_returns_annotation mra1 mra2) else false) in
+      let tmp1 = (if tmp then (match (i1, i2) with
+          | (None, None) -> true
+          | ((Some (t12)), (Some (t22))) -> (eq_ident t12 t22)
+          | tmp1 -> false
+        ) else false) in
+      let tmp2 = (if tmp1 then (match (mra1, mra2) with
+          | (None, None) -> true
+          | ((Some (t12)), (Some (t22))) -> (eq_match_returns_annotation t12 t22)
+          | tmp2 -> false
+        ) else false) in
       let tmp3 = (if tmp2 then (eq_term t21 t5) else false) in
       (if tmp3 then (eq_term t3 t6) else false))
     | ((FStarC_Parser_AST.Match (t11, i1, mra1, bs1)), (FStarC_Parser_AST.Match (t21, i2, mra2, bs2))) -> (let tmp = (eq_term t11 t21) in
-      let tmp1 = (if tmp then (eq_option eq_ident i1 i2) else false) in
-      let tmp2 = (if tmp1 then (eq_option eq_match_returns_annotation mra1 mra2) else false) in
+      let tmp1 = (if tmp then (match (i1, i2) with
+          | (None, None) -> true
+          | ((Some (t12)), (Some (t22))) -> (eq_ident t12 t22)
+          | tmp1 -> false
+        ) else false) in
+      let tmp2 = (if tmp1 then (match (mra1, mra2) with
+          | (None, None) -> true
+          | ((Some (t12)), (Some (t22))) -> (eq_match_returns_annotation t12 t22)
+          | tmp2 -> false
+        ) else false) in
       (if tmp2 then (eq_list eq_branch bs1 bs2) else false))
     | ((FStarC_Parser_AST.TryWith (t11, bs1)), (FStarC_Parser_AST.TryWith (t21, bs2))) -> (let tmp = (eq_term t11 t21) in
       (if tmp then (eq_list eq_branch bs1 bs2) else false))
     | ((FStarC_Parser_AST.Ascribed (t11, t21, topt1, b1)), (FStarC_Parser_AST.Ascribed (t3, t4, topt2, b2))) -> (let tmp = (eq_term t11 t3) in
       let tmp1 = (if tmp then (eq_term t21 t4) else false) in
-      let tmp2 = (if tmp1 then (eq_option eq_term topt1 topt2) else false) in
+      let tmp2 = (if tmp1 then (match (topt1, topt2) with
+          | (None, None) -> true
+          | ((Some (t12)), (Some (t22))) -> (eq_term t12 t22)
+          | tmp2 -> false
+        ) else false) in
       (if tmp2 then ((=) b1 b2) else false))
-    | ((FStarC_Parser_AST.Record (topt1, fs1)), (FStarC_Parser_AST.Record (topt2, fs2))) -> (let tmp = (eq_option eq_term topt1 topt2) in
+    | ((FStarC_Parser_AST.Record (topt1, fs1)), (FStarC_Parser_AST.Record (topt2, fs2))) -> (let tmp = (match (topt1, topt2) with
+          | (None, None) -> true
+          | ((Some (t11)), (Some (t21))) -> (eq_term t11 t21)
+          | tmp -> false
+        ) in
       (if tmp then (eq_list (fun tmp1 tmp2 -> (match (tmp1, tmp2) with
         | ((l1, t11), (l2, t21)) -> (if (FStarC_Ident.lid_equals l1 l2) then (eq_term t11 t21) else false)
       )) fs1 fs2) else false))
@@ -297,7 +337,11 @@ and eq_pattern' (p1 : FStarC_Parser_AST.pattern') (p2 : FStarC_Parser_AST.patter
       )) ps1 ps2)
     | ((FStarC_Parser_AST.PatAscribed (p11, (t1, topt1))), (FStarC_Parser_AST.PatAscribed (p21, (t2, topt2)))) -> (let tmp = (eq_pattern p11 p21) in
       let tmp1 = (if tmp then (eq_term t1 t2) else false) in
-      (if tmp1 then (eq_option eq_term topt1 topt2) else false))
+      (if tmp1 then (match (topt1, topt2) with
+        | (None, None) -> true
+        | ((Some (t11)), (Some (t21))) -> (eq_term t11 t21)
+        | tmp2 -> false
+      ) else false))
     | ((FStarC_Parser_AST.PatOp (i1)), (FStarC_Parser_AST.PatOp (i2))) -> (eq_ident i1 i2)
     | ((FStarC_Parser_AST.PatVQuote (t1)), (FStarC_Parser_AST.PatVQuote (t2))) -> (eq_term t1 t2)
     | (FStarC_Parser_AST.PatRest, FStarC_Parser_AST.PatRest) -> true
@@ -320,7 +364,11 @@ let eq_constructor_payload (t1 : FStarC_Parser_AST.constructor_payload) (t2 : FS
     | ((FStarC_Parser_AST.VpOfNotation (t11)), (FStarC_Parser_AST.VpOfNotation (t21))) -> (eq_term t11 t21)
     | ((FStarC_Parser_AST.VpArbitrary (t11)), (FStarC_Parser_AST.VpArbitrary (t21))) -> (eq_term t11 t21)
     | ((FStarC_Parser_AST.VpRecord (r1, k1)), (FStarC_Parser_AST.VpRecord (r2, k2))) -> (let tmp = (eq_tycon_record r1 r2) in
-      (if tmp then (eq_option eq_term k1 k2) else false))
+      (if tmp then (match (k1, k2) with
+        | (None, None) -> true
+        | ((Some (t11)), (Some (t21))) -> (eq_term t11 t21)
+        | tmp1 -> false
+      ) else false))
     | tmp -> false
   )
 
@@ -328,22 +376,42 @@ let eq_tycon (t1 : FStarC_Parser_AST.tycon) (t2 : FStarC_Parser_AST.tycon) : boo
   (match (t1, t2) with
     | ((FStarC_Parser_AST.TyconAbstract (i1, bs1, k1)), (FStarC_Parser_AST.TyconAbstract (i2, bs2, k2))) -> (let tmp = (eq_ident i1 i2) in
       let tmp1 = (if tmp then (eq_list eq_binder bs1 bs2) else false) in
-      (if tmp1 then (eq_option eq_term k1 k2) else false))
+      (if tmp1 then (match (k1, k2) with
+        | (None, None) -> true
+        | ((Some (t11)), (Some (t21))) -> (eq_term t11 t21)
+        | tmp2 -> false
+      ) else false))
     | ((FStarC_Parser_AST.TyconAbbrev (i1, bs1, k1, t11)), (FStarC_Parser_AST.TyconAbbrev (i2, bs2, k2, t21))) -> (let tmp = (eq_ident i1 i2) in
       let tmp1 = (if tmp then (eq_list eq_binder bs1 bs2) else false) in
-      let tmp2 = (if tmp1 then (eq_option eq_term k1 k2) else false) in
+      let tmp2 = (if tmp1 then (match (k1, k2) with
+          | (None, None) -> true
+          | ((Some (t12)), (Some (t22))) -> (eq_term t12 t22)
+          | tmp2 -> false
+        ) else false) in
       (if tmp2 then (eq_term t11 t21) else false))
     | ((FStarC_Parser_AST.TyconRecord (i1, bs1, k1, a1, r1)), (FStarC_Parser_AST.TyconRecord (i2, bs2, k2, a2, r2))) -> (let tmp = (eq_ident i1 i2) in
       let tmp1 = (if tmp then (eq_list eq_binder bs1 bs2) else false) in
-      let tmp2 = (if tmp1 then (eq_option eq_term k1 k2) else false) in
+      let tmp2 = (if tmp1 then (match (k1, k2) with
+          | (None, None) -> true
+          | ((Some (t11)), (Some (t21))) -> (eq_term t11 t21)
+          | tmp2 -> false
+        ) else false) in
       let tmp3 = (if tmp2 then (eq_list eq_term a1 a2) else false) in
       (if tmp3 then (eq_tycon_record r1 r2) else false))
     | ((FStarC_Parser_AST.TyconVariant (i1, bs1, k1, cs1)), (FStarC_Parser_AST.TyconVariant (i2, bs2, k2, cs2))) -> (let tmp = (eq_ident i1 i2) in
       let tmp1 = (if tmp then (eq_list eq_binder bs1 bs2) else false) in
-      let tmp2 = (if tmp1 then (eq_option eq_term k1 k2) else false) in
+      let tmp2 = (if tmp1 then (match (k1, k2) with
+          | (None, None) -> true
+          | ((Some (t11)), (Some (t21))) -> (eq_term t11 t21)
+          | tmp2 -> false
+        ) else false) in
       (if tmp2 then (eq_list (fun tmp3 tmp4 -> (match (tmp3, tmp4) with
         | ((i11, o1, a1), (i21, o2, a2)) -> (let tmp5 = (eq_ident i11 i21) in
-          let tmp6 = (if tmp5 then (eq_option eq_constructor_payload o1 o2) else false) in
+          let tmp6 = (if tmp5 then (match (o1, o2) with
+              | (None, None) -> true
+              | ((Some (t11)), (Some (t21))) -> (eq_constructor_payload t11 t21)
+              | tmp6 -> false
+            ) else false) in
           (if tmp6 then (eq_list eq_term a1 a2) else false))
       )) cs1 cs2) else false))
     | tmp -> false
@@ -356,8 +424,16 @@ let eq_pragma (t1 : FStarC_Parser_AST.pragma) (t2 : FStarC_Parser_AST.pragma) : 
   (match (t1, t2) with
     | (FStarC_Parser_AST.ShowOptions, FStarC_Parser_AST.ShowOptions) -> true
     | ((FStarC_Parser_AST.SetOptions (s1)), (FStarC_Parser_AST.SetOptions (s2))) -> ((=) s1 s2)
-    | ((FStarC_Parser_AST.ResetOptions (s1)), (FStarC_Parser_AST.ResetOptions (s2))) -> (eq_option (fun s11 s21 -> ((=) s11 s21)) s1 s2)
-    | ((FStarC_Parser_AST.PushOptions (s1)), (FStarC_Parser_AST.PushOptions (s2))) -> (eq_option (fun s11 s21 -> ((=) s11 s21)) s1 s2)
+    | ((FStarC_Parser_AST.ResetOptions (s1)), (FStarC_Parser_AST.ResetOptions (s2))) -> (match (s1, s2) with
+        | (None, None) -> true
+        | ((Some (t11)), (Some (t21))) -> ((=) t11 t21)
+        | tmp -> false
+      )
+    | ((FStarC_Parser_AST.PushOptions (s1)), (FStarC_Parser_AST.PushOptions (s2))) -> (match (s1, s2) with
+        | (None, None) -> true
+        | ((Some (t11)), (Some (t21))) -> ((=) t11 t21)
+        | tmp -> false
+      )
     | (FStarC_Parser_AST.PopOptions, FStarC_Parser_AST.PopOptions) -> true
     | (FStarC_Parser_AST.RestartSolver, FStarC_Parser_AST.RestartSolver) -> true
     | (FStarC_Parser_AST.PrintEffectsGraph, FStarC_Parser_AST.PrintEffectsGraph) -> true
@@ -414,7 +490,11 @@ and eq_decl' (d1 : FStarC_Parser_AST.decl') (d2 : FStarC_Parser_AST.decl') : boo
     | ((FStarC_Parser_AST.Val (i1, t1)), (FStarC_Parser_AST.Val (i2, t2))) -> (let tmp = (eq_ident i1 i2) in
       (if tmp then (eq_term t1 t2) else false))
     | ((FStarC_Parser_AST.Exception (i1, t1)), (FStarC_Parser_AST.Exception (i2, t2))) -> (let tmp = (eq_ident i1 i2) in
-      (if tmp then (eq_option eq_term t1 t2) else false))
+      (if tmp then (match (t1, t2) with
+        | (None, None) -> true
+        | ((Some (t11)), (Some (t21))) -> (eq_term t11 t21)
+        | tmp1 -> false
+      ) else false))
     | ((FStarC_Parser_AST.NewEffect (ed1)), (FStarC_Parser_AST.NewEffect (ed2))) -> (eq_effect_decl ed1 ed2)
     | ((FStarC_Parser_AST.SubEffect (l1)), (FStarC_Parser_AST.SubEffect (l2))) -> (eq_lift l1 l2)
     | ((FStarC_Parser_AST.Pragma (p1)), (FStarC_Parser_AST.Pragma (p2))) -> (eq_pragma p1 p2)

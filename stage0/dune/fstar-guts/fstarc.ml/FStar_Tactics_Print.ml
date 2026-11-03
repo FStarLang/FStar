@@ -28,7 +28,7 @@ let paren (s : string) : string =
   (Prims.strcat "(" (Prims.strcat s ")"))
 
 let rec universe_to_ast_string (u : FStarC_Reflection_Types.universe) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect_universe u ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect_universe u ps) in
   (match x with
     | FStar_Tactics_NamedView.Uv_Zero -> "Uv_Zero"
     | (FStar_Tactics_NamedView.Uv_Succ (u1)) -> (let x1 = (universe_to_ast_string u1 ps) in
@@ -42,7 +42,7 @@ let rec universe_to_ast_string (u : FStarC_Reflection_Types.universe) : ((FStarC
       )))
     | (FStar_Tactics_NamedView.Uv_Unif (tmp)) -> "Uv_Unif"
     | FStar_Tactics_NamedView.Uv_Unk -> "Uv_Unk"
-  )))))
+  )))
 
 let universes_to_ast_string (us : (FStarC_Syntax_Syntax.universe) list) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
   (print_list universe_to_ast_string us)
@@ -83,11 +83,11 @@ let rec comp_to_ast_string (c : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_
   (Prims.strcat "Effect " x3)))
 
 and match_returns_to_string (ret_opt : ((FStar_Tactics_NamedView.binder * ((FStarC_Reflection_Types.term, FStarC_Reflection_V2_Data.comp_view) FStar_Pervasives.either * (FStarC_Reflection_Types.term) option * bool))) option) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
-  (Obj.magic ((fun ps -> (let x = (Obj.magic ((fun tacopt -> (match tacopt with
+  (fun ps -> (let x = (fun tacopt -> (match tacopt with
       | None -> (fun tmp -> "")
       | (Some (tac)) -> (fun ps1 -> (let x = (term_to_ast_string tac ps1) in
         (Prims.strcat " by " x)))
-    )))) in
+    )) in
   (match ret_opt with
     | None -> ""
     | (Some ((b, asc))) -> (let x1 = (FStar_Tactics_V2_Derived.binder_to_string b ps) in
@@ -101,7 +101,7 @@ and match_returns_to_string (ret_opt : ((FStar_Tactics_NamedView.binder * ((FSta
             (Prims.strcat x3 x4))
         ) in
       (Prims.strcat x2 x3))
-  )))))
+  )))
 
 and branch_to_ast_string (b : (FStar_Tactics_NamedView.pattern * FStarC_Reflection_Types.term)) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
   (fun ps -> (match b with
@@ -114,7 +114,7 @@ and branches_to_ast_string (brs : ((FStar_Tactics_NamedView.pattern * FStarC_Ref
   (print_list branch_to_ast_string brs)
 
 and term_to_ast_string (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_Var (bv)) -> (let x1 = (namedv_view_to_string bv ps) in
       (Prims.strcat "Tv_Var " x1))
@@ -191,7 +191,7 @@ and term_to_ast_string (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Typ
       (Prims.strcat "Tv_AscribedC " x6))
     | FStar_Tactics_NamedView.Tv_Unknown -> "_"
     | FStar_Tactics_NamedView.Tv_Unsupp -> "<Tv_Unsupp>"
-  )))))
+  )))
 
 let namedv_to_string (x : FStarC_Reflection_Types.namedv) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
   (fun ps -> (let x1 = (FStarC_Reflection_V2_Builtins.inspect_namedv x) in

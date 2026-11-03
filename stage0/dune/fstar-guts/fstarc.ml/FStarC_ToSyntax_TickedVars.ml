@@ -29,9 +29,6 @@ let fStarC_Class_Monoid_mzero__rbset_ident_uu___0 : (FStarC_Ident.ident) FStarC_
 let fStarC_Writer_writer_return__rbset_ident_uu___0 (x : 'a) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a) =
   (fStarC_Class_Monoid_mzero__rbset_ident_uu___0, x)
 
-let fStarC_Class_Monad_return__writer_rbset_ident_uu___0 (tmp : 'a) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a) =
-  (fStarC_Writer_writer_return__rbset_ident_uu___0 tmp)
-
 let fStarC_Class_Monoid_mplus__rbset_ident_uu___0 (tmp : (FStarC_Ident.ident) FStarC_RBSet.rbset) (eta : (FStarC_Ident.ident) FStarC_RBSet.rbset) : (FStarC_Ident.ident) FStarC_RBSet.rbset =
   ((uu___0).FStarC_Class_Monoid.mplus tmp eta)
 
@@ -44,24 +41,18 @@ let fStarC_Writer_writer_bind__rbset_ident_uu___0 (x : ((FStarC_Ident.ident) FSt
       ))
   )
 
-let fStarC_Class_Monad_bind__writer_rbset_ident_uu___0 (tmp : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a)) (f : ('a -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b))) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b) =
-  (fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp f)
-
-let fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 (tmp : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a)) (f : ('a -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b))) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'b) =
-  (fStarC_Class_Monad_bind__writer_rbset_ident_uu___0 tmp f)
-
 let rec fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (f : ('a -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * unit))) (l : ('a) list) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * unit) =
   (match l with
-    | [] -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | [] -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
     | (x :: xs) -> (let tmp = (f x) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 f xs))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun tmp1 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 f xs))))
   )
 
 let rec fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 (f : ('a -> ('b -> ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a)))) (e : 'a) (xs : ('b) list) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * 'a) =
   (match xs with
-    | [] -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 e)
+    | [] -> (fStarC_Writer_writer_return__rbset_ident_uu___0 e)
     | (x :: xs1) -> (let tmp = (f e x) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun e' -> (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 f e' xs1))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun e' -> (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 f e' xs1))))
   )
 
 let rec go_binder (env : FStarC_Syntax_DsEnv.env) (b : FStarC_Parser_AST.binder) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * FStarC_Syntax_DsEnv.env) =
@@ -72,10 +63,10 @@ let rec go_binder (env : FStarC_Syntax_DsEnv.env) (b : FStarC_Parser_AST.binder)
           | None -> true
           | tmp2 -> false
         )) else false) in
-      let tmp2 = (if tmp1 then (emit1 x) else (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (let tmp4 = (FStarC_Syntax_DsEnv.push_bv env x) in
+      let tmp2 = (if tmp1 then (emit1 x) else (fStarC_Writer_writer_return__rbset_ident_uu___0 ())) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp2) (fun tmp3 -> (let tmp4 = (FStarC_Syntax_DsEnv.push_bv env x) in
       (match tmp4 with
-        | (env', tmp5) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 env')
+        | (env', tmp5) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 env')
       )))))
     | (FStarC_Parser_AST.Annotated (x, t)) -> (let tmp = (ident_is_ticked x) in
       let tmp1 = (if tmp then (let tmp1 = (FStarC_Syntax_DsEnv.try_lookup_id env x) in
@@ -83,14 +74,14 @@ let rec go_binder (env : FStarC_Syntax_DsEnv.env) (b : FStarC_Parser_AST.binder)
           | None -> true
           | tmp2 -> false
         )) else false) in
-      let tmp2 = (if tmp1 then (emit1 x) else (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (let tmp4 = (go_term env t) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp4 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_DsEnv.push_bv env x) in
+      let tmp2 = (if tmp1 then (emit1 x) else (fStarC_Writer_writer_return__rbset_ident_uu___0 ())) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp2) (fun tmp3 -> (let tmp4 = (go_term env t) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp4) (fun tmp5 -> (let tmp6 = (FStarC_Syntax_DsEnv.push_bv env x) in
       (match tmp6 with
-        | (env', tmp7) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 env')
+        | (env', tmp7) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 env')
       ))))))))
     | (FStarC_Parser_AST.NoName (t)) -> (let tmp = (go_term env t) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 env))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun tmp1 -> (fStarC_Writer_writer_return__rbset_ident_uu___0 env))))
   )
 
 and go_binders (env : FStarC_Syntax_DsEnv.env) (xs : (FStarC_Parser_AST.binder) list) : ((FStarC_Ident.ident) FStarC_RBSet.rbset * FStarC_Syntax_DsEnv.env) =
@@ -106,86 +97,86 @@ and go_term (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) : ((FSt
           | None -> true
           | tmp2 -> false
         )) else false) in
-      (if tmp1 then (emit1 (FStarC_Ident.ident_of_lid a)) else (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())))
-    | (FStarC_Parser_AST.Var (x)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | FStarC_Parser_AST.Wild -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Const (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Uvar (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Projector (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Discrim (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Name (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+      (if tmp1 then (emit1 (FStarC_Ident.ident_of_lid a)) else (fStarC_Writer_writer_return__rbset_ident_uu___0 ())))
+    | (FStarC_Parser_AST.Var (x)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | FStarC_Parser_AST.Wild -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Const (tmp)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Uvar (tmp)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Projector (u__1, u__2)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Discrim (tmp)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Name (tmp)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
     | (FStarC_Parser_AST.Requires (t1)) -> (go_term env t1)
     | (FStarC_Parser_AST.Ensures (t1)) -> (go_term env t1)
     | (FStarC_Parser_AST.Decreases (t1)) -> (go_term env t1)
     | (FStarC_Parser_AST.NamedTyp (tmp, t1)) -> (go_term env t1)
     | (FStarC_Parser_AST.LexList (l)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env) l)
     | (FStarC_Parser_AST.WFOrder (rel, e)) -> (let tmp = (go_term env rel) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (go_term env e))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun tmp1 -> (go_term env e))))
     | (FStarC_Parser_AST.Paren (t1)) -> (FStarC_Effect.failwith "impossible")
     | (FStarC_Parser_AST.Ascribed (t1, t', tacopt, tmp)) -> (let tmp1 = (go_term env t1) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp1 (fun tmp2 -> (let tmp3 = (go_term env t') in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp3 (Obj.magic ((fun tmp4 -> (match tacopt with
-        | None -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp1) (fun tmp2 -> (let tmp3 = (go_term env t') in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp3) (fun tmp4 -> (match tacopt with
+        | None -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
         | (Some (tac)) -> (go_term env tac)
-      )))))))))
+      )))))))
     | (FStarC_Parser_AST.Construct (tmp, ts)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (fun tmp1 -> (match tmp1 with
         | (a, tmp2) -> (go_term env a)
       )) ts)
     | (FStarC_Parser_AST.Op (tmp, ts)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env) ts)
     | (FStarC_Parser_AST.App (t1, t2, tmp)) -> (let tmp1 = (go_term env t1) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp1 (fun tmp2 -> (go_term env t2))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp1) (fun tmp2 -> (go_term env t2))))
     | (FStarC_Parser_AST.Refine (b, t1)) -> (let tmp = (go_binder env b) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (go_term env' t1))))
-    | (FStarC_Parser_AST.Sum (binders, body)) -> (let tmp = (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 (Obj.magic ((fun env1 bt -> (match bt with
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun env' -> (go_term env' t1))))
+    | (FStarC_Parser_AST.Sum (binders, body)) -> (let tmp = (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 (fun env1 bt -> (match bt with
           | (FStar_Pervasives.Inl (binder)) -> (go_binder env1 binder)
           | (FStar_Pervasives.Inr (t1)) -> (let tmp = (go_term env1 t1) in
-            (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 env1))))
-        )))) env binders) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (go_term env' body))))
+            ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun tmp1 -> (fStarC_Writer_writer_return__rbset_ident_uu___0 env1))))
+        )) env binders) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun env' -> (go_term env' body))))
     | (FStarC_Parser_AST.Product (binders, body)) -> (let tmp = (fStarC_Class_Monad_foldM_left__writer_rbset_ident_uu___0 go_binder env binders) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (go_term env' body))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun env' -> (go_term env' body))))
     | (FStarC_Parser_AST.Project (t1, tmp)) -> (go_term env t1)
     | (FStarC_Parser_AST.CalcProof (rel, init, steps)) -> (let tmp = (go_term env rel) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (let tmp2 = (go_term env init) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (fun tmp4 -> (match tmp4 with
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun tmp1 -> (let tmp2 = (go_term env init) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp2) (fun tmp3 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (fun tmp4 -> (match tmp4 with
         | (rel1, just, next) -> (let tmp5 = (go_term env rel1) in
-          (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp5 (fun tmp6 -> (let tmp7 = (go_term env just) in
-          (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp7 (fun tmp8 -> (go_term env next)))))))
+          ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp5) (fun tmp6 -> (let tmp7 = (go_term env just) in
+          ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp7) (fun tmp8 -> (go_term env next)))))))
       )) steps)))))))
     | (FStarC_Parser_AST.ElimForall (bs, t1, ts)) -> (let tmp = (go_binders env bs) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (let tmp1 = (go_term env' t1) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp1 (fun tmp2 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env') ts)))))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun env' -> (let tmp1 = (go_term env' t1) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp1) (fun tmp2 -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env') ts)))))))
     | (FStarC_Parser_AST.ElimExists (binders, p, e)) -> (let tmp = (go_binders env binders) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun env' -> (let tmp1 = (go_term env' p) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp1 (fun tmp2 -> (go_term env' e)))))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun env' -> (let tmp1 = (go_term env' p) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp1) (fun tmp2 -> (go_term env' e)))))))
     | (FStarC_Parser_AST.ElimImplies (p, q, e)) -> (let tmp = (go_term env p) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (let tmp2 = (go_term env q) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (go_term env e)))))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun tmp1 -> (let tmp2 = (go_term env q) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp2) (fun tmp3 -> (go_term env e)))))))
     | (FStarC_Parser_AST.ElimOr (p, q, e, e')) -> (let tmp = (go_term env p) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (let tmp2 = (go_term env q) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (let tmp4 = (go_term env e) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp4 (fun tmp5 -> (go_term env e'))))))))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun tmp1 -> (let tmp2 = (go_term env q) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp2) (fun tmp3 -> (let tmp4 = (go_term env e) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp4) (fun tmp5 -> (go_term env e'))))))))))
     | (FStarC_Parser_AST.ElimAnd (p, q, e)) -> (let tmp = (go_term env p) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp (fun tmp1 -> (let tmp2 = (go_term env q) in
-      (fStarC_Class_Monad_op_let_Bang__writer_rbset_ident_uu___0 tmp2 (fun tmp3 -> (go_term env e)))))))
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp) (fun tmp1 -> (let tmp2 = (go_term env q) in
+      ((fStarC_Writer_writer_bind__rbset_ident_uu___0 tmp2) (fun tmp3 -> (go_term env e)))))))
     | (FStarC_Parser_AST.ListLiteral (ts)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env) ts)
     | (FStarC_Parser_AST.SeqLiteral (ts)) -> (fStarC_Class_Monad_iterM__writer_rbset_ident_uu___0 (go_term env) ts)
-    | (FStarC_Parser_AST.Abs (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Function (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Let (u__1, u__2, u__3)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.LetOpen (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.If (u__1, u__2, u__3, u__4, u__5)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.QForall (u__1, u__2, u__3)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.QExists (u__1, u__2, u__3)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.QuantOp (u__1, u__2, u__3, u__4)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Record (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Match (u__1, u__2, u__3, u__4)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.TryWith (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Bind (u__1, u__2, u__3)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Quote (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.VQuote (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Antiquote (tmp)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
-    | (FStarC_Parser_AST.Seq (u__1, u__2)) -> (fStarC_Class_Monad_return__writer_rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Abs (u__1, u__2)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Function (u__1, u__2)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Let (u__1, u__2, u__3)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.LetOpen (u__1, u__2)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.If (u__1, u__2, u__3, u__4, u__5)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.QForall (u__1, u__2, u__3)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.QExists (u__1, u__2, u__3)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.QuantOp (u__1, u__2, u__3, u__4)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Record (u__1, u__2)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Match (u__1, u__2, u__3, u__4)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.TryWith (u__1, u__2)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Bind (u__1, u__2, u__3)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Quote (u__1, u__2)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.VQuote (tmp)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Antiquote (tmp)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
+    | (FStarC_Parser_AST.Seq (u__1, u__2)) -> (fStarC_Writer_writer_return__rbset_ident_uu___0 ())
   )
 
 let free_ticked_vars (env : FStarC_Syntax_DsEnv.env) (t : FStarC_Parser_AST.term) : (FStarC_Ident.ident) list =

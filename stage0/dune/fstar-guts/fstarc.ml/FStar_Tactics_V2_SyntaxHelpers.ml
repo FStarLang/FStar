@@ -3,12 +3,12 @@
 
 let rec collect_arr' (bs : (FStar_Tactics_NamedView.binder) list) (c : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStar_Tactics_NamedView.binder) list * FStarC_Reflection_V2_Data.comp_view)) =
   (let tmp = (FStarC_Reflection_V2_Data.is_tot_comp c) in
-  (if tmp then (Obj.magic ((fun ps -> (let tmp1 = (c).FStarC_Reflection_V2_Data.result_typ in
+  (if tmp then (fun ps -> (let tmp1 = (c).FStarC_Reflection_V2_Data.result_typ in
   let x = (FStar_Tactics_NamedView.inspect tmp1 ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_Arrow (b, c')) -> ((collect_arr' (b :: bs) c') ps)
     | tmp2 -> (bs, c)
-  ))))) else (fun tmp1 -> (bs, c))))
+  ))) else (fun tmp1 -> (bs, c))))
 
 let collect_arr (t : FStarC_Reflection_Types.typ) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Reflection_Types.typ) list * FStarC_Reflection_V2_Data.comp_view)) =
   (fun ps -> (let tmp = (FStarC_Reflection_V2_Data.mk_tot_comp t) in
@@ -18,26 +18,26 @@ let collect_arr (t : FStarC_Reflection_Types.typ) : ((FStarC_Tactics_Types.proof
   )))
 
 let rec inspect_unascribe (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStar_Tactics_NamedView.named_term_view) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_AscribedT (t1, tmp, tmp1, tmp2)) -> ((inspect_unascribe t1) ps)
     | (FStar_Tactics_NamedView.Tv_AscribedC (t1, tmp, tmp1, tmp2)) -> ((inspect_unascribe t1) ps)
     | tv -> tv
-  )))))
+  )))
 
 let rec collect_app' (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_Types.term * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list)) =
-  (Obj.magic ((fun ps -> (let x = (inspect_unascribe t ps) in
+  (fun ps -> (let x = (inspect_unascribe t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_App (l, r)) -> ((collect_app' (r :: args) l) ps)
     | tmp -> (t, args)
-  )))))
+  )))
 
 let collect_app : (FStarC_Reflection_Types.term -> ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_Types.term * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list))) =
   (collect_app' [])
 
 let fail (m : string) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
-  (Obj.magic ((fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure (((FStar_Errors_Msg.mkmsg m), None))) ps));
-  (failwith "Prims.magic")))))
+  (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure (((FStar_Errors_Msg.mkmsg m), None))) ps));
+  (failwith "Prims.magic")))
 
 let rec mk_arr (bs : (FStar_Tactics_NamedView.binder) list) (cod : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
   (match bs with
@@ -77,12 +77,12 @@ let hua (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate r
   )))
 
 let lookup_lb (lbs : (FStar_Tactics_NamedView.letbinding) list) (nm : FStarC_Reflection_Types.name) : ((FStarC_Tactics_Types.proofstate ref) -> FStar_Tactics_NamedView.letbinding) =
-  (Obj.magic ((fun ps -> (let x = (FStar_List_Tot_Base.find (fun lb -> (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv (lb).FStar_Tactics_NamedView.lb_fv) in
+  (fun ps -> (let x = (FStar_List_Tot_Base.find (fun lb -> (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv (lb).FStar_Tactics_NamedView.lb_fv) in
     ((=) tmp nm))) lbs) in
   (match x with
     | (Some (lb)) -> lb
     | None -> ((fail "lookup_letbinding: Name not in let group") ps)
-  )))))
+  )))
 
 let u___plugin_collect_arr_bs : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.collect_arr_bs (plugin)" collect_arr_bs FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStar_Tactics_NamedView.e_binder) FStarC_Reflection_V2_Embeddings.e_comp_view) tmp tmp1 tmp2 tmp3)))
@@ -91,11 +91,11 @@ let u___plugin_collect_arr : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.collect_arr" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.collect_arr (plugin)" collect_arr FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_term) FStarC_Reflection_V2_Embeddings.e_comp_view) tmp tmp1 tmp2 tmp3)))
 
 let rec collect_abs' (bs : (FStar_Tactics_NamedView.binder) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStar_Tactics_NamedView.binder) list * FStarC_Reflection_Types.term)) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_Abs (b, t')) -> ((collect_abs' (b :: bs) t') ps)
     | tmp -> (bs, t)
-  )))))
+  )))
 
 let collect_abs (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStar_Tactics_NamedView.binder) list * FStarC_Reflection_Types.term)) =
   (fun ps -> (let x = (collect_abs' [] t ps) in

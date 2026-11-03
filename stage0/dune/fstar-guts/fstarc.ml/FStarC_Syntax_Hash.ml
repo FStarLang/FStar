@@ -344,12 +344,6 @@ let term_map_add (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) 
 let term_map_empty (a : unit) : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree =
   (FStarC_HashMap.empty ())
 
-let equal_term_upto_compress (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
-  (equal_term_c true t0 t2)
-
-let term_map_lookup (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree) : ('a) option =
-  (fStarC_HashMap_lookup__syntax_term' t m)
-
 let fStarC_HashTable_hashtbl_make__arg_equal__1 (tmp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (fStarC_Class_Deq_op_Equals_Question__syntax_term' tmp t2)
 
@@ -361,6 +355,12 @@ module FStarC_HashTable_hashtbl_make__1 = Hashtbl.Make (struct
   let equal = fStarC_HashTable_hashtbl_make__arg_equal__1
   let hash = fStarC_HashTable_hashtbl_make__arg_hash__1
 end)
+
+let equal_term_upto_compress (t0 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
+  (equal_term_c true t0 t2)
+
+let term_map_lookup (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree) : ('a) option =
+  (fStarC_HashMap_lookup__syntax_term' t m)
 
 let term_map_fold (f : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ('a -> ('b -> 'b)))) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree) (acc : 'b) : 'b =
   (FStarC_HashMap.fStarC_HashMap_fold__syntax_term' f m acc)

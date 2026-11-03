@@ -13,11 +13,11 @@ let rec fStarC_Path_search_forest__aux__string (p : (string) list) (def : 'q) (r
   (match roots with
     | [] -> def
     | ((r, q) :: rs) -> (let tmp = (fStarC_Path_is_under__string p r) in
-      (if tmp then q else ((fStarC_Path_search_forest__aux__string p def) rs)))
+      (if tmp then q else (fStarC_Path_search_forest__aux__string p def rs)))
   )
 
 let fStarC_Path_search_forest__string (p : (string) list) (f : ((((string) list * 'q)) list * 'q)) : 'q =
   (match f with
-    | (roots, def) -> ((fStarC_Path_search_forest__aux__string p def) roots)
+    | (roots, def) -> (fStarC_Path_search_forest__aux__string p def roots)
   )
 

@@ -4,22 +4,46 @@
 let finally (finally_ : (unit -> unit)) (eta : (unit -> 'u___a)) : 'u___a =
   ((fun h f -> BatPervasives.finally h f ()) finally_ eta)
 
-let float_of_string (s : string) : float =
-  (Stdlib.float_of_string s)
+let sigint_delay : (int ref) =
+  (ref 0)
 
-let incr (r : (Prims.int ref)) : unit =
-  (let tmp = (!(r)) in
-  let tmp1 = (Prims.op_Plus tmp Prims.int_one) in
-  ((r) := tmp1))
+let sigint_pending : (bool ref) =
+  (ref false)
 
-let stack_dump (tmp : unit) : string =
-  ((fun () -> Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)) ())
+let cur_sigint_handler : (Sys.signal_behavior ref) =
+  (ref Sys.Signal_default)
+
+type proc_rec = {
+  pid : int;
+  inc : Stdlib.in_channel;
+  errc : Stdlib.in_channel;
+  outc : Stdlib.out_channel;
+  killed : (bool ref);
+  stop_marker : ((string -> bool)) option;
+  id : string;
+  prog : string;
+}
+
+let all_procs : ((proc_rec) list ref) =
+  (ref [])
+
+let digest_cache : (string, string) Hashtbl.t =
+  ((fun () -> Hashtbl.create 101) ())
+
+let try_find (f : ('u___a -> bool)) (eta : ('u___a) list) : ('u___a) option =
+  (List.find_opt f eta)
+
+let split (str : string) (sep : string) : (string) list =
+  (if ((=) str "") then ("" :: []) else (FStarC_String.split_on_string str sep))
+
+let exec_name : string =
+  ((fun () -> Unix.realpath Sys.executable_name) ())
+
+let get_exec_dir (tmp : unit) : string =
+  (Filename.dirname exec_name)
 
 let trim_string (s : string) : string =
   (BatString.trim s)
-
-let for_some (f : ('u___a -> bool)) : (('u___a) list -> bool) =
-  (BatList.exists f)
 
 let rec find_map (l : ('u___a) list) (f : ('u___a -> ('u___b) option)) : ('u___b) option =
   (match l with
@@ -31,29 +55,11 @@ let rec find_map (l : ('u___a) list) (f : ('u___a -> ('u___b) option)) : ('u___b
       ))
   )
 
-let prefix (l : ('u___a) list) : (('u___a) list * 'u___a) =
-  (match (FStar_List_Tot_Base.rev l) with
-    | (hd :: tl) -> ((FStar_List_Tot_Base.rev tl), hd)
-    | [] -> (Stdlib.failwith "impossible")
-  )
+let float_of_string (s : string) : float =
+  (Stdlib.float_of_string s)
 
-let concat_l (sep : string) (eta : (string) list) : string =
-  (BatString.concat sep eta)
-
-let starts_with (long : string) (eta : string) : bool =
-  (BatString.starts_with long eta)
-
-let for_all (f : ('u___a -> bool)) (eta : ('u___a) list) : bool =
-  (BatList.for_all f eta)
-
-let split (str : string) (sep : string) : (string) list =
-  (if ((=) str "") then ("" :: []) else (FStarC_String.split_on_string str sep))
-
-let sigint_delay : (int ref) =
-  (ref 0)
-
-let sigint_pending : (bool ref) =
-  (ref false)
+let splitlines (s : string) : (string) list =
+  (if ((=) s "") then ("" :: []) else (FStarC_String.split_on_string s "\n"))
 
 exception SigInt
 
@@ -76,43 +82,64 @@ let atomically' (f : (unit -> 'a)) : 'a =
 let atomically (f : (unit -> 'u___a)) : 'u___a =
   (atomically' f)
 
-let exec_name : string =
-  ((fun () -> Unix.realpath Sys.executable_name) ())
+let stack_dump (tmp : unit) : string =
+  ((fun () -> Printexc.raw_backtrace_to_string (Printexc.get_callstack 1000)) ())
 
-let get_exec_dir (tmp : unit) : string =
-  (Filename.dirname exec_name)
+let prefix (l : ('u___a) list) : (('u___a) list * 'u___a) =
+  (match (FStar_List_Tot_Base.rev l) with
+    | (hd :: tl) -> ((FStar_List_Tot_Base.rev tl), hd)
+    | [] -> (Stdlib.failwith "impossible")
+  )
 
-let splitlines (s : string) : (string) list =
-  (if ((=) s "") then ("" :: []) else (FStarC_String.split_on_string s "\n"))
+let concat_l (sep : string) (eta : (string) list) : string =
+  (BatString.concat sep eta)
 
-let try_find (f : ('u___a -> bool)) (eta : ('u___a) list) : ('u___a) option =
-  (List.find_opt f eta)
+let incr (r : (Prims.int ref)) : unit =
+  (let tmp = (!(r)) in
+  let tmp1 = (Prims.op_Plus tmp Prims.int_one) in
+  ((r) := tmp1))
 
-let rec first_N__aux (n : Prims.int) (acc : ('u___a) list) (i : Prims.int) (l : ('u___a) list) : (('u___a) list * ('u___a) list) =
-  (if ((=) i n) then ((FStar_List_Tot_Base.rev acc), l) else (match l with
-    | (h :: tl) -> ((first_N__aux n) (h :: acc) (Prims.op_Plus i Prims.int_one) tl)
-    | [] -> (Stdlib.failwith "firstN")
-  ))
+let read (r : ('u___a ref)) : 'u___a =
+  (!(r))
 
-let first_N (n : Prims.int) (eta : ('u___a) list) : (('u___a) list * ('u___a) list) =
-  ((first_N__aux n) [] Prims.int_zero eta)
+let write (r : ('u___a ref)) (v : 'u___a) : unit =
+  ((r) := v)
+
+let for_some (f : ('u___a -> bool)) : (('u___a) list -> bool) =
+  (BatList.exists f)
+
+let starts_with (long : string) (eta : string) : bool =
+  (BatString.starts_with long eta)
 
 let sort_with (f : ('u___a -> ('u___a -> Prims.int))) (eta : ('u___a) list) : ('u___a) list =
   ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) f eta)
 
-type proc_rec = {
-  pid : int;
-  inc : Stdlib.in_channel;
-  errc : Stdlib.in_channel;
-  outc : Stdlib.out_channel;
-  killed : (bool ref);
-  stop_marker : ((string -> bool)) option;
-  id : string;
-  prog : string;
-}
+let ends_with (long : string) : (string -> bool) =
+  (BatString.ends_with long)
 
-let all_procs : ((proc_rec) list ref) =
-  (ref [])
+let rec first_N__aux (n : Prims.int) (acc : ('u___a) list) (i : Prims.int) (l : ('u___a) list) : (('u___a) list * ('u___a) list) =
+  (if ((=) i n) then ((FStar_List_Tot_Base.rev acc), l) else (match l with
+    | (h :: tl) -> (first_N__aux n (h :: acc) (Prims.op_Plus i Prims.int_one) tl)
+    | [] -> (Stdlib.failwith "firstN")
+  ))
+
+let first_N (n : Prims.int) (l : ('u___a) list) : (('u___a) list * ('u___a) list) =
+  (first_N__aux n [] Prims.int_zero l)
+
+let rec nth_tail (n : Prims.int) (l : ('u___a) list) : ('u___a) list =
+  (if ((=) n Prims.int_zero) then l else (match l with
+    | (tmp :: tl) -> (nth_tail (Prims.op_Minus n Prims.int_one) tl)
+    | [] -> (Stdlib.failwith "tl")
+  ))
+
+let is_upper (c : int) : bool =
+  (((>=) (FStarC_SmallInt.of_char c) (FStarC_SmallInt.of_char 65)) && ((<=) (FStarC_SmallInt.of_char c) (FStarC_SmallInt.of_char 90)))
+
+let strcat (s1 : string) (eta : string) : string =
+  (Prims.strcat s1 eta)
+
+let for_all (f : ('u___a -> bool)) (eta : ('u___a) list) : bool =
+  (BatList.for_all f eta)
 
 let kill_process' (p : proc_rec) : unit =
   (let tmp = (!((p).killed)) in
@@ -128,38 +155,32 @@ let kill_all (tmp : unit) : unit =
   (let tmp1 = (!(all_procs)) in
   (BatList.iter kill_process' tmp1))
 
-let ends_with (long : string) : (string -> bool) =
-  (BatString.ends_with long)
-
-let is_upper (c : int) : bool =
-  (((>=) (FStarC_SmallInt.of_char c) (FStarC_SmallInt.of_char 65)) && ((<=) (FStarC_SmallInt.of_char c) (FStarC_SmallInt.of_char 90)))
-
 let rec prefix_until__aux (f : ('u___a -> bool)) (prefix_ : ('u___a) list) (l : ('u___a) list) : ((('u___a) list * 'u___a * ('u___a) list)) option =
   (match l with
     | [] -> None
     | (hd :: tl) -> (let tmp = (f hd) in
-      (if tmp then (Some (((FStar_List_Tot_Base.rev prefix_), hd, tl))) else ((prefix_until__aux f) (hd :: prefix_) tl)))
+      (if tmp then (Some (((FStar_List_Tot_Base.rev prefix_), hd, tl))) else (prefix_until__aux f (hd :: prefix_) tl)))
   )
 
-let prefix_until (f : ('u___a -> bool)) (eta : ('u___a) list) : ((('u___a) list * 'u___a * ('u___a) list)) option =
-  ((prefix_until__aux f) [] eta)
+let prefix_until (f : ('u___a -> bool)) (l : ('u___a) list) : ((('u___a) list * 'u___a * ('u___a) list)) option =
+  (prefix_until__aux f [] l)
 
 let rec remove_dups__aux (f : ('u___a -> ('u___a -> bool))) (out : ('u___a) list) (l : ('u___a) list) : ('u___a) list =
   (match l with
     | (hd :: tl) -> (let tmp = (BatList.exists (f hd) out) in
-      (if tmp then ((remove_dups__aux f) out tl) else ((remove_dups__aux f) (hd :: out) tl)))
+      (if tmp then (remove_dups__aux f out tl) else (remove_dups__aux f (hd :: out) tl)))
     | [] -> (FStar_List_Tot_Base.rev out)
   )
 
-let remove_dups (f : ('u___a -> ('u___a -> bool))) (eta : ('u___a) list) : ('u___a) list =
-  ((remove_dups__aux f) [] eta)
+let remove_dups (f : ('u___a -> ('u___a -> bool))) (l : ('u___a) list) : ('u___a) list =
+  (remove_dups__aux f [] l)
 
 let rec find_dup__aux (f : ('u___a -> ('u___a -> bool))) (l : ('u___a) list) : ('u___a) option =
   (match l with
     | (hd :: tl) -> (let tmp = (BatList.partition (f hd) tl) in
       (match tmp with
         | (hds, tl') -> (match hds with
-            | [] -> ((find_dup__aux f) tl')
+            | [] -> (find_dup__aux f tl')
             | tmp1 -> (Some (hd))
           )
       ))
@@ -174,79 +195,12 @@ let rec fold_map__aux (f : ('u___a -> ('u___b -> ('u___a * 'u___c)))) (state : '
     | [] -> (state, (FStar_List_Tot_Base.rev acc))
     | (x :: s1) -> (let tmp = (f state x) in
       (match tmp with
-        | (state1, v) -> ((fold_map__aux f) state1 (v :: acc) s1)
+        | (state1, v) -> (fold_map__aux f state1 (v :: acc) s1)
       ))
   )
 
-let fold_map (f : ('u___a -> ('u___b -> ('u___a * 'u___c)))) (state : 'u___a) (eta : ('u___b) list) : ('u___a * ('u___c) list) =
-  ((fold_map__aux f) state [] eta)
-
-let start_process' (id : string) (prog : string) (args : (string) list) (stop_marker : ((string -> bool)) option) : proc_rec =
-  (let tmp = ((fun prog args -> let (stdin_r, stdin_w) = Unix.pipe () in let (stdout_r, stdout_w) = Unix.pipe () in let (stderr_r, stderr_w) = Unix.pipe () in Unix.set_close_on_exec stdin_w; Unix.set_close_on_exec stdout_r; Unix.set_close_on_exec stderr_r; let pid = Unix.create_process prog (Array.of_list (prog :: args)) stdin_r stdout_w stderr_w in Unix.close stdin_r; Unix.close stdout_w; Unix.close stderr_w; (pid, Unix.in_channel_of_descr stdout_r, Unix.in_channel_of_descr stderr_r, Unix.out_channel_of_descr stdin_w)) prog args) in
-  (match tmp with
-    | (pid, inc, errc, outc) -> (let tmp1 = (ref false) in
-      let proc = { pid = pid;
-          inc = inc;
-          errc = errc;
-          outc = outc;
-          killed = tmp1;
-          stop_marker = stop_marker;
-          id = (Prims.strcat prog (Prims.strcat ":" id));
-          prog = prog } in
-      let tmp2 = (!(all_procs)) in
-      let tmp3 = (proc :: tmp2) in
-      ((all_procs) := tmp3);
-      proc)
-  ))
-
-let run_process (id : string) (prog : string) (args : (string) list) (stdin : (string) option) : string =
-  (let p = (start_process' id prog args None) in
-  (match stdin with
-    | None -> ()
-    | (Some (str)) -> ((fun oc s -> try Stdlib.output_string oc s with Sys_error _ -> ()) (p).outc str)
-  );
-  ((fun oc -> (try Stdlib.flush oc with _ -> ()); (try Stdlib.close_out oc with _ -> ())) (p).outc);
-  let s = ((fun ic -> BatIO.read_all (BatIO.input_channel ~autoclose:true ~cleanup:false ic)) (p).inc) in
-  (kill_process' p);
-  s)
-
-let rec nth_tail (n : Prims.int) (l : ('u___a) list) : ('u___a) list =
-  (if ((=) n Prims.int_zero) then l else (match l with
-    | (tmp :: tl) -> (nth_tail (Prims.op_Minus n Prims.int_one) tl)
-    | [] -> (Stdlib.failwith "tl")
-  ))
-
-let rec take__aux (p : ('u___a -> bool)) (l : ('u___a) list) (acc : ('u___a) list) (l' : ('u___a) list) : (('u___a) list * ('u___a) list) =
-  (match l' with
-    | [] -> (l, [])
-    | (x :: xs) -> (let tmp = (p x) in
-      (if tmp then ((take__aux p l) (x :: acc) xs) else ((FStar_List_Tot_Base.rev acc), (x :: xs))))
-  )
-
-let take (p : ('u___a -> bool)) (l : ('u___a) list) : (('u___a) list * ('u___a) list) =
-  ((take__aux p l) [] l)
-
-let forall_exists (rel : ('u___a -> ('u___b -> bool))) (l1 : ('u___a) list) (l2 : ('u___b) list) : bool =
-  (for_all (fun x -> (for_some (rel x) l2)) l1)
-
-let multiset_equiv (rel : ('u___a -> ('u___b -> bool))) (l1 : ('u___a) list) (l2 : ('u___b) list) : bool =
-  (if ((=) (FStar_List_Tot_Base.length l1) (FStar_List_Tot_Base.length l2)) then (forall_exists rel l1 l2) else false)
-
-let is_letter_or_digit (c : int) : bool =
-  (((fun c -> c <= 255 && BatChar.is_letter (Char.chr c)) c) || ((fun c -> c <= 255 && BatChar.is_digit (Char.chr c)) c))
-
-let rec file_get_lines__aux (ic : Stdlib.in_channel) (acc : (string) list) : (string) list =
-  (let tmp = ((fun ic -> try Some (Stdlib.input_line ic) with End_of_file -> None) ic) in
-  (match tmp with
-    | None -> acc
-    | (Some (l)) -> ((file_get_lines__aux ic) (l :: acc))
-  ))
-
-let file_get_lines (f : string) : (string) list =
-  (let ic = (Stdlib.open_in f) in
-  let l = ((file_get_lines__aux ic) []) in
-  (Stdlib.close_in ic);
-  (FStar_List_Tot_Base.rev l))
+let fold_map (f : ('u___a -> ('u___b -> ('u___a * 'u___c)))) (state : 'u___a) (s : ('u___b) list) : ('u___a * ('u___c) list) =
+  (fold_map__aux f state [] s)
 
 let rec drop_while (f : (string -> bool)) (xs : (string) list) : (string) list =
   (match xs with
@@ -280,11 +234,94 @@ let rec mkdir' (clean : bool) (mkparents : bool) (nm : string) : unit =
       ((fun nm -> Unix.mkdir nm 0o777) nm))
   ))
 
+let create_parent (fname : string) : unit =
+  (let d = (Filename.dirname fname) in
+  let tmp = ((fun d -> Sys.file_exists d && Sys.is_directory d) d) in
+  (if tmp then () else (mkdir' false true d)))
+
+let append_to_file (c : Stdlib.out_channel) (s : string) : unit =
+  ((Stdlib.output_string c s);
+  (Stdlib.output_string c "\n");
+  (Stdlib.flush c))
+
+let write_file (fn : string) (contents : string) : unit =
+  ((create_parent fn);
+  let fh = (Stdlib.open_out_bin fn) in
+  (append_to_file fh contents);
+  (Stdlib.close_out fh))
+
+let rec fold_flatten (f : ('u___a -> ('u___b -> ('u___a * ('u___b) list)))) (acc : 'u___a) (l : ('u___b) list) : 'u___a =
+  (match l with
+    | [] -> acc
+    | (x :: xs) -> (let tmp = (f acc x) in
+      (match tmp with
+        | (acc1, xs') -> (fold_flatten f acc1 (FStar_List_Tot_Base.append xs' xs))
+      ))
+  )
+
+let start_process' (id : string) (prog : string) (args : (string) list) (stop_marker : ((string -> bool)) option) : proc_rec =
+  (let tmp = ((fun prog args -> let (stdin_r, stdin_w) = Unix.pipe () in let (stdout_r, stdout_w) = Unix.pipe () in let (stderr_r, stderr_w) = Unix.pipe () in Unix.set_close_on_exec stdin_w; Unix.set_close_on_exec stdout_r; Unix.set_close_on_exec stderr_r; let pid = Unix.create_process prog (Array.of_list (prog :: args)) stdin_r stdout_w stderr_w in Unix.close stdin_r; Unix.close stdout_w; Unix.close stderr_w; (pid, Unix.in_channel_of_descr stdout_r, Unix.in_channel_of_descr stderr_r, Unix.out_channel_of_descr stdin_w)) prog args) in
+  (match tmp with
+    | (pid, inc, errc, outc) -> (let tmp1 = (ref false) in
+      let proc = { pid = pid;
+          inc = inc;
+          errc = errc;
+          outc = outc;
+          killed = tmp1;
+          stop_marker = stop_marker;
+          id = (Prims.strcat prog (Prims.strcat ":" id));
+          prog = prog } in
+      let tmp2 = (!(all_procs)) in
+      let tmp3 = (proc :: tmp2) in
+      ((all_procs) := tmp3);
+      proc)
+  ))
+
+let run_process (id : string) (prog : string) (args : (string) list) (stdin : (string) option) : string =
+  (let p = (start_process' id prog args None) in
+  (match stdin with
+    | None -> ()
+    | (Some (str)) -> ((fun oc s -> try Stdlib.output_string oc s with Sys_error _ -> ()) (p).outc str)
+  );
+  ((fun oc -> (try Stdlib.flush oc with _ -> ()); (try Stdlib.close_out oc with _ -> ())) (p).outc);
+  let s = ((fun ic -> BatIO.read_all (BatIO.input_channel ~autoclose:true ~cleanup:false ic)) (p).inc) in
+  (kill_process' p);
+  s)
+
+let rec take__aux (p : ('u___a -> bool)) (l : ('u___a) list) (acc : ('u___a) list) (l' : ('u___a) list) : (('u___a) list * ('u___a) list) =
+  (match l' with
+    | [] -> (l, [])
+    | (x :: xs) -> (let tmp = (p x) in
+      (if tmp then (take__aux p l (x :: acc) xs) else ((FStar_List_Tot_Base.rev acc), (x :: xs))))
+  )
+
+let take (p : ('u___a -> bool)) (l : ('u___a) list) : (('u___a) list * ('u___a) list) =
+  (take__aux p l [] l)
+
+let forall_exists (rel : ('u___a -> ('u___b -> bool))) (l1 : ('u___a) list) (l2 : ('u___b) list) : bool =
+  (for_all (fun x -> (for_some (rel x) l2)) l1)
+
+let multiset_equiv (rel : ('u___a -> ('u___b -> bool))) (l1 : ('u___a) list) (l2 : ('u___b) list) : bool =
+  (if ((=) (FStar_List_Tot_Base.length l1) (FStar_List_Tot_Base.length l2)) then (forall_exists rel l1 l2) else false)
+
+let is_letter_or_digit (c : int) : bool =
+  (((fun c -> c <= 255 && BatChar.is_letter (Char.chr c)) c) || ((fun c -> c <= 255 && BatChar.is_digit (Char.chr c)) c))
+
+let rec file_get_lines__aux (ic : Stdlib.in_channel) (acc : (string) list) : (string) list =
+  (let tmp = ((fun ic -> try Some (Stdlib.input_line ic) with End_of_file -> None) ic) in
+  (match tmp with
+    | None -> acc
+    | (Some (l)) -> (file_get_lines__aux ic (l :: acc))
+  ))
+
+let file_get_lines (f : string) : (string) list =
+  (let ic = (Stdlib.open_in f) in
+  let l = (file_get_lines__aux ic []) in
+  (Stdlib.close_in ic);
+  (FStar_List_Tot_Base.rev l))
+
 let mkdir (clean : bool) (mkparents : bool) : (string -> unit) =
   (mkdir' clean mkparents)
-
-let cur_sigint_handler : (Sys.signal_behavior ref) =
-  (ref Sys.Signal_default)
 
 let get_sigint_handler (tmp : unit) : Sys.signal_behavior =
   (!(cur_sigint_handler))
@@ -299,17 +336,6 @@ let sigint_handler_f (f : (Prims.int -> unit)) : Sys.signal_behavior =
 let argv0 : string =
   ((fun () -> Sys.argv.(0)) ())
 
-let fprint (oc : Stdlib.out_channel) (fmt : string) (args : (string) list) : unit =
-  (Stdlib.output_string oc (FStarC_Format.fmt fmt args))
-
-let create_parent (fname : string) : unit =
-  (let d = (Filename.dirname fname) in
-  let tmp = ((fun d -> Sys.file_exists d && Sys.is_directory d) d) in
-  (if tmp then () else (mkdir' false true d)))
-
-let maybe_create_parent (fname : string) : unit =
-  (create_parent fname)
-
 let with_in_channel_opt (fname : string) (f : (Stdlib.in_channel -> 'a)) : ('a) option =
   (try (let channel = (Stdlib.open_in_bin fname) in
   (finally (fun tmp -> (Stdlib.close_in channel)) (fun tmp -> (let tmp1 = (f channel) in
@@ -323,9 +349,6 @@ let load_1value_from_file3 (fname : string) : ((string * 'u___a)) option =
   let v1 = (Stdlib.input_value channel) in
   (dig, v1))))
 
-let digest_cache : (string, string) Hashtbl.t =
-  ((fun () -> Hashtbl.create 101) ())
-
 let digest_of_file (fname : string) : string =
   (let tmp = (Hashtbl.find_opt digest_cache fname) in
   (match tmp with
@@ -336,10 +359,24 @@ let digest_of_file (fname : string) : string =
       dig)
   ))
 
-let append_to_file (c : Stdlib.out_channel) (s : string) : unit =
-  ((Stdlib.output_string c s);
-  (Stdlib.output_string c "\n");
-  (Stdlib.flush c))
+let load_2values_from_file3 (fname : string) : ((string * 'u___a * 'u___b)) option =
+  (with_in_channel_opt fname (fun channel -> (let dig = (Stdlib.input_value channel) in
+  (ignore (Stdlib.input_binary_int channel));
+  let v1 = (Stdlib.input_value channel) in
+  let v2 = (Stdlib.input_value channel) in
+  (dig, v1, v2))))
+
+let load_3rd_value_from_file3 (fname : string) : ('u___c) option =
+  (with_in_channel_opt fname (fun channel -> ((ignore (Stdlib.input_value channel));
+  let len = (Stdlib.input_binary_int channel) in
+  ((fun c len -> Stdlib.seek_in c (Stdlib.pos_in c + len)) channel len);
+  (Stdlib.input_value channel))))
+
+let fprint (oc : Stdlib.out_channel) (fmt : string) (args : (string) list) : unit =
+  (Stdlib.output_string oc (FStarC_Format.fmt fmt args))
+
+let maybe_create_parent (fname : string) : unit =
+  (create_parent fname)
 
 let start_process (id : string) (prog : string) (args : (string) list) (stop_marker : (string -> bool)) : proc_rec =
   (start_process' id prog args (Some (stop_marker)))
@@ -357,7 +394,7 @@ let rec ask_process__loop (p : proc_rec) (result : ((read_result) option ref)) (
       let tmp2 = (stop_marker line1) in
       let tmp3 = (not tmp2) in
       (if tmp3 then ((Buffer.add_string out (Prims.strcat line1 "\n"));
-      ((ask_process__loop p result out stop_marker) ())) else ()))
+      (ask_process__loop p result out stop_marker ())) else ()))
   ))
 
 let handle_stderr (p : proc_rec) (h : (string -> unit)) : unit =
@@ -371,7 +408,7 @@ let ask_process (p : proc_rec) (stdin : string) (exn_handler : (unit -> string))
       | (Some (f)) -> (f s)
       | None -> false
     )) in
-  let reader_fn = (fun signal_fn -> ((try ((ask_process__loop p result out stop_marker) ()) with
+  let reader_fn = (fun signal_fn -> ((try (ask_process__loop p result out stop_marker ()) with
       | SigInt -> ((result) := (Some (SIGINT)))
     );
     (signal_fn ()))) in
@@ -397,12 +434,6 @@ let proc_prog (p : proc_rec) : string =
 let kill_process (p : proc_rec) : unit =
   (kill_process' p)
 
-let write_file (fn : string) (contents : string) : unit =
-  ((create_parent fn);
-  let fh = (Stdlib.open_out_bin fn) in
-  (append_to_file fh contents);
-  (Stdlib.close_out fh))
-
 let mlock : Mutex.t =
   (Mutex.create ())
 
@@ -420,27 +451,14 @@ let rec try_find_index__aux (f : ('u___a -> bool)) (i : Prims.int) (l : ('u___a)
   (match l with
     | [] -> None
     | (hd :: tl) -> (let tmp = (f hd) in
-      (if tmp then (Some (i)) else ((try_find_index__aux f) (Prims.op_Plus i Prims.int_one) tl)))
+      (if tmp then (Some (i)) else (try_find_index__aux f (Prims.op_Plus i Prims.int_one) tl)))
   )
 
-let try_find_index (f : ('u___a -> bool)) (eta : ('u___a) list) : (Prims.int) option =
-  ((try_find_index__aux f) Prims.int_zero eta)
+let try_find_index (f : ('u___a -> bool)) (l : ('u___a) list) : (Prims.int) option =
+  (try_find_index__aux f Prims.int_zero l)
 
 let digest_of_string (s : string) : string =
   (BatDigest.to_hex (BatDigest.string s))
-
-let load_2values_from_file3 (fname : string) : ((string * 'u___a * 'u___b)) option =
-  (with_in_channel_opt fname (fun channel -> (let dig = (Stdlib.input_value channel) in
-  (ignore (Stdlib.input_binary_int channel));
-  let v1 = (Stdlib.input_value channel) in
-  let v2 = (Stdlib.input_value channel) in
-  (dig, v1, v2))))
-
-let load_3rd_value_from_file3 (fname : string) : ('u___c) option =
-  (with_in_channel_opt fname (fun channel -> ((ignore (Stdlib.input_value channel));
-  let len = (Stdlib.input_binary_int channel) in
-  ((fun c len -> Stdlib.seek_in c (Stdlib.pos_in c + len)) channel len);
-  (Stdlib.input_value channel))))
 
 let with_sigint_handler (handler : Sys.signal_behavior) (f : (unit -> 'u___a)) : 'u___a =
   (let original_handler = (!(cur_sigint_handler)) in
@@ -454,15 +472,6 @@ let raise_sigint_maybe_delay (tmp : Prims.int) : unit =
 
 let sigint_raise : Sys.signal_behavior =
   ((fun f -> Sys.Signal_handle (fun i -> f (Z.of_int i))) raise_sigint_maybe_delay)
-
-let rec fold_flatten (f : ('u___a -> ('u___b -> ('u___a * ('u___b) list)))) (acc : 'u___a) (l : ('u___b) list) : 'u___a =
-  (match l with
-    | [] -> acc
-    | (x :: xs) -> (let tmp = (f acc x) in
-      (match tmp with
-        | (acc1, xs') -> (fold_flatten f acc1 (FStar_List_Tot_Base.append xs' xs))
-      ))
-  )
 
 let with_out_channel_atomic (fname : string) (f : (Stdlib.out_channel -> 'a)) : 'a =
   ((create_parent fname);
@@ -495,13 +504,4 @@ let load_value_from_file (fname : string) : ('u___a) option =
 
 let save_value_to_file (fname : string) (value : 'u___a) : unit =
   (with_out_channel_atomic fname (fun channel -> (Stdlib.output_value channel value)))
-
-let strcat (s1 : string) (eta : string) : string =
-  (Prims.strcat s1 eta)
-
-let read (r : ('u___a ref)) : 'u___a =
-  (!(r))
-
-let write (r : ('u___a ref)) (v : 'u___a) : unit =
-  ((r) := v)
 

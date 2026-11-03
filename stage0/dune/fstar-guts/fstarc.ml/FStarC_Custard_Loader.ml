@@ -34,10 +34,13 @@ let module_is_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_E
     )) else false) in
   (loaded env m want_impl))
 
-let loading : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+let cache_primed : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
-let cache_primed : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+let loaded_files : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
+
+let loading : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
 let rec prime_cache (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) : (string -> unit) =
@@ -68,7 +71,7 @@ let rec ensure_loaded__first_usable (deps : FStarC_Parser_Dep.deps) (env : FStar
     | (fn :: fns1) -> ((prime_cache' false deps env fn);
       let tmp = (FStarC_Custard_Prof.timed "cachefile" (fun tmp -> (FStarC_CheckedFiles.load_module_from_cache env fn))) in
       (match tmp with
-        | None -> ((ensure_loaded__first_usable deps env m) fns1)
+        | None -> (ensure_loaded__first_usable deps env m fns1)
         | (Some (tcr)) -> (fn, tcr)
       ))
   )
@@ -88,9 +91,6 @@ let candidate_files (deps : FStarC_Parser_Dep.deps) (m : string) : (string) list
       )
   ))
 
-let loaded_files : (unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
-
 let rec ensure_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_Env.env) (m : string) : FStarC_TypeChecker_Env.env =
   (let tmp = (module_is_loaded deps env m) in
   (if tmp then env else (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt loading (BatString.lowercase_ascii m)) in
@@ -99,7 +99,7 @@ let rec ensure_loaded (deps : FStarC_Parser_Dep.deps) (env : FStarC_TypeChecker_
       | tmp2 -> false
     ) in
   (if tmp2 then env else (let tmp3 = (candidate_files deps m) in
-  let tmp4 = ((ensure_loaded__first_usable deps env m) tmp3) in
+  let tmp4 = (ensure_loaded__first_usable deps env m tmp3) in
   (match tmp4 with
     | (fn, tcr) -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace loaded_files fn ());
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace loading (BatString.lowercase_ascii m) ());

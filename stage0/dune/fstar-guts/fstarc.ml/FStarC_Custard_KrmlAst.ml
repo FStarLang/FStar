@@ -760,7 +760,7 @@ let decl_to_doc (d : decl) : PPrint.document =
 let fStarC_Class_PP_pp__decl (tmp : decl) : PPrint.document =
   (decl_to_doc tmp)
 
-let fStarC_Class_Show_show__decl_157 (tmp : decl) : string =
+let fStarC_Class_Show_show__decl_163 (tmp : decl) : string =
   (let tmp1 = (fStarC_Class_PP_pp__decl tmp) in
   (FStar_Pprint.render tmp1))
 

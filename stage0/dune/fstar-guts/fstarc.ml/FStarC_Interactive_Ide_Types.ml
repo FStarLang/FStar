@@ -95,6 +95,9 @@ and repl_state = {
   repl_lang : (FStarC_Parser_AST.decl) list;
 }
 
+let t0 : float =
+  (BatUnix.gettimeofday ())
+
 let initial_range (filename : string) : FStarC_Range_Type.range =
   (FStarC_Range_Type.mk_range filename (FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero) (FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero))
 
@@ -245,7 +248,11 @@ let json_of_issue_level (i : FStarC_Errors_Issue.issue_level) : FStarC_Json.json
   )))
 
 let json_of_issue (issue : FStarC_Errors_Issue.issue) : FStarC_Json.json =
-  (let r = (FStarC_Option.map FStarC_Range_Ops.refind_range (issue).FStarC_Errors_Issue.issue_range) in
+  (let r = (match (issue).FStarC_Errors_Issue.issue_range with
+      | (Some (x)) -> (let tmp = (FStarC_Range_Ops.refind_range x) in
+        (Some (tmp)))
+      | None -> None
+    ) in
   let tmp = (json_of_issue_level (issue).FStarC_Errors_Issue.issue_level) in
   let tmp1 = ("level", tmp) in
   let tmp2 = (tmp1 :: []) in
@@ -266,9 +273,6 @@ let json_of_issue (issue : FStarC_Errors_Issue.issue) : FStarC_Json.json =
   let tmp8 = (BatList.append tmp2 tmp7) in
   (FStarC_Json.JsonAssoc (tmp8)))
 
-let t0 : float =
-  (BatUnix.gettimeofday ())
-
 let string_of_timed_fname (x : timed_fname) : string =
   (if ((=) (x).tf_modtime t0) then (FStarC_Format.fmt1 "{ %s }" (x).tf_fname) else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__ocaml_float (x).tf_modtime) in
   (FStarC_Format.fmt2 "{ %s; %s }" (x).tf_fname tmp)))
@@ -280,8 +284,8 @@ let string_of_repl_task (t : repl_task) : string =
     | (LDInterfaceOfCurrentFile (intf)) -> (let tmp = (string_of_timed_fname intf) in
       (FStarC_Format.fmt1 "LDInterfaceOfCurrentFile %s" tmp))
     | (PushFragment ((FStar_Pervasives.Inl (frag)), tmp, tmp1, tmp2)) -> (FStarC_Format.fmt1 "PushFragment { code = %s }" (frag).FStarC_Parser_Frontend.frag_text)
-    | (PushFragment ((FStar_Pervasives.Inr (d)), tmp, tmp1, deps)) -> (let tmp2 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_168 d) in
-      let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string deps) in
+    | (PushFragment ((FStar_Pervasives.Inr (d)), tmp, tmp1, deps)) -> (let tmp2 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_174 d) in
+      let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 deps) in
       (FStarC_Format.fmt2 "PushFragment { decl = %s; deps=%s }" tmp2 tmp3))
     | Noop -> "Noop {}"
   )
@@ -304,7 +308,7 @@ let repl_state_to_string (r : repl_state) : string =
   let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int (r).repl_column) in
   let tmp2 = (string_of_repl_stack (r).repl_deps_stack) in
   let tmp3 = (BatList.map (fun q -> (q).qid) (r).repl_buffered_input_queries) in
-  let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp3) in
+  let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 tmp3) in
   let tmp5 = (tmp4 :: []) in
   let tmp6 = (tmp2 :: tmp5) in
   let tmp7 = ((match (r).repl_curmod with

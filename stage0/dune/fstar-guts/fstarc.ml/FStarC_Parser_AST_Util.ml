@@ -6,26 +6,7 @@ type error_message = {
   range : FStarC_Range_Type.range;
 }
 
-type open_namespaces_and_abbreviations = {
-  open_namespaces : (FStarC_Ident.lident) list;
-  module_abbreviations : ((FStarC_Ident.ident * FStarC_Ident.lident)) list;
-}
-
-type extension_parser = {
-  parse_decl_name : (string -> (FStarC_Range_Type.range -> (error_message, FStarC_Ident.ident) FStar_Pervasives.either));
-  parse_decl : (open_namespaces_and_abbreviations -> (string -> (FStarC_Range_Type.range -> (error_message, FStarC_Parser_AST.decl) FStar_Pervasives.either)));
-}
-
-let extension_parser_table : (extension_parser) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20))))
-
-let register_extension_parser (extension_name : string) (eta : extension_parser) : unit =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace extension_parser_table extension_name eta)
-
 type extension_lang_parser = (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))
-
-let mk_extension_lang_parser (f : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either)) =
-  f
 
 let extension_lang_parser_table : ((string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20))))
@@ -49,8 +30,18 @@ let parse_extension_lang (lang_name : string) (raw_text : string) (raw_text_pos 
       ))
   ))
 
-let register_extension_lang_parser (extension_name : string) (eta : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) : unit =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace extension_lang_parser_table extension_name eta)
+type open_namespaces_and_abbreviations = {
+  open_namespaces : (FStarC_Ident.lident) list;
+  module_abbreviations : ((FStarC_Ident.ident * FStarC_Ident.lident)) list;
+}
+
+type extension_parser = {
+  parse_decl_name : (string -> (FStarC_Range_Type.range -> (error_message, FStarC_Ident.ident) FStar_Pervasives.either));
+  parse_decl : (open_namespaces_and_abbreviations -> (string -> (FStarC_Range_Type.range -> (error_message, FStarC_Parser_AST.decl) FStar_Pervasives.either)));
+}
+
+let extension_parser_table : (extension_parser) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20))))
 
 let comments : (((string * FStarC_Range_Type.range)) list ref) =
   (ref [])
@@ -59,6 +50,20 @@ let flush_comments (tmp : unit) : ((string * FStarC_Range_Type.range)) list =
   (let cs = (!(comments)) in
   ((comments) := []);
   cs)
+
+let register_extension_lang_parser (extension_name : string) (eta : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) : unit =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace extension_lang_parser_table extension_name eta)
+
+let add_comments (cs : ((string * FStarC_Range_Type.range)) list) : unit =
+  (let tmp = (!(comments)) in
+  let tmp1 = (BatList.append cs tmp) in
+  ((comments) := tmp1))
+
+let register_extension_parser (extension_name : string) (eta : extension_parser) : unit =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace extension_parser_table extension_name eta)
+
+let mk_extension_lang_parser (f : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either))) : (string -> (FStarC_Range_Type.range -> (error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either)) =
+  f
 
 let lookup_extension_parser (extension_name : string) : (extension_parser) option =
   (let do_ = (fun tmp -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt extension_parser_table extension_name)) in
@@ -363,9 +368,4 @@ and lidents_of_decl (t : FStarC_Parser_AST.decl) : (FStarC_Ident.lident) list =
     | (FStarC_Parser_AST.DeclSyntaxExtension (u__1, u__2, u__3, u__4)) -> []
     | (FStarC_Parser_AST.DeclToBeDesugared (tmp)) -> []
   )
-
-let add_comments (cs : ((string * FStarC_Range_Type.range)) list) : unit =
-  (let tmp = (!(comments)) in
-  let tmp1 = (BatList.append cs tmp) in
-  ((comments) := tmp1))
 

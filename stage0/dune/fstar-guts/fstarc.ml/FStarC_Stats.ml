@@ -4,8 +4,8 @@
 let enabled : (bool ref) =
   (ref false)
 
-let stack : ((string) list ref) =
-  (ref [])
+let ever_enabled : (bool ref) =
+  (ref false)
 
 type stat = {
   ns_tree : Prims.int;
@@ -16,6 +16,9 @@ type stat = {
 
 let st : (((bool ref) * stat)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (10))))
+
+let stack : ((string) list ref) =
+  (ref [])
 
 let fStarC_Class_Monoid_mzero__stat : stat =
   { ns_tree = Prims.int_zero;
@@ -97,9 +100,6 @@ let do_record (key : string) (f : (unit -> 'u___a)) : 'u___a =
 let record (key : string) (f : (unit -> 'u___a)) : 'u___a =
   (let e = (!(enabled)) in
   (if e then (do_record key f) else (f ())))
-
-let ever_enabled : (bool ref) =
-  (ref false)
 
 let fStarC_Class_Ord_cmp__tuple2_string_stat (tmp : (string * stat)) (tmp1 : (string * stat)) : FStarC_Order.order =
   (match (tmp, tmp1) with

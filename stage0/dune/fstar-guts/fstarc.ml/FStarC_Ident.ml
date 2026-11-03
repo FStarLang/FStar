@@ -23,27 +23,11 @@ let string_of_lid (lid : lident) : string =
 let string_of_id (id : ident) : string =
   (id).idText
 
-let set_id_range (r : FStarC_Range_Type.range) (i : ident) : ident =
-  { idText = (i).idText; idRange = r }
-
-let set_lid_range (l : lident) (r : FStarC_Range_Type.range) : lident =
-  { ns = (l).ns;
-    ident = (let tmp = (l).ident in
-    { idText = (tmp).idText; idRange = r });
-    nsstr = (l).nsstr;
-    str = (l).str }
-
 let range_of_id (id : ident) : FStarC_Range_Type.range =
   (id).idRange
 
-let ident_equals (id1 : ident) (id2 : ident) : bool =
-  ((=) (id1).idText (id2).idText)
-
 let range_of_lid (lid : lident) : FStarC_Range_Type.range =
   (range_of_id (lid).ident)
-
-let lid_equals (l1 : lident) (l2 : lident) : bool =
-  ((=) (l1).str (l2).str)
 
 type path = (string) list [@@deriving yojson]
 
@@ -73,30 +57,6 @@ let lid_of_path (path : (string) list) (pos : FStarC_Range_Type.range) : lident 
   (let ids = (BatList.map (fun s -> (mk_ident (s, pos))) path) in
   (lid_of_ids ids))
 
-let reserved_prefix : string =
-  "uu___"
-
-let ident_of_lid (l : lident) : ident =
-  (l).ident
-
-let fStarC_Class_Show_show__ident (tmp : ident) : string =
-  (string_of_id tmp)
-
-let path_of_lid (lid : lident) : (string) list =
-  (BatList.map string_of_id (BatList.append (lid).ns ((lid).ident :: [])))
-
-let path_of_ns (ns : (ident) list) : (string) list =
-  (BatList.map string_of_id ns)
-
-let path_of_text (text : string) : (string) list =
-  (FStarC_String.split (46 :: []) text)
-
-let nsstr (l : lident) : string =
-  (l).nsstr
-
-let ns_of_lid (lid : lident) : (ident) list =
-  (lid).ns
-
 let id_of_text (str : string) : ident =
   (mk_ident (str, FStarC_Range_Type.dummyRange))
 
@@ -104,34 +64,8 @@ let lid_of_str (str : string) : lident =
   (let tmp = (BatList.map id_of_text (FStarC_Util.split str ".")) in
   (lid_of_ids tmp))
 
-let fStarC_Class_Show_show__lident (tmp : lident) : string =
-  (string_of_lid tmp)
-
-let rec fStarC_Class_Show_show__show_list_aux__list_lident (l : (lident) list) : string =
-  (match l with
-    | [] -> ""
-    | (x :: []) -> (fStarC_Class_Show_show__lident x)
-    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__lident x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident xs) in
-      let tmp2 = (Prims.strcat ", " tmp1) in
-      (Prims.strcat tmp tmp2))
-  )
-
-let fStarC_Class_Show_show__list_lident (tmp : (lident) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident tmp) in
-  let tmp2 = (Prims.strcat tmp1 "]") in
-  (Prims.strcat "[" tmp2))
-
-let fStarC_Class_Show_show__option_list_lident (tmp : ((lident) list) option) : string =
-  (match tmp with
-    | None -> "None"
-    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__list_lident x) in
-      (Prims.strcat "Some " tmp1))
-  )
-
-let qual_id (lid : lident) (id : ident) : lident =
-  (let tmp = (lid_of_ids (BatList.append (lid).ns ((lid).ident :: (id :: [])))) in
-  (set_lid_range tmp (range_of_id id)))
+let fStarC_Class_Show_show__ident (tmp : ident) : string =
+  (string_of_id tmp)
 
 let fStarC_Class_Show_show__option_ident (tmp : (ident) option) : string =
   (match tmp with
@@ -165,18 +99,21 @@ let fStarC_Class_Show_show__list_tuple2_ident_option (tmp : ((ident * (ident) op
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
-let ids_of_lid (lid : lident) : (ident) list =
-  (BatList.append (lid).ns ((lid).ident :: []))
+let set_id_range (r : FStarC_Range_Type.range) (i : ident) : ident =
+  { idText = (i).idText; idRange = r }
 
-let fStarC_Class_PP_pp__lident (tmp : lident) : PPrint.document =
-  (let tmp1 = (fStarC_Class_Show_show__lident tmp) in
-  (PPrint.arbitrary_string tmp1))
+let set_lid_range (l : lident) (r : FStarC_Range_Type.range) : lident =
+  { ns = (l).ns;
+    ident = (let tmp = (l).ident in
+    { idText = (tmp).idText; idRange = r });
+    nsstr = (l).nsstr;
+    str = (l).str }
 
-let fStarC_Class_HasRange_pos__ident (tmp : ident) : FStarC_Range_Type.range =
-  (range_of_id tmp)
+let ident_equals (id1 : ident) (id2 : ident) : bool =
+  ((=) (id1).idText (id2).idText)
 
-let fStarC_Class_HasRange_pos__lident (tmp : lident) : FStarC_Range_Type.range =
-  (fStarC_Class_HasRange_pos__ident (tmp).ident)
+let reserved_prefix : string =
+  "uu___"
 
 let gen' (s : string) (r : FStarC_Range_Type.range) : ident =
   (let i = (FStarC_GenSym.next_id ()) in
@@ -187,6 +124,40 @@ let gen' (s : string) (r : FStarC_Range_Type.range) : ident =
 
 let gen (r : FStarC_Range_Type.range) : ident =
   (gen' reserved_prefix r)
+
+let ident_of_lid (l : lident) : ident =
+  (l).ident
+
+let ns_of_lid (lid : lident) : (ident) list =
+  (lid).ns
+
+let fStarC_Class_HasRange_pos__ident (tmp : ident) : FStarC_Range_Type.range =
+  (range_of_id tmp)
+
+let lid_equals (l1 : lident) (l2 : lident) : bool =
+  ((=) (l1).str (l2).str)
+
+let nsstr (l : lident) : string =
+  (l).nsstr
+
+let fStarC_Class_HasRange_pos__lident (tmp : lident) : FStarC_Range_Type.range =
+  (fStarC_Class_HasRange_pos__ident (tmp).ident)
+
+let path_of_text (text : string) : (string) list =
+  (FStarC_String.split (46 :: []) text)
+
+let fStarC_Class_Show_show__lident (tmp : lident) : string =
+  (string_of_lid tmp)
+
+let qual_id (lid : lident) (id : ident) : lident =
+  (let tmp = (lid_of_ids (BatList.append (lid).ns ((lid).ident :: (id :: [])))) in
+  (set_lid_range tmp (range_of_id id)))
+
+let path_of_lid (lid : lident) : (string) list =
+  (BatList.map string_of_id (BatList.append (lid).ns ((lid).ident :: [])))
+
+let ids_of_lid (lid : lident) : (ident) list =
+  (BatList.append (lid).ns ((lid).ident :: []))
 
 let rec fStarC_Class_Show_show__show_list_aux__list_ident (l : (ident) list) : string =
   (match l with
@@ -200,6 +171,72 @@ let rec fStarC_Class_Show_show__show_list_aux__list_ident (l : (ident) list) : s
 
 let fStarC_Class_Show_show__list_ident (tmp : (ident) list) : string =
   (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__option_list_ident (tmp : ((ident) list) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__list_ident x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let id_as_lid (id : ident) : lident =
+  (lid_of_ns_and_id [] id)
+
+let fStarC_Class_Setlike_empty__ident_list_ident (tmp : unit) : (ident) list =
+  (FStarC_FlatSet.empty ())
+
+let fStarC_FlatSet_singleton__ident (x : ident) : (ident) list =
+  (x :: [])
+
+let fStarC_Class_Setlike_singleton__ident_list_ident (tmp : ident) : (ident) list =
+  (fStarC_FlatSet_singleton__ident tmp)
+
+let path_of_ns (ns : (ident) list) : (string) list =
+  (BatList.map string_of_id ns)
+
+let rec fStarC_Class_Show_show__show_list_aux__list_lident (l : (lident) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__lident x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__lident x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_lident (tmp : (lident) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__option_list_lident (tmp : ((lident) list) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__list_lident x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let fStarC_Class_PP_pp__lident (tmp : lident) : PPrint.document =
+  (let tmp1 = (fStarC_Class_Show_show__lident tmp) in
+  (PPrint.arbitrary_string tmp1))
+
+let fStarC_Class_Setlike_empty__ident_list_ident_6 (tmp : unit) : (ident) list =
+  (FStarC_FlatSet.empty ())
+
+let rec fStarC_Class_Show_show__show_list_aux__list_ident_67 (l : (ident) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__ident x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__ident x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident_67 xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_ident_67 (tmp : (ident) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident_67 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
@@ -218,49 +255,58 @@ let fStarC_Class_Show_show__option_lident (tmp : (lident) option) : string =
       (Prims.strcat "Some " tmp1))
   )
 
-let rec fStarC_Class_Show_show__show_list_aux__list_lident_86 (l : (lident) list) : string =
+let rec fStarC_Class_Show_show__show_list_aux__list_lident_98 (l : (lident) list) : string =
   (match l with
     | [] -> ""
     | (x :: []) -> (fStarC_Class_Show_show__lident x)
     | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__lident x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_86 xs) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_98 xs) in
       let tmp2 = (Prims.strcat ", " tmp1) in
       (Prims.strcat tmp tmp2))
   )
 
-let fStarC_Class_Show_show__list_lident_86 (tmp : (lident) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_86 tmp) in
+let fStarC_Class_Show_show__list_lident_98 (tmp : (lident) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_98 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
-
-let rec fStarC_Class_Show_show__show_list_aux__list_ident_112 (l : (ident) list) : string =
-  (match l with
-    | [] -> ""
-    | (x :: []) -> (fStarC_Class_Show_show__ident x)
-    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__ident x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident_112 xs) in
-      let tmp2 = (Prims.strcat ", " tmp1) in
-      (Prims.strcat tmp tmp2))
-  )
-
-let fStarC_Class_Show_show__list_ident_112 (tmp : (ident) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ident_112 tmp) in
-  let tmp2 = (Prims.strcat tmp1 "]") in
-  (Prims.strcat "[" tmp2))
-
-let fStarC_Class_Show_show__option_list_ident (tmp : ((ident) list) option) : string =
-  (match tmp with
-    | None -> "None"
-    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__list_ident_112 x) in
-      (Prims.strcat "Some " tmp1))
-  )
-
-let id_as_lid (id : ident) : lident =
-  (lid_of_ns_and_id [] id)
 
 let lid_add_suffix (l : lident) (s : string) : lident =
   (let path = (path_of_lid l) in
   (lid_of_path (BatList.append path (s :: [])) (range_of_lid l)))
+
+let fStarC_Class_Ord_cmp__lident_8 (tmp : lident) (tmp1 : lident) : FStarC_Order.order =
+  (FStarC_Class_Ord.fStarC_Class_Ord_cmp__string (string_of_lid tmp) (string_of_lid tmp1))
+
+let fStarC_Class_Ord_cmp__ident (tmp : ident) (tmp1 : ident) : FStarC_Order.order =
+  (FStarC_Class_Ord.fStarC_Class_Ord_cmp__string (string_of_id tmp) (string_of_id tmp1))
+
+let fStarC_Class_Ord_cmp__tuple2_lident_ident (tmp : (lident * ident)) (tmp1 : (lident * ident)) : FStarC_Order.order =
+  (match (tmp, tmp1) with
+    | ((x1, x2), (y1, y2)) -> (let tmp2 = (fStarC_Class_Ord_cmp__lident_8 x1 y1) in
+      let o2 = (fun tmp3 -> (fStarC_Class_Ord_cmp__ident x2 y2)) in
+      (match (tmp2, o2) with
+        | (FStarC_Order.Lt, tmp3) -> FStarC_Order.Lt
+        | (FStarC_Order.Eq, tmp3) -> (o2 ())
+        | (FStarC_Order.Gt, tmp3) -> FStarC_Order.Gt
+      ))
+  )
+
+let fStarC_Class_Ord_cmp__list_ident (tmp : (ident) list) (tmp1 : (ident) list) : FStarC_Order.order =
+  (FStarC_Order.compare_list tmp tmp1 fStarC_Class_Ord_cmp__ident)
+
+let fStarC_Class_Ord_cmp__tuple2_list_ident_list_ident (tmp : ((ident) list * (ident) list)) (tmp1 : ((ident) list * (ident) list)) : FStarC_Order.order =
+  (match (tmp, tmp1) with
+    | ((x1, x2), (y1, y2)) -> (let tmp2 = (fStarC_Class_Ord_cmp__list_ident x1 y1) in
+      let o2 = (fun tmp3 -> (fStarC_Class_Ord_cmp__list_ident x2 y2)) in
+      (match (tmp2, o2) with
+        | (FStarC_Order.Lt, tmp3) -> FStarC_Order.Lt
+        | (FStarC_Order.Eq, tmp3) -> (o2 ())
+        | (FStarC_Order.Gt, tmp3) -> FStarC_Order.Gt
+      ))
+  )
+
+let fStarC_Class_Setlike_is_empty__ident_list_ident (tmp : (ident) list) : bool =
+  (FStarC_FlatSet.is_empty tmp)
 
 let fStarC_Class_Hashable_hash__lident (tmp : lident) : int =
   (FStarC_Class_Hashable.fStarC_Class_Hashable_hash__string (string_of_lid tmp))
@@ -283,30 +329,9 @@ let fStarC_Class_HasRange_setPos__lident (tmp : FStarC_Range_Type.range) (tmp1 :
   (let tmp2 = (fStarC_Class_HasRange_setPos__ident tmp (tmp1).ident) in
   { ns = (tmp1).ns; ident = tmp2; nsstr = (tmp1).nsstr; str = (tmp1).str })
 
-let fStarC_Class_Ord_cmp__lident_12 (tmp : lident) (tmp1 : lident) : FStarC_Order.order =
-  (FStarC_Class_Ord.fStarC_Class_Ord_cmp__string (string_of_lid tmp) (string_of_lid tmp1))
-
-let fStarC_Class_Ord_cmp__ident_14 (tmp : ident) (tmp1 : ident) : FStarC_Order.order =
-  (FStarC_Class_Ord.fStarC_Class_Ord_cmp__string (string_of_id tmp) (string_of_id tmp1))
-
-let fStarC_Class_Ord_cmp__tuple2_lident_ident (tmp : (lident * ident)) (tmp1 : (lident * ident)) : FStarC_Order.order =
-  (match (tmp, tmp1) with
-    | ((x1, x2), (y1, y2)) -> (let tmp2 = (fStarC_Class_Ord_cmp__lident_12 x1 y1) in
-      (FStarC_Order.lex tmp2 (fun tmp3 -> (fStarC_Class_Ord_cmp__ident_14 x2 y2))))
-  )
-
-let fStarC_Class_Ord_cmp__list_ident (tmp : (ident) list) (tmp1 : (ident) list) : FStarC_Order.order =
-  (FStarC_Order.compare_list tmp tmp1 fStarC_Class_Ord_cmp__ident_14)
-
-let fStarC_Class_Ord_cmp__tuple2_list_ident_list_ident (tmp : ((ident) list * (ident) list)) (tmp1 : ((ident) list * (ident) list)) : FStarC_Order.order =
-  (match (tmp, tmp1) with
-    | ((x1, x2), (y1, y2)) -> (let tmp2 = (fStarC_Class_Ord_cmp__list_ident x1 y1) in
-      (FStarC_Order.lex tmp2 (fun tmp3 -> (fStarC_Class_Ord_cmp__list_ident x2 y2))))
-  )
-
 let fStarC_Class_Show_show__tuple2_list_string_lident (tmp : ((string) list * lident)) : string =
   (match tmp with
-    | (x1, x2) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string x1) in
+    | (x1, x2) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 x1) in
       let tmp2 = (fStarC_Class_Show_show__lident x2) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat ", " tmp3) in
