@@ -31,9 +31,9 @@ let v : t = synth_by_tactic (fun () -> exact (f ()))
 let m = match v with | B _ -> 0 | A x -> x
 
 let _ = assert True by (let t = `m in
-                        let t' = norm_term [delta;iota] t in
-                        (* The reduction of the match leaves an ascription *)
-                        let r = (`(1 <: int)) in
+                        let t' = norm_term [delta;iota;unascribe] t in
+                        (* ^ unascribe since the typechecker adds some ascriptions to the match *)
+                        let r = `1 in
                         if term_eq t' r
                         then ()
-                        else fail ("The match did not reduce!:" ^ term_to_string t'))
+                        else fail ("The match did not reduce!: " ^ term_to_string t'))
