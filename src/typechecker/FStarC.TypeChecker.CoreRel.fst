@@ -35,10 +35,13 @@ let dbg = Debug.get_toggle "CoreRel"
 let decide (guard_ok:bool) (subtyping:bool) (env:env) (t1 t2:typ) (g:guard_t)
   : ML (option guard_t)
   = if env.admit then Some g else
+    (* Core is always allowed a guard: when the caller is not, the guard
+       must simplify to [True] (e.g. [hide (reveal x) == x], which Rel
+       decides with a primitive step, and Core only by its guard). *)
     let r =
       if subtyping
-      then Core.check_term_subtyping guard_ok true env t1 t2
-      else Core.check_term_equality guard_ok true env t1 t2
+      then Core.check_term_subtyping true true env t1 t2
+      else Core.check_term_equality true true env t1 t2
     in
     let reject (why:string) : ML (option guard_t) =
       if !dbg then

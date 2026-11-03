@@ -458,8 +458,18 @@ let __do_unify_wflags
         try
           (* Rel solves the unification variables, and Core decides the
              equality of the terms so instantiated, computing its proof
-             obligation if [allow_guards] (see [CoreRel]). *)
-          let res = CoreRel.try_teq allow_guards env t1 t2 in
+             obligation if [allow_guards] (see [CoreRel]). With
+             [--compat_pre_core 0|1], tactics do not have Core check their
+             terms ([core_check]), nor decide an equality with no guard. *)
+          let res =
+            if not allow_guards && not (Options.compat_pre_core_should_check ())
+            then
+              let tx = UF.new_transaction () in
+              match Rel.teq_nosmt env t1 t2 with
+              | None -> UF.rollback tx; None
+              | r -> UF.commit tx; r
+            else CoreRel.try_teq allow_guards env t1 t2
+          in
           if dbg then
             Format.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStarC.Common.string_of_option (Rel.guard_to_string env) res)

@@ -473,7 +473,7 @@ in
 visible let  yy  : t2 = (C2 (fun x -> (lift (match x@0:(Tm_unknown) as uu___ returns t1 with
 	| 0  -> A1
 	|5  -> (B1 42)
-	|x#194  -> (B1 24)))))
+	|x#200  -> (B1 24)))))
 [@ ]
 visible let  zz1  : t2 = (C2 (fun x -> (C2 (fun x -> A2))))
 [@ ((postprocess_for_extraction_with push_lifts))]
