@@ -638,9 +638,16 @@ let elim_pure_step (g: env) (ctxt: slprop_view) :
     let x = ppname_default, fresh g in
     let ty = mk_squash p in
     let g' = push_binding g (snd x) (fst x) ty in
-    // Keep an impossible exit spatially available for ex-falso, rather than
-    // losing it to an SMT hypothesis that cannot synthesize owned resources.
-    // Retain the SMT hypothesis too, for pure well-formedness obligations.
+    // Impossible normal/exceptional posts must support BOTH kinds of ex-falso:
+    // the squash False binding discharges pure typing obligations (including an
+    // unhandled raise), while IsUnreachable lets the spatial prover discharge
+    // arbitrary ownership goals. Merely moving False into g' would leave the
+    // resource matcher unable to establish a destination's pts_to assertions.
+    // Conversely, keeping only the marker would lose the pure hypothesis.
+    //
+    // Preserve the marker by eliminating pure False into g' and reintroducing
+    // it under the same frame; elab_slprops identifies it with IsUnreachable.
+    // The test here is syntactic False, not a satisfiability test on a slprop.
     if eq_tm p tm_l_false then
       Some (| g', [IsUnreachable], [], [], fun g'' ->
         let pv = check_prop_validity g' p in
@@ -1505,6 +1512,11 @@ let k_unreach (g: env) (x: nvar { freshv g (snd x) }) (post_hint: post_hint_t { 
 
 #restart-solver
 #push-options "--z3rlimit_factor 2"
+// Shared by normal postcondition checking and exact abortive transfers. A
+// leftover duplicable assertion needs no consumer; an unreachable context
+// justifies any continuation. Otherwise the remaining spatial ownership must
+// not disappear. Keeping this check shared prevents gotos from being more
+// permissive than ordinary returns merely because their continuation is dead.
 let check_remaining (g:env) (rng:range) (remaining:slprop) : T.Tac unit =
   let remaining = inspect_slprop (mk_penv g true) remaining in
   let remaining = T.filter (function | Atom _ dup _ _ -> not dup | _ -> true) remaining in
@@ -1561,6 +1573,7 @@ let prove_post_hint (#g:env) (#ctxt:slprop) (r:checker_result_t g ctxt NoHint) (
           prove rng g2 ctxt' post_hint_opened false in
         assume lookup g3 x == lookup g2 x;
 
+        // Use the same ownership-conservation criterion as prove_exact below.
         check_remaining g rng remaining_ctxt;
 
         // for the typing of ty in g3, we have typing of ty in g2 above, and g3 `env_extends` g2
@@ -1582,6 +1595,10 @@ let try_frame_pre (allow_ambiguous : bool) (#g:env)
  // weakening from to g'
   checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname
 
+// prove normally returns goals ** remaining for a caller to frame around its
+// continuation. An abortive exit has no such continuation: validate remaining
+// before changing the continuation elaborator's input to goals alone. This
+// removes only admissible leftovers, never an unchecked nonduplicable frame.
 let prove_exact rng g ctxt goals =
   let (| g', remaining, k |) = prove rng g ctxt goals false in
   check_remaining g' rng remaining;

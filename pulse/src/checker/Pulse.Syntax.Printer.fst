@@ -337,6 +337,9 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "goto %s %s"
         (term_to_string lbl)
         (term_to_string arg)
+    // Diagnostics can inspect these nodes before checking has lowered them.
+    // Print both contracts, and keep the handler's locally nameless payload
+    // representation rather than pretending this is a round-trippable parser AST.
     | Tm_Raise { arg } ->
       sprintf "raise %s" (term_to_string arg)
     | Tm_ExceptionScope { normal; exceptional; body } ->
@@ -422,6 +425,7 @@ let tag_of_st_term (t:st_term) =
   | Tm_PragmaWithOptions _ -> "Tm_PragmaWithOptions"
   | Tm_ForwardJumpLabel _ -> "Tm_ForwardJumpLabel"
   | Tm_Goto _ -> "Tm_Goto"
+  // Preserve the pre-checking node names in traces of exception elaboration.
   | Tm_Raise _ -> "Tm_Raise"
   | Tm_ExceptionScope _ -> "Tm_ExceptionScope"
   | Tm_Try _ -> "Tm_Try"
@@ -467,6 +471,7 @@ let print_st_head (t:st_term)
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
   | Tm_ForwardJumpLabel _ -> "ForwardJumpLabel"
   | Tm_Goto _ -> "Goto"
+  // These heads identify source exception syntax, not the generated goto/match.
   | Tm_Raise _ -> "Raise"
   | Tm_ExceptionScope _ -> "ExceptionScope"
   | Tm_Try _ -> "Try"
@@ -494,6 +499,8 @@ let rec print_skel (t:st_term) =
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
   | Tm_ForwardJumpLabel {body} -> Printf.sprintf "(ForwardJumpLabel %s)" (print_skel body)
   | Tm_Goto _ -> "Goto"
+  // A try has two separately scoped children; include both in skeleton traces
+  // to distinguish a protected raise from a handler's outward re-raise.
   | Tm_Raise _ -> "Raise"
   | Tm_ExceptionScope {body} -> Printf.sprintf "(ExceptionScope %s)" (print_skel body)
   | Tm_Try {body;handler} -> Printf.sprintf "(Try %s %s)" (print_skel body) (print_skel handler)

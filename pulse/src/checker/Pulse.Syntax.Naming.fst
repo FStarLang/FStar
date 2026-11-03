@@ -247,6 +247,9 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' lbl x i;
       close_open_inverse' arg x i
 
+    // Mirror subst_st_term's binder depths. ExceptionScope adds no binder;
+    // Try's extra payload binder is confined to handler, so its inverse
+    // closing/opening proof recurses at i+1 rather than i.
     | Tm_Raise { arg } ->
       close_open_inverse' arg x i
 

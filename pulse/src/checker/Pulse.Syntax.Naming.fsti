@@ -449,6 +449,9 @@ let rec freevars_st (t:st_term)
     | Tm_Goto { lbl; arg } ->
       freevars lbl ++ freevars arg
 
+    // Include contract terms, which can refer to surrounding owned resources.
+    // A try's index-0 payload is bound (not a named free variable), so freevars
+    // unions the handler directly; only depth-sensitive traversals shift there.
     | Tm_Raise { arg } -> freevars arg
 
     | Tm_ExceptionScope { normal; exceptional; body } ->
@@ -650,6 +653,8 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Goto { lbl; arg } ->
       ln' lbl i && ln' arg i
 
+    // ExceptionScope creates no source binder. Try binds only its caught
+    // payload in handler; the protected body and both contracts stay at depth i.
     | Tm_Raise { arg } -> ln' arg i
 
     | Tm_ExceptionScope { normal; exceptional; body } ->
@@ -928,6 +933,9 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_Goto { lbl; arg } ->
       Tm_Goto { lbl=subst_term lbl ss; arg=subst_term arg ss }
 
+    // Keep this binder convention aligned with ln_st' and the closing proofs:
+    // only the try handler needs a shifted substitution. The exception label
+    // is generated later by the checker, not bound by either source node.
     | Tm_Raise { arg } ->
       Tm_Raise { arg=subst_term arg ss }
 

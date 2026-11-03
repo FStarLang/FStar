@@ -197,6 +197,8 @@ let try_find_equality (g:env) (x:R.term)
 : T.Tac (option R.term)
 = T.tryPick
     (function
+      // Control-flow bindings are not logical hypotheses. In particular a
+      // cleanup boundary hides exits, not the equalities in outer variables.
       | BindingGotoLabel .. | BindingPost .. | BindingCleanupBoundary -> None
       | BindingVar {ty} ->
         match is_squash ty with

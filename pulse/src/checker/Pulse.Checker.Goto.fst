@@ -61,8 +61,13 @@ let check'
       in
       let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
       let c' = match_comp_res_with_post_hint t c' post_hint in
-      // No continuation runs after a jump. Its destination and intervening
-      // cleanup obligations must account for all owned resources.
+      // lookup_goto has added the BindingPost obligations for local/defer scopes
+      // crossed by this jump; substituting arg selects the destination's exit
+      // protocol (e.g. exit_post q r (Raised e) = r e). Transfer to that complete
+      // obligation EXACTLY. Ordinary precondition framing would retain resources
+      // for a continuation which never runs, silently leaking a caller's frame.
+      // This applies to every goto, including return/break/continue, not just
+      // raises: an early return from inside a try also bypasses its continuation.
       let (| g', k |) = prove_exact rng g pre (comp_pre c') in
       prove_post_hint #g
         (checker_result_for_st_typing (k NoHint (|t,c'|)) res_ppname)

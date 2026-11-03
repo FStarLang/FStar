@@ -162,6 +162,9 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   let with_open b e = with_open g b e simplify_st_term in
 
   match e.term with
+  // Exception checking must precede simplification. Only the resulting
+  // outcome matches/lexical jumps may be simplified; dropping an unchecked
+  // scope or clause here could hide an unproved exceptional resource transfer.
   | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
     T.fail "Internal error: unchecked exception syntax in simplification"
   | Tm_Return _
@@ -269,6 +272,9 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
   then unit_tm
   else begin
     match p.term with
+    // Native exceptions are stateful, not proof annotations to erase. Their
+    // unchecked syntax has no extraction meaning; its contracts must already
+    // have been discharged and its control flow lowered by Exceptions.
     | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
       T.fail "Internal error: unchecked exception syntax in erasure"
     | Tm_IntroPure _
@@ -435,6 +441,9 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
   if is_erasable p then ECL.mk_return ECL.unit_tm
   else begin
     match p.term with
+    // Do not map source raise/try directly to host-language exceptions. The
+    // checker has selected lexical destinations and accounted for cleanup;
+    // extraction consumes that checked lowering, not a second exception model.
     | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
       T.fail "Internal error: unchecked exception syntax in extraction"
     | Tm_IntroPure _

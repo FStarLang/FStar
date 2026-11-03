@@ -231,6 +231,9 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' lbl x i;
       freevars_close_term' arg x i
 
+    // Closing must cover both ownership contracts as well as executable code.
+    // Only the handler sits under the caught-payload binder; the source scope
+    // itself has no label binder until Exceptions.check_scope elaborates it.
     | Tm_Raise { arg } ->
       freevars_close_term' arg x i
 

@@ -309,19 +309,29 @@ type st_term' =
       lbl: term; // either var or named
       arg: term;
     }
+  // Transient exception syntax: Pulse.Checker.Exceptions eliminates all three
+  // nodes before extraction. No lexical label is bound here; the checker
+  // creates one after validating the two-exit contract.
   | Tm_Raise {
+      // May contain stateful syntax until the checker's hoisting pass runs.
       arg: term;
     }
   | Tm_ExceptionScope {
+      // The unwrapped result/post; the scope itself returns native_outcome.
       normal: comp_st;
+      // A total payload -> slprop expression, not a closed spatial assertion.
       exceptional: term;
       body: st_term;
     }
   | Tm_Try {
+      // Shared normal result/post for the protected body and catch clauses.
       normal: comp_st;
       exceptional: term;
       body: st_term;
-      handler: st_term; // exception payload bound at index 0
+      // Payload bound at index 0 ONLY in handler. Desugaring supplies an
+      // ordered match and a fallback raise; the checker checks this outside
+      // the protected body's exception label so clauses can re-raise outward.
+      handler: st_term;
     }
   | Tm_Defer {
       handler_pre: slprop;

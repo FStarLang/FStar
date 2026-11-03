@@ -307,6 +307,9 @@ let rec eq_st_term (t1 t2:st_term)
       Tm_Goto { lbl=l2; arg=a2 } ->
       eq_tm l1 l2 && eq_tm a1 a2
 
+    // Compare the pre-checking contracts as well as code: changing a raises
+    // protocol changes the ownership obligation even when the body is identical.
+    // Try handlers already use the same locally nameless payload binder.
     | Tm_Raise { arg=a1 }, Tm_Raise { arg=a2 } ->
       eq_tm a1 a2
 

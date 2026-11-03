@@ -51,10 +51,12 @@ let check
       { post with post = tm_star post.post cpre } in
     // Check body with extended env and post_hint
     let (| body', c_body |) = apply_checker_result_k (check g' pre (PostHint body_post) res_ppname body) res_ppname in
-    // The body's postcondition should be (post ** cpre)
-    // Now check the handler with cpre as (part of) precondition
-    // A nonlocal exit would abandon the pending exit's framed resources.
-    // Cleanup may use local control flow, but cannot jump or raise out of it.
+    // Cleanup consumes cpre; the pending normal/exceptional exit's remaining
+    // ownership is not available to it. A nonlocal exit from the handler would
+    // abandon that ownership, so stop both goto and exception-label lookup at
+    // this boundary. Labels introduced INSIDE cleanup are still visible: local
+    // catches and loop exits are allowed, but return/raise/break to an outer
+    // scope are not. Automatically propagated native calls obey the same rule.
     let g_cleanup = push g BindingCleanupBoundary in
     let post_hint_for_handler: post_hint_for_env g = {
       g;
@@ -67,6 +69,9 @@ let check
     // After body, context is (post ** cpre); handler consumes cpre
     // Overall defer comp has the original post (without cpre)
     let t = wtag (Some (ctag_of_comp_st c_body)) (Tm_Defer { handler_pre = cpre; handler; body=body' }) in
+    // Preserve the body's computation constructor, particularly C_STDiv. A
+    // defer around a throwing call does not prove that the call terminates;
+    // rebuilding a C_ST here would erase divergence before an enclosing catch.
     let c = with_st_comp c_body { u=comp_u c_body; res=comp_res c_body; pre; post=post.post } in
     let c'' = match_comp_res_with_post_hint t c post_hint in
     prove_post_hint

@@ -39,6 +39,8 @@ let check
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_ST? t.term })
+  // Used to check the match/raise generated when a native call is unwrapped;
+  // passing the recursive checker avoids depending on Pulse.Checker itself.
   (check:check_t)
   : T.Tac (checker_result_t g ctxt post_hint) =
 
@@ -107,13 +109,22 @@ let check
          | Some _ -> ())
     );
  // TODO: thread through prover
+      // The reserved alias is a call-site control-flow convention, not merely
+      // data equal to outcome. Split EVERY native call, even without a visible
+      // exception label and even when the source discards the result. Otherwise
+      // `let _ = f (); ...` could swallow an unhandled exceptional exit.
       if Some? (Pulse.Checker.Exceptions.outcome_types (comp_res c)) then
         let Some (exn, a) = Pulse.Checker.Exceptions.outcome_types (comp_res c) in
         if not (C_ST? c || C_STDiv? c) then
           fail g (Some range) "Exception-producing calls must have the stateful effect";
+        // Frame before splitting so both Normal and Raised carry ctxt'. The
+        // Raised branch must then transfer that frame to its destination or
+        // crossed cleanup scopes; it cannot leave it in a dead continuation.
         let c = add_frame c ctxt' in
         let framed : checker_result_t g ctxt NoHint =
           checker_result_for_st_typing (k NoHint (| t, c |)) res_ppname in
+        // post_hint describes the unwrapped a-valued continuation, not the
+        // intermediate native_outcome. Apply it only after unwrap's match.
         Pulse.Checker.Exceptions.unwrap post_hint res_ppname framed exn a (comp_post c) range check
       else if comp_post c `eq_tm` tm_is_unreachable then
         let framed = checker_result_for_st_typing (k _ (| t, add_frame c ctxt' |)) res_ppname in

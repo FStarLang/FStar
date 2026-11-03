@@ -31,10 +31,17 @@ noeq type var_binding = { n: ppname; x: var; ty: typ }
 
 noeq type binding =
   | BindingVar of var_binding
+  // Exception destinations use the ordinary goto contract and cleanup lookup.
+  // The flag selects the nearest lexical destination for raise; it does not
+  // create a distinct kind of jump or select a handler by payload type.
   | BindingGotoLabel { n: ppname; x: var; post: comp_st; is_exception: bool }
   | BindingPost { post: term }
+  // A delimiter for nonlocal exits while checking a defer handler. It binds
+  // no variable and adds no F* hypothesis, but both exit lookups stop here.
   | BindingCleanupBoundary
 
+// Cleanup delimiters and ownership obligations contribute no names to dom;
+// only actual variable/label bindings participate in freshness.
 let binding_dom : binding -> Set.set var = function
   | BindingVar { x }
   | BindingGotoLabel { x }
@@ -47,6 +54,8 @@ type env_bindings = list binding
 let bindings_dom (g: env_bindings) : Set.set var =
   L.fold_right (fun b vs -> vs `Set.union` binding_dom b) g Set.empty
 
+// Control bookkeeping remains Pulse-local. A cleanup delimiter must not hide
+// ordinary F* variables, since its handler can still mention enclosing values.
 let binding_extend_env (f: R.env) : binding -> R.env = function
   | BindingVar { n; x; ty } -> R.push_binding f { ppname = n.name; uniq = x; sort = ty }
   | BindingGotoLabel .. | BindingPost .. | BindingCleanupBoundary -> f
@@ -100,9 +109,15 @@ let push_binding (g:env) (x:var { freshv g x }) (n:ppname) (ty:typ) =
 let push_goto (g: env) (x: var { freshv g x }) (n: ppname) (c: comp_st) =
   push g (BindingGotoLabel { x; n; post = c; is_exception = false })
 
+// Ordinary return/break labels are skipped by exception_label; only scopes
+// introduced by the exception checker set this flag.
 let push_exception (g: env) (x: var { freshv g x }) (n: ppname) (c: comp_st) =
   push g (BindingGotoLabel { x; n; post = c; is_exception = true })
 
+// Bindings are newest first. Select a destination without accumulating cleanup
+// here: check_raise subsequently calls lookup_goto for the complete obligation.
+// A local try inside cleanup is visible before the boundary; outer scopes are
+// not, so an unmatched/re-raised payload must be proved impossible there.
 let rec exception_label (bs:env_bindings) : option (ppname & var) =
   match bs with
   | BindingGotoLabel { n; x; is_exception = true } :: _ -> Some (n, x)
@@ -131,8 +146,13 @@ val lookup_push g x (b: binding {dom g `Set.disjoint` binding_dom b}) :
     | BindingGotoLabel .. | BindingPost .. | BindingCleanupBoundary -> lookup g x
   )) [SMTPat (lookup (push g b) x)]
 
+// Find a reachable label and conjoin each crossed BindingPost to its pre.
+// Stop at the label, so locals surrounding an inner handler are NOT reclaimed
+// when jumping to it. No explicit goto may cross a cleanup boundary either.
 val lookup_goto (g: env) (x: var) : option (ppname & comp_st)
 
+// Keep the logical lookup equation aligned with the implementation's delimiter:
+// unlike ordinary variable lookup, a boundary makes all older labels invisible.
 val lookup_goto_push g x (b: binding {dom g `Set.disjoint` binding_dom b}) :
   Lemma (lookup_goto (push g b) x == (match b with
     | BindingVar .. -> lookup_goto g x

@@ -137,6 +137,9 @@ the previous result value is stored in `cond.result` instead.
 *)
 let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option st_term) =
   match t.term with
+  // Conditionalization only knows checked lexical jumps. Interpreting raw
+  // exception syntax here would bypass payload/ownership and cleanup checks;
+  // Exceptions must have lowered it to labels, gotos, and outcome matches.
   | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
     fail g (Some t.range) "Internal error: exceptions must be checked before eliminating jumps"
   | Tm_Return ..
@@ -327,6 +330,9 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
 
 let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
   match t.term with
+  // Enforce the same phase boundary even when no enclosing label invokes
+  // conditionalize. A residual exception node is a checker bug, not an
+  // unsupported runtime exception to silently retain for extraction.
   | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
     fail g (Some t.range) "Internal error: exceptions must be checked before eliminating jumps"
   | Tm_Return ..
