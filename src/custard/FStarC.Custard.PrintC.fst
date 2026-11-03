@@ -5983,25 +5983,34 @@ let cherry_iarr_helpers () : ML (list string & list string) =
        (bounds "index" ^
         "  " ^ decl_of t "x" ^ " = ((" ^ s ^ " *)a)->data[cherry_iarray_pos(i)];\n" ^
         (if counted then "  " ^ op "inc" "x" ^ "\n" else "") ^ "  return x;\n");
-    (* A shared or persistent array is copied, as is one with another
-       reference: the copy takes a reference to every element, and the
-       original is released after, so that no element dies in between. *)
+    (* A persistent array is copied, as is one with another reference: the
+       copy takes a reference to every element, and the original is
+       released after, so that no element dies in between.  A shared array
+       of which this is the only reference -- one just taken out of a
+       global [ref], say -- is updated in place, and then the element
+       stored into it has to be made shared ([share_v]). *)
     let unique_or_copy (cap:string) : string =
       "  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
       "  size_t n = c->h.size;\n" ^
+      (if counted then "  bool sh = false;\n" else "") ^
       "  if (!cherry_is_unique(a)) {\n" ^
-      "    " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, " ^ cap ^ ");\n" ^
-      "  " ^ copy ^
-      "    " ^ p ^ "_dec(a);\n    c = d;\n  }\n" in
+      "    if (cherry_is_sole_shared(a)) {\n" ^
+      (if counted then "      sh = true;\n" else "") ^
+      "    } else {\n" ^
+      "      " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, " ^ cap ^ ");\n" ^
+      "    " ^ copy ^
+      "      " ^ p ^ "_dec(a);\n      c = d;\n    }\n  }\n" in
+    let share_v : string =
+      if counted then "  if (sh) " ^ rc_fn "mark" t ^ "(v, CHERRY_SHARE);\n" else "" in
     fn ("static inline cherry_iarray " ^ p ^ "_upd(cherry_iarray a, cherry_int i, " ^ decl_of t "v" ^ ")")
-       (bounds "upd" ^ unique_or_copy "n" ^
+       (bounds "upd" ^ unique_or_copy "n" ^ share_v ^
         "  size_t k = cherry_iarray_pos(i);\n" ^
         (if counted then "  " ^ decl_of t "old" ^ " = c->data[k];\n" else "") ^
         "  c->data[k] = v;\n" ^
         (if counted then "  " ^ op "dec" "old" ^ "\n" else "") ^
         "  return (cherry_iarray)c;\n");
     fn ("static inline cherry_iarray " ^ p ^ "_push(cherry_iarray a, " ^ decl_of t "v" ^ ")")
-       (unique_or_copy "2 * n + 1" ^
+       (unique_or_copy "2 * n + 1" ^ share_v ^
         "  if (n == c->h.cap) {\n" ^
         "    size_t cap = 2 * n + 1;\n" ^
         "    c = (" ^ s ^ " *)realloc(c, sizeof(" ^ s ^ ") + cap * sizeof(c->data[0]));\n" ^
