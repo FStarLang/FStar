@@ -6,7 +6,7 @@ open FStar.All
 (* A global whose value was shared before the global was computed: [a] is
    stored into a global reference, which marks it shared, and taken out
    again, so that the global holds its only reference.  Persisting the
-   global leaves it shared (cherry.h, [cherry_mark_ref]) but pins it: a
+   global makes it persistent even so (cherry.h, [cherry_mark_ref]): a
    global is read without an inc, so [set g] hands the global's reference
    to [upd], which would otherwise take it for the only one and change the
    global in place, or with the count dropping to zero free it. *)

@@ -188,25 +188,18 @@ static inline bool cherry_dec_ref(cherry_obj *o) {
 #define CHERRY_PERSIST 1
 
 /* Mark a cell; true when that changed it, so that its fields have to be
-   marked too.  Only a cell of this thread's own (a positive count) changes.
-   A shared one is left shared even when persisting: other threads may be
-   counting it already, so zeroing its count would race with them.  It is
-   pinned instead: its count is moved CHERRY_PINNED further from zero, at
-   once, so that it never comes back to -1 or 0.  A global's value is read
-   without an inc, like a persistent one, so the reference the global holds
-   may be given away any number of times; pinned, the cell is neither freed
-   nor taken for a sole reference ([cherry_is_sole_shared]) then.  What it
-   reaches is already shared. */
-#define CHERRY_PINNED (1 << 29)
-
+   marked too.  Sharing changes only a cell of this thread's own (a positive
+   count).  Persisting changes every cell not persistent yet, shared ones
+   too: a global's value is read without an inc, so it must never be freed
+   nor taken for a sole reference ([cherry_is_sole_shared]), however many
+   times the reference the global holds is given away.  Zeroing a shared
+   count with a plain store assumes that no other thread is counting the
+   cell at the same time: globals are initialized before the program starts
+   any thread. */
 static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
   if (cherry_is_scalar(o)) return false;
   int32_t rc = cherry_rc_load(o);
-  if (rc <= 0) {
-    if (rc < 0 && mode == CHERRY_PERSIST && rc > -CHERRY_PINNED)
-      __atomic_fetch_sub(&o->rc, CHERRY_PINNED, __ATOMIC_RELAXED);
-    return false;
-  }
+  if (rc == 0 || (rc < 0 && mode == CHERRY_SHARE)) return false;
   cherry_rc_store(o, mode == CHERRY_PERSIST ? 0 : -rc);
   return true;
 }
