@@ -24,8 +24,8 @@ let sigelt_name (se : FStarC_Reflection_Types.sigelt) : ((FStarC_Tactics_Types.p
   (let tmp = (FStarC_Reflection_V2_Builtins.inspect_sigelt se) in
   (match tmp with
     | (FStarC_Reflection_V2_Data.Sg_Let (tmp1, lbs)) -> (match lbs with
-        | (lb :: []) -> (Obj.magic ((fun tmp2 -> (let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_lb lb) in
-          (tmp3).FStarC_Reflection_V2_Data.lb_fv))))
+        | (lb :: []) -> (fun tmp2 -> (let tmp3 = (FStarC_Reflection_V2_Builtins.inspect_lb lb) in
+          (tmp3).FStarC_Reflection_V2_Data.lb_fv))
         | tmp2 -> (FStar_Tactics_V2_Derived.fail "GGG1")
       )
     | (FStarC_Reflection_V2_Data.Sg_Val (nm, tmp1, tmp2)) -> (Obj.magic ((fun tmp3 -> (FStarC_Reflection_V2_Builtins.pack_fv nm))))
@@ -33,24 +33,24 @@ let sigelt_name (se : FStarC_Reflection_Types.sigelt) : ((FStarC_Tactics_Types.p
   ))
 
 let rec res_typ (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_Arrow (tmp, c)) -> (let tmp1 = (FStarC_Reflection_V2_Data.is_tot_comp c) in
       let tmp2 = (if tmp1 then (let tmp2 = (c).FStarC_Reflection_V2_Data.result_typ in
         (res_typ tmp2)) else (fun tmp2 -> t)) in
       (tmp2 ps))
     | tmp -> t
-  )))))
+  )))
 
 let rec head_of (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_Types.fv) option) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_FVar (fv)) -> (Some (fv))
     | (FStar_Tactics_NamedView.Tv_UInst (fv, tmp)) -> (Some (fv))
     | (FStar_Tactics_NamedView.Tv_App (h, tmp)) -> ((head_of h) ps)
     | (FStar_Tactics_NamedView.Tv_Refine (b, tmp)) -> ((head_of ((b : FStar_Tactics_NamedView.binder)).FStar_Tactics_NamedView.sort) ps)
     | v -> None
-  )))))
+  )))
 
 let is_class_name (f : FStarC_Reflection_Types.fv) (ps : (FStarC_Tactics_Types.proofstate ref)) : bool =
   (let x = (FStar_Tactics_V2_Derived.cur_env () ps) in
@@ -106,7 +106,7 @@ let build_glb_map (all_glb : (FStarC_Reflection_Types.sigelt) list) (ps : (FStar
     let tmp2 = (FStarC_Reflection_V2_Builtins.sigelt_attrs se) in
     let tmp3 = (FStar_List_Tot_Base.existsb tmp1 tmp2) in
     { inst_name = x; noinst = tmp3 }))) in
-  let x1 = (FStar_Tactics_Util.concatMap (Obj.magic ((fun se -> (Obj.magic ((fun ps1 -> (let x1 = (x se ps1) in
+  let x1 = (FStar_Tactics_Util.concatMap (fun se -> (fun ps1 -> (let x1 = (x se ps1) in
     let x2 = (FStar_Tactics_V2_Derived.try_with (fun tmp -> (fun ps2 -> (let x2 = (FStar_Tactics_V2_Derived.cur_env () ps2) in
       let x3 = (FStarC_Tactics_V2_Builtins.tc x2 (FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_FVar ((x1).inst_name))) ps2) in
       (Some (x3))))) (fun tmp -> (fun tmp1 -> None)) ps1) in
@@ -118,7 +118,7 @@ let build_glb_map (all_glb : (FStarC_Reflection_Types.sigelt) list) (ps : (FStar
           | None -> []
           | (Some (cvf)) -> ({ class_name = cvf; instances = (x1 :: []) } :: [])
         ))
-    )))))))) all_glb ps) in
+    )))) all_glb ps) in
   (compact x1 ps))
 
 type st_t = {
@@ -133,18 +133,18 @@ type st_t = {
 exception Next
 
 let debug (st : st_t) (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> string))) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (if (st).dbg then (Obj.magic ((fun ps -> (let x = (f () ps) in
-  (FStarC_Tactics_V2_Builtins.print x ps))))) else (fun tmp -> ()))
+  (if (st).dbg then (fun ps -> (let x = (f () ps) in
+  (FStarC_Tactics_V2_Builtins.print x ps))) else (fun tmp -> ()))
 
 let run (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'a))) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
   (t ())
 
 let op_Greater_Greater_Greater (t1 : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'a))) (t2 : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'a))) (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
-  (FStar_Tactics_V2_Derived.try_with (fun tmp1 -> (t1 ())) (Obj.magic ((fun tmp1 -> (match tmp1 with
+  (FStar_Tactics_V2_Derived.try_with (fun tmp1 -> (t1 ())) (fun tmp1 -> (match tmp1 with
     | Next -> (t2 ())
-    | e -> (Obj.magic ((fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core e ps));
-      (failwith "Prims.magic")))))
-  )))))
+    | e -> (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core e ps));
+      (failwith "Prims.magic")))
+  )))
 
 let rec unrefine (t : FStar_Tactics_NamedView.named_term_view) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
   (match t with
@@ -158,7 +158,7 @@ let rec unrefine (t : FStar_Tactics_NamedView.named_term_view) : ((FStarC_Tactic
   )
 
 let try_trivial (g : FStarC_Reflection_Types.term) (k : (st_t -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect g ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect g ps) in
   let x1 = (unrefine x ps) in
   let x2 = (FStar_Tactics_V2_SyntaxHelpers.hua x1 ps) in
   let tmp1 = (match x2 with
@@ -172,7 +172,7 @@ let try_trivial (g : FStarC_Reflection_Types.term) (k : (st_t -> ((FStarC_Tactic
       | tmp1 -> (fun ps1 -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core Next ps1));
         ()))
     ) in
-  (tmp1 ps)))))
+  (tmp1 ps)))
 
 let rec unembed_list (u : (FStarC_Reflection_Types.term -> ((FStarC_Tactics_Types.proofstate ref) -> ('a) option))) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> (('a) list) option) =
   (fun ps -> (let x = (FStar_Tactics_V2_SyntaxHelpers.hua t ps) in
@@ -227,8 +227,8 @@ type tc_goal = {
 
 let rec first (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___b))) (l : ('u___a) list) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___b) =
   (match l with
-    | [] -> (Obj.magic ((fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core Next ps));
-      (failwith "Prims.magic")))))
+    | [] -> (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core Next ps));
+      (failwith "Prims.magic")))
     | (x :: xs) -> (run (op_Greater_Greater_Greater (fun tmp -> (f x)) (fun tmp -> (first f xs))))
   )
 
@@ -240,10 +240,10 @@ let type_matches_class (cfv : FStarC_Reflection_Types.fv) (t : FStarC_Reflection
   ))
 
 let skip (st : st_t) (s : string) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
-  (Obj.magic ((fun ps -> (let tmp = (if (st).dbg then (FStarC_Tactics_V2_Builtins.print (Prims.strcat "skip: " s)) else (fun tmp -> ())) in
+  (fun ps -> (let tmp = (if (st).dbg then (FStarC_Tactics_V2_Builtins.print (Prims.strcat "skip: " s)) else (fun tmp -> ())) in
   (tmp ps);
   (ignore (FStarC_Tactics_V2_Builtins.raise_core Next ps));
-  (failwith "Prims.magic")))))
+  (failwith "Prims.magic")))
 
 let orskip (st : st_t) (s : string) (k : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'a))) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
   (FStar_Tactics_V2_Derived.try_with (fun tmp -> (k ())) (fun tmp -> (skip st s)))
@@ -292,13 +292,13 @@ let rec global__go (st : st_t) (g : tc_goal) (k : (st_t -> ((FStarC_Tactics_Type
   (match l with
     | [] -> (skip st "no more global instances")
     | ({ class_name = class_name; instances = instances; _ } :: rest) -> (fun ps -> (let x = (type_matches_class (g).head_fv (FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_FVar (class_name))) ps) in
-      ((if x then (first (fun i -> (trywith st g (FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_FVar ((i).inst_name))) (i).noinst k)) instances) else ((global__go st g k) rest)) ps)))
+      ((if x then (first (fun i -> (trywith st g (FStar_Tactics_NamedView.pack (FStar_Tactics_NamedView.Tv_FVar ((i).inst_name))) (i).noinst k)) instances) else (global__go st g k rest)) ps)))
   )
 
 let global (st : st_t) (g : tc_goal) (k : (st_t -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (fun ps -> ((debug st (fun tmp1 -> (fun ps1 -> (let x = (FStarC_Tactics_V2_Builtins.term_to_string (g).g ps1) in
   (Prims.strcat "global, goal = " x)))) ps);
-  (((global__go st g k) (st).glb) ps)))
+  ((global__go st g k (st).glb) ps)))
 
 let try_instances (st : st_t) (k : (st_t -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (fun ps -> (let x = (FStar_Tactics_V2_Derived.cur_goal () ps) in
@@ -353,9 +353,9 @@ let rec tac_unrefine (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) :
   (tmp2 ps))
 
 let try_unrefining (st : st_t) (k : (st_t -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (tac_unrefine () ps) in
+  (fun ps -> (let x = (tac_unrefine () ps) in
   (if x then ((k st) ps) else ((ignore (FStarC_Tactics_V2_Builtins.raise_core Next ps));
-  ()))))))
+  ()))))
 
 let rec tcresolve' (st : st_t) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (fun ps -> ((ignore (if (Prims.op_Less_Equals (st).fuel Prims.int_zero) then (let x = (st).warned_oof in
@@ -399,7 +399,7 @@ let u___tcresolve (dbg : bool) : ((FStarC_Tactics_Types.proofstate ref) -> unit)
       dbg = dbg } in
   (FStar_Tactics_V2_Derived.try_with (fun tmp2 -> (fun ps1 -> ((tcresolve' x7 ps1);
   (debug x7 (fun tmp3 -> (fun ps2 -> (let x8 = (FStarC_Tactics_V2_Builtins.term_to_string x ps2) in
-  (Prims.strcat "Solved to:\n\t" x8)))) ps1)))) (Obj.magic ((fun tmp2 -> (match tmp2 with
+  (Prims.strcat "Solved to:\n\t" x8)))) ps1)))) (fun tmp2 -> (match tmp2 with
     | Next -> (fun ps1 -> (let x8 = (FStar_Tactics_V2_Derived.cur_goal () ps1) in
       let x9 = (FStarC_Tactics_V2_Builtins.term_to_doc x8 ps1) in
       let x10 = (fquotes x9) in
@@ -409,7 +409,7 @@ let u___tcresolve (dbg : bool) : ((FStarC_Tactics_Types.proofstate ref) -> unit)
     | (FStarC_Tactics_Common.TacticFailure ((msg, r))) -> (FStar_Tactics_V2_Derived.fail_doc_at (op_At ((FStar_Errors_Msg.text "Typeclass resolution failed.") :: []) msg) r)
     | e -> (fun ps1 -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core e ps1));
       ()))
-  )))) ps)))
+  )) ps)))
 
 let u___plugin___tcresolve : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.Typeclasses.__tcresolve" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.Typeclasses.__tcresolve (plugin)" u___tcresolve FStarC_Syntax_Embeddings.e_bool FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
@@ -510,7 +510,7 @@ let mk_class (nm : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Re
                   (Prims.strcat "cod = " x8)))) ps);
                   let x8 = (Prims.strcat "__proj__Mk" (Prims.strcat x5 "__item__")) in
                   let x9 = (filter_no_method_binders bs ps) in
-                  (FStar_Tactics_Util.map (Obj.magic ((fun b -> (Obj.magic ((fun ps1 -> (let x10 = (FStar_Tactics_V2_Derived.name_of_binder b ps1) in
+                  (FStar_Tactics_Util.map (fun b -> (fun ps1 -> (let x10 = (FStar_Tactics_V2_Derived.name_of_binder b ps1) in
                   (debug' (fun tmp2 -> (fun tmp3 -> (Prims.strcat "processing method " x10))) ps1);
                   let x11 = (FStar_Tactics_V2_Derived.cur_module () ps1) in
                   let x12 = (FStarC_Reflection_V2_Builtins.pack_fv (op_At x11 (x10 :: []))) in
@@ -577,7 +577,7 @@ let mk_class (nm : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Re
                       (tmp3 :: (let tmp4 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp4 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Typeclasses" :: ("tcmethod" :: []))))) in
                         (FStarC_Reflection_V2_Data.Tv_FVar (tmp4)))) in
                       (tmp4 :: x19)))) (b).FStar_Tactics_NamedView.attrs) tmp2))
-                  )))))))) x9 ps))
+                  )))) x9 ps))
               ))
           ))
       ))

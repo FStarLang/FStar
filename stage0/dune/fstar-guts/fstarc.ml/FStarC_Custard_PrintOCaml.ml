@@ -22,6 +22,52 @@ let module_name_of_unit (u : string) : string =
   (let tmp = (sanitize u) in
   (uppercase_first tmp))
 
+let current_module : ((string) option ref) =
+  (ref None)
+
+let externals : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let qualifiers : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let realized : ((unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let at_home : ((unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let exn_idents : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let extern_ctors : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let tuples : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let record_params : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let record_labels : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let extern_types : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let reserved_top : ((string) list ref) =
+  (ref [])
+
 let reject_target_only_types (p : (FStarC_Custard_Syntax.decl) list) : unit =
   (BatList.iter (fun d -> (match d with
     | (FStarC_Custard_Syntax.DType (ty_)) -> (BatList.iter (fun f -> (match f with
@@ -59,10 +105,6 @@ let realization_of (n : FStarC_Custard_Syntax.name) : string =
       let tmp2 = (Prims.strcat "." tmp1) in
       (Prims.strcat (BatString.concat "_" ns) tmp2))
   )
-
-let at_home : ((unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
 
 let is_at_home (n : FStarC_Custard_Syntax.name) : bool =
   (if (match (n).FStarC_Custard_Syntax.spec with
@@ -109,23 +151,12 @@ let is_tuple_type (n : FStarC_Custard_Syntax.name) : bool =
 let label_key (n : FStarC_Custard_Syntax.name) (f : string) : string =
   (Prims.strcat (BatString.concat "." (n).FStarC_Custard_Syntax.ns) (Prims.strcat "|" f))
 
-let externals : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
-
-let qualifiers : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
-
 let ocaml_module_ident (n : FStarC_Custard_Syntax.name) : string =
   (let tmp = (is_at_home n) in
   (if tmp then (let tmp1 = (sanitize (n).FStarC_Custard_Syntax.id) in
   (uppercase_first tmp1)) else (let tmp1 = (FStarC_Custard_Syntax.mangled_name n) in
   let tmp2 = (sanitize tmp1) in
   (uppercase_first tmp2))))
-
-let current_module : ((string) option ref) =
-  (ref None)
 
 let qualifier (n : FStarC_Custard_Syntax.name) : (string) option =
   (let tmp = (!(qualifiers)) in
@@ -148,30 +179,6 @@ let qualify (n : FStarC_Custard_Syntax.name) (s : string) : string =
 let ocaml_module_path (n : FStarC_Custard_Syntax.name) : string =
   (let tmp = (ocaml_module_ident n) in
   (qualify n tmp))
-
-let extern_types : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
-
-let realized : ((unit) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
-
-let tuples : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
-
-let record_params : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
-
-let record_labels : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
-
-let exn_idents : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
 
 let extern_exn (e : FStarC_Custard_Syntax.dexn) : (string) option =
   (List.find_map (fun tmp -> (match tmp with
@@ -207,10 +214,6 @@ let ocaml_ctor_ident (n : FStarC_Custard_Syntax.name) : string =
 
 let predefined_ctors : (string) list =
   ("Out_of_memory" :: ("Sys_error" :: ("Failure" :: ("Invalid_argument" :: ("End_of_file" :: ("Division_by_zero" :: ("Not_found" :: ("Match_failure" :: ("Stack_overflow" :: ("Sys_blocked_io" :: ("Assert_failure" :: ("Undefined_recursive_module" :: ("Exit" :: ("None" :: ("Some" :: ("Nil" :: ("Cons" :: [])))))))))))))))))
-
-let extern_ctors : ((string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
 
 let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (p : (FStarC_Custard_Syntax.decl) list) : unit =
   (let tbl = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50)))) in
@@ -467,9 +470,6 @@ let build_tables (homes : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_mak
   )) p);
   ((extern_ctors) := ext_ctors);
   ((exn_idents) := exn_tbl))
-
-let reserved_top : ((string) list ref) =
-  (ref [])
 
 let reserve_top (p : (FStarC_Custard_Syntax.decl) list) : unit =
   (let tmp = ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (match d with
@@ -829,7 +829,7 @@ let tuple_index (f : string) : Prims.int =
 
 let rec by_position__go (k : Prims.int) (at : (Prims.int -> string)) (i : Prims.int) : (string) list =
   (if (Prims.op_Greater i k) then [] else (let tmp = (at i) in
-  let tmp1 = ((by_position__go k at) (Prims.op_Plus i Prims.int_one)) in
+  let tmp1 = (by_position__go k at (Prims.op_Plus i Prims.int_one)) in
   (tmp :: tmp1)))
 
 let by_position (k : Prims.int) (dflt : string) (fs : ((string * string)) list) : (string) list =
@@ -842,7 +842,7 @@ let by_position (k : Prims.int) (dflt : string) (fs : ((string * string)) list) 
       | (Some (s)) -> s
       | None -> dflt
     ))) in
-  ((by_position__go k at) Prims.int_one))
+  (by_position__go k at Prims.int_one))
 
 let rec pattern (p : FStarC_Custard_Syntax.pat) : string =
   (match p with

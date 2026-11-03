@@ -151,7 +151,7 @@ let rec inspect_repl_stack__matching_prefix (push_kind : FStarC_Interactive_Ide_
   (match (entries, ds) with
     | ([], []) -> (return (lookups, accum))
     | ((e :: entries1), (d :: ds1)) -> (match (repl_task_of_entry e) with
-        | FStarC_Interactive_Ide_Types.Noop -> ((inspect_repl_stack__matching_prefix push_kind with_symbols write_full_buffer_fragment_progress push_decls_) accum lookups entries1 (d :: ds1))
+        | FStarC_Interactive_Ide_Types.Noop -> (inspect_repl_stack__matching_prefix push_kind with_symbols write_full_buffer_fragment_progress push_decls_ accum lookups entries1 (d :: ds1))
         | (FStarC_Interactive_Ide_Types.PushFragment ((FStar_Pervasives.Inl (frag)), tmp, tmp1, tmp2)) -> (let tmp3 = (pop_entries (e :: entries1)) in
           (op_let_Bang tmp3 (fun pops -> (let tmp4 = (push_decls_ (d :: ds1)) in
           (op_let_Bang tmp4 (fun pushes -> (return ((BatList.append lookups (BatList.append pops pushes)), accum))))))))
@@ -162,7 +162,7 @@ let rec inspect_repl_stack__matching_prefix (push_kind : FStarC_Interactive_Ide_
           (if tmp2 then (match d with
             | (d1, s) -> ((write_full_buffer_fragment_progress (FragmentSuccess (d1, s, pk)));
               (if with_symbols then (let tmp3 = (dump_symbols d1) in
-              (op_let_Bang tmp3 (fun lookups' -> ((inspect_repl_stack__matching_prefix push_kind with_symbols write_full_buffer_fragment_progress push_decls_) (BatList.append issues accum) (BatList.append lookups' lookups) entries1 ds1)))) else ((inspect_repl_stack__matching_prefix push_kind with_symbols write_full_buffer_fragment_progress push_decls_) (BatList.append issues accum) lookups entries1 ds1)))
+              (op_let_Bang tmp3 (fun lookups' -> (inspect_repl_stack__matching_prefix push_kind with_symbols write_full_buffer_fragment_progress push_decls_ (BatList.append issues accum) (BatList.append lookups' lookups) entries1 ds1)))) else (inspect_repl_stack__matching_prefix push_kind with_symbols write_full_buffer_fragment_progress push_decls_ (BatList.append issues accum) lookups entries1 ds1)))
           ) else (let tmp3 = (pop_entries (e :: entries1)) in
           (op_let_Bang tmp3 (fun pops -> (let tmp4 = (push_decls_ (d :: ds1)) in
           (op_let_Bang tmp4 (fun pushes -> (return ((BatList.append pops (BatList.append lookups pushes)), accum))))))))))
@@ -185,7 +185,7 @@ let inspect_repl_stack (s : ((((Prims.int * Prims.int * (Prims.int * Prims.int *
     | None -> (let tmp1 = (push_decls_ ds) in
       (op_let_Bang tmp1 (fun ds1 -> (return (ds1, [])))))
     | (Some ((u__prefix, first_push, rest))) -> (let entries1 = (first_push :: rest) in
-      let tmp1 = ((inspect_repl_stack__matching_prefix push_kind with_symbols write_full_buffer_fragment_progress push_decls_) [] [] entries1 ds) in
+      let tmp1 = (inspect_repl_stack__matching_prefix push_kind with_symbols write_full_buffer_fragment_progress push_decls_ [] [] entries1 ds) in
       (op_let_Bang tmp1 (fun tmp2 -> (match tmp2 with
         | (queries, json) -> (return (queries, json))
       ))))
@@ -219,7 +219,7 @@ let run_full_buffer (st : FStarC_Interactive_Ide_Types.repl_state) (qid : string
       | tmp1 -> decls
     )) in
   (match parse_result with
-    | (FStarC_Parser_Frontend.IncrementalFragment ((decls, tmp1, err_opt))) -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) decls)) in
+    | (FStarC_Parser_Frontend.IncrementalFragment ((decls, tmp1, err_opt))) -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) decls)) in
       (FStarC_Format.print1 "Parsed %s declarations\n" tmp2);
       (match (full, decls) with
         | (FStarC_Interactive_Ide_Types.ReloadDeps, (d :: tmp3)) -> (let tmp4 = (!(FStarC_Interactive_PushHelper.repl_stack)) in

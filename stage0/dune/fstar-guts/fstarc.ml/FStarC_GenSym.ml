@@ -4,25 +4,16 @@
 let gensym_st : (Prims.int ref) =
   (ref Prims.int_zero)
 
-let with_frozen_gensym (f : (unit -> 'u___a)) : 'u___a =
-  (let v = (!(gensym_st)) in
-  let r = (try (f ()) with
-      | u__cexn -> (((gensym_st) := v);
-        (raise u__cexn))
-    ) in
-  ((gensym_st) := v);
-  r)
-
-let next_id (tmp : unit) : Prims.int =
-  (let r = (!(gensym_st)) in
-  ((gensym_st) := (Prims.op_Plus r Prims.int_one));
-  r)
-
 let get_gensym_state (tmp : unit) : Prims.int =
   (!(gensym_st))
 
 let set_gensym_state (v : Prims.int) : unit =
   ((gensym_st) := v)
+
+let next_id (tmp : unit) : Prims.int =
+  (let r = (!(gensym_st)) in
+  ((gensym_st) := (Prims.op_Plus r Prims.int_one));
+  r)
 
 let reset_gensym (tmp : unit) : unit =
   ((gensym_st) := Prims.int_zero)

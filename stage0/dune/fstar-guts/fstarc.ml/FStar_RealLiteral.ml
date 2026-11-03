@@ -23,6 +23,12 @@ let to_string (r : real_literal_repr) : string =
   let pad = (if (Prims.op_Greater_Equals (ndigits fpart) k) then Prims.int_zero else (Prims.op_Minus k (ndigits fpart))) in
   (Prims.strcat (if (Prims.op_Less (r).mantissa Prims.int_zero) then "-" else "") (Prims.strcat (Prims.string_of_int (Prims.op_Slash m p)) (Prims.strcat "." (if ((=) k Prims.int_zero) then "0" else (zeros pad (Prims.string_of_int fpart)))))))
 
+let rec strip (m : Prims.int) (e : Prims.int) : real_literal_repr =
+  (if (((=) e Prims.int_zero) || ((<>) (Prims.op_Percent m (Prims.of_int (10))) Prims.int_zero)) then { mantissa = m; exponent = e } else (strip (Prims.op_Slash m (Prims.of_int (10))) (Prims.op_Plus e Prims.int_one)))
+
+let mk (m : Prims.int) (e : Prims.int) : real_literal_repr =
+  (if (Prims.op_Greater_Equals e Prims.int_zero) then { mantissa = (Prims.op_Star m (pow10 e)); exponent = Prims.int_zero } else (strip m e))
+
 let compare (r1 : real_literal_repr) (r2 : real_literal_repr) : Prims.int =
   (let e = (if (Prims.op_Less_Equals (r1).exponent (r2).exponent) then (r1).exponent else (r2).exponent) in
   let m1 = (Prims.op_Star (r1).mantissa (pow10 (Prims.op_Minus (r1).exponent e))) in
@@ -31,10 +37,4 @@ let compare (r1 : real_literal_repr) (r2 : real_literal_repr) : Prims.int =
 
 let of_int (i : Prims.int) : real_literal_repr =
   { mantissa = i; exponent = Prims.int_zero }
-
-let rec strip (m : Prims.int) (e : Prims.int) : real_literal_repr =
-  (if (((=) e Prims.int_zero) || ((<>) (Prims.op_Percent m (Prims.of_int (10))) Prims.int_zero)) then { mantissa = m; exponent = e } else (strip (Prims.op_Slash m (Prims.of_int (10))) (Prims.op_Plus e Prims.int_one)))
-
-let mk (m : Prims.int) (e : Prims.int) : real_literal_repr =
-  (if (Prims.op_Greater_Equals e Prims.int_zero) then { mantissa = (Prims.op_Star m (pow10 e)); exponent = Prims.int_zero } else (strip m e))
 

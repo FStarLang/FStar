@@ -14,6 +14,15 @@ type range = {
 
 type t = range
 
+let dummy_pos : Prims.int =
+  Prims.int_zero
+
+let dummy_rng : rng =
+  { file_name = "dummy"; start_pos = dummy_pos; end_pos = dummy_pos }
+
+let dummyRange : range =
+  { def_range = dummy_rng; use_range = dummy_rng }
+
 let col_limit : Prims.int =
   (Prims.of_int (65536))
 
@@ -23,14 +32,20 @@ let pos_line (p : Prims.int) : Prims.int =
 let pos_col (p : Prims.int) : Prims.int =
   (Prims.op_Percent p col_limit)
 
+let def_range (r : range) : rng =
+  (r).def_range
+
 let use_range (r : range) : rng =
   (r).use_range
 
-let dummy_pos : Prims.int =
-  Prims.int_zero
+let json_of_pos (r : Prims.int) : FStarC_Json.json =
+  (FStarC_Json.JsonAssoc ((("line", (FStarC_Json.JsonInt ((pos_line r)))) :: (("col", (FStarC_Json.JsonInt ((pos_col r)))) :: []))))
 
-let dummy_rng : rng =
-  { file_name = "dummy"; start_pos = dummy_pos; end_pos = dummy_pos }
+let json_of_rng (r : rng) : FStarC_Json.json =
+  (FStarC_Json.JsonAssoc ((("file_name", (FStarC_Json.JsonStr ((r).file_name))) :: (("start_pos", (json_of_pos (r).start_pos)) :: (("end_pos", (json_of_pos (r).end_pos)) :: [])))))
+
+let json_of_range (r : range) : FStarC_Json.json =
+  (FStarC_Json.JsonAssoc ((("def", (json_of_rng (r).def_range)) :: (("use", (json_of_rng (r).use_range)) :: []))))
 
 let set_use_range (r2 : range) (use_rng : rng) : range =
   (if ((<>) use_rng dummy_rng) then { def_range = (if ((=) (r2).def_range dummy_rng) then use_rng else (r2).def_range);
@@ -41,9 +56,6 @@ let mk_rng (file_name : string) (start_pos : Prims.int) (end_pos : Prims.int) : 
     start_pos = start_pos;
     end_pos = end_pos }
 
-let dummyRange : range =
-  { def_range = dummy_rng; use_range = dummy_rng }
-
 let max (i : Prims.int) (j : Prims.int) : Prims.int =
   (if (Prims.op_Less i j) then j else i)
 
@@ -51,18 +63,6 @@ let mk_pos (l : Prims.int) (c : Prims.int) : Prims.int =
   (let l1 = (max Prims.int_zero l) in
   let c1 = (max Prims.int_zero c) in
   (Prims.op_Plus (Prims.op_Star l1 col_limit) (if (Prims.op_Greater_Equals c1 col_limit) then (Prims.op_Minus col_limit Prims.int_one) else c1)))
-
-let def_range (r : range) : rng =
-  (r).def_range
-
-let json_of_pos (r : Prims.int) : FStarC_Json.json =
-  (FStarC_Json.JsonAssoc ((("line", (FStarC_Json.JsonInt ((pos_line r)))) :: (("col", (FStarC_Json.JsonInt ((pos_col r)))) :: []))))
-
-let json_of_rng (r : rng) : FStarC_Json.json =
-  (FStarC_Json.JsonAssoc ((("file_name", (FStarC_Json.JsonStr ((r).file_name))) :: (("start_pos", (json_of_pos (r).start_pos)) :: (("end_pos", (json_of_pos (r).end_pos)) :: [])))))
-
-let json_of_range (r : range) : FStarC_Json.json =
-  (FStarC_Json.JsonAssoc ((("def", (json_of_rng (r).def_range)) :: (("use", (json_of_rng (r).use_range)) :: []))))
 
 let range_of_rng (def_rng : rng) (use_rng : rng) : range =
   { def_range = def_rng; use_range = use_rng }

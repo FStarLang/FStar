@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let rec apply_squash_or_lem (d : Prims.int) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (FStar_Tactics_V2_Derived.try_with (fun tmp -> (FStar_Tactics_V2_Derived.apply t)) (fun tmp -> (FStar_Tactics_V2_Derived.try_with (fun tmp1 -> (FStar_Tactics_V2_Derived.apply_lemma t)) (Obj.magic ((fun tmp1 -> (if (Prims.op_Less_Equals d Prims.int_zero) then (FStar_Tactics_V2_Derived.fail "mapply: out of fuel") else (Obj.magic ((fun ps -> (let x = (FStar_Tactics_V2_Derived.cur_env () ps) in
+  (FStar_Tactics_V2_Derived.try_with (fun tmp -> (FStar_Tactics_V2_Derived.apply t)) (fun tmp -> (FStar_Tactics_V2_Derived.try_with (fun tmp1 -> (FStar_Tactics_V2_Derived.apply_lemma t)) (fun tmp1 -> (if (Prims.op_Less_Equals d Prims.int_zero) then (FStar_Tactics_V2_Derived.fail "mapply: out of fuel") else (fun ps -> (let x = (FStar_Tactics_V2_Derived.cur_env () ps) in
   let x1 = (FStarC_Tactics_V2_Builtins.tc x t ps) in
   let x2 = (FStar_Tactics_V2_SyntaxHelpers.collect_arr x1 ps) in
   (match x2 with
@@ -28,7 +28,7 @@ let rec apply_squash_or_lem (d : Prims.int) (t : FStarC_Reflection_Types.term) :
             | tmp2 -> ((FStar_Tactics_V2_Derived.apply t) ps)
           ))
       )))
-  ))))))))))))
+  ))))))))
 
 let mapply0 (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (apply_squash_or_lem (Prims.of_int (10)) t)

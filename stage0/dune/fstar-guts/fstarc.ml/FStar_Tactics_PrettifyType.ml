@@ -11,21 +11,42 @@ type parsed_type =
 let rec u___knot_e_parsed_type (u__thunk : unit) : (parsed_type) FStarC_Syntax_Embeddings_Base.embedding =
   (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Tactics.PrettifyType.parsed_type" (fun tmp -> (match tmp with
     | ("FStar.Tactics.PrettifyType.Atom", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
-      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Atom (tmp3)))))))
+      (match tmp2 with
+        | (Some (x)) -> (Some ((Atom (x))))
+        | None -> None
+      ))
     | ("FStar.Tactics.PrettifyType.Tuple2", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (u___knot_e_parsed_type ()) in
       let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp3 tmp1) in
-      (FStarC_Option.bind tmp4 (fun tmp5 -> (let tmp6 = (u___knot_e_parsed_type ()) in
-      let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp6 tmp2) in
-      (FStarC_Option.bind tmp7 (fun tmp8 -> (Some ((Tuple2 (tmp5, tmp8))))))))))
+      (match tmp4 with
+        | (Some (x)) -> (let tmp5 = (u___knot_e_parsed_type ()) in
+          let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp5 tmp2) in
+          (match tmp6 with
+            | (Some (x1)) -> (Some ((Tuple2 (x, x1))))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Tactics.PrettifyType.Either", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (u___knot_e_parsed_type ()) in
       let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp3 tmp1) in
-      (FStarC_Option.bind tmp4 (fun tmp5 -> (let tmp6 = (u___knot_e_parsed_type ()) in
-      let tmp7 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp6 tmp2) in
-      (FStarC_Option.bind tmp7 (fun tmp8 -> (Some ((Either (tmp5, tmp8))))))))))
+      (match tmp4 with
+        | (Some (x)) -> (let tmp5 = (u___knot_e_parsed_type ()) in
+          let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp5 tmp2) in
+          (match tmp6 with
+            | (Some (x1)) -> (Some ((Either (x, x1))))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Tactics.PrettifyType.Named", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_string tmp1) in
-      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (u___knot_e_parsed_type ()) in
-      let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp5 tmp2) in
-      (FStarC_Option.bind tmp6 (fun tmp7 -> (Some ((Named (tmp4, tmp7))))))))))
+      (match tmp3 with
+        | (Some (x)) -> (let tmp4 = (u___knot_e_parsed_type ()) in
+          let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed tmp4 tmp2) in
+          (match tmp5 with
+            | (Some (x1)) -> (Some ((Named (x, x1))))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp1 -> None
   )) (fun tmp -> (match tmp with
     | (Atom (tmp1)) -> (let tmp2 = (FStarC_Ident.lid_of_str "FStar.Tactics.PrettifyType.Atom") in
@@ -129,7 +150,7 @@ let get_typ_def (nm : FStarC_Reflection_Types.name) (ps : (FStarC_Tactics_Types.
   ))
 
 let rec parse_prod_type (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> parsed_type) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_V2_SyntaxHelpers.collect_app t ps) in
+  (fun ps -> (let x = (FStar_Tactics_V2_SyntaxHelpers.collect_app t ps) in
   (match x with
     | (hd, args) -> (let x1 = (FStar_Tactics_NamedView.inspect hd ps) in
       let x2 = (x1, args) in
@@ -154,7 +175,7 @@ let rec parse_prod_type (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Ty
           ))
         | tmp -> (Atom (t))
       ))
-  )))))
+  )))
 
 let rec parse_sum_type (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : parsed_type =
   (let x = (FStar_Tactics_V2_SyntaxHelpers.collect_app t ps) in
@@ -576,13 +597,13 @@ let entry (suf : string) (nm : string) : ((FStarC_Tactics_Types.proofstate ref) 
           let x15 = (FStar_List_Tot_Base.op_At x13 x14) in
           let x16 = (mk_right_left x9 ps) in
           let x17 = (FStar_List_Tot_Base.op_At x15 x16) in
-          let x18 = (Obj.magic ((fun se -> (Obj.magic ((fun ps1 -> (let x18 = (FStar_Tactics_Util.filter (fun q -> (fun tmp2 -> (not (match q with
+          let x18 = (fun se -> (fun ps1 -> (let x18 = (FStar_Tactics_Util.filter (fun q -> (fun tmp2 -> (not (match q with
                 | FStarC_Reflection_V2_Data.Unfold_for_unification_and_vcgen -> true
                 | tmp3 -> false
               )))) x ps1) in
             let tmp2 = (FStarC_Reflection_V2_Builtins.set_sigelt_quals x18 se) in
-            (FStarC_Reflection_V2_Builtins.set_sigelt_attrs x1 tmp2)))))))) in
-          let x19 = (Obj.magic ((fun se -> (Obj.magic ((fun ps1 -> (let x19 = (FStar_Tactics_Util.filter (fun q -> (fun tmp2 -> (not ((match q with
+            (FStarC_Reflection_V2_Builtins.set_sigelt_attrs x1 tmp2)))) in
+          let x19 = (fun se -> (fun ps1 -> (let x19 = (FStar_Tactics_Util.filter (fun q -> (fun tmp2 -> (not ((match q with
                 | FStarC_Reflection_V2_Data.Noeq -> true
                 | tmp3 -> false
               ) || (match q with
@@ -591,7 +612,7 @@ let entry (suf : string) (nm : string) : ((FStarC_Tactics_Types.proofstate ref) 
               ))))) x ps1) in
             let tmp2 = (FStarC_Reflection_V2_Builtins.set_sigelt_quals x19 se) in
             (FStarC_Reflection_V2_Builtins.set_sigelt_attrs (FStar_List_Tot_Base.op_At x1 (let tmp3 = (FStarC_Reflection_V2_Builtins.pack_ln (FStarC_Reflection_V2_Data.Tv_Const ((FStarC_Reflection_V2_Data.C_String ("KrmlPrivate"))))) in
-            (tmp3 :: []))) tmp2)))))))) in
+            (tmp3 :: []))) tmp2)))) in
           let x20 = (FStar_Tactics_Util.map x18 x10 ps) in
           let x21 = (FStar_Tactics_Util.map x19 x17 ps) in
           (FStar_List_Tot_Base.op_At x20 x21))

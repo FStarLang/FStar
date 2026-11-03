@@ -53,7 +53,7 @@ let rec sccs__go__pop (onstack : (bool) FStarC_HashTable.FStarC_HashTable_hashtb
     | [] -> acc
     | (w :: rest) -> (((stack) := rest);
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace onstack w false);
-      (if ((=) w v) then (w :: acc) else ((sccs__go__pop onstack stack v) (w :: acc))))
+      (if ((=) w v) then (w :: acc) else (sccs__go__pop onstack stack v (w :: acc))))
   ))
 
 let rec sccs__go (succ : (string -> (string) list)) (index : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (low : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (onstack : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (stack : ((string) list ref)) (next : (Prims.int ref)) (out : (((string) list) list ref)) (get : ((Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t -> (string -> Prims.int))) (v : string) : unit =
@@ -74,7 +74,7 @@ let rec sccs__go (succ : (string -> (string) list)) (index : (Prims.int) FStarC_
       | None -> true
       | tmp8 -> false
     ) in
-  (if tmp8 then (((sccs__go succ index low onstack stack next out get) w);
+  (if tmp8 then ((sccs__go succ index low onstack stack next out get w);
   let tmp9 = (get low w) in
   let tmp10 = (get low v) in
   let tmp11 = (Prims.op_Less tmp9 tmp10) in
@@ -89,7 +89,7 @@ let rec sccs__go (succ : (string -> (string) list)) (index : (Prims.int) FStarC_
   let tmp7 = (get low v) in
   let tmp8 = (get index v) in
   let tmp9 = ((=) tmp7 tmp8) in
-  (if tmp9 then (let tmp10 = ((sccs__go__pop onstack stack v) []) in
+  (if tmp9 then (let tmp10 = (sccs__go__pop onstack stack v []) in
   let tmp11 = (!(out)) in
   let tmp12 = (tmp10 :: tmp11) in
   ((out) := tmp12)) else ()))
@@ -111,7 +111,7 @@ let sccs (nodes : (string) list) (succ : (string -> (string) list)) : ((string) 
       | None -> true
       | tmp1 -> false
     ) in
-  (if tmp1 then ((sccs__go succ index low onstack stack next out get) v) else ()))) nodes);
+  (if tmp1 then (sccs__go succ index low onstack stack next out get v) else ()))) nodes);
   let tmp = (!(out)) in
   (BatList.rev tmp))
 
@@ -221,7 +221,7 @@ let mangle_prefix (tmp : unit) : string =
 let rec avoid__go (foreign : (string) list) (f : string) (fuel : Prims.int) : string =
   (if (((=) fuel Prims.int_zero) || (not (BatList.mem f foreign))) then f else (let tmp = (mangle_prefix ()) in
   let tmp1 = (Prims.strcat tmp f) in
-  ((avoid__go foreign) tmp1 (Prims.op_Minus fuel Prims.int_one))))
+  (avoid__go foreign tmp1 (Prims.op_Minus fuel Prims.int_one))))
 
 let is_shared_library_module (deps : FStarC_Parser_Dep.deps) (m : string) : bool =
   (let tmp = (unit_prefix ()) in
@@ -245,7 +245,7 @@ let file_of (deps : FStarC_Parser_Dep.deps) (m : string) : string =
 
 let avoid (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (m : string) : string =
   (let tmp = (file_of deps m) in
-  ((avoid__go foreign) tmp (Prims.of_int (10))))
+  (avoid__go foreign tmp (Prims.of_int (10))))
 
 let run (deps : FStarC_Parser_Dep.deps) (foreign : (string) list) (prog : (FStarC_Custard_Syntax.decl) list) : ((string * (FStarC_Custard_Syntax.decl) list)) list =
   (let gs = (groups prog) in

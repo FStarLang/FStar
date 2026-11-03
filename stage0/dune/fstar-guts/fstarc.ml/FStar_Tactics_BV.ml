@@ -167,7 +167,7 @@ let rec arith_expr_to_bv (e : FStar_Reflection_V2_Arith.expr) : ((FStarC_Tactics
   )
 
 let arith_to_bv_tac (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (FStar_Tactics_V2_Derived.focus (Obj.magic ((fun tmp1 -> (Obj.magic ((fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.norm ((FStarC_NormSteps.delta_only ("FStar.BV.bvult" :: [])) :: []) ps));
+  (FStar_Tactics_V2_Derived.focus (fun tmp1 -> (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.norm ((FStarC_NormSteps.delta_only ("FStar.BV.bvult" :: [])) :: []) ps));
   let x = (FStar_Tactics_V2_Derived.cur_goal () ps) in
   let x1 = (FStar_Reflection_V2_Formula.term_as_formula x ps) in
   (match x1 with
@@ -180,7 +180,7 @@ let arith_to_bv_tac (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> uni
     | tmp2 -> (let x2 = (FStarC_Tactics_V2_Builtins.term_to_string x ps) in
       let x3 = (Prims.strcat "arith_to_bv_tac: unexpected: " x2) in
       (FStar_Tactics_V2_Derived.fail x3 ps))
-  )))))))))
+  )))))
 
 let u___plugin_arith_to_bv_tac : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.BV.arith_to_bv_tac" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.BV.arith_to_bv_tac (plugin)" arith_to_bv_tac FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))

@@ -9,9 +9,13 @@ let try_assoc (key : string) (d : ((string * FStarC_Json.json)) list) : (FStarC_
   (let tmp = (FStarC_Util.try_find (fun tmp -> (match tmp with
       | (k, tmp1) -> ((=) k key)
     )) d) in
-  (FStarC_Option.map (fun x -> (match x with
-    | (u__1, u__2) -> u__2
-  )) tmp))
+  (match tmp with
+    | (Some (x)) -> (let tmp1 = (match x with
+          | (u__1, u__2) -> u__2
+        ) in
+      (Some (tmp1)))
+    | None -> None
+  ))
 
 exception InvalidQuery of string
 

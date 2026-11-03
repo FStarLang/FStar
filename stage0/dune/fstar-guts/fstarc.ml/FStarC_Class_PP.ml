@@ -11,6 +11,10 @@ let gbrackets (a : PPrint.document) : PPrint.document =
 let fStarC_Class_PP_pp__bool (tmp : bool) : PPrint.document =
   (FStar_Pprint.doc_of_bool tmp)
 
+let fStarC_Class_PP_pp__list_int (tmp : (Prims.int) list) : PPrint.document =
+  (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__int tmp) in
+  (gbrackets tmp1))
+
 let fStarC_Class_PP_pp__string (tmp : string) : PPrint.document =
   (PPrint.dquotes (PPrint.string tmp))
 
@@ -33,8 +37,4 @@ let fStarC_Class_PP_pp__tuple2_list_string_string (tmp : ((string) list * string
       let tmp5 = (PPrint.separate comma_space tmp4) in
       (gparens tmp5))
   )
-
-let fStarC_Class_PP_pp__list_int (tmp : (Prims.int) list) : PPrint.document =
-  (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__int tmp) in
-  (gbrackets tmp1))
 

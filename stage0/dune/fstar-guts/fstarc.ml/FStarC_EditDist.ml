@@ -8,10 +8,10 @@ let rec edit_distance__go (s1 : string) (s2 : string) (lookup : (Prims.int -> (P
     | None -> (let tmp1 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s1 i1) in
       let tmp2 = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s2 i2) in
       let tmp3 = ((=) tmp1 tmp2) in
-      let d = (if tmp3 then ((edit_distance__go s1 s2 lookup set l1 l2) (Prims.op_Plus i1 Prims.int_one) (Prims.op_Plus i2 Prims.int_one)) else (let d1 = ((edit_distance__go s1 s2 lookup set l1 l2) (Prims.op_Plus i1 Prims.int_one) i2) in
-        let d2 = ((edit_distance__go s1 s2 lookup set l1 l2) i1 (Prims.op_Plus i2 Prims.int_one)) in
-        let d3 = ((edit_distance__go s1 s2 lookup set l1 l2) (Prims.op_Plus i1 Prims.int_one) (Prims.op_Plus i2 Prims.int_one)) in
-        (Prims.op_Plus (Custard_Prims.prims_min (Custard_Prims.prims_min d1 d2) d3) Prims.int_one))) in
+      let d = (if tmp3 then (edit_distance__go s1 s2 lookup set l1 l2 (Prims.op_Plus i1 Prims.int_one) (Prims.op_Plus i2 Prims.int_one)) else (let d1 = (edit_distance__go s1 s2 lookup set l1 l2 (Prims.op_Plus i1 Prims.int_one) i2) in
+        let d2 = (edit_distance__go s1 s2 lookup set l1 l2 i1 (Prims.op_Plus i2 Prims.int_one)) in
+        let d3 = (edit_distance__go s1 s2 lookup set l1 l2 (Prims.op_Plus i1 Prims.int_one) (Prims.op_Plus i2 Prims.int_one)) in
+        (Prims.op_Plus (Fstarc_Prims.prims_min (Fstarc_Prims.prims_min d1 d2) d3) Prims.int_one))) in
       (set i1 i2 d);
       d)
   ))))
@@ -32,5 +32,5 @@ let edit_distance (s1 : string) (s2 : string) : Prims.int =
     (FStarC_HashTable.FStarC_HashTable_hashtbl_make__2.replace cache i m))) in
   let l1 = ((fun s -> Z.of_int (BatUTF8.length s)) s1) in
   let l2 = ((fun s -> Z.of_int (BatUTF8.length s)) s2) in
-  ((edit_distance__go s1 s2 lookup set l1 l2) Prims.int_zero Prims.int_zero))
+  (edit_distance__go s1 s2 lookup set l1 l2 Prims.int_zero Prims.int_zero))
 

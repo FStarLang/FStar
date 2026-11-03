@@ -4,14 +4,14 @@
 let to_string (r : FStar_RealLiteral.real_literal_repr) : string =
   (FStar_RealLiteral.to_string r)
 
+let of_string (s : string) : (FStar_RealLiteral.real_literal_repr) option =
+  (FStar_RealLiteral_Parse.of_string s)
+
 let cmp (r1 : FStar_RealLiteral.real_literal_repr) (r2 : FStar_RealLiteral.real_literal_repr) : FStarC_Order.order =
   (FStarC_Order.compare_int (FStar_RealLiteral.compare r1 r2) Prims.int_zero)
 
 let of_int (i : Prims.int) : FStar_RealLiteral.real_literal_repr =
   (FStar_RealLiteral.of_int i)
-
-let of_string (s : string) : (FStar_RealLiteral.real_literal_repr) option =
-  (FStar_RealLiteral_Parse.of_string s)
 
 let mk (mantissa_ : Prims.int) (e : Prims.int) : FStar_RealLiteral.real_literal_repr =
   (FStar_RealLiteral.mk mantissa_ e)
@@ -22,10 +22,10 @@ let mantissa (r : FStar_RealLiteral.real_literal_repr) : Prims.int =
 let exponent (r : FStar_RealLiteral.real_literal_repr) : Prims.int =
   (r).FStar_RealLiteral.exponent
 
+let to_smt_string (r : FStar_RealLiteral.real_literal_repr) : string =
+  (if (Prims.op_Less (mantissa r) Prims.int_zero) then (Prims.strcat "(- " (Prims.strcat (to_string (mk (Prims.op_Tilde_Minus (mantissa r)) (exponent r))) ")")) else (to_string r))
+
 let try_mk (mantissa_ : Prims.int) (exponent_ : Prims.int) : (FStar_RealLiteral.real_literal_repr) option =
   (let r = (mk mantissa_ exponent_) in
   (if (((=) (mantissa r) mantissa_) && ((=) (exponent r) exponent_)) then (Some (r)) else None))
-
-let to_smt_string (r : FStar_RealLiteral.real_literal_repr) : string =
-  (if (Prims.op_Less (mantissa r) Prims.int_zero) then (Prims.strcat "(- " (Prims.strcat (to_string (mk (Prims.op_Tilde_Minus (mantissa r)) (exponent r))) ")")) else (to_string r))
 

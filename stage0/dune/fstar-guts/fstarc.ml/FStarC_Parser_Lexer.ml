@@ -163,10 +163,10 @@ let first_cp (l : (int) list) : int =
 
 let rec cps__go (s : string) (i : int) : (int) list =
   (let b = ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) s i) in
-  (if ((<) b 0) then [] else (b :: ((cps__go s) ((+) i 1)))))
+  (if ((<) b 0) then [] else (b :: (cps__go s ((+) i 1)))))
 
 let cps (s : string) : (int) list =
-  ((cps__go s) 0)
+  (cps__go s 0)
 
 let early_literals : (((int) list * FStarC_Parser_TokenKind.token_kind)) list =
   (BatList.map (fun tmp -> (match tmp with
@@ -181,7 +181,7 @@ let early_bucket : (((((int) list * FStarC_Parser_TokenKind.token_kind)) list) a
 let rec match_lit__go (st : lstate) (l : (int) list) (i : int) : int =
   (match l with
     | [] -> i
-    | (c :: l1) -> (if ((=) (byte st i) c) then ((match_lit__go st) l1 ((+) i 1)) else (-1))
+    | (c :: l1) -> (if ((=) (byte st i) c) then (match_lit__go st l1 ((+) i 1)) else (-1))
   )
 
 let match_lit (st : lstate) (l : (int) list) (i : int) : int =
@@ -395,11 +395,11 @@ let lit_14 : (int) list =
 
 let rec match_backtick_ident__go (st : lstate) (ok : (int -> bool)) (j : int) (n : int) : int =
   (let c = (get st j) in
-  (if (ok c) then ((match_backtick_ident__go st ok) (next st j) ((+) n 1)) else (if (((=) c (FStarC_SmallInt.of_char 96)) && (ok (get st ((+) j 1)))) then ((match_backtick_ident__go st ok) (next st ((+) j 1)) ((+) n 1)) else (if ((((>) n 0) && ((=) c (FStarC_SmallInt.of_char 96))) && ((=) (byte st ((+) j 1)) (FStarC_SmallInt.of_char 96))) then ((+) j (FStarC_SmallInt.of_int (Prims.of_int (2)))) else (-1)))))
+  (if (ok c) then (match_backtick_ident__go st ok (next st j) ((+) n 1)) else (if (((=) c (FStarC_SmallInt.of_char 96)) && (ok (get st ((+) j 1)))) then (match_backtick_ident__go st ok (next st ((+) j 1)) ((+) n 1)) else (if ((((>) n 0) && ((=) c (FStarC_SmallInt.of_char 96))) && ((=) (byte st ((+) j 1)) (FStarC_SmallInt.of_char 96))) then ((+) j (FStarC_SmallInt.of_int (Prims.of_int (2)))) else (-1)))))
 
 let match_backtick_ident (st : lstate) (i : int) : int =
   (if (((<>) (byte st i) (FStarC_SmallInt.of_char 96)) || ((<>) (byte st ((+) i 1)) (FStarC_SmallInt.of_char 96))) then (-1) else (let ok = (fun c -> ((((>=) c 0) && ((<>) c (FStarC_SmallInt.of_char 96))) && (not (is_newline_char c)))) in
-  ((match_backtick_ident__go st ok) ((+) i (FStarC_SmallInt.of_int (Prims.of_int (2)))) 0)))
+  (match_backtick_ident__go st ok ((+) i (FStarC_SmallInt.of_int (Prims.of_int (2)))) 0)))
 
 let lit_15 : (int) list =
   (cps "<|")
@@ -701,10 +701,10 @@ let unescape (st : lstate) (i : int) : int =
   (FStarC_SmallInt.of_int tmp)) else (get st ((+) i 1))))))))))))
 
 let rec no_comment__go (st : lstate) (e : int) (j : int) : int =
-  (if ((>=) ((+) j 1) e) then e else (if (((=) (byte st j) (FStarC_SmallInt.of_char 47)) && ((=) (byte st ((+) j 1)) (FStarC_SmallInt.of_char 47))) then j else ((no_comment__go st e) ((+) j 1))))
+  (if ((>=) ((+) j 1) e) then e else (if (((=) (byte st j) (FStarC_SmallInt.of_char 47)) && ((=) (byte st ((+) j 1)) (FStarC_SmallInt.of_char 47))) then j else (no_comment__go st e ((+) j 1))))
 
 let no_comment (st : lstate) (i : int) (e : int) : int =
-  ((no_comment__go st e) i)
+  (no_comment__go st e i)
 
 let keywords : (string, (FStarC_Parser_TokenKind.token_kind * string)) FStarC_AVLMap.tree =
   (let kw = (fun k -> (k, "")) in
@@ -717,25 +717,25 @@ let cps_number_strip : (int) list =
   (cps "uzyslLUnIN")
 
 let rec clean_number__left (n : int) (strip : (int -> bool)) (i : int) : int =
-  (if (((<) i n) && (strip i)) then ((clean_number__left n strip) ((+) i 1)) else i)
+  (if (((<) i n) && (strip i)) then (clean_number__left n strip ((+) i 1)) else i)
 
 let rec clean_number__right (strip : (int -> bool)) (j : int) : int =
-  (if (((>) j 0) && (strip ((-) j 1))) then ((clean_number__right strip) ((-) j 1)) else j)
+  (if (((>) j 0) && (strip ((-) j 1))) then (clean_number__right strip ((-) j 1)) else j)
 
 let clean_number (s : string) : string =
   (let n = (String.length s) in
   let strip = (fun i -> (mem_cp ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) s i) cps_number_strip)) in
-  let tmp = ((clean_number__left n strip) 0) in
-  let tmp1 = ((clean_number__right strip) n) in
+  let tmp = (clean_number__left n strip 0) in
+  let tmp1 = (clean_number__right strip n) in
   ((fun s i j -> let n = String.length s in let i = if i > 0 then i else 0 and j = if j < n then j else n in if j <= i then "" else String.sub s i (j - i)) s tmp tmp1))
 
 let rec maybe_trim_lines__aux (k : int) (s : string) (j : int) (i : int) : int =
-  (if ((>) i j) then k else (if ((<>) ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) s i) (FStarC_SmallInt.of_char 32)) then i else ((maybe_trim_lines__aux k s j) ((+) i 1))))
+  (if ((>) i j) then k else (if ((<>) ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) s i) (FStarC_SmallInt.of_char 32)) then i else (maybe_trim_lines__aux k s j ((+) i 1))))
 
 let maybe_trim_lines (start_column : int) (comment_ : string) : string =
   (if ((=) start_column 0) then comment_ else (let lines = (FStarC_String.split (10 :: []) comment_) in
   let ensures_empty_prefix = (fun k s -> (let j = (FStarC_SmallInt.min k ((-) (String.length s) 1)) in
-    ((maybe_trim_lines__aux k s j) 0))) in
+    (maybe_trim_lines__aux k s j 0))) in
   let trim_width = (BatList.fold_left ensures_empty_prefix start_column lines) in
   let tail = (fun s -> (let n = (String.length s) in
     (if ((>=) trim_width n) then "" else ((fun s i j -> let n = String.length s in let i = if i > 0 then i else 0 and j = if j < n then j else n in if j <= i then "" else String.sub s i (j - i)) s trim_width n)))) in
@@ -975,7 +975,7 @@ let rec lex_all__go (st : lstate) (acc : (token) list) : (token) list =
           extra = (LexError (code, msg, r));
           ncom = (tmp1).ncom })
     ) in
-  (if (((=) (t).kind FStarC_Parser_TokenKind.EOF) || ((=) (t).kind FStarC_Parser_TokenKind.ERROR)) then (BatList.rev (t :: acc)) else ((lex_all__go st) (t :: acc))))
+  (if (((=) (t).kind FStarC_Parser_TokenKind.EOF) || ((=) (t).kind FStarC_Parser_TokenKind.ERROR)) then (BatList.rev (t :: acc)) else (lex_all__go st (t :: acc))))
 
 let lex_all (fname : string) (contents : string) (line : Prims.int) (col : Prims.int) : ((token) list * ((string * FStarC_Range_Type.range)) list) =
   (let tmp = (ref 0) in
@@ -997,7 +997,7 @@ let lex_all (fname : string) (contents : string) (line : Prims.int) (col : Prims
       cache_col = tmp5;
       comments = tmp6;
       ncomments = tmp7 } in
-  let toks = ((lex_all__go st) []) in
+  let toks = (lex_all__go st []) in
   let tmp8 = (!((st).comments)) in
   (toks, tmp8))
 

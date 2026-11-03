@@ -164,7 +164,7 @@ let rec bench__go (k : (unit -> unit)) (g0 : Prims.int) (n : Prims.int) : unit =
   (if (Prims.op_Greater n Prims.int_zero) then ((FStarC_GenSym.set_gensym_state g0);
   (ignore (FStarC_Parser_AST_Util.flush_comments ()));
   (k ());
-  ((bench__go k g0) (Prims.op_Minus n Prims.int_one))) else ())
+  (bench__go k g0 (Prims.op_Minus n Prims.int_one))) else ())
 
 let show_ms (ns : Prims.int) : string =
   (let us = (Prims.op_Slash ns (Prims.of_int (1000))) in
@@ -243,7 +243,7 @@ let bench (fn : parse_frag) : parse_result =
         | (f', contents) -> (let only = (FStarC_Options_Ext.get "parser_bench_only") in
           let time = (fun name k -> (if (((=) only "") || ((=) only name)) then (let g0 = (FStarC_GenSym.get_gensym_state ()) in
             let t0 = (Mtime_clock.now_ns ()) in
-            ((bench__go k g0) iters);
+            (bench__go k g0 iters);
             let tmp3 = (Mtime_clock.now_ns ()) in
             let tmp4 = (FStarC_Timing.diff_ns t0 tmp3) in
             let t = (Prims.op_Slash tmp4 iters) in
@@ -282,6 +282,28 @@ let parse (ext_lang : (string) option) (frag : parse_frag) : parse_result =
           (if tmp3 then (bench frag) else (parse_no_lang frag)))
       ))
   )))
+
+let parse_fstar_incrementally_aux (s : string) (r : FStarC_Range_Type.range) : (FStarC_Parser_AST_Util.error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either =
+  (let filename = (FStarC_Range_Ops.file_of_range r) in
+  (try (let tmp = (FStarC_Parser_Grammar.parse_incremental filename s (FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.start_of_range r)) (FStarC_Range_Ops.col_of_pos (FStarC_Range_Ops.start_of_range r))) in
+  (match tmp with
+    | (decls, comments, err_opt) -> ((FStarC_Parser_AST_Util.add_comments comments);
+      (match err_opt with
+        | None -> (FStar_Pervasives.Inr (decls))
+        | (Some ((tmp1, tmp2, r1))) -> (let tmp3 = (FStarC_Parser_AST.mk_decl FStarC_Parser_AST.Unparseable r1 []) in
+          let tmp4 = (tmp3 :: []) in
+          let tmp5 = (BatList.append decls tmp4) in
+          (FStar_Pervasives.Inr (tmp5)))
+      ))
+  )) with
+    | (FStarC_Errors.Error ((tmp, msg, r1, tmp1))) -> (FStar_Pervasives.Inl ({ FStarC_Parser_AST_Util.message = msg; range = r1 }))
+  ))
+
+let parse_fstar_incrementally : (string -> (FStarC_Range_Type.range -> (FStarC_Parser_AST_Util.error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either)) =
+  parse_fstar_incrementally_aux
+
+let uu___0 : unit =
+  (FStarC_Parser_AST_Util.register_extension_lang_parser "fstar" parse_fstar_incrementally)
 
 let add_vfs_entry (fname : string) (contents : string) : unit =
   (let tmp = (FStarC_Filepath.normalize_file_path fname) in
@@ -364,26 +386,4 @@ let parse_warn_error (s : string) : (((FStarC_Errors_Codes.error_code * FStarC_E
           (Some (tmp)))
       )
   ))
-
-let parse_fstar_incrementally_aux (s : string) (r : FStarC_Range_Type.range) : (FStarC_Parser_AST_Util.error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either =
-  (let filename = (FStarC_Range_Ops.file_of_range r) in
-  (try (let tmp = (FStarC_Parser_Grammar.parse_incremental filename s (FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.start_of_range r)) (FStarC_Range_Ops.col_of_pos (FStarC_Range_Ops.start_of_range r))) in
-  (match tmp with
-    | (decls, comments, err_opt) -> ((FStarC_Parser_AST_Util.add_comments comments);
-      (match err_opt with
-        | None -> (FStar_Pervasives.Inr (decls))
-        | (Some ((tmp1, tmp2, r1))) -> (let tmp3 = (FStarC_Parser_AST.mk_decl FStarC_Parser_AST.Unparseable r1 []) in
-          let tmp4 = (tmp3 :: []) in
-          let tmp5 = (BatList.append decls tmp4) in
-          (FStar_Pervasives.Inr (tmp5)))
-      ))
-  )) with
-    | (FStarC_Errors.Error ((tmp, msg, r1, tmp1))) -> (FStar_Pervasives.Inl ({ FStarC_Parser_AST_Util.message = msg; range = r1 }))
-  ))
-
-let parse_fstar_incrementally : (string -> (FStarC_Range_Type.range -> (FStarC_Parser_AST_Util.error_message, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either)) =
-  parse_fstar_incrementally_aux
-
-let uu___0 : unit =
-  (FStarC_Parser_AST_Util.register_extension_lang_parser "fstar" parse_fstar_incrementally)
 

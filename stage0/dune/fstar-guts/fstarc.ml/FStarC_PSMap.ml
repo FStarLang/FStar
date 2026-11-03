@@ -13,28 +13,28 @@ let try_find (map : (string, 'u___value) FStarC_AVLMap.tree) (key : string) : ('
 let add (map : (string, 'u___value) FStarC_AVLMap.tree) (key : string) (value : 'u___value) : (string, 'u___value) FStarC_AVLMap.tree =
   (FStarC_AVLMap.add cmp key value map)
 
-let merge (m1 : (string, 'u___value) FStarC_AVLMap.tree) (acc : (string, 'u___value) FStarC_AVLMap.tree) : (string, 'u___value) FStarC_AVLMap.tree =
-  (FStarC_AVLMap.fold_pure (fun k v m -> (FStarC_AVLMap.add cmp k v m)) m1 acc)
-
-let fold (m : (string, 'u___value) FStarC_AVLMap.tree) (f : (string -> ('u___value -> ('u___a -> 'u___a)))) (acc : 'u___a) : 'u___a =
-  (FStarC_AVLMap.fold f m acc)
-
 let iter (m : (string, 'u___value) FStarC_AVLMap.tree) (f : (string -> ('u___value -> unit))) : unit =
   (FStarC_AVLMap.iter f m)
 
 let keys (m : (string, 'u___value) FStarC_AVLMap.tree) : (string) list =
   (FStarC_AVLMap.fold_pure (fun k tmp acc -> (k :: acc)) m [])
 
+let of_list (l : ((string * 'u___value)) list) : (string, 'u___value) FStarC_AVLMap.tree =
+  (FStar_List_Tot_Base.fold_left (fun acc tmp -> (match tmp with
+    | (k, v) -> (add acc k v)
+  )) (empty ()) l)
+
+let merge (m1 : (string, 'u___value) FStarC_AVLMap.tree) (acc : (string, 'u___value) FStarC_AVLMap.tree) : (string, 'u___value) FStarC_AVLMap.tree =
+  (FStarC_AVLMap.fold_pure (fun k v m -> (FStarC_AVLMap.add cmp k v m)) m1 acc)
+
+let fold (m : (string, 'u___value) FStarC_AVLMap.tree) (f : (string -> ('u___value -> ('u___a -> 'u___a)))) (acc : 'u___a) : 'u___a =
+  (FStarC_AVLMap.fold f m acc)
+
 let find_default (map : (string, 'u___value) FStarC_AVLMap.tree) (key : string) (dflt : 'u___value) : 'u___value =
   (match (FStarC_AVLMap.find cmp key map) with
     | (Some (v)) -> v
     | None -> dflt
   )
-
-let of_list (l : ((string * 'u___value)) list) : (string, 'u___value) FStarC_AVLMap.tree =
-  (FStar_List_Tot_Base.fold_left (fun acc tmp -> (match tmp with
-    | (k, v) -> (add acc k v)
-  )) (empty ()) l)
 
 let modify (m : (string, 'u___value) FStarC_AVLMap.tree) (k : string) (upd : (('u___value) option -> 'u___value)) : (string, 'u___value) FStarC_AVLMap.tree =
   (let tmp = (upd (try_find m k)) in

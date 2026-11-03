@@ -12,6 +12,14 @@ let init : (string, string) FStarC_AVLMap.tree =
 let cur_state : ((string, string) FStarC_AVLMap.tree ref) =
   (ref init)
 
+let reset (tmp : unit) : unit =
+  ((cur_state) := init)
+
+let set (k : string) (v : string) : unit =
+  (let tmp = (!(cur_state)) in
+  let tmp1 = (FStarC_PSMap.add tmp k v) in
+  ((cur_state) := tmp1))
+
 let get (k : string) : string =
   (let tmp = (!(cur_state)) in
   let tmp1 = (FStarC_PSMap.try_find tmp k) in
@@ -37,11 +45,6 @@ let all (tmp : unit) : ((string * string)) list =
   let tmp1 = (!(cur_state)) in
   (FStarC_PSMap.fold tmp1 f []))
 
-let set (k : string) (v : string) : unit =
-  (let tmp = (!(cur_state)) in
-  let tmp1 = (FStarC_PSMap.add tmp k v) in
-  ((cur_state) := tmp1))
-
 let is_prefix (s1 : string) (s2 : string) : bool =
   (let l1 = ((fun s -> Z.of_int (BatUTF8.length s)) s1) in
   let l2 = ((fun s -> Z.of_int (BatUTF8.length s)) s2) in
@@ -53,7 +56,4 @@ let getns (ns : string) : ((string * string)) list =
     (if tmp then ((k, v) :: acc) else acc))) in
   let tmp = (!(cur_state)) in
   (FStarC_PSMap.fold tmp f []))
-
-let reset (tmp : unit) : unit =
-  ((cur_state) := init)
 
