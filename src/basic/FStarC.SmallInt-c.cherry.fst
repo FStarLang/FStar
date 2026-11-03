@@ -80,4 +80,8 @@ let array_index arr i =
 
 let int_compare a b = int_cmp a b
 
-let string_compare a b = int_cmp (FStar.String.compare a b) 0
+(* In ulib/c/cherry.c: -1, 0 or 1 as a [t], with no [int] in between. *)
+[@@custard_extern "cherry_str_compare_u64"]
+private assume val str_compare_u64 : string -> string -> U64.t
+
+let string_compare a b = str_compare_u64 a b
