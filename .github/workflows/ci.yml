@@ -1,9 +1,12 @@
 name: CI
 
 on:
+  # Only run on pushes to master; PRs and the merge queue are covered by
+  # the pull_request and merge_group triggers. Other branches can use
+  # workflow_dispatch.
   push:
-    branches-ignore:
-    - _**
+    branches:
+    - master
   pull_request:
   workflow_dispatch:
   merge_group:
