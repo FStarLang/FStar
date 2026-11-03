@@ -261,7 +261,7 @@ val make_record_fields_in_order
 
 (* Whether elaboration is to run [synth_by_tactic], and if so, whether the
    tactics are to run with [admit] set (in a lax module). Set by
-   [Tc.tc_sig_let] around the elaboration of a top-level definition: other
+   [TcLet.tc_sig_let] around the elaboration of a top-level definition: other
    callers of TcTerm leave the synthesis to their caller, as the goals may
    still mention unification variables that are only solved later. *)
 val synth_mode : unit -> ML (option bool)

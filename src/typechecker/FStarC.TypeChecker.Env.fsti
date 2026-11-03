@@ -360,6 +360,10 @@ val push : env -> string -> ML (env)
 val pop : env -> string -> ML (env)
 
 val incr_query_index: env -> ML (env)
+(* Name the SMT queries of the declaration [se] after its first lident (or a
+   fresh name), continuing the count of the queries already issued with that
+   name, so that hints can be correlated with the declarations they are for. *)
+val set_hint_correlator: env -> sigelt -> ML env
 
 val set_range      : env -> Range.t -> env
 

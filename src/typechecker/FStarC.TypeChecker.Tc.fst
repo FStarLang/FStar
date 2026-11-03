@@ -51,6 +51,7 @@ module PC = FStarC.Parser.Const
 module EMB = FStarC.Syntax.Embeddings
 module Print = FStarC.Syntax.Print
 module Core = FStarC.TypeChecker.Core
+module TcLet = FStarC.TypeChecker.TcLet
 
 
 let dbg_Elab = Debug.get_toggle "Elab"
@@ -58,40 +59,6 @@ let dbg_IdInfoOn  = Debug.get_toggle "IdInfoOn"
 let dbg_Normalize = Debug.get_toggle "Normalize"
 let dbg_UF        = Debug.get_toggle "UF"
 let dbg_LogTypes  = Debug.get_toggle "LogTypes"
-
-let sigelt_typ (se:sigelt) : option typ =
-  match se.sigel with
-  | Sig_inductive_typ {t}
-  | Sig_datacon {t}
-  | Sig_declare_typ {t} -> Some t
-
-  | Sig_let {lbs=(_, lb::_)} ->
-    Some lb.lbtyp
-
-  | _ ->
-    None
-
-//set the name of the query so that we can correlate hints to source program fragments
-let set_hint_correlator env se =
-    //if the tbl has a counter for lid, we use that, else we start from 0
-    //this is useful when we verify the extracted interface alongside
-    let tbl = env.qtbl_name_and_index |> snd in
-    let get_n lid =
-      let n_opt = HashTable.try_find tbl (show lid) in
-      if Some? n_opt then n_opt |> Option.must else 0
-    in
-
-    let typ = match sigelt_typ se with | Some t -> t | _ -> S.tun in
-
-    let lids = U.lids_of_sigelt se in
-      let lid = match lids with
-            | [] -> Ident.lid_add_suffix (Env.current_module env)
-                                         (GenSym.next_id () |> show) // GM: Should we really touch the gensym?
-            | l::_ -> l in
-      {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
-
-let log env = (Options.log_types()) &&  not(lid_equals PC.prims_lid (Env.current_module env))
-
 
 (*****************Type-checking the signature of a module*****************************)
 
@@ -291,661 +258,7 @@ let store_sigopts (se:sigelt) : ML sigelt =
 let tc_decls_knot : ref (option (Env.env -> list sigelt -> ML (list sigelt & Env.env))) =
   mk_ref None
 
-(* Elaborate with TcTerm. Its guards are not proven, so Core's memo table
-   must not remember what it checks meanwhile. *)
-[@@FStar.Attributes.custard_inline]
-let elaborating (f:unit -> ML 'a) : ML 'a =
-  FStarC.TypeChecker.Core.clear_memo_table();
-  let r = f () in
-  FStarC.TypeChecker.Core.clear_memo_table();
-  r
-
-let read_postprocess_with_attr (for_extraction : bool) (env:Env.env) (ats:list attribute)
-    : ML (list attribute & option term & bool)
-      (* returns:
-         - remaining attrs
-         - postprocess tactic
-         - whether postprocess_type is set. *)
-= (* Extract the postprocess_with *)
-  let get1 ats lid =
-    match U.extract_attr' lid ats with
-    | None -> ats, None
-    | Some (ats, [tau, None]) ->
-      ats, Some tau
-    | Some (ats, args) ->
-      Errors.log_issue env Errors.Warning_UnrecognizedAttribute [
-        text <| Format.fmt1 "Ill-formed application of ‘%s’" (show lid);
-      ];
-      ats, None
-  in
-  let lid = if for_extraction then PC.postprocess_extr_with else PC.postprocess_with in
-  let ats, pt = get1 ats lid in
-  let on_type =
-    (* NOTE: retain the attribute even if we find it. So postprocess_type can work
-    with a postprocess_with and postprocess_for_extraction_with simultaneously 
-    on a single definition. *)
-    Some? (U.extract_attr' PC.postprocess_type ats)
-  in
-  ats, pt, on_type
-
-let run_postprocess (for_extraction : bool) env (se : sigelt) : ML sigelt =
-  let attrs, pt, on_type = read_postprocess_with_attr for_extraction env se.sigattrs in
-
-  (* remove the postprocess_with, if any *)
-  let se = { se with sigattrs = attrs } in
-
-  let postprocess_lb (tau:term) (on_type : bool) (lb:letbinding) : ML letbinding =
-      let s, univnames = SS.univ_var_opening lb.lbunivs in
-      let lbdef = SS.subst s lb.lbdef in
-      let lbtyp = SS.subst s lb.lbtyp in
-      let env = Env.push_univ_vars env univnames in
-
-      let lbdef = Env.postprocess env tau lbtyp lbdef in
-      let lbdef = SS.close_univ_vars univnames lbdef in
-
-      let lbtyp =
-        if on_type then
-          let u = env.universe_of env lbtyp in
-          let lbtyp = Env.postprocess env tau lbtyp lbtyp in
-          SS.close_univ_vars univnames lbtyp
-        else lbtyp
-      in
-
-      { lb with lbdef = lbdef; lbtyp = lbtyp }
-  in
-  let se =
-    match pt, se.sigel with
-    | Some tac, Sig_let {lbs; lids} ->
-        // Postprocess the letbindings with the tactic, if any
-        let lbs = (fst lbs, List.map (postprocess_lb tac on_type) (snd lbs)) in
-        { se with sigel = Sig_let {lbs; lids} }
-    | _ -> se
-  in
-  se
-
-(* qopt: qualifiers in the definition for l
-   val_q: qualifiers in the val decl for l.
-   This returns a new list of qualifiers from combining both, but they must match. *)
-let check_quals_eq (r:Range.t) (l:lident) (qopt : list qualifier) (val_q : list qualifier) : ML (list qualifier) =
-  match qopt with
-  | [] -> val_q
-  | q' ->
-    //logic is now a deprecated qualifier, so discard it from the checking
-    //AR: 05/19: drop irreducible also
-    //           irreducible is not allowed on val, but one could add it on let
-    let drop_logic_and_irreducible = List.filter (fun x -> not (Logic? x || Irreducible? x)) in
-    let val_q = drop_logic_and_irreducible val_q in
-    //but we retain it in the returned list of qualifiers, some code may still add type annotations of Type0, which will hinder `logical` inference
-    let q'0 = q' in
-    let q' = drop_logic_and_irreducible q' in
-    match Class.Ord.ord_list_diff val_q q' with
-    | [], [] -> q'0
-    | d1, d2 ->
-      let open FStarC.Pprint in
-      raise_error r Errors.Fatal_InconsistentQualifierAnnotation [
-          text "Inconsistent qualifier annotations on" ^/^ pp l;
-          prefix 4 1 (text "Expected") (fquotes (pp val_q)) ^/^
-          prefix 4 1 (text "got") (fquotes (pp q'));
-
-          if Cons? d1 then
-            prefix 2 1 (text "Only in declaration: ") (fquotes (pp d1))
-          else empty;
-          if Cons? d2 then
-            prefix 2 1 (text "Only in definition: ") (fquotes (pp d2))
-          else empty;
-        ]
-
-(* A [synth_by_tactic] at a proof goal, once Core has run its tactic (see
-   [TcTerm.tc_synth]), is a proof, which we record as [()]. *)
-let erase_synthesized_proofs (env:Env.env) (e:term) : ML term =
-  e |> FStarC.Syntax.Visit.visit_term false (fun t ->
-    match t.n with
-    | Tm_app _ ->
-      (match U.head_and_args_full t with
-       | hd, [(typ, Some ({ aqual_implicit = true })); (_, None)]
-           when U.is_synth_by_tactic hd
-             && Some? (VCUtil.synth_proof_goal env typ) ->
-         { U.exp_unit with pos = t.pos }
-       | _ -> t)
-    | _ -> t)
-
-(* The type checking rule for Sig_let (lbs, lids) *)
-(* Checking the elaboration [e] of a top-level let-binding with
-   FStarC.TypeChecker.Core. Core does no inference: it only checks [e], and its
-   guard is discharged here. [elab_typ] is the type elaboration computed for a
-   definition whose [lbtyp] it dropped; [elab_typ_annotated] says whether the
-   user annotated the result of the definition, from which that type then
-   comes. Returns the checked term, or Core's error. *)
-let tc_sig_let_core (env:Env.env) (elab_typ:option typ) (elab_typ_annotated:bool) (e:term)
-  : ML (either term Core.error)
-  = (* TcTerm discharges the guard of the body of a top-level function with
-       the function's binders in the environment (see [TcTerm.tc_abs]). Core's
-       guard quantifies over them instead. Its leading quantifiers are opened
-       into the environment, so that the goal, the context shown when it
-       fails, and what tactics handling it (e.g. with [handle_smt_goals]) see
-       are as with TcTerm. Quantifiers further in, e.g. over the thunks of a
-       [calc], are kept, as by TcTerm. *)
-    let rec open_foralls (drop:bv -> typ -> ML bool) (env:Env.env) (g:typ) : ML (Env.env & typ) =
-      let hd, args = U.head_and_args_full g in
-      match (U.un_uinst hd).n, args with
-      | Tm_fvar fv, [_; (f, _)] when S.fv_eq_lid fv PC.forall_lid ->
-        begin match (SS.compress f).n with
-        | Tm_abs {b; body} ->
-          let bs, body = SS.open_term [b] body in
-          let env = if drop (List.hd bs).binder_bv body then env else Env.push_binders env bs in
-          open_foralls drop env body
-        | _ -> env, g
-        end
-      | _ -> env, g
-    in
-    (* TcTerm simplifies guards as it builds them (without full
-       normalization, see [TcUtil]); do the same for Core's guard before
-       it is discharged. This matters for normalization requests, e.g.
-       [norm [nbe; primops] ("a" ^ "b") == "ab"]: the simplifier reduces
-       the primitive application in the argument first, whereas
-       processing the request directly with only [primops] does not
-       unfold [(^)]. *)
-    (* TcTerm discharges the guard of a function body when checking the
-       abstraction; that of any other definition later, in
-       [TcUtil.check_top_level]: errors are reported in the same context. *)
-    let discharge (drop:bv -> typ -> ML bool)
-                  (abs_body:option term) (env:Env.env) (g:option Core.guard_and_tok_t) : ML unit =
-      match g with
-      | None -> ()
-      | Some (g, tok) ->
-        let go () =
-          (* E.g. goals produced by tactics are located at the range of the
-             environment: that of the body of a function, as with TcTerm. *)
-          let env = match abs_body with
-                    | Some body -> Env.set_range env body.pos
-                    | None -> env in
-          let env, g = open_foralls drop env g in
-          if !dbg_Elab then Format.print2 "core: discharging %s (at %s)\n" (show g) (Range.string_of_range g.pos);
-          Rel.force_trivial_guard env
-            (Rel.simplify_guard env (Env.guard_of_guard_formula (NonTrivial g)))
-        in
-        if Some? abs_body then go ()
-        else Errors.with_ctx "While checking for top-level effects" go;
-        Core.commit_guard tok
-    in
-    (* The declared types of a definition are checked on their own, and
-       their guard discharged as a separate query, as TcTerm does. Core
-       caches what it proves, so checking the definition against them does
-       not re-emit their guards. Were the two guards conjoined, that of the
-       types, quantified over their binders, would be a hypothesis of every
-       goal of the definition (the SMT encoding assumes each conjunct of a
-       guard while proving the next), which can derail the SMT solver, e.g.
-       with nonlinear terms like [pow2 (hi - lo)]. *)
-    let check_declared_types (env:Env.env) (ts:list typ) : ML unit =
-      ts |> List.iter (fun t ->
-        if not (Tm_unknown? (SS.compress t).n)
-        then (
-          if !dbg_Elab then Format.print1 "core: checking the declared type %s\n" (show t);
-          ignore (CoreCheck.universe_of env "the type of this definition" t)
-        ))
-    in
-    match (SS.compress e).n with
-    | Tm_let {lbs=(false, [lb]); body=e2} ->
-      let usubst, univ_names = SS.univ_var_opening lb.lbunivs in
-      let lbdef = SS.subst usubst lb.lbdef in
-      let lbtyp = SS.subst usubst lb.lbtyp in
-      let env_u = Env.push_univ_vars env univ_names in
-      let topt = if Tm_unknown? (SS.compress lbtyp).n then None else Some lbtyp in
-      let user_topt = topt in
-      (* Core does no inference: an unannotated definition is checked against
-         the type elaboration inferred for it, which is then recorded, as
-         clients of the module see it. *)
-      let check_t, topt =
-        match topt, elab_typ with
-        | None, Some t when not (Options.Ext.enabled "core_infer") -> false, Some (SS.subst usubst t)
-        | _ -> true, topt
-      in
-      if !dbg_Elab then Format.print2 "core: expected type %s (result annotated: %s)\n" (show topt) (show elab_typ_annotated);
-      (* The annotation is checked, and its guard discharged, before the
-         definition, as by TcTerm: in one guard, its conjunct would be a
-         hypothesis of every goal of the definition's (see
-         [check_declared_types]). So is the type elaboration computed for a
-         definition with an annotated result, from which the annotation is
-         dropped: Core would otherwise check it only as part of the
-         definition, e.g. the precondition of a lemma as the type of one of
-         its binders. A type elaboration inferred is not checked: it may only be
-         well-formed in the context the definition sets up, e.g. [x:U32.t{v x
-         = f b}] for [let n = f b in lem b; U32.uint_to_t n], where [=] is
-         taken at [uint_t 32]; TcTerm does not check it either. *)
-      let check_t =
-        match topt with
-        | Some t when check_t || elab_typ_annotated -> check_declared_types env_u [t]; false
-        | _ -> check_t
-      in
-      begin match Core.compute_term_comp env_u lbdef topt check_t with
-      | Inl (c, g) ->
-        (* An inferred type is recorded as TcTerm would record it: TcTerm
-           normalizes the computation type of every function body it checks
-           (see [TcTerm.check_expected_effect]), unfolding [unfold]
-           abbreviations like [U32.( + )]. Clients rely on it: unification
-           compares the heads of indices, e.g. [raw a (U32.add l1 l2)]. *)
-        let c =
-          if Some? topt then c (* the elaborated type is already normalized *)
-          else
-            let norm_c env = N.normalize_comp [Env.Beta; Env.Eager_unfolding; Env.NoFullNorm; Env.Exclude Env.Zeta] env in
-            (* Only the result of a function is normalized; its binders are
-               recorded as written. *)
-            (* [e] is only inspected for the length of its spine of
-               abstractions, so it need not be opened. *)
-            let rec aux (env:Env.env) (e:term) (c:comp) : ML comp =
-              match (SS.compress e).n, (SS.compress (U.comp_result c)).n with
-              | Tm_abs {body}, Tm_arrow {b; comp} when U.is_total_comp c ->
-                let t = U.comp_result c in
-                let bs, comp = SS.open_comp [b] comp in
-                let comp = aux (Env.push_binders env bs) body comp in
-                S.mk_Total (S.mk (Tm_arrow {b=List.hd (SS.close_binders bs); comp=SS.close_comp bs comp}) t.pos)
-              | _ -> norm_c env c
-            in
-            aux env_u lbdef c
-        in
-        let abs_body =
-          match (SS.compress (U.unascribe lbdef)).n with
-          | Tm_abs {body} -> Some body
-          | _ -> None
-        in
-        discharge (fun _ _ -> false) abs_body env_u g;
-        CoreCheck.check_smt_patterns env_u lbdef;
-        let e = finish_top_level_let true env lb lbdef univ_names c Env.trivial_guard user_topt (Some? user_topt) e2 e.pos in
-        Inl e
-      | Inr err -> Inr err
-      end
-
-    | Tm_let {lbs=(true, lbs); body=e2} ->
-      let lbs', _ = SS.open_let_rec lbs e2 in
-      let univ_names = (List.hd lbs').lbunivs in
-      let env_u = Env.push_univ_vars env univ_names in
-      check_declared_types env_u (List.map (fun (lb:letbinding) -> lb.lbtyp) lbs');
-      begin match Core.check_top_level_letrec env_u lbs' with
-      | Inl g ->
-        (* The guard mentions the names of the nest (see
-           [Core.check_top_level_letrec]), bound here, before the binders of
-           the function: the SMT encoding closes a query over the variables
-           at the end of the environment only ([Encode.encode_query]), and
-           encodes the others as constants. Were the binders followed by the
-           names of the nest, a refinement mentioning them, e.g. the [x:a{p
-           x}] in [list_refb #a #p tl : list (x:a{p x})], would be encoded as
-           a constant unrelated to its encoding in the typing axiom of the
-           function, from which the SMT solver gets the type of the recursive
-           call. The quantifiers over the local names of the nest, which the
-           guard no longer mentions, are dropped. *)
-        let is_nest_name (x:bv) (body:typ) : ML bool =
-          not (FStarC.Syntax.Free.names body |> mem x)
-          && lbs' |> List.existsb (fun (lb:letbinding) ->
-               match lb.lbname with
-               | Inr fv -> Ident.string_of_id (Ident.ident_of_lid fv.fv_name) = Ident.string_of_id x.ppname
-               | Inl y -> Ident.string_of_id y.ppname = Ident.string_of_id x.ppname)
-        in
-        let push_nest env =
-          List.fold_left (fun env (lb:letbinding) ->
-            Env.push_let_binding env lb.lbname (lb.lbunivs, lb.lbtyp)) env lbs' in
-        let _, body, _ = U.abs_formals (List.hd lbs').lbdef in
-        let env_nest = push_nest env_u in
-        discharge is_nest_name (Some body) env_nest g;
-        List.iter (fun (lb:letbinding) -> CoreCheck.check_smt_patterns env_nest lb.lbdef) lbs';
-        Inl e
-      | Inr err -> Inr err
-      end
-
-    | _ -> failwith "tc_sig_let_core: not a let"
-
-let tc_sig_let env r se lbs lids : ML (list sigelt & list sigelt & Env.env) =
-    let env0 = env in
-    let env = Env.set_range env r in
-    let rename_parameters lb =
-      let rename_in_typ def typ =
-        let typ = Subst.compress typ in
-        let def_bs = match (Subst.compress def).n with
-                     | Tm_abs _ ->
-                       let binders, _, _ = U.abs_formals_ln def in
-                       binders
-                     | _ -> [] in
-        match typ with
-        | { n = Tm_arrow _; pos = r } -> begin
-          let val_bs, c = U.arrow_formals_comp_ln_strict typ in
-          let has_auto_name bv =
-            BU.starts_with (string_of_id bv.ppname) Ident.reserved_prefix in
-          let rec rename_binders def_bs val_bs =
-            match def_bs, val_bs with
-            | [], _ | _, [] -> val_bs
-            | ({binder_bv=body_bv}) :: bt, val_b :: vt ->
-              (match has_auto_name body_bv, has_auto_name val_b.binder_bv with
-               | true, _ -> val_b
-               | false, true -> { val_b with
-                                 binder_bv={val_b.binder_bv with
-                                   ppname = mk_ident (string_of_id body_bv.ppname, range_of_id val_b.binder_bv.ppname)} }
-               | false, false ->
-                 // if (string_of_id body_bv.ppname) <> (string_of_id val_bv.ppname) then
-                 //   Errors.warn (range_of_id body_bv.ppname)
-                 //     (Format.fmt2 "Parameter name %s doesn't match name %s used in val declaration"
-                 //                  (string_of_id body_bv.ppname) (string_of_id val_bv.ppname));
-                 val_b) :: rename_binders bt vt in
-          S.mk_Tm_arrow (rename_binders def_bs val_bs) c r end
-        | _ -> typ in
-      { lb with lbtyp = rename_in_typ lb.lbdef lb.lbtyp } in
-
-    (*
-     * The names of the let bindings for which the user wrote no type at all,
-     * neither an ascription here nor a separate val declaration. Their types
-     * are inferred, and for those we do not want an incidentally inferred
-     * postcondition to become an ambient fact; see drop_inferred_postcondition
-     * below.
-     *)
-    let unannotated_lbnames =
-      snd lbs |> List.collect (fun lb ->
-        let lbname = Inr?.v lb.lbname in
-        if Tm_unknown? lb.lbtyp.n && None? (Env.try_lookup_val_decl env lbname.fv_name)
-        then [lbname.fv_name]
-        else [])
-    in
-
-    (* 1. (a) Annotate each lb in lbs with a type from the corresponding val decl, if there is one
-          (b) Generalize the type of lb only if none of the lbs have val decls nor explicit universes
-      *)
-    let should_generalize, lbs', quals =
-       snd lbs |> List.fold_left (fun (gen, lbs, quals) lb ->
-          let lbname = Inr?.v lb.lbname in //this is definitely not a local let binding
-          let gen, lb, quals = match Env.try_lookup_val_decl env lbname.fv_name with
-            | None ->
-                gen, lb, quals
-
-            | Some ((uvs,tval), vquals) ->
-              let quals = check_quals_eq r lbname.fv_name quals vquals in
-              let def = match lb.lbtyp.n with
-                | Tm_unknown -> lb.lbdef
-                | _ ->
-                  (* If there are two type ascriptions we check that they are compatible *)
-                  mk (Tm_ascribed {tm=lb.lbdef; asc=(Inl lb.lbtyp, None, false); eff_opt=None}) lb.lbdef.pos
-              in
-              if lb.lbunivs <> [] && List.length lb.lbunivs <> List.length uvs
-              then raise_error r Errors.Fatal_IncoherentInlineUniverse "Inline universes are incoherent with annotation from val declaration";
-              false, //explicit annotation provided; do not generalize
-              mk_lb (Inr lbname, uvs, PC.effect_Tot_lid, tval, def, lb.lbattrs, lb.lbpos),
-              quals
-          in
-          gen, lb::lbs, quals)
-          (true, [], se.sigquals)
-    in
-
-    (* Check that all the mutually recursive bindings mention the same universes *)
-    U.check_mutual_universes lbs';
-
-    let quals =
-        if quals |> BU.for_some (function Irreducible | Visible_default | Unfold_for_unification_and_vcgen -> true | _ -> false)
-        then quals
-        else Visible_default :: quals //the default visibility for a let binding is Unfoldable
-    in
-
-    let lbs' = List.rev lbs' in
-
-    (* preprocess_with *)
-    let attrs, pre_tau =
-        match U.extract_attr' PC.preprocess_with se.sigattrs with
-        | None -> se.sigattrs, None
-        | Some (ats, [tau, None]) -> ats, Some tau
-        | Some (ats, args) ->
-            Errors.log_issue r Errors.Warning_UnrecognizedAttribute "Ill-formed application of `preprocess_with`";
-            se.sigattrs, None
-    in
-    let se = { se with sigattrs = attrs } in (* to remove the preprocess_with *)
-
-    let preprocess_lb (tau:term) (lb:letbinding) : ML letbinding =
-        let lbdef = Env.preprocess env tau lb.lbdef in
-        if Debug.medium () || !dbg_Elab then
-          Format.print1 "lb preprocessed into: %s\n" (show lbdef);
-        { lb with lbdef = lbdef }
-    in
-    // Preprocess the letbindings with the tactic, if any
-    let lbs' = match pre_tau with
-               | Some tau -> List.map (preprocess_lb tau) lbs'
-               | None -> lbs'
-    in
-    (* / preprocess_with *)
-
-    (* 2. Turn the top-level lb into a Tm_let with a unit body *)
-    let e = mk (Tm_let {lbs=(fst lbs, lbs'); body=mk (Tm_constant (Const_unit)) r}) r in
-
-    (* 3. Type-check the Tm_let and convert it back to Sig_let *)
-    let env' = { env with top_level = true; generalize = should_generalize } in
-    let e_src = e in
-    let elab_lbtyp : ref (option typ) = mk_ref None in
-    (* Whether the result of an (unannotated) definition is annotated, as in
-       [let f x : t = e], where the annotation is an ascription of [e]. *)
-    let result_annotated =
-      let rec ascribed (t:term) : ML bool =
-        match (SS.compress t).n with
-        | Tm_abs {body} -> ascribed body
-        | Tm_meta {tm} -> ascribed tm
-        | Tm_ascribed _ -> true
-        | _ -> false
-      in
-      match (SS.compress e_src).n with
-      | Tm_let {lbs=(false, [lb])} -> ascribed lb.lbdef
-      | _ -> false
-    in
-    (* Elaboration by TcTerm, without checking guards. When the definition is
-       checked by Core, the type elaboration inferred for an unannotated
-       definition is dropped from it, and recorded in [elab_lbtyp]. *)
-    let elaborate () : ML term =
-      let e = e_src in
-      elaborating (fun _ ->
-        let drop_lbtyp (e_lax:term) : ML term =
-          if env'.admit then e_lax else
-          match (SS.compress e_lax).n with
-          | Tm_let {lbs=(false, [ lb ]); body=e2} ->
-            let lb_unannotated =
-              match (SS.compress e).n with  //checking type annotation on e, the lb before elaboration
-              | Tm_let {lbs=(_, [ lb ])} ->
-                (match (SS.compress lb.lbtyp).n with
-                 | Tm_unknown -> true
-                 | _ -> false)
-              | _ -> failwith "Impossible: the lb before and after elaboration differ in structure!"
-            in
-            if lb_unannotated then elab_lbtyp := Some lb.lbtyp;
-            if lb_unannotated then { e_lax with n = Tm_let {lbs=(false, [ { lb with lbtyp = S.tun } ]);
-                                                            body=e2}}  //erase the type annotation
-            else e_lax
-          | Tm_let {lbs=(true, lbs)} ->
-            U.check_mutual_universes lbs;
-            //leave recursive lets as is; since the decreases clause from the ascription (if any)
-            //is propagated to the lbtyp by TcUtil.extract_let_rec_annotation
-            //if we drop the lbtyp here, we'll lose the decreases clause
-            e_lax
-        in
-        let e =
-          Profiling.profile (fun () ->
-              let tc (e:term) () = tc_maybe_toplevel_term ({ env' with admit = true }) e in
-              (* A goal of a [synth_by_tactic] may mention unification
-                 variables that are only solved after the tactic would have
-                 run (e.g. the implicits of [f h (_ by tac)] when [h]'s
-                 subtyping is deferred). So we first elaborate without
-                 synthesis, and then synthesize over that elaboration, where
-                 the goals are fully resolved. *)
-              let (e, _, _) =
-                if mem PC.synth_lid (Free.fvars e)
-                then
-                  let (e1, _, _) = tc e () in
-                  let e1 = N.remove_uvar_solutions env' e1 |> drop_lbtyp in
-                  TcUtil.with_synth env'.admit (tc e1)
-                else tc e ()
-              in
-              e)
-              (Some (Ident.string_of_lid (Env.current_module env)))
-              "FStarC.TypeChecker.Tc.tc_sig_let-elaborate"
-        in
-
-        if Debug.medium () || !dbg_Elab then
-          Format.print1 "Let binding after elaboration, before removing uvars: %s\n" (show e);
-
-        let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
-
-        if Debug.medium () || !dbg_Elab then
-          Format.print1 "Let binding after elaboration, uvars removed: %s\n" (show e);
-        e)
-    in
-    let e = elaborate () in
-
-    let env' =
-        match (SS.compress e).n with
-        | Tm_let {lbs} ->
-          let se = { se with sigel = Sig_let {lbs; lids} } in
-          set_hint_correlator env' se
-        | _ ->
-          failwith "no way, not a let?"
-    in
-    Errors.stop_if_err ();
-    let r =
-      let strip (e:term) : ML term =
-        if mem PC.synth_lid (Free.fvars e_src) then erase_synthesized_proofs env' e else e
-      in
-      if env'.admit
-      then (
-        (match (SS.compress e).n with
-         | Tm_let {lbs=(_, lbs)} ->
-           lbs |> List.iter (fun (lb:letbinding) ->
-             let usubst, univ_names = SS.univ_var_opening lb.lbunivs in
-             let env_u = Env.push_univ_vars env' univ_names in
-             CoreCheck.check_smt_patterns env_u (SS.subst usubst lb.lbtyp);
-             CoreCheck.check_smt_patterns env_u (SS.subst usubst lb.lbdef))
-         | _ -> ());
-        strip e, S.mk_Total S.t_unit, Env.trivial_guard
-      )
-      (* The elaboration of a closed definition must be closed: Core checks it
-         as is. A free name in it is a bug in elaboration (see
-         doc/ref/core_typechecking.md, "Ill-scoped elaborations"). *)
-      else if Cons? (elems (FStarC.Syntax.Free.names e))
-      then
-        raise_error (Env.get_range env') Errors.Error_IllScopedTerm [
-          Errors.Msg.text "Internal error: the elaboration of this definition has free names:";
-          Errors.Msg.text (show (FStarC.Syntax.Free.names e))
-        ]
-      else (
-        let r =
-          Profiling.profile (fun () -> tc_sig_let_core env' !elab_lbtyp result_annotated e)
-                            (Some (Ident.string_of_lid (Env.current_module env)))
-                            "FStarC.TypeChecker.Tc.tc_sig_let-core"
-        in
-        (* Core decides whether the definition is accepted, and reports why
-           when it is not: an unprovable guard is reported by the SMT solver,
-           with the labels Core put on it, and a structural failure with
-           Core's error. *)
-        match r with
-        | Inl e -> strip e, S.mk_Total S.t_unit, Env.trivial_guard
-        | Inr err ->
-          let r = match Core.error_range err with Some r -> r | None -> Env.get_range env' in
-          match Core.error_code err with
-          | Some code -> raise_error r code (Core.error_message err)
-          | None ->
-            raise_error r Errors.Error_TypeError [
-              Errors.Msg.text "Core failed to check this definition.";
-              Errors.Msg.text (Core.print_error err)
-            ]
-      )
-    in
-    let se, lbs = match r with
-      | {n=Tm_let {lbs; body=e}}, _, g when Env.is_trivial g ->
-        U.check_mutual_universes (snd lbs);
-
-        // Propagate binder names into signature
-        let lbs = (fst lbs, (snd lbs) |> List.map rename_parameters) in
-
-        //propagate the MaskedEffect tag to the qualifiers
-        let quals = match e.n with
-            | Tm_meta {meta=Meta_desugared Masked_effect} -> HasMaskedEffect::quals
-            | _ -> quals
-        in
-        { se with sigel = Sig_let {lbs; lids};
-                  sigquals =  quals },
-        lbs
-      | _ -> failwith "impossible (typechecking should preserve Tm_let)"
-    in
-    let se = run_postprocess false env' se in
-
-    (*
-     * An unannotated top-level `let _ = lem ()` (or `let _ = assert_norm p`)
-     * gets the inferred type `squash p`, since the postcondition of a Pure
-     * computation is now part of its result type. Recording that as the type
-     * of the binding would publish `p` to the SMT solver as an ambient fact
-     * for the rest of the module, which can badly degrade (or even break)
-     * later queries.
-     *
-     * The user asked for no particular type here, so we record the plain
-     * `unit` instead. Writing `let _ : squash p = ...` (or any other
-     * annotation, e.g. the `let _ : nonempty t = nonempty_intro w` idiom)
-     * still publishes the fact, as intended.
-     *)
-    let se =
-      let is_squashed_unit t =
-        let head, _ = U.head_and_args_full t in
-        match (U.un_uinst head).n with
-        | Tm_fvar fv -> S.fv_eq_lid fv PC.squash_lid
-        | Tm_refine {b={sort={n=Tm_fvar fv}}} -> S.fv_eq_lid fv PC.unit_lid
-        | _ -> false
-      in
-      let drop_inferred_postcondition lb =
-        let lbname = Inr?.v lb.lbname in
-        if Nil? lb.lbunivs
-        && List.existsb (lid_equals lbname.fv_name) unannotated_lbnames
-        && is_squashed_unit lb.lbtyp
-        then { lb with lbtyp = S.t_unit }
-        else lb
-      in
-      match se.sigel with
-      | Sig_let {lbs=(is_rec, lbs); lids} ->
-        { se with sigel = Sig_let {lbs=(is_rec, List.map drop_inferred_postcondition lbs); lids} }
-      | _ -> se
-    in
-
-    //
-    // if no_subtyping attribute is present, typecheck the signatures with use_eq_strict
-    //
-    if U.has_attribute se.sigattrs PC.no_subtping_attr_lid
-    then begin
-      let env' = {env' with use_eq_strict=true} in
-      let err s pos = raise_error pos Errors.Fatal_InconsistentQualifierAnnotation s in
-      snd lbs |> List.iter (fun lb ->
-        if not (U.is_lemma lb.lbtyp)
-        then err ("no_subtype annotation on a non-lemma") lb.lbpos
-        else let lid_opt =
-                   Free.fvars lb.lbtyp
-                   |> elems
-                   |> List.tryFind (fun lid ->
-                                   not (lid |> Ident.path_of_lid |> List.hd = "Prims" ||
-                                        lid_equals lid PC.pattern_lid)) in
-             if lid_opt |> Some?             
-             then err (Format.fmt1 "%s is not allowed in no_subtyping lemmas (only prims symbols)"
-                         (lid_opt |> Option.must |> string_of_lid)) lb.lbpos
-             else let t, _ = U.type_u () in
-                  let uvs, lbtyp = SS.open_univ_vars lb.lbunivs lb.lbtyp in
-                  let env_u = Env.push_univ_vars env' uvs in
-                  if CoreCheck.enabled env_u then (
-                    (* Core's memo table must not answer with the result of
-                       checking the definition, where subtyping was allowed. *)
-                    Core.clear_memo_table ();
-                    ignore (CoreCheck.universe_of env_u "the no_subtyping annotation" lbtyp);
-                    Core.clear_memo_table ()
-                  ))
-    end;
-
-    (* 4. Record the type of top-level lets, and log if requested *)
-    snd lbs |> List.iter (fun lb ->
-        let fv = Inr?.v lb.lbname in
-        Env.insert_fv_info env fv lb.lbtyp);
-
-    if log env
-    then Format.print1 "%s\n" (snd lbs |> List.map (fun lb ->
-          let should_log = match Env.try_lookup_val_decl env (Inr?.v lb.lbname).fv_name with
-              | None -> true
-              | _ -> false in
-          if should_log
-          then Format.fmt2 "let %s : %s" (show lb.lbname) (show (*env*) lb.lbtyp)
-          else "") |> String.concat "\n");
-
-    [se], [], env0
+let run_postprocess = TcLet.run_postprocess
 
 let snapshot_context env msg = BU.atomically (fun () ->
     TypeChecker.Env.snapshot env msg)
@@ -1170,7 +483,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     let ses =
       (* The inductive is elaborated, and its elaboration checked with Core
          (see [TcInductive]). In lax mode, it is only elaborated, once. *)
-      if CoreCheck.enabled env then elaborating (fun _ ->
+      if CoreCheck.enabled env then CoreCheck.elaborating (fun _ ->
         //we generate extra sigelts when elaborating and then throw them away
         //would be nice to not generate them at all
         let ses =
@@ -1203,7 +516,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
 
   | Sig_new_effect ne ->
       let ne =
-        if CoreCheck.enabled env then elaborating (fun _ ->
+        if CoreCheck.enabled env then CoreCheck.elaborating (fun _ ->
           let ne =
             TcEff.tc_eff_decl ({ env with admit = true }) ne se.sigquals se.sigattrs
             |> (fun ne -> { se with sigel = Sig_new_effect ne })
@@ -1221,7 +534,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     (* The lift is elaborated, and checked by Core (see [TcEff.check_comb]);
        in lax mode, it is only elaborated, once. *)
     let sub =
-      if CoreCheck.enabled env && Some? sub.lift then elaborating (fun _ ->
+      if CoreCheck.enabled env && Some? sub.lift then CoreCheck.elaborating (fun _ ->
         let sub = TcEff.tc_lift ({ env with admit = true }) sub r in
         match (N.elim_uvars env { se with sigel = Sig_sub_effect sub }).sigel with
         | Sig_sub_effect sub -> sub
@@ -1256,7 +569,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
 
     let env = Env.set_range env r in
     let uvs, t =
-      elaborating (fun _ ->
+      CoreCheck.elaborating (fun _ ->
         let uvs, t = tc_declare_typ ({ env with admit = true }) (uvs, t) se.sigrng in
         if Debug.medium () || !dbg_Elab then Format.print2 "Val declaration after elaboration: %s and uvs: %s\n" (show t) (show uvs);
         uvs, t)
@@ -1277,7 +590,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
     let env = Env.set_range env r in
 
     let uvs, t =
-      elaborating (fun _ ->
+      CoreCheck.elaborating (fun _ ->
         let uvs, t = tc_assume ({ env with admit = true }) (uvs, t) se.sigrng in
         if Debug.medium () || !dbg_Elab then Format.print2 "Assume after elaboration: %s and uvs: %s\n" (show t) (show uvs);
         uvs, t)
@@ -1350,7 +663,7 @@ let tc_decl' env0 se: ML (list sigelt & list sigelt & Env.env) =
 
   | Sig_let {lbs; lids} ->
     Profiling.profile
-      (fun () -> tc_sig_let env r se lbs lids)
+      (fun () -> TcLet.tc_sig_let env r se lbs lids)
       (Some (Ident.string_of_lid (Env.current_module env)))
       "FStarC.TypeChecker.Tc.tc_sig_let"
   )
@@ -1365,7 +678,7 @@ let tc_decl env se: ML (list sigelt & list sigelt & Env.env) =
   FStarC.GenSym.reset_gensym();
   FStarC.TypeChecker.Overload.reset_ambiguity_reports();
   let env0 = env in
-  let env = set_hint_correlator env se in
+  let env = Env.set_hint_correlator env se in
   let env =
     (* This is one point where we read admit_smt_queries
     and pass it through into the .admit field.

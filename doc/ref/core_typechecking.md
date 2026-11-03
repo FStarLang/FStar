@@ -84,23 +84,22 @@ checker uses (§3).
 
 ## 2. The driver for `let`
 
-The driver is `Tc.tc_sig_let`, with `Tc.tc_sig_let_core`.
+The driver is `TcLet.tc_sig_let` (`FStarC.TypeChecker.TcLet`), in four
+phases: annotation (from `val` declarations, then `preprocess_with`),
+elaboration, checking, and recording (`postprocess_with`, etc.).
 
-* **Elaboration.** TcTerm runs with `admit` set, inside `Tc.elaborating`,
-  which clears Core's memo table before and after (the elaboration's
-  guards are not proven, so nothing Core caches meanwhile may be trusted).
-  In a lax module the driver stops there, after
+* **Elaboration.** TcTerm runs with `admit` set, inside
+  `CoreCheck.elaborating`, which clears Core's memo table before and after
+  (the elaboration's guards are not proven, so nothing Core caches
+  meanwhile may be trusted). In a lax module the driver stops there, after
   `CoreCheck.check_smt_patterns` (§3).
-* **Non-recursive `let`.** The elaborated definition is checked with
-  `Core.compute_term_comp` against an expected type:
+* **Non-recursive `let`** (`check_let`). The elaborated definition is
+  checked with `Core.compute_term_comp` against its elaborated type:
   * the user's annotation, if there is one;
-  * otherwise, **the type elaboration inferred**. The elaborator's
-    type is dropped from the definition and remembered (`drop_lbtyp`,
-    `elab_lbtyp`).
+  * otherwise, **the type elaboration inferred**.
 
   Core does no inference, even at the top level: clients depend on the
-  recorded type (§9). With `--ext core_infer`, Core infers the type
-  instead.
+  recorded type (§9).
 
   Declared types are checked for well-formedness on their own first
   (`check_declared_types`), and their guard is discharged as a separate
@@ -111,18 +110,14 @@ The driver is `Tc.tc_sig_let`, with `Tc.tc_sig_let_core`.
   like `pow2 (hi - lo)`. This applies to the user's annotation, to the
   declared types of a recursive nest, and to the elaborated type of a
   definition whose result is annotated, as in `let f x : Lemma (requires p
-  x) (ensures q x) = e` (`result_annotated`).
+  x) (ensures q x) = e` (`result_ascribed`).
 
-  An inferred type is not checked (`check_t = false`): it may only be
+  Any other inferred type is not checked: it may only be
   well-formed in the context the definition sets up, e.g. `x:U32.t{v x = f
   b}` for `let n = f b in lem b; U32.uint_to_t n`, where `=` is taken at
   `uint_t 32`.
 
-  An inferred computation type is normalized as TcTerm normalizes the
-  computation type of a function body (`Beta; Eager_unfolding; NoFullNorm;
-  Exclude Zeta`): only the result of the arrow, not its binders.
-
-  Core's guard is then discharged by `tc_sig_let_core` (`discharge`), and
+  Core's guard is then discharged (`TcLet.discharge`), and
   the definition is finished by `TcTerm.finish_top_level_let` with a
   trivial guard: it masks top-level effects, checks that the type is
   inhabited, applies tcnorm, and closes the universes.
@@ -763,7 +758,7 @@ place its postcondition lives.
   has proven the guard, the entries are committed to the global cache with
   a token (`mk_token`, `commit_guard_core`; the `guard_and_tok_t` the API
   returns). The global cache is cleared by `clear_memo_table`: at each
-  top-level declaration and around every elaboration (`Tc.elaborating`,
+  top-level declaration and around every elaboration (`CoreCheck.elaborating`,
   `CoreCheck.elaborate`), since Core may run on unproven terms there.
 * **Re-emitting.** A caller that transforms the guard of a sub-computation
   (closing, weakening, labeling, adding facts) must emit the result with
@@ -827,8 +822,9 @@ type; otherwise dependents fail with elaboration errors (Error 54 or 189)
 far from the change.
 
 This is why Core checks against the type elaboration inferred (§2), and
-that is the type recorded. Core's own inferred types (`--ext core_infer`)
-differ in hundreds of places over `ulib`: abbreviations unfolded (`u32`
+that is the type recorded. The types Core itself would compute (it
+supported inferring them, under `--ext core_infer`, now removed) differed
+in hundreds of places over `ulib`: abbreviations unfolded (`u32`
 becomes `U32.t`), refinements typed as `eqtype`, `unfold` operators not
 normalized.
 
@@ -845,7 +841,7 @@ annotation.
 * **Not handled.** `when` clauses (Error 236), and `match ... returns`
   annotations with tactic handlers.
 * **Synthesis outside `let`.** Only the definitions of top-level `let`s are
-  elaborated with synthesis (`Tc.tc_sig_let`). A `synth_by_tactic` at a
+  elaborated with synthesis (`TcLet.elaborate`). A `synth_by_tactic` at a
   type that is not a proof goal elsewhere, e.g. in the type of a `val` or
   `assume val`, or of a constructor's argument, is not run, and Core
   rejects it.

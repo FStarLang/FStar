@@ -439,6 +439,31 @@ let incr_query_index env : ML _ =
       HashTable.add tbl (string_of_lid l) next;
       {env with qtbl_name_and_index=Some (l, typ, next), tbl}
 
+let set_hint_correlator (env:env) (se:sigelt) : ML _ =
+    (* if the tbl has a counter for lid, we use that, else we start from 0;
+       this is useful when we verify the extracted interface alongside *)
+    let tbl = env.qtbl_name_and_index |> snd in
+    let get_n lid =
+      match HashTable.try_find tbl (show lid) with
+      | Some n -> n
+      | None -> 0
+    in
+    let typ =
+      match se.sigel with
+      | Sig_inductive_typ {t}
+      | Sig_datacon {t}
+      | Sig_declare_typ {t} -> t
+      | Sig_let {lbs=(_, lb::_)} -> lb.lbtyp
+      | _ -> S.tun
+    in
+    let lid =
+      match U.lids_of_sigelt se with
+      | [] -> Ident.lid_add_suffix env.curmodule
+                                   (GenSym.next_id () |> show) // GM: Should we really touch the gensym?
+      | l::_ -> l
+    in
+    {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
+
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////

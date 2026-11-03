@@ -21,7 +21,7 @@
    term and computes its verification condition: Core is the only source of
    verification conditions, and TcTerm is run once. See
    doc/ref/core_typechecking.md. The functions here are the common part of that for
-   the declarations other than [let] (whose driver is [Tc.tc_sig_let]): they
+   the declarations other than [let] (whose driver is [TcLet.tc_sig_let]): they
    check a fully elaborated term (no unification variables) with Core,
    discharge Core's guard, and report Core's errors. *)
 module FStarC.TypeChecker.CoreCheck
@@ -40,6 +40,11 @@ val enabled (env:Env.env) : ML bool
 (* [core ()] if Core is [enabled] in [env]; otherwise [elab ()], which only
    elaborates, as there is nothing to prove. *)
 val check_or_elaborate (env:Env.env) (core:unit -> ML 'a) (elab:unit -> ML 'a) : ML 'a
+
+(* [f ()], which elaborates with TcTerm. Its guards are not proven, so
+   Core's memo table, cleared before and after, must not remember what Core
+   checks meanwhile. *)
+val elaborating (f:unit -> ML 'a) : ML 'a
 
 (* Elaborate [e] with [tc] (in [env] with [admit] set), solving its
    implicits, and return the elaborated term, without unification variables,
