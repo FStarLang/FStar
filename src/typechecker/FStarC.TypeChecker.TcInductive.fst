@@ -42,6 +42,7 @@ module U  = FStarC.Syntax.Util
 module C  = FStarC.Parser.Const
 module Print = FStarC.Syntax.Print
 module Core = FStarC.TypeChecker.Core
+module CoreRel = FStarC.TypeChecker.CoreRel
 
 open FStarC.Class.Show
 open FStarC.Class.Listlike
@@ -507,7 +508,7 @@ let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:u
   //haseq of all binders in bs, we will add only those binders x:t for which t <: Type u for some fresh universe variable u
   //we want to avoid the case of binders such as (x:nat), as hasEq x is not well-typed
   let bs' = List.filter (fun b ->
-    Rel.subtype_nosmt_force en b.binder_bv.sort  (fst (U.type_u ()))
+    CoreRel.subtype_nosmt_force en b.binder_bv.sort  (fst (U.type_u ()))
   ) bs in
   let haseq_bs = List.fold_left (fun (t:term) (b:binder) -> U.mk_conj t (mk_Tm_app U.t_haseq [S.as_arg (S.bv_to_name b.binder_bv)] Range.dummyRange)) U.t_true bs' in
   //implication

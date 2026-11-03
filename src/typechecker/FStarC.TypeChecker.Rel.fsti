@@ -63,8 +63,9 @@ val guard_to_string           : env -> guard_t -> ML string
    the [_nosmt] functions) or when verification is disabled ([env.admit]),
    relying on Core, which re-checks every term Rel helps elaborate, to generate
    that proof obligation.  Without SMT, Rel only succeeds if the obligation
-   simplifies to [True].  So, a client that does not have its terms re-checked
-   by Core must use the [_nosmt] functions. *)
+   simplifies to [True].  Rel does not decide relations: a client that does
+   not have its terms re-checked by Core must use [CoreRel], in which Core
+   decides the relation once Rel has solved the unification variables. *)
 val try_teq    : smt_ok:bool -> env -> typ -> typ -> ML (option guard_t)
 val teq        : env -> typ -> typ -> ML guard_t
 val subtype_fail: env -> term -> typ -> typ -> ML unit

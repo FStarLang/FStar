@@ -170,8 +170,8 @@ and env = {
   typeof_tot_or_gtot_term :env -> term -> must_tot -> ML (term & typ & guard_t); (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> ML universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> ML (typ & guard_t); (* typechecker callback, uses fast path, with a fallback on the slow path *)
-  teq_nosmt_force: env -> term -> term -> ML bool;        (* callback to the unifier *)
-  subtype_nosmt_force: env -> term -> term -> ML bool;    (* callback to the unifier *)
+  teq_nosmt_force: env -> term -> term -> ML bool;        (* callback to [CoreRel]: decided by Core *)
+  subtype_nosmt_force: env -> term -> term -> ML bool;    (* callback to [CoreRel]: decided by Core *)
   qtbl_name_and_index: option (lident & typ & int) & HashTable.t string int;
      (* ^ the top-level term we're currently processing, its type, and the query counter for it,
        in addition we maintain a counter for query index per lid *)

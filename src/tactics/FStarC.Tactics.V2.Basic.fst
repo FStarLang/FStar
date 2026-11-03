@@ -54,6 +54,7 @@ module TcTerm = FStarC.TypeChecker.TcTerm
 module UF     = FStarC.Syntax.Unionfind
 module U      = FStarC.Syntax.Util
 module Core   = FStarC.TypeChecker.Core
+module CoreRel = FStarC.TypeChecker.CoreRel
 module PO     = FStarC.TypeChecker.Primops
 module TC     = FStar.Tactics.Typeclasses
 
@@ -455,29 +456,10 @@ let __do_unify_wflags
       catch (//restore UF graph in case anything fails
         let! gopt = trytac cur_goal in
         try
-          let tx = UF.new_transaction () in
-          let res =
-            if allow_guards
-            then Rel.try_teq true env t1 t2
-            else Rel.teq_nosmt env t1 t2
-          in
-          (* Rel computes no logical guard: when it is allowed to leave a
-             proof obligation, it only solves the unification variables, and
-             Core computes the obligation for the terms so instantiated. *)
-          let res =
-            match res with
-            | Some g when allow_guards && not env.admit ->
-              (match Core.check_term_equality true true env t1 t2 with
-               | Inl None -> UF.commit tx; Some g
-               | Inl (Some (f, _)) -> UF.commit tx; Some {g with guard_f = NonTrivial f}
-               | Inr err ->
-                 if dbg then
-                   Format.print1 "%%%%%%%%do_unify: Core rejected the unifier's solution: %s\n"
-                     (Core.print_error err);
-                 UF.rollback tx;
-                 None)
-            | _ -> UF.commit tx; res
-          in
+          (* Rel solves the unification variables, and Core decides the
+             equality of the terms so instantiated, computing its proof
+             obligation if [allow_guards] (see [CoreRel]). *)
+          let res = CoreRel.try_teq allow_guards env t1 t2 in
           if dbg then
             Format.print3 "%%%%%%%%do_unify (RESULT %s) %s =? %s\n"
                               (FStarC.Common.string_of_option (Rel.guard_to_string env) res)
@@ -553,8 +535,8 @@ let do_subtype (must_tot:bool) (env:Env.env) (t1:term) (t2:term) : ML (tac bool)
     match!
       catch (
         try
-          match Rel.subtype_nosmt env t1 t2 with
-          | Some g when Env.is_trivial_guard_formula g ->
+          match CoreRel.try_subtype false env t1 t2 with
+          | Some g ->
             tc_unifier_solved_implicits env must_tot false all_uvars ;!
             add_implicits (Listlike.to_list g.implicits) ;!
             return true

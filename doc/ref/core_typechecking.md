@@ -239,14 +239,31 @@ logical guard. The contract is stated above `Rel.try_teq` in `Rel.fsti`:
 * `TcUtil.weaken_result_typ` and `check_has_type` use `Rel.try_teq` /
   `Rel.try_subtype`.
 
-A client whose terms Core does not check again must therefore use the
-`_nosmt` functions: `TcInductive`, `Positivity`, the tactic interpreter,
-and Pulse's `RuntimeUtils`.
+Rel is therefore not trusted to decide a relation. A client whose terms
+Core does not check again goes through `CoreRel`:
+* Rel solves the uvars of the two terms, in a transaction.
+* Core then decides the relation between the terms so instantiated
+  (`Core.check_term_equality` / `check_term_subtyping`).
+* If Core rejects it, the transaction is rolled back and the relation
+  fails.
 
-Tactics that unify with guards allowed (`V2.Basic.__do_unify_wflags`) get
-the obligation from Core: once Rel has solved the uvars, outside lax mode,
-`Core.check_term_equality` relates the two terms and its guard becomes a
-goal. If Core rejects them, the unification is rolled back and fails.
+Without guards, Core must relate the terms with no obligation, or with one
+that simplifies to `True`. With guards, Core's obligation is the result's
+logical guard. In admit mode, Rel's answer is taken as it is, since
+nothing is proven.
+
+The clients of `CoreRel` are:
+* the tactics' unification and subtyping (`V2.Basic.__do_unify_wflags`
+  and `do_subtype`). When guards are allowed, Core's obligation becomes a
+  goal.
+* the `Env` hooks `teq_nosmt_force` / `subtype_nosmt_force` (`TcInductive`'s
+  check that an inductive's annotation is a `Type`);
+* the binders of `TcInductive`'s hasEq axioms;
+* the memo of already-unfolded inductives in `Positivity`.
+
+Pulse's `RuntimeUtils` uses Rel's `_nosmt` functions only to solve uvars in
+its prover: these calls either have `admit` set (`elaboration_env`) or
+ignore the result.
 
 TcTerm still builds guards of its own (e.g. in `value_check_expected_typ`),
 but it runs with `admit` set, and they are discarded.

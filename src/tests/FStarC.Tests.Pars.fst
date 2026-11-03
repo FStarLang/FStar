@@ -69,8 +69,8 @@ let do_init () =
                 TcTerm.typeof_tot_or_gtot_term
                 TcTerm.typeof_tot_or_gtot_term_fastpath
                 TcTerm.universe_of
-                Rel.teq_nosmt_force
-                Rel.subtype_nosmt_force
+                FStarC.TypeChecker.CoreRel.teq_nosmt_force
+                FStarC.TypeChecker.CoreRel.subtype_nosmt_force
                 solver
                 Const.prims_lid
                 NBE.normalize_for_unit_test
