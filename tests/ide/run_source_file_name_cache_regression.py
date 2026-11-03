@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -31,12 +32,14 @@ def main():
     archive = build / "fstarcompiler.cmxa"
     args.output.mkdir(parents=True, exist_ok=True)
     executable = args.output / "source-file-name-cache-regression.exe"
+    build_harness = args.output / harness.name
+    shutil.copyfile(harness, build_harness)
     command = [
         "ocamlfind", "ocamlopt", "-thread", "-linkpkg",
         "-package", PACKAGES,
         "-I", str(build / ".fstarcompiler.objs/byte"),
         "-I", str(build / ".fstarcompiler.objs/native"),
-        str(archive), str(harness), "-o", str(executable),
+        str(archive), str(build_harness), "-o", str(executable),
     ]
     subprocess.run(command, check=True)
     with tempfile.TemporaryDirectory(
