@@ -35,6 +35,7 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
 let _full_include : ref (option (list string)) = mk_ref None
 let _module_include_paths_normalized : ref (option (list module_include_path)) = mk_ref None
 let find_file_cache : HashTable.t string (option string) = HashTable.create 100
+let source_file_name_cache : HashTable.t string string = HashTable.create 100
 
 (* Bumped every time the include path (or anything else affecting file
 resolution) changes. Clients that cache results derived from the include path
@@ -43,6 +44,7 @@ let _epoch : ref int = mk_ref 0
 
 let clear () : ML unit =
   HashTable.clear find_file_cache;
+  HashTable.clear source_file_name_cache;
   _full_include := None;
   _module_include_paths_normalized := None;
   _epoch := !_epoch + 1;
@@ -270,20 +272,21 @@ let find_file =
   cached_fun find_file_cache fun s ->
     do_find (full_include_path ()) s
 
-let source_file_name (filename:string) : ML string =
-  // Resolve relative names first: an incremental parser may already have an
-  // include-relative range filename, rather than a path relative to cwd.
-  let filename =
-    match find_file filename with
-    | Some path -> Filepath.normalize_file_path path
-    | None -> filename
-  in
-  if Filepath.is_path_absolute filename then
-    match relative_source_path filename with
-    | Some relative -> relative
-    | None -> Filepath.basename filename
-  else
-    BU.replace_char filename '\\' '/'
+let source_file_name =
+  cached_fun source_file_name_cache fun filename ->
+    // Resolve relative names first: an incremental parser may already have an
+    // include-relative range filename, rather than a path relative to cwd.
+    let filename =
+      match find_file filename with
+      | Some path -> Filepath.normalize_file_path path
+      | None -> filename
+    in
+    if Filepath.is_path_absolute filename then
+      match relative_source_path filename with
+      | Some relative -> relative
+      | None -> Filepath.basename filename
+    else
+      BU.replace_char filename '\\' '/'
 
 let find_file_odir =
   (* NOTE: this function is not cached, since the plugin-building code
