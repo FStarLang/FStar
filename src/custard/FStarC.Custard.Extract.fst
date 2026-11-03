@@ -5089,6 +5089,11 @@ and mono_holes (st:state) (l:Ident.lident)
                       if List.existsb (S.bv_eq v) acc then acc else acc @ [v])
                    acc (elems (Free.names (snd it))) in
   let vs = List.fold_left names_of [] (margs @ msubst) in
+  (* Under --custard_monomorphize_types a type name was rejected by
+     [check_mono_arg] before getting here.  Otherwise types are compiled
+     uniformly and erased, so a type name is not a parameter but stays a free
+     type variable of the specialization. *)
+  let vs = vs |> List.filter (fun v -> not (is_type_bv st v)) in
   (* Sorted so that the order cannot depend on the order the arguments happen
      to be visited in, which would make the key unstable. *)
   List.sortWith (fun a b -> a.index - b.index) vs
@@ -5197,6 +5202,18 @@ and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
    there would be nothing to pass at runtime -- the specialization would have
    to be chosen by a value that does not exist in the emitted program. *)
 and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
+  let is_type_name (v:S.bv) : ML bool =
+    match (SS.compress v.sort).n with
+    | Tm_type _ -> true
+    | _ -> false in
+  (* Without --custard_monomorphize_types every type is compiled uniformly
+     (section 5.0), so a runtime type parameter is simply left free in the
+     specialization (see [mono_holes]): it is a type variable of the emitted
+     code, and that code is the same whatever it is instantiated at. *)
+  let uniform = not (Options.custard_monomorphize_types ()) in
+  match (SS.compress t).n with
+  | Tm_name v when uniform && is_type_name v -> ()
+  | _ ->
   (* An argument that is *nothing but* a runtime value has no shape to
      specialize on, and abstracting it would silently turn monomorphization
      into ordinary runtime passing -- which is the performance cliff the
@@ -5313,10 +5330,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
      in
      custard_error st E.Error_CustardCannotMonomorphize msg
    | _ -> ());
-  let is_type_name (v:S.bv) : ML bool =
-    match (SS.compress v.sort).n with
-    | Tm_type _ -> true
-    | _ -> false in
+  if uniform then () else
   match elems (Free.names t) |> List.filter is_type_name with
   | [] -> ()
   | v :: _ ->

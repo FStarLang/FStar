@@ -611,11 +611,22 @@ cherry_string cherry_str_escaped(cherry_string s) {
   return (cherry_string)c;
 }
 
-cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
+static inline int str_compare(cherry_string a, cherry_string b) {
+  if (a == b) return 0;
   size_t la = cherry_str_size(a), lb = cherry_str_size(b);
   int r = memcmp(cherry_str_data(a), cherry_str_data(b), la < lb ? la : lb);
   if (r == 0) r = (la > lb) - (la < lb);
-  return CHERRY_INT_SMALL(r < 0 ? -1 : r > 0 ? 1 : 0);
+  return r < 0 ? -1 : r > 0 ? 1 : 0;
+}
+
+cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
+  return CHERRY_INT_SMALL(str_compare(a, b));
+}
+
+/* The same comparison as a two's complement 64-bit -1/0/1
+   (FStarC.SmallInt.string_compare). */
+uint64_t cherry_str_compare_u64(cherry_string a, cherry_string b) {
+  return (uint64_t)(int64_t)str_compare(a, b);
 }
 
 /* 64-bit FNV-1a over the UTF-8 bytes (FStarC.Hash.of_string). */
