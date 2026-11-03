@@ -22,6 +22,10 @@ type interp_t =
 type nbe_interp_t =
     NBE.nbe_cbs -> universes -> NBE.args -> ML (option NBE.t)
 
+(* Stored by the thousand in the normalizer's maps of steps: boxed under
+   Cherry, so that copying a map node copies a pointer rather than the ten
+   fields. *)
+[@@FStar.Attributes.cherry_boxed]
 type primitive_step = {
     name:FStarC.Ident.lid;
     arity:int;
