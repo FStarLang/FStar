@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   bump-and-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
         with:

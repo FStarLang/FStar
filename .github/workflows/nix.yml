@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   fstar-nix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
     - uses: actions/checkout@v6
       # No submodules checkout needed, Nix wil take care of that.

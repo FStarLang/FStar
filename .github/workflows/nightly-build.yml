@@ -27,7 +27,7 @@ jobs:
       ref: ${{ inputs.branch }}
 
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: build-all
     if: always()
     steps:
