@@ -284,7 +284,11 @@ instance showable_cfg : showable cfg = {
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv : ML (option primitive_step) =
-    match PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name) with
+    let name = I.string_of_lid fv.fv_name in
+    let r = match PSMap.try_find cfg.local_steps name with
+            | None -> PSMap.try_find cfg.primitive_steps name
+            | r -> r in
+    match r with
     | Some ps when ps.unrepresentable_result && not cfg.steps.unrepresentable_primops -> None
     | r -> r
 
@@ -421,7 +425,7 @@ let config' psteps s e : ML cfg =
         | [] -> [Env.NoDelta]
         | _ -> d in
     let steps = to_fsteps s |> add_nbe in
-    let psteps = add_steps (merge_steps (env_dependent_ops e) (cached_steps ())) psteps in
+    let local_steps = add_steps (env_dependent_ops e) psteps in
     let dbg_flag = List.contains NormDebug s in
     {
       tcenv = e;
@@ -444,7 +448,8 @@ let config' psteps s e : ML cfg =
       };
       steps = steps;
       delta_level = d;
-      primitive_steps = psteps;
+      primitive_steps = cached_steps ();
+      local_steps = local_steps;
       strong = false;
       memoize_lazy = true;
       normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();

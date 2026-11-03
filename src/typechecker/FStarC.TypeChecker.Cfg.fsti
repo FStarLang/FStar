@@ -105,6 +105,10 @@ type cfg = {
      debug: debug_switches;
      delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
      primitive_steps:PSMap.t primitive_step;
+     (* Consulted before [primitive_steps]: the steps passed to [config'] and
+        those that depend on [tcenv].  Kept apart so that each configuration
+        need not copy the shared [primitive_steps]. *)
+     local_steps:PSMap.t primitive_step;
      strong : bool;                       // under a binder
      memoize_lazy : bool;     (* What exactly is this? Seems to be always true now. *)
      normalize_pure_lets: bool;
