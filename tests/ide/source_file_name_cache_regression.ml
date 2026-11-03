@@ -20,6 +20,12 @@ let () =
     (FStarC_Find.source_file_name source);
   expect "path boundary" "c.fst"
     (FStarC_Find.source_file_name sibling_source);
+  expect "unresolved dot fallback" "."
+    (FStarC_Find.source_file_name
+      (Filename.concat root "absent/."));
+  expect "unresolved dotdot fallback" ".."
+    (FStarC_Find.source_file_name
+      (Filename.concat root "absent/.."));
   FStarC_Find.set_include_path [];
   FStarC_Find.set_file_list [source];
   expect "file-list invalidation" "c.fst"

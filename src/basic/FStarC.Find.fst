@@ -292,10 +292,13 @@ let find_file =
   cached_fun find_file_cache fun s ->
     do_find (full_include_path ()) s
 
-let source_file_name_of_normalized (filename:string) : ML string =
+let source_file_name_of_normalized
+  (filename:string)
+  (fallback:unit -> ML string)
+: ML string =
   match relative_source_path_normalized filename with
   | Some relative -> relative
-  | None -> Filepath.basename filename
+  | None -> fallback ()
 
 let source_file_name =
   cached_fun source_file_name_cache fun filename ->
@@ -303,10 +306,14 @@ let source_file_name =
     // include-relative range filename, rather than a path relative to cwd.
     match find_file filename with
     | Some path ->
-      source_file_name_of_normalized (Filepath.normalize_file_path path)
+      let path = Filepath.normalize_file_path path in
+      source_file_name_of_normalized path (fun _ -> Filepath.basename path)
     | None ->
       if Filepath.is_path_absolute filename
-      then source_file_name_of_normalized (Filepath.normalize_file_path filename)
+      then
+        source_file_name_of_normalized
+          (Filepath.normalize_file_path filename)
+          (fun _ -> Filepath.basename filename)
       else BU.replace_char filename '\\' '/'
 
 let find_file_odir =
