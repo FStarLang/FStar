@@ -58,6 +58,11 @@ let should_unfold (allow_strict : bool) cfg should_reify fv qninfo : ML should_u
       Some? cfg.steps.unfold_qual ||
       Some? cfg.steps.unfold_namespace
     in
+    let explicitly_requested =
+      match cfg.steps.unfold_only with
+      | None -> false
+      | Some lids -> BU.for_some (fv_eq_lid fv) lids
+    in
     let res : bool & bool & bool & bool =
     match qninfo, selective_unfold with
     // We unfold effect actions if and only if we are reifying
@@ -76,7 +81,7 @@ let should_unfold (allow_strict : bool) cfg should_reify fv qninfo : ML should_u
         no
 
     // If it is handled primitively, then don't unfold
-    | _ when Some? (find_prim_step cfg fv) ->
+    | _ when Some? (find_prim_step cfg fv) && not explicitly_requested ->
         log_unfolding cfg (fun () -> Format.print_string " >> It's a primop, not unfolding\n");
         no
 

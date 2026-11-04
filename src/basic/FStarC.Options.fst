@@ -197,6 +197,7 @@ let defaults = [
   ("custard_entrypoints"                       , List []);
   ("custard_entry_module"                      , List []);
   ("custard_c_no_prefix"                       , List []);
+  ("custard_static_header"                     , Bool false);
   ("custard_main"                              , Unset);
   ("target"                                    , Unset);
   ("custard_dump_ir"                           , Bool false);
@@ -216,7 +217,6 @@ let defaults = [
   ("custard_krml_model"                        , List []);
   ("custard_no_unfold"                         , List []);
   ("custard_dump_cui"                          , Bool false);
-  ("compat_pre_core"                           , Unset);
   ("compat_pre_typed_indexed_effects"          , Bool false);
   ("debug_all"                                 , Bool false);
   ("debug_all_modules"                         , Bool false);
@@ -455,7 +455,6 @@ let lookup_opt s (c: option_val -> ML 'a) : ML 'a =
 let get_abort_on                ()      = lookup_opt "abort_on"                 as_int
 let get_admit_smt_queries       ()      = lookup_opt "admit_smt_queries"        as_bool
 let get_admit_except            ()      = lookup_opt "admit_except"             (as_option as_string)
-let get_compat_pre_core         ()      = lookup_opt "compat_pre_core"          (as_option as_int)
 
 let get_compat_pre_typed_indexed_effects ()  = lookup_opt "compat_pre_typed_indexed_effects" as_bool
 let get_disallow_unification_guards  ()      = lookup_opt "disallow_unification_guards"      as_bool
@@ -469,6 +468,7 @@ let get_custard_entry           ()      = lookup_opt "custard_entry"            
 let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      (as_list as_string)
 let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
 let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      (as_list as_string)
+let get_custard_static_header   ()      = lookup_opt "custard_static_header"    as_bool
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_target                  ()      = lookup_opt "target"                   (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
@@ -795,12 +795,6 @@ let specs_with_types warn_unsafe : ML (list (char & string & opt_type & Pprint.d
           (e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)");
 
   ( noshort,
-    "compat_pre_core",
-    IntStr "0, 1, 2",
-    text "Retain behavior of the tactic engine prior to the introduction \
-          of FStarC.TypeChecker.Core (0 is most permissive, 2 is least permissive)");
-
-  ( noshort,
     "compat_pre_typed_indexed_effects",
     Const (Bool true),
     text "Retain untyped indexed effects implicits");
@@ -887,6 +881,16 @@ specialization: a specialized name carries a hint (section 30.15) that is \
 free to change when the monomorphizer's input changes, and is not something \
 another translation unit may depend on. Two public definitions that would \
 share an unqualified name is an error.");
+
+  ( noshort,
+    "custard_static_header",
+    Const (Bool true),
+    text "With --codegen C, emit a single header containing static function \
+definitions and no source file. CInline independently requests inline. \
+Foreign declarations retain extern linkage. -o must name a .h file; the \
+default is Custard.h (or the --custard_unit name). Does not change roots \
+or API names. Non-macro globals, runtime initialization, --custard_main, \
+--custard_split and other code generators are not supported.");
 
   ( noshort,
     "custard_entry_module",
@@ -1821,7 +1825,6 @@ let settable = function
     | "abort_on"
     | "admit_except"
     | "admit_smt_queries"
-    | "compat_pre_core"
     | "compat_pre_typed_indexed_effects"
     | "disallow_unification_guards"
     | "debug"
@@ -2185,19 +2188,6 @@ let parse_settings ns : ML (list (list string & bool)) =
 
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
-let compat_pre_core_should_register () =
-  match get_compat_pre_core() with
-  | Some 0 -> false
-  | _ -> true
-let compat_pre_core_should_check () =
-  match get_compat_pre_core() with
-  | Some 0
-  | Some 1 -> false
-  | _ -> true
-let compat_pre_core_set () =
-  match get_compat_pre_core() with
-  | None -> false
-  | _ -> true
 
 let compat_pre_typed_indexed_effects () = get_compat_pre_typed_indexed_effects ()
 
@@ -2266,6 +2256,7 @@ let custard_entries              () = get_custard_entry ()
 let custard_entrypoint_files     () = get_custard_entrypoints ()
 let custard_entry_modules        () = get_custard_entry_module ()
 let custard_c_no_prefix          () = get_custard_c_no_prefix ()
+let custard_static_header        () = get_custard_static_header ()
 let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()

@@ -45,6 +45,16 @@ let rec arith_expr_to_bv (e : FStar_Reflection_V2_Arith.expr) : ((FStarC_Tactics
         (FStarC_Reflection_V2_Data.Tv_FVar (tmp2)))) in
       (FStar_Tactics_V2_Derived.apply_lemma tmp2 ps);
       (arith_expr_to_bv e1 ps)))
+    | (FStar_Reflection_V2_Arith.NatToBv ((FStar_Reflection_V2_Arith.Shl ((FStar_Reflection_V2_Arith.Lit (tmp)), tmp1)))) -> (fun ps -> (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("BV" :: ("int2bv_shl" :: [])))) in
+        (FStarC_Reflection_V2_Data.Tv_FVar (tmp2)))) in
+      (FStar_Tactics_V2_Derived.apply_lemma tmp2 ps);
+      (ignore (FStarC_Tactics_V2_Builtins.norm (FStarC_NormSteps.primops :: []) ps));
+      (FStar_Tactics_V2_Derived.trefl () ps)))
+    | (FStar_Reflection_V2_Arith.Shl ((FStar_Reflection_V2_Arith.Lit (tmp)), tmp1)) -> (fun ps -> (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp2 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("BV" :: ("int2bv_shl" :: [])))) in
+        (FStarC_Reflection_V2_Data.Tv_FVar (tmp2)))) in
+      (FStar_Tactics_V2_Derived.apply_lemma tmp2 ps);
+      (ignore (FStarC_Tactics_V2_Builtins.norm (FStarC_NormSteps.primops :: []) ps));
+      (FStar_Tactics_V2_Derived.trefl () ps)))
     | (FStar_Reflection_V2_Arith.NatToBv ((FStar_Reflection_V2_Arith.Shl (e1, tmp)))) -> (fun ps -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("BV" :: ("int2bv_shl" :: [])))) in
         (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
       (FStar_Tactics_V2_Derived.apply_lemma tmp1 ps);

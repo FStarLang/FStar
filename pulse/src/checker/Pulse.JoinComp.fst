@@ -107,6 +107,123 @@ let rec close_hoisted_exists (bs:list (universe & binder & var)) (post:slprop)
     then post
     else tm_exists_sl u b (close_term post x)
 
+(* Is [t] the variable [y], under any number of [reveal]s? An [exists*]
+   binder is erased, so a conjunct mentions [reveal w] rather than [w]. *)
+let rec is_revealed_var (y:var) (t:term) : bool =
+  match is_var t with
+  | Some nm -> nm.nm_index = y
+  | None ->
+    match unreveal t with
+    | Some t -> is_revealed_var y t
+    | None -> false
+
+(* The field that [fv] projects, if [fv] is a record projector. *)
+let projector_field (g:env) (fv:R.fv) : T.Tac (option string) =
+  match R.lookup_typ (elab_env g) (R.inspect_fv fv) with
+  | None -> None
+  | Some se ->
+    let rec find (qs:list R.qualifier) : option string =
+      match qs with
+      | [] -> None
+      | R.Projector (_, f)::_ -> Some (fst (R.inspect_ident f))
+      | _::qs -> find qs
+    in
+    find (R.sigelt_quals se)
+
+(* Do not discard a witness's refinement, even under erasure or an alias.
+   All record fields must be projected: an unused field may carry a proof
+   constraining the others, even when their own types are independent. *)
+let rec record_witness_fields (g:env) (ty:typ) : T.Tac (option (list string)) =
+  let ty = T.norm_term_env (elab_env g) [hnf] ty in
+  let hd, args = T.collect_app_ln ty in
+  match R.inspect_ln hd with
+  | R.Tv_FVar fv | R.Tv_UInst fv _ ->
+    if R.inspect_fv fv = ["FStar"; "Ghost"; "erased"] then
+      (match args with
+       | [(ty, _)] -> record_witness_fields g ty
+       | _ -> None)
+    else
+      (match R.lookup_typ (elab_env g) (R.inspect_fv fv) with
+       | Some se ->
+         let rec fields (qs:list R.qualifier) : option (list string) =
+           match qs with
+           | R.RecordType (_, fs)::_ -> Some (List.Tot.map (fun f -> fst (R.inspect_ident f)) fs)
+           | _::qs -> fields qs
+           | [] -> None
+         in
+         fields (R.sigelt_quals se)
+       | None -> None)
+  | _ -> None
+
+(* A witness [y] whose every use in [post] is a field projection [y.f] -- a
+   record read through a split, say. Closing it with one [exists* y] makes
+   the prover fix [y] from the first projection it matches, and then fail on
+   any field whose cell has changed since:
+
+     exists* y. R ** pts_to a y.a ** pts_to b y.b
+       against  R ** pts_to a 1uL ** pts_to b y0.b
+
+   Replace each distinct projection by a fresh variable instead, for the
+   caller to quantify one by one:
+
+     exists* fa fb. R ** pts_to a fa ** pts_to b fb
+
+   [None] if [y] is refined, has a use that is not a projection, has an
+   unprojected field, or a field whose type depends on [y]; the caller then
+   falls back to the single quantifier. *)
+let eta_record_witness (g:env) (y:var) (ty:typ) (post:slprop)
+: T.Tac (option (env & list (ppname & var & typ) & slprop))
+= let fields = record_witness_fields g ty in
+  if None? fields then None else
+  let Some fields = fields in
+  (* threaded env (for [fresh]) and the projections replaced so far *)
+  let st : T.tref (env & list (R.name & (ppname & var & typ))) = T.alloc (g, []) in
+  let visit (t:term) : T.Tac term =
+    let hd, args = T.collect_app_ln t in
+    let fv =
+      match R.inspect_ln hd with
+      | R.Tv_FVar fv | R.Tv_UInst fv _ -> Some fv
+      | _ -> None
+    in
+    match fv, List.Tot.rev args with
+    | Some fv, (arg, R.Q_Explicit)::params ->
+      (* A projection has implicit type parameters and one explicit receiver.
+         Further explicit arguments apply a function-valued field. *)
+      if not (is_revealed_var y arg)
+         || not (List.Tot.for_all (fun (_, q) -> match q with | R.Q_Implicit -> true | _ -> false) params)
+      then t
+      else begin
+        match projector_field g fv with
+        | None -> t
+        | Some f ->
+          let g, seen = T.read st in
+          let name = R.inspect_fv fv in
+          match List.Tot.assoc name seen with
+          | Some (_, z, _) -> term_of_no_name_var z
+          | None ->
+            match RU.try_quietly (fun () -> compute_term_type_and_u g t) with
+            | None -> t
+            | Some (| _, _, ty, _ |) ->
+              if y `Set.mem` freevars ty then t (* dependent field: leave [y] in place *)
+              else begin
+                let z = fresh g in
+                let n = mk_ppname (T.seal f) (T.range_of_term t) in
+                let g = push_binding g z n ty in
+                T.write st (g, (name, (n, z, ty))::seen);
+                term_of_no_name_var z
+              end
+      end
+    | _ -> t
+  in
+  let post' = FStar.Tactics.Visit.visit_tm visit post in
+  let g, seen = T.read st in
+  if Nil? seen || y `Set.mem` freevars post'
+  then None
+  else if T.existsb (fun f ->
+    not (T.existsb (fun (_, (n, _, _)) -> T.unseal n.name = f) seen)) fields
+  then None
+  else Some (g, List.Tot.map snd seen, post')
+
 let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
 : T.Tac slprop
 = let quantify_pure_deps (n:ppname) (y:var) (ty:typ) (u:universe)
@@ -120,13 +237,21 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
         mk_abs_with_name_and_range n.name n.range ty R.Q_Explicit (close_term pred y) in
       tm_star (tm_pure (mk_l_exists u ty abs)) rest
   in
-  let maybe_close ((n, y, ty) : ppname & var & typ) (post:slprop) = 
+  let rec maybe_close (g:env) (z:ppname & var & typ) (post:slprop) : T.Tac slprop =
+    let n, y, ty = z in
     if not (y `Set.mem` freevars post) then post
     else (
-      let u = Pulse.Checker.Pure.universe_of_well_typed_term g1 ty in
+      let u = Pulse.Checker.Pure.universe_of_well_typed_term g ty in
       let fallback () =
-        let b = {binder_ty=ty; binder_ppname=n; binder_attrs=[]} in
-        tm_exists_sl u b (close_term post y)
+        match eta_record_witness g y ty post with
+        | Some (g, zs, post) ->
+          (* each field goes through the same routine: an slprop-constrained
+             one gets its own [exists*], a pure-only one is pushed into the
+             pure propositions *)
+          T.fold_left (fun post z -> maybe_close g z post) post zs
+        | None ->
+          let b = {binder_ty=ty; binder_ppname=n; binder_attrs=[]} in
+          tm_exists_sl u b (close_term post y)
       in
       (* If [y] is not constrained by any slprop, an [exists*] over it leaves
          the prover with no way of finding a witness. Push the quantifier into
@@ -136,7 +261,7 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
       match split_pure_deps y post with
       | Some (p::ps, rest) -> quantify_pure_deps n y ty u (p::ps) rest
       | _ ->
-        let _, bs, body = hoist_exists g1 post in
+        let _, bs, body = hoist_exists g post in
         begin match bs, split_pure_deps y body with
         | _::_, Some (p::ps, rest) ->
           close_hoisted_exists bs (quantify_pure_deps n y ty u (p::ps) rest)
@@ -184,11 +309,11 @@ let rec close_post x_ret dom_g g1 (bs1:env_bindings) (post:slprop)
           then
             (* [y] is a hypothesis, but the post may still mention [y] itself;
                quantify it in that case so that it does not escape. *)
-            close_post tl (maybe_close (n,y,ty) (maybe_elim_rewrites_to (n, p) post))
-          else close_post tl (maybe_close (n,y,ty) post)
-        | _ -> close_post tl (maybe_close (n,y,ty) post)
+            close_post tl (maybe_close g1 (n,y,ty) (maybe_elim_rewrites_to (n, p) post))
+          else close_post tl (maybe_close g1 (n,y,ty) post)
+        | _ -> close_post tl (maybe_close g1 (n,y,ty) post)
       )
-      | _ -> close_post tl (maybe_close (n,y,ty) post)
+      | _ -> close_post tl (maybe_close g1 (n,y,ty) post)
     )
   )
   | _::tl -> close_post tl post

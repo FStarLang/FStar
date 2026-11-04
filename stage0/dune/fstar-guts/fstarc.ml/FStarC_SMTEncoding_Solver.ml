@@ -200,10 +200,14 @@ let quake_bounds (tmp : unit) : (Prims.int * Prims.int) =
   let lo1 = (if (Prims.op_Less lo Prims.int_one) then Prims.int_one else (if (Prims.op_Greater lo hi1) then hi1 else lo)) in
   (lo1, hi1))
 
+let max_z3_rlimit : Prims.int =
+  (Prims.parse_int "4294967295")
+
 let convert_rlimit (r : Prims.int) : Prims.int =
   (let tmp = (FStarC_Options.z3_version ()) in
   let tmp1 = (FStarC_Misc.version_ge tmp "4.12.3") in
-  (if tmp1 then (Prims.op_Star (Prims.of_int (500000)) r) else (Prims.op_Star (Prims.of_int (544656)) r)))
+  let z3_rlimit = (if tmp1 then (Prims.op_Star (Prims.of_int (500000)) r) else (Prims.op_Star (Prims.of_int (544656)) r)) in
+  (if (Prims.op_Greater z3_rlimit max_z3_rlimit) then max_z3_rlimit else z3_rlimit))
 
 let goal_block (settings : query_settings) (g : FStarC_SMTEncoding_ErrorReporting.goal) : (FStarC_SMTEncoding_Term.decl) list =
   (let n = (settings).query_fuel in

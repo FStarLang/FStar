@@ -87,26 +87,6 @@ let fStarC_Class_Setlike_mem__string_rbset_string (tmp : string) (s : (string) r
 let fStarC_Class_Setlike_empty__ctx_uvar_rbset_ctx_uvar (tmp : unit) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
   (empty ())
 
-let rec fStarC_RBSet_add__add'__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (s : (FStarC_Syntax_Syntax.ctx_uvar) rbset) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
-  (match s with
-    | L -> (N (R, L, x, L))
-    | (N (c, a, y, b)) -> (let tmp = (FStarC_Syntax_Unionfind.fStarC_Class_Ord_op_Less_Question__ctx_uvar x y) in
-      (if tmp then (let tmp1 = ((fStarC_RBSet_add__add'__ctx_uvar x) a) in
-      (balance c tmp1 y b)) else (let tmp1 = (FStarC_Syntax_Unionfind.fStarC_Class_Ord_op_Greater_Question__ctx_uvar x y) in
-      (if tmp1 then (let tmp2 = ((fStarC_RBSet_add__add'__ctx_uvar x) b) in
-      (balance c a y tmp2)) else s))))
-  )
-
-let fStarC_RBSet_add__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (s : (FStarC_Syntax_Syntax.ctx_uvar) rbset) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
-  (let tmp = ((fStarC_RBSet_add__add'__ctx_uvar x) s) in
-  (blackroot tmp))
-
-let fStarC_RBSet_from_list__ctx_uvar (xs : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
-  (BatList.fold_left (fun s e -> (fStarC_RBSet_add__ctx_uvar e s)) L xs)
-
-let fStarC_Class_Setlike_from_list__ctx_uvar_rbset_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) rbset =
-  (fStarC_RBSet_from_list__ctx_uvar tmp)
-
 let rec elems (s : ('u___a) rbset) : ('u___a) list =
   (match s with
     | L -> []

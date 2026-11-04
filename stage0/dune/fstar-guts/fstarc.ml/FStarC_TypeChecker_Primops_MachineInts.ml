@@ -91,3 +91,25 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
     | (u__1, u__2) -> u__1
   ))
 
+let size_step (lid : FStarC_Ident.lident) (fits : (Prims.int -> (Prims.int -> (bool) option))) : FStarC_TypeChecker_Primops_Base.primitive_step =
+  (let as_prop = (fun b -> (if b then FStarC_Syntax_Util.t_true else FStarC_Syntax_Util.t_false)) in
+  let as_nbe_prop = (fun b -> (FStarC_TypeChecker_NBETerm.mkFV (FStarC_Syntax_Syntax.lid_as_fv (if b then FStarC_Parser_Const.true_lid else FStarC_Parser_Const.false_lid) None) [] [])) in
+  (FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero lid FStarC_Syntax_Embeddings.e_int FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_abstract_term FStarC_TypeChecker_NBETerm.e_abstract_nbe_term (fun x n -> (FStarC_Option.map as_prop (fits x n))) (fun x n -> (FStarC_Option.map as_nbe_prop (fits x n)))))
+
+let rec bit_length (x : Prims.int) : Prims.int =
+  (if (Prims.op_Less_Equals x Prims.int_zero) then Prims.int_zero else (Prims.op_Plus Prims.int_one (bit_length (Prims.op_Slash x (Prims.of_int (2))))))
+
+let uint_fits (x : Prims.int) (n : Prims.int) : (bool) option =
+  (if (Prims.op_Less n Prims.int_zero) then None else (Some (((Prims.op_Greater_Equals x Prims.int_zero) && (Prims.op_Less_Equals (bit_length x) n)))))
+
+let int_fits (x : Prims.int) (n : Prims.int) : (bool) option =
+  (if (Prims.op_Less_Equals n Prims.int_zero) then None else (if (Prims.op_Greater_Equals x Prims.int_zero) then (Some ((Prims.op_Less_Equals (bit_length x) (Prims.op_Minus n Prims.int_one)))) else (Some ((Prims.op_Less_Equals (bit_length (Prims.op_Minus (Prims.op_Tilde_Minus x) Prims.int_one)) (Prims.op_Minus n Prims.int_one))))))
+
+let simplify_ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
+  (let tmp = (FStarC_Parser_Const.p2l ("FStar" :: ("UInt" :: ("size" :: [])))) in
+  let tmp1 = (size_step tmp uint_fits) in
+  let tmp2 = (FStarC_Parser_Const.p2l ("FStar" :: ("Int" :: ("size" :: [])))) in
+  let tmp3 = (size_step tmp2 int_fits) in
+  let tmp4 = (tmp3 :: []) in
+  (tmp1 :: tmp4))
+

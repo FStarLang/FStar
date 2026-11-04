@@ -35,56 +35,6 @@ let rec show_base_typ (b : base_typ) : string =
 let fStarC_Class_Show_show__base_typ (tmp : base_typ) : string =
   (show_base_typ tmp)
 
-let rec base_of_typ (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : base_typ =
-  (let t1 = (FStarC_TypeChecker_Normalize.unfold_whnf' base_steps env t) in
-  let tmp = (FStarC_Syntax_Util.head_and_args_full t1) in
-  (match tmp with
-    | (hd, args) -> (let tmp1 = (FStarC_Syntax_Util.un_uinst hd) in
-      let tmp2 = (FStarC_Syntax_Subst.compress tmp1) in
-      let tmp3 = (tmp2).FStarC_Syntax_Syntax.n in
-      let tmp4 = (tmp3, args) in
-      let r = (match tmp4 with
-          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((a, tmp5) :: [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.erased_lid) -> (let tmp6 = (base_of_typ env a) in
-            let tmp7 = (fv, tmp6) in
-            (Base_erased ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
-          | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), tmp5) -> (Base_rigid (fv))
-          | ((FStarC_Syntax_Syntax.Tm_type (tmp5)), tmp6) -> Base_type
-          | tmp5 -> Base_unknown
-        ) in
-      let tmp5 = (!(dbg)) in
-      (if tmp5 then (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t1) in
-      let tmp7 = (fStarC_Class_Show_show__base_typ r) in
-      (FStarC_Format.print2 "(Overload) base_of_typ %s = %s\n" tmp6 tmp7)) else ());
-      r)
-  ))
-
-let base_head_fv (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.fv) option =
-  (let tmp = (base_of_typ env t) in
-  (match tmp with
-    | (Base_rigid (fv)) -> (Some (fv))
-    | (Base_erased (fv, tmp1)) -> (Some (fv))
-    | tmp1 -> None
-  ))
-
-let coercion_source_and_target (env : FStarC_TypeChecker_Env.env) (f_typ : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.fv)) option =
-  (let tmp = (FStarC_Syntax_Util.arrow_formals_comp f_typ) in
-  (match tmp with
-    | (f_bs, f_c) -> (let f_bs' = (coercion_source_and_target__drop_trailing_implicits f_bs) in
-      (if (match f_bs' with
-        | [] -> true
-        | tmp1 -> false
-      ) then None else (let tmp1 = (FStarC_TypeChecker_Env.push_binders env ((fun l -> match BatList.rev l with [] -> failwith "init: empty list" | _ :: t -> BatList.rev t) f_bs')) in
-      let src = (base_head_fv tmp1 (let scrut = (BatList.last f_bs') in
-        let scrut1 = (scrut).FStarC_Syntax_Syntax.binder_bv in
-        (scrut1).FStarC_Syntax_Syntax.sort)) in
-      let tmp2 = (FStarC_TypeChecker_Env.push_binders env f_bs) in
-      let tgt = (base_head_fv tmp2 (FStarC_Syntax_Util.comp_result f_c)) in
-      (match (src, tgt) with
-        | ((Some (src1)), (Some (tgt1))) -> (Some ((src1, tgt1)))
-        | tmp3 -> None
-      ))))
-  ))
-
 let type_of_fv (env : FStarC_TypeChecker_Env.env) (fv : FStarC_Syntax_Syntax.fv) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let tmp = (FStarC_TypeChecker_Env.try_lookup_lid env (FStarC_Syntax_Syntax.lid_of_fv fv)) in
   (match tmp with
@@ -123,33 +73,6 @@ let keep_if (f : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> bo
       )
   )
 
-let formals_of_typ (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) =
-  (let tmp = (FStarC_TypeChecker_Normalize.unfold_whnf env t) in
-  (FStarC_Syntax_Util.arrow_formals_comp tmp))
-
-let arity_compatible (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (n : Prims.int) : bool =
-  (let tmp = (formals_of_typ env t) in
-  (match tmp with
-    | (bs, c) -> (let tmp1 = (BatList.filter (fun b -> (not (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta (b).FStarC_Syntax_Syntax.binder_qual))) bs) in
-      let n_explicit = ((fun l -> Z.of_int (BatList.length l)) tmp1) in
-      (if (Prims.op_Less_Equals n n_explicit) then true else (let tmp2 = (base_of_typ env (FStarC_Syntax_Util.comp_result c)) in
-      (match tmp2 with
-        | (Base_rigid (tmp3)) -> false
-        | (Base_erased (u__1, u__2)) -> false
-        | Base_type -> false
-        | Base_unknown -> true
-      ))))
-  ))
-
-let nth_explicit_formal_base (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (i : Prims.int) : base_typ =
-  (let tmp = (formals_of_typ env t) in
-  (match tmp with
-    | (bs, tmp1) -> (let explicit = (BatList.filter (fun b -> (not (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta (b).FStarC_Syntax_Syntax.binder_qual))) bs) in
-      (if ((Prims.op_Less i Prims.int_zero) || (Prims.op_Greater_Equals i ((fun l -> Z.of_int (BatList.length l)) explicit))) then Base_unknown else (base_of_typ env (let scrut = ((fun l i -> BatList.nth l (Z.to_int i)) explicit i) in
-      let scrut1 = (scrut).FStarC_Syntax_Syntax.binder_bv in
-      (scrut1).FStarC_Syntax_Syntax.sort))))
-  ))
-
 let rec strip_erased (b : base_typ) : base_typ =
   (match b with
     | (Base_erased (tmp, b1)) -> (strip_erased b1)
@@ -174,52 +97,6 @@ let builtin_coercion (b1 : base_typ) (b2 : base_typ) : bool =
     | tmp -> false
   ))) || ((is_prop b1) && (is_bool b2))))
 
-let user_coercions (env : FStarC_TypeChecker_Env.env) : ((FStarC_Syntax_Syntax.fv * FStarC_Syntax_Syntax.fv)) list =
-  (let tmp = (FStarC_TypeChecker_Env.lookup_attr env (FStarC_Ident.string_of_lid FStarC_Parser_Const.coercion_lid)) in
-  ((fun f l -> BatList.flatten (BatList.map f l)) (fun se -> (let typ = (match (se).FStarC_Syntax_Syntax.sigel with
-      | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp1, (lb :: [])); lids = tmp2; _ })) -> (Some (((lb).FStarC_Syntax_Syntax.lbunivs, (lb).FStarC_Syntax_Syntax.lbtyp)))
-      | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = tmp1; us = us; t = t; _ })) -> (Some ((us, t)))
-      | tmp1 -> None
-    ) in
-  (match typ with
-    | None -> []
-    | (Some ((us, t))) -> (let tmp1 = (FStarC_Syntax_Subst.open_univ_vars us t) in
-      (match tmp1 with
-        | (tmp2, t1) -> (let tmp3 = (coercion_source_and_target env t1) in
-          (match tmp3 with
-            | (Some (p)) -> (p :: [])
-            | None -> []
-          ))
-      ))
-  ))) tmp))
-
-let coercible (env : FStarC_TypeChecker_Env.env) (src : base_typ) (tgt : base_typ) : bool =
-  (let src' = (strip_erased src) in
-  let tgt' = (strip_erased tgt) in
-  (match (src', tgt') with
-    | (Base_unknown, tmp) -> true
-    | (tmp, Base_unknown) -> true
-    | (Base_type, Base_type) -> true
-    | ((Base_rigid (fv1)), (Base_rigid (fv2))) when (FStarC_Syntax_Syntax.fv_eq fv1 fv2) -> true
-    | tmp -> (if (builtin_coercion src' tgt') then true else (let cs = (user_coercions env) in
-      let related = (fun src1 tgt1 -> (BatList.exists (fun tmp1 -> (match tmp1 with
-          | (s, t) -> ((is_base_lid (FStarC_Syntax_Syntax.lid_of_fv s) src1) && (is_base_lid (FStarC_Syntax_Syntax.lid_of_fv t) tgt1))
-        )) cs)) in
-      let tmp1 = (related src' tgt') in
-      (if tmp1 then true else (related src tgt))))
-  ))
-
-let rec resolve__by_args (env : FStarC_TypeChecker_Env.env) (speculate : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> base_typ)) (args : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (nargs : Prims.int) (i : Prims.int) (cands : ((FStarC_Syntax_Syntax.fv * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) list) : ((FStarC_Syntax_Syntax.fv * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) list =
-  (if ((Prims.op_Greater_Equals i nargs) || (Prims.op_Less_Equals ((fun l -> Z.of_int (BatList.length l)) cands) Prims.int_one)) then cands else (let b_arg = (speculate ((fun l i -> BatList.nth l (Z.to_int i)) args i)) in
-  let cands1 = (match b_arg with
-      | Base_unknown -> cands
-      | tmp -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-        let tmp2 = (FStarC_Format.fmt1 "arg%s" tmp1) in
-        (narrow_at tmp2 (keep_if (fun t -> (let tmp3 = (nth_explicit_formal_base env t i) in
-        (coercible env b_arg tmp3)))) cands))
-    ) in
-  ((resolve__by_args env speculate args nargs) (Prims.op_Plus i Prims.int_one) cands1)))
-
 let rec explicit_shape__go (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (bs : (FStarC_Syntax_Syntax.binder) list) (n : Prims.int) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (match bs with
     | [] -> ([], (FStarC_Syntax_Util.comp_result c))
@@ -228,42 +105,6 @@ let rec explicit_shape__go (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Sy
         | (rest, r) -> ((((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort :: rest), r)
       ))))
   )
-
-let explicit_shape (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (n : Prims.int) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
-  (let tmp = (formals_of_typ env t) in
-  (match tmp with
-    | (bs, c) -> ((explicit_shape__go c) bs n)
-  ))
-
-let base_of_typ_safe (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : base_typ =
-  (try (base_of_typ env t) with
-    | u__cexn -> Base_unknown
-  )
-
-let compatible (env : FStarC_TypeChecker_Env.env) (b1 : base_typ) (b2 : base_typ) : bool =
-  (let tmp = (coercible env b1 b2) in
-  (if tmp then true else (coercible env b2 b1)))
-
-let rec expected_compatible__cmp (env : FStarC_TypeChecker_Env.env) (rt : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (re : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (ts : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (es : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : bool =
-  (match (ts, es) with
-    | ((t1 :: ts1), (e1 :: es1)) -> (let tmp = (base_of_typ_safe env t1) in
-      let tmp1 = (base_of_typ_safe env e1) in
-      let tmp2 = (compatible env tmp tmp1) in
-      (if tmp2 then ((expected_compatible__cmp env rt re) ts1 es1) else false))
-    | ([], []) -> (let tmp = (base_of_typ_safe env rt) in
-      let tmp1 = (base_of_typ_safe env re) in
-      (coercible env tmp tmp1))
-    | tmp -> true
-  )
-
-let expected_compatible (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (n : Prims.int) (te : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
-  (let tmp = (explicit_shape env t n) in
-  (match tmp with
-    | (ts, rt) -> (let tmp1 = (explicit_shape env te Prims.int_zero) in
-      (match tmp1 with
-        | (es, re) -> ((expected_compatible__cmp env rt re) ts es)
-      ))
-  ))
 
 let reported : (((string * (string) list)) list ref) =
   (ref [])
@@ -289,55 +130,6 @@ let candidates_doc (env : FStarC_TypeChecker_Env.env) (eta : (FStarC_Syntax_Synt
   let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
   let tmp2 = (PPrint.(^^) tmp1 (PPrint.(^/^) (PPrint.string " :") (PPrint.align ty))) in
   (PPrint.group tmp2))) eta)
-
-let resolve (env : FStarC_TypeChecker_Env.env) (speculate : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> base_typ)) (primary : FStarC_Syntax_Syntax.fv) (alts : (FStarC_Syntax_Syntax.fv) list) (args : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (expected : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : FStarC_Syntax_Syntax.fv =
-  (let cands = (BatList.map (fun fv -> (let tmp = (type_of_fv env fv) in
-    (fv, tmp))) (primary :: alts)) in
-  let nargs = ((fun l -> Z.of_int (BatList.length l)) args) in
-  let tmp = (!(dbg)) in
-  (if tmp then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident (FStarC_Syntax_Syntax.lid_of_fv primary)) in
-  let tmp2 = (BatList.map (fun fv -> (FStarC_Syntax_Syntax.lid_of_fv fv)) (primary :: alts)) in
-  let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident tmp2) in
-  (FStarC_Format.print2 "(Overload) resolving %s among %s\n" tmp1 tmp3)) else ());
-  let cands1 = (narrow_at "arity" (keep_if (fun t -> (arity_compatible env t nargs))) cands) in
-  let cands2 = ((resolve__by_args env speculate args nargs) Prims.int_zero cands1) in
-  let cands3 = (if (Prims.op_Less_Equals ((fun l -> Z.of_int (BatList.length l)) cands2) Prims.int_one) then cands2 else (match expected with
-      | None -> cands2
-      | (Some (te)) -> (narrow_at "expected" (keep_if (fun t -> (expected_compatible env t nargs te))) cands2)
-    )) in
-  (match cands3 with
-    | ((fv, tmp1) :: []) -> (let tmp2 = (!(dbg)) in
-      (if tmp2 then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__lident (FStarC_Syntax_Syntax.lid_of_fv fv)) in
-      (FStarC_Format.print1 "(Overload) resolved to %s\n" tmp3)) else ());
-      fv)
-    | ((fv, tmp1) :: tmp2) -> (let tmp3 = (FStarC_Options.overload_mode ()) in
-      let tmp4 = (match tmp3 with
-          | FStarC_Options.Overload_strict -> true
-          | tmp4 -> false
-        ) in
-      (if tmp4 then (let tmp5 = (BatList.map (fun x -> (match x with
-          | (u__1, u__2) -> u__1
-        )) cands3) in
-      let tmp6 = (already_reported (FStarC_Syntax_Syntax.lid_of_fv primary) tmp5) in
-      let tmp7 = (not tmp6) in
-      (if tmp7 then (let tmp8 = (FStarC_Ident.fStarC_Class_PP_pp__ident (FStarC_Ident.ident_of_lid (FStarC_Syntax_Syntax.lid_of_fv primary))) in
-      let tmp9 = (FStarC_Errors_Msg.fquotes tmp8) in
-      let tmp10 = (PPrint.(^/^) tmp9 (FStarC_Errors_Msg.text "is ambiguous; candidates are:")) in
-      let tmp11 = (PPrint.(^/^) (FStarC_Errors_Msg.text "The name") tmp10) in
-      let tmp12 = (PPrint.group tmp11) in
-      let tmp13 = (tmp12 :: []) in
-      let tmp14 = (BatList.map (fun x -> (match x with
-          | (u__1, u__2) -> u__1
-        )) cands3) in
-      let tmp15 = (candidates_doc env tmp14) in
-      let tmp16 = (BatList.append tmp13 tmp15) in
-      (FStarC_Errors.fStarC_Errors_log_issue__lident_list_ocaml_document (FStarC_Syntax_Syntax.lid_of_fv primary) FStarC_Errors_Codes.Error_AmbiguousName tmp16)) else ());
-      fv) else (let tmp5 = (!(dbg)) in
-      (if tmp5 then (let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__lident (FStarC_Syntax_Syntax.lid_of_fv fv)) in
-      (FStarC_Format.print1 "(Overload) ambiguous, defaulting to %s\n" tmp6)) else ());
-      fv)))
-    | [] -> primary
-  ))
 
 let reset_ambiguity_reports (tmp : unit) : unit =
   ((reported) := [])

@@ -42,6 +42,7 @@ let bind o f =
   | Some x -> f x
   | None -> None
 
+[@@FStar.Attributes.custard_inline]
 let catch o f =
   match o with
   | Some x -> Some x

@@ -73,6 +73,7 @@ let equal_iff = function
 // anything when either result is NotEqual or Unknown, hence this returns Unknown
 // in most cases.
 // The second comparison is thunked for efficiency.
+[@@FStar.Attributes.custard_inline]
 let eq_and r (s: unit -> ML eq_result) : ML eq_result =
     if r = Equal && s () = Equal
     then Equal

@@ -52,6 +52,7 @@ module SS      = FStarC.Syntax.Subst
 module TcComm  = FStarC.TypeChecker.Common
 module TcRel   = FStarC.TypeChecker.Rel
 module TcTerm  = FStarC.TypeChecker.TcTerm
+module CoreCheck = FStarC.TypeChecker.CoreCheck
 module U       = FStarC.Syntax.Util
 
 let dbg_Tac = Debug.get_toggle "Tac"
@@ -160,16 +161,18 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
         let h_result = t_head_of result in
         let open FStarC.Pprint in
         let maybe_admit_tip : document =
-          (* Use the monadic visitor to check whether the reduced head
-          contains an admit, which is a common error *)
-          let r : option term =
-            Syntax.VisitM.visitM_term false (fun t ->
-              let tn = t.n in
-              match tn with
-              | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> None
-              | _ -> Some t) h_result
+          (* Check whether the reduced head contains an admit, which is a
+          common error.  Not with [VisitM] at the [option] monad: Cherry
+          cannot compile a polymorphic monad passed as a runtime dictionary
+          (error 399). *)
+          let found = mk_ref false in
+          let _ = Syntax.Visit.visit_term false (fun t ->
+              (match t.n with
+               | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> found := true
+               | _ -> ());
+              t) h_result
           in
-          if None? r
+          if !found
           then doc_of_string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?"
           else empty
         in
@@ -419,18 +422,24 @@ let run_tactic_on_ps'
 
     (* Do NOT use the returned tactic, the typechecker is not idempotent and
      * will mess up the monadic lifts. We're just making sure it's well-typed
-     * so it won't get stuck. c.f #1307 *)
-    let g =
-      if tactic_already_typed
-      then Env.trivial_guard
-      else let _, _, g = TcTerm.tc_tactic (type_of e_arg) (type_of e_res) env tactic in
-           g
-    in
+     * so it won't get stuck. c.f #1307
+     *
+     * The tactic is elaborated, and its elaboration is checked by Core (see
+     * [CoreCheck]). *)
+    let a = type_of e_arg in
+    let b = type_of e_res in
+    if not tactic_already_typed then
+      CoreCheck.check_or_elaborate env
+        (fun () ->
+          let tau, _ = CoreCheck.elaborate env (TcTerm.tc_tactic a b) tactic in
+          CoreCheck.check_term env "this tactic" tau (S.t_tac_of a b) true)
+        (fun () ->
+          let _, _, g = TcTerm.tc_tactic a b env tactic in
+          TcRel.force_trivial_guard env g);
 
     if !dbg_Tac then
         Format.print_string "}\n";
 
-    TcRel.force_trivial_guard env g;
     Err.stop_if_err ();
     let tau = unembed_tactic_1 e_arg e_res tactic FStarC.Syntax.Embeddings.id_norm_cb in
 

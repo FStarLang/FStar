@@ -197,12 +197,6 @@ val admit_smt_queries           : unit    -> ML bool
 
 val admit_except                : unit    -> ML (option string)
 
-val compat_pre_core_should_register : unit    -> ML bool
-
-val compat_pre_core_should_check : unit    -> ML bool
-
-val compat_pre_core_set         : unit    -> ML bool
-
 val compat_pre_typed_indexed_effects: unit -> ML bool
 
 val disallow_unification_guards : unit    -> ML bool
@@ -227,6 +221,7 @@ val custard_entries             : unit    -> ML (list string)
 val custard_entrypoint_files    : unit    -> ML (list string)
 val custard_entry_modules       : unit    -> ML (list string)
 val custard_c_no_prefix         : unit    -> ML (list string)
+val custard_static_header       : unit    -> ML bool
 val custard_main                : unit    -> ML (option string)
 val custard_dump_ir             : unit    -> ML bool
 val custard_dump_specializations: unit    -> ML bool

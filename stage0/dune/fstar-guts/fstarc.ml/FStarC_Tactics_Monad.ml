@@ -139,7 +139,7 @@ let mark_goal_implicit_already_checked (g : FStarC_Tactics_Types.goal) : unit =
 
 let get_phi (g : FStarC_Tactics_Types.goal) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let tmp = (FStarC_Tactics_Types.goal_type g) in
-  let tmp1 = (FStarC_TypeChecker_Normalize.unfold_whnf (FStarC_Tactics_Types.goal_env g) tmp) in
+  let tmp1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf (FStarC_Tactics_Types.goal_env g) tmp) in
   (FStarC_Syntax_Util.un_squash tmp1))
 
 let is_irrelevant (g : FStarC_Tactics_Types.goal) : bool =
@@ -582,7 +582,7 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit =
   let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__ctx_uvar uv) in
   (FStarC_Format.print2 "(%s) Registering goal for %s\n" tmp8 tmp9)) else ());
   let goal_ty = (FStarC_Syntax_Util.ctx_uvar_typ uv) in
-  let tmp8 = (FStarC_TypeChecker_Core.compute_term_type env1 goal_ty) in
+  let tmp8 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Core_compute_term_type env1 goal_ty) in
   (match tmp8 with
     | (FStar_Pervasives.Inl ((tmp9, tmp10, None))) -> ()
     | (FStar_Pervasives.Inl ((tmp9, tmp10, (Some ((g1, tok)))))) -> (FStarC_TypeChecker_Core.commit_guard tok)

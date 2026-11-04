@@ -45,14 +45,14 @@ let fv_as_emb_typ (fv : FStarC_Syntax_Syntax.fv) : FStarC_Syntax_Syntax.emb_typ 
   (FStarC_Syntax_Syntax.ET_app ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
 
 let e_proofstate_nbe : (FStarC_Tactics_Types.proofstate) FStarC_TypeChecker_NBETerm.embedding =
-  (let embed_proofstate = (fun u__cb ps -> (let li = ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn ps);
+  (let embed_proofstate = (fun u__cb ps -> (let li = ({ FStarC_Syntax_Syntax.blob = (Obj.magic (ps));
         lkind = FStarC_Syntax_Syntax.Lazy_proofstate;
         ltyp = (fstar_tactics_proofstate).t;
         rng = FStarC_Range_Type.dummyRange } : FStarC_Syntax_Syntax.lazyinfo) in
     let thunk = (FStarC_Thunk.mk (fun tmp -> (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Constant ((FStarC_TypeChecker_NBETerm.String ("(((proofstate.nbe)))", FStarC_Range_Type.dummyRange))))))) in
     (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl (li)), thunk))))) in
   let unembed_proofstate = (fun u__cb t -> (match (FStarC_TypeChecker_NBETerm.nbe_t_of_t t) with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_proofstate; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_proofstate; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (!(FStarC_Options.debug_embedding)) in
         (if tmp1 then (let tmp2 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
@@ -72,14 +72,14 @@ let e_goal : (FStarC_Tactics_Types.goal) FStarC_Syntax_Embeddings_Base.embedding
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_goal (fstar_tactics_goal).t)
 
 let e_goal_nbe : (FStarC_Tactics_Types.goal) FStarC_TypeChecker_NBETerm.embedding =
-  (let embed_goal = (fun u__cb ps -> (let li = ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn ps);
+  (let embed_goal = (fun u__cb ps -> (let li = ({ FStarC_Syntax_Syntax.blob = (Obj.magic (ps));
         lkind = FStarC_Syntax_Syntax.Lazy_goal;
         ltyp = (fstar_tactics_goal).t;
         rng = FStarC_Range_Type.dummyRange } : FStarC_Syntax_Syntax.lazyinfo) in
     let thunk = (FStarC_Thunk.mk (fun tmp -> (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Constant ((FStarC_TypeChecker_NBETerm.String ("(((goal.nbe)))", FStarC_Range_Type.dummyRange))))))) in
     (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl (li)), thunk))))) in
   let unembed_goal = (fun u__cb t -> (match (FStarC_TypeChecker_NBETerm.nbe_t_of_t t) with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_goal; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_goal; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (!(FStarC_Options.debug_embedding)) in
         (if tmp1 then (let tmp2 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
@@ -93,14 +93,14 @@ let e_goal_nbe : (FStarC_Tactics_Types.goal) FStarC_TypeChecker_NBETerm.embeddin
     e_typ = (fun tmp -> (fv_as_emb_typ (fstar_tactics_goal).fv)) })
 
 let e_ref_proofstate_nbe : ((FStarC_Tactics_Types.proofstate ref)) FStarC_TypeChecker_NBETerm.embedding =
-  (let embed_ref_proofstate = (fun u__cb ps -> (let li = ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn ps);
+  (let embed_ref_proofstate = (fun u__cb ps -> (let li = ({ FStarC_Syntax_Syntax.blob = (Obj.magic (ps));
         lkind = FStarC_Syntax_Syntax.Lazy_ref_proofstate;
         ltyp = (fstar_tactics_ref_proofstate).t;
         rng = FStarC_Range_Type.dummyRange } : FStarC_Syntax_Syntax.lazyinfo) in
     let thunk = (FStarC_Thunk.mk (fun tmp -> (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Constant ((FStarC_TypeChecker_NBETerm.String ("(((ref_proofstate.nbe)))", FStarC_Range_Type.dummyRange))))))) in
     (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl (li)), thunk))))) in
   let unembed_ref_proofstate = (fun u__cb t -> (match (FStarC_TypeChecker_NBETerm.nbe_t_of_t t) with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_ref_proofstate; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_ref_proofstate; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (!(FStarC_Options.debug_embedding)) in
         (if tmp1 then (let tmp2 = (FStarC_TypeChecker_NBETerm.t_to_string t) in
@@ -383,21 +383,21 @@ let e_tref (a : unit) : (('a ref)) FStarC_Syntax_Embeddings_Base.embedding =
   let un = (fun t tmp -> (let tmp1 = (FStarC_Syntax_Subst.compress t) in
     let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
     (match tmp2 with
-      | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_tref; ltyp = tmp3; rng = tmp4; _ })) -> (let tmp5 = (FStar_Dyn.undyn blob) in
+      | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_tref; ltyp = tmp3; rng = tmp4; _ })) -> (let tmp5 = (Obj.magic (blob)) in
         (Some (tmp5)))
       | tmp3 -> None
     ))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> t_tref) (fun i -> "tref") (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.tref_lid), (FStarC_Syntax_Syntax.ET_abstract :: []))))))
 
 let e_tref_nbe (a : unit) : (('a ref)) FStarC_TypeChecker_NBETerm.embedding =
-  (let embed_tref = (fun u__cb r -> (let li = ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn r);
+  (let embed_tref = (fun u__cb r -> (let li = ({ FStarC_Syntax_Syntax.blob = (Obj.magic (r));
         lkind = FStarC_Syntax_Syntax.Lazy_tref;
         ltyp = t_tref;
         rng = FStarC_Range_Type.dummyRange } : FStarC_Syntax_Syntax.lazyinfo) in
     let thunk = (FStarC_Thunk.mk (fun tmp -> (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Constant ((FStarC_TypeChecker_NBETerm.String ("(((tref.nbe)))", FStarC_Range_Type.dummyRange))))))) in
     (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl (li)), thunk))))) in
   let unembed_tref = (fun u__cb t -> (match (FStarC_TypeChecker_NBETerm.nbe_t_of_t t) with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_tref; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn b) in
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = b; lkind = FStarC_Syntax_Syntax.Lazy_tref; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (b)) in
         (Some (tmp3)))
       | tmp -> (let tmp1 = (!(FStarC_Options.debug_embedding)) in
         (if tmp1 then (let tmp2 = (FStarC_TypeChecker_NBETerm.t_to_string t) in

@@ -60,6 +60,10 @@ let should_unfold (allow_strict : bool) (c : FStarC_TypeChecker_Cfg.cfg) (should
       | (Some (v)) -> true
       | tmp -> false
     )) in
+  let explicitly_requested = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only with
+      | None -> false
+      | (Some (lids)) -> (FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv) lids)
+    ) in
   let res = (match (qninfo, selective_unfold) with
       | tmp when (FStarC_TypeChecker_Env.qninfo_is_action qninfo) -> (let b = (should_reify c) in
         (FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
@@ -73,10 +77,11 @@ let should_unfold (allow_strict : bool) (c : FStarC_TypeChecker_Cfg.cfg) (should
       )) else false) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (FStarC_Format.print_string " >> Not unfolding strict_on_arguments definition\n")));
         no)
       | tmp when (let tmp1 = (FStarC_TypeChecker_Cfg.find_prim_step c fv) in
-      (match tmp1 with
-        | (Some (v)) -> true
-        | tmp2 -> false
-      )) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (FStarC_Format.print_string " >> It's a primop, not unfolding\n")));
+      let tmp2 = (match tmp1 with
+          | (Some (v)) -> true
+          | tmp2 -> false
+        ) in
+      (if tmp2 then (not explicitly_requested) else false)) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (FStarC_Format.print_string " >> It's a primop, not unfolding\n")));
         no)
       | ((Some (((FStar_Pervasives.Inr (({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, tmp); lids = tmp1; _ })); sigrng = tmp2; sigquals = qs; sigmeta = tmp3; sigattrs = tmp4; sigopens_and_abbrevs = tmp5; sigopts = tmp6; _ }, tmp7))), tmp8))), tmp9) when (BatList.mem FStarC_Syntax_Syntax.HasMaskedEffect qs) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp10 -> (FStarC_Format.print_string " >> HasMaskedEffect, not unfolding\n")));
         no)

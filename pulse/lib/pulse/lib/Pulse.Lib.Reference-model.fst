@@ -145,22 +145,6 @@ fn gather u#a (#a: Type u#a) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   fold (pts_to r #(p0 +. p1) x0)
 }
 
-fn with_local u#a u#b
-  (#a:Type u#a) {| small_type u#a |}
-  (init:a)
-  (#pre:slprop)
-  (#ret_t:Type u#b)
-  (#post:ret_t -> slprop)
-  (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
-                               (fun v -> post v ** (exists* (x:a). pts_to r x)))
-  : stt ret_t pre (fun r -> post r) =
-{
-  let x = alloc init;
-  let r = body x;
-  free x;
-  r
-}
-
 ghost
 fn pts_to_injective_eq
     u#a (#a: Type u#a)
@@ -301,15 +285,4 @@ fn return_array_at_uninit u#a (#a: Type u#a) (arr: array a) (i: nat) (#v': Seq.s
   gsub_elim arr i (i+1);
   join_mask arr;
   mask_ext arr (Seq.upd v' i (Seq.index vi 0)) (fun k -> mask k \/ k == i);
-}
-
-fn replace u#a (#a:Type u#a) (r:ref a) (x:a) (#v:erased a)
-  requires r |-> v
-  returns  res: a
-  ensures  r |-> x
-  ensures  rewrites_to res v
-{
-  let y = !r;
-  r := x;
-  y
 }

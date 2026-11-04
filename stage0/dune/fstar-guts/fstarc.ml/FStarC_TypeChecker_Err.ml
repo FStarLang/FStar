@@ -58,22 +58,6 @@ let print_discrepancy (f : ('a -> 'b)) (x : 'a) (y : 'a) : ('b * 'b) =
   let bas = (get ()) in
   (FStarC_Options.with_saved_options (fun tmp -> ((print_discrepancy__go print full set bas) bas))))
 
-let expected_expression_of_type (env : FStarC_TypeChecker_Env.env) (rng : FStarC_Range_Type.range) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : 'a =
-  (let d1 = (FStarC_TypeChecker_Normalize.term_to_doc env t1) in
-  let d2 = (FStarC_TypeChecker_Normalize.term_to_doc env t2) in
-  let ed = (FStarC_TypeChecker_Normalize.term_to_doc env e) in
-  (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Fatal_UnexpectedExpressionType ((PPrint.(^/^) (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "Expected expression of type") d1) (PPrint.(^/^) (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "got expression") ed) (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "of type") d2))) :: [])))
-
-let subtyping_failed (tmp : FStarC_TypeChecker_Env.env) (tmp1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (tmp2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (tmp3 : unit) : (PPrint.document) list =
-  (let ppt = (FStarC_TypeChecker_Normalize.term_to_doc tmp) in
-  let tmp4 = (ppt tmp2) in
-  let tmp5 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Expected type") tmp4) in
-  let tmp6 = (ppt tmp1) in
-  let tmp7 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "got type") tmp6) in
-  let tmp8 = (PPrint.(^/^) tmp5 tmp7) in
-  let tmp9 = (tmp8 :: []) in
-  ((FStarC_Errors_Msg.text "Subtyping check failed") :: tmp9))
-
 let name_and_result (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (string * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (match (c).FStarC_Syntax_Syntax.n with
     | ct when (FStarC_Parser_Const.is_tot_lid (ct).FStarC_Syntax_Syntax.effect_name) -> ("Tot", (ct).FStarC_Syntax_Syntax.result_typ)
@@ -108,93 +92,8 @@ let expected_ghost_expression (rng : FStarC_Range_Type.range) (e : (FStarC_Synta
 let expected_pure_expression (rng : FStarC_Range_Type.range) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (reason : (string) option) : 'a =
   (u___expected_eff_expression "pure" rng e c reason)
 
-let err_msg_type_strings (env : FStarC_TypeChecker_Env.env) (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (y : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (string * string) =
-  (print_discrepancy (FStarC_TypeChecker_Normalize.term_to_string env) x y)
-
-let basic_type_error (env : FStarC_TypeChecker_Env.env) (rng : FStarC_Range_Type.range) (eopt : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : unit =
-  (let tmp = (err_msg_type_strings env t1 t2) in
-  (match tmp with
-    | (s1, s2) -> (let msg = (match eopt with
-          | None -> (let tmp1 = (FStarC_TypeChecker_Normalize.term_to_doc env t1) in
-            let tmp2 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "Expected type") tmp1) in
-            let tmp3 = (FStarC_TypeChecker_Normalize.term_to_doc env t2) in
-            let tmp4 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "got type") tmp3) in
-            let tmp5 = (PPrint.(^/^) tmp2 tmp4) in
-            (tmp5 :: []))
-          | (Some (e)) -> (let tmp1 = (FStarC_TypeChecker_Normalize.term_to_doc env t1) in
-            let tmp2 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "Expected type") tmp1) in
-            let tmp3 = (FStarC_TypeChecker_Normalize.term_to_doc env e) in
-            let tmp4 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "but") tmp3) in
-            let tmp5 = (FStarC_TypeChecker_Normalize.term_to_doc env t2) in
-            let tmp6 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "has type") tmp5) in
-            let tmp7 = (PPrint.(^/^) tmp4 tmp6) in
-            let tmp8 = (PPrint.(^/^) tmp2 tmp7) in
-            (tmp8 :: []))
-        ) in
-      (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document rng FStarC_Errors_Codes.Error_TypeError msg))
-  ))
-
-let raise_basic_type_error (env : FStarC_TypeChecker_Env.env) (rng : FStarC_Range_Type.range) (eopt : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : 'a =
-  (let tmp = (err_msg_type_strings env t1 t2) in
-  (match tmp with
-    | (s1, s2) -> (let msg = (match eopt with
-          | None -> (let tmp1 = (FStarC_TypeChecker_Normalize.term_to_doc env t1) in
-            let tmp2 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "Expected type") tmp1) in
-            let tmp3 = (FStarC_TypeChecker_Normalize.term_to_doc env t2) in
-            let tmp4 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "got type") tmp3) in
-            let tmp5 = (PPrint.(^/^) tmp2 tmp4) in
-            (tmp5 :: []))
-          | (Some (e)) -> (let tmp1 = (FStarC_TypeChecker_Normalize.term_to_doc env t1) in
-            let tmp2 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "Expected type") tmp1) in
-            let tmp3 = (FStarC_TypeChecker_Normalize.term_to_doc env e) in
-            let tmp4 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "but") tmp3) in
-            let tmp5 = (FStarC_TypeChecker_Normalize.term_to_doc env t2) in
-            let tmp6 = (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text "has type") tmp5) in
-            let tmp7 = (PPrint.(^/^) tmp4 tmp6) in
-            let tmp8 = (PPrint.(^/^) tmp2 tmp7) in
-            (tmp8 :: []))
-        ) in
-      (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_TypeError msg))
-  ))
-
-let computed_computation_type_does_not_match_annotation_eq (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.range) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (c' : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : 'a =
-  (let ppc = (FStarC_TypeChecker_Normalize.comp_to_doc env) in
-  let tmp = (ppc c) in
-  let tmp1 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Computed type") tmp) in
-  let tmp2 = (ppc c') in
-  let tmp3 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "does not match annotated type") tmp2) in
-  let tmp4 = (PPrint.(^/^) tmp3 (FStarC_Errors_Msg.text "and no subtyping was allowed")) in
-  let tmp5 = (PPrint.(^/^) tmp1 tmp4) in
-  let tmp6 = (tmp5 :: []) in
-  (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation tmp6))
-
-let computed_computation_type_does_not_match_annotation (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_Type.range) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (c' : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : 'a =
-  (let ppt = (FStarC_TypeChecker_Normalize.term_to_doc env) in
-  let tmp = (name_and_result c) in
-  (match tmp with
-    | (f1, r1) -> (let tmp1 = (name_and_result c') in
-      (match tmp1 with
-        | (f2, r2) -> (let tmp2 = (ppt r1) in
-          let tmp3 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Computed type") tmp2) in
-          let tmp4 = (ppt r2) in
-          let tmp5 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "is not compatible with the annotated type") tmp4) in
-          let tmp6 = (PPrint.(^/^) tmp5 (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "and effect") (FStarC_Errors_Msg.text f2))) in
-          let tmp7 = (PPrint.(^/^) (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "and effect") (FStarC_Errors_Msg.text f1)) tmp6) in
-          let tmp8 = (PPrint.(^/^) tmp3 tmp7) in
-          let tmp9 = (tmp8 :: []) in
-          (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document r FStarC_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation tmp9))
-      ))
-  ))
-
 let ill_kinded_type : (PPrint.document) list =
   (FStarC_Errors_Msg.mkmsg "Ill-kinded type")
-
-let expected_function_typ (env : FStarC_TypeChecker_Env.env) (rng : FStarC_Range_Type.range) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : 'a =
-  (let tmp = (FStarC_TypeChecker_Normalize.term_to_doc env t) in
-  let tmp1 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Got an expression of type:") tmp) in
-  let tmp2 = (tmp1 :: []) in
-  let tmp3 = ((FStarC_Errors_Msg.text "Expected a function.") :: tmp2) in
-  (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Fatal_FunctionTypeExpected tmp3))
 
 let exhaustiveness_check : (PPrint.document) list =
   ((FStarC_Errors_Msg.text "Patterns are incomplete") :: [])

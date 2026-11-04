@@ -221,6 +221,168 @@ let map_seal_lid : FStarC_Ident.lident =
 let bind_seal_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Sealed" :: ("bind_seal" :: []))))
 
+let bvconst (s : string) : FStarC_Ident.lident =
+  (p2l ("FStar" :: ("BV" :: (s :: []))))
+
+let bv_uext_lid : FStarC_Ident.lident =
+  (bvconst "bv_uext")
+
+let nat_to_bv_lid : FStarC_Ident.lident =
+  (bvconst "int2bv")
+
+let bv_sext_lid : FStarC_Ident.lident =
+  (bvconst "bv_sext")
+
+let bv_repeat_lid : FStarC_Ident.lident =
+  (bvconst "bv_repeat")
+
+let bv_concat_lid : FStarC_Ident.lident =
+  (bvconst "bv_concat")
+
+let bv_extract_lid : FStarC_Ident.lident =
+  (bvconst "bv_extract")
+
+let bv_not_lid : FStarC_Ident.lident =
+  (bvconst "bvnot")
+
+let bv_neg_lid : FStarC_Ident.lident =
+  (bvconst "bvneg")
+
+let bv_and_lid : FStarC_Ident.lident =
+  (bvconst "bvand")
+
+let bv_or_lid : FStarC_Ident.lident =
+  (bvconst "bvor")
+
+let bv_xor_lid : FStarC_Ident.lident =
+  (bvconst "bvxor")
+
+let bv_nand_lid : FStarC_Ident.lident =
+  (bvconst "bvnand")
+
+let bv_nor_lid : FStarC_Ident.lident =
+  (bvconst "bvnor")
+
+let bv_xnor_lid : FStarC_Ident.lident =
+  (bvconst "bvxnor")
+
+let bv_comp_lid : FStarC_Ident.lident =
+  (bvconst "bvcomp")
+
+let bv_add_lid : FStarC_Ident.lident =
+  (bvconst "bvadd")
+
+let bv_sub_lid : FStarC_Ident.lident =
+  (bvconst "bvsub")
+
+let bv_mul'_lid : FStarC_Ident.lident =
+  (bvconst "bvmul'")
+
+let bv_shift_left'_lid : FStarC_Ident.lident =
+  (bvconst "bvshl'")
+
+let bv_shift_right'_lid : FStarC_Ident.lident =
+  (bvconst "bvshr'")
+
+let bv_ashr_lid : FStarC_Ident.lident =
+  (bvconst "bvashr")
+
+let bv_rotate_left'_lid : FStarC_Ident.lident =
+  (bvconst "bvrol'")
+
+let bv_rotate_right'_lid : FStarC_Ident.lident =
+  (bvconst "bvror'")
+
+let bv_udiv_unsafe_lid : FStarC_Ident.lident =
+  (bvconst "bvdiv_unsafe")
+
+let bv_mod_unsafe_lid : FStarC_Ident.lident =
+  (bvconst "bvmod_unsafe")
+
+let bv_sdiv_lid : FStarC_Ident.lident =
+  (bvconst "bvsdiv")
+
+let bv_srem_lid : FStarC_Ident.lident =
+  (bvconst "bvsrem")
+
+let bv_smod_lid : FStarC_Ident.lident =
+  (bvconst "bvsmod")
+
+let bv_shift_left_lid : FStarC_Ident.lident =
+  (bvconst "bvshl")
+
+let bv_shift_right_lid : FStarC_Ident.lident =
+  (bvconst "bvshr")
+
+let bv_rotate_left_lid : FStarC_Ident.lident =
+  (bvconst "bvrol")
+
+let bv_rotate_right_lid : FStarC_Ident.lident =
+  (bvconst "bvror")
+
+let bv_mul_lid : FStarC_Ident.lident =
+  (bvconst "bvmul")
+
+let bv_udiv_lid : FStarC_Ident.lident =
+  (bvconst "bvdiv")
+
+let bv_mod_lid : FStarC_Ident.lident =
+  (bvconst "bvmod")
+
+let bv_ult_lid : FStarC_Ident.lident =
+  (bvconst "bvult")
+
+let bv_ule_lid : FStarC_Ident.lident =
+  (bvconst "bvule")
+
+let bv_ugt_lid : FStarC_Ident.lident =
+  (bvconst "bvugt")
+
+let bv_uge_lid : FStarC_Ident.lident =
+  (bvconst "bvuge")
+
+let bv_slt_lid : FStarC_Ident.lident =
+  (bvconst "bvslt")
+
+let bv_sle_lid : FStarC_Ident.lident =
+  (bvconst "bvsle")
+
+let bv_sgt_lid : FStarC_Ident.lident =
+  (bvconst "bvsgt")
+
+let bv_sge_lid : FStarC_Ident.lident =
+  (bvconst "bvsge")
+
+let bv_uaddo_lid : FStarC_Ident.lident =
+  (bvconst "bvuaddo")
+
+let bv_saddo_lid : FStarC_Ident.lident =
+  (bvconst "bvsaddo")
+
+let bv_umulo_lid : FStarC_Ident.lident =
+  (bvconst "bvumulo")
+
+let bv_smulo_lid : FStarC_Ident.lident =
+  (bvconst "bvsmulo")
+
+let bv_usubo_lid : FStarC_Ident.lident =
+  (bvconst "bvusubo")
+
+let bv_ssubo_lid : FStarC_Ident.lident =
+  (bvconst "bvssubo")
+
+let bv_sdivo_lid : FStarC_Ident.lident =
+  (bvconst "bvsdivo")
+
+let bv_nego_lid : FStarC_Ident.lident =
+  (bvconst "bvnego")
+
+let bv_to_nat_lid : FStarC_Ident.lident =
+  (bvconst "bv2int")
+
+let sbv_to_int_lid : FStarC_Ident.lident =
+  (bvconst "sbv_to_int")
+
 let immutable_array_t_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("ImmutableArray" :: ("Base" :: ("t" :: [])))))
 
@@ -322,6 +484,9 @@ let string_make_lid : FStarC_Ident.lident =
 
 let string_list_of_string_lid : FStarC_Ident.lident =
   (s2l "list_of_string")
+
+let string_length_lid : FStarC_Ident.lident =
+  (s2l "length")
 
 let string_lowercase_lid : FStarC_Ident.lident =
   (s2l "lowercase")
@@ -807,168 +972,6 @@ let real_op_Minus : FStarC_Ident.lident =
 let real_op_Slash : FStarC_Ident.lident =
   (real_const "op_Slash_Dot")
 
-let bvconst (s : string) : FStarC_Ident.lident =
-  (p2l ("FStar" :: ("BV" :: (s :: []))))
-
-let bv_extract_lid : FStarC_Ident.lident =
-  (bvconst "bv_extract")
-
-let bv_concat_lid : FStarC_Ident.lident =
-  (bvconst "bv_concat")
-
-let bv_and_lid : FStarC_Ident.lident =
-  (bvconst "bvand")
-
-let bv_xor_lid : FStarC_Ident.lident =
-  (bvconst "bvxor")
-
-let bv_or_lid : FStarC_Ident.lident =
-  (bvconst "bvor")
-
-let bv_add_lid : FStarC_Ident.lident =
-  (bvconst "bvadd")
-
-let bv_sub_lid : FStarC_Ident.lident =
-  (bvconst "bvsub")
-
-let bv_shift_left_lid : FStarC_Ident.lident =
-  (bvconst "bvshl")
-
-let bv_shift_right_lid : FStarC_Ident.lident =
-  (bvconst "bvshr")
-
-let bv_udiv_lid : FStarC_Ident.lident =
-  (bvconst "bvdiv")
-
-let bv_mod_lid : FStarC_Ident.lident =
-  (bvconst "bvmod")
-
-let bv_mul_lid : FStarC_Ident.lident =
-  (bvconst "bvmul")
-
-let bv_shift_left'_lid : FStarC_Ident.lident =
-  (bvconst "bvshl'")
-
-let bv_shift_right'_lid : FStarC_Ident.lident =
-  (bvconst "bvshr'")
-
-let bv_rotate_left_lid : FStarC_Ident.lident =
-  (bvconst "bvrol")
-
-let bv_rotate_right_lid : FStarC_Ident.lident =
-  (bvconst "bvror")
-
-let bv_rotate_left'_lid : FStarC_Ident.lident =
-  (bvconst "bvrol'")
-
-let bv_rotate_right'_lid : FStarC_Ident.lident =
-  (bvconst "bvror'")
-
-let bv_udiv_unsafe_lid : FStarC_Ident.lident =
-  (bvconst "bvdiv_unsafe")
-
-let bv_mod_unsafe_lid : FStarC_Ident.lident =
-  (bvconst "bvmod_unsafe")
-
-let bv_mul'_lid : FStarC_Ident.lident =
-  (bvconst "bvmul'")
-
-let bv_ult_lid : FStarC_Ident.lident =
-  (bvconst "bvult")
-
-let bv_ule_lid : FStarC_Ident.lident =
-  (bvconst "bvule")
-
-let bv_ugt_lid : FStarC_Ident.lident =
-  (bvconst "bvugt")
-
-let bv_uge_lid : FStarC_Ident.lident =
-  (bvconst "bvuge")
-
-let bv_slt_lid : FStarC_Ident.lident =
-  (bvconst "bvslt")
-
-let bv_sle_lid : FStarC_Ident.lident =
-  (bvconst "bvsle")
-
-let bv_sgt_lid : FStarC_Ident.lident =
-  (bvconst "bvsgt")
-
-let bv_sge_lid : FStarC_Ident.lident =
-  (bvconst "bvsge")
-
-let bv_nand_lid : FStarC_Ident.lident =
-  (bvconst "bvnand")
-
-let bv_nor_lid : FStarC_Ident.lident =
-  (bvconst "bvnor")
-
-let bv_xnor_lid : FStarC_Ident.lident =
-  (bvconst "bvxnor")
-
-let bv_comp_lid : FStarC_Ident.lident =
-  (bvconst "bvcomp")
-
-let bv_sdiv_lid : FStarC_Ident.lident =
-  (bvconst "bvsdiv")
-
-let bv_srem_lid : FStarC_Ident.lident =
-  (bvconst "bvsrem")
-
-let bv_smod_lid : FStarC_Ident.lident =
-  (bvconst "bvsmod")
-
-let bv_ashr_lid : FStarC_Ident.lident =
-  (bvconst "bvashr")
-
-let bv_uaddo_lid : FStarC_Ident.lident =
-  (bvconst "bvuaddo")
-
-let bv_saddo_lid : FStarC_Ident.lident =
-  (bvconst "bvsaddo")
-
-let bv_umulo_lid : FStarC_Ident.lident =
-  (bvconst "bvumulo")
-
-let bv_smulo_lid : FStarC_Ident.lident =
-  (bvconst "bvsmulo")
-
-let bv_usubo_lid : FStarC_Ident.lident =
-  (bvconst "bvusubo")
-
-let bv_ssubo_lid : FStarC_Ident.lident =
-  (bvconst "bvssubo")
-
-let bv_sdivo_lid : FStarC_Ident.lident =
-  (bvconst "bvsdivo")
-
-let bv_uext_lid : FStarC_Ident.lident =
-  (bvconst "bv_uext")
-
-let bv_sext_lid : FStarC_Ident.lident =
-  (bvconst "bv_sext")
-
-let bv_repeat_lid : FStarC_Ident.lident =
-  (bvconst "bv_repeat")
-
-let nat_to_bv_lid : FStarC_Ident.lident =
-  (bvconst "int2bv")
-
-let bv_not_lid : FStarC_Ident.lident =
-  (bvconst "bvnot")
-
-let bv_neg_lid : FStarC_Ident.lident =
-  (bvconst "bvneg")
-
-let bv_nego_lid : FStarC_Ident.lident =
-  (bvconst "bvnego")
-
-let bv_to_nat_lid : FStarC_Ident.lident =
-  (bvconst "bv2int")
-
-let sbv_to_int_lid : FStarC_Ident.lident =
-  (bvconst "sbv_to_int")
-
 let bv_t_lid : FStarC_Ident.lident =
   (bvconst "bv_t")
 
@@ -1047,6 +1050,9 @@ let custard_bfloat16_attr : FStarC_Ident.lident =
 let custard_float_attr : FStarC_Ident.lident =
   (attr "custard_float")
 
+let custard_compile_time_attr : FStarC_Ident.lident =
+  (attr "custard_compile_time")
+
 let custard_opaque_attr : FStarC_Ident.lident =
   (attr "custard_opaque")
 
@@ -1062,9 +1068,6 @@ let extract_as_impure_effect_lid : FStarC_Ident.lident =
 let custard_functor_attr : FStarC_Ident.lident =
   (attr "custard_functor")
 
-let custard_compile_time_attr : FStarC_Ident.lident =
-  (attr "custard_compile_time")
-
 let normalize_for_extraction_lid : FStarC_Ident.lident =
   (psconst "normalize_for_extraction")
 
@@ -1077,11 +1080,23 @@ let custard_c_reference_attr : FStarC_Ident.lident =
 let custard_inline_field_attr : FStarC_Ident.lident =
   (attr "custard_inline_field")
 
+let custard_declare_in_c_header_attr : FStarC_Ident.lident =
+  (attr "custard_declare_in_c_header")
+
+let custard_no_unfold_attr : FStarC_Ident.lident =
+  (attr "custard_no_unfold")
+
 let custard_no_monomorphize_attr : FStarC_Ident.lident =
   (attr "custard_no_monomorphize")
 
 let custard_boxed_fields_attr : FStarC_Ident.lident =
   (attr "custard_boxed_fields")
+
+let cherry_boxed_attr : FStarC_Ident.lident =
+  (attr "cherry_boxed")
+
+let custard_inline_attr : FStarC_Ident.lident =
+  (attr "custard_inline")
 
 let monomorphize_attr : FStarC_Ident.lident =
   (attr "monomorphize")
@@ -1097,6 +1112,9 @@ let tcmethod_lid : FStarC_Ident.lident =
 
 let rename_let_attr : FStarC_Ident.lident =
   (attr "rename_let")
+
+let c_inline_attr : FStarC_Ident.lident =
+  (attr "CInline")
 
 let noextract_to_attr : FStarC_Ident.lident =
   (attr "noextract_to")
@@ -1229,9 +1247,6 @@ let range_0 : FStarC_Ident.lident =
 
 let comment_attr : FStarC_Ident.lident =
   (attr "Comment")
-
-let c_inline_attr : FStarC_Ident.lident =
-  (attr "CInline")
 
 let ite_soundness_by_attr : FStarC_Ident.lident =
   (attr "ite_soundness_by")

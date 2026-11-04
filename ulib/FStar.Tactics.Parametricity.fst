@@ -139,7 +139,7 @@ let rec param' (s:param_state) (t:term) : Tac term =
     let t = param' s' t in
     abs bx0 (abs bx1 (abs bxR t))
 
-  | Tv_Match t None brs ->
+  | Tv_Match t _ brs ->  (* The annotation is dropped, as ascriptions are. *)
     pack (Tv_Match (param' s t) None (map (param_br s) brs))
 
   | Tv_UInst fv _

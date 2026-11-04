@@ -91,6 +91,7 @@ let get : tac proofstate =
 let traise e =
   fun _ -> raise e
 
+[@@FStar.Attributes.custard_inline]
 let do_log ps (f : unit -> ML unit) : ML unit =
   if ps.tac_verb_dbg then
     f ()
@@ -327,6 +328,7 @@ let wrap_err (pref:string) (t : tac 'a) : tac 'a =
 let mlog (f : unit -> ML unit) (cont : unit -> ML (tac 'a)) : tac 'a =
   bind (log f) (fun _ -> cont ())
 
+[@@FStar.Attributes.custard_inline]
 let if_verbose_tac (f : unit -> ML (tac unit)) : tac unit =
   bind get (fun ps ->
   if ps.tac_verb_dbg
@@ -357,9 +359,8 @@ let is_goal_safe_as_well_typed (g:goal) : ML bool =
   all_deps_resolved
 
 let register_goal (g:goal) : ML unit =
-  if not (Options.compat_pre_core_should_register()) then () else
   let env = goal_env g in
-  if env.phase1 || Options.admit_smt_queries () then () else
+  if env.admit || Options.admit_smt_queries () then () else
   let uv = g.goal_ctx_uvar in
   let i = Core.incr_goal_ctr () in
   if Allow_untyped? (U.ctx_uvar_should_check g.goal_ctx_uvar) then () else

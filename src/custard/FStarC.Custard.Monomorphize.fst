@@ -244,6 +244,22 @@ let rec zip_params (ps:list string) (args:list cty) : list (string & cty) =
 (* Requesting an instantiation                                          *)
 (* -------------------------------------------------------------------- *)
 
+let rec has_tvar (c:cty) : ML bool =
+  match c with
+  | TVar _ -> true
+  | TArrow (a, _, b) -> has_tvar a || has_tvar b
+  | TTuple cs | TApp (_, cs) -> List.existsb has_tvar cs
+  | TBuf c | TRef (_, c) | TInline c -> has_tvar c
+  | _ -> false
+
+(* The declaration being rewritten, for {!request}'s diagnostic. *)
+let cur_decl : ref (option name) = mk_ref None
+
+(* Section 5.0.2.  The instantiations made at a type variable, on Cherry, with
+   the declaration that asked for each.  They are judged by {!check_tvar_clones}
+   once their layouts are known. *)
+let tvar_clones : ref (list (name & name & list cty & option name)) = mk_ref []
+
 let request (st:state) (n:name) (args:list cty) : ML name =
   let key = key_of n args in
   match HashTable.try_find st.names key with
@@ -257,6 +273,8 @@ let request (st:state) (n:name) (args:list cty) : ML name =
       if Some? (HashTable.try_find st.taken k) then pick (i + 1)
       else (HashTable.add st.taken k true; cand) in
     let nm = { n with spec = Some (pick 0) } in
+    if Options.custard_cherry () && List.existsb has_tvar args then
+      tvar_clones := (nm, n, args, !cur_decl) :: !tvar_clones;
     (* Register before building the body: a recursive type -- [list], whose
        [Cons] mentions [list a] -- must find this name rather than loop. *)
     HashTable.add st.names key nm;
@@ -621,6 +639,7 @@ let run (prog:program) : ML program =
              ext_bare   = HashTable.create 20;
              ext_clones = mk_ref [] } in
   exn_fields := HashTable.create 20;
+  tvar_clones := [];
   prog |> List.iter (fun d ->
     match d with
     | DExn x -> HashTable.add !exn_fields (string_of_name x.de_name) x.de_args
@@ -675,6 +694,7 @@ let run (prog:program) : ML program =
      order does not matter: [Simplify.scc] sorts the whole program
      topologically at the end of phase 4, which is after this runs. *)
   let rest = prog |> List.collect (fun d ->
+    cur_decl := Some (name_of_decl d);
     match d with
     (* Section 47.2.  Kept, and with its parameters dropped so that the
        declaration agrees with the [TApp (n, [])] every use site is now
@@ -714,6 +734,7 @@ let run (prog:program) : ML program =
     | DExn e -> [DExn { e with de_args = e.de_args |> List.map (mono_cty st) }]
     | DModule m ->
       [DModule { m with dm_types = m.dm_types |> List.map (fun (f, c) -> (f, mono_cty st c)) }]) in
+  cur_decl := None;
   drain st;
   (* Section 64.  The polymorphic externals are dropped here rather than in
      the pass above, because "was it instantiated?" is not answerable until
@@ -751,3 +772,35 @@ let run (prog:program) : ML program =
     | d -> [d]) in
   rest @ (List.rev !st.ext_clones |> List.map (fun d -> DExternal d))
        @ (List.rev !st.clones |> List.map (fun d -> DType d))
+
+(* Section 5.0.2.  On Cherry a type variable is [any], so a clone at one --
+   [list@'a], whose [hd] is boxed -- has a different layout from the clone a
+   value was built at -- [list@int], whose [hd] is not.  Both are a
+   [cherry_obj *] in C, so the program compiled and then read its fields at the
+   wrong representation.  A clone that collapsed to its one field, or was
+   erased, has no layout of its own: [id@'a] is just [any], and the coercions
+   at its uses convert it like any other.  Everything else is refused. *)
+let check_tvar_clones (infos:list (name & type_info)) : ML unit =
+  List.rev !tvar_clones |> List.iter (fun (nm, n, args, decl) ->
+    let k = string_of_name nm in
+    match infos |> List.tryFind (fun (m, _) -> string_of_name m = k) with
+    | Some (_, ({ ti_layout = L_struct _ })) ->
+      FStarC.Errors.raise_error0 FStarC.Errors.Codes.Error_CustardTypeVarInstantiation ([
+        Pprint.arbitrary_string
+          ("Custard: the type " ^ show (TApp (n, args)) ^ " is instantiated at a \
+            type variable" ^
+           (match decl with
+            | Some d -> " in " ^ string_of_name d
+            | None -> "") ^ ".");
+        Pprint.arbitrary_string
+          "Cherry represents a type variable as a boxed [any], so this \
+           instantiation has a different layout from the one at the concrete \
+           type a value is built at, and the two cannot be told apart at \
+           runtime.";
+        Pprint.arbitrary_string
+          "This happens when a polymorphic function is called through a \
+           dictionary passed at runtime (FStar.Custard.dyn) and the method \
+           builds or inspects a value of a polymorphic datatype -- for example \
+           a monad instance over [option].  Make the call specializable, or \
+           use a type that does not depend on the type variable."])
+    | _ -> ())

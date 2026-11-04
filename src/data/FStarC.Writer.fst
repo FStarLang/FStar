@@ -11,6 +11,7 @@ let run_writer #m {| monoid m |} #a (x : writer m a) : m & a =
   let Wr (m, x) = x in
   (m, x)
 
+[@@FStar.Attributes.custard_inline]
 let writer_bind #m {| monoid m |} #a #b (x : writer m a) (f : a -> ML (writer m b)) : ML (writer m b) =
   let Wr (a, x) = x in
   let Wr (b, y) = f x in

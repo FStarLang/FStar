@@ -278,7 +278,7 @@ let rec eta_ctors__go (fields : (((string * FStarC_Custard_Syntax.cty)) list) FS
         | (Some (fs)) when (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) es1) ((fun l -> Z.of_int (BatList.length l)) fs)) -> (let tmp2 = (eta_ctors__drop () ((fun l -> Z.of_int (BatList.length l)) es1) fs) in
           let bs = (BatList.map (fun tmp3 -> (match tmp3 with
               | (f, c) -> (let tmp4 = (fresh ()) in
-                { FStarC_Custard_Syntax.b_name = tmp4; b_ty = c })
+                { FStarC_Custard_Syntax.b_name = tmp4; b_ty = (uninline c) })
             )) tmp2) in
           let args = (BatList.map (fun b -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ((b).FStarC_Custard_Syntax.b_name)) (b).FStarC_Custard_Syntax.b_ty FStarC_Custard_Syntax.E_Pure)) bs) in
           let res = (BatList.fold_right (fun b c -> (FStarC_Custard_Syntax.TArrow ((b).FStarC_Custard_Syntax.b_ty, FStarC_Custard_Syntax.E_Pure, c))) bs (x).FStarC_Custard_Syntax.ty) in

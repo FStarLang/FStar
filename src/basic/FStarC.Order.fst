@@ -28,6 +28,7 @@ let lt (o : order) : bool = o = Lt
 let eq (o : order) : bool = o = Eq
 
 // Lexicographical combination, thunked to be lazy
+[@@FStar.Attributes.custard_inline]
 let lex (o1 : order) (o2 : unit -> ML order) : ML order =
     match o1, o2 with
     | Lt, _ -> Lt

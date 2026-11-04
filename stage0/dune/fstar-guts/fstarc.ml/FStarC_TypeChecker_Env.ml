@@ -2050,7 +2050,7 @@ let rec univnames__aux (out : (FStarC_Ident.ident) list) (g : (FStarC_Syntax_Syn
   )
 
 let univnames (env : env) : (FStarC_Ident.ident) list =
-  (let no_univ_names = (FStarC_Ident.fStarC_Class_Setlike_empty__ident_list_ident ()) in
+  (let no_univ_names = (FStarC_FlatSet.fStarC_Class_Setlike_empty__ident_list_ident ()) in
   (univnames__aux no_univ_names (env).gamma))
 
 let rec uvars_in_env__aux (out : (FStarC_Syntax_Syntax.ctx_uvar) list) (g : (FStarC_Syntax_Syntax.binding) list) : (FStarC_Syntax_Syntax.ctx_uvar) list =

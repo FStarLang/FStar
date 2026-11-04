@@ -23,10 +23,10 @@ let parse_attr_with_list (warn : bool) (at : (FStarC_Syntax_Syntax.term') FStarC
       ))
   ))
 
-let extension_tosyntax_table : ((FStarC_Syntax_DsEnv.env -> (FStar_Dyn.dyn -> ((FStarC_Ident.lident) list -> (FStarC_Range_Type.range -> (FStarC_Syntax_Syntax.sigelt') list))))) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+let extension_tosyntax_table : ((FStarC_Syntax_DsEnv.env -> (Obj.t -> ((FStarC_Ident.lident) list -> (FStarC_Range_Type.range -> (FStarC_Syntax_Syntax.sigelt') list))))) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20))))
 
-let register_extension_tosyntax (lang_name : string) (eta : (FStarC_Syntax_DsEnv.env -> (FStar_Dyn.dyn -> ((FStarC_Ident.lident) list -> (FStarC_Range_Type.range -> (FStarC_Syntax_Syntax.sigelt') list))))) : unit =
+let register_extension_tosyntax (lang_name : string) (eta : (FStarC_Syntax_DsEnv.env -> (Obj.t -> ((FStarC_Ident.lident) list -> (FStarC_Range_Type.range -> (FStarC_Syntax_Syntax.sigelt') list))))) : unit =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace extension_tosyntax_table lang_name eta)
 
 let desugar_machine_integer (env : FStarC_Syntax_DsEnv.env) (repr : Prims.int) (base : FStar_IntegerLiteral.int_base) (u__sw_ : (FStarC_Const.signedness * FStarC_Const.width)) (range : FStarC_Range_Type.range) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
@@ -415,14 +415,14 @@ let rec gather_pattern_bound_vars_maybe_top (acc : (FStarC_Ident.ident) list) (p
   ))
 
 let gather_pattern_bound_vars : (FStarC_Parser_AST.pattern -> (FStarC_Ident.ident) list) =
-  (let acc = (FStarC_Ident.fStarC_Class_Setlike_empty__ident_list_ident_7 ()) in
+  (let acc = (FStarC_FlatSet.fStarC_Class_Setlike_empty__ident_list_ident_7 ()) in
   (fun p -> (gather_pattern_bound_vars_maybe_top acc p)))
 
 let rec fStarC_ToSyntax_ToSyntax_desugar_term_maybe_top__aux__1 (acc : (FStarC_Ident.ident) list) (sets : ((FStarC_Ident.ident) list) list) : (FStarC_Ident.ident) option =
   (match sets with
     | [] -> None
     | (set :: sets1) -> (let i = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_inter__ident_list_ident acc set) in
-      let tmp = (FStarC_Ident.fStarC_Class_Setlike_is_empty__ident_list_ident i) in
+      let tmp = (FStarC_FlatSet.fStarC_Class_Setlike_is_empty__ident_list_ident i) in
       (if tmp then (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__ident_list_ident_5 acc set) in
       (fStarC_ToSyntax_ToSyntax_desugar_term_maybe_top__aux__1 tmp1 sets1)) else (let tmp1 = (BatList.hd i) in
       (Some (tmp1)))))
@@ -1721,7 +1721,7 @@ and desugar_term_maybe_top (top_level : bool) (env : FStarC_Syntax_DsEnv.env) (t
       let t' = (FStarC_Parser_AST.mk_term tmp8 (top).FStarC_Parser_AST.range FStarC_Parser_AST.Expr) in
       (desugar_term_maybe_top top_level env t'))
     | (FStarC_Parser_AST.Abs (binders, body)) -> (let bvss = (BatList.map gather_pattern_bound_vars binders) in
-      let check_disjoint = (fun sets -> (let tmp1 = (FStarC_Ident.fStarC_Class_Setlike_empty__ident_list_ident_7 ()) in
+      let check_disjoint = (fun sets -> (let tmp1 = (FStarC_FlatSet.fStarC_Class_Setlike_empty__ident_list_ident_7 ()) in
         (fStarC_ToSyntax_ToSyntax_desugar_term_maybe_top__aux__1 tmp1 sets))) in
       let tmp1 = (check_disjoint bvss) in
       (match tmp1 with
@@ -3184,7 +3184,7 @@ let lookup_effect_lid_for_lift (env : FStarC_Syntax_DsEnv.env) (l : FStarC_Ident
       ))
   ))
 
-let lookup_extension_tosyntax (lang_name : string) : ((FStarC_Syntax_DsEnv.env -> (FStar_Dyn.dyn -> ((FStarC_Ident.lident) list -> (FStarC_Range_Type.range -> (FStarC_Syntax_Syntax.sigelt') list))))) option =
+let lookup_extension_tosyntax (lang_name : string) : ((FStarC_Syntax_DsEnv.env -> (Obj.t -> ((FStarC_Ident.lident) list -> (FStarC_Range_Type.range -> (FStarC_Syntax_Syntax.sigelt') list))))) option =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt extension_tosyntax_table lang_name)
 
 let rec generalize_annotated_univs (s : FStarC_Syntax_Syntax.sigelt) : FStarC_Syntax_Syntax.sigelt =

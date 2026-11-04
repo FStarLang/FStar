@@ -471,10 +471,6 @@ let comp_to_string' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.c
   (let tmp = (FStarC_Options.ugly ()) in
   (if tmp then (FStarC_Syntax_Print_Ugly.comp_to_string c) else (FStarC_Syntax_Print_Pretty.comp_to_string' env c)))
 
-let fStarC_Class_Show_show__clist_universe (tmp : (FStarC_Syntax_Syntax.universe) FStarC_CList.clist) : string =
-  (let tmp1 = (FStarC_CList.fStarC_Class_Listlike_to_list__universe_clist_universe tmp) in
-  (fStarC_Class_Show_show__list_universe tmp1))
-
 let fStarC_Class_Show_show__tuple2_tuple3_p_uvar_rec_version_range_string (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) * string)) : string =
   (match tmp with
     | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__tuple3_p_uvar_rec_tuple2_version_range x1) in
