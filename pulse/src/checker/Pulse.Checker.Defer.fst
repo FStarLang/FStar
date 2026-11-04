@@ -68,7 +68,7 @@ let check
     let (| handler, c_handler |) = apply_checker_result_k (check g_cleanup cpre (PostHint post_hint_for_handler) ppname_default handler) ppname_default in
     // After body, context is (post ** cpre); handler consumes cpre
     // Overall defer comp has the original post (without cpre)
-    let t = wtag (Some (ctag_of_comp_st c_body)) (Tm_Defer { handler_pre = cpre; handler; body=body' }) in
+    let t = wtag (Some (ctag_of_comp_st c_body)) (Tm_Defer { result_ty=comp_res c_body; handler_pre = cpre; handler; body=body' }) in
     // Preserve the body's computation constructor, particularly C_STDiv. A
     // defer around a throwing call does not prove that the call terminates;
     // rebuilding a C_ST here would erase divergence before an enclosing catch.

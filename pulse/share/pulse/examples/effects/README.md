@@ -6,7 +6,8 @@ All library examples use the single graded model in `Pulse.Lib.Effects.Core`
 and its `Exception` layer. `Rules` exercises the two-exit rules derived through
 that interpreter. Negative examples check invalid ownership and grade uses.
 `Native` and `NativeRejected` separately exercise the native two-exit checker,
-without constructing effect trees. Their Custard extraction is deferred.
+without constructing effect trees. `NativeRuntime` executes native exceptions
+through Custard on OCaml, F#, and Cherry C. Standalone C extraction is rejected.
 
 Start with `Core`, `Exception`, and `Nested`, then `Graded` and `Rules`.
 
@@ -22,7 +23,12 @@ Start with `Core`, `Exception`, and `Nested`, then `Graded` and `Rules`.
 | [`Example.Effects.Rejected.fst`](Example.Effects.Rejected.fst) | Twelve expected failures covering ownership, operation kinds, unresolved effects, framing, and grades. Not an executable test module. |
 | [`Example.Effects.Native.fst`](Example.Effects.Native.fst) | Native raises contracts, partial catches, re-raising, exact state transfers, framing, local reclamation, cleanup, loops, recursion, and higher-order calls. Verification only. |
 | [`Example.Effects.NativeRejected.fst`](Example.Effects.NativeRejected.fst) | Expected rejections for lost ownership, unhandled calls, incomplete handlers, escaping cleanup, invalid local reclamation, and ghost/atomic raises. Verification only. |
-| [`Example.Effects.Runtime.fst`](Example.Effects.Runtime.fst) | The one extraction entry point. Calls five concrete cases and returns a list of runtime comparisons, with a proof that they are all true. |
+| [`Example.Effects.NativeExtraction.fst`](Example.Effects.NativeExtraction.fst) | Standalone-C refusals for implicit native calls and nonraising native scopes, with raw outcome data as an extractable control. |
+| [`Example.Effects.NativeNoExtract.fst`](Example.Effects.NativeNoExtract.fst) | The `pulse.noextract` debugging option must refuse native extraction, including from a checked file. |
+| [`Example.Effects.NativeRuntime.fst`](Example.Effects.NativeRuntime.fst) | Native runtime regressions: early return, non-unit cleanup results, unwinding, separate control exits, locally handled cleanup, extensible and managed payloads, re-raising, recursion, higher-order calls, loops, framing, and raw outcome data. |
+| [`Native_runtime.ml.expected`](Native_runtime.ml.expected) | Complete expected OCaml extraction of the native runtime suite, including its example callees. |
+| [`Native_runtime.c.expected`](Native_runtime.c.expected), [`Native_runtime.h.expected`](Native_runtime.h.expected) | Complete expected Cherry implementation and header, including exception descriptors, payload ownership helpers, and the exported ABI. |
+| [`Example.Effects.Runtime.fst`](Example.Effects.Runtime.fst) | Tree-based runtime entry point. Calls five concrete cases and returns a list of runtime comparisons, with a proof that they are all true. |
 | [`driver.ml`](driver.ml) | External OCaml harness that checks the complete list returned by the extracted entry point and fails the executable if any observation differs. |
 | [`Makefile`](Makefile) | Builds the library first, verifies all examples, extracts the runtime entry, links the driver, and records a successful run incrementally. |
 | [`.fst.config.json`](.fst.config.json) | VS Code compiler/options/include configuration. It includes both source and cache directories of the library; see the field descriptions below. |
@@ -31,6 +37,75 @@ Start with `Core`, `Exception`, and `Nested`, then `Graded` and `Rules`.
 The original sketch `../Effects.fst` is outside this directory and is not part
 of this suite. Generated `.depend`, `_cache/`, and `_output/` files are not
 additional authored examples and should not be edited.
+
+`make check-native-extraction` checks that native exception entry points fail
+with the intended diagnostic for standalone C, from source and from checked
+files, while raw outcomes still extract.
+
+`make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry` executes the native runtime
+regressions. The three `native_driver.*` files check the same returned boolean.
+Cherry uses address/undefined-behavior sanitizers and leak detection: the
+cleanup cases must free their boxes exactly once. These checks run under
+`make all`, with the F# leg enabled when `dotnet` is available (SDK 10 required).
+Cherry requires GCC 15 or later; set `CHERRY_CC` if the default C compiler is
+older. `NOCHERRY=1` skips the default build's Cherry leg.
+
+## Reviewing native exception extraction
+
+The three `Native_runtime.*.expected` files are the actual generated code, not
+handwritten sketches or filtered excerpts. They cover the executable cases in
+`NativeRuntime.test`, including callees from `Native` and `NativeExtraction`.
+The golden checks compare all lines using the shared `test.mk` diff rules
+(only CRLF line endings are ignored). Names, control-flow keys, reference
+counting, and unreachable code are not normalized away.
+
+From this directory:
+
+```sh
+make check-native-goldens
+make CHERRY_CC=gcc-15 native-ocaml native-cherry
+```
+
+The first command extracts and compares OCaml, Cherry C, and its header; it
+does not require a C compiler. The second also compiles and runs the matching
+code, with sanitizers and leak detection for Cherry. `make all` includes the
+golden checks, even with `NOCHERRY=1`. A changed implementation or header fails
+with a unified diff; normal test targets never update the expected files.
+
+Start with `handled_bool`, the smallest example of an actual raise and catch.
+OCaml function names have the prefix `example_Effects_`; Cherry names use
+`Example_Effects_`. Cherry's `__cloN` functions are lifted protected bodies:
+read them together with their callers, rather than as independent examples.
+
+| Source definitions to locate in the snapshots | What to review |
+| --- | --- |
+| `NativeExtraction.handled_bool` | OCaml uses `raise (NativeException ...)` and `try ... with`. Cherry constructs the exception, calls `cherry_raise`, tests `CHERRY_EXN_PENDING()`, takes the exception, checks its descriptor, and unboxes its payload. Both return an ordinary `bool`. |
+| `NativeRuntime.early`, `return_through_try` | The ordinary result is an integer, not an outcome. `ControlFlow` carries lexical returns on a separate channel; the user catch cannot intercept them. The result slot starts at `None` and is written before the control exception is raised. |
+| `NativeRuntime.cleanup`, `cleanup_return` | Normal completion preserves the body result. Exceptional completion frees the box and re-raises the saved exception; an early return crosses the same cleanup. In OCaml, `B.free` becomes `()` because references are garbage collected; Cherry emits `cherry_pbuf1_free`. |
+| `NativeRuntime.cleanup_handles` | Cleanup catches a local Boolean exception and a local loop break without losing the pending integer exception. Follow `_cexn` through cleanup to its final re-raise. |
+| `NativeRuntime.reraises`, `Native.reraised` | A handler can translate or re-raise a payload without catching its own raise. The stateful example updates the owned cell before re-raising and before final recovery. |
+| `NativeRuntime.stack_payload`, `return_payload` | Dynamically allocated strings survive boxing and unwinding. Cherry drops the scoped local's owned value before leaving on an exception, and drops the return slot after acquiring its result. |
+| `NativeRuntime.recurse`, `Native.invoke`, `Native.locally_defined` | Recursive and higher-order calls use the normal-result ABI, with exceptions propagated by the backend rather than outcome matching. |
+| `NativeExtraction.raw_outcome` | This deliberately remains an ordinary tagged datatype. Its `Normal`/`Raised` constructors in the snapshots and header are not the native exception ABI. |
+
+Cherry's zeroed `cherry_dummy` returns are placeholders on exceptional exits,
+not successful results: the caller must test the pending-exception flag before
+using the return value. Tail calls delegate that test to their caller. Some
+generated cleanup/unreachable scaffolding remains after unconditional returns;
+it is included in the snapshots, but is not executed a second time.
+
+For an intentional extraction change, inspect the failing diffs against the
+source examples and the checks above, then explicitly regenerate the baseline:
+
+```sh
+make accept-native-goldens
+git diff -- Native_runtime.ml.expected Native_runtime.c.expected Native_runtime.h.expected
+make CHERRY_CC=gcc-15 check-native-goldens native-ocaml native-cherry
+```
+
+Do not accept a change merely to make the diff pass. Fresh source verification
+and re-extraction should reproduce the same snapshots; executable checks remain
+necessary because an unchanged snapshot alone does not establish correctness.
 
 ## The five executable observations
 
@@ -86,8 +161,9 @@ the local on either route. `divergent_program` checks the same bind/frame/handle
 composition for a genuinely recursive callback.
 
 `Graded` and `Rules` are proof examples, not extraction entry points.
-The five-case executable uses the same canonical model; native Custard extraction
-and arbitrary delayed request generation are separate milestones.
+The five-case executable uses the same canonical model. It is independent of
+the native runtime executable and does not exercise arbitrary delayed request
+generation.
 
 ### Core operations
 
@@ -267,19 +343,22 @@ make verify   # Library and example proofs, including expected failures
 make extract  # Produce _output/Effects_runtime.ml
 make build    # Produce the extracted module and _output/effects.exe
 make run      # Build as needed, then explicitly rerun the executable
+make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry
 make clean    # Remove this directory's generated artifacts only
 ```
 
 `extract`, `build`, and `run` follow the runtime entry's dependencies; default
 `make` and `make verify` also check both standalone negative-test modules and
-the native scenarios. Use `make verify` for the native proof/checker milestone;
-the runtime targets concern only the five-case tree-based entry point.
+the native scenarios. `verify` does not request extraction. The unprefixed
+`extract`, `build`, and `run` targets concern the five-case tree-based entry;
+the `native-*` targets execute the native exception suite.
 
 The library owns its own `_cache`; these examples keep their checked files in
 this directory's `_cache`. F* generates `.depend`. Custard produces
 `_output/Effects_runtime.ml`, and the Makefile copies `driver.ml` into `_output`
 so OCaml's auxiliary files stay there. `_output/effects.out` records successful
-execution and makes an unchanged default build a no-op for execution.
+execution and avoids rerunning that tree-based driver on an unchanged build.
+The native targets rerun their executables.
 
 The dependency distinctions are intentional:
 

@@ -10,8 +10,10 @@ module T = FStar.Tactics.V2
      stt[_div] (Rules.native_outcome exn a) pre (Rules.exit_post q r)
 
    Normal x transfers q x; Raised e transfers r e. Inside a function, Raised
-   exits use lexical goto labels, including the cleanup obligations of scopes
-   crossed by the jump. No exception AST remains in the checked result.
+   exits are checked against lexical goto labels, including the cleanup
+   obligations of scopes crossed by the jump. These outcomes and exception
+   labels are proof-only: the checked result retains Tm_NativeRaise,
+   Tm_NativeScope, and Tm_NativeTry for native runtime extraction.
 
    The checker callback checks generated returns, matches, and raises using the
    same rules as source terms. Passing it explicitly avoids a module dependency
@@ -29,6 +31,8 @@ val outcome_types (ty:term) : Tot (option (term & term))
 // The nearest exception label determines the payload type; its destination
 // contract plus crossed cleanup obligations must consume the owned context.
 // With no visible destination (also at a cleanup boundary), require False.
+// After the goto's exact-transfer check, emit a checked native raise, not an
+// executable goto carrying Raised.
 val check_raise
   (g:env)
   (pre:term)
@@ -41,9 +45,10 @@ val check_raise
 // Check a function's exception scope or a try's protected body. normal carries
 // the unwrapped result type/postcondition; exceptional is an exn -> slprop
 // expression. The actual entry context is pre. Check body with a fresh lexical
-// destination, then close it, yielding a native_outcome computation. ph applies
-// to that outcome, not to the body's normal result. Payloads/results are Type0,
-// and the ambient effect must be STT or STTDiv.
+// destination, then close its proof scope, yielding a native_outcome
+// computation. ph applies to that outcome, not to the body's normal result.
+// The checked runtime body returns the normal result without a Normal wrapper.
+// Payloads/results are Type0, and the ambient effect must be STT or STTDiv.
 val check_scope
   (g:env)
   (pre:term)
@@ -63,6 +68,8 @@ val check_scope
 // propagates through check_raise. This must run even when no exception label
 // is visible or the source discards the call result. ph applies to the
 // unwrapped normal continuation, not to the intermediate outcome.
+// The split is for checking only: the runtime call either returns an a or
+// throws. Preserve its single evaluation and omit the checked outcome match.
 val unwrap
   (#g:env)
   (#pre:term)
@@ -80,6 +87,8 @@ val unwrap
 // its ordered pattern match and unmatched-payload re-raise. It is checked
 // OUTSIDE the protected body's exception label, so re-raises target the outer
 // scope. The returned computation exposes the normal result, not an outcome.
+// Its runtime node pairs the checked protected body with the checked Raised
+// branch; native extraction supplies the payload binder.
 val check_try
   (g:env)
   (pre:term)

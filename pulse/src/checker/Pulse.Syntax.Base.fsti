@@ -334,9 +334,20 @@ type st_term' =
       handler: st_term;
     }
   | Tm_Defer {
+      result_ty: term; // unknown in source; filled by the checker
       handler_pre: slprop;
       handler: st_term;
       body: st_term;
+    }
+  // Checked runtime nodes. The checker first discharges the two-exit/goto
+  // obligations; these nodes preserve host control flow for extraction.
+  | Tm_NativeRaise { exn_ty:term; result_ty:term; arg:term }
+  | Tm_NativeScope { body:st_term }
+  | Tm_NativeTry {
+      exn_ty:term;
+      result_ty:term;
+      body:st_term;
+      handler:st_term; // payload bound at index 0
     }
 and st_term = {
     term : st_term';

@@ -5352,6 +5352,8 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
    knot-tying makes the recursive uses visible as ordinary occurrences of [l],
    so testing for them is enough. *)
 and fixup_extract_as (se:sigelt) : ML sigelt =
+  // Check before replacing the body, including definitions loaded from cache.
+  ExtractAs.check_extraction_error se;
   match se.sigel, List.tryPick ExtractAs.is_extract_as_attr se.sigattrs with
   | Sig_let {lids; lbs=(is_rec, [lb])}, Some impl ->
     let self = match lb.lbname with

@@ -16,16 +16,19 @@ module U = Pulse.Reflection.Util
      raises r  ==>  stt[_div] (native_outcome exn a) pre (exit_post q r)
      raise e   ==>  goto nearest_exception_label (Raised e)
 
-   A scope checks ordinary completion against q, wraps it in Normal, and binds
-   the destination for Raised exits. A try then matches that outcome outside
-   the destination's scope. Calls returning native_outcome are split similarly,
-   even when their result is discarded or there is no enclosing handler.
+   These are checking rules, not the runtime representation. A scope checks
+   ordinary completion against q, checks its Normal wrapper, and binds the
+   destination for Raised exits. A try checks an outcome match outside that
+   destination. Calls returning native_outcome are split similarly, even when
+   their result is discarded or there is no enclosing handler.
 
    Resource transfer is delegated to the existing checker: calls frame both
    outcomes, whereas Goto.check requires exact ownership for the destination
    and crossed cleanup scopes. Outcome construction uses ordinary syntax; the
    recursive checker callback and continuation elaborators check and compose
-   it. See doc/ref/pulse_exceptions.md for the pipeline and reference model. *)
+   it. Only after these obligations have succeeded do we retain the checked
+   normal bodies and native raise/try nodes, discarding proof-only outcome
+   wrappers and matches. See doc/ref/pulse_exceptions.md for both lowerings. *)
 let rules_name s = ["Pulse"; "Lib"; "Effects"; "Rules"; s]
 let rules_term s = R.pack_ln (R.Tv_FVar (R.pack_fv (rules_name s)))
 let explicit t = t, R.Q_Explicit
@@ -90,7 +93,7 @@ let check_raise (g:env) (pre:term) (ph:post_hint_opt g)
         // Goto substitutes Raised arg into the destination precondition and
         // uses prove_exact. Framing here would strand ownership in a normal
         // continuation which this jump never executes.
-        Pulse.Checker.Goto.check g pre ph name t
+        Pulse.Checker.Goto.check_native_raise g pre ph name t exn arg
       | None -> fail g (Some rng) "Internal error: exception label has no outcome type")
     | None -> fail g (Some rng) "Internal error: missing exception label")
   | None ->
@@ -137,12 +140,13 @@ let posts (g:env) (ph:post_hint_opt g) (normal:comp_st) (exceptional:term) (rng:
   let outer = intro_post_hint g eff (Some (outcome_type exn normal.ret_ty)) post in
   normal, outer, exn
 
-// Lower a source exception scope to a checked forward-jump block:
+// Check a source exception scope using the forward-jump discipline:
 //   label L { let x = body in Normal x }
 // A raise in body jumps directly to L with Raised e, bypassing the Normal
 // wrapper. For a function-level scope, desugaring puts its ordinary _return
 // label INSIDE this scope, so early return still passes through Normal. A try
 // scope need not enclose _return: returning can bypass the try and its catches.
+// Neither the exception label nor its Normal wrapper is emitted at runtime.
 let check_scope (g:env) (pre:term) (ph:post_hint_opt g) (name:ppname)
   (normal:comp_st) (exceptional:term) (body:st_term) (rng:range) (check:check_t)
   : T.Tac (checker_result_t g pre ph) =
@@ -154,6 +158,9 @@ let check_scope (g:env) (pre:term) (ph:post_hint_opt g) (name:ppname)
   // post. In particular, jumping with Raised e requires exceptional e.
   let g' = push_exception g x lbl (goto_comp_of_block_comp c) in
   let r = check g' pre (PostHint normal) name body in
+  // Keep the checked normal-result body for runtime extraction. The Normal
+  // wrapper and exception label below are used only to validate the ABI/post.
+  let (| runtime_body, _ |) = apply_checker_result_k r name in
   // Forget only the result's post-hint refinement, not the checked computation
   // or its effect. We must compose the body with an outcome-producing return
   // rather than force its a-valued result to match the outer outcome type.
@@ -167,11 +174,11 @@ let check_scope (g:env) (pre:term) (ph:post_hint_opt g) (name:ppname)
   let value = constructor "Normal" exn normal.ret_ty (term_of_nvar (name, y)) in
   let r1 = check g1 ctxt (PostHint outer) name (ret rng outer.ret_ty value) in
   let r = compose_checker_result_t r r1 in
-  // Materialize the composed continuation before binding the label: all jumps
-  // introduced while checking body must be enclosed by this block. Returning
-  // a checker result in g (not g') keeps the label out of subsequent handlers.
+  // Materialize the proof-only composition to establish its outcome contract.
+  // Returning in g (not g') keeps the exception destination out of subsequent
+  // handlers; the runtime scope stores only the original checked normal body.
   let (| body, c |) = apply_checker_result_k r name in
-  let t = wrst c (Tm_ForwardJumpLabel { lbl; body=close_st_term body x; post=c }) in
+  let t = wrst c (Tm_NativeScope { body=runtime_body }) in
   let c = match_comp_res_with_post_hint t c ph in
   prove_post_hint (checker_result_for_st_typing (| t, c |) name) ph rng
 
@@ -203,6 +210,13 @@ let unwrap (#g:env) (#pre:term) (ph:post_hint_opt g) (name:ppname)
   ] in
   let r1 = Pulse.Checker.Match.check g1 ctxt normal name
     (ret rng ty (term_of_nvar (name, x))) branches check in
+  // The checked match proves propagation, including an impossible Raised
+  // branch. Runtime native calls already return a or throw: retaining this
+  // match would reintroduce the outcome ABI we are deliberately erasing.
+  let (| _, c |) = apply_checker_result_k r1 name in
+  let t = wrst c (Tm_Return { expected_type=a; insert_eq=false; term=term_of_nvar (name, x) }) in
+  let r1 : checker_result_t g1 ctxt (PostHint normal) =
+    checker_result_for_st_typing (| t, c |) name in
   let r = compose_checker_result_t r r1 in
   prove_post_hint (retype_checker_result NoHint r) ph rng
 
@@ -213,11 +227,13 @@ let unwrap (#g:env) (#pre:term) (ph:post_hint_opt g) (name:ppname)
 let check_try (g:env) (pre:term) (ph:post_hint_opt g) (name:ppname)
   (normal:comp_st) (exceptional:term) (body handler:st_term) (rng:range) (check:check_t)
   : T.Tac (checker_result_t g pre ph) =
-  let normal_post, _, _ = posts g ph normal exceptional rng in
+  let normal_post, outer, exn = posts g ph normal exceptional rng in
   // NoHint is intentional: this intermediate result is native_outcome, whereas
   // ph describes the final a-valued try. check_scope closes its own label, so
   // the following match sees only outer exception destinations in g1.
-  let r = check_scope g pre NoHint name normal exceptional body rng check in
+  let r = check_scope g pre (PostHint outer) name normal exceptional body rng check in
+  let (| runtime_body, _ |) = apply_checker_result_k r name in
+  let r = retype_checker_result NoHint r in
   let (| x, g1, (_, ty), ctxt, _ |) = r in
   env_extends_trans g1 g normal_post.g;
   let branches = [
@@ -229,5 +245,16 @@ let check_try (g:env) (pre:term) (ph:post_hint_opt g) (name:ppname)
   ] in
   let r1 = Pulse.Checker.Match.check g1 ctxt normal_post name
     (ret rng ty (term_of_nvar (name, x))) branches check in
+  let (| runtime_match, _ |) = apply_checker_result_k r1 name in
+  // Select the already-checked Raised branch with a constructor application.
+  // Custard simplifies this closed constructor match; the protected call is
+  // never evaluated twice, nor is an outcome allocated at runtime.
+  let payload = fresh g1 in
+  let raised = constructor "Raised" exn normal_post.ret_ty (term_of_nvar (name, payload)) in
+  let runtime_handler = subst_st_term runtime_match [RT.NT x raised] in
+  let runtime_handler = close_st_term runtime_handler payload in
   let r = compose_checker_result_t r r1 in
-  prove_post_hint (retype_checker_result NoHint r) ph rng
+  let (| _, c |) = apply_checker_result_k r name in
+  let t = wrst c (Tm_NativeTry { exn_ty=exn; result_ty=normal_post.ret_ty;
+                               body=runtime_body; handler=runtime_handler }) in
+  prove_post_hint (checker_result_for_st_typing (| t, c |) name) ph rng

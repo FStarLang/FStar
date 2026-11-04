@@ -135,7 +135,14 @@ let check_fndefn
     let open Pulse.Extract.Main in begin
     if T.ext_enabled "pulse.noextract" then (
       T.print ">>>>>Skipping extraction\n";
-      se
+      // A native ABI must never fall back to the opaque verification body.
+      // Persist the refusal so extracting this checked file is also safe.
+      if uses_native_exceptions body then
+        let chk, decl, blob = se in
+        let attr = Pulse.Extract.CompilerLib.mk_extraction_error_attr
+          "Native Pulse exceptions cannot be extracted with pulse.noextract." in
+        chk, RU.add_attribute decl attr, blob
+      else se
     )
     else
     if C_STGhost? comp then

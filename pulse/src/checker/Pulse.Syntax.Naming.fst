@@ -252,6 +252,16 @@ let rec close_open_inverse_st'  (t:st_term)
     // closing/opening proof recurses at i+1 rather than i.
     | Tm_Raise { arg } ->
       close_open_inverse' arg x i
+    | Tm_NativeRaise { exn_ty; result_ty; arg } ->
+      close_open_inverse' exn_ty x i;
+      close_open_inverse' result_ty x i;
+      close_open_inverse' arg x i
+    | Tm_NativeScope { body } -> close_open_inverse_st' body x i
+    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+      close_open_inverse' exn_ty x i;
+      close_open_inverse' result_ty x i;
+      close_open_inverse_st' body x i;
+      close_open_inverse_st' handler x (i + 1)
 
     | Tm_ExceptionScope { normal; exceptional; body } ->
       close_open_inverse_comp' normal x i;
@@ -264,7 +274,8 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse_st' body x i;
       close_open_inverse_st' handler x (i + 1)
 
-    | Tm_Defer { handler_pre; handler; body } ->
+    | Tm_Defer { result_ty; handler_pre; handler; body } ->
+      close_open_inverse' result_ty x i;
       close_open_inverse' handler_pre x i;
       close_open_inverse_st' handler x i;
       close_open_inverse_st' body x i

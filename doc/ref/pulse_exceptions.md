@@ -3,22 +3,24 @@
 *A reference for F* compiler developers.*
 
 Pulse's native exception support consists of `raises` contracts, `raise`
-statements, and `try ... catch` blocks. "Native" here means integrated into
-Pulse's syntax and checker: it does **not** mean that these constructs use
-OCaml exceptions, a new primitive F* effect, or a runtime stack-unwinding
-mechanism.
+statements, and `try ... catch` blocks. Checking uses ordinary F* stateful
+contracts; execution uses Custard's native exception operations. OCaml and F#
+use host exceptions, and Cherry C uses its exception-aware runtime. Standalone
+C is rejected: it has no corresponding unwinding support.
 
 The implementation has two central ideas:
 
-1. A raising function is an ordinary `stt` or `stt_div` computation returning
-   a tagged outcome. Its postcondition describes ownership on either exit.
-2. Within a function, exception propagation uses lexical forward-jump labels
-   and the existing obligations for scopes crossed by a jump.
+1. For verification, a raising function is an ordinary `stt` or `stt_div`
+   computation returning a tagged outcome. Its postcondition describes
+   ownership on either exit. Lexical forward-jump destinations enforce the
+   existing obligations for scopes crossed by an exceptional exit.
+2. For extraction, the reserved native outcome type becomes the normal result
+   type. Checked raises and handlers become `ERaise` and `ETry`, not executable
+   outcome matches or the old flag-based goto lowering.
 
 The checker does not construct or interpret effect trees. The graded effects
 library provides a reference model and derives corresponding two-exit rules;
-the compiler implements the surface constructs directly. Native Custard
-extraction is still a separate, unvalidated milestone.
+the compiler implements the surface constructs directly.
 
 ## 1. Code map and compilation pipeline
 
@@ -29,13 +31,14 @@ The following paths are relative to the repository root.
 | --- | --- |
 | Surface syntax and dependency scanning | [`PulseSyntaxExtension.Sugar.fst`](../../pulse/src/syntax_extension/PulseSyntaxExtension.Sugar.fst), [`Grammar.fst`](../../pulse/src/syntax_extension/PulseSyntaxExtension.Grammar.fst) |
 | Declaration, lambda, and statement lowering | [`PulseSyntaxExtension.Desugar.fst`](../../pulse/src/syntax_extension/PulseSyntaxExtension.Desugar.fst): `lower_raises`, `wrap_exception_body`, `desugar_stmt'` |
-| Checker AST | [`Pulse.Syntax.Base.fsti`](../../pulse/src/checker/Pulse.Syntax.Base.fsti): `Tm_Raise`, `Tm_ExceptionScope`, `Tm_Try` |
+| Checker AST | [`Pulse.Syntax.Base.fsti`](../../pulse/src/checker/Pulse.Syntax.Base.fsti): source `Tm_Raise`, `Tm_ExceptionScope`, `Tm_Try`; checked `Tm_NativeRaise`, `Tm_NativeScope`, `Tm_NativeTry` |
 | Exception checking | [`Pulse.Checker.Exceptions.fst`](../../pulse/src/checker/Pulse.Checker.Exceptions.fst): `posts`, `check_scope`, `check_raise`, `unwrap`, `check_try` |
 | Stateful call integration | [`Pulse.Checker.ST.fst`](../../pulse/src/checker/Pulse.Checker.ST.fst): `check` |
 | Dispatch and payload evaluation | [`Pulse.Checker.fst`](../../pulse/src/checker/Pulse.Checker.fst): `maybe_elaborate_stateful_head`, `check` |
 | Lexical exits and cleanup obligations | [`Pulse.Typing.Env.fsti`](../../pulse/src/checker/Pulse.Typing.Env.fsti), [`Pulse.Checker.Goto.fst`](../../pulse/src/checker/Pulse.Checker.Goto.fst), [`Pulse.Checker.Defer.fst`](../../pulse/src/checker/Pulse.Checker.Defer.fst) |
 | Result-type convention and reference rules | [`Pulse.Lib.Effects.Rules.fsti`](../../pulse/lib/pulse/lib/effects/Pulse.Lib.Effects.Rules.fsti), [`Rules.fst`](../../pulse/lib/pulse/lib/effects/Pulse.Lib.Effects.Rules.fst) |
 | Post-checking transformations | [`Pulse.ElimGoto.fst`](../../pulse/src/checker/Pulse.ElimGoto.fst), [`Pulse.Extract.Main.fst`](../../pulse/src/checker/Pulse.Extract.Main.fst) |
+| Runtime ABI | [`Pulse.Lib.NativeExceptions.fst`](../../pulse/lib/common/Pulse.Lib.NativeExceptions.fst), [`FStarC.Custard.Builtins.fst`](../../src/custard/FStarC.Custard.Builtins.fst): `pulse_rule` |
 
 The pipeline is:
 
@@ -46,17 +49,22 @@ Pulse source
                                   |
                             Pulse checker
                                   |
-                 outcomes + matches + labels/gotos
-                 + ordinary local/defer constructs
+                 checked native raise/scope/try
+                 + ordinary local/defer/label constructs
                                   |
-              erasure, simplification, jump elimination
+                    erasure and simplification
                                   |
-                      existing extraction path
+              native runtime lowering (skip ElimGoto)
+                                  |
+                     Custard ERaise / ETry
+                                  |
+                    OCaml / F# / Cherry C
 ```
 
-In particular, exception AST nodes must disappear during checking, before
-erasure or jump elimination. The presence of that lowering path should not be
-confused with end-to-end runtime validation of native exceptions.
+Source exception AST nodes must disappear during checking. The separate
+checked-native nodes retain runtime control structure only after validating
+the two-exit contracts. Non-native functions retain the existing `ElimGoto`
+pipeline.
 
 ## 2. Two exits, one ordinary computation type
 
@@ -127,8 +135,9 @@ This distinction controls call-site elaboration:
 Recognition is neither a definitional-equality test nor a test of whether an
 exception scope is active. Preserving this spelling through type construction
 and readback is important; indiscriminately unfolding the alias or recognizing
-every raw `outcome` would change control-flow behavior. This is a checker-facing
-ABI convention, not a nominal distinction enforced by F*'s type system.
+every raw `outcome` would change control-flow behavior. This is a checker and
+extraction ABI convention, not a nominal distinction enforced by F*'s type
+system. Use raw `outcome` for explicitly constructed outcome data.
 
 The library's `stt_exn` and `stt_exn_div` aliases use raw `outcome`, deliberately.
 For higher-order native callbacks, use `fn ... raises ...` types. Raw semantic
@@ -246,7 +255,8 @@ post hints: the original normal contract and the outcome contract.
 2. Installs a fresh `_exception` label with `push_exception`.
 3. Checks the body against the **normal** post hint.
 4. On normal completion, returns `Normal x` against the outcome post hint.
-5. Closes the fresh label and emits a checked `Tm_ForwardJumpLabel`.
+5. Closes the proof scope and emits `Tm_NativeScope` containing the checked
+   normal-result body, without the proof-only `Normal` wrapper.
 
 The label contract is constructed by `goto_comp_of_block_comp` in
 [`Pulse.Typing.fst`](../../pulse/src/checker/Pulse.Typing.fst). For a block
@@ -254,7 +264,7 @@ with postcondition `Q v`, jumping with argument `v` requires `Q v`, and the
 jump itself has postcondition `is_unreachable`. For an exception scope,
 `Q (Raised e)` reduces to the exceptional ownership protocol.
 
-The result is schematically:
+The verification discipline is schematically:
 
 ```text
 forward_label L : native_outcome exn_ty a {
@@ -277,6 +287,10 @@ types, checks the payload against the required type, and delegates:
 ```text
 raise e  ==>  Goto.check (goto L (Raised e))
 ```
+
+Concretely, `Goto.check_native_raise` shares `Goto.check`'s payload,
+unreachable-post, and exact ownership checks, but returns `Tm_NativeRaise`.
+The logical exception label is not an executable goto destination.
 
 There is no search by payload type or constructor. Labels are lexical; no
 implicit embedding from one payload type to another is inserted.
@@ -308,6 +322,9 @@ Raised e: r e ** F   -> raise e to the nearest lexical destination
 `unwrap` uses `Checker.Match.check`, substituting `Normal x` into the checked
 call's postcondition to construct the normal post hint. It does not erase
 payload-dependent facts or restart from the pre-call state.
+After checking this split, the runtime term is just the original call result:
+the extracted callee returns `a` normally or throws. The proof-only match must
+not be executed against the native result, nor may the call be evaluated twice.
 
 The split is unconditional on the existence of an exception scope and on
 whether the caller uses the value. In particular, `let _ = f (); ...` and a
@@ -328,6 +345,11 @@ Crucially, this match is checked **outside** the new exception label. A catch
 clause that raises again targets the enclosing exception destination, not
 itself. It may change the state or translate the payload, provided it
 establishes the outer exceptional contract.
+
+The checked runtime `Tm_NativeTry` keeps the protected normal-result body and
+the checked `Raised` branch. Substituting `Raised payload` into the checked
+match selects that branch during Custard simplification; it does not allocate
+an outcome at runtime.
 
 The payload match generated by desugaring uses the ordinary match checker's
 ordered-pattern facts. In
@@ -497,24 +519,79 @@ share the two-exit contracts and ownership discipline. They are not yet
 connected by a general simulation theorem for native lowering, nor is there
 a full observational-equivalence theorem for arbitrary opaque callbacks.
 
-## 9. Extraction boundary and current limits
+## 9. Native extraction and current limits
 
-`Pulse.Extract.Main.extract_pulse_dv` erases ghost subterms, simplifies,
-invokes `Pulse.ElimGoto.elim_gotos`, then extracts the resulting Pulse term.
-`ElimGoto` implements forward exits using a taken flag and, for non-unit
-results, a result local; continuations are conditionalized so they do not
-execute after the jump. It also traverses local scopes and `defer`.
+`Pulse.Extract.Main.extract_pulse_dv` detects checked native constructs and
+native-call binders **before** simplification. This includes fully handled
+exceptions, nested functions, and scopes whose exceptional postcondition is
+`False`. Such functions bypass `Pulse.ElimGoto`: the older conditionalized
+label lowering could lose early-return values or overwrite a non-unit defer
+result with cleanup's unit value.
 
-The simplifier, eraser, extractor, and jump-elimination traversals explicitly
-reject residual `Tm_Raise`, `Tm_ExceptionScope`, or `Tm_Try` nodes as internal
-errors. Adding extraction support for unchecked exception syntax is not the
-intended repair for such an error: fix the preceding checking/lowering phase.
+### Result and exception representations
 
-The effects example executable currently exercises five **tree-based**
-scenarios through Custard specialization. It does not execute the native
-syntax examples. Successful verification of native programs, or execution
-of the tree demonstration, is not evidence that native runtime lowering has
-been validated.
+Custard's `pulse_rule` maps `Rules.native_outcome exn a` to runtime `a`.
+Ordinary `Rules.outcome` remains an ordinary datatype; the tree interpreter's
+ABI is unchanged. Native function arguments, recursive calls, and callbacks
+must consistently use this reserved native ABI.
+
+`Tm_NativeRaise` boxes its checked payload with `FStar.Dyn.mkdyn` and raises
+`Pulse.Lib.NativeExceptions.NativeException`. `Tm_NativeTry` catches exactly
+this wrapper and unboxes at its checked payload type with `FStar.Dyn.undyn`.
+This works for integers, booleans, and user-extensible `exn` values alike.
+Source catch patterns still operate on the original payload. Even a payload
+whose type is `exn` is wrapped; it cannot impersonate a compiler control exit.
+
+The reflection terms use `FStar.All.raise` and `try_with`, whose existing
+Custard rules produce `ERaise` and `ETry`. OCaml and F# print host-language
+exceptions. Cherry handles propagation, managed payload ownership, and
+exception-aware unwinding through its existing runtime. Standalone C rejects
+the native ABI and exception operations instead of silently changing their
+semantics.
+
+### Ordinary returns, breaks, and cleanup
+
+Native-containing functions still have lexical forward labels for ordinary
+returns and loop exits. Each label becomes a local callable that stores its
+result in a scoped `option a` reference and throws `ControlFlow key`. The
+label's enclosing handler catches only that module-qualified label key and
+reads the stored result. Initializing the slot to `None` avoids uninitialized
+managed values in Cherry. Each recursive activation catches its own exit;
+the checker forbids capturing labels across function boundaries.
+
+Cherry's reference-counting pass also tracks pending cleanup for Pulse stack
+buffers. Their pointers are borrowed, but their cells own managed values:
+dropping ordinary owned variables alone would leak the cells on an exception.
+`exn_exit` empties these buffers in innermost-first order before leaving the
+function. Initializer evaluation precedes registration of that cleanup.
+
+The control channel is distinct from `NativeException`: a source catch-all
+must not intercept `return`, `break`, or `continue`. Foreign host exceptions
+also pass through source catches unchanged.
+
+A checked `defer` carries its body's result type. Extraction preserves it as:
+
+```text
+let result =
+  try body
+  with pending -> cleanup; raise pending
+in cleanup; result
+```
+
+Thus cleanup runs on normal completion, a Pulse raise, or a lexical control
+exit, and never replaces the body's result. Normal cleanup is outside the
+protected expression so a cleanup failure cannot run the same cleanup twice.
+Nested local handlers in cleanup use the same native exception machinery.
+
+The eraser, simplifier, and extractor traverse checked-native nodes but
+reject residual source `Tm_Raise`, `Tm_ExceptionScope`, or `Tm_Try` as internal
+errors. `ElimGoto` rejects checked-native nodes as well: routing one through
+the non-native pipeline is a compiler error.
+
+`pulse.noextract` cannot bypass the native runtime lowering: for native
+definitions it records an `extraction_error` attribute. Custard also checks
+that attribute when loading checked files, rather than extracting the opaque
+verification body.
 
 Other current boundaries are deliberate: stateful computations only,
 `Type0` payloads/results, explicit protected-body exceptional contracts, no
@@ -529,7 +606,10 @@ The primary native suites are
 and
 [`Example.Effects.NativeRejected.fst`](../../pulse/share/pulse/examples/effects/Example.Effects.NativeRejected.fst).
 The [scenario guide](../../pulse/share/pulse/examples/effects/README.md)
-describes their exact contracts and the separate runtime demonstration.
+describes their exact contracts.
+[`Example.Effects.NativeRuntime.fst`](../../pulse/share/pulse/examples/effects/Example.Effects.NativeRuntime.fst)
+and its OCaml, F#, and Cherry drivers execute native exception regressions.
+This is separate from the five-case tree-interpreter runtime demonstration.
 
 | Invariant | Representative definitions |
 | --- | --- |
@@ -560,6 +640,13 @@ make -C pulse/share/pulse/examples/effects \
   -W Example.Effects.Native.fst \
   -W Example.Effects.NativeRejected.fst verify
 ```
+
+`make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry` in the effects directory runs
+the native executable checks; Cherry runs with address/undefined-behavior
+sanitizers and leak detection. `make check-native-extraction` checks
+standalone-C refusal from source and checked files, with raw outcomes as a
+positive control. It also checks that `pulse.noextract` cannot bypass the
+native lowering, from either source or a persisted checked file.
 
 For changes to this implementation, preserve the `native_outcome` recognition
 boundary, the handler's binding depth, unconditional splitting of native

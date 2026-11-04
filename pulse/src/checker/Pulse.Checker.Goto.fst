@@ -31,6 +31,7 @@ let check'
   (post_hint:post_hint_opt g { PostHint? post_hint })
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })
+  (native_raise:option (term & term))
 : T.Tac (checker_result_t g pre post_hint)
 = let rng = t.range in
   let Tm_Goto { lbl; arg } = t.term in
@@ -59,7 +60,15 @@ let check'
         | EffectAnnotSTTDiv -> C_STDiv sc
         | _ -> with_st_comp lbl_c sc
       in
-      let t = wtag (Some (ctag_of_comp_st c')) (Tm_Goto { lbl = term_of_nvar (lbln, v); arg }) in
+      // The lexical goto protocol above remains the proof obligation. Only
+      // after checking its payload do native raises acquire runtime syntax.
+      let runtime =
+        match native_raise with
+        | None -> Tm_Goto { lbl = term_of_nvar (lbln, v); arg }
+        | Some (exn_ty, payload) ->
+          Tm_NativeRaise { exn_ty; result_ty=comp_res c'; arg=payload }
+      in
+      let t = wtag (Some (ctag_of_comp_st c')) runtime in
       let c' = match_comp_res_with_post_hint t c' post_hint in
       // lookup_goto has added the BindingPost obligations for local/defer scopes
       // crossed by this jump; substituting arg selects the destination's exit
@@ -78,21 +87,28 @@ let check'
   | _ ->
     fail g (Some t.range) "Goto label is not a variable"
 
-let check
+let check_with
   (g:env)
   (pre:term)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })
+  (native_raise:option (term & term))
 : T.Tac (checker_result_t g pre post_hint)
 = match post_hint with
   | NoHint ->
     let post_hint' = intro_post_hint g EffectAnnotSTT None tm_is_unreachable in
-    let res = check' g pre (PostHint post_hint') res_ppname t in
+    let res = check' g pre (PostHint post_hint') res_ppname t native_raise in
     retype_checker_result _ res
   | TypeHint ty ->
     let post_hint' = intro_post_hint g EffectAnnotSTT (Some ty) tm_is_unreachable in
-    let res = check' g pre (PostHint post_hint') res_ppname t in
+    let res = check' g pre (PostHint post_hint') res_ppname t native_raise in
     retype_checker_result _ res
   | PostHint post ->
-    check' g pre post_hint res_ppname t
+    check' g pre post_hint res_ppname t native_raise
+
+let check g pre post_hint res_ppname t =
+  check_with g pre post_hint res_ppname t None
+
+let check_native_raise g pre post_hint res_ppname t exn_ty payload =
+  check_with g pre post_hint res_ppname t (Some (exn_ty, payload))

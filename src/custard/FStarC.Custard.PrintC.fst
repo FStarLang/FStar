@@ -3166,7 +3166,11 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        around the rest of the block, so a [return] in the last position leaves
        exactly this behind. *)
     !out ^
-    (if tt = "" && ft = "" then ""
+    (if tt = "" && ft = "" then
+       (* Cherry can bind a dynamically unboxed payload solely for this test.
+          Keep its use when both branches erase, rather than leaving a C
+          variable assigned but never read. Ownership is already explicit. *)
+       (if Options.custard_cherry () then ind ^ "(void)" ^ group cs ^ ";\n" else "")
      else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind ft
      else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind tt ^
           (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
