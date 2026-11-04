@@ -2058,10 +2058,17 @@ type c_body =
   | CFor of c_local & string & c_body & string
   | CIfdef of string & c_body & c_body & string
   | CLocal of c_local
+(* What a local declares, so that --custard_init_locals can spell a zero of
+   it once the declaration has reached its final place. *)
+and local_kind =
+  | LKValue of cty
+  | LKArray of cty & bool  (* the element type; whether the length is variable *)
+  | LKPointer               (* a pointer whose type the printer spelled itself *)
 and c_local = {
   cl_name: string;
   cl_origin: string;
   cl_decl: string;
+  cl_kind: local_kind;
   cl_init: option string;
   cl_reinit: c_body;
   cl_ind: string;
@@ -2102,10 +2109,11 @@ let rec render_body (b:c_body) : ML string =
     l.cl_ind ^ l.cl_decl ^
     (match l.cl_init with None -> "" | Some v -> " = " ^ v) ^ ";\n"
 
-let local_decl (ind:string) (decl nm:string) (init:option string)
+let local_decl (ind:string) (decl nm:string) (kind:local_kind) (init:option string)
                (barrier:option string) : ML c_body =
   CLocal {
-    cl_name = nm; cl_origin = !current; cl_decl = decl; cl_init = init; cl_ind = ind;
+    cl_name = nm; cl_origin = !current; cl_decl = decl; cl_kind = kind;
+    cl_init = init; cl_ind = ind;
     cl_reinit = (match init with
                  | None -> empty_body
                  | Some v -> CText (ind ^ nm ^ " = " ^ v ^ ";\n"));
@@ -2113,7 +2121,7 @@ let local_decl (ind:string) (decl nm:string) (init:option string)
   }
 
 let typed_local (ind:string) (t:cty) (nm:string) (init:option string) : ML c_body =
-  local_decl ind (decl_of t nm) nm init
+  local_decl ind (decl_of t nm) nm (LKValue t) init
     (if binds_by_ref t then Some "a C++ handle with initialization-only semantics" else None)
 
 (* Function bodies retain declaration provenance until the last printing step.
@@ -2180,8 +2188,89 @@ let hoist_body (b:c_body) : ML c_body =
       ["The --custard_hoist_locals invariant failed."];
   h ++ r
 
+(* --custard_init_locals, for the c99 and c89 modes: a zero of [t] spelled
+   after the layout {!type_decl} gives it, with designators when
+   [designated].  Records list every field, so that -Wmissing-field-initializers
+   has nothing to report; a tagged union takes its first tag and zeroes the
+   first member of its union, the only one C lets an initializer reach
+   without a designator.  An enum takes its first tag rather than [0], which
+   C++ would not convert.  A foreign type's layout is the header's, and
+   [{ 0 }] is a valid initializer of every complete object type in C. *)
+let rec zero_init (designated:bool) (fuel:int) (t:cty) : ML string =
+  let fields (fs:list (string & cty)) : ML string =
+    match fs with
+    | [] -> "{}"
+    | _ ->
+      "{ " ^ String.concat ", " (fs |> List.map (fun (f, c) ->
+        (if designated then "." ^ c_var f ^ " = " else "") ^
+        zero_init designated (fuel - 1) c)) ^ " }" in
+  if fuel <= 0 then "{ 0 }" else
+  match t with
+  | TUnit | TInt _ | TFloat Float32 | TFloat Float64 -> "0"
+  | TFloat fw -> "CUSTARD_" ^ (if Float16? fw then "F16" else "BF16") ^ "_INIT(0U)"
+  | TBuf _ | TRef (_, _) | TArrow _ -> "NULL"
+  | TApp (n, []) when Some? (builtin_type n) ->
+    (match builtin_type n with
+     | Some "bool" -> "false"
+     | Some s when BU.ends_with s "*" -> "NULL"
+     | _ -> "0")
+  | TApp (n, []) ->
+    (match find_type n with
+     | Some { dt_body = TAbbrev c } -> zero_init designated (fuel - 1) c
+     | Some d when is_enum d ->
+       (match d.dt_body with
+        | TVariant ((c0, _) :: _) -> c_tag c0
+        | _ -> "0")
+     | Some { dt_body = TRecord fs } -> fields fs
+     | Some { dt_body = TVariant [(_, fs)] } -> fields fs
+     | Some { dt_body = TVariant cs } when Cons? cs ->
+       let tag = (if designated then ".tag = " else "") ^ c_tag (fst (List.hd cs)) in
+       (match List.filter (fun (_, fs) -> Cons? fs) cs with
+        | [] -> "{ " ^ tag ^ " }"
+        | (c, fs) :: _ ->
+          let arm = if arm_flat fs then zero_init designated (fuel - 1) (snd (List.hd fs))
+                    else fields fs in
+          "{ " ^ tag ^ ", " ^ (if designated then ".val = " else "") ^
+          "{ " ^ (if designated then "." ^ arm_name c ^ " = " else "") ^ arm ^ " } }")
+     | _ -> "{ 0 }")
+  | _ -> "{ 0 }"
+
+let local_zero (mode:string) (l:c_local) : ML string =
+  match l.cl_kind with
+  | LKArray (_, true) when mode <> "c23" ->
+    E.raise_error0 E.Error_CustardNoCRepresentation [
+      text ("Custard: --custard_init_locals " ^ mode ^ " cannot initialize " ^
+            l.cl_name ^ " in " ^ l.cl_origin ^ ": it is a variable-length \
+            stack array.");
+      text "C99 and C89 forbid an initializer on a variable-length array. \
+            Use --custard_init_locals c23, or fixed-size storage." ]
+  | _ when mode = "c23" -> "{}"
+  | LKPointer -> "NULL"
+  | LKValue t -> zero_init (mode = "c99") 16 t
+  | LKArray (e, _) -> "{ " ^ zero_init (mode = "c99") 16 e ^ " }"
+
+(* Run on the final placement of every declaration, which is why it follows
+   {!hoist_body}: a declaration hoisting moved has lost its initializer, and
+   is zeroed here while the original initialization stays an assignment at
+   its execution point, as krml's -fhoist-locals and -finitialize-locals
+   compose. *)
+let init_locals_body (mode:string) (b:c_body) : ML c_body =
+  let rec go (b:c_body) : ML c_body =
+    match b with
+    | CText _ | CComment _ -> b
+    | CAppend (x, y) -> CAppend (go x, go y)
+    | CBlock (pre, x, post) -> CBlock (pre, go x, post)
+    | CFor (l, rest, x, post) -> CFor (l, rest, go x, post)
+    | CIfdef (c, t, f, ind) -> CIfdef (c, go t, go f, ind)
+    | CLocal l ->
+      if Some? l.cl_init then b
+      else CLocal { l with cl_init = Some (local_zero mode l) } in
+  go b
+
 let function_body (b:c_body) : ML string =
-  render_body (if Options.custard_hoist_locals () then hoist_body b else b)
+  let b = if Options.custard_hoist_locals () then hoist_body b else b in
+  let mode = Options.custard_init_locals () in
+  render_body (if mode = "no" then b else init_locals_body mode b)
 
 (* Where the value of an expression goes once it has been computed. *)
 type dest =
@@ -2844,7 +2933,7 @@ and c_expr_doc (out:ref c_body) (ind:string) (e:expr) : ML c_expression =
     let cv = c_expr out ind (strip_coerce c) in
     let cv = if cv <> "" && List.for_all (fun ch -> BU.is_letter_or_digit ch || ch = '_') (String.list_of_string cv) then cv else begin
       let tmp = fresh "clo" in
-      out := !out ++ local_decl ind ("custard_closure *" ^ tmp) tmp (Some cv) None;
+      out := !out ++ local_decl ind ("custard_closure *" ^ tmp) tmp LKPointer (Some cv) None;
       tmp
     end in
     let fty = closure_fn_decl doms ret "(*)" in
@@ -3832,13 +3921,13 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
     let s =
       match vs with
       | [] ->
-        local_decl ind ("custard_closure *" ^ tmp) tmp
+        local_decl ind ("custard_closure *" ^ tmp) tmp LKPointer
           (Some "(custard_closure *)malloc(sizeof(custard_closure))") None ++
         CText (ind ^ "if (" ^ tmp ^ " == NULL) { abort(); }\n" ^
                ind ^ tmp ^ "->code = " ^ entry ^ ";\n")
       | _ ->
         let env = closure_env_name nm in
-        local_decl ind (env ^ " *" ^ tmp) tmp
+        local_decl ind (env ^ " *" ^ tmp) tmp LKPointer
           (Some ("(" ^ env ^ " *)malloc(sizeof(" ^ env ^ "))")) None ++
         CText (ind ^ "if (" ^ tmp ^ " == NULL) { abort(); }\n" ^
                ind ^ tmp ^ "->hdr.code = " ^ entry ^ ";\n" ^
@@ -4019,7 +4108,8 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
   let fill =
     if const_len = Some 0 || any_init then empty_body else
     let counter = {
-      cl_name = i; cl_origin = !current; cl_decl = "size_t " ^ i; cl_init = Some "0";
+      cl_name = i; cl_origin = !current; cl_decl = "size_t " ^ i;
+      cl_kind = LKValue (TInt (Unsigned, WSizet)); cl_init = Some "0";
       cl_reinit = empty_body; cl_ind = ind; cl_barrier = None
     } in
     CFor (counter,
@@ -4040,6 +4130,7 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
                          (const_init && n <= init_list_max)) ->
     CLocal {
       cl_name = arr; cl_origin = !current; cl_decl = decl_of elt_of (arr ^ "[" ^ dlv ^ "]");
+      cl_kind = LKArray (elt_of, false);
       cl_init = Some ("{ " ^ (if n = 0 || zero_init then "0"
                              else String.concat ", " (repeat n [])) ^ " }");
       cl_reinit = fill; cl_ind = ind; cl_barrier = None
@@ -4049,7 +4140,8 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
   let alloc =
     match lt with
     | LStack ->
-      local_decl ind (decl_of elt_of (arr ^ "[" ^ dlv ^ "]")) arr None
+      local_decl ind (decl_of elt_of (arr ^ "[" ^ dlv ^ "]")) arr
+        (LKArray (elt_of, None? const_len)) None
         (if None? const_len then Some "a variable-length stack array" else None)
     | LHeap ->
       (* Section 116.  [len * sizeof(elt)] is computed in [size_t] and wraps
@@ -4079,10 +4171,10 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
       (if Some? const_len then empty_body
        else let n = fresh "sz" in
             CBlock (ind ^ "{ ",
-              local_decl "" ("size_t " ^ n) n (Some ("(size_t)" ^ group dlv)) None ++
+              local_decl "" ("size_t " ^ n) n (LKValue (TInt (Unsigned, WSizet))) (Some ("(size_t)" ^ group dlv)) None ++
               CText (ind ^ "  if (" ^ n ^ " > SIZE_MAX / sizeof(" ^ elt ^
                      ")) { abort(); }"), " }\n")) ++
-      local_decl ind (elt ^ " *" ^ arr) arr
+      local_decl ind (elt ^ " *" ^ arr) arr LKPointer
         (Some ("(" ^ elt ^ " *)malloc(" ^ group dlv ^ " * sizeof(" ^ elt ^ "))")) None ++
       CText (ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n") in
   !out ++ alloc ++ fill ++
