@@ -207,9 +207,18 @@ static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
 typedef void (*cherry_work_fn)(cherry_obj *, int);
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode);
 
+/* Atomic loads hide an immortal literal's zero count from GCC's inliner.
+   As for static closures below, this branch never frees a static object. */
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
+#endif
 static inline void cherry_dec(cherry_obj *o) {
   if (cherry_dec_ref(o)) free(o);
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 static inline void cherry_mark(cherry_obj *o, int mode) {
   (void)cherry_mark_ref(o, mode);

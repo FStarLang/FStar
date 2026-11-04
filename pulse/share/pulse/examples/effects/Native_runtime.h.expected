@@ -14,6 +14,9 @@ extern "C" {
 #endif
 
 typedef struct FStar_Pervasives_Native_option__int_s FStar_Pervasives_Native_option__int;
+typedef cherry_obj *Prims_list__string;
+typedef cherry_obj *Prims_list__int;
+typedef struct Example_Effects_NativeBoundary_payload_s Example_Effects_NativeBoundary_payload;
 typedef struct FStar_Pervasives_Native_option__string_s FStar_Pervasives_Native_option__string;
 typedef struct Pulse_Lib_Effects_Rules_outcome__bool_bool_s Pulse_Lib_Effects_Rules_outcome__bool_bool;
 
@@ -31,6 +34,28 @@ typedef enum {
   FSTAR_PERVASIVES_NATIVE_NONE__UNIT,
   FSTAR_PERVASIVES_NATIVE_SOME__UNIT
 } FStar_Pervasives_Native_option__unit;
+enum Prims_list__string_tags {
+  PRIMS_NIL__STRING,
+  PRIMS_CONS__STRING
+};
+struct Prims_list__string_Cons_s {
+  cherry_obj hdr;
+  cherry_string hd;
+  Prims_list__string tl;
+};
+enum Prims_list__int_tags {
+  PRIMS_NIL__INT,
+  PRIMS_CONS__INT
+};
+struct Prims_list__int_Cons_s {
+  cherry_obj hdr;
+  cherry_int hd;
+  Prims_list__int tl;
+};
+struct Example_Effects_NativeBoundary_payload_s {
+  cherry_string message;
+  Prims_list__int values;
+};
 typedef enum {
   EXAMPLE_EFFECTS_NATIVE_FIRST,
   EXAMPLE_EFFECTS_NATIVE_SECOND
@@ -57,6 +82,7 @@ struct Pulse_Lib_Effects_Rules_outcome__bool_bool_s {
   } val;
 };
 
+bool Example_Effects_NativeRuntime_stress(cherry_fn note);
 bool Example_Effects_NativeRuntime_test(void);
 
 

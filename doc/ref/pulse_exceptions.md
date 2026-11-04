@@ -549,6 +549,15 @@ exception-aware unwinding through its existing runtime. Standalone C rejects
 the native ABI and exception operations instead of silently changing their
 semantics.
 
+Separate compilation must preserve the identity of the runtime wrapper, not
+redeclare it in each OCaml module. `PrintOCaml.build_tables` qualifies imported
+`DExn` constructors just like imported variant constructors. Unsplit unit
+exports keep their fully mangled exception names: choosing a short name from
+the consumer's set of constructors would make the ABI depend on unrelated
+client declarations. The `.cui` format version rejects artifacts from before
+this naming convention. Cherry identifies exception and dynamic-type
+descriptors by name across separately compiled translation units.
+
 ### Ordinary returns, breaks, and cleanup
 
 Native-containing functions still have lexical forward labels for ordinary
@@ -610,6 +619,12 @@ describes their exact contracts.
 [`Example.Effects.NativeRuntime.fst`](../../pulse/share/pulse/examples/effects/Example.Effects.NativeRuntime.fst)
 and its OCaml, F#, and Cherry drivers execute native exception regressions.
 This is separate from the five-case tree-interpreter runtime demonstration.
+`NativeStress` adds driver-observed LIFO cleanup on normal, raise, return,
+break, and continue paths, 257-frame unwinding, and 1,000 repeated exceptions.
+`NativeBoundary.fsti`/`.fst` exercise a polymorphic native ABI and callbacks
+capturing managed payloads and owned state, including real separate Custard
+compilation for OCaml and Cherry. The driver-private observer does not require
+discarding Pulse permissions or adding axioms.
 
 | Invariant | Representative definitions |
 | --- | --- |
@@ -641,9 +656,10 @@ make -C pulse/share/pulse/examples/effects \
   -W Example.Effects.NativeRejected.fst verify
 ```
 
-`make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry` in the effects directory runs
-the native executable checks; Cherry runs with address/undefined-behavior
-sanitizers and leak detection. `make check-native-extraction` checks
+`make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry native-separate`
+in the effects directory runs the native executable checks; Cherry runs
+distinct `-O0` and `-O2` binaries with address/undefined-behavior sanitizers,
+leak detection, and strict warnings. `make check-native-extraction` checks
 standalone-C refusal from source and checked files, with raw outcomes as a
 positive control. It also checks that `pulse.noextract` cannot bypass the
 native lowering, from either source or a persisted checked file.

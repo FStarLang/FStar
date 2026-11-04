@@ -9,6 +9,7 @@ module R = Pulse.Lib.Reference
 module B = Pulse.Lib.Box
 module N = Example.Effects.Native
 module E = Pulse.Lib.Effects.Rules
+module L = Example.Effects.NativeBoundary
 
 // Ignoring a call's result is not an exception handler. The checker must split
 // native calls even when the enclosing function has no raises annotation.
@@ -17,6 +18,38 @@ fn ignored_exception ()
 {
   let _ = N.maybe_value true;
   ()
+}
+
+// The native calling convention must survive a separately checked interface.
+[@@expect_failure [19]]
+fn ignored_interface_exception ()
+{
+  let _ = L.choose 17 true;
+  ()
+}
+
+// Cleanup cannot use a surrounding loop's continuation or exit, even though
+// loops created inside cleanup are legal (NativeRuntime.cleanup_handles).
+[@@expect_failure [228]]
+divergent fn cleanup_continue_escapes ()
+  raises (fun (_:bool) -> emp)
+{
+  while (true) invariant emp ensures True
+  {
+    defer emp { continue };
+    break
+  }
+}
+
+[@@expect_failure [228]]
+divergent fn cleanup_break_escapes ()
+  raises (fun (_:bool) -> emp)
+{
+  while (true) invariant emp ensures True
+  {
+    defer emp { break };
+    break
+  }
 }
 
 // Calls cannot bypass the cleanup boundary by discarding their result either.

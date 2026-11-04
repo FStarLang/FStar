@@ -26,6 +26,8 @@ Start with `Core`, `Exception`, and `Nested`, then `Graded` and `Rules`.
 | [`Example.Effects.NativeExtraction.fst`](Example.Effects.NativeExtraction.fst) | Standalone-C refusals for implicit native calls and nonraising native scopes, with raw outcome data as an extractable control. |
 | [`Example.Effects.NativeNoExtract.fst`](Example.Effects.NativeNoExtract.fst) | The `pulse.noextract` debugging option must refuse native extraction, including from a checked file. |
 | [`Example.Effects.NativeRuntime.fst`](Example.Effects.NativeRuntime.fst) | Native runtime regressions: early return, non-unit cleanup results, unwinding, separate control exits, locally handled cleanup, extensible and managed payloads, re-raising, recursion, higher-order calls, loops, framing, and raw outcome data. |
+| [`Example.Effects.NativeStress.fst`](Example.Effects.NativeStress.fst) | Independently observed cleanup order/count, nested loop/handler exits, deep and repeated unwinding, managed record/list payloads, capturing callbacks, and exception-name collisions. |
+| [`Example.Effects.NativeBoundary.fsti`](Example.Effects.NativeBoundary.fsti), [`.fst`](Example.Effects.NativeBoundary.fst) | A separately checked native interface with a polymorphic raising function and a stateful native callback; also compiled as a separate Custard unit. |
 | [`Native_runtime.ml.expected`](Native_runtime.ml.expected) | Complete expected OCaml extraction of the native runtime suite, including its example callees. |
 | [`Native_runtime.c.expected`](Native_runtime.c.expected), [`Native_runtime.h.expected`](Native_runtime.h.expected) | Complete expected Cherry implementation and header, including exception descriptors, payload ownership helpers, and the exported ABI. |
 | [`Example.Effects.Runtime.fst`](Example.Effects.Runtime.fst) | Tree-based runtime entry point. Calls five concrete cases and returns a list of runtime comparisons, with a proof that they are all true. |
@@ -42,19 +44,65 @@ additional authored examples and should not be edited.
 with the intended diagnostic for standalone C, from source and from checked
 files, while raw outcomes still extract.
 
-`make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry` executes the native runtime
-regressions. The three `native_driver.*` files check the same returned boolean.
-Cherry uses address/undefined-behavior sanitizers and leak detection: the
-cleanup cases must free their boxes exactly once. These checks run under
+`make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry native-separate`
+executes the native runtime regressions. The three `native_driver.*` files check
+the same returned booleans and exact cleanup trace. Cherry runs distinct `-O0`
+and `-O2` executables with `CHERRY_DEBUG`, strict warnings,
+address/undefined-behavior sanitizers, and leak detection: the cleanup cases
+must free their boxes exactly once. These checks run under
 `make all`, with the F# leg enabled when `dotnet` is available (SDK 10 required).
 Cherry requires GCC 15 or later; set `CHERRY_CC` if the default C compiler is
-older. `NOCHERRY=1` skips the default build's Cherry leg.
+older. `NOCHERRY=1` skips the default build's Cherry execution legs, not its
+Cherry extraction/golden comparisons.
+
+### Cleanup and boundary stress tests
+
+The observer callback has an ordinary `emp`-to-`emp` Pulse contract. Each driver
+implements it using driver-private state, outside the verified heap. Cleanup
+does not discard an owned log reference or rely on a new axiom. The callback
+must return normally and must not modify Pulse-owned memory.
+
+The drivers assert this exact trace:
+
+```text
+100, 2, 1, 101, 2, 1, 102, 2, 1,
+200, 3, 5, 4, 5, 201, 8, 7, 300,
+0, 1, ..., 256, 400, [1000 occurrences of 6]
+```
+
+The first three groups distinguish nested LIFO cleanup on normal completion,
+early return, and raise. The next groups exercise continue/break through a
+handler and two defers, then return through a handler and two defers. The
+recursive case unwinds 257 frames, each owning a box with a dynamically
+constructed string list. Its ascending trace distinguishes unwind order from
+call-entry order. The final loop catches 1,000 exceptions, freeing a fresh box
+each time; it checks pending-exception reset and payload preservation across
+successive handlers. These are bounded CI regressions, not stack-depth or
+throughput benchmarks.
+
+`NativeBoundary.choose` is used at record, string, and integer types.
+Its concrete `deliver` wrapper forces Cherry's record calls across the unit
+boundary; other polymorphic instantiations may be specialized in the client.
+`NativeBoundary.invoke` calls a closure capturing a reference and managed
+payload; its exceptional ownership crosses the interface while a separate
+cell remains framed. A user exception named `NativeException` deliberately
+collides with the runtime carrier's short name, but must remain a distinct
+constructor.
+
+`native-separate` extracts `NativeBoundary` first, writes its `.cui`, and then
+extracts the same runtime client with `--custard_link`. OCaml links two generated
+modules; Cherry links two generated C translation units at both optimization
+levels. These executables use the same drivers and observations as the
+whole-program builds. The OCaml build also checks that the client imports,
+rather than redefines, the library function; Cherry checks that the client
+object has unresolved references to both `deliver` and `invoke` before linking
+the library. F# currently exercises whole-program extraction only.
 
 ## Reviewing native exception extraction
 
 The three `Native_runtime.*.expected` files are the actual generated code, not
 handwritten sketches or filtered excerpts. They cover the executable cases in
-`NativeRuntime.test`, including callees from `Native` and `NativeExtraction`.
+`NativeRuntime.test` and `NativeRuntime.stress`, including their callees.
 The golden checks compare all lines using the shared `test.mk` diff rules
 (only CRLF line endings are ignored). Names, control-flow keys, reference
 counting, and unreachable code are not normalized away.
@@ -79,16 +127,18 @@ read them together with their callers, rather than as independent examples.
 
 | Source definitions to locate in the snapshots | What to review |
 | --- | --- |
-| `NativeExtraction.handled_bool` | OCaml uses `raise (NativeException ...)` and `try ... with`. Cherry constructs the exception, calls `cherry_raise`, tests `CHERRY_EXN_PENDING()`, takes the exception, checks its descriptor, and unboxes its payload. Both return an ordinary `bool`. |
+| `NativeExtraction.handled_bool` | OCaml raises the `Pulse_Lib_NativeExceptions_NativeException` carrier and uses `try ... with`. Cherry constructs the exception, calls `cherry_raise`, tests `CHERRY_EXN_PENDING()`, takes the exception, checks its descriptor, and unboxes its payload. Both return an ordinary `bool`. |
 | `NativeRuntime.early`, `return_through_try` | The ordinary result is an integer, not an outcome. `ControlFlow` carries lexical returns on a separate channel; the user catch cannot intercept them. The result slot starts at `None` and is written before the control exception is raised. |
 | `NativeRuntime.cleanup`, `cleanup_return` | Normal completion preserves the body result. Exceptional completion frees the box and re-raises the saved exception; an early return crosses the same cleanup. In OCaml, `B.free` becomes `()` because references are garbage collected; Cherry emits `cherry_pbuf1_free`. |
 | `NativeRuntime.cleanup_handles` | Cleanup catches a local Boolean exception and a local loop break without losing the pending integer exception. Follow `_cexn` through cleanup to its final re-raise. |
 | `NativeRuntime.reraises`, `Native.reraised` | A handler can translate or re-raise a payload without catching its own raise. The stateful example updates the owned cell before re-raising and before final recovery. |
 | `NativeRuntime.stack_payload`, `return_payload` | Dynamically allocated strings survive boxing and unwinding. Cherry drops the scoped local's owned value before leaving on an exception, and drops the return slot after acquiring its result. |
 | `NativeRuntime.recurse`, `Native.invoke`, `Native.locally_defined` | Recursive and higher-order calls use the normal-result ABI, with exceptions propagated by the backend rather than outcome matching. |
+| `NativeStress.nested`, `loop_exits`, `return_handled`, `unwind` | Each exit must execute the same cleanup calls in the driver-observed order, exactly once. User handlers must not catch lexical control exits. Recursive calls are not tail calls: each frame still owes cleanup. |
+| `NativeStress.captured`, `NativeBoundary.choose`, `invoke` | Managed payloads and closures survive boxing and cross-module calls. Compare the whole-program snapshots with `_output/native-ocaml-split/` and `_output/native-cherry-split/` to review imported calls and shared exception identity. |
 | `NativeExtraction.raw_outcome` | This deliberately remains an ordinary tagged datatype. Its `Normal`/`Raised` constructors in the snapshots and header are not the native exception ABI. |
 
-Cherry's zeroed `cherry_dummy` returns are placeholders on exceptional exits,
+Cherry's `cherry_dummy` and `CHERRY_INT_SMALL(0)` returns are placeholders on exceptional exits,
 not successful results: the caller must test the pending-exception flag before
 using the return value. Tail calls delegate that test to their caller. Some
 generated cleanup/unreachable scaffolding remains after unconditional returns;

@@ -3,14 +3,225 @@
 
 exception ControlFlow of string
 
-exception NativeException of Obj.t
+exception Pulse_Lib_NativeExceptions_NativeException of Obj.t
+
+let example_Effects_NativeStress_nested (note : (FStar_UInt32.t -> unit)) (mode : Prims.int) : Prims.int =
+  (let u__jump_result = (ref None) in
+  (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
+    (raise (ControlFlow ("Example.Effects.NativeStress.2164"))))) in
+  let outer = (ref "outer") in
+  let u__result = (try (let inner = (ref "inner") in
+    let u__result = (try (if ((=) mode Prims.int_zero) then (Prims.of_int (7)) else (if ((=) mode Prims.int_one) then ((u__return (Prims.of_int (7)));
+      (failwith "Pulse.Lib.Dv.unreachable")) else (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Prims.of_int (9))))))))) with
+        | u__cexn -> ((note (FStar_UInt32.uint_to_t (Prims.of_int (2))));
+          ();
+          (raise u__cexn))
+      ) in
+    (note (FStar_UInt32.uint_to_t (Prims.of_int (2))));
+    ();
+    u__result) with
+      | u__cexn -> ((note (FStar_UInt32.uint_to_t Prims.int_one));
+        ();
+        (raise u__cexn))
+    ) in
+  (note (FStar_UInt32.uint_to_t Prims.int_one));
+  ();
+  u__result) with
+    | (ControlFlow ("Example.Effects.NativeStress.2164")) -> (let tmp = (!(u__jump_result)) in
+      (match tmp with
+        | (Some (u__result)) -> u__result
+        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.2164")))
+      ))
+    | u__other -> (raise u__other)
+  ))
+
+let example_Effects_NativeStress_loop_exits (note : (FStar_UInt32.t -> unit)) : Prims.int =
+  (let i = (ref Prims.int_zero) in
+  let u__jump_result = (ref None) in
+  (try (let u__break = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
+    (raise (ControlFlow ("Example.Effects.NativeStress.2520"))))) in
+  (while true do (let u__jump_result1 = (ref None) in
+  (try (let u__continue = (fun u__jump_value -> (((u__jump_result1) := (Some (u__jump_value)));
+    (raise (ControlFlow ("Example.Effects.NativeStress.2517"))))) in
+  let k = (!(i)) in
+  (try (let u__result = (try (let box = (ref k) in
+    let u__result = (try (if ((=) k Prims.int_zero) then (((i) := Prims.int_one);
+      (u__continue ());
+      (failwith "Pulse.Lib.Dv.unreachable")) else ((u__break ());
+      (failwith "Pulse.Lib.Dv.unreachable"))) with
+        | u__cexn -> ((note (if ((=) k Prims.int_zero) then (FStar_UInt32.uint_to_t (Prims.of_int (3))) else (FStar_UInt32.uint_to_t (Prims.of_int (4)))));
+          ();
+          (raise u__cexn))
+      ) in
+    (note (if ((=) k Prims.int_zero) then (FStar_UInt32.uint_to_t (Prims.of_int (3))) else (FStar_UInt32.uint_to_t (Prims.of_int (4)))));
+    ();
+    u__result) with
+      | u__cexn -> ((note (FStar_UInt32.uint_to_t (Prims.of_int (5))));
+        (raise u__cexn))
+    ) in
+  (note (FStar_UInt32.uint_to_t (Prims.of_int (5))));
+  u__result) with
+    | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (note (FStar_UInt32.uint_to_t (Prims.of_int (99))))
+    | u__other -> (raise u__other)
+  )) with
+    | (ControlFlow ("Example.Effects.NativeStress.2517")) -> (let tmp = (!(u__jump_result1)) in
+      (match tmp with
+        | (Some (u__result)) -> u__result
+        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.2517")))
+      ))
+    | u__other -> (raise u__other)
+  )) done)) with
+    | (ControlFlow ("Example.Effects.NativeStress.2520")) -> (let tmp = (!(u__jump_result)) in
+      (match tmp with
+        | (Some (u__result)) -> u__result
+        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.2520")))
+      ))
+    | u__other -> (raise u__other)
+  );
+  (!(i)))
+
+let example_Effects_NativeStress_return_handled (note : (FStar_UInt32.t -> unit)) : Prims.int =
+  (let u__jump_result = (ref None) in
+  (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
+    (raise (ControlFlow ("Example.Effects.NativeStress.880"))))) in
+  let u__result = (try (try (let u__result = (try ((u__return (Prims.of_int (7)));
+      (failwith "Pulse.Lib.Dv.unreachable")) with
+        | u__cexn -> ((note (FStar_UInt32.uint_to_t (Prims.of_int (8))));
+          (raise u__cexn))
+      ) in
+    (note (FStar_UInt32.uint_to_t (Prims.of_int (8))));
+    u__result) with
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Prims.of_int (99))
+      | u__other -> (raise u__other)
+    ) with
+      | u__cexn -> ((note (FStar_UInt32.uint_to_t (Prims.of_int (7))));
+        (raise u__cexn))
+    ) in
+  (note (FStar_UInt32.uint_to_t (Prims.of_int (7))));
+  u__result) with
+    | (ControlFlow ("Example.Effects.NativeStress.880")) -> (let tmp = (!(u__jump_result)) in
+      (match tmp with
+        | (Some (u__result)) -> u__result
+        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.880")))
+      ))
+    | u__other -> (raise u__other)
+  ))
+
+let rec example_Effects_NativeStress_unwind (note : (FStar_UInt32.t -> unit)) (n : Prims.int) (seed : string) : Prims.int =
+  (let contents = ((Prims.strcat seed seed) :: (seed :: [])) in
+  let box = (ref contents) in
+  let u__result = (try (if ((=) n Prims.int_zero) then (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Prims.of_int (9))))))) else (example_Effects_NativeStress_unwind note (Prims.op_Minus n Prims.int_one) seed)) with
+      | u__cexn -> ((note (FStar_UInt32.uint_to_t (Obj.magic (n))));
+        ();
+        (raise u__cexn))
+    ) in
+  (note (FStar_UInt32.uint_to_t (Obj.magic (n))));
+  ();
+  u__result)
+
+type example_Effects_NativeBoundary_payload = {
+  message : string;
+  values : (Prims.int) list;
+}
+
+let example_Effects_NativeBoundary_choose (value : 'a) (fail : bool) : 'a =
+  (if fail then (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (value))))) else value)
+
+let example_Effects_NativeBoundary_deliver (value : example_Effects_NativeBoundary_payload) (fail : bool) : example_Effects_NativeBoundary_payload =
+  (example_Effects_NativeBoundary_choose value fail)
+
+let example_Effects_NativeBoundary_invoke (r : (Prims.int ref)) (value : example_Effects_NativeBoundary_payload) (action : (unit -> Prims.int)) : Prims.int =
+  (action ())
+
+let example_Effects_NativeStress_captured (value : example_Effects_NativeBoundary_payload) : bool =
+  (let state = (ref Prims.int_zero) in
+  let frame = (ref (Prims.of_int (17))) in
+  let action = (fun tmp -> (((state) := Prims.int_one);
+    (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (value))))))) in
+  let got = (try ((ignore (example_Effects_NativeBoundary_invoke state value action));
+    value) with
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Obj.magic (u__payload))
+      | u__other -> (raise u__other)
+    ) in
+  let s = (!(state)) in
+  let f = (!(frame)) in
+  (((((=) s Prims.int_one) && ((=) f (Prims.of_int (17)))) && ((=) (got).message (value).message)) && ((=) (got).values (value).values)))
+
+exception Example_Effects_NativeStress_NativeException of string
+
+let example_Effects_NativeStress_collision (tmp : unit) : string =
+  (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Example_Effects_NativeStress_NativeException ("collision")))))))
+
+let example_Effects_NativeStress_repeated (note : (FStar_UInt32.t -> unit)) (value : example_Effects_NativeBoundary_payload) : bool =
+  (let count = (ref Prims.int_zero) in
+  let good = (ref true) in
+  (while (let u___anf0 = (!(count)) in
+  (Prims.op_Less u___anf0 (Prims.of_int (1000)))) do (let got = (try (let box = (ref value) in
+    let u__result = (try (example_Effects_NativeBoundary_deliver value true) with
+        | u__cexn -> ((note (FStar_UInt32.uint_to_t (Prims.of_int (6))));
+          ();
+          (raise u__cexn))
+      ) in
+    (note (FStar_UInt32.uint_to_t (Prims.of_int (6))));
+    ();
+    u__result) with
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Obj.magic (u__payload))
+      | u__other -> (raise u__other)
+    ) in
+  let u___anf0 = (!(good)) in
+  ((good) := ((u___anf0 && ((=) (got).message (value).message)) && ((=) (got).values (value).values)));
+  let u___anf01 = (!(count)) in
+  ((count) := (Prims.op_Plus u___anf01 Prims.int_one))) done);
+  (!(good)))
+
+let example_Effects_NativeStress_test (note : (FStar_UInt32.t -> unit)) : bool =
+  ((note (FStar_UInt32.uint_to_t (Prims.of_int (100))));
+  let a = (example_Effects_NativeStress_nested note Prims.int_zero) in
+  (note (FStar_UInt32.uint_to_t (Prims.of_int (101))));
+  let b = (example_Effects_NativeStress_nested note Prims.int_one) in
+  (note (FStar_UInt32.uint_to_t (Prims.of_int (102))));
+  let c = (try (example_Effects_NativeStress_nested note (Prims.of_int (2))) with
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Obj.magic (u__payload))
+      | u__other -> (raise u__other)
+    ) in
+  (note (FStar_UInt32.uint_to_t (Prims.of_int (200))));
+  let d = (example_Effects_NativeStress_loop_exits note) in
+  (note (FStar_UInt32.uint_to_t (Prims.of_int (201))));
+  let returned = (example_Effects_NativeStress_return_handled note) in
+  (note (FStar_UInt32.uint_to_t (Prims.of_int (300))));
+  let e = (try (example_Effects_NativeStress_unwind note (Prims.of_int (256)) "managed") with
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Obj.magic (u__payload))
+      | u__other -> (raise u__other)
+    ) in
+  let value = { message = "managedpayload";
+      values = ((Prims.of_int (3)) :: ((Prims.of_int (5)) :: ((Prims.of_int (8)) :: []))) } in
+  let f = (example_Effects_NativeBoundary_deliver value false) in
+  let text = (example_Effects_NativeBoundary_choose "polymorphic" false) in
+  let number = (try (example_Effects_NativeBoundary_choose (Prims.of_int (37)) true) with
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Obj.magic (u__payload))
+      | u__other -> (raise u__other)
+    ) in
+  let g = (example_Effects_NativeStress_captured value) in
+  let name = (try (example_Effects_NativeStress_collision ()) with
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (let tmp = (Obj.magic (u__payload)) in
+        (match tmp with
+          | (Example_Effects_NativeStress_NativeException (message)) -> message
+        ))
+      | u__other -> (raise u__other)
+    ) in
+  (note (FStar_UInt32.uint_to_t (Prims.of_int (400))));
+  let h = (example_Effects_NativeStress_repeated note value) in
+  ((((((((((((((=) a (Prims.of_int (7))) && ((=) b (Prims.of_int (7)))) && ((=) c (Prims.of_int (9)))) && ((=) d Prims.int_one)) && ((=) returned (Prims.of_int (7)))) && ((=) e (Prims.of_int (9)))) && ((=) (f).message "managedpayload")) && ((=) (f).values ((Prims.of_int (3)) :: ((Prims.of_int (5)) :: ((Prims.of_int (8)) :: []))))) && ((=) text "polymorphic")) && ((=) number (Prims.of_int (37)))) && g) && ((=) name "collision")) && h))
+
+let example_Effects_NativeRuntime_stress (note : (FStar_UInt32.t -> unit)) : bool =
+  (example_Effects_NativeStress_test note)
 
 let example_Effects_NativeRuntime_early (b : bool) : Prims.int =
   (let u__jump_result = (ref None) in
   (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
     (raise (ControlFlow ("Example.Effects.NativeRuntime.805"))))) in
   (if b then ((u__return (Prims.of_int (7)));
-  (failwith "Pulse.Lib.Dv.unreachable")) else (raise (NativeException ((Obj.magic ((Prims.of_int (9))))))))) with
+  (failwith "Pulse.Lib.Dv.unreachable")) else (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Prims.of_int (9))))))))) with
     | (ControlFlow ("Example.Effects.NativeRuntime.805")) -> (let tmp = (!(u__jump_result)) in
       (match tmp with
         | (Some (u__result)) -> u__result
@@ -21,7 +232,7 @@ let example_Effects_NativeRuntime_early (b : bool) : Prims.int =
 
 let example_Effects_NativeRuntime_cleanup (b : bool) : Prims.int =
   (let box = (ref Prims.int_zero) in
-  let u__result = (try (if b then (raise (NativeException ((Obj.magic ((Prims.of_int (9))))))) else (Prims.of_int (7))) with
+  let u__result = (try (if b then (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Prims.of_int (9))))))) else (Prims.of_int (7))) with
       | u__cexn -> (();
         (raise u__cexn))
     ) in
@@ -54,7 +265,7 @@ let example_Effects_NativeRuntime_return_through_try (tmp : unit) : Prims.int =
     (raise (ControlFlow ("Example.Effects.NativeRuntime.778"))))) in
   (try ((u__return (Prims.of_int (7)));
   (failwith "Pulse.Lib.Dv.unreachable")) with
-    | (NativeException (u__payload)) -> (Prims.of_int (99))
+    | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Prims.of_int (99))
     | u__other -> (raise u__other)
   )) with
     | (ControlFlow ("Example.Effects.NativeRuntime.778")) -> (let tmp1 = (!(u__jump_result)) in
@@ -67,9 +278,9 @@ let example_Effects_NativeRuntime_return_through_try (tmp : unit) : Prims.int =
 
 let example_Effects_NativeRuntime_cleanup_handles (tmp : unit) : Prims.int =
   (let box = (ref Prims.int_zero) in
-  let u__result = (try (raise (NativeException ((Obj.magic ((Prims.of_int (9))))))) with
-      | u__cexn -> ((ignore (try (raise (NativeException ((Obj.magic (true))))) with
-          | (NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
+  let u__result = (try (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Prims.of_int (9))))))) with
+      | u__cexn -> ((ignore (try (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (true))))) with
+          | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
             (if tmp1 then () else ()))
           | u__other -> (raise u__other)
         ));
@@ -88,8 +299,8 @@ let example_Effects_NativeRuntime_cleanup_handles (tmp : unit) : Prims.int =
         ();
         (raise u__cexn))
     ) in
-  (ignore (try (raise (NativeException ((Obj.magic (true))))) with
-    | (NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
+  (ignore (try (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (true))))) with
+    | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
       (if tmp1 then () else ()))
     | u__other -> (raise u__other)
   ));
@@ -113,28 +324,28 @@ exception First of Prims.int
 exception Second of string
 
 let example_Effects_NativeRuntime_reraises (tmp : unit) : Prims.int =
-  (try (raise (NativeException ((Obj.magic ((First ((Prims.of_int (3))))))))) with
-    | (NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
+  (try (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((First ((Prims.of_int (3))))))))) with
+    | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
       (match tmp1 with
-        | (First (tmp2)) -> (raise (NativeException ((Obj.magic ((Second ("outer")))))))
-        | tmp2 -> (raise (NativeException ((Obj.magic (tmp1)))))
+        | (First (tmp2)) -> (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Second ("outer")))))))
+        | tmp2 -> (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (tmp1)))))
       ))
     | u__other -> (raise u__other)
   )
 
 let rec example_Effects_NativeRuntime_recurse (n : Prims.int) : Prims.int =
-  (if ((=) n Prims.int_zero) then (raise (NativeException ((Obj.magic ((Prims.of_int (9))))))) else (example_Effects_NativeRuntime_recurse (Prims.op_Minus n Prims.int_one)))
+  (if ((=) n Prims.int_zero) then (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Prims.of_int (9))))))) else (example_Effects_NativeRuntime_recurse (Prims.op_Minus n Prims.int_one)))
 
 let example_Effects_Native_invoke (action : (bool -> Prims.int)) (eta : bool) : Prims.int =
   (action eta)
 
 let example_Effects_Native_locally_defined (b : bool) : Prims.int =
-  (let local = (fun b1 -> (if b1 then (raise (NativeException ((Obj.magic (Prims.int_one))))) else (Prims.of_int (7)))) in
+  (let local = (fun b1 -> (if b1 then (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (Prims.int_one))))) else (Prims.of_int (7)))) in
   (local b))
 
 let example_Effects_Native_loop_exit (r : (Prims.int ref)) : unit =
   ((while true do (((r) := Prims.int_one);
-  (raise (NativeException ((Obj.magic (Prims.int_one)))))) done);
+  (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (Prims.int_one)))))) done);
   ())
 
 type example_Effects_Native_failure =
@@ -145,16 +356,16 @@ type example_Effects_Native_failure =
 let example_Effects_Native_reraised (r : (Prims.int ref)) : Prims.int =
   (try (try ((ignore (ref (Prims.of_int (10))));
   ((r) := Prims.int_one);
-  (raise (NativeException ((Obj.magic (Example_Effects_Native_First)))))) with
-    | (NativeException (u__payload)) -> (let tmp = (Obj.magic (u__payload)) in
+  (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (Example_Effects_Native_First)))))) with
+    | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (let tmp = (Obj.magic (u__payload)) in
       (match tmp with
         | Example_Effects_Native_First -> (((r) := (Prims.of_int (4)));
-          (raise (NativeException ((Obj.magic (Example_Effects_Native_First))))))
-        | tmp1 -> (raise (NativeException ((Obj.magic (tmp)))))
+          (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (Example_Effects_Native_First))))))
+        | tmp1 -> (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (tmp)))))
       ))
     | u__other -> (raise u__other)
   ) with
-    | (NativeException (u__payload)) -> (let tmp = (Obj.magic (u__payload)) in
+    | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (let tmp = (Obj.magic (u__payload)) in
       (match tmp with
         | Example_Effects_Native_First -> (((r) := (Prims.of_int (5)));
           (Prims.of_int (50)))
@@ -165,7 +376,7 @@ let example_Effects_Native_reraised (r : (Prims.int ref)) : Prims.int =
 let example_Effects_NativeRuntime_stack_payload (s : string) : string =
   (let local = (ref (Prims.strcat s s)) in
   let u___anf0 = (!(local)) in
-  (raise (NativeException ((Obj.magic (u___anf0))))))
+  (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (u___anf0))))))
 
 let example_Effects_NativeRuntime_return_payload (s : string) : string =
   (let u__jump_result = (ref None) in
@@ -195,48 +406,48 @@ let example_Effects_NativeExtraction_raw_outcome (b : bool) : (bool, bool) pulse
   (!(u__return)))
 
 let example_Effects_NativeExtraction_handled_bool (b : bool) : bool =
-  (try (if b then (raise (NativeException ((Obj.magic (b))))) else b) with
-    | (NativeException (u__payload)) -> (Obj.magic (u__payload))
+  (try (if b then (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic (b))))) else b) with
+    | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Obj.magic (u__payload))
     | u__other -> (raise u__other)
   )
 
 let example_Effects_NativeRuntime_test (tmp : unit) : bool =
   (let a = (example_Effects_NativeRuntime_early true) in
   let b = (try (example_Effects_NativeRuntime_early false) with
-      | (NativeException (u__payload)) -> (Prims.of_int (9))
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Prims.of_int (9))
       | u__other -> (raise u__other)
     ) in
   let c = (example_Effects_NativeRuntime_cleanup false) in
   let d = (try (example_Effects_NativeRuntime_cleanup true) with
-      | (NativeException (u__payload)) -> (Prims.of_int (9))
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Prims.of_int (9))
       | u__other -> (raise u__other)
     ) in
   let e = (example_Effects_NativeRuntime_cleanup_return ()) in
   let f = (example_Effects_NativeRuntime_return_through_try ()) in
   let g = (try (example_Effects_NativeRuntime_cleanup_handles ()) with
-      | (NativeException (u__payload)) -> (Prims.of_int (9))
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Prims.of_int (9))
       | u__other -> (raise u__other)
     ) in
   let h = (try (example_Effects_NativeRuntime_reraises ()) with
-      | (NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
         (match tmp1 with
           | (Second (tmp2)) -> (Prims.of_int (11))
         ))
       | u__other -> (raise u__other)
     ) in
   let i = (try (example_Effects_NativeRuntime_recurse (Prims.of_int (5))) with
-      | (NativeException (u__payload)) -> (Prims.of_int (9))
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Prims.of_int (9))
       | u__other -> (raise u__other)
     ) in
   let j = (example_Effects_Native_invoke example_Effects_Native_locally_defined false) in
   let k = (try (example_Effects_Native_invoke example_Effects_Native_locally_defined true) with
-      | (NativeException (u__payload)) -> Prims.int_one
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> Prims.int_one
       | u__other -> (raise u__other)
     ) in
   let state = (ref Prims.int_zero) in
   let frame = (ref (Prims.of_int (17))) in
   (try (example_Effects_Native_loop_exit state) with
-    | (NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
+    | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (let tmp1 = (Obj.magic (u__payload)) in
       (match tmp1 with
         | u__iconst0 when u__iconst0 = Prims.int_one -> ()
         | tmp2 -> ()
@@ -249,7 +460,7 @@ let example_Effects_NativeRuntime_test (tmp : unit) : bool =
   let n = (!(state)) in
   let o = (!(frame)) in
   let p = (try (example_Effects_NativeRuntime_stack_payload "owned") with
-      | (NativeException (u__payload)) -> (Obj.magic (u__payload))
+      | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Obj.magic (u__payload))
       | u__other -> (raise u__other)
     ) in
   let q = (example_Effects_NativeRuntime_return_payload "owned") in

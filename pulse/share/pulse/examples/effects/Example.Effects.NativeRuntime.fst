@@ -7,6 +7,7 @@ module R = Pulse.Lib.Reference
 module N = Example.Effects.Native
 module X = Example.Effects.NativeExtraction
 module E = Pulse.Lib.Effects.Rules
+module H = Example.Effects.NativeStress
 
 fn early (b:bool)
   returns x:int
@@ -186,4 +187,11 @@ divergent fn test ()
    f = 7 && g = 9 && h = 11 && i = 9 &&
    j = 7 && k = 1 && l = 1 && m = 50 && n = 5 && o = 17 &&
    p = "ownedowned" && q = "ownedowned" && r && s && not t)
+}
+
+divergent fn stress (note:H.observer)
+  returns ok:bool
+  ensures emp
+{
+  H.test note
 }

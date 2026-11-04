@@ -137,22 +137,26 @@ check-native-extraction: $(CACHE_DIR)/Example.Effects.Native.fst.checked $(CACHE
 all: check-native-extraction
 
 NATIVE_CHECKED := $(CACHE_DIR)/Example.Effects.NativeRuntime.fst.checked
+NATIVE_BOUNDARY := $(CACHE_DIR)/Example.Effects.NativeBoundary.fst.checked
+NATIVE_ENTRIES := --custard_entry Example.Effects.NativeRuntime.test --custard_entry Example.Effects.NativeRuntime.stress
 
-$(OUTPUT_DIR)/Native_runtime.ml: $(NATIVE_CHECKED) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
-	$(FSTAR) --codegen OCaml --custard_entry Example.Effects.NativeRuntime.test $< -o $@
+# Client checking sees only NativeBoundary's interface. Extraction also depends
+# on its hidden implementation, even when the interface has not changed.
+$(OUTPUT_DIR)/Native_runtime.ml: $(NATIVE_CHECKED) $(NATIVE_BOUNDARY) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
+	$(FSTAR) --codegen OCaml $(NATIVE_ENTRIES) $< -o $@
 
 $(OUTPUT_DIR)/native.exe: $(OUTPUT_DIR)/Native_runtime.ml native_driver.ml
 	cp native_driver.ml $(OUTPUT_DIR)/
 	cd $(OUTPUT_DIR) && $(FSTAR_EXE) --ocamlopt Native_runtime.ml native_driver.ml -o native.exe
 
-$(OUTPUT_DIR)/Native_runtime.fs: $(NATIVE_CHECKED) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
-	$(FSTAR) --codegen FSharp --custard_entry Example.Effects.NativeRuntime.test $< -o $@
+$(OUTPUT_DIR)/Native_runtime.fs: $(NATIVE_CHECKED) $(NATIVE_BOUNDARY) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
+	$(FSTAR) --codegen FSharp $(NATIVE_ENTRIES) $< -o $@
 
 # Cherry writes the implementation and header together. Regenerate both if
 # either disappears; concurrent snapshot checks must not invoke it twice.
-$(OUTPUT_DIR)/Native_runtime.c $(OUTPUT_DIR)/Native_runtime.h &: $(NATIVE_CHECKED) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
+$(OUTPUT_DIR)/Native_runtime.c $(OUTPUT_DIR)/Native_runtime.h &: $(NATIVE_CHECKED) $(NATIVE_BOUNDARY) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
 	$(FSTAR) --codegen Cherry --custard_monomorphize_types true \
-	  --custard_entry Example.Effects.NativeRuntime.test $< -o $(OUTPUT_DIR)/Native_runtime.c
+	  $(NATIVE_ENTRIES) $< -o $(OUTPUT_DIR)/Native_runtime.c
 
 # Compare the complete emitted files, including the Cherry ABI and ownership
 # helpers. Use test.mk's .diff/.accept rules; normal tests never bless drift.
@@ -165,20 +169,73 @@ all: check-native-goldens
 CHERRY_INC := $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
 CHERRY_CC ?= $(CC)
 CHERRY_CFLAGS ?= -std=c11 -g -DCHERRY_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined
-$(OUTPUT_DIR)/native-cherry.exe: $(OUTPUT_DIR)/Native_runtime.c native_driver.c
-	$(CHERRY_CC) $(CHERRY_CFLAGS) -Wall -Wextra -Werror \
+$(OUTPUT_DIR)/native-cherry-O%.exe: $(OUTPUT_DIR)/Native_runtime.c $(OUTPUT_DIR)/Native_runtime.h native_driver.c $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h Makefile
+	$(CHERRY_CC) $(CHERRY_CFLAGS) -O$* -Wall -Wextra -Werror \
 	  -I$(OUTPUT_DIR) -I$(CHERRY_INC) $< native_driver.c $(CHERRY_INC)/cherry.c -o $@
 
-.PHONY: native-ocaml native-fsharp native-cherry
+.PHONY: native-ocaml native-fsharp native-cherry native-separate native-separate-ocaml native-separate-cherry
 native-ocaml: $(OUTPUT_DIR)/native.exe $(OUTPUT_DIR)/Native_runtime.ml.diff
 	$<
 native-fsharp: $(OUTPUT_DIR)/Native_runtime.fs native_driver.fsx
 	cp native_driver.fsx $(OUTPUT_DIR)/
 	cd $(OUTPUT_DIR) && DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet fsi --exec native_driver.fsx
-native-cherry: $(OUTPUT_DIR)/native-cherry.exe $(OUTPUT_DIR)/Native_runtime.c.diff $(OUTPUT_DIR)/Native_runtime.h.diff
-	ASAN_OPTIONS=detect_leaks=1 $<
+native-cherry: $(OUTPUT_DIR)/native-cherry-O0.exe $(OUTPUT_DIR)/native-cherry-O2.exe $(OUTPUT_DIR)/Native_runtime.c.diff $(OUTPUT_DIR)/Native_runtime.h.diff
+	ASAN_OPTIONS=detect_leaks=1 $(OUTPUT_DIR)/native-cherry-O0.exe
+	ASAN_OPTIONS=detect_leaks=1 $(OUTPUT_DIR)/native-cherry-O2.exe
 
-all: native-ocaml
+# These are independent compiler invocations, not a split of one whole-program
+# extraction. The client must import the library's native ABI through its .cui.
+NATIVE_EXPORTS := $(foreach e,choose deliver invoke,--custard_entry Example.Effects.NativeBoundary.$(e))
+NATIVE_ML_SPLIT := $(OUTPUT_DIR)/native-ocaml-split
+NATIVE_C_SPLIT := $(OUTPUT_DIR)/native-cherry-split
+
+$(NATIVE_ML_SPLIT)/Native_boundary.cui $(NATIVE_ML_SPLIT)/Native_boundary.ml &: $(NATIVE_BOUNDARY) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
+	mkdir -p $(NATIVE_ML_SPLIT)
+	$(FSTAR) --codegen OCaml --custard_unit Native_boundary $(NATIVE_EXPORTS) \
+	  --odir $(NATIVE_ML_SPLIT) $<
+
+$(NATIVE_ML_SPLIT)/Native_runtime.ml: $(NATIVE_CHECKED) $(NATIVE_ML_SPLIT)/Native_boundary.cui $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
+	$(FSTAR) --codegen OCaml --custard_link $(NATIVE_ML_SPLIT)/Native_boundary.cui \
+	  $(NATIVE_ENTRIES) $< -o $@
+	grep -q 'Native_boundary.example_Effects_NativeBoundary_choose' $@
+	! grep -q '^let .*example_Effects_NativeBoundary_choose' $@
+
+$(NATIVE_ML_SPLIT)/native.exe: $(NATIVE_ML_SPLIT)/Native_boundary.ml $(NATIVE_ML_SPLIT)/Native_runtime.ml native_driver.ml Makefile
+	cp native_driver.ml $(NATIVE_ML_SPLIT)/
+	cd $(NATIVE_ML_SPLIT) && $(FSTAR_EXE) --ocamlopt -I . Native_boundary.ml Native_runtime.ml native_driver.ml -o native.exe
+
+$(NATIVE_C_SPLIT)/Native_boundary.cui $(NATIVE_C_SPLIT)/Native_boundary.c $(NATIVE_C_SPLIT)/Native_boundary.h &: $(NATIVE_BOUNDARY) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
+	mkdir -p $(NATIVE_C_SPLIT)
+	$(FSTAR) --codegen Cherry --custard_monomorphize_types true \
+	  --custard_unit Native_boundary $(NATIVE_EXPORTS) --odir $(NATIVE_C_SPLIT) $<
+
+$(NATIVE_C_SPLIT)/Native_runtime.c $(NATIVE_C_SPLIT)/Native_runtime.h &: $(NATIVE_CHECKED) $(NATIVE_C_SPLIT)/Native_boundary.cui $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
+	$(FSTAR) --codegen Cherry --custard_monomorphize_types true \
+	  --custard_link $(NATIVE_C_SPLIT)/Native_boundary.cui \
+	  $(NATIVE_ENTRIES) $< -o $(NATIVE_C_SPLIT)/Native_runtime.c
+
+$(NATIVE_C_SPLIT)/client-O%.o: $(NATIVE_C_SPLIT)/Native_runtime.c $(NATIVE_C_SPLIT)/Native_runtime.h $(NATIVE_C_SPLIT)/Native_boundary.h $(CHERRY_INC)/cherry.h Makefile
+	$(CHERRY_CC) $(CHERRY_CFLAGS) -O$* -Wall -Wextra -Werror \
+	  -I$(NATIVE_C_SPLIT) -I$(CHERRY_INC) -c $< -o $@
+	nm -u $@ | grep -qw Example_Effects_NativeBoundary_deliver
+	nm -u $@ | grep -qw Example_Effects_NativeBoundary_invoke
+
+$(NATIVE_C_SPLIT)/native-O%.exe: $(NATIVE_C_SPLIT)/client-O%.o $(NATIVE_C_SPLIT)/Native_boundary.c $(NATIVE_C_SPLIT)/Native_boundary.h native_driver.c $(CHERRY_INC)/cherry.c $(CHERRY_INC)/cherry.h Makefile
+	$(CHERRY_CC) $(CHERRY_CFLAGS) -O$* -Wall -Wextra -Werror \
+	  -I$(NATIVE_C_SPLIT) -I$(CHERRY_INC) $< \
+	  $(NATIVE_C_SPLIT)/Native_boundary.c native_driver.c $(CHERRY_INC)/cherry.c -o $@
+
+native-separate: native-separate-ocaml
+native-separate-ocaml: $(NATIVE_ML_SPLIT)/native.exe
+	$(NATIVE_ML_SPLIT)/native.exe
+ifneq ($(NOCHERRY),1)
+native-separate: native-separate-cherry
+endif
+native-separate-cherry: $(NATIVE_C_SPLIT)/native-O0.exe $(NATIVE_C_SPLIT)/native-O2.exe
+	ASAN_OPTIONS=detect_leaks=1 $(NATIVE_C_SPLIT)/native-O0.exe
+	ASAN_OPTIONS=detect_leaks=1 $(NATIVE_C_SPLIT)/native-O2.exe
+
+all: native-ocaml native-separate
 ifneq ($(NOCHERRY),1)
 all: native-cherry
 endif
