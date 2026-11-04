@@ -846,7 +846,7 @@ let rec teq_slprop (g: env) (cfg: teq_cfg) (a b: term) : T.Tac bool =
   let bh, ba = R.collect_app_ln b in
   match is_fvar_or_uinst ah, is_fvar_or_uinst bh with
   | Some fv, Some _ ->
-    let head_matches = RU.teq_nosmt_force_phase1 (elab_env g) ah bh in
+    let head_matches = RU.teq_nosmt_force_elab (elab_env g) ah bh in
     if not head_matches && cfg.teq_fail_fast then false else
     let h_ty = match type_of_fv (elab_env g) fv with Some h_ty -> h_ty | None -> tm_unknown in 
     let use_mkeys =
@@ -919,9 +919,9 @@ and teq_slprop_base (g: env) (cfg: teq_cfg) (a b: R.term) : T.Tac bool =
     // disallow unifying (f ..) with ?u in matching mode
     false
   else if cfg.teq_noforce then
-    RU.teq_nosmt_phase1 (elab_env g) a b
+    RU.teq_nosmt_elab (elab_env g) a b
   else
-    RU.teq_nosmt_force_phase1 (elab_env g) a b
+    RU.teq_nosmt_force_elab (elab_env g) a b
 
 let is_unamb g (cands: list (int & slprop_view)) : T.Tac bool =
   match cands with
@@ -1095,7 +1095,7 @@ let try_apply_elim_lemma (pg: penv) (lid: R.name) (i: nat) (ctxt: slprop_view) :
       with_uf_transaction fun _ ->
         teq_slprop g teq_cfg_first_mkeys_pass a b
     | _ -> false in
-  let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
+  let t, ty, _ = tc_term_elab g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in
   match Pulse.Readback.readback_comp ty with
   | Some (C_STGhost inames { pre; post; res; u }) ->
@@ -1137,7 +1137,7 @@ let try_apply_eager_intro_lemma (pg: penv) (lid: R.name) (i: nat) ctxt (goal: sl
       with_uf_transaction fun _ ->
         teq_slprop g teq_cfg_first_mkeys_pass a b
     | _ -> false in
-  let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
+  let t, ty, _ = tc_term_elab g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in
   match Pulse.Readback.readback_comp ty with
   | Some (C_STGhost inames { pre; post; res; u }) ->
@@ -1233,7 +1233,7 @@ let try_apply_intro_lemma (pg: penv) (lid: R.name) (i: nat) ctxt (goal: slprop_v
       with_uf_transaction fun _ ->
         teq_slprop g teq_cfg_first_mkeys_pass a b
     | _ -> false in
-  let t, ty, _ = tc_term_phase1 g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
+  let t, ty, _ = tc_term_elab g (R.pack_ln <| R.Tv_FVar <| R.pack_fv lid) in
   let ty, t = apply_with_uvars g ty t in
   match Pulse.Readback.readback_comp ty with
   | Some (C_STGhost inames { pre; post; res; u }) ->

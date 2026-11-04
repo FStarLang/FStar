@@ -256,7 +256,8 @@ let parent_idx_lt (i:nat{i > 0}) : Lemma (parent_idx i < i) = ()
 //
 // Swap (defined here because mem_swap uses it)
 //
-let swap_seq #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s}) : Seq.seq t =
+let swap_seq #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
+  : s':Seq.seq t{Seq.length s' == Seq.length s} =
   Seq.upd (Seq.upd s i (Seq.index s j)) j (Seq.index s i)
 
 let swap_length #t (s:Seq.seq t) (i j:nat{i < Seq.length s /\ j < Seq.length s})
@@ -634,6 +635,38 @@ let sift_up_swap_lemma #t {| total_order t |}
 // for the recursive call. The recursive call has new idx = parent, new sequence = swap_seq.
 // The invariant requires: swap_seq[gp] <=? swap_seq[children of parent].
 #push-options "--fuel 1 --ifuel 1"
+// One child [k] of the parent of [child]: s'[gp] <=? s'[k]
+let grandparent_up_after_swap_child #t {| total_order t |}
+  (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s}) (k:nat)
+  : Lemma (requires almost_heap_sift_up s child /\
+                    Seq.index s child <? Seq.index s (parent_idx child) /\
+                    parent_idx child > 0 /\ k < Seq.length s /\
+                    (k == left_idx (parent_idx child) \/ k == right_idx (parent_idx child)))
+          (ensures parent_idx (parent_idx child) < parent_idx child /\
+                   Seq.length (swap_seq s child (parent_idx child)) == Seq.length s /\
+                   Seq.index (swap_seq s child (parent_idx child)) (parent_idx (parent_idx child)) <=?
+                   Seq.index (swap_seq s child (parent_idx child)) k)
+  = let p = parent_idx child in
+    swap_length s child p;
+    let gp = parent_idx p in
+    parent_idx_lt child;
+    parent_idx_lt p;
+    // s'[gp] = s[gp] (gp < p < child, so gp <> child, gp <> p)
+    swap_index_other s child p gp;
+    // From almost_heap_sift_up part 2 for gp: s[gp] <=? s[p] (since p <> child = bad)
+    left_idx_parent_of p;
+    assert (Seq.index s gp <=? Seq.index s p);
+    if k = child then
+      // s'[child] = s[p] (from swap)
+      swap_index_i s child p
+    else (
+      // k <> child, and k <> p (since k > p): s'[k] = s[k]
+      swap_index_other s child p k;
+      // From almost_heap_sift_up part 2 for p: s[p] <=? s[k] (since k <> child)
+      // By transitivity: s[gp] <=? s[p] <=? s[k]
+      le_le_trans (Seq.index s gp) (Seq.index s p) (Seq.index s k)
+    )
+
 let grandparent_up_after_swap #t {| total_order t |} 
   (s:Seq.seq t) (child:nat{child > 0 /\ child < Seq.length s})
   : Lemma (requires almost_heap_sift_up s child /\
@@ -646,41 +679,12 @@ let grandparent_up_after_swap #t {| total_order t |}
                        Seq.index (swap_seq s child (parent_idx child)) (parent_idx (parent_idx child)) <=? 
                        Seq.index (swap_seq s child (parent_idx child)) (right_idx (parent_idx child)))))
   = let p = parent_idx child in
-    let s' = swap_seq s child p in
     swap_length s child p;
     if p > 0 then (
-      let gp = parent_idx p in
-      // s'[gp] = s[gp] (gp < p < child, so gp <> child, gp <> p)
-      swap_index_other s child p gp;
-      // From almost_heap_sift_up part 2 for gp: s[gp] <=? s[p] (since p <> child = bad)
-      assert (Seq.index s gp <=? Seq.index s p);
-      
-      // For left child of p:
-      if left_idx p < Seq.length s then (
-        if left_idx p = child then (
-          // s'[child] = s[p] (from swap)
-          swap_index_i s child p;
-          // Need s'[gp] <=? s'[child] = s[gp] <=? s[p]. ✓
-          ()
-        ) else (
-          // left_idx p <> child, and left_idx p <> p (since left_idx p > p)
-          // s'[left_idx p] = s[left_idx p]
-          swap_index_other s child p (left_idx p);
-          // From almost_heap_sift_up part 2 for p: s[p] <=? s[left_idx p] (since left_idx p <> child)
-          // By transitivity: s[gp] <=? s[p] <=? s[left_idx p]
-          le_le_trans (Seq.index s gp) (Seq.index s p) (Seq.index s (left_idx p))
-        )
-      );
-      // Similarly for right child
-      if right_idx p < Seq.length s then (
-        if right_idx p = child then (
-          swap_index_i s child p;
-          ()
-        ) else (
-          swap_index_other s child p (right_idx p);
-          le_le_trans (Seq.index s gp) (Seq.index s p) (Seq.index s (right_idx p))
-        )
-      )
+      if left_idx p < Seq.length s then
+        grandparent_up_after_swap_child s child (left_idx p);
+      if right_idx p < Seq.length s then
+        grandparent_up_after_swap_child s child (right_idx p)
     )
 #pop-options
 
@@ -806,6 +810,7 @@ fn rec sift_up (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t)
       grandparent_up_after_swap s (SZ.v idx);
       // Swap preserves counts
       swap_preserves_counts s (SZ.v idx) (SZ.v parent);
+      swap_length s (SZ.v idx) (SZ.v parent);
       sift_up pq parent #(swap_seq s (SZ.v idx) (SZ.v parent)) #cap
     } else {
       // Current >= parent, so heap_up_at holds at idx
@@ -1107,6 +1112,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
 {
   // We know: fits(2*len + 2), so fits(2*idx + 1) since idx < len
   let left : SZ.t = SZ.add (SZ.mul 2sz idx) 1sz;
+  assert (pure (SZ.v left == left_idx (SZ.v idx)));
   
   if (SZ.gte left len) {
     // Leaf node - heap_down_at is trivially satisfied
@@ -1115,6 +1121,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
   } else {
     // Compute right directly from idx for SMT clarity
     let right : SZ.t = SZ.add (SZ.mul 2sz idx) 2sz;
+    assert (pure (SZ.v right == right_idx (SZ.v idx)));
     let current_val = RV.get pq idx;
     let left_val = RV.get pq left;
     

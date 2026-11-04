@@ -401,6 +401,13 @@ Guidelines for the changelog:
     drop any `open FStar.Nonempty`. Note that `Prims.nonempty` is transparent,
     whereas `FStar.Nonempty.nonempty` was abstract.
 
+  * PR https://github.com/FStarLang/FStar/pull/4605: the `--compat_pre_core`
+    option and the `with_compat_pre_core` tactic primitive are removed. They
+    let tactics skip the Core typechecker's check of the terms they solve
+    goals with, or drop its proof obligations, which is unsound. Code that
+    relied on them must make its tactics produce terms that Core accepts,
+    e.g. by leaving their proof obligations as goals.
+
 ## Syntax
 
   * Operator names are now mangled uniformly. An operator is turned into an

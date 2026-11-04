@@ -4,6 +4,7 @@
   - Expected type b: Prims.bool{bad_p b} got type Prims.bool
   - The SMT solver could not prove the query.
   - Failed to prove: NegativeTests.ShortCircuiting.bad_p true
+  - In context: x: Prims.int
   - See also NegativeTests.ShortCircuiting.fst(19,31-19,38)
 
 * Info at NegativeTests.ShortCircuiting.fst(25,11-25,36):

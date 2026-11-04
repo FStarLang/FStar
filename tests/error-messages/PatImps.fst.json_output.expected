@@ -58,7 +58,7 @@ Module after type checking:
 module PatImps
 Declarations: [
 let f1 x =
-  (match x with
+  (match x as _ returns Prims.int with
     | [] -> 0
     | _ :: _ -> 1)
   <:
@@ -67,11 +67,7 @@ noeq
 type t2 = | A : PatImps.t2
 
 
-let f2 x =
-  (let PatImps.A #i = x in
-    i)
-  <:
-  Prims.int
+let f2 x = (match x as _ returns Prims.int with | PatImps.A #i -> i) <: Prims.int
 noeq
 type t3 =
   | B : PatImps.t3
@@ -81,7 +77,7 @@ type t3 =
 
 
 let f3 x =
-  (match x with
+  (match x as _ returns Prims.int with
     | PatImps.B #i -> i
     | PatImps.C #i -> i)
   <:
