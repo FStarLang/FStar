@@ -206,7 +206,7 @@ let defaults = [
   ("custard_dump_layouts"                     , Bool false);
   ("custard_warn_any"                          , Bool false);
   ("custard_fuel"                              , Int 100000);
-  ("custard_max_specializations"               , Int 1000);
+  ("custard_max_specializations"               , Int 10000);
   ("custard_norm_budget"                       , Int 10000000);
   ("custard_monomorphize_types"                , Unset);
   ("custard_int128"                            , Bool true);
@@ -979,7 +979,7 @@ that catches a definition recursing through a monomorphized binder");
     "custard_max_specializations",
     IntStr "positive_integer",
     text "Number of specializations Custard may create for any single \
-definition before giving up (default 1000)");
+definition before giving up (default 10000)");
 
   ( noshort,
     "custard_norm_budget",
