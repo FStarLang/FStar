@@ -565,6 +565,30 @@ cherry_string cherry_str_of_byte(uint32_t b) {
   return cherry_str_of_bytes(&c, 1);
 }
 
+uint64_t cherry_u64_id(uint64_t x) { return x; }
+
+cherry_string cherry_str_push_byte(cherry_string s, uint64_t b) {
+  cherry_string_cell *x = (cherry_string_cell *)s;
+  size_t n = x->size + 1;
+  if (cherry_claim(&x->hdr)) {
+    if (n + 1 > x->cap) {
+      size_t cap = 2 * n + 1;
+      x = (cherry_string_cell *)realloc(x, sizeof(cherry_string_cell) + cap);
+      if (x == NULL) abort();
+      x->cap = cap;
+    }
+  } else {
+    cherry_string_cell *c = str_alloc(x->size, 2 * n + 1);
+    memcpy(c->data, x->data, x->size);
+    cherry_dec(s);
+    x = c;
+  }
+  x->data[x->size] = (char)(unsigned char)b;
+  x->size = n;
+  x->data[n] = 0;
+  return (cherry_string)x;
+}
+
 static cherry_string str_map_ascii(cherry_string s, char lo, char hi, int d) {
   size_t n = cherry_str_size(s);
   cherry_string_cell *c = str_alloc(n, n + 1);
@@ -1144,6 +1168,55 @@ cherry_string cherry_file_get_contents(cherry_string path) {
   cherry_string r = cherry_chan_read(h, UINT64_MAX);
   cherry_chan_close(h);
   return r;
+}
+
+/* Up to [len] bytes of [path] from byte [off] on (fewer at its end). */
+cherry_string cherry_file_get_range(cherry_string path, uint64_t off, uint64_t len) {
+  int fd = open(cherry_str_data(path), O_RDONLY);
+  if (fd < 0) { io_fail(cherry_str_data(path)); return str_of_c(""); }
+  struct stat st;
+  if (fstat(fd, &st) != 0) { io_fail(cherry_str_data(path)); close(fd); return str_of_c(""); }
+  uint64_t size = (uint64_t)st.st_size;
+  uint64_t n = off >= size ? 0 : (len < size - off ? len : size - off);
+  char *buf = (char *)malloc(n ? n : 1);
+  if (buf == NULL) abort();
+  uint64_t got = 0;
+  while (got < n) {
+    ssize_t k = pread(fd, buf + got, (size_t)(n - got), (off_t)(off + got));
+    if (k < 0 && errno == EINTR) continue;
+    if (k <= 0) { io_fail(cherry_str_data(path)); break; }
+    got += (uint64_t)k;
+  }
+  close(fd);
+  cherry_string r = cherry_str_of_bytes(buf, (size_t)got);
+  free(buf);
+  return r;
+}
+
+/* Writes [path] atomically: to a fresh temporary file in the same
+   directory, which is then renamed over [path]. */
+void cherry_write_file_atomic(cherry_string path, cherry_string contents) {
+  const char *p = cherry_str_data(path);
+  size_t pn = strlen(p);
+  char *tmp = (char *)malloc(pn + 12);
+  if (tmp == NULL) abort();
+  memcpy(tmp, p, pn);
+  memcpy(tmp + pn, ".tmpXXXXXX", 11);
+  int fd = mkstemp(tmp);
+  if (fd < 0) { io_fail(p); free(tmp); return; }
+  const char *d = cherry_str_data(contents);
+  size_t n = cherry_str_size(contents), done = 0;
+  while (done < n) {
+    ssize_t k = write(fd, d + done, n - done);
+    if (k < 0 && errno == EINTR) continue;
+    if (k <= 0) break;
+    done += (size_t)k;
+  }
+  if (close(fd) != 0 || done < n || rename(tmp, p) != 0) {
+    io_fail(p);
+    unlink(tmp);
+  }
+  free(tmp);
 }
 
 void cherry_touch_file(cherry_string path) {

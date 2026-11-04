@@ -485,6 +485,12 @@ uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i);
 cherry_string cherry_str_slice64(cherry_string s, uint64_t i, uint64_t j);
 /* The one-byte string of [b] < 256, which need not be UTF-8. */
 cherry_string cherry_str_of_byte(uint32_t b);
+/* Appends the byte [b] < 256 to [s], which it takes owned: a uniquely
+   referenced [s] is extended in place (FStarC.ByteBuffer). */
+cherry_string cherry_str_push_byte(cherry_string s, uint64_t b);
+/* The identity, converting between FStarC.SmallInt.t and FStar.UInt64.t,
+   which are both a uint64_t. */
+uint64_t cherry_u64_id(uint64_t x);
 /* ASCII case mapping; other bytes are unchanged. */
 cherry_string cherry_str_lowercase_ascii(cherry_string s);
 cherry_string cherry_str_uppercase_ascii(cherry_string s);
@@ -792,6 +798,8 @@ void cherry_copy_file(cherry_string from, cherry_string to);
 void cherry_remove_file(cherry_string path);
 void cherry_rename_file(cherry_string from, cherry_string to);
 cherry_string cherry_file_get_contents(cherry_string path);
+cherry_string cherry_file_get_range(cherry_string path, uint64_t off, uint64_t len);
+void cherry_write_file_atomic(cherry_string path, cherry_string contents);
 void cherry_touch_file(cherry_string path);
 cherry_string cherry_getcwd(void);
 cherry_string cherry_readdir(cherry_string path);

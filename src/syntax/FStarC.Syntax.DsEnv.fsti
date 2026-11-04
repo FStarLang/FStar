@@ -145,6 +145,7 @@ val finish_module_or_interface: env -> modul -> ML (env & modul)
 val module_inclusion_info : Type0
 instance val showable_mii: showable module_inclusion_info
 val default_mii : module_inclusion_info
+instance val serializable_mii : FStarC.Serialize.serializable module_inclusion_info
 val inclusion_info: env -> lident -> ML module_inclusion_info
 val prepare_module_or_interface: no_prelude:bool -> is_interface:bool -> is_admitted:bool -> env -> lident -> module_inclusion_info -> ML (env & bool) //pop the context when done desugaring
 val enter_monad_scope: env -> ident -> ML env

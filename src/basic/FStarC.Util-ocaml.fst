@@ -887,46 +887,11 @@ private assume val raw_digest : string -> string
 [@@custard_extern "BatDigest.to_hex"]
 private assume val digest_to_hex : string -> string
 
-(* See FStarC.Util.fsti for the layout of this container format. *)
-let save_3values_to_file fname value1 value2 value3 =
-  try
-    let b12 = marshal' value1 ^ marshal' value2 in
-    let b3 = marshal' value3 in
-    (* A Merkle-style digest of the two halves, so that we never have to
-       materialize the concatenation of the whole payload. *)
-    let dig = digest_to_hex (raw_digest (raw_digest b12 ^ raw_digest b3)) in
-    with_out_channel_atomic fname (fun channel ->
-      output_value channel dig;
-      output_binary_int channel (S.byte_length b12);
-      output_string channel b12;
-      output_string channel b3);
-    dig
-  with
-  (* The atomic write leaves [fname] untouched on failure, but an older,
-     now-stale file may still be there: get rid of it. *)
-  | e -> try_remove fname; raise e
+[@@custard_extern "(fun fn off len -> let ic = Stdlib.open_in_bin fn in Fun.protect ~finally:(fun () -> Stdlib.close_in ic) (fun () -> let off = Z.to_int off in let n = Stdlib.max 0 (Stdlib.min (Z.to_int len) (Stdlib.in_channel_length ic - off)) in Stdlib.seek_in ic off; Stdlib.really_input_string ic n))"]
+let file_get_range _ _ _ = admit ()
 
-let load_1value_from_file3 fname =
-  with_in_channel_opt fname (fun channel ->
-    let dig : string = input_value channel in
-    let _len = input_binary_int channel in
-    let v1 = input_value channel in
-    (dig, v1))
-
-let load_2values_from_file3 fname =
-  with_in_channel_opt fname (fun channel ->
-    let dig : string = input_value channel in
-    let _len = input_binary_int channel in
-    let v1 = input_value channel in
-    let v2 = input_value channel in
-    (dig, v1, v2))
-
-let load_3rd_value_from_file3 fname =
-  with_in_channel_opt fname (fun channel ->
-    let _dig : string = input_value channel in
-    let len = input_binary_int channel in
-    skip channel len;
-    input_value channel)
+let write_file_atomic fname contents =
+  with_out_channel_atomic fname (fun channel -> append_to_file channel contents)
 
 [@@custard_extern "Printexc.to_string"]
 let print_exn _ = admit ()
