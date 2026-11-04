@@ -1044,6 +1044,13 @@ rather than merely large.  `tests/custard/NormBudget.fst` pins the behaviour
 with a definition that is `Tot` for the typechecker and divergent for the
 normalizer; without the budget it hangs, with it it fails in three seconds.
 
+The budget is a backstop, not a licence: a normalization that only has to
+substitute or beta-reduce passes `Exclude Zeta`.  Besides `custard_norm_steps`
+(M9k), that is `specialize` instantiating a definition's monomorphized
+arguments.  An argument such as `go' k false`, a partial application of a
+local `let rec` inside a closure, unfolds forever under zeta;
+`tests/custard/CherryMonoLocalRec.fst` hit error 365 there before.
+
 #### Arguments that are erased are not normalized
 
 Issue #4828.  A specification argument (an implicit `prop` or `slprop`, an

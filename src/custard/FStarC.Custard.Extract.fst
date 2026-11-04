@@ -6478,9 +6478,14 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
                 |> List.map (fun (b:S.binder) ->
                      S.mk_binder (S.new_bv None b.binder_bv.sort)) in
       let hargs = hbs |> List.map (fun (b:S.binder) -> S.as_arg (S.bv_to_name b.binder_bv)) in
+      (* Only the holes are substituted: [Exclude Zeta], because the
+         argument may hold a local [let rec], and unfolding one need not
+         terminate (a closure [let go = go' bf in ... List.iter (go false)]
+         inside [go'] did not). *)
       let inst (t:term) : ML term =
         norm_bounded st "a monomorphized argument"
-                     [TcEnv.AllowUnboundUniverses; TcEnv.Beta]
+                     [TcEnv.AllowUnboundUniverses; TcEnv.Beta;
+                      TcEnv.Exclude TcEnv.Zeta]
                      (U.mk_app t hargs) in
       hbs, List.map (fun (i, t) -> (i, inst t)) margs
     | _ -> [], margs
