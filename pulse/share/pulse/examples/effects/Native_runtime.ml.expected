@@ -8,7 +8,7 @@ exception Pulse_Lib_NativeExceptions_NativeException of Obj.t
 let example_Effects_NativeStress_nested (note : (FStar_UInt32.t -> unit)) (mode : Prims.int) : Prims.int =
   (let u__jump_result = (ref None) in
   (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeStress.2164"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeStress.1835"))))) in
   let outer = (ref "outer") in
   let u__result = (try (let inner = (ref "inner") in
     let u__result = (try (if ((=) mode Prims.int_zero) then (Prims.of_int (7)) else (if ((=) mode Prims.int_one) then ((u__return (Prims.of_int (7)));
@@ -27,10 +27,10 @@ let example_Effects_NativeStress_nested (note : (FStar_UInt32.t -> unit)) (mode 
   (note (FStar_UInt32.uint_to_t Prims.int_one));
   ();
   u__result) with
-    | (ControlFlow ("Example.Effects.NativeStress.2164")) -> (let tmp = (!(u__jump_result)) in
+    | (ControlFlow ("Example.Effects.NativeStress.1835")) -> (let tmp = (!(u__jump_result)) in
       (match tmp with
         | (Some (u__result)) -> u__result
-        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.2164")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.1835")))
       ))
     | u__other -> (raise u__other)
   ))
@@ -39,10 +39,10 @@ let example_Effects_NativeStress_loop_exits (note : (FStar_UInt32.t -> unit)) : 
   (let i = (ref Prims.int_zero) in
   let u__jump_result = (ref None) in
   (try (let u__break = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeStress.2520"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeStress.2282"))))) in
   (while true do (let u__jump_result1 = (ref None) in
   (try (let u__continue = (fun u__jump_value -> (((u__jump_result1) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeStress.2517"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeStress.2279"))))) in
   let k = (!(i)) in
   (try (let u__result = (try (let box = (ref k) in
     let u__result = (try (if ((=) k Prims.int_zero) then (((i) := Prims.int_one);
@@ -64,17 +64,17 @@ let example_Effects_NativeStress_loop_exits (note : (FStar_UInt32.t -> unit)) : 
     | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (note (FStar_UInt32.uint_to_t (Prims.of_int (99))))
     | u__other -> (raise u__other)
   )) with
-    | (ControlFlow ("Example.Effects.NativeStress.2517")) -> (let tmp = (!(u__jump_result1)) in
+    | (ControlFlow ("Example.Effects.NativeStress.2279")) -> (let tmp = (!(u__jump_result1)) in
       (match tmp with
         | (Some (u__result)) -> u__result
-        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.2517")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.2279")))
       ))
     | u__other -> (raise u__other)
   )) done)) with
-    | (ControlFlow ("Example.Effects.NativeStress.2520")) -> (let tmp = (!(u__jump_result)) in
+    | (ControlFlow ("Example.Effects.NativeStress.2282")) -> (let tmp = (!(u__jump_result)) in
       (match tmp with
         | (Some (u__result)) -> u__result
-        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.2520")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.2282")))
       ))
     | u__other -> (raise u__other)
   );
@@ -83,7 +83,7 @@ let example_Effects_NativeStress_loop_exits (note : (FStar_UInt32.t -> unit)) : 
 let example_Effects_NativeStress_return_handled (note : (FStar_UInt32.t -> unit)) : Prims.int =
   (let u__jump_result = (ref None) in
   (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeStress.880"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeStress.842"))))) in
   let u__result = (try (try (let u__result = (try ((u__return (Prims.of_int (7)));
       (failwith "Pulse.Lib.Dv.unreachable")) with
         | u__cexn -> ((note (FStar_UInt32.uint_to_t (Prims.of_int (8))));
@@ -99,10 +99,10 @@ let example_Effects_NativeStress_return_handled (note : (FStar_UInt32.t -> unit)
     ) in
   (note (FStar_UInt32.uint_to_t (Prims.of_int (7))));
   u__result) with
-    | (ControlFlow ("Example.Effects.NativeStress.880")) -> (let tmp = (!(u__jump_result)) in
+    | (ControlFlow ("Example.Effects.NativeStress.842")) -> (let tmp = (!(u__jump_result)) in
       (match tmp with
         | (Some (u__result)) -> u__result
-        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.880")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeStress.842")))
       ))
     | u__other -> (raise u__other)
   ))
@@ -219,13 +219,13 @@ let example_Effects_NativeRuntime_stress (note : (FStar_UInt32.t -> unit)) : boo
 let example_Effects_NativeRuntime_early (b : bool) : Prims.int =
   (let u__jump_result = (ref None) in
   (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeRuntime.805"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeRuntime.577"))))) in
   (if b then ((u__return (Prims.of_int (7)));
   (failwith "Pulse.Lib.Dv.unreachable")) else (raise (Pulse_Lib_NativeExceptions_NativeException ((Obj.magic ((Prims.of_int (9))))))))) with
-    | (ControlFlow ("Example.Effects.NativeRuntime.805")) -> (let tmp = (!(u__jump_result)) in
+    | (ControlFlow ("Example.Effects.NativeRuntime.577")) -> (let tmp = (!(u__jump_result)) in
       (match tmp with
         | (Some (u__result)) -> u__result
-        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.805")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.577")))
       ))
     | u__other -> (raise u__other)
   ))
@@ -242,7 +242,7 @@ let example_Effects_NativeRuntime_cleanup (b : bool) : Prims.int =
 let example_Effects_NativeRuntime_cleanup_return (tmp : unit) : Prims.int =
   (let u__jump_result = (ref None) in
   (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeRuntime.709"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeRuntime.555"))))) in
   let box = (ref Prims.int_zero) in
   let u__result = (try ((u__return (Prims.of_int (7)));
     (failwith "Pulse.Lib.Dv.unreachable")) with
@@ -251,10 +251,10 @@ let example_Effects_NativeRuntime_cleanup_return (tmp : unit) : Prims.int =
     ) in
   ();
   u__result) with
-    | (ControlFlow ("Example.Effects.NativeRuntime.709")) -> (let tmp1 = (!(u__jump_result)) in
+    | (ControlFlow ("Example.Effects.NativeRuntime.555")) -> (let tmp1 = (!(u__jump_result)) in
       (match tmp1 with
         | (Some (u__result)) -> u__result
-        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.709")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.555")))
       ))
     | u__other -> (raise u__other)
   ))
@@ -262,16 +262,16 @@ let example_Effects_NativeRuntime_cleanup_return (tmp : unit) : Prims.int =
 let example_Effects_NativeRuntime_return_through_try (tmp : unit) : Prims.int =
   (let u__jump_result = (ref None) in
   (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeRuntime.778"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeRuntime.766"))))) in
   (try ((u__return (Prims.of_int (7)));
   (failwith "Pulse.Lib.Dv.unreachable")) with
     | (Pulse_Lib_NativeExceptions_NativeException (u__payload)) -> (Prims.of_int (99))
     | u__other -> (raise u__other)
   )) with
-    | (ControlFlow ("Example.Effects.NativeRuntime.778")) -> (let tmp1 = (!(u__jump_result)) in
+    | (ControlFlow ("Example.Effects.NativeRuntime.766")) -> (let tmp1 = (!(u__jump_result)) in
       (match tmp1 with
         | (Some (u__result)) -> u__result
-        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.778")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.766")))
       ))
     | u__other -> (raise u__other)
   ))
@@ -286,13 +286,13 @@ let example_Effects_NativeRuntime_cleanup_handles (tmp : unit) : Prims.int =
         ));
         let u__jump_result = (ref None) in
         (try (let u__break = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-          (raise (ControlFlow ("Example.Effects.NativeRuntime.2157"))))) in
+          (raise (ControlFlow ("Example.Effects.NativeRuntime.1876"))))) in
         (while true do ((u__break ());
         (failwith "Pulse.Lib.Dv.unreachable")) done)) with
-          | (ControlFlow ("Example.Effects.NativeRuntime.2157")) -> (let tmp1 = (!(u__jump_result)) in
+          | (ControlFlow ("Example.Effects.NativeRuntime.1876")) -> (let tmp1 = (!(u__jump_result)) in
             (match tmp1 with
               | (Some (u__result)) -> u__result
-              | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.2157")))
+              | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.1876")))
             ))
           | u__other -> (raise u__other)
         );
@@ -306,13 +306,13 @@ let example_Effects_NativeRuntime_cleanup_handles (tmp : unit) : Prims.int =
   ));
   let u__jump_result = (ref None) in
   (try (let u__break = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeRuntime.2157"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeRuntime.1876"))))) in
   (while true do ((u__break ());
   (failwith "Pulse.Lib.Dv.unreachable")) done)) with
-    | (ControlFlow ("Example.Effects.NativeRuntime.2157")) -> (let tmp1 = (!(u__jump_result)) in
+    | (ControlFlow ("Example.Effects.NativeRuntime.1876")) -> (let tmp1 = (!(u__jump_result)) in
       (match tmp1 with
         | (Some (u__result1)) -> u__result1
-        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.2157")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.1876")))
       ))
     | u__other -> (raise u__other)
   );
@@ -381,13 +381,13 @@ let example_Effects_NativeRuntime_stack_payload (s : string) : string =
 let example_Effects_NativeRuntime_return_payload (s : string) : string =
   (let u__jump_result = (ref None) in
   (try (let u__return = (fun u__jump_value -> (((u__jump_result) := (Some (u__jump_value)));
-    (raise (ControlFlow ("Example.Effects.NativeRuntime.616"))))) in
+    (raise (ControlFlow ("Example.Effects.NativeRuntime.463"))))) in
   (u__return (Prims.strcat s s));
   (failwith "Pulse.Lib.Dv.unreachable")) with
-    | (ControlFlow ("Example.Effects.NativeRuntime.616")) -> (let tmp = (!(u__jump_result)) in
+    | (ControlFlow ("Example.Effects.NativeRuntime.463")) -> (let tmp = (!(u__jump_result)) in
       (match tmp with
         | (Some (u__result)) -> u__result
-        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.616")))
+        | None -> (raise (ControlFlow ("Example.Effects.NativeRuntime.463")))
       ))
     | u__other -> (raise u__other)
   ))

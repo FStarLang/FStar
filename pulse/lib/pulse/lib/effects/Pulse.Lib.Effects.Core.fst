@@ -135,7 +135,10 @@ let rec frame #tag #ops #g #a #p #q f c =
       star_assoc (request (ops op) arg) r f;
       reindex_pre (p ** f) ()
         (Perform #_ #(frame_signature f ops) #g #a #(fun x -> q x ** f) #(r ** f) op arg next)
-  | Abort op arg -> Abort #tag #(frame_signature f ops) op arg
+  | Abort op arg ->
+      // Framing preserves the input type, not the entire operation descriptor.
+      // Transport explicitly rather than asking Core to equate the descriptors.
+      Abort #tag #(frame_signature f ops) op (FStar.Pervasives.coerce_eq () arg)
 
 let perform #tag #ops #g op arg =
   let next y =

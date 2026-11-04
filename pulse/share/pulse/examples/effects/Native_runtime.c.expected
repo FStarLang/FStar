@@ -6,23 +6,23 @@
 typedef uint8_t custard_unit;
 #endif
 
-CHERRY_STRING_LIT(cherry_lit, "Example.Effects.NativeStress.2164");
-CHERRY_STRING_LIT(cherry_lit_1, "inner");
-CHERRY_STRING_LIT(cherry_lit_2, "outer");
-CHERRY_STRING_LIT(cherry_lit_3, "Example.Effects.NativeStress.2517");
-CHERRY_STRING_LIT(cherry_lit_4, "Example.Effects.NativeStress.2520");
-CHERRY_STRING_LIT(cherry_lit_5, "Example.Effects.NativeStress.880");
-CHERRY_STRING_LIT(cherry_lit_6, "collision");
-CHERRY_STRING_LIT(cherry_lit_7, "managed");
-CHERRY_STRING_LIT(cherry_lit_8, "managedpayload");
-CHERRY_STRING_LIT(cherry_lit_9, "polymorphic");
-CHERRY_STRING_LIT(cherry_lit_10, "Example.Effects.NativeRuntime.805");
-CHERRY_STRING_LIT(cherry_lit_11, "Example.Effects.NativeRuntime.709");
-CHERRY_STRING_LIT(cherry_lit_12, "Example.Effects.NativeRuntime.778");
-CHERRY_STRING_LIT(cherry_lit_13, "Example.Effects.NativeRuntime.2157");
-CHERRY_STRING_LIT(cherry_lit_14, "Example.Effects.NativeRuntime.616");
-CHERRY_STRING_LIT(cherry_lit_15, "owned");
-CHERRY_STRING_LIT(cherry_lit_16, "ownedowned");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_1ce9509846, "Example.Effects.NativeStress.1835");
+CHERRY_STRING_LIT(cherry_lit_inner_0743c638b3, "inner");
+CHERRY_STRING_LIT(cherry_lit_outer_fa1739fba0, "outer");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_1d16bf4acc, "Example.Effects.NativeStress.2279");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_1d16bf4c78, "Example.Effects.NativeStress.2282");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_0243f7d3d2, "Example.Effects.NativeStress.842");
+CHERRY_STRING_LIT(cherry_lit_collision_d2927b3a7c, "collision");
+CHERRY_STRING_LIT(cherry_lit_managed_14397c9769, "managed");
+CHERRY_STRING_LIT(cherry_lit_managedpayload_247dd524eb, "managedpayload");
+CHERRY_STRING_LIT(cherry_lit_polymorphic_a8d81e48c4, "polymorphic");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_d8048384dd, "Example.Effects.NativeRuntime.577");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_d804838175, "Example.Effects.NativeRuntime.555");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_d80499497b, "Example.Effects.NativeRuntime.766");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_85b22c6d26, "Example.Effects.NativeRuntime.1876");
+CHERRY_STRING_LIT(cherry_lit_Example_Effects_d804789ffd, "Example.Effects.NativeRuntime.463");
+CHERRY_STRING_LIT(cherry_lit_owned_fa7258a5f3, "owned");
+CHERRY_STRING_LIT(cherry_lit_ownedowned_6d7f3fcdd6, "ownedowned");
 
 static inline void cherry_inc_FStar_Pervasives_Native_option__int(FStar_Pervasives_Native_option__int x);
 static inline void cherry_dec_FStar_Pervasives_Native_option__int(FStar_Pervasives_Native_option__int x);
@@ -121,42 +121,42 @@ static inline FStar_Pervasives_Native_option__int cherry_pbuf0_read(FStar_Pervas
 static inline void cherry_pbuf0_write(FStar_Pervasives_Native_option__int *b, size_t i, FStar_Pervasives_Native_option__int v);
 static inline void cherry_pbuf0_drop(FStar_Pervasives_Native_option__int *b, size_t n);
 static inline void cherry_pbuf0_free(FStar_Pervasives_Native_option__int *b);
-static inline void cherry_pbuf0_blit(FStar_Pervasives_Native_option__int *s, size_t si, FStar_Pervasives_Native_option__int *b, size_t di, size_t n);
+static inline void cherry_pbuf0_blit(FStar_Pervasives_Native_option__int *s, FStar_Pervasives_Native_option__int *b, size_t n);
 static inline void cherry_pbuf1_init(cherry_string *b, cherry_string v, size_t n);
 static inline cherry_string *cherry_pbuf1_alloc(cherry_string v, size_t n);
 static inline cherry_string cherry_pbuf1_read(cherry_string *b, size_t i);
 static inline void cherry_pbuf1_write(cherry_string *b, size_t i, cherry_string v);
 static inline void cherry_pbuf1_drop(cherry_string *b, size_t n);
 static inline void cherry_pbuf1_free(cherry_string *b);
-static inline void cherry_pbuf1_blit(cherry_string *s, size_t si, cherry_string *b, size_t di, size_t n);
+static inline void cherry_pbuf1_blit(cherry_string *s, cherry_string *b, size_t n);
 static inline void cherry_pbuf2_init(cherry_int *b, cherry_int v, size_t n);
 static inline cherry_int *cherry_pbuf2_alloc(cherry_int v, size_t n);
 static inline cherry_int cherry_pbuf2_read(cherry_int *b, size_t i);
 static inline void cherry_pbuf2_write(cherry_int *b, size_t i, cherry_int v);
 static inline void cherry_pbuf2_drop(cherry_int *b, size_t n);
 static inline void cherry_pbuf2_free(cherry_int *b);
-static inline void cherry_pbuf2_blit(cherry_int *s, size_t si, cherry_int *b, size_t di, size_t n);
+static inline void cherry_pbuf2_blit(cherry_int *s, cherry_int *b, size_t n);
 static inline void cherry_pbuf3_init(Prims_list__string *b, Prims_list__string v, size_t n);
 static inline Prims_list__string *cherry_pbuf3_alloc(Prims_list__string v, size_t n);
 static inline Prims_list__string cherry_pbuf3_read(Prims_list__string *b, size_t i);
 static inline void cherry_pbuf3_write(Prims_list__string *b, size_t i, Prims_list__string v);
 static inline void cherry_pbuf3_drop(Prims_list__string *b, size_t n);
 static inline void cherry_pbuf3_free(Prims_list__string *b);
-static inline void cherry_pbuf3_blit(Prims_list__string *s, size_t si, Prims_list__string *b, size_t di, size_t n);
+static inline void cherry_pbuf3_blit(Prims_list__string *s, Prims_list__string *b, size_t n);
 static inline void cherry_pbuf4_init(Example_Effects_NativeBoundary_payload *b, Example_Effects_NativeBoundary_payload v, size_t n);
 static inline Example_Effects_NativeBoundary_payload *cherry_pbuf4_alloc(Example_Effects_NativeBoundary_payload v, size_t n);
 static inline Example_Effects_NativeBoundary_payload cherry_pbuf4_read(Example_Effects_NativeBoundary_payload *b, size_t i);
 static inline void cherry_pbuf4_write(Example_Effects_NativeBoundary_payload *b, size_t i, Example_Effects_NativeBoundary_payload v);
 static inline void cherry_pbuf4_drop(Example_Effects_NativeBoundary_payload *b, size_t n);
 static inline void cherry_pbuf4_free(Example_Effects_NativeBoundary_payload *b);
-static inline void cherry_pbuf4_blit(Example_Effects_NativeBoundary_payload *s, size_t si, Example_Effects_NativeBoundary_payload *b, size_t di, size_t n);
+static inline void cherry_pbuf4_blit(Example_Effects_NativeBoundary_payload *s, Example_Effects_NativeBoundary_payload *b, size_t n);
 static inline void cherry_pbuf5_init(FStar_Pervasives_Native_option__string *b, FStar_Pervasives_Native_option__string v, size_t n);
 static inline FStar_Pervasives_Native_option__string *cherry_pbuf5_alloc(FStar_Pervasives_Native_option__string v, size_t n);
 static inline FStar_Pervasives_Native_option__string cherry_pbuf5_read(FStar_Pervasives_Native_option__string *b, size_t i);
 static inline void cherry_pbuf5_write(FStar_Pervasives_Native_option__string *b, size_t i, FStar_Pervasives_Native_option__string v);
 static inline void cherry_pbuf5_drop(FStar_Pervasives_Native_option__string *b, size_t n);
 static inline void cherry_pbuf5_free(FStar_Pervasives_Native_option__string *b);
-static inline void cherry_pbuf5_blit(FStar_Pervasives_Native_option__string *s, size_t si, FStar_Pervasives_Native_option__string *b, size_t di, size_t n);
+static inline void cherry_pbuf5_blit(FStar_Pervasives_Native_option__string *s, FStar_Pervasives_Native_option__string *b, size_t n);
 
 static inline void cherry_inc_FStar_Pervasives_Native_option__int(FStar_Pervasives_Native_option__int x) {
   (void)x;
@@ -373,18 +373,18 @@ static cherry_int Example_Effects_NativeStress_nested__clo1(cherry_int mode, FSt
 static cherry_int Example_Effects_NativeStress_nested__clo2(cherry_int mode, FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note);
 static cherry_int Example_Effects_NativeStress_nested__clo3(cherry_int mode, FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note);
 static cherry_int Example_Effects_NativeStress_nested(cherry_fn note, cherry_int mode);
-static void Example_Effects_NativeStress_loop_exits__clo4(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result);
-static void Example_Effects_NativeStress_loop_exits__clo5(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note);
-static void Example_Effects_NativeStress_loop_exits__clo6(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note);
-static void Example_Effects_NativeStress_loop_exits__clo7(cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note);
-static void Example_Effects_NativeStress_loop_exits__clo8(cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note);
+static void Example_Effects_NativeStress_loop_exits__clo1(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result);
+static void Example_Effects_NativeStress_loop_exits__clo2(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note);
+static void Example_Effects_NativeStress_loop_exits__clo3(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note);
+static void Example_Effects_NativeStress_loop_exits__clo4(cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note);
+static void Example_Effects_NativeStress_loop_exits__clo5(cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note);
 static cherry_int Example_Effects_NativeStress_loop_exits(cherry_fn note);
-static cherry_int Example_Effects_NativeStress_return_handled__clo9(FStar_Pervasives_Native_option__int *_jump_result);
-static cherry_int Example_Effects_NativeStress_return_handled__clo10(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note);
-static cherry_int Example_Effects_NativeStress_return_handled__clo11(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note);
-static cherry_int Example_Effects_NativeStress_return_handled__clo12(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note);
+static cherry_int Example_Effects_NativeStress_return_handled__clo1(FStar_Pervasives_Native_option__int *_jump_result);
+static cherry_int Example_Effects_NativeStress_return_handled__clo2(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note);
+static cherry_int Example_Effects_NativeStress_return_handled__clo3(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note);
+static cherry_int Example_Effects_NativeStress_return_handled__clo4(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note);
 static cherry_int Example_Effects_NativeStress_return_handled(cherry_fn note);
-static cherry_int Example_Effects_NativeStress_unwind__clo13(cherry_int n, cherry_fn note, cherry_string seed);
+static cherry_int Example_Effects_NativeStress_unwind__clo1(cherry_int n, cherry_fn note, cherry_string seed);
 static cherry_int Example_Effects_NativeStress_unwind(cherry_fn note, cherry_int n, cherry_string seed);
 static Example_Effects_NativeBoundary_payload Example_Effects_NativeBoundary_choose__payload(Example_Effects_NativeBoundary_payload value, bool fail);
 static Example_Effects_NativeBoundary_payload Example_Effects_NativeBoundary_deliver(Example_Effects_NativeBoundary_payload value, bool fail);
@@ -392,75 +392,75 @@ static cherry_string Example_Effects_NativeBoundary_choose__string(cherry_string
 static cherry_int Example_Effects_NativeBoundary_choose__int(cherry_int value, bool fail);
 static cherry_int Example_Effects_NativeStress_captured__action(Example_Effects_NativeBoundary_payload value, cherry_int *state);
 static cherry_int Example_Effects_NativeBoundary_invoke(cherry_int *r, Example_Effects_NativeBoundary_payload value, cherry_fn action);
-static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_captured__clo14(cherry_int *state, Example_Effects_NativeBoundary_payload value);
+static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_captured__clo1(cherry_int *state, Example_Effects_NativeBoundary_payload value);
 static bool Example_Effects_NativeStress_captured(Example_Effects_NativeBoundary_payload value);
 static cherry_string Example_Effects_NativeStress_collision(void);
-static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repeated__clo15(Example_Effects_NativeBoundary_payload value);
-static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repeated__clo16(Example_Effects_NativeBoundary_payload value, cherry_fn note);
+static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repeated__clo1(Example_Effects_NativeBoundary_payload value);
+static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repeated__clo2(Example_Effects_NativeBoundary_payload value, cherry_fn note);
 static bool Example_Effects_NativeStress_repeated(cherry_fn note, Example_Effects_NativeBoundary_payload value);
-static cherry_int Example_Effects_NativeStress_test__clo17(cherry_fn note);
-static cherry_int Example_Effects_NativeStress_test__clo18(cherry_fn note);
-static cherry_int Example_Effects_NativeStress_test__clo19(void);
-static cherry_string Example_Effects_NativeStress_test__clo20(void);
+static cherry_int Example_Effects_NativeStress_test__clo1(cherry_fn note);
+static cherry_int Example_Effects_NativeStress_test__clo2(cherry_fn note);
+static cherry_int Example_Effects_NativeStress_test__clo3(void);
+static cherry_string Example_Effects_NativeStress_test__clo4(void);
 static bool Example_Effects_NativeStress_test(cherry_fn note);
-static cherry_int Example_Effects_NativeRuntime_early__clo21(bool b, FStar_Pervasives_Native_option__int *_jump_result);
+static cherry_int Example_Effects_NativeRuntime_early__clo1(bool b, FStar_Pervasives_Native_option__int *_jump_result);
 static cherry_int Example_Effects_NativeRuntime_early(bool b);
-static cherry_int Example_Effects_NativeRuntime_cleanup__clo22(bool b);
+static cherry_int Example_Effects_NativeRuntime_cleanup__clo1(bool b);
 static cherry_int Example_Effects_NativeRuntime_cleanup(bool b);
-static cherry_int Example_Effects_NativeRuntime_cleanup_return__clo23(FStar_Pervasives_Native_option__int *_jump_result);
-static cherry_int Example_Effects_NativeRuntime_cleanup_return__clo24(FStar_Pervasives_Native_option__int *_jump_result);
+static cherry_int Example_Effects_NativeRuntime_cleanup_return__clo1(FStar_Pervasives_Native_option__int *_jump_result);
+static cherry_int Example_Effects_NativeRuntime_cleanup_return__clo2(FStar_Pervasives_Native_option__int *_jump_result);
 static cherry_int Example_Effects_NativeRuntime_cleanup_return(void);
-static cherry_int Example_Effects_NativeRuntime_return_through_try__clo25(FStar_Pervasives_Native_option__int *_jump_result);
-static cherry_int Example_Effects_NativeRuntime_return_through_try__clo26(FStar_Pervasives_Native_option__int *_jump_result);
+static cherry_int Example_Effects_NativeRuntime_return_through_try__clo1(FStar_Pervasives_Native_option__int *_jump_result);
+static cherry_int Example_Effects_NativeRuntime_return_through_try__clo2(FStar_Pervasives_Native_option__int *_jump_result);
 static cherry_int Example_Effects_NativeRuntime_return_through_try(void);
-static cherry_int Example_Effects_NativeRuntime_cleanup_handles__clo27(void);
-static void Example_Effects_NativeRuntime_cleanup_handles__clo28(void);
-static void Example_Effects_NativeRuntime_cleanup_handles__clo29(FStar_Pervasives_Native_option__unit *_jump_result);
-static void Example_Effects_NativeRuntime_cleanup_handles__clo30(void);
-static void Example_Effects_NativeRuntime_cleanup_handles__clo31(FStar_Pervasives_Native_option__unit *_jump_result);
+static cherry_int Example_Effects_NativeRuntime_cleanup_handles__clo1(void);
+static void Example_Effects_NativeRuntime_cleanup_handles__clo2(void);
+static void Example_Effects_NativeRuntime_cleanup_handles__clo3(FStar_Pervasives_Native_option__unit *_jump_result);
+static void Example_Effects_NativeRuntime_cleanup_handles__clo4(void);
+static void Example_Effects_NativeRuntime_cleanup_handles__clo5(FStar_Pervasives_Native_option__unit *_jump_result);
 static cherry_int Example_Effects_NativeRuntime_cleanup_handles(void);
-static cherry_int Example_Effects_NativeRuntime_reraises__clo32(void);
+static cherry_int Example_Effects_NativeRuntime_reraises__clo1(void);
 static cherry_int Example_Effects_NativeRuntime_reraises(void);
 static cherry_int Example_Effects_NativeRuntime_recurse(cherry_int n);
 static cherry_int Example_Effects_Native_invoke(cherry_fn action, bool eta);
 static cherry_int Example_Effects_Native_locally_defined__local(bool b);
 static cherry_int Example_Effects_Native_locally_defined(bool b);
 static void Example_Effects_Native_loop_exit(cherry_int *r);
-static cherry_int Example_Effects_Native_reraised__clo33(cherry_int *r);
-static cherry_int Example_Effects_Native_reraised__clo34(cherry_int *r);
+static cherry_int Example_Effects_Native_reraised__clo1(cherry_int *r);
+static cherry_int Example_Effects_Native_reraised__clo2(cherry_int *r);
 static cherry_int Example_Effects_Native_reraised(cherry_int *r);
 static cherry_string Example_Effects_NativeRuntime_stack_payload(cherry_string s);
-static cherry_string Example_Effects_NativeRuntime_return_payload__clo35(FStar_Pervasives_Native_option__string *_jump_result, cherry_string s);
+static cherry_string Example_Effects_NativeRuntime_return_payload__clo1(FStar_Pervasives_Native_option__string *_jump_result, cherry_string s);
 static cherry_string Example_Effects_NativeRuntime_return_payload(cherry_string s);
 static Pulse_Lib_Effects_Rules_outcome__bool_bool Example_Effects_NativeExtraction_raw_outcome(bool b);
-static bool Example_Effects_NativeExtraction_handled_bool__clo36(bool b);
+static bool Example_Effects_NativeExtraction_handled_bool__clo1(bool b);
 static bool Example_Effects_NativeExtraction_handled_bool(bool b);
-static cherry_int Example_Effects_NativeRuntime_test__clo37(void);
-static cherry_int Example_Effects_NativeRuntime_test__clo38(void);
-static cherry_int Example_Effects_NativeRuntime_test__clo39(void);
-static cherry_int Example_Effects_NativeRuntime_test__clo40(void);
-static cherry_int Example_Effects_NativeRuntime_test__clo41(void);
-static cherry_int Example_Effects_NativeRuntime_test__clo42(void);
-static void Example_Effects_NativeRuntime_test__clo43(cherry_int *state);
-static cherry_string Example_Effects_NativeRuntime_test__clo44(void);
+static cherry_int Example_Effects_NativeRuntime_test__clo1(void);
+static cherry_int Example_Effects_NativeRuntime_test__clo2(void);
+static cherry_int Example_Effects_NativeRuntime_test__clo3(void);
+static cherry_int Example_Effects_NativeRuntime_test__clo4(void);
+static cherry_int Example_Effects_NativeRuntime_test__clo5(void);
+static cherry_int Example_Effects_NativeRuntime_test__clo6(void);
+static void Example_Effects_NativeRuntime_test__clo7(cherry_int *state);
+static cherry_string Example_Effects_NativeRuntime_test__clo8(void);
 
-static inline custard_unit cherry_apply_0_1(cherry_fn f, uint32_t a0);
-static inline cherry_int cherry_apply_1_1(cherry_fn f);
-struct cherry_envl_0 {
+static inline custard_unit cherry_apply_de0dbeb00b_1(cherry_fn f, uint32_t a0);
+static inline cherry_int cherry_apply_511d5571f6_1(cherry_fn f);
+struct cherry_envl_4fe77e1807 {
   cherry_closure clo;
   Example_Effects_NativeBoundary_payload e0;
   cherry_int *e1;
 };
-static inline void cherry_envl_0_dec(cherry_obj *o);
-static inline void cherry_envl_0_mark(cherry_obj *o, int m);
-static inline cherry_fn cherry_envl_0_new(cherry_code cherry_entry, uint32_t cherry_arity, Example_Effects_NativeBoundary_payload e0, cherry_int *e1);
+static inline void cherry_envl_4fe77e1807_dec(cherry_obj *o);
+static inline void cherry_envl_4fe77e1807_mark(cherry_obj *o, int m);
+static inline cherry_fn cherry_envl_4fe77e1807_new(cherry_code cherry_entry, uint32_t cherry_arity, Example_Effects_NativeBoundary_payload e0, cherry_int *e1);
 static inline cherry_int cherry_entry_Example_Effects_NativeStress_captured__action_2(cherry_fn self);
-#define cherry_pap_Example_Effects_NativeStress_captured__action_2(...) cherry_envl_0_new((cherry_code)cherry_entry_Example_Effects_NativeStress_captured__action_2, CHERRY_ARITY_UNITS, __VA_ARGS__)
-static inline cherry_int cherry_apply_2_1(cherry_fn f, bool a0);
+#define cherry_pap_Example_Effects_NativeStress_captured__action_2(...) cherry_envl_4fe77e1807_new((cherry_code)cherry_entry_Example_Effects_NativeStress_captured__action_2, CHERRY_ARITY_UNITS, __VA_ARGS__)
+static inline cherry_int cherry_apply_a11f8f4322_1(cherry_fn f, bool a0);
 static inline cherry_int cherry_entry_Example_Effects_Native_locally_defined_0(cherry_fn self, bool p0);
 CHERRY_STATIC_CLOSURE(cherry_clo_Example_Effects_Native_locally_defined, cherry_entry_Example_Effects_Native_locally_defined_0, 1);
 
-static inline custard_unit cherry_apply_0_1(cherry_fn f, uint32_t a0) {
+static inline custard_unit cherry_apply_de0dbeb00b_1(cherry_fn f, uint32_t a0) {
   switch (CHERRY_CLOSURE(f)->arity) {
     case CHERRY_ARITY_UNITS:
     case 0: {
@@ -468,7 +468,7 @@ static inline custard_unit cherry_apply_0_1(cherry_fn f, uint32_t a0) {
       if (CHERRY_EXN_PENDING()) {
         { custard_unit cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
       }
-      custard_unit r = cherry_apply_0_1(g, a0);
+      custard_unit r = cherry_apply_de0dbeb00b_1(g, a0);
       cherry_dec_fn(g);
       return r;
     }
@@ -477,7 +477,7 @@ static inline custard_unit cherry_apply_0_1(cherry_fn f, uint32_t a0) {
   }
 }
 
-static inline cherry_int cherry_apply_1_1(cherry_fn f) {
+static inline cherry_int cherry_apply_511d5571f6_1(cherry_fn f) {
   switch (CHERRY_CLOSURE(f)->arity) {
     case 0: CHERRY_MUSTTAIL return ((cherry_int (*)(cherry_fn))CHERRY_CLOSURE(f)->fn)(f);
     case CHERRY_ARITY_UNITS: CHERRY_MUSTTAIL return ((cherry_int (*)(cherry_fn))CHERRY_CLOSURE(f)->fn)(f);
@@ -485,21 +485,21 @@ static inline cherry_int cherry_apply_1_1(cherry_fn f) {
   }
 }
 
-static inline void cherry_envl_0_dec(cherry_obj *o) {
-  struct cherry_envl_0 *env = (struct cherry_envl_0 *)o;
+static inline void cherry_envl_4fe77e1807_dec(cherry_obj *o) {
+  struct cherry_envl_4fe77e1807 *env = (struct cherry_envl_4fe77e1807 *)o;
   cherry_dec_Example_Effects_NativeBoundary_payload(env->e0);
 }
 
-static inline void cherry_envl_0_mark(cherry_obj *o, int m) {
-  struct cherry_envl_0 *env = (struct cherry_envl_0 *)o;
+static inline void cherry_envl_4fe77e1807_mark(cherry_obj *o, int m) {
+  struct cherry_envl_4fe77e1807 *env = (struct cherry_envl_4fe77e1807 *)o;
   cherry_mark_Example_Effects_NativeBoundary_payload(env->e0, m);
 }
 
-static inline cherry_fn cherry_envl_0_new(cherry_code cherry_entry, uint32_t cherry_arity, Example_Effects_NativeBoundary_payload e0, cherry_int *e1) {
-  struct cherry_envl_0 *env = (struct cherry_envl_0 *)cherry_alloc(sizeof(struct cherry_envl_0), CHERRY_TAG_CLOSURE);
+static inline cherry_fn cherry_envl_4fe77e1807_new(cherry_code cherry_entry, uint32_t cherry_arity, Example_Effects_NativeBoundary_payload e0, cherry_int *e1) {
+  struct cherry_envl_4fe77e1807 *env = (struct cherry_envl_4fe77e1807 *)cherry_alloc(sizeof(struct cherry_envl_4fe77e1807), CHERRY_TAG_CLOSURE);
   env->clo.fn = cherry_entry;
-  env->clo.drop = cherry_envl_0_dec;
-  env->clo.mark = cherry_envl_0_mark;
+  env->clo.drop = cherry_envl_4fe77e1807_dec;
+  env->clo.mark = cherry_envl_4fe77e1807_mark;
   env->clo.arity = cherry_arity;
   env->e0 = e0;
   env->e1 = e1;
@@ -507,13 +507,13 @@ static inline cherry_fn cherry_envl_0_new(cherry_code cherry_entry, uint32_t che
 }
 
 static inline cherry_int cherry_entry_Example_Effects_NativeStress_captured__action_2(cherry_fn self) {
-  struct cherry_envl_0 *env = (struct cherry_envl_0 *)self;
+  struct cherry_envl_4fe77e1807 *env = (struct cherry_envl_4fe77e1807 *)self;
   (void)env;
   cherry_inc_Example_Effects_NativeBoundary_payload(env->e0);
   CHERRY_MUSTTAIL return Example_Effects_NativeStress_captured__action(env->e0, env->e1);
 }
 
-static inline cherry_int cherry_apply_2_1(cherry_fn f, bool a0) {
+static inline cherry_int cherry_apply_a11f8f4322_1(cherry_fn f, bool a0) {
   switch (CHERRY_CLOSURE(f)->arity) {
     case CHERRY_ARITY_UNITS:
     case 0: {
@@ -521,7 +521,7 @@ static inline cherry_int cherry_apply_2_1(cherry_fn f, bool a0) {
       if (CHERRY_EXN_PENDING()) {
         return CHERRY_INT_SMALL(0);
       }
-      cherry_int r = cherry_apply_2_1(g, a0);
+      cherry_int r = cherry_apply_a11f8f4322_1(g, a0);
       cherry_dec_fn(g);
       return r;
     }
@@ -1021,10 +1021,10 @@ static inline void cherry_pbuf0_free(FStar_Pervasives_Native_option__int *b) {
   cherry_pbuf_release((void *)b);
 }
 
-static inline void cherry_pbuf0_blit(FStar_Pervasives_Native_option__int *s, size_t si, FStar_Pervasives_Native_option__int *b, size_t di, size_t n) {
-  for (size_t j = 0; j < n; j++) cherry_inc_FStar_Pervasives_Native_option__int(s[si + j]);
-  for (size_t j = 0; j < n; j++) cherry_dec_FStar_Pervasives_Native_option__int(b[di + j]);
-  memmove(&b[di], &s[si], n * sizeof(b[0]));
+static inline void cherry_pbuf0_blit(FStar_Pervasives_Native_option__int *s, FStar_Pervasives_Native_option__int *b, size_t n) {
+  for (size_t j = 0; j < n; j++) cherry_inc_FStar_Pervasives_Native_option__int(s[j]);
+  for (size_t j = 0; j < n; j++) cherry_dec_FStar_Pervasives_Native_option__int(b[j]);
+  memmove(b, s, n * sizeof(b[0]));
 }
 
 static inline void cherry_pbuf1_init(cherry_string *b, cherry_string v, size_t n) {
@@ -1063,10 +1063,10 @@ static inline void cherry_pbuf1_free(cherry_string *b) {
   cherry_pbuf_release((void *)b);
 }
 
-static inline void cherry_pbuf1_blit(cherry_string *s, size_t si, cherry_string *b, size_t di, size_t n) {
-  for (size_t j = 0; j < n; j++) cherry_inc(s[si + j]);
-  for (size_t j = 0; j < n; j++) cherry_dec(b[di + j]);
-  memmove(&b[di], &s[si], n * sizeof(b[0]));
+static inline void cherry_pbuf1_blit(cherry_string *s, cherry_string *b, size_t n) {
+  for (size_t j = 0; j < n; j++) cherry_inc(s[j]);
+  for (size_t j = 0; j < n; j++) cherry_dec(b[j]);
+  memmove(b, s, n * sizeof(b[0]));
 }
 
 static inline void cherry_pbuf2_init(cherry_int *b, cherry_int v, size_t n) {
@@ -1105,10 +1105,10 @@ static inline void cherry_pbuf2_free(cherry_int *b) {
   cherry_pbuf_release((void *)b);
 }
 
-static inline void cherry_pbuf2_blit(cherry_int *s, size_t si, cherry_int *b, size_t di, size_t n) {
-  for (size_t j = 0; j < n; j++) cherry_inc(s[si + j]);
-  for (size_t j = 0; j < n; j++) cherry_dec(b[di + j]);
-  memmove(&b[di], &s[si], n * sizeof(b[0]));
+static inline void cherry_pbuf2_blit(cherry_int *s, cherry_int *b, size_t n) {
+  for (size_t j = 0; j < n; j++) cherry_inc(s[j]);
+  for (size_t j = 0; j < n; j++) cherry_dec(b[j]);
+  memmove(b, s, n * sizeof(b[0]));
 }
 
 static inline void cherry_pbuf3_init(Prims_list__string *b, Prims_list__string v, size_t n) {
@@ -1147,10 +1147,10 @@ static inline void cherry_pbuf3_free(Prims_list__string *b) {
   cherry_pbuf_release((void *)b);
 }
 
-static inline void cherry_pbuf3_blit(Prims_list__string *s, size_t si, Prims_list__string *b, size_t di, size_t n) {
-  for (size_t j = 0; j < n; j++) cherry_inc(s[si + j]);
-  for (size_t j = 0; j < n; j++) cherry_dec_Prims_list__string(b[di + j]);
-  memmove(&b[di], &s[si], n * sizeof(b[0]));
+static inline void cherry_pbuf3_blit(Prims_list__string *s, Prims_list__string *b, size_t n) {
+  for (size_t j = 0; j < n; j++) cherry_inc(s[j]);
+  for (size_t j = 0; j < n; j++) cherry_dec_Prims_list__string(b[j]);
+  memmove(b, s, n * sizeof(b[0]));
 }
 
 static inline void cherry_pbuf4_init(Example_Effects_NativeBoundary_payload *b, Example_Effects_NativeBoundary_payload v, size_t n) {
@@ -1189,10 +1189,10 @@ static inline void cherry_pbuf4_free(Example_Effects_NativeBoundary_payload *b) 
   cherry_pbuf_release((void *)b);
 }
 
-static inline void cherry_pbuf4_blit(Example_Effects_NativeBoundary_payload *s, size_t si, Example_Effects_NativeBoundary_payload *b, size_t di, size_t n) {
-  for (size_t j = 0; j < n; j++) cherry_inc_Example_Effects_NativeBoundary_payload(s[si + j]);
-  for (size_t j = 0; j < n; j++) cherry_dec_Example_Effects_NativeBoundary_payload(b[di + j]);
-  memmove(&b[di], &s[si], n * sizeof(b[0]));
+static inline void cherry_pbuf4_blit(Example_Effects_NativeBoundary_payload *s, Example_Effects_NativeBoundary_payload *b, size_t n) {
+  for (size_t j = 0; j < n; j++) cherry_inc_Example_Effects_NativeBoundary_payload(s[j]);
+  for (size_t j = 0; j < n; j++) cherry_dec_Example_Effects_NativeBoundary_payload(b[j]);
+  memmove(b, s, n * sizeof(b[0]));
 }
 
 static inline void cherry_pbuf5_init(FStar_Pervasives_Native_option__string *b, FStar_Pervasives_Native_option__string v, size_t n) {
@@ -1231,10 +1231,10 @@ static inline void cherry_pbuf5_free(FStar_Pervasives_Native_option__string *b) 
   cherry_pbuf_release((void *)b);
 }
 
-static inline void cherry_pbuf5_blit(FStar_Pervasives_Native_option__string *s, size_t si, FStar_Pervasives_Native_option__string *b, size_t di, size_t n) {
-  for (size_t j = 0; j < n; j++) cherry_inc_FStar_Pervasives_Native_option__string(s[si + j]);
-  for (size_t j = 0; j < n; j++) cherry_dec_FStar_Pervasives_Native_option__string(b[di + j]);
-  memmove(&b[di], &s[si], n * sizeof(b[0]));
+static inline void cherry_pbuf5_blit(FStar_Pervasives_Native_option__string *s, FStar_Pervasives_Native_option__string *b, size_t n) {
+  for (size_t j = 0; j < n; j++) cherry_inc_FStar_Pervasives_Native_option__string(s[j]);
+  for (size_t j = 0; j < n; j++) cherry_dec_FStar_Pervasives_Native_option__string(b[j]);
+  memmove(b, s, n * sizeof(b[0]));
 }
 
 static bool Prims_list__int__eq(Prims_list__int a, Prims_list__int b);
@@ -1266,7 +1266,7 @@ static cherry_int Example_Effects_NativeStress_nested__clo1(cherry_int mode, FSt
       FStar_Pervasives_Native_option__int cherry_tmp3 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
       cherry_pbuf0_write(_jump_result, 0, cherry_tmp3);
       cherry_any cherry_tmp4;
-      cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit));
+      cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_1ce9509846));
       cherry_raise(cherry_tmp5);
       return CHERRY_INT_SMALL(0);
       cherry_any_dec(cherry_tmp4);
@@ -1283,15 +1283,15 @@ static cherry_int Example_Effects_NativeStress_nested__clo1(cherry_int mode, FSt
 }
 
 static cherry_int Example_Effects_NativeStress_nested__clo2(cherry_int mode, FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note) {
-  cherry_string *inner = cherry_pbuf1_alloc(((cherry_string)&cherry_lit_1), 1);
+  cherry_string *inner = cherry_pbuf1_alloc(((cherry_string)&cherry_lit_inner_0743c638b3), 1);
   cherry_int _result;
-  cherry_int cherry_tmp8 = Example_Effects_NativeStress_nested__clo1(mode, _jump_result);
+  cherry_int cherry_tmp1 = Example_Effects_NativeStress_nested__clo1(mode, _jump_result);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp9 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp9;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp9);
-    (void)(cherry_apply_0_1(note, 2));
+    cherry_exn_dec(cherry_tmp2);
+    (void)(cherry_apply_de0dbeb00b_1(note, 2));
     if (CHERRY_EXN_PENDING()) {
       cherry_exn_dec(_cexn);
       return CHERRY_INT_SMALL(0);
@@ -1301,9 +1301,9 @@ static cherry_int Example_Effects_NativeStress_nested__clo2(cherry_int mode, FSt
     return CHERRY_INT_SMALL(0);
   }
   else {
-    _result = cherry_tmp8;
+    _result = cherry_tmp1;
   }
-  (void)(cherry_apply_0_1(note, 2));
+  (void)(cherry_apply_de0dbeb00b_1(note, 2));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(_result);
     return CHERRY_INT_SMALL(0);
@@ -1313,15 +1313,15 @@ static cherry_int Example_Effects_NativeStress_nested__clo2(cherry_int mode, FSt
 }
 
 static cherry_int Example_Effects_NativeStress_nested__clo3(cherry_int mode, FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note) {
-  cherry_string *outer = cherry_pbuf1_alloc(((cherry_string)&cherry_lit_2), 1);
+  cherry_string *outer = cherry_pbuf1_alloc(((cherry_string)&cherry_lit_outer_fa1739fba0), 1);
   cherry_int _result;
-  cherry_int cherry_tmp12 = Example_Effects_NativeStress_nested__clo2(mode, _jump_result, note);
+  cherry_int cherry_tmp1 = Example_Effects_NativeStress_nested__clo2(mode, _jump_result, note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp13 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp13;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp13);
-    (void)(cherry_apply_0_1(note, 1));
+    cherry_exn_dec(cherry_tmp2);
+    (void)(cherry_apply_de0dbeb00b_1(note, 1));
     if (CHERRY_EXN_PENDING()) {
       cherry_exn_dec(_cexn);
       return CHERRY_INT_SMALL(0);
@@ -1331,9 +1331,9 @@ static cherry_int Example_Effects_NativeStress_nested__clo3(cherry_int mode, FSt
     return CHERRY_INT_SMALL(0);
   }
   else {
-    _result = cherry_tmp12;
+    _result = cherry_tmp1;
   }
-  (void)(cherry_apply_0_1(note, 1));
+  (void)(cherry_apply_de0dbeb00b_1(note, 1));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(_result);
     return CHERRY_INT_SMALL(0);
@@ -1343,89 +1343,89 @@ static cherry_int Example_Effects_NativeStress_nested__clo3(cherry_int mode, FSt
 }
 
 static cherry_int Example_Effects_NativeStress_nested(cherry_fn note, cherry_int mode) {
-  FStar_Pervasives_Native_option__int cherry_tmp16 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
+  FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
   FStar_Pervasives_Native_option__int _jump_result;
-  cherry_pbuf0_init(&_jump_result, cherry_tmp16, 1);
-  cherry_int cherry_tmp17;
-  cherry_int cherry_tmp18;
-  cherry_int cherry_tmp20 = Example_Effects_NativeStress_nested__clo3(mode, &_jump_result, note);
+  cherry_pbuf0_init(&_jump_result, cherry_tmp1, 1);
+  cherry_int cherry_tmp2;
+  cherry_int cherry_tmp3;
+  cherry_int cherry_tmp5 = Example_Effects_NativeStress_nested__clo3(mode, &_jump_result, note);
   cherry_dec(mode);
-  cherry_tmp18 = cherry_tmp20;
+  cherry_tmp3 = cherry_tmp5;
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp19 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp19, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp19)->f0, ((cherry_string)&cherry_lit))) {
-      cherry_exn_dec(cherry_tmp19);
+    cherry_exn cherry_tmp4 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp4)->f0, ((cherry_string)&cherry_lit_Example_Effects_1ce9509846))) {
+      cherry_exn_dec(cherry_tmp4);
       FStar_Pervasives_Native_option__int tmp = cherry_pbuf0_read(&_jump_result, 0);
       if (tmp.tag == FSTAR_PERVASIVES_NATIVE_SOME__INT) {
         cherry_int _result = tmp.val.Some;
-        cherry_tmp17 = _result;
+        cherry_tmp2 = _result;
       }
       else {
         CHERRY_ASSUME(tmp.tag == FSTAR_PERVASIVES_NATIVE_NONE__INT, "incomplete match in Example.Effects.NativeStress.nested");
-        cherry_exn cherry_tmp21 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit));
-        cherry_raise(cherry_tmp21);
+        cherry_exn cherry_tmp6 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_1ce9509846));
+        cherry_raise(cherry_tmp6);
         cherry_pbuf0_drop(&_jump_result, 1);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other = cherry_tmp19;
+      cherry_exn _other = cherry_tmp4;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp19);
+      cherry_exn_dec(cherry_tmp4);
       cherry_raise(_other);
       cherry_pbuf0_drop(&_jump_result, 1);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    cherry_tmp17 = cherry_tmp18;
+    cherry_tmp2 = cherry_tmp3;
   }
   cherry_pbuf0_drop(&_jump_result, 1);
-  return cherry_tmp17;
+  return cherry_tmp2;
 }
 
-static void Example_Effects_NativeStress_loop_exits__clo4(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result) {
-  bool cherry_tmp22 = (cherry_int_eq(k, CHERRY_INT_SMALL(0)));
-  if (cherry_tmp22) {
+static void Example_Effects_NativeStress_loop_exits__clo1(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result) {
+  bool cherry_tmp1 = (cherry_int_eq(k, CHERRY_INT_SMALL(0)));
+  if (cherry_tmp1) {
     cherry_pbuf2_write(i, 0, CHERRY_INT_SMALL(1));
     _jump_result1[0] = FSTAR_PERVASIVES_NATIVE_SOME__UNIT;
-    cherry_any cherry_tmp23;
-    cherry_exn cherry_tmp24 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_3));
-    cherry_raise(cherry_tmp24);
+    cherry_any cherry_tmp2;
+    cherry_exn cherry_tmp3 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_1d16bf4acc));
+    cherry_raise(cherry_tmp3);
     return;
-    cherry_any_dec(cherry_tmp23);
-    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeStress.loop_exits__clo4");
+    cherry_any_dec(cherry_tmp2);
+    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeStress.loop_exits__clo1");
   }
   else {
     _jump_result[0] = FSTAR_PERVASIVES_NATIVE_SOME__UNIT;
-    cherry_any cherry_tmp25;
-    cherry_exn cherry_tmp26 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_4));
-    cherry_raise(cherry_tmp26);
+    cherry_any cherry_tmp4;
+    cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_1d16bf4c78));
+    cherry_raise(cherry_tmp5);
     return;
-    cherry_any_dec(cherry_tmp25);
-    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeStress.loop_exits__clo4");
+    cherry_any_dec(cherry_tmp4);
+    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeStress.loop_exits__clo1");
   }
 }
 
-static void Example_Effects_NativeStress_loop_exits__clo5(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note) {
+static void Example_Effects_NativeStress_loop_exits__clo2(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note) {
   cherry_int *box;
   cherry_inc(k);
   box = cherry_pbuf2_alloc(k, 1);
-  Example_Effects_NativeStress_loop_exits__clo4(k, i, _jump_result1, _jump_result);
+  Example_Effects_NativeStress_loop_exits__clo1(k, i, _jump_result1, _jump_result);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp28 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp28;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp28);
-    uint32_t cherry_tmp29;
-    bool cherry_tmp30 = (cherry_int_eq(k, CHERRY_INT_SMALL(0)));
-    if (cherry_tmp30) {
-      cherry_tmp29 = 3;
+    cherry_exn_dec(cherry_tmp2);
+    uint32_t cherry_tmp3;
+    bool cherry_tmp4 = (cherry_int_eq(k, CHERRY_INT_SMALL(0)));
+    if (cherry_tmp4) {
+      cherry_tmp3 = 3;
     }
     else {
-      cherry_tmp29 = 4;
+      cherry_tmp3 = 4;
     }
-    (void)(cherry_apply_0_1(note, cherry_tmp29));
+    (void)(cherry_apply_de0dbeb00b_1(note, cherry_tmp3));
     if (CHERRY_EXN_PENDING()) {
       cherry_exn_dec(_cexn);
       cherry_dec(k);
@@ -1436,32 +1436,32 @@ static void Example_Effects_NativeStress_loop_exits__clo5(cherry_int k, cherry_i
     cherry_dec(k);
     return;
   }
-  uint32_t cherry_tmp32;
-  bool cherry_tmp33;
-  bool cherry_tmp34 = (cherry_int_eq(k, CHERRY_INT_SMALL(0)));
+  uint32_t cherry_tmp6;
+  bool cherry_tmp7;
+  bool cherry_tmp8 = (cherry_int_eq(k, CHERRY_INT_SMALL(0)));
   cherry_dec(k);
-  cherry_tmp33 = cherry_tmp34;
-  if (cherry_tmp33) {
-    cherry_tmp32 = 3;
+  cherry_tmp7 = cherry_tmp8;
+  if (cherry_tmp7) {
+    cherry_tmp6 = 3;
   }
   else {
-    cherry_tmp32 = 4;
+    cherry_tmp6 = 4;
   }
-  (void)(cherry_apply_0_1(note, cherry_tmp32));
+  (void)(cherry_apply_de0dbeb00b_1(note, cherry_tmp6));
   if (CHERRY_EXN_PENDING()) {
     return;
   }
   cherry_pbuf2_free(box);
 }
 
-static void Example_Effects_NativeStress_loop_exits__clo6(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note) {
-  Example_Effects_NativeStress_loop_exits__clo5(k, i, _jump_result1, _jump_result, note);
+static void Example_Effects_NativeStress_loop_exits__clo3(cherry_int k, cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note) {
+  Example_Effects_NativeStress_loop_exits__clo2(k, i, _jump_result1, _jump_result, note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp37 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp37;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp37);
-    (void)(cherry_apply_0_1(note, 5));
+    cherry_exn_dec(cherry_tmp2);
+    (void)(cherry_apply_de0dbeb00b_1(note, 5));
     if (CHERRY_EXN_PENDING()) {
       cherry_exn_dec(_cexn);
       return;
@@ -1469,51 +1469,51 @@ static void Example_Effects_NativeStress_loop_exits__clo6(cherry_int k, cherry_i
     cherry_raise(_cexn);
     return;
   }
-  (void)(cherry_apply_0_1(note, 5));
+  (void)(cherry_apply_de0dbeb00b_1(note, 5));
   if (CHERRY_EXN_PENDING()) {
     return;
   }
 }
 
-static void Example_Effects_NativeStress_loop_exits__clo7(cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note) {
+static void Example_Effects_NativeStress_loop_exits__clo4(cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result1, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note) {
   cherry_int k = cherry_pbuf2_read(i, 0);
-  Example_Effects_NativeStress_loop_exits__clo6(k, i, _jump_result1, _jump_result, note);
+  Example_Effects_NativeStress_loop_exits__clo3(k, i, _jump_result1, _jump_result, note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp41 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp41, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_exn_dec(cherry_tmp41);
-      (void)(cherry_apply_0_1(note, 99));
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp2, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_exn_dec(cherry_tmp2);
+      (void)(cherry_apply_de0dbeb00b_1(note, 99));
     }
     else {
-      cherry_exn _other = cherry_tmp41;
+      cherry_exn _other = cherry_tmp2;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp41);
+      cherry_exn_dec(cherry_tmp2);
       cherry_raise(_other);
       return;
     }
   }
 }
 
-static void Example_Effects_NativeStress_loop_exits__clo8(cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note) {
+static void Example_Effects_NativeStress_loop_exits__clo5(cherry_int *i, FStar_Pervasives_Native_option__unit *_jump_result, cherry_fn note) {
   while (true) {
     FStar_Pervasives_Native_option__unit _jump_result1 = FSTAR_PERVASIVES_NATIVE_NONE__UNIT;
-    Example_Effects_NativeStress_loop_exits__clo7(i, &_jump_result1, _jump_result, note);
+    Example_Effects_NativeStress_loop_exits__clo4(i, &_jump_result1, _jump_result, note);
     if (CHERRY_EXN_PENDING()) {
-      cherry_exn cherry_tmp43 = cherry_exn_take();
-      if (cherry_exn_is(cherry_tmp43, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp43)->f0, ((cherry_string)&cherry_lit_3))) {
-        cherry_exn_dec(cherry_tmp43);
+      cherry_exn cherry_tmp2 = cherry_exn_take();
+      if (cherry_exn_is(cherry_tmp2, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp2)->f0, ((cherry_string)&cherry_lit_Example_Effects_1d16bf4acc))) {
+        cherry_exn_dec(cherry_tmp2);
         if (_jump_result1 == FSTAR_PERVASIVES_NATIVE_SOME__UNIT) { }
         else {
-          CHERRY_ASSUME(_jump_result1 == FSTAR_PERVASIVES_NATIVE_NONE__UNIT, "incomplete match in Example.Effects.NativeStress.loop_exits__clo8");
-          cherry_exn cherry_tmp44 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_3));
-          cherry_raise(cherry_tmp44);
+          CHERRY_ASSUME(_jump_result1 == FSTAR_PERVASIVES_NATIVE_NONE__UNIT, "incomplete match in Example.Effects.NativeStress.loop_exits__clo5");
+          cherry_exn cherry_tmp3 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_1d16bf4acc));
+          cherry_raise(cherry_tmp3);
           return;
         }
       }
       else {
-        cherry_exn _other = cherry_tmp43;
+        cherry_exn _other = cherry_tmp2;
         cherry_inc(_other);
-        cherry_exn_dec(cherry_tmp43);
+        cherry_exn_dec(cherry_tmp2);
         cherry_raise(_other);
         return;
       }
@@ -1524,56 +1524,56 @@ static void Example_Effects_NativeStress_loop_exits__clo8(cherry_int *i, FStar_P
 static cherry_int Example_Effects_NativeStress_loop_exits(cherry_fn note) {
   cherry_int i;
   cherry_pbuf2_init(&i, CHERRY_INT_SMALL(0), 1);
-  cherry_int cherry_tmp45;
+  cherry_int cherry_tmp1;
   FStar_Pervasives_Native_option__unit _jump_result = FSTAR_PERVASIVES_NATIVE_NONE__UNIT;
-  Example_Effects_NativeStress_loop_exits__clo8(&i, &_jump_result, note);
+  Example_Effects_NativeStress_loop_exits__clo5(&i, &_jump_result, note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp47 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp47, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp47)->f0, ((cherry_string)&cherry_lit_4))) {
-      cherry_exn_dec(cherry_tmp47);
+    cherry_exn cherry_tmp3 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp3, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp3)->f0, ((cherry_string)&cherry_lit_Example_Effects_1d16bf4c78))) {
+      cherry_exn_dec(cherry_tmp3);
       if (_jump_result == FSTAR_PERVASIVES_NATIVE_SOME__UNIT) { }
       else {
         CHERRY_ASSUME(_jump_result == FSTAR_PERVASIVES_NATIVE_NONE__UNIT, "incomplete match in Example.Effects.NativeStress.loop_exits");
-        cherry_exn cherry_tmp48 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_4));
-        cherry_raise(cherry_tmp48);
+        cherry_exn cherry_tmp4 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_1d16bf4c78));
+        cherry_raise(cherry_tmp4);
         cherry_pbuf2_drop(&i, 1);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other = cherry_tmp47;
+      cherry_exn _other = cherry_tmp3;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp47);
+      cherry_exn_dec(cherry_tmp3);
       cherry_raise(_other);
       cherry_pbuf2_drop(&i, 1);
       return CHERRY_INT_SMALL(0);
     }
   }
-  cherry_tmp45 = cherry_pbuf2_read(&i, 0);
+  cherry_tmp1 = cherry_pbuf2_read(&i, 0);
   cherry_pbuf2_drop(&i, 1);
-  return cherry_tmp45;
+  return cherry_tmp1;
 }
 
-static cherry_int Example_Effects_NativeStress_return_handled__clo9(FStar_Pervasives_Native_option__int *_jump_result) {
-  FStar_Pervasives_Native_option__int cherry_tmp49 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
-  cherry_pbuf0_write(_jump_result, 0, cherry_tmp49);
-  cherry_any cherry_tmp50;
-  cherry_exn cherry_tmp51 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_5));
-  cherry_raise(cherry_tmp51);
+static cherry_int Example_Effects_NativeStress_return_handled__clo1(FStar_Pervasives_Native_option__int *_jump_result) {
+  FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
+  cherry_pbuf0_write(_jump_result, 0, cherry_tmp1);
+  cherry_any cherry_tmp2;
+  cherry_exn cherry_tmp3 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_0243f7d3d2));
+  cherry_raise(cherry_tmp3);
   return CHERRY_INT_SMALL(0);
-  cherry_any_dec(cherry_tmp50);
-  CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeStress.return_handled__clo9");
+  cherry_any_dec(cherry_tmp2);
+  CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeStress.return_handled__clo1");
 }
 
-static cherry_int Example_Effects_NativeStress_return_handled__clo10(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note) {
+static cherry_int Example_Effects_NativeStress_return_handled__clo2(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note) {
   cherry_int _result;
-  cherry_int cherry_tmp52 = Example_Effects_NativeStress_return_handled__clo9(_jump_result);
+  cherry_int cherry_tmp1 = Example_Effects_NativeStress_return_handled__clo1(_jump_result);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp53 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp53;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp53);
-    (void)(cherry_apply_0_1(note, 8));
+    cherry_exn_dec(cherry_tmp2);
+    (void)(cherry_apply_de0dbeb00b_1(note, 8));
     if (CHERRY_EXN_PENDING()) {
       cherry_exn_dec(_cexn);
       return CHERRY_INT_SMALL(0);
@@ -1582,9 +1582,9 @@ static cherry_int Example_Effects_NativeStress_return_handled__clo10(FStar_Perva
     return CHERRY_INT_SMALL(0);
   }
   else {
-    _result = cherry_tmp52;
+    _result = cherry_tmp1;
   }
-  (void)(cherry_apply_0_1(note, 8));
+  (void)(cherry_apply_de0dbeb00b_1(note, 8));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(_result);
     return CHERRY_INT_SMALL(0);
@@ -1592,36 +1592,36 @@ static cherry_int Example_Effects_NativeStress_return_handled__clo10(FStar_Perva
   return _result;
 }
 
-static cherry_int Example_Effects_NativeStress_return_handled__clo11(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note) {
-  cherry_int cherry_tmp56 = Example_Effects_NativeStress_return_handled__clo10(_jump_result, note);
+static cherry_int Example_Effects_NativeStress_return_handled__clo3(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note) {
+  cherry_int cherry_tmp1 = Example_Effects_NativeStress_return_handled__clo2(_jump_result, note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp57 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp57, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_exn_dec(cherry_tmp57);
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp2, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_exn_dec(cherry_tmp2);
       return CHERRY_INT_SMALL(99);
     }
     else {
-      cherry_exn _other = cherry_tmp57;
+      cherry_exn _other = cherry_tmp2;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp57);
+      cherry_exn_dec(cherry_tmp2);
       cherry_raise(_other);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    return cherry_tmp56;
+    return cherry_tmp1;
   }
 }
 
-static cherry_int Example_Effects_NativeStress_return_handled__clo12(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note) {
+static cherry_int Example_Effects_NativeStress_return_handled__clo4(FStar_Pervasives_Native_option__int *_jump_result, cherry_fn note) {
   cherry_int _result;
-  cherry_int cherry_tmp58 = Example_Effects_NativeStress_return_handled__clo11(_jump_result, note);
+  cherry_int cherry_tmp1 = Example_Effects_NativeStress_return_handled__clo3(_jump_result, note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp59 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp59;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp59);
-    (void)(cherry_apply_0_1(note, 7));
+    cherry_exn_dec(cherry_tmp2);
+    (void)(cherry_apply_de0dbeb00b_1(note, 7));
     if (CHERRY_EXN_PENDING()) {
       cherry_exn_dec(_cexn);
       return CHERRY_INT_SMALL(0);
@@ -1630,9 +1630,9 @@ static cherry_int Example_Effects_NativeStress_return_handled__clo12(FStar_Perva
     return CHERRY_INT_SMALL(0);
   }
   else {
-    _result = cherry_tmp58;
+    _result = cherry_tmp1;
   }
-  (void)(cherry_apply_0_1(note, 7));
+  (void)(cherry_apply_de0dbeb00b_1(note, 7));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(_result);
     return CHERRY_INT_SMALL(0);
@@ -1641,80 +1641,80 @@ static cherry_int Example_Effects_NativeStress_return_handled__clo12(FStar_Perva
 }
 
 static cherry_int Example_Effects_NativeStress_return_handled(cherry_fn note) {
-  FStar_Pervasives_Native_option__int cherry_tmp62 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
+  FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
   FStar_Pervasives_Native_option__int _jump_result;
-  cherry_pbuf0_init(&_jump_result, cherry_tmp62, 1);
-  cherry_int cherry_tmp63;
-  cherry_int cherry_tmp64 = Example_Effects_NativeStress_return_handled__clo12(&_jump_result, note);
+  cherry_pbuf0_init(&_jump_result, cherry_tmp1, 1);
+  cherry_int cherry_tmp2;
+  cherry_int cherry_tmp3 = Example_Effects_NativeStress_return_handled__clo4(&_jump_result, note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp65 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp65, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp65)->f0, ((cherry_string)&cherry_lit_5))) {
-      cherry_exn_dec(cherry_tmp65);
+    cherry_exn cherry_tmp4 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp4)->f0, ((cherry_string)&cherry_lit_Example_Effects_0243f7d3d2))) {
+      cherry_exn_dec(cherry_tmp4);
       FStar_Pervasives_Native_option__int tmp = cherry_pbuf0_read(&_jump_result, 0);
       if (tmp.tag == FSTAR_PERVASIVES_NATIVE_SOME__INT) {
         cherry_int _result = tmp.val.Some;
-        cherry_tmp63 = _result;
+        cherry_tmp2 = _result;
       }
       else {
         CHERRY_ASSUME(tmp.tag == FSTAR_PERVASIVES_NATIVE_NONE__INT, "incomplete match in Example.Effects.NativeStress.return_handled");
-        cherry_exn cherry_tmp66 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_5));
-        cherry_raise(cherry_tmp66);
+        cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_0243f7d3d2));
+        cherry_raise(cherry_tmp5);
         cherry_pbuf0_drop(&_jump_result, 1);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other = cherry_tmp65;
+      cherry_exn _other = cherry_tmp4;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp65);
+      cherry_exn_dec(cherry_tmp4);
       cherry_raise(_other);
       cherry_pbuf0_drop(&_jump_result, 1);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    cherry_tmp63 = cherry_tmp64;
+    cherry_tmp2 = cherry_tmp3;
   }
   cherry_pbuf0_drop(&_jump_result, 1);
-  return cherry_tmp63;
+  return cherry_tmp2;
 }
 
-static cherry_int Example_Effects_NativeStress_unwind__clo13(cherry_int n, cherry_fn note, cherry_string seed) {
-  bool cherry_tmp67 = (cherry_int_eq(n, CHERRY_INT_SMALL(0)));
-  if (cherry_tmp67) {
+static cherry_int Example_Effects_NativeStress_unwind__clo1(cherry_int n, cherry_fn note, cherry_string seed) {
+  bool cherry_tmp1 = (cherry_int_eq(n, CHERRY_INT_SMALL(0)));
+  if (cherry_tmp1) {
     cherry_dec(seed);
-    cherry_exn cherry_tmp68;
-    cherry_any cherry_tmp69 = cherry_any0_mk(CHERRY_INT_SMALL(9));
-    cherry_tmp68 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp69);
-    cherry_raise(cherry_tmp68);
+    cherry_exn cherry_tmp2;
+    cherry_any cherry_tmp3 = cherry_any0_mk(CHERRY_INT_SMALL(9));
+    cherry_tmp2 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp3);
+    cherry_raise(cherry_tmp2);
     return CHERRY_INT_SMALL(0);
   }
   else {
-    cherry_int cherry_tmp70 = (cherry_int_sub(n, CHERRY_INT_SMALL(1)));
-    CHERRY_MUSTTAIL return Example_Effects_NativeStress_unwind(note, cherry_tmp70, seed);
+    cherry_int cherry_tmp4 = (cherry_int_sub(n, CHERRY_INT_SMALL(1)));
+    CHERRY_MUSTTAIL return Example_Effects_NativeStress_unwind(note, cherry_tmp4, seed);
   }
 }
 
 static cherry_int Example_Effects_NativeStress_unwind(cherry_fn note, cherry_int n, cherry_string seed) {
   Prims_list__string contents;
-  cherry_string cherry_tmp71;
+  cherry_string cherry_tmp1;
   cherry_inc(seed);
-  cherry_tmp71 = (cherry_str_append(seed, seed));
-  Prims_list__string cherry_tmp72;
-  Prims_list__string cherry_tmp73 = CHERRY_SCALAR(PRIMS_NIL__STRING);
+  cherry_tmp1 = (cherry_str_append(seed, seed));
+  Prims_list__string cherry_tmp2;
+  Prims_list__string cherry_tmp3 = CHERRY_SCALAR(PRIMS_NIL__STRING);
   cherry_inc(seed);
-  cherry_tmp72 = cherry_new_Prims_list__string_Cons(seed, cherry_tmp73);
-  contents = cherry_new_Prims_list__string_Cons(cherry_tmp71, cherry_tmp72);
+  cherry_tmp2 = cherry_new_Prims_list__string_Cons(seed, cherry_tmp3);
+  contents = cherry_new_Prims_list__string_Cons(cherry_tmp1, cherry_tmp2);
   Prims_list__string *box = cherry_pbuf3_alloc(contents, 1);
   cherry_int _result;
-  cherry_int cherry_tmp74 = Example_Effects_NativeStress_unwind__clo13(n, note, seed);
+  cherry_int cherry_tmp4 = Example_Effects_NativeStress_unwind__clo1(n, note, seed);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp75 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp75;
+    cherry_exn cherry_tmp5 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp5;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp75);
-    uint32_t cherry_tmp76 = (uint32_t)cherry_int_to_u64(n);
-    (void)(cherry_apply_0_1(note, cherry_tmp76));
+    cherry_exn_dec(cherry_tmp5);
+    uint32_t cherry_tmp6 = (uint32_t)cherry_int_to_u64(n);
+    (void)(cherry_apply_de0dbeb00b_1(note, cherry_tmp6));
     if (CHERRY_EXN_PENDING()) {
       cherry_exn_dec(_cexn);
       cherry_dec(n);
@@ -1726,13 +1726,13 @@ static cherry_int Example_Effects_NativeStress_unwind(cherry_fn note, cherry_int
     return CHERRY_INT_SMALL(0);
   }
   else {
-    _result = cherry_tmp74;
+    _result = cherry_tmp4;
   }
-  uint32_t cherry_tmp78;
-  uint32_t cherry_tmp79 = (uint32_t)cherry_int_to_u64(n);
+  uint32_t cherry_tmp8;
+  uint32_t cherry_tmp9 = (uint32_t)cherry_int_to_u64(n);
   cherry_dec(n);
-  cherry_tmp78 = cherry_tmp79;
-  (void)(cherry_apply_0_1(note, cherry_tmp78));
+  cherry_tmp8 = cherry_tmp9;
+  (void)(cherry_apply_de0dbeb00b_1(note, cherry_tmp8));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(_result);
     return CHERRY_INT_SMALL(0);
@@ -1743,10 +1743,10 @@ static cherry_int Example_Effects_NativeStress_unwind(cherry_fn note, cherry_int
 
 static Example_Effects_NativeBoundary_payload Example_Effects_NativeBoundary_choose__payload(Example_Effects_NativeBoundary_payload value, bool fail) {
   if (fail) {
-    cherry_exn cherry_tmp81;
-    cherry_any cherry_tmp82 = cherry_any1_mk(value);
-    cherry_tmp81 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp82);
-    cherry_raise(cherry_tmp81);
+    cherry_exn cherry_tmp1;
+    cherry_any cherry_tmp2 = cherry_any1_mk(value);
+    cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+    cherry_raise(cherry_tmp1);
     { Example_Effects_NativeBoundary_payload cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
@@ -1760,10 +1760,10 @@ static Example_Effects_NativeBoundary_payload Example_Effects_NativeBoundary_del
 
 static cherry_string Example_Effects_NativeBoundary_choose__string(cherry_string value, bool fail) {
   if (fail) {
-    cherry_exn cherry_tmp83;
-    cherry_any cherry_tmp84 = cherry_any2_mk(value);
-    cherry_tmp83 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp84);
-    cherry_raise(cherry_tmp83);
+    cherry_exn cherry_tmp1;
+    cherry_any cherry_tmp2 = cherry_any2_mk(value);
+    cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+    cherry_raise(cherry_tmp1);
     { cherry_string cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
@@ -1773,10 +1773,10 @@ static cherry_string Example_Effects_NativeBoundary_choose__string(cherry_string
 
 static cherry_int Example_Effects_NativeBoundary_choose__int(cherry_int value, bool fail) {
   if (fail) {
-    cherry_exn cherry_tmp85;
-    cherry_any cherry_tmp86 = cherry_any0_mk(value);
-    cherry_tmp85 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp86);
-    cherry_raise(cherry_tmp85);
+    cherry_exn cherry_tmp1;
+    cherry_any cherry_tmp2 = cherry_any0_mk(value);
+    cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+    cherry_raise(cherry_tmp1);
     return CHERRY_INT_SMALL(0);
   }
   else {
@@ -1786,63 +1786,63 @@ static cherry_int Example_Effects_NativeBoundary_choose__int(cherry_int value, b
 
 static cherry_int Example_Effects_NativeStress_captured__action(Example_Effects_NativeBoundary_payload value, cherry_int *state) {
   cherry_pbuf2_write(state, 0, CHERRY_INT_SMALL(1));
-  cherry_exn cherry_tmp87;
-  cherry_any cherry_tmp88 = cherry_any1_mk(value);
-  cherry_tmp87 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp88);
-  cherry_raise(cherry_tmp87);
+  cherry_exn cherry_tmp1;
+  cherry_any cherry_tmp2 = cherry_any1_mk(value);
+  cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+  cherry_raise(cherry_tmp1);
   return CHERRY_INT_SMALL(0);
 }
 
 static cherry_int Example_Effects_NativeBoundary_invoke(cherry_int *r, Example_Effects_NativeBoundary_payload value, cherry_fn action) {
   (void)r;
   (void)value;
-  CHERRY_MUSTTAIL return cherry_apply_1_1(action);
+  CHERRY_MUSTTAIL return cherry_apply_511d5571f6_1(action);
 }
 
-static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_captured__clo14(cherry_int *state, Example_Effects_NativeBoundary_payload value) {
-  cherry_int cherry_tmp89;
-  cherry_fn cherry_tmp90;
+static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_captured__clo1(cherry_int *state, Example_Effects_NativeBoundary_payload value) {
+  cherry_int cherry_tmp1;
+  cherry_fn cherry_tmp2;
   cherry_inc_Example_Effects_NativeBoundary_payload(value);
-  cherry_tmp90 = cherry_pap_Example_Effects_NativeStress_captured__action_2(value, state);
-  cherry_int cherry_tmp91 = Example_Effects_NativeBoundary_invoke(state, value, cherry_tmp90);
+  cherry_tmp2 = cherry_pap_Example_Effects_NativeStress_captured__action_2(value, state);
+  cherry_int cherry_tmp3 = Example_Effects_NativeBoundary_invoke(state, value, cherry_tmp2);
   if (CHERRY_EXN_PENDING()) {
-    cherry_dec_fn(cherry_tmp90);
+    cherry_dec_fn(cherry_tmp2);
     cherry_dec_Example_Effects_NativeBoundary_payload(value);
     { Example_Effects_NativeBoundary_payload cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    cherry_dec_fn(cherry_tmp90);
-    cherry_tmp89 = cherry_tmp91;
+    cherry_dec_fn(cherry_tmp2);
+    cherry_tmp1 = cherry_tmp3;
   }
-  cherry_dec(cherry_tmp89);
+  cherry_dec(cherry_tmp1);
   return value;
 }
 
 static bool Example_Effects_NativeStress_captured(Example_Effects_NativeBoundary_payload value) {
   cherry_int state;
   cherry_pbuf2_init(&state, CHERRY_INT_SMALL(0), 1);
-  bool cherry_tmp92;
+  bool cherry_tmp1;
   cherry_int frame;
   cherry_pbuf2_init(&frame, CHERRY_INT_SMALL(17), 1);
-  bool cherry_tmp93;
+  bool cherry_tmp2;
   Example_Effects_NativeBoundary_payload got;
-  Example_Effects_NativeBoundary_payload cherry_tmp94;
+  Example_Effects_NativeBoundary_payload cherry_tmp3;
   cherry_inc_Example_Effects_NativeBoundary_payload(value);
-  cherry_tmp94 = Example_Effects_NativeStress_captured__clo14(&state, value);
+  cherry_tmp3 = Example_Effects_NativeStress_captured__clo1(&state, value);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp95 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp95, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp95)->f0;
+    cherry_exn cherry_tmp4 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp4)->f0;
       cherry_any_inc(_payload);
-      cherry_exn_dec(cherry_tmp95);
-      Example_Effects_NativeBoundary_payload cherry_tmp96 = cherry_any1_get(_payload);
+      cherry_exn_dec(cherry_tmp4);
+      Example_Effects_NativeBoundary_payload cherry_tmp5 = cherry_any1_get(_payload);
       cherry_any_dec(_payload);
-      got = cherry_tmp96;
+      got = cherry_tmp5;
     }
     else {
-      cherry_exn _other = cherry_tmp95;
+      cherry_exn _other = cherry_tmp4;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp95);
+      cherry_exn_dec(cherry_tmp4);
       cherry_raise(_other);
       cherry_pbuf2_drop(&frame, 1);
       cherry_pbuf2_drop(&state, 1);
@@ -1851,91 +1851,91 @@ static bool Example_Effects_NativeStress_captured(Example_Effects_NativeBoundary
     }
   }
   else {
-    got = cherry_tmp94;
+    got = cherry_tmp3;
   }
   cherry_int s = cherry_pbuf2_read(&state, 0);
   cherry_int f = cherry_pbuf2_read(&frame, 0);
-  bool cherry_tmp97;
-  bool cherry_tmp98;
-  bool cherry_tmp99;
-  bool cherry_tmp100 = (cherry_int_eq(s, CHERRY_INT_SMALL(1)));
+  bool cherry_tmp6;
+  bool cherry_tmp7;
+  bool cherry_tmp8;
+  bool cherry_tmp9 = (cherry_int_eq(s, CHERRY_INT_SMALL(1)));
   cherry_dec(s);
-  cherry_tmp99 = cherry_tmp100;
-  if (cherry_tmp99) {
-    bool cherry_tmp101 = (cherry_int_eq(f, CHERRY_INT_SMALL(17)));
+  cherry_tmp8 = cherry_tmp9;
+  if (cherry_tmp8) {
+    bool cherry_tmp10 = (cherry_int_eq(f, CHERRY_INT_SMALL(17)));
     cherry_dec(f);
-    cherry_tmp98 = cherry_tmp101;
+    cherry_tmp7 = cherry_tmp10;
   }
   else {
     cherry_dec(f);
-    cherry_tmp98 = false;
+    cherry_tmp7 = false;
   }
-  if (cherry_tmp98) {
-    cherry_string cherry_tmp102 = got.message;
-    cherry_string cherry_tmp103 = value.message;
-    cherry_tmp97 = (cherry_str_eq(cherry_tmp102, cherry_tmp103));
+  if (cherry_tmp7) {
+    cherry_string cherry_tmp11 = got.message;
+    cherry_string cherry_tmp12 = value.message;
+    cherry_tmp6 = (cherry_str_eq(cherry_tmp11, cherry_tmp12));
   }
   else {
-    cherry_tmp97 = false;
+    cherry_tmp6 = false;
   }
-  if (cherry_tmp97) {
-    Prims_list__int cherry_tmp104;
-    Prims_list__int cherry_tmp105 = got.values;
-    cherry_string cherry_tmp106 = got.message;
-    cherry_dec(cherry_tmp106);
-    cherry_tmp104 = cherry_tmp105;
-    Prims_list__int cherry_tmp107;
-    Prims_list__int cherry_tmp108 = value.values;
-    cherry_string cherry_tmp109 = value.message;
-    cherry_dec(cherry_tmp109);
-    cherry_tmp107 = cherry_tmp108;
-    bool cherry_tmp110 = (Prims_list__int__eq(cherry_tmp104, cherry_tmp107));
-    cherry_dec_Prims_list__int(cherry_tmp107);
-    cherry_dec_Prims_list__int(cherry_tmp104);
-    cherry_tmp93 = cherry_tmp110;
+  if (cherry_tmp6) {
+    Prims_list__int cherry_tmp13;
+    Prims_list__int cherry_tmp14 = got.values;
+    cherry_string cherry_tmp15 = got.message;
+    cherry_dec(cherry_tmp15);
+    cherry_tmp13 = cherry_tmp14;
+    Prims_list__int cherry_tmp16;
+    Prims_list__int cherry_tmp17 = value.values;
+    cherry_string cherry_tmp18 = value.message;
+    cherry_dec(cherry_tmp18);
+    cherry_tmp16 = cherry_tmp17;
+    bool cherry_tmp19 = (Prims_list__int__eq(cherry_tmp13, cherry_tmp16));
+    cherry_dec_Prims_list__int(cherry_tmp16);
+    cherry_dec_Prims_list__int(cherry_tmp13);
+    cherry_tmp2 = cherry_tmp19;
   }
   else {
     cherry_dec_Example_Effects_NativeBoundary_payload(got);
     cherry_dec_Example_Effects_NativeBoundary_payload(value);
-    cherry_tmp93 = false;
+    cherry_tmp2 = false;
   }
   cherry_pbuf2_drop(&frame, 1);
-  cherry_tmp92 = cherry_tmp93;
+  cherry_tmp1 = cherry_tmp2;
   cherry_pbuf2_drop(&state, 1);
-  return cherry_tmp92;
+  return cherry_tmp1;
 }
 
 static cherry_string Example_Effects_NativeStress_collision(void) {
-  cherry_any cherry_tmp111;
-  cherry_exn cherry_tmp112;
+  cherry_any cherry_tmp1;
+  cherry_exn cherry_tmp2;
   cherry_any _ct1;
-  cherry_exn cherry_tmp114 = cherry_exn_new_Example_Effects_NativeStress_NativeException(((cherry_string)&cherry_lit_6));
-  _ct1 = cherry_any3_mk(cherry_tmp114);
-  cherry_any cherry_tmp113 = _ct1;
-  cherry_tmp112 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp113);
-  cherry_raise(cherry_tmp112);
+  cherry_exn cherry_tmp4 = cherry_exn_new_Example_Effects_NativeStress_NativeException(((cherry_string)&cherry_lit_collision_d2927b3a7c));
+  _ct1 = cherry_any3_mk(cherry_tmp4);
+  cherry_any cherry_tmp3 = _ct1;
+  cherry_tmp2 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp3);
+  cherry_raise(cherry_tmp2);
   { cherry_string cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
-  cherry_string cherry_tmp115 = cherry_any2_get(cherry_tmp111);
-  cherry_any_dec(cherry_tmp111);
-  return cherry_tmp115;
+  cherry_string cherry_tmp5 = cherry_any2_get(cherry_tmp1);
+  cherry_any_dec(cherry_tmp1);
+  return cherry_tmp5;
 }
 
-static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repeated__clo15(Example_Effects_NativeBoundary_payload value) {
+static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repeated__clo1(Example_Effects_NativeBoundary_payload value) {
   return Example_Effects_NativeBoundary_deliver(value, true);
 }
 
-static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repeated__clo16(Example_Effects_NativeBoundary_payload value, cherry_fn note) {
+static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repeated__clo2(Example_Effects_NativeBoundary_payload value, cherry_fn note) {
   Example_Effects_NativeBoundary_payload *box;
   cherry_inc_Example_Effects_NativeBoundary_payload(value);
   box = cherry_pbuf4_alloc(value, 1);
   Example_Effects_NativeBoundary_payload _result;
-  Example_Effects_NativeBoundary_payload cherry_tmp116 = Example_Effects_NativeStress_repeated__clo15(value);
+  Example_Effects_NativeBoundary_payload cherry_tmp1 = Example_Effects_NativeStress_repeated__clo1(value);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp117 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp117;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp117);
-    (void)(cherry_apply_0_1(note, 6));
+    cherry_exn_dec(cherry_tmp2);
+    (void)(cherry_apply_de0dbeb00b_1(note, 6));
     if (CHERRY_EXN_PENDING()) {
       cherry_exn_dec(_cexn);
       { Example_Effects_NativeBoundary_payload cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
@@ -1945,9 +1945,9 @@ static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repea
     { Example_Effects_NativeBoundary_payload cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    _result = cherry_tmp116;
+    _result = cherry_tmp1;
   }
-  (void)(cherry_apply_0_1(note, 6));
+  (void)(cherry_apply_de0dbeb00b_1(note, 6));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec_Example_Effects_NativeBoundary_payload(_result);
     { Example_Effects_NativeBoundary_payload cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
@@ -1959,33 +1959,33 @@ static Example_Effects_NativeBoundary_payload Example_Effects_NativeStress_repea
 static bool Example_Effects_NativeStress_repeated(cherry_fn note, Example_Effects_NativeBoundary_payload value) {
   cherry_int count;
   cherry_pbuf2_init(&count, CHERRY_INT_SMALL(0), 1);
-  bool cherry_tmp120;
+  bool cherry_tmp1;
   bool good = true;
   while (true) {
     bool _ct1;
     cherry_int __anf0 = cherry_pbuf2_read(&count, 0);
-    bool cherry_tmp121 = (cherry_int_lt(__anf0, CHERRY_INT_SMALL(1000)));
+    bool cherry_tmp2 = (cherry_int_lt(__anf0, CHERRY_INT_SMALL(1000)));
     cherry_dec(__anf0);
-    _ct1 = cherry_tmp121;
+    _ct1 = cherry_tmp2;
     if (!(_ct1)) { break; }
     Example_Effects_NativeBoundary_payload got;
-    Example_Effects_NativeBoundary_payload cherry_tmp122;
+    Example_Effects_NativeBoundary_payload cherry_tmp3;
     cherry_inc_Example_Effects_NativeBoundary_payload(value);
-    cherry_tmp122 = Example_Effects_NativeStress_repeated__clo16(value, note);
+    cherry_tmp3 = Example_Effects_NativeStress_repeated__clo2(value, note);
     if (CHERRY_EXN_PENDING()) {
-      cherry_exn cherry_tmp123 = cherry_exn_take();
-      if (cherry_exn_is(cherry_tmp123, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-        cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp123)->f0;
+      cherry_exn cherry_tmp4 = cherry_exn_take();
+      if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+        cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp4)->f0;
         cherry_any_inc(_payload);
-        cherry_exn_dec(cherry_tmp123);
-        Example_Effects_NativeBoundary_payload cherry_tmp124 = cherry_any1_get(_payload);
+        cherry_exn_dec(cherry_tmp4);
+        Example_Effects_NativeBoundary_payload cherry_tmp5 = cherry_any1_get(_payload);
         cherry_any_dec(_payload);
-        got = cherry_tmp124;
+        got = cherry_tmp5;
       }
       else {
-        cherry_exn _other = cherry_tmp123;
+        cherry_exn _other = cherry_tmp4;
         cherry_inc(_other);
-        cherry_exn_dec(cherry_tmp123);
+        cherry_exn_dec(cherry_tmp4);
         cherry_raise(_other);
         cherry_pbuf2_drop(&count, 1);
         cherry_dec_Example_Effects_NativeBoundary_payload(value);
@@ -1993,113 +1993,113 @@ static bool Example_Effects_NativeStress_repeated(cherry_fn note, Example_Effect
       }
     }
     else {
-      got = cherry_tmp122;
+      got = cherry_tmp3;
     }
     bool __anf0_1 = good;
-    bool cherry_tmp125;
-    bool cherry_tmp126;
+    bool cherry_tmp6;
+    bool cherry_tmp7;
     if (__anf0_1) {
-      cherry_string cherry_tmp127 = got.message;
-      cherry_string cherry_tmp128 = value.message;
-      cherry_tmp126 = (cherry_str_eq(cherry_tmp127, cherry_tmp128));
+      cherry_string cherry_tmp8 = got.message;
+      cherry_string cherry_tmp9 = value.message;
+      cherry_tmp7 = (cherry_str_eq(cherry_tmp8, cherry_tmp9));
     }
     else {
-      cherry_tmp126 = false;
+      cherry_tmp7 = false;
     }
-    if (cherry_tmp126) {
-      Prims_list__int cherry_tmp129;
-      Prims_list__int cherry_tmp130 = got.values;
-      cherry_string cherry_tmp131 = got.message;
-      cherry_dec(cherry_tmp131);
-      cherry_tmp129 = cherry_tmp130;
-      Prims_list__int cherry_tmp132 = value.values;
-      bool cherry_tmp133 = (Prims_list__int__eq(cherry_tmp129, cherry_tmp132));
-      cherry_dec_Prims_list__int(cherry_tmp129);
-      cherry_tmp125 = cherry_tmp133;
+    if (cherry_tmp7) {
+      Prims_list__int cherry_tmp10;
+      Prims_list__int cherry_tmp11 = got.values;
+      cherry_string cherry_tmp12 = got.message;
+      cherry_dec(cherry_tmp12);
+      cherry_tmp10 = cherry_tmp11;
+      Prims_list__int cherry_tmp13 = value.values;
+      bool cherry_tmp14 = (Prims_list__int__eq(cherry_tmp10, cherry_tmp13));
+      cherry_dec_Prims_list__int(cherry_tmp10);
+      cherry_tmp6 = cherry_tmp14;
     }
     else {
       cherry_dec_Example_Effects_NativeBoundary_payload(got);
-      cherry_tmp125 = false;
+      cherry_tmp6 = false;
     }
-    good = cherry_tmp125;
+    good = cherry_tmp6;
     cherry_int __anf01 = cherry_pbuf2_read(&count, 0);
-    cherry_int cherry_tmp134;
-    cherry_int cherry_tmp135 = (cherry_int_add(__anf01, CHERRY_INT_SMALL(1)));
+    cherry_int cherry_tmp15;
+    cherry_int cherry_tmp16 = (cherry_int_add(__anf01, CHERRY_INT_SMALL(1)));
     cherry_dec(__anf01);
-    cherry_tmp134 = cherry_tmp135;
-    cherry_pbuf2_write(&count, 0, cherry_tmp134);
+    cherry_tmp15 = cherry_tmp16;
+    cherry_pbuf2_write(&count, 0, cherry_tmp15);
   }
   cherry_dec_Example_Effects_NativeBoundary_payload(value);
-  cherry_tmp120 = good;
+  cherry_tmp1 = good;
   cherry_pbuf2_drop(&count, 1);
-  return cherry_tmp120;
+  return cherry_tmp1;
 }
 
-static cherry_int Example_Effects_NativeStress_test__clo17(cherry_fn note) {
+static cherry_int Example_Effects_NativeStress_test__clo1(cherry_fn note) {
   CHERRY_MUSTTAIL return Example_Effects_NativeStress_nested(note, CHERRY_INT_SMALL(2));
 }
 
-static cherry_int Example_Effects_NativeStress_test__clo18(cherry_fn note) {
-  CHERRY_MUSTTAIL return Example_Effects_NativeStress_unwind(note, CHERRY_INT_SMALL(256), ((cherry_string)&cherry_lit_7));
+static cherry_int Example_Effects_NativeStress_test__clo2(cherry_fn note) {
+  CHERRY_MUSTTAIL return Example_Effects_NativeStress_unwind(note, CHERRY_INT_SMALL(256), ((cherry_string)&cherry_lit_managed_14397c9769));
 }
 
-static cherry_int Example_Effects_NativeStress_test__clo19(void) {
+static cherry_int Example_Effects_NativeStress_test__clo3(void) {
   CHERRY_MUSTTAIL return Example_Effects_NativeBoundary_choose__int(CHERRY_INT_SMALL(37), true);
 }
 
-static cherry_string Example_Effects_NativeStress_test__clo20(void) {
+static cherry_string Example_Effects_NativeStress_test__clo4(void) {
   CHERRY_MUSTTAIL return Example_Effects_NativeStress_collision();
 }
 
 static bool Example_Effects_NativeStress_test(cherry_fn note) {
-  (void)(cherry_apply_0_1(note, 100));
+  (void)(cherry_apply_de0dbeb00b_1(note, 100));
   if (CHERRY_EXN_PENDING()) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   cherry_int a;
-  cherry_int cherry_tmp138 = Example_Effects_NativeStress_nested(note, CHERRY_INT_SMALL(0));
+  cherry_int cherry_tmp2 = Example_Effects_NativeStress_nested(note, CHERRY_INT_SMALL(0));
   if (CHERRY_EXN_PENDING()) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    a = cherry_tmp138;
+    a = cherry_tmp2;
   }
-  (void)(cherry_apply_0_1(note, 101));
+  (void)(cherry_apply_de0dbeb00b_1(note, 101));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(a);
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   cherry_int b;
-  cherry_int cherry_tmp140 = Example_Effects_NativeStress_nested(note, CHERRY_INT_SMALL(1));
+  cherry_int cherry_tmp4 = Example_Effects_NativeStress_nested(note, CHERRY_INT_SMALL(1));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(a);
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    b = cherry_tmp140;
+    b = cherry_tmp4;
   }
-  (void)(cherry_apply_0_1(note, 102));
+  (void)(cherry_apply_de0dbeb00b_1(note, 102));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(b);
     cherry_dec(a);
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   cherry_int c;
-  cherry_int cherry_tmp142 = Example_Effects_NativeStress_test__clo17(note);
+  cherry_int cherry_tmp6 = Example_Effects_NativeStress_test__clo1(note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp143 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp143, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp143)->f0;
+    cherry_exn cherry_tmp7 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp7, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp7)->f0;
       cherry_any_inc(_payload);
-      cherry_exn_dec(cherry_tmp143);
-      cherry_int cherry_tmp144 = cherry_any0_get(_payload);
+      cherry_exn_dec(cherry_tmp7);
+      cherry_int cherry_tmp8 = cherry_any0_get(_payload);
       cherry_any_dec(_payload);
-      c = cherry_tmp144;
+      c = cherry_tmp8;
     }
     else {
-      cherry_exn _other = cherry_tmp143;
+      cherry_exn _other = cherry_tmp7;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp143);
+      cherry_exn_dec(cherry_tmp7);
       cherry_raise(_other);
       cherry_dec(b);
       cherry_dec(a);
@@ -2107,9 +2107,9 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     }
   }
   else {
-    c = cherry_tmp142;
+    c = cherry_tmp6;
   }
-  (void)(cherry_apply_0_1(note, 200));
+  (void)(cherry_apply_de0dbeb00b_1(note, 200));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(c);
     cherry_dec(b);
@@ -2117,7 +2117,7 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   cherry_int d;
-  cherry_int cherry_tmp146 = Example_Effects_NativeStress_loop_exits(note);
+  cherry_int cherry_tmp10 = Example_Effects_NativeStress_loop_exits(note);
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(c);
     cherry_dec(b);
@@ -2125,9 +2125,9 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    d = cherry_tmp146;
+    d = cherry_tmp10;
   }
-  (void)(cherry_apply_0_1(note, 201));
+  (void)(cherry_apply_de0dbeb00b_1(note, 201));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(d);
     cherry_dec(c);
@@ -2136,7 +2136,7 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   cherry_int returned;
-  cherry_int cherry_tmp148 = Example_Effects_NativeStress_return_handled(note);
+  cherry_int cherry_tmp12 = Example_Effects_NativeStress_return_handled(note);
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(d);
     cherry_dec(c);
@@ -2145,9 +2145,9 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    returned = cherry_tmp148;
+    returned = cherry_tmp12;
   }
-  (void)(cherry_apply_0_1(note, 300));
+  (void)(cherry_apply_de0dbeb00b_1(note, 300));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(returned);
     cherry_dec(d);
@@ -2157,21 +2157,21 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   cherry_int e;
-  cherry_int cherry_tmp150 = Example_Effects_NativeStress_test__clo18(note);
+  cherry_int cherry_tmp14 = Example_Effects_NativeStress_test__clo2(note);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp151 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp151, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload_1 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp151)->f0;
+    cherry_exn cherry_tmp15 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp15, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload_1 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp15)->f0;
       cherry_any_inc(_payload_1);
-      cherry_exn_dec(cherry_tmp151);
-      cherry_int cherry_tmp152 = cherry_any0_get(_payload_1);
+      cherry_exn_dec(cherry_tmp15);
+      cherry_int cherry_tmp16 = cherry_any0_get(_payload_1);
       cherry_any_dec(_payload_1);
-      e = cherry_tmp152;
+      e = cherry_tmp16;
     }
     else {
-      cherry_exn _other_1 = cherry_tmp151;
+      cherry_exn _other_1 = cherry_tmp15;
       cherry_inc(_other_1);
-      cherry_exn_dec(cherry_tmp151);
+      cherry_exn_dec(cherry_tmp15);
       cherry_raise(_other_1);
       cherry_dec(returned);
       cherry_dec(d);
@@ -2182,21 +2182,21 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     }
   }
   else {
-    e = cherry_tmp150;
+    e = cherry_tmp14;
   }
   Example_Effects_NativeBoundary_payload value;
-  Prims_list__int cherry_tmp153;
-  Prims_list__int cherry_tmp154;
-  Prims_list__int cherry_tmp155;
-  Prims_list__int cherry_tmp156 = CHERRY_SCALAR(PRIMS_NIL__INT);
-  cherry_tmp155 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(8), cherry_tmp156);
-  cherry_tmp154 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(5), cherry_tmp155);
-  cherry_tmp153 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(3), cherry_tmp154);
-  value = (Example_Effects_NativeBoundary_payload){ .message = ((cherry_string)&cherry_lit_8), .values = cherry_tmp153 };
+  Prims_list__int cherry_tmp17;
+  Prims_list__int cherry_tmp18;
+  Prims_list__int cherry_tmp19;
+  Prims_list__int cherry_tmp20 = CHERRY_SCALAR(PRIMS_NIL__INT);
+  cherry_tmp19 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(8), cherry_tmp20);
+  cherry_tmp18 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(5), cherry_tmp19);
+  cherry_tmp17 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(3), cherry_tmp18);
+  value = (Example_Effects_NativeBoundary_payload){ .message = ((cherry_string)&cherry_lit_managedpayload_247dd524eb), .values = cherry_tmp17 };
   Example_Effects_NativeBoundary_payload f;
-  Example_Effects_NativeBoundary_payload cherry_tmp157;
+  Example_Effects_NativeBoundary_payload cherry_tmp21;
   cherry_inc_Example_Effects_NativeBoundary_payload(value);
-  cherry_tmp157 = Example_Effects_NativeBoundary_deliver(value, false);
+  cherry_tmp21 = Example_Effects_NativeBoundary_deliver(value, false);
   if (CHERRY_EXN_PENDING()) {
     cherry_dec_Example_Effects_NativeBoundary_payload(value);
     cherry_dec(e);
@@ -2208,10 +2208,10 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    f = cherry_tmp157;
+    f = cherry_tmp21;
   }
   cherry_string text;
-  cherry_string cherry_tmp158 = Example_Effects_NativeBoundary_choose__string(((cherry_string)&cherry_lit_9), false);
+  cherry_string cherry_tmp22 = Example_Effects_NativeBoundary_choose__string(((cherry_string)&cherry_lit_polymorphic_a8d81e48c4), false);
   if (CHERRY_EXN_PENDING()) {
     cherry_dec_Example_Effects_NativeBoundary_payload(f);
     cherry_dec_Example_Effects_NativeBoundary_payload(value);
@@ -2224,24 +2224,24 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    text = cherry_tmp158;
+    text = cherry_tmp22;
   }
   cherry_int number;
-  cherry_int cherry_tmp159 = Example_Effects_NativeStress_test__clo19();
+  cherry_int cherry_tmp23 = Example_Effects_NativeStress_test__clo3();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp160 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp160, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload_2 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp160)->f0;
+    cherry_exn cherry_tmp24 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp24, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload_2 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp24)->f0;
       cherry_any_inc(_payload_2);
-      cherry_exn_dec(cherry_tmp160);
-      cherry_int cherry_tmp161 = cherry_any0_get(_payload_2);
+      cherry_exn_dec(cherry_tmp24);
+      cherry_int cherry_tmp25 = cherry_any0_get(_payload_2);
       cherry_any_dec(_payload_2);
-      number = cherry_tmp161;
+      number = cherry_tmp25;
     }
     else {
-      cherry_exn _other_2 = cherry_tmp160;
+      cherry_exn _other_2 = cherry_tmp24;
       cherry_inc(_other_2);
-      cherry_exn_dec(cherry_tmp160);
+      cherry_exn_dec(cherry_tmp24);
       cherry_raise(_other_2);
       cherry_dec(text);
       cherry_dec_Example_Effects_NativeBoundary_payload(f);
@@ -2256,12 +2256,12 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     }
   }
   else {
-    number = cherry_tmp159;
+    number = cherry_tmp23;
   }
   bool g;
-  bool cherry_tmp162;
+  bool cherry_tmp26;
   cherry_inc_Example_Effects_NativeBoundary_payload(value);
-  cherry_tmp162 = Example_Effects_NativeStress_captured(value);
+  cherry_tmp26 = Example_Effects_NativeStress_captured(value);
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(number);
     cherry_dec(text);
@@ -2276,20 +2276,20 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    g = cherry_tmp162;
+    g = cherry_tmp26;
   }
   cherry_string name;
-  cherry_string cherry_tmp163 = Example_Effects_NativeStress_test__clo20();
+  cherry_string cherry_tmp27 = Example_Effects_NativeStress_test__clo4();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp164 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp164, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload_3 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp164)->f0;
+    cherry_exn cherry_tmp28 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp28, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload_3 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp28)->f0;
       cherry_any_inc(_payload_3);
-      cherry_exn_dec(cherry_tmp164);
+      cherry_exn_dec(cherry_tmp28);
       cherry_exn tmp;
-      cherry_exn cherry_tmp165 = cherry_any3_get(_payload_3);
+      cherry_exn cherry_tmp29 = cherry_any3_get(_payload_3);
       cherry_any_dec(_payload_3);
-      tmp = cherry_tmp165;
+      tmp = cherry_tmp29;
       CHERRY_ASSUME(cherry_exn_is(tmp, &Example_Effects_NativeStress_NativeException_exn_info), "incomplete match in Example.Effects.NativeStress.test");
       cherry_string message = ((struct Example_Effects_NativeStress_NativeException_exn_s *)tmp)->f0;
       cherry_inc(message);
@@ -2297,9 +2297,9 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
       name = message;
     }
     else {
-      cherry_exn _other_3 = cherry_tmp164;
+      cherry_exn _other_3 = cherry_tmp28;
       cherry_inc(_other_3);
-      cherry_exn_dec(cherry_tmp164);
+      cherry_exn_dec(cherry_tmp28);
       cherry_raise(_other_3);
       cherry_dec(number);
       cherry_dec(text);
@@ -2315,9 +2315,9 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     }
   }
   else {
-    name = cherry_tmp163;
+    name = cherry_tmp27;
   }
-  (void)(cherry_apply_0_1(note, 400));
+  (void)(cherry_apply_de0dbeb00b_1(note, 400));
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(name);
     cherry_dec(number);
@@ -2333,7 +2333,7 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   bool h;
-  bool cherry_tmp167 = Example_Effects_NativeStress_repeated(note, value);
+  bool cherry_tmp31 = Example_Effects_NativeStress_repeated(note, value);
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(name);
     cherry_dec(number);
@@ -2348,197 +2348,197 @@ static bool Example_Effects_NativeStress_test(cherry_fn note) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    h = cherry_tmp167;
+    h = cherry_tmp31;
   }
-  bool cherry_tmp168;
-  bool cherry_tmp169;
-  bool cherry_tmp170;
-  bool cherry_tmp171;
-  bool cherry_tmp172;
-  bool cherry_tmp173;
-  bool cherry_tmp174;
-  bool cherry_tmp175;
-  bool cherry_tmp176;
-  bool cherry_tmp177;
-  bool cherry_tmp178;
-  bool cherry_tmp179;
-  bool cherry_tmp180 = (cherry_int_eq(a, CHERRY_INT_SMALL(7)));
+  bool cherry_tmp32;
+  bool cherry_tmp33;
+  bool cherry_tmp34;
+  bool cherry_tmp35;
+  bool cherry_tmp36;
+  bool cherry_tmp37;
+  bool cherry_tmp38;
+  bool cherry_tmp39;
+  bool cherry_tmp40;
+  bool cherry_tmp41;
+  bool cherry_tmp42;
+  bool cherry_tmp43;
+  bool cherry_tmp44 = (cherry_int_eq(a, CHERRY_INT_SMALL(7)));
   cherry_dec(a);
-  cherry_tmp179 = cherry_tmp180;
-  if (cherry_tmp179) {
-    bool cherry_tmp181 = (cherry_int_eq(b, CHERRY_INT_SMALL(7)));
+  cherry_tmp43 = cherry_tmp44;
+  if (cherry_tmp43) {
+    bool cherry_tmp45 = (cherry_int_eq(b, CHERRY_INT_SMALL(7)));
     cherry_dec(b);
-    cherry_tmp178 = cherry_tmp181;
+    cherry_tmp42 = cherry_tmp45;
   }
   else {
     cherry_dec(b);
-    cherry_tmp178 = false;
+    cherry_tmp42 = false;
   }
-  if (cherry_tmp178) {
-    bool cherry_tmp182 = (cherry_int_eq(c, CHERRY_INT_SMALL(9)));
+  if (cherry_tmp42) {
+    bool cherry_tmp46 = (cherry_int_eq(c, CHERRY_INT_SMALL(9)));
     cherry_dec(c);
-    cherry_tmp177 = cherry_tmp182;
+    cherry_tmp41 = cherry_tmp46;
   }
   else {
     cherry_dec(c);
-    cherry_tmp177 = false;
+    cherry_tmp41 = false;
   }
-  if (cherry_tmp177) {
-    bool cherry_tmp183 = (cherry_int_eq(d, CHERRY_INT_SMALL(1)));
+  if (cherry_tmp41) {
+    bool cherry_tmp47 = (cherry_int_eq(d, CHERRY_INT_SMALL(1)));
     cherry_dec(d);
-    cherry_tmp176 = cherry_tmp183;
+    cherry_tmp40 = cherry_tmp47;
   }
   else {
     cherry_dec(d);
-    cherry_tmp176 = false;
+    cherry_tmp40 = false;
   }
-  if (cherry_tmp176) {
-    bool cherry_tmp184 = (cherry_int_eq(returned, CHERRY_INT_SMALL(7)));
+  if (cherry_tmp40) {
+    bool cherry_tmp48 = (cherry_int_eq(returned, CHERRY_INT_SMALL(7)));
     cherry_dec(returned);
-    cherry_tmp175 = cherry_tmp184;
+    cherry_tmp39 = cherry_tmp48;
   }
   else {
     cherry_dec(returned);
-    cherry_tmp175 = false;
+    cherry_tmp39 = false;
   }
-  if (cherry_tmp175) {
-    bool cherry_tmp185 = (cherry_int_eq(e, CHERRY_INT_SMALL(9)));
+  if (cherry_tmp39) {
+    bool cherry_tmp49 = (cherry_int_eq(e, CHERRY_INT_SMALL(9)));
     cherry_dec(e);
-    cherry_tmp174 = cherry_tmp185;
+    cherry_tmp38 = cherry_tmp49;
   }
   else {
     cherry_dec(e);
-    cherry_tmp174 = false;
+    cherry_tmp38 = false;
   }
-  if (cherry_tmp174) {
-    cherry_string cherry_tmp186 = f.message;
-    cherry_tmp173 = (cherry_str_eq(cherry_tmp186, ((cherry_string)&cherry_lit_8)));
+  if (cherry_tmp38) {
+    cherry_string cherry_tmp50 = f.message;
+    cherry_tmp37 = (cherry_str_eq(cherry_tmp50, ((cherry_string)&cherry_lit_managedpayload_247dd524eb)));
   }
   else {
-    cherry_tmp173 = false;
+    cherry_tmp37 = false;
   }
-  if (cherry_tmp173) {
-    Prims_list__int cherry_tmp187;
-    Prims_list__int cherry_tmp188 = f.values;
-    cherry_string cherry_tmp189 = f.message;
-    cherry_dec(cherry_tmp189);
-    cherry_tmp187 = cherry_tmp188;
-    Prims_list__int cherry_tmp190;
-    Prims_list__int cherry_tmp191;
-    Prims_list__int cherry_tmp192;
-    Prims_list__int cherry_tmp193 = CHERRY_SCALAR(PRIMS_NIL__INT);
-    cherry_tmp192 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(8), cherry_tmp193);
-    cherry_tmp191 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(5), cherry_tmp192);
-    cherry_tmp190 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(3), cherry_tmp191);
-    bool cherry_tmp194 = (Prims_list__int__eq(cherry_tmp187, cherry_tmp190));
-    cherry_dec_Prims_list__int(cherry_tmp190);
-    cherry_dec_Prims_list__int(cherry_tmp187);
-    cherry_tmp172 = cherry_tmp194;
+  if (cherry_tmp37) {
+    Prims_list__int cherry_tmp51;
+    Prims_list__int cherry_tmp52 = f.values;
+    cherry_string cherry_tmp53 = f.message;
+    cherry_dec(cherry_tmp53);
+    cherry_tmp51 = cherry_tmp52;
+    Prims_list__int cherry_tmp54;
+    Prims_list__int cherry_tmp55;
+    Prims_list__int cherry_tmp56;
+    Prims_list__int cherry_tmp57 = CHERRY_SCALAR(PRIMS_NIL__INT);
+    cherry_tmp56 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(8), cherry_tmp57);
+    cherry_tmp55 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(5), cherry_tmp56);
+    cherry_tmp54 = cherry_new_Prims_list__int_Cons(CHERRY_INT_SMALL(3), cherry_tmp55);
+    bool cherry_tmp58 = (Prims_list__int__eq(cherry_tmp51, cherry_tmp54));
+    cherry_dec_Prims_list__int(cherry_tmp54);
+    cherry_dec_Prims_list__int(cherry_tmp51);
+    cherry_tmp36 = cherry_tmp58;
   }
   else {
     cherry_dec_Example_Effects_NativeBoundary_payload(f);
-    cherry_tmp172 = false;
+    cherry_tmp36 = false;
   }
-  if (cherry_tmp172) {
-    bool cherry_tmp195 = (cherry_str_eq(text, ((cherry_string)&cherry_lit_9)));
+  if (cherry_tmp36) {
+    bool cherry_tmp59 = (cherry_str_eq(text, ((cherry_string)&cherry_lit_polymorphic_a8d81e48c4)));
     cherry_dec(text);
-    cherry_tmp171 = cherry_tmp195;
+    cherry_tmp35 = cherry_tmp59;
   }
   else {
     cherry_dec(text);
-    cherry_tmp171 = false;
+    cherry_tmp35 = false;
   }
-  if (cherry_tmp171) {
-    bool cherry_tmp196 = (cherry_int_eq(number, CHERRY_INT_SMALL(37)));
+  if (cherry_tmp35) {
+    bool cherry_tmp60 = (cherry_int_eq(number, CHERRY_INT_SMALL(37)));
     cherry_dec(number);
-    cherry_tmp170 = cherry_tmp196;
+    cherry_tmp34 = cherry_tmp60;
   }
   else {
     cherry_dec(number);
-    cherry_tmp170 = false;
+    cherry_tmp34 = false;
   }
-  cherry_tmp169 = (cherry_tmp170 && g);
-  if (cherry_tmp169) {
-    bool cherry_tmp197 = (cherry_str_eq(name, ((cherry_string)&cherry_lit_6)));
+  cherry_tmp33 = (cherry_tmp34 && g);
+  if (cherry_tmp33) {
+    bool cherry_tmp61 = (cherry_str_eq(name, ((cherry_string)&cherry_lit_collision_d2927b3a7c)));
     cherry_dec(name);
-    cherry_tmp168 = cherry_tmp197;
+    cherry_tmp32 = cherry_tmp61;
   }
   else {
     cherry_dec(name);
-    cherry_tmp168 = false;
+    cherry_tmp32 = false;
   }
-  return (cherry_tmp168 && h);
+  return (cherry_tmp32 && h);
 }
 
 bool Example_Effects_NativeRuntime_stress(cherry_fn note) {
   CHERRY_MUSTTAIL return Example_Effects_NativeStress_test(note);
 }
 
-static cherry_int Example_Effects_NativeRuntime_early__clo21(bool b, FStar_Pervasives_Native_option__int *_jump_result) {
+static cherry_int Example_Effects_NativeRuntime_early__clo1(bool b, FStar_Pervasives_Native_option__int *_jump_result) {
   if (b) {
-    FStar_Pervasives_Native_option__int cherry_tmp198 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
-    cherry_pbuf0_write(_jump_result, 0, cherry_tmp198);
-    cherry_any cherry_tmp199;
-    cherry_exn cherry_tmp200 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_10));
-    cherry_raise(cherry_tmp200);
+    FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
+    cherry_pbuf0_write(_jump_result, 0, cherry_tmp1);
+    cherry_any cherry_tmp2;
+    cherry_exn cherry_tmp3 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_d8048384dd));
+    cherry_raise(cherry_tmp3);
     return CHERRY_INT_SMALL(0);
-    cherry_any_dec(cherry_tmp199);
-    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.early__clo21");
+    cherry_any_dec(cherry_tmp2);
+    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.early__clo1");
   }
   else {
-    cherry_exn cherry_tmp201;
-    cherry_any cherry_tmp202 = cherry_any0_mk(CHERRY_INT_SMALL(9));
-    cherry_tmp201 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp202);
-    cherry_raise(cherry_tmp201);
+    cherry_exn cherry_tmp4;
+    cherry_any cherry_tmp5 = cherry_any0_mk(CHERRY_INT_SMALL(9));
+    cherry_tmp4 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp5);
+    cherry_raise(cherry_tmp4);
     return CHERRY_INT_SMALL(0);
   }
 }
 
 static cherry_int Example_Effects_NativeRuntime_early(bool b) {
-  FStar_Pervasives_Native_option__int cherry_tmp203 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
+  FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
   FStar_Pervasives_Native_option__int _jump_result;
-  cherry_pbuf0_init(&_jump_result, cherry_tmp203, 1);
-  cherry_int cherry_tmp204;
-  cherry_int cherry_tmp205 = Example_Effects_NativeRuntime_early__clo21(b, &_jump_result);
+  cherry_pbuf0_init(&_jump_result, cherry_tmp1, 1);
+  cherry_int cherry_tmp2;
+  cherry_int cherry_tmp3 = Example_Effects_NativeRuntime_early__clo1(b, &_jump_result);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp206 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp206, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp206)->f0, ((cherry_string)&cherry_lit_10))) {
-      cherry_exn_dec(cherry_tmp206);
+    cherry_exn cherry_tmp4 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp4)->f0, ((cherry_string)&cherry_lit_Example_Effects_d8048384dd))) {
+      cherry_exn_dec(cherry_tmp4);
       FStar_Pervasives_Native_option__int tmp = cherry_pbuf0_read(&_jump_result, 0);
       if (tmp.tag == FSTAR_PERVASIVES_NATIVE_SOME__INT) {
         cherry_int _result = tmp.val.Some;
-        cherry_tmp204 = _result;
+        cherry_tmp2 = _result;
       }
       else {
         CHERRY_ASSUME(tmp.tag == FSTAR_PERVASIVES_NATIVE_NONE__INT, "incomplete match in Example.Effects.NativeRuntime.early");
-        cherry_exn cherry_tmp207 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_10));
-        cherry_raise(cherry_tmp207);
+        cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_d8048384dd));
+        cherry_raise(cherry_tmp5);
         cherry_pbuf0_drop(&_jump_result, 1);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other = cherry_tmp206;
+      cherry_exn _other = cherry_tmp4;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp206);
+      cherry_exn_dec(cherry_tmp4);
       cherry_raise(_other);
       cherry_pbuf0_drop(&_jump_result, 1);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    cherry_tmp204 = cherry_tmp205;
+    cherry_tmp2 = cherry_tmp3;
   }
   cherry_pbuf0_drop(&_jump_result, 1);
-  return cherry_tmp204;
+  return cherry_tmp2;
 }
 
-static cherry_int Example_Effects_NativeRuntime_cleanup__clo22(bool b) {
+static cherry_int Example_Effects_NativeRuntime_cleanup__clo1(bool b) {
   if (b) {
-    cherry_exn cherry_tmp208;
-    cherry_any cherry_tmp209 = cherry_any0_mk(CHERRY_INT_SMALL(9));
-    cherry_tmp208 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp209);
-    cherry_raise(cherry_tmp208);
+    cherry_exn cherry_tmp1;
+    cherry_any cherry_tmp2 = cherry_any0_mk(CHERRY_INT_SMALL(9));
+    cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+    cherry_raise(cherry_tmp1);
     return CHERRY_INT_SMALL(0);
   }
   else {
@@ -2549,262 +2549,262 @@ static cherry_int Example_Effects_NativeRuntime_cleanup__clo22(bool b) {
 static cherry_int Example_Effects_NativeRuntime_cleanup(bool b) {
   cherry_int *box = cherry_pbuf2_alloc(CHERRY_INT_SMALL(0), 1);
   cherry_int _result;
-  cherry_int cherry_tmp210 = Example_Effects_NativeRuntime_cleanup__clo22(b);
+  cherry_int cherry_tmp1 = Example_Effects_NativeRuntime_cleanup__clo1(b);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp211 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp211;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp211);
+    cherry_exn_dec(cherry_tmp2);
     cherry_pbuf2_free(box);
     cherry_raise(_cexn);
     return CHERRY_INT_SMALL(0);
   }
   else {
-    _result = cherry_tmp210;
+    _result = cherry_tmp1;
   }
   cherry_pbuf2_free(box);
   return _result;
 }
 
-static cherry_int Example_Effects_NativeRuntime_cleanup_return__clo23(FStar_Pervasives_Native_option__int *_jump_result) {
-  FStar_Pervasives_Native_option__int cherry_tmp212 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
-  cherry_pbuf0_write(_jump_result, 0, cherry_tmp212);
-  cherry_any cherry_tmp213;
-  cherry_exn cherry_tmp214 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_11));
-  cherry_raise(cherry_tmp214);
+static cherry_int Example_Effects_NativeRuntime_cleanup_return__clo1(FStar_Pervasives_Native_option__int *_jump_result) {
+  FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
+  cherry_pbuf0_write(_jump_result, 0, cherry_tmp1);
+  cherry_any cherry_tmp2;
+  cherry_exn cherry_tmp3 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_d804838175));
+  cherry_raise(cherry_tmp3);
   return CHERRY_INT_SMALL(0);
-  cherry_any_dec(cherry_tmp213);
-  CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.cleanup_return__clo23");
+  cherry_any_dec(cherry_tmp2);
+  CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.cleanup_return__clo1");
 }
 
-static cherry_int Example_Effects_NativeRuntime_cleanup_return__clo24(FStar_Pervasives_Native_option__int *_jump_result) {
+static cherry_int Example_Effects_NativeRuntime_cleanup_return__clo2(FStar_Pervasives_Native_option__int *_jump_result) {
   cherry_int *box = cherry_pbuf2_alloc(CHERRY_INT_SMALL(0), 1);
   cherry_int _result;
-  cherry_int cherry_tmp215 = Example_Effects_NativeRuntime_cleanup_return__clo23(_jump_result);
+  cherry_int cherry_tmp1 = Example_Effects_NativeRuntime_cleanup_return__clo1(_jump_result);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp216 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp216;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp216);
+    cherry_exn_dec(cherry_tmp2);
     cherry_pbuf2_free(box);
     cherry_raise(_cexn);
     return CHERRY_INT_SMALL(0);
   }
   else {
-    _result = cherry_tmp215;
+    _result = cherry_tmp1;
   }
   cherry_pbuf2_free(box);
   return _result;
 }
 
 static cherry_int Example_Effects_NativeRuntime_cleanup_return(void) {
-  FStar_Pervasives_Native_option__int cherry_tmp217 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
+  FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
   FStar_Pervasives_Native_option__int _jump_result;
-  cherry_pbuf0_init(&_jump_result, cherry_tmp217, 1);
-  cherry_int cherry_tmp218;
-  cherry_int cherry_tmp219 = Example_Effects_NativeRuntime_cleanup_return__clo24(&_jump_result);
+  cherry_pbuf0_init(&_jump_result, cherry_tmp1, 1);
+  cherry_int cherry_tmp2;
+  cherry_int cherry_tmp3 = Example_Effects_NativeRuntime_cleanup_return__clo2(&_jump_result);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp220 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp220, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp220)->f0, ((cherry_string)&cherry_lit_11))) {
-      cherry_exn_dec(cherry_tmp220);
+    cherry_exn cherry_tmp4 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp4)->f0, ((cherry_string)&cherry_lit_Example_Effects_d804838175))) {
+      cherry_exn_dec(cherry_tmp4);
       FStar_Pervasives_Native_option__int tmp1 = cherry_pbuf0_read(&_jump_result, 0);
       if (tmp1.tag == FSTAR_PERVASIVES_NATIVE_SOME__INT) {
         cherry_int _result = tmp1.val.Some;
-        cherry_tmp218 = _result;
+        cherry_tmp2 = _result;
       }
       else {
         CHERRY_ASSUME(tmp1.tag == FSTAR_PERVASIVES_NATIVE_NONE__INT, "incomplete match in Example.Effects.NativeRuntime.cleanup_return");
-        cherry_exn cherry_tmp221 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_11));
-        cherry_raise(cherry_tmp221);
+        cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_d804838175));
+        cherry_raise(cherry_tmp5);
         cherry_pbuf0_drop(&_jump_result, 1);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other = cherry_tmp220;
+      cherry_exn _other = cherry_tmp4;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp220);
+      cherry_exn_dec(cherry_tmp4);
       cherry_raise(_other);
       cherry_pbuf0_drop(&_jump_result, 1);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    cherry_tmp218 = cherry_tmp219;
+    cherry_tmp2 = cherry_tmp3;
   }
   cherry_pbuf0_drop(&_jump_result, 1);
-  return cherry_tmp218;
+  return cherry_tmp2;
 }
 
-static cherry_int Example_Effects_NativeRuntime_return_through_try__clo25(FStar_Pervasives_Native_option__int *_jump_result) {
-  FStar_Pervasives_Native_option__int cherry_tmp222 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
-  cherry_pbuf0_write(_jump_result, 0, cherry_tmp222);
-  cherry_any cherry_tmp223;
-  cherry_exn cherry_tmp224 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_12));
-  cherry_raise(cherry_tmp224);
+static cherry_int Example_Effects_NativeRuntime_return_through_try__clo1(FStar_Pervasives_Native_option__int *_jump_result) {
+  FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__INT, .val = { .Some = CHERRY_INT_SMALL(7) } };
+  cherry_pbuf0_write(_jump_result, 0, cherry_tmp1);
+  cherry_any cherry_tmp2;
+  cherry_exn cherry_tmp3 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_d80499497b));
+  cherry_raise(cherry_tmp3);
   return CHERRY_INT_SMALL(0);
-  cherry_any_dec(cherry_tmp223);
-  CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.return_through_try__clo25");
+  cherry_any_dec(cherry_tmp2);
+  CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.return_through_try__clo1");
 }
 
-static cherry_int Example_Effects_NativeRuntime_return_through_try__clo26(FStar_Pervasives_Native_option__int *_jump_result) {
-  cherry_int cherry_tmp225 = Example_Effects_NativeRuntime_return_through_try__clo25(_jump_result);
+static cherry_int Example_Effects_NativeRuntime_return_through_try__clo2(FStar_Pervasives_Native_option__int *_jump_result) {
+  cherry_int cherry_tmp1 = Example_Effects_NativeRuntime_return_through_try__clo1(_jump_result);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp226 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp226, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_exn_dec(cherry_tmp226);
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp2, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_exn_dec(cherry_tmp2);
       return CHERRY_INT_SMALL(99);
     }
     else {
-      cherry_exn _other = cherry_tmp226;
+      cherry_exn _other = cherry_tmp2;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp226);
+      cherry_exn_dec(cherry_tmp2);
       cherry_raise(_other);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    return cherry_tmp225;
+    return cherry_tmp1;
   }
 }
 
 static cherry_int Example_Effects_NativeRuntime_return_through_try(void) {
-  FStar_Pervasives_Native_option__int cherry_tmp227 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
+  FStar_Pervasives_Native_option__int cherry_tmp1 = (FStar_Pervasives_Native_option__int){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__INT };
   FStar_Pervasives_Native_option__int _jump_result;
-  cherry_pbuf0_init(&_jump_result, cherry_tmp227, 1);
-  cherry_int cherry_tmp228;
-  cherry_int cherry_tmp229 = Example_Effects_NativeRuntime_return_through_try__clo26(&_jump_result);
+  cherry_pbuf0_init(&_jump_result, cherry_tmp1, 1);
+  cherry_int cherry_tmp2;
+  cherry_int cherry_tmp3 = Example_Effects_NativeRuntime_return_through_try__clo2(&_jump_result);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp230 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp230, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp230)->f0, ((cherry_string)&cherry_lit_12))) {
-      cherry_exn_dec(cherry_tmp230);
+    cherry_exn cherry_tmp4 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp4)->f0, ((cherry_string)&cherry_lit_Example_Effects_d80499497b))) {
+      cherry_exn_dec(cherry_tmp4);
       FStar_Pervasives_Native_option__int tmp1 = cherry_pbuf0_read(&_jump_result, 0);
       if (tmp1.tag == FSTAR_PERVASIVES_NATIVE_SOME__INT) {
         cherry_int _result = tmp1.val.Some;
-        cherry_tmp228 = _result;
+        cherry_tmp2 = _result;
       }
       else {
         CHERRY_ASSUME(tmp1.tag == FSTAR_PERVASIVES_NATIVE_NONE__INT, "incomplete match in Example.Effects.NativeRuntime.return_through_try");
-        cherry_exn cherry_tmp231 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_12));
-        cherry_raise(cherry_tmp231);
+        cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_d80499497b));
+        cherry_raise(cherry_tmp5);
         cherry_pbuf0_drop(&_jump_result, 1);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other = cherry_tmp230;
+      cherry_exn _other = cherry_tmp4;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp230);
+      cherry_exn_dec(cherry_tmp4);
       cherry_raise(_other);
       cherry_pbuf0_drop(&_jump_result, 1);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    cherry_tmp228 = cherry_tmp229;
+    cherry_tmp2 = cherry_tmp3;
   }
   cherry_pbuf0_drop(&_jump_result, 1);
-  return cherry_tmp228;
+  return cherry_tmp2;
 }
 
-static cherry_int Example_Effects_NativeRuntime_cleanup_handles__clo27(void) {
-  cherry_exn cherry_tmp232;
-  cherry_any cherry_tmp233 = cherry_any0_mk(CHERRY_INT_SMALL(9));
-  cherry_tmp232 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp233);
-  cherry_raise(cherry_tmp232);
+static cherry_int Example_Effects_NativeRuntime_cleanup_handles__clo1(void) {
+  cherry_exn cherry_tmp1;
+  cherry_any cherry_tmp2 = cherry_any0_mk(CHERRY_INT_SMALL(9));
+  cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+  cherry_raise(cherry_tmp1);
   return CHERRY_INT_SMALL(0);
 }
 
-static void Example_Effects_NativeRuntime_cleanup_handles__clo28(void) {
-  cherry_exn cherry_tmp234;
-  cherry_any cherry_tmp235 = cherry_any4_mk(true);
-  cherry_tmp234 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp235);
-  cherry_raise(cherry_tmp234);
+static void Example_Effects_NativeRuntime_cleanup_handles__clo2(void) {
+  cherry_exn cherry_tmp1;
+  cherry_any cherry_tmp2 = cherry_any4_mk(true);
+  cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+  cherry_raise(cherry_tmp1);
   return;
 }
 
-static void Example_Effects_NativeRuntime_cleanup_handles__clo29(FStar_Pervasives_Native_option__unit *_jump_result) {
+static void Example_Effects_NativeRuntime_cleanup_handles__clo3(FStar_Pervasives_Native_option__unit *_jump_result) {
   while (true) {
     _jump_result[0] = FSTAR_PERVASIVES_NATIVE_SOME__UNIT;
-    cherry_any cherry_tmp236;
-    cherry_exn cherry_tmp237 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_13));
-    cherry_raise(cherry_tmp237);
+    cherry_any cherry_tmp1;
+    cherry_exn cherry_tmp2 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_85b22c6d26));
+    cherry_raise(cherry_tmp2);
     return;
-    cherry_any_dec(cherry_tmp236);
-    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.cleanup_handles__clo29");
+    cherry_any_dec(cherry_tmp1);
+    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.cleanup_handles__clo3");
   }
 }
 
-static void Example_Effects_NativeRuntime_cleanup_handles__clo30(void) {
-  cherry_exn cherry_tmp238;
-  cherry_any cherry_tmp239 = cherry_any4_mk(true);
-  cherry_tmp238 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp239);
-  cherry_raise(cherry_tmp238);
+static void Example_Effects_NativeRuntime_cleanup_handles__clo4(void) {
+  cherry_exn cherry_tmp1;
+  cherry_any cherry_tmp2 = cherry_any4_mk(true);
+  cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+  cherry_raise(cherry_tmp1);
   return;
 }
 
-static void Example_Effects_NativeRuntime_cleanup_handles__clo31(FStar_Pervasives_Native_option__unit *_jump_result) {
+static void Example_Effects_NativeRuntime_cleanup_handles__clo5(FStar_Pervasives_Native_option__unit *_jump_result) {
   while (true) {
     _jump_result[0] = FSTAR_PERVASIVES_NATIVE_SOME__UNIT;
-    cherry_any cherry_tmp240;
-    cherry_exn cherry_tmp241 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_13));
-    cherry_raise(cherry_tmp241);
+    cherry_any cherry_tmp1;
+    cherry_exn cherry_tmp2 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_85b22c6d26));
+    cherry_raise(cherry_tmp2);
     return;
-    cherry_any_dec(cherry_tmp240);
-    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.cleanup_handles__clo31");
+    cherry_any_dec(cherry_tmp1);
+    CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.cleanup_handles__clo5");
   }
 }
 
 static cherry_int Example_Effects_NativeRuntime_cleanup_handles(void) {
   cherry_int *box = cherry_pbuf2_alloc(CHERRY_INT_SMALL(0), 1);
   cherry_int _result;
-  cherry_int cherry_tmp242 = Example_Effects_NativeRuntime_cleanup_handles__clo27();
+  cherry_int cherry_tmp1 = Example_Effects_NativeRuntime_cleanup_handles__clo1();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp243 = cherry_exn_take();
-    cherry_exn _cexn = cherry_tmp243;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    cherry_exn _cexn = cherry_tmp2;
     cherry_inc(_cexn);
-    cherry_exn_dec(cherry_tmp243);
-    Example_Effects_NativeRuntime_cleanup_handles__clo28();
+    cherry_exn_dec(cherry_tmp2);
+    Example_Effects_NativeRuntime_cleanup_handles__clo2();
     if (CHERRY_EXN_PENDING()) {
-      cherry_exn cherry_tmp245 = cherry_exn_take();
-      if (cherry_exn_is(cherry_tmp245, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-        cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp245)->f0;
+      cherry_exn cherry_tmp4 = cherry_exn_take();
+      if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+        cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp4)->f0;
         cherry_any_inc(_payload);
-        cherry_exn_dec(cherry_tmp245);
+        cherry_exn_dec(cherry_tmp4);
         bool tmp1;
-        bool cherry_tmp246 = cherry_any4_get(_payload);
+        bool cherry_tmp5 = cherry_any4_get(_payload);
         cherry_any_dec(_payload);
-        tmp1 = cherry_tmp246;
+        tmp1 = cherry_tmp5;
         (void)(tmp1);
       }
       else {
-        cherry_exn _other = cherry_tmp245;
+        cherry_exn _other = cherry_tmp4;
         cherry_inc(_other);
-        cherry_exn_dec(cherry_tmp245);
+        cherry_exn_dec(cherry_tmp4);
         cherry_raise(_other);
         cherry_exn_dec(_cexn);
         return CHERRY_INT_SMALL(0);
       }
     }
     FStar_Pervasives_Native_option__unit _jump_result = FSTAR_PERVASIVES_NATIVE_NONE__UNIT;
-    Example_Effects_NativeRuntime_cleanup_handles__clo29(&_jump_result);
+    Example_Effects_NativeRuntime_cleanup_handles__clo3(&_jump_result);
     if (CHERRY_EXN_PENDING()) {
-      cherry_exn cherry_tmp248 = cherry_exn_take();
-      if (cherry_exn_is(cherry_tmp248, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp248)->f0, ((cherry_string)&cherry_lit_13))) {
-        cherry_exn_dec(cherry_tmp248);
+      cherry_exn cherry_tmp7 = cherry_exn_take();
+      if (cherry_exn_is(cherry_tmp7, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp7)->f0, ((cherry_string)&cherry_lit_Example_Effects_85b22c6d26))) {
+        cherry_exn_dec(cherry_tmp7);
         if (_jump_result == FSTAR_PERVASIVES_NATIVE_SOME__UNIT) { }
         else {
           CHERRY_ASSUME(_jump_result == FSTAR_PERVASIVES_NATIVE_NONE__UNIT, "incomplete match in Example.Effects.NativeRuntime.cleanup_handles");
-          cherry_exn cherry_tmp249 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_13));
-          cherry_raise(cherry_tmp249);
+          cherry_exn cherry_tmp8 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_85b22c6d26));
+          cherry_raise(cherry_tmp8);
           cherry_exn_dec(_cexn);
           return CHERRY_INT_SMALL(0);
         }
       }
       else {
-        cherry_exn _other_1 = cherry_tmp248;
+        cherry_exn _other_1 = cherry_tmp7;
         cherry_inc(_other_1);
-        cherry_exn_dec(cherry_tmp248);
+        cherry_exn_dec(cherry_tmp7);
         cherry_raise(_other_1);
         cherry_exn_dec(_cexn);
         return CHERRY_INT_SMALL(0);
@@ -2815,49 +2815,49 @@ static cherry_int Example_Effects_NativeRuntime_cleanup_handles(void) {
     return CHERRY_INT_SMALL(0);
   }
   else {
-    _result = cherry_tmp242;
+    _result = cherry_tmp1;
   }
-  Example_Effects_NativeRuntime_cleanup_handles__clo30();
+  Example_Effects_NativeRuntime_cleanup_handles__clo4();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp251 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp251, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload_1 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp251)->f0;
+    cherry_exn cherry_tmp10 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp10, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload_1 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp10)->f0;
       cherry_any_inc(_payload_1);
-      cherry_exn_dec(cherry_tmp251);
+      cherry_exn_dec(cherry_tmp10);
       bool tmp1_1;
-      bool cherry_tmp252 = cherry_any4_get(_payload_1);
+      bool cherry_tmp11 = cherry_any4_get(_payload_1);
       cherry_any_dec(_payload_1);
-      tmp1_1 = cherry_tmp252;
+      tmp1_1 = cherry_tmp11;
       (void)(tmp1_1);
     }
     else {
-      cherry_exn _other_2 = cherry_tmp251;
+      cherry_exn _other_2 = cherry_tmp10;
       cherry_inc(_other_2);
-      cherry_exn_dec(cherry_tmp251);
+      cherry_exn_dec(cherry_tmp10);
       cherry_raise(_other_2);
       cherry_dec(_result);
       return CHERRY_INT_SMALL(0);
     }
   }
   FStar_Pervasives_Native_option__unit _jump_result_1 = FSTAR_PERVASIVES_NATIVE_NONE__UNIT;
-  Example_Effects_NativeRuntime_cleanup_handles__clo31(&_jump_result_1);
+  Example_Effects_NativeRuntime_cleanup_handles__clo5(&_jump_result_1);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp254 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp254, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp254)->f0, ((cherry_string)&cherry_lit_13))) {
-      cherry_exn_dec(cherry_tmp254);
+    cherry_exn cherry_tmp13 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp13, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp13)->f0, ((cherry_string)&cherry_lit_Example_Effects_85b22c6d26))) {
+      cherry_exn_dec(cherry_tmp13);
       if (_jump_result_1 == FSTAR_PERVASIVES_NATIVE_SOME__UNIT) { }
       else {
         CHERRY_ASSUME(_jump_result_1 == FSTAR_PERVASIVES_NATIVE_NONE__UNIT, "incomplete match in Example.Effects.NativeRuntime.cleanup_handles");
-        cherry_exn cherry_tmp255 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_13));
-        cherry_raise(cherry_tmp255);
+        cherry_exn cherry_tmp14 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_85b22c6d26));
+        cherry_raise(cherry_tmp14);
         cherry_dec(_result);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other_3 = cherry_tmp254;
+      cherry_exn _other_3 = cherry_tmp13;
       cherry_inc(_other_3);
-      cherry_exn_dec(cherry_tmp254);
+      cherry_exn_dec(cherry_tmp13);
       cherry_raise(_other_3);
       cherry_dec(_result);
       return CHERRY_INT_SMALL(0);
@@ -2867,79 +2867,79 @@ static cherry_int Example_Effects_NativeRuntime_cleanup_handles(void) {
   return _result;
 }
 
-static cherry_int Example_Effects_NativeRuntime_reraises__clo32(void) {
-  cherry_exn cherry_tmp256;
+static cherry_int Example_Effects_NativeRuntime_reraises__clo1(void) {
+  cherry_exn cherry_tmp1;
   cherry_any _ct1;
-  cherry_exn cherry_tmp258 = cherry_exn_new_Example_Effects_NativeRuntime_First(CHERRY_INT_SMALL(3));
-  _ct1 = cherry_any3_mk(cherry_tmp258);
-  cherry_any cherry_tmp257 = _ct1;
-  cherry_tmp256 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp257);
-  cherry_raise(cherry_tmp256);
+  cherry_exn cherry_tmp3 = cherry_exn_new_Example_Effects_NativeRuntime_First(CHERRY_INT_SMALL(3));
+  _ct1 = cherry_any3_mk(cherry_tmp3);
+  cherry_any cherry_tmp2 = _ct1;
+  cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+  cherry_raise(cherry_tmp1);
   return CHERRY_INT_SMALL(0);
 }
 
 static cherry_int Example_Effects_NativeRuntime_reraises(void) {
-  cherry_int cherry_tmp259 = Example_Effects_NativeRuntime_reraises__clo32();
+  cherry_int cherry_tmp1 = Example_Effects_NativeRuntime_reraises__clo1();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp260 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp260, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp260)->f0;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp2, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp2)->f0;
       cherry_any_inc(_payload);
-      cherry_exn_dec(cherry_tmp260);
+      cherry_exn_dec(cherry_tmp2);
       cherry_exn tmp1;
-      cherry_exn cherry_tmp261 = cherry_any3_get(_payload);
+      cherry_exn cherry_tmp3 = cherry_any3_get(_payload);
       cherry_any_dec(_payload);
-      tmp1 = cherry_tmp261;
+      tmp1 = cherry_tmp3;
       if (cherry_exn_is(tmp1, &Example_Effects_NativeRuntime_First_exn_info)) {
         cherry_exn_dec(tmp1);
-        cherry_exn cherry_tmp262;
+        cherry_exn cherry_tmp4;
         cherry_any _ct1;
-        cherry_exn cherry_tmp264 = cherry_exn_new_Example_Effects_NativeRuntime_Second(((cherry_string)&cherry_lit_2));
-        _ct1 = cherry_any3_mk(cherry_tmp264);
-        cherry_any cherry_tmp263 = _ct1;
-        cherry_tmp262 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp263);
-        cherry_raise(cherry_tmp262);
+        cherry_exn cherry_tmp6 = cherry_exn_new_Example_Effects_NativeRuntime_Second(((cherry_string)&cherry_lit_outer_fa1739fba0));
+        _ct1 = cherry_any3_mk(cherry_tmp6);
+        cherry_any cherry_tmp5 = _ct1;
+        cherry_tmp4 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp5);
+        cherry_raise(cherry_tmp4);
         return CHERRY_INT_SMALL(0);
       }
       else {
-        cherry_exn cherry_tmp265;
-        cherry_any cherry_tmp266 = cherry_any3_mk(tmp1);
-        cherry_tmp265 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp266);
-        cherry_raise(cherry_tmp265);
+        cherry_exn cherry_tmp7;
+        cherry_any cherry_tmp8 = cherry_any3_mk(tmp1);
+        cherry_tmp7 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp8);
+        cherry_raise(cherry_tmp7);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other = cherry_tmp260;
+      cherry_exn _other = cherry_tmp2;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp260);
+      cherry_exn_dec(cherry_tmp2);
       cherry_raise(_other);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    return cherry_tmp259;
+    return cherry_tmp1;
   }
 }
 
 static cherry_int Example_Effects_NativeRuntime_recurse(cherry_int n) {
 custard_tail:;
-  bool cherry_tmp267 = (cherry_int_eq(n, CHERRY_INT_SMALL(0)));
-  if (cherry_tmp267) {
+  bool cherry_tmp1 = (cherry_int_eq(n, CHERRY_INT_SMALL(0)));
+  if (cherry_tmp1) {
     cherry_dec(n);
-    cherry_exn cherry_tmp268;
-    cherry_any cherry_tmp269 = cherry_any0_mk(CHERRY_INT_SMALL(9));
-    cherry_tmp268 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp269);
-    cherry_raise(cherry_tmp268);
+    cherry_exn cherry_tmp2;
+    cherry_any cherry_tmp3 = cherry_any0_mk(CHERRY_INT_SMALL(9));
+    cherry_tmp2 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp3);
+    cherry_raise(cherry_tmp2);
     return CHERRY_INT_SMALL(0);
   }
   else {
-    cherry_int cherry_tmp270;
-    cherry_int cherry_tmp271 = (cherry_int_sub(n, CHERRY_INT_SMALL(1)));
+    cherry_int cherry_tmp4;
+    cherry_int cherry_tmp5 = (cherry_int_sub(n, CHERRY_INT_SMALL(1)));
     cherry_dec(n);
-    cherry_tmp270 = cherry_tmp271;
+    cherry_tmp4 = cherry_tmp5;
     {
-      cherry_int _ctail1 = cherry_tmp270;
+      cherry_int _ctail1 = cherry_tmp4;
       n = _ctail1;
       goto custard_tail;
     }
@@ -2947,15 +2947,15 @@ custard_tail:;
 }
 
 static cherry_int Example_Effects_Native_invoke(cherry_fn action, bool eta) {
-  CHERRY_MUSTTAIL return cherry_apply_2_1(action, eta);
+  CHERRY_MUSTTAIL return cherry_apply_a11f8f4322_1(action, eta);
 }
 
 static cherry_int Example_Effects_Native_locally_defined__local(bool b) {
   if (b) {
-    cherry_exn cherry_tmp272;
-    cherry_any cherry_tmp273 = cherry_any0_mk(CHERRY_INT_SMALL(1));
-    cherry_tmp272 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp273);
-    cherry_raise(cherry_tmp272);
+    cherry_exn cherry_tmp1;
+    cherry_any cherry_tmp2 = cherry_any0_mk(CHERRY_INT_SMALL(1));
+    cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+    cherry_raise(cherry_tmp1);
     return CHERRY_INT_SMALL(0);
   }
   else {
@@ -2970,175 +2970,175 @@ static cherry_int Example_Effects_Native_locally_defined(bool b) {
 static void Example_Effects_Native_loop_exit(cherry_int *r) {
   while (true) {
     cherry_pbuf2_write(r, 0, CHERRY_INT_SMALL(1));
-    cherry_exn cherry_tmp274;
-    cherry_any cherry_tmp275 = cherry_any0_mk(CHERRY_INT_SMALL(1));
-    cherry_tmp274 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp275);
-    cherry_raise(cherry_tmp274);
+    cherry_exn cherry_tmp1;
+    cherry_any cherry_tmp2 = cherry_any0_mk(CHERRY_INT_SMALL(1));
+    cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+    cherry_raise(cherry_tmp1);
     return;
   }
 }
 
-static cherry_int Example_Effects_Native_reraised__clo33(cherry_int *r) {
-  cherry_int cherry_tmp276;
-  cherry_pbuf2_init(&cherry_tmp276, CHERRY_INT_SMALL(10), 1);
-  cherry_int cherry_tmp277;
+static cherry_int Example_Effects_Native_reraised__clo1(cherry_int *r) {
+  cherry_int cherry_tmp1;
+  cherry_pbuf2_init(&cherry_tmp1, CHERRY_INT_SMALL(10), 1);
+  cherry_int cherry_tmp2;
   cherry_pbuf2_write(r, 0, CHERRY_INT_SMALL(1));
-  cherry_exn cherry_tmp278;
-  cherry_any cherry_tmp279 = cherry_any5_mk(EXAMPLE_EFFECTS_NATIVE_FIRST);
-  cherry_tmp278 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp279);
-  cherry_raise(cherry_tmp278);
-  cherry_pbuf2_drop(&cherry_tmp276, 1);
+  cherry_exn cherry_tmp3;
+  cherry_any cherry_tmp4 = cherry_any5_mk(EXAMPLE_EFFECTS_NATIVE_FIRST);
+  cherry_tmp3 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp4);
+  cherry_raise(cherry_tmp3);
+  cherry_pbuf2_drop(&cherry_tmp1, 1);
   return CHERRY_INT_SMALL(0);
-  cherry_pbuf2_drop(&cherry_tmp276, 1);
-  return cherry_tmp277;
+  cherry_pbuf2_drop(&cherry_tmp1, 1);
+  return cherry_tmp2;
 }
 
-static cherry_int Example_Effects_Native_reraised__clo34(cherry_int *r) {
-  cherry_int cherry_tmp280 = Example_Effects_Native_reraised__clo33(r);
+static cherry_int Example_Effects_Native_reraised__clo2(cherry_int *r) {
+  cherry_int cherry_tmp1 = Example_Effects_Native_reraised__clo1(r);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp281 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp281, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp281)->f0;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp2, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp2)->f0;
       cherry_any_inc(_payload);
-      cherry_exn_dec(cherry_tmp281);
+      cherry_exn_dec(cherry_tmp2);
       Example_Effects_Native_failure tmp;
-      Example_Effects_Native_failure cherry_tmp282 = cherry_any5_get(_payload);
+      Example_Effects_Native_failure cherry_tmp3 = cherry_any5_get(_payload);
       cherry_any_dec(_payload);
-      tmp = cherry_tmp282;
+      tmp = cherry_tmp3;
       if (tmp == EXAMPLE_EFFECTS_NATIVE_FIRST) {
         cherry_pbuf2_write(r, 0, CHERRY_INT_SMALL(4));
-        cherry_exn cherry_tmp283;
-        cherry_any cherry_tmp284 = cherry_any5_mk(EXAMPLE_EFFECTS_NATIVE_FIRST);
-        cherry_tmp283 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp284);
-        cherry_raise(cherry_tmp283);
+        cherry_exn cherry_tmp4;
+        cherry_any cherry_tmp5 = cherry_any5_mk(EXAMPLE_EFFECTS_NATIVE_FIRST);
+        cherry_tmp4 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp5);
+        cherry_raise(cherry_tmp4);
         return CHERRY_INT_SMALL(0);
       }
       else {
-        cherry_exn cherry_tmp285;
-        cherry_any cherry_tmp286 = cherry_any5_mk(tmp);
-        cherry_tmp285 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp286);
-        cherry_raise(cherry_tmp285);
+        cherry_exn cherry_tmp6;
+        cherry_any cherry_tmp7 = cherry_any5_mk(tmp);
+        cherry_tmp6 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp7);
+        cherry_raise(cherry_tmp6);
         return CHERRY_INT_SMALL(0);
       }
     }
     else {
-      cherry_exn _other = cherry_tmp281;
+      cherry_exn _other = cherry_tmp2;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp281);
+      cherry_exn_dec(cherry_tmp2);
       cherry_raise(_other);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    return cherry_tmp280;
+    return cherry_tmp1;
   }
 }
 
 static cherry_int Example_Effects_Native_reraised(cherry_int *r) {
-  cherry_int cherry_tmp287 = Example_Effects_Native_reraised__clo34(r);
+  cherry_int cherry_tmp1 = Example_Effects_Native_reraised__clo2(r);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp288 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp288, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp288)->f0;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp2, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp2)->f0;
       cherry_any_inc(_payload);
-      cherry_exn_dec(cherry_tmp288);
+      cherry_exn_dec(cherry_tmp2);
       Example_Effects_Native_failure tmp;
-      Example_Effects_Native_failure cherry_tmp289 = cherry_any5_get(_payload);
+      Example_Effects_Native_failure cherry_tmp3 = cherry_any5_get(_payload);
       cherry_any_dec(_payload);
-      tmp = cherry_tmp289;
+      tmp = cherry_tmp3;
       CHERRY_ASSUME(tmp == EXAMPLE_EFFECTS_NATIVE_FIRST, "incomplete match in Example.Effects.Native.reraised");
       cherry_pbuf2_write(r, 0, CHERRY_INT_SMALL(5));
       return CHERRY_INT_SMALL(50);
     }
     else {
-      cherry_exn _other = cherry_tmp288;
+      cherry_exn _other = cherry_tmp2;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp288);
+      cherry_exn_dec(cherry_tmp2);
       cherry_raise(_other);
       return CHERRY_INT_SMALL(0);
     }
   }
   else {
-    return cherry_tmp287;
+    return cherry_tmp1;
   }
 }
 
 static cherry_string Example_Effects_NativeRuntime_stack_payload(cherry_string s) {
-  cherry_string cherry_tmp290;
-  cherry_string cherry_tmp291;
+  cherry_string cherry_tmp1;
+  cherry_string cherry_tmp2;
   cherry_inc(s);
-  cherry_tmp291 = (cherry_str_append(s, s));
+  cherry_tmp2 = (cherry_str_append(s, s));
   cherry_dec(s);
-  cherry_tmp290 = cherry_tmp291;
+  cherry_tmp1 = cherry_tmp2;
   cherry_string local;
-  cherry_pbuf1_init(&local, cherry_tmp290, 1);
-  cherry_string cherry_tmp292;
+  cherry_pbuf1_init(&local, cherry_tmp1, 1);
+  cherry_string cherry_tmp3;
   cherry_string __anf0 = cherry_pbuf1_read(&local, 0);
-  cherry_exn cherry_tmp293;
-  cherry_any cherry_tmp294 = cherry_any2_mk(__anf0);
-  cherry_tmp293 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp294);
-  cherry_raise(cherry_tmp293);
+  cherry_exn cherry_tmp4;
+  cherry_any cherry_tmp5 = cherry_any2_mk(__anf0);
+  cherry_tmp4 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp5);
+  cherry_raise(cherry_tmp4);
   cherry_pbuf1_drop(&local, 1);
   { cherry_string cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   cherry_pbuf1_drop(&local, 1);
-  return cherry_tmp292;
+  return cherry_tmp3;
 }
 
-static cherry_string Example_Effects_NativeRuntime_return_payload__clo35(FStar_Pervasives_Native_option__string *_jump_result, cherry_string s) {
-  FStar_Pervasives_Native_option__string cherry_tmp295;
-  cherry_string cherry_tmp296;
-  cherry_string cherry_tmp297;
+static cherry_string Example_Effects_NativeRuntime_return_payload__clo1(FStar_Pervasives_Native_option__string *_jump_result, cherry_string s) {
+  FStar_Pervasives_Native_option__string cherry_tmp1;
+  cherry_string cherry_tmp2;
+  cherry_string cherry_tmp3;
   cherry_inc(s);
-  cherry_tmp297 = (cherry_str_append(s, s));
+  cherry_tmp3 = (cherry_str_append(s, s));
   cherry_dec(s);
-  cherry_tmp296 = cherry_tmp297;
-  cherry_tmp295 = (FStar_Pervasives_Native_option__string){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__STRING, .val = { .Some = cherry_tmp296 } };
-  cherry_pbuf5_write(_jump_result, 0, cherry_tmp295);
-  cherry_any cherry_tmp298;
-  cherry_exn cherry_tmp299 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_14));
-  cherry_raise(cherry_tmp299);
+  cherry_tmp2 = cherry_tmp3;
+  cherry_tmp1 = (FStar_Pervasives_Native_option__string){ .tag = FSTAR_PERVASIVES_NATIVE_SOME__STRING, .val = { .Some = cherry_tmp2 } };
+  cherry_pbuf5_write(_jump_result, 0, cherry_tmp1);
+  cherry_any cherry_tmp4;
+  cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_d804789ffd));
+  cherry_raise(cherry_tmp5);
   { cherry_string cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
-  cherry_any_dec(cherry_tmp298);
-  CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.return_payload__clo35");
+  cherry_any_dec(cherry_tmp4);
+  CHERRY_UNREACHABLE("unreachable code (Pulse.Lib.Dv.unreachable) in Example.Effects.NativeRuntime.return_payload__clo1");
 }
 
 static cherry_string Example_Effects_NativeRuntime_return_payload(cherry_string s) {
-  FStar_Pervasives_Native_option__string cherry_tmp300 = (FStar_Pervasives_Native_option__string){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__STRING };
+  FStar_Pervasives_Native_option__string cherry_tmp1 = (FStar_Pervasives_Native_option__string){ .tag = FSTAR_PERVASIVES_NATIVE_NONE__STRING };
   FStar_Pervasives_Native_option__string _jump_result;
-  cherry_pbuf5_init(&_jump_result, cherry_tmp300, 1);
-  cherry_string cherry_tmp301;
-  cherry_string cherry_tmp302 = Example_Effects_NativeRuntime_return_payload__clo35(&_jump_result, s);
+  cherry_pbuf5_init(&_jump_result, cherry_tmp1, 1);
+  cherry_string cherry_tmp2;
+  cherry_string cherry_tmp3 = Example_Effects_NativeRuntime_return_payload__clo1(&_jump_result, s);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp303 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp303, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp303)->f0, ((cherry_string)&cherry_lit_14))) {
-      cherry_exn_dec(cherry_tmp303);
+    cherry_exn cherry_tmp4 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp4, &Pulse_Lib_NativeExceptions_ControlFlow_exn_info) && cherry_str_eq(((struct Pulse_Lib_NativeExceptions_ControlFlow_exn_s *)cherry_tmp4)->f0, ((cherry_string)&cherry_lit_Example_Effects_d804789ffd))) {
+      cherry_exn_dec(cherry_tmp4);
       FStar_Pervasives_Native_option__string tmp = cherry_pbuf5_read(&_jump_result, 0);
       if (tmp.tag == FSTAR_PERVASIVES_NATIVE_SOME__STRING) {
         cherry_string _result = tmp.val.Some;
-        cherry_tmp301 = _result;
+        cherry_tmp2 = _result;
       }
       else {
         CHERRY_ASSUME(tmp.tag == FSTAR_PERVASIVES_NATIVE_NONE__STRING, "incomplete match in Example.Effects.NativeRuntime.return_payload");
-        cherry_exn cherry_tmp304 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_14));
-        cherry_raise(cherry_tmp304);
+        cherry_exn cherry_tmp5 = cherry_exn_new_Pulse_Lib_NativeExceptions_ControlFlow(((cherry_string)&cherry_lit_Example_Effects_d804789ffd));
+        cherry_raise(cherry_tmp5);
         cherry_pbuf5_drop(&_jump_result, 1);
         { cherry_string cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
       }
     }
     else {
-      cherry_exn _other = cherry_tmp303;
+      cherry_exn _other = cherry_tmp4;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp303);
+      cherry_exn_dec(cherry_tmp4);
       cherry_raise(_other);
       cherry_pbuf5_drop(&_jump_result, 1);
       { cherry_string cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
     }
   }
   else {
-    cherry_tmp301 = cherry_tmp302;
+    cherry_tmp2 = cherry_tmp3;
   }
   cherry_pbuf5_drop(&_jump_result, 1);
-  return cherry_tmp301;
+  return cherry_tmp2;
 }
 
 static Pulse_Lib_Effects_Rules_outcome__bool_bool Example_Effects_NativeExtraction_raw_outcome(bool b) {
@@ -3153,12 +3153,12 @@ static Pulse_Lib_Effects_Rules_outcome__bool_bool Example_Effects_NativeExtracti
   return _return;
 }
 
-static bool Example_Effects_NativeExtraction_handled_bool__clo36(bool b) {
+static bool Example_Effects_NativeExtraction_handled_bool__clo1(bool b) {
   if (b) {
-    cherry_exn cherry_tmp305;
-    cherry_any cherry_tmp306 = cherry_any4_mk(b);
-    cherry_tmp305 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp306);
-    cherry_raise(cherry_tmp305);
+    cherry_exn cherry_tmp1;
+    cherry_any cherry_tmp2 = cherry_any4_mk(b);
+    cherry_tmp1 = cherry_exn_new_Pulse_Lib_NativeExceptions_NativeException(cherry_tmp2);
+    cherry_raise(cherry_tmp1);
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
@@ -3167,113 +3167,113 @@ static bool Example_Effects_NativeExtraction_handled_bool__clo36(bool b) {
 }
 
 static bool Example_Effects_NativeExtraction_handled_bool(bool b) {
-  bool cherry_tmp307 = Example_Effects_NativeExtraction_handled_bool__clo36(b);
+  bool cherry_tmp1 = Example_Effects_NativeExtraction_handled_bool__clo1(b);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp308 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp308, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp308)->f0;
+    cherry_exn cherry_tmp2 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp2, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp2)->f0;
       cherry_any_inc(_payload);
-      cherry_exn_dec(cherry_tmp308);
-      bool cherry_tmp309 = cherry_any4_get(_payload);
+      cherry_exn_dec(cherry_tmp2);
+      bool cherry_tmp3 = cherry_any4_get(_payload);
       cherry_any_dec(_payload);
-      return cherry_tmp309;
+      return cherry_tmp3;
     }
     else {
-      cherry_exn _other = cherry_tmp308;
+      cherry_exn _other = cherry_tmp2;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp308);
+      cherry_exn_dec(cherry_tmp2);
       cherry_raise(_other);
       { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
     }
   }
   else {
-    return cherry_tmp307;
+    return cherry_tmp1;
   }
 }
 
-static cherry_int Example_Effects_NativeRuntime_test__clo37(void) {
+static cherry_int Example_Effects_NativeRuntime_test__clo1(void) {
   CHERRY_MUSTTAIL return Example_Effects_NativeRuntime_early(false);
 }
 
-static cherry_int Example_Effects_NativeRuntime_test__clo38(void) {
+static cherry_int Example_Effects_NativeRuntime_test__clo2(void) {
   CHERRY_MUSTTAIL return Example_Effects_NativeRuntime_cleanup(true);
 }
 
-static cherry_int Example_Effects_NativeRuntime_test__clo39(void) {
+static cherry_int Example_Effects_NativeRuntime_test__clo3(void) {
   CHERRY_MUSTTAIL return Example_Effects_NativeRuntime_cleanup_handles();
 }
 
-static cherry_int Example_Effects_NativeRuntime_test__clo40(void) {
+static cherry_int Example_Effects_NativeRuntime_test__clo4(void) {
   CHERRY_MUSTTAIL return Example_Effects_NativeRuntime_reraises();
 }
 
-static cherry_int Example_Effects_NativeRuntime_test__clo41(void) {
+static cherry_int Example_Effects_NativeRuntime_test__clo5(void) {
   CHERRY_MUSTTAIL return Example_Effects_NativeRuntime_recurse(CHERRY_INT_SMALL(5));
 }
 
-static cherry_int Example_Effects_NativeRuntime_test__clo42(void) {
+static cherry_int Example_Effects_NativeRuntime_test__clo6(void) {
   CHERRY_MUSTTAIL return Example_Effects_Native_invoke(((cherry_fn)&cherry_clo_Example_Effects_Native_locally_defined), true);
 }
 
-static void Example_Effects_NativeRuntime_test__clo43(cherry_int *state) {
+static void Example_Effects_NativeRuntime_test__clo7(cherry_int *state) {
   CHERRY_TAILCALL_VOID(Example_Effects_Native_loop_exit(state));
 }
 
-static cherry_string Example_Effects_NativeRuntime_test__clo44(void) {
-  CHERRY_MUSTTAIL return Example_Effects_NativeRuntime_stack_payload(((cherry_string)&cherry_lit_15));
+static cherry_string Example_Effects_NativeRuntime_test__clo8(void) {
+  CHERRY_MUSTTAIL return Example_Effects_NativeRuntime_stack_payload(((cherry_string)&cherry_lit_owned_fa7258a5f3));
 }
 
 bool Example_Effects_NativeRuntime_test(void) {
   cherry_int a;
-  cherry_int cherry_tmp310 = Example_Effects_NativeRuntime_early(true);
+  cherry_int cherry_tmp1 = Example_Effects_NativeRuntime_early(true);
   if (CHERRY_EXN_PENDING()) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    a = cherry_tmp310;
+    a = cherry_tmp1;
   }
   cherry_int b;
-  cherry_int cherry_tmp311 = Example_Effects_NativeRuntime_test__clo37();
+  cherry_int cherry_tmp2 = Example_Effects_NativeRuntime_test__clo1();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp312 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp312, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_exn_dec(cherry_tmp312);
+    cherry_exn cherry_tmp3 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp3, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_exn_dec(cherry_tmp3);
       b = CHERRY_INT_SMALL(9);
     }
     else {
-      cherry_exn _other = cherry_tmp312;
+      cherry_exn _other = cherry_tmp3;
       cherry_inc(_other);
-      cherry_exn_dec(cherry_tmp312);
+      cherry_exn_dec(cherry_tmp3);
       cherry_raise(_other);
       cherry_dec(a);
       { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
     }
   }
   else {
-    b = cherry_tmp311;
+    b = cherry_tmp2;
   }
   cherry_int c;
-  cherry_int cherry_tmp313 = Example_Effects_NativeRuntime_cleanup(false);
+  cherry_int cherry_tmp4 = Example_Effects_NativeRuntime_cleanup(false);
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(b);
     cherry_dec(a);
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    c = cherry_tmp313;
+    c = cherry_tmp4;
   }
   cherry_int d;
-  cherry_int cherry_tmp314 = Example_Effects_NativeRuntime_test__clo38();
+  cherry_int cherry_tmp5 = Example_Effects_NativeRuntime_test__clo2();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp315 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp315, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_exn_dec(cherry_tmp315);
+    cherry_exn cherry_tmp6 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp6, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_exn_dec(cherry_tmp6);
       d = CHERRY_INT_SMALL(9);
     }
     else {
-      cherry_exn _other_1 = cherry_tmp315;
+      cherry_exn _other_1 = cherry_tmp6;
       cherry_inc(_other_1);
-      cherry_exn_dec(cherry_tmp315);
+      cherry_exn_dec(cherry_tmp6);
       cherry_raise(_other_1);
       cherry_dec(c);
       cherry_dec(b);
@@ -3282,10 +3282,10 @@ bool Example_Effects_NativeRuntime_test(void) {
     }
   }
   else {
-    d = cherry_tmp314;
+    d = cherry_tmp5;
   }
   cherry_int e;
-  cherry_int cherry_tmp316 = Example_Effects_NativeRuntime_cleanup_return();
+  cherry_int cherry_tmp7 = Example_Effects_NativeRuntime_cleanup_return();
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(d);
     cherry_dec(c);
@@ -3294,10 +3294,10 @@ bool Example_Effects_NativeRuntime_test(void) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    e = cherry_tmp316;
+    e = cherry_tmp7;
   }
   cherry_int f;
-  cherry_int cherry_tmp317 = Example_Effects_NativeRuntime_return_through_try();
+  cherry_int cherry_tmp8 = Example_Effects_NativeRuntime_return_through_try();
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(e);
     cherry_dec(d);
@@ -3307,20 +3307,20 @@ bool Example_Effects_NativeRuntime_test(void) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    f = cherry_tmp317;
+    f = cherry_tmp8;
   }
   cherry_int g;
-  cherry_int cherry_tmp318 = Example_Effects_NativeRuntime_test__clo39();
+  cherry_int cherry_tmp9 = Example_Effects_NativeRuntime_test__clo3();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp319 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp319, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_exn_dec(cherry_tmp319);
+    cherry_exn cherry_tmp10 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp10, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_exn_dec(cherry_tmp10);
       g = CHERRY_INT_SMALL(9);
     }
     else {
-      cherry_exn _other_2 = cherry_tmp319;
+      cherry_exn _other_2 = cherry_tmp10;
       cherry_inc(_other_2);
-      cherry_exn_dec(cherry_tmp319);
+      cherry_exn_dec(cherry_tmp10);
       cherry_raise(_other_2);
       cherry_dec(f);
       cherry_dec(e);
@@ -3332,28 +3332,28 @@ bool Example_Effects_NativeRuntime_test(void) {
     }
   }
   else {
-    g = cherry_tmp318;
+    g = cherry_tmp9;
   }
   cherry_int h;
-  cherry_int cherry_tmp320 = Example_Effects_NativeRuntime_test__clo40();
+  cherry_int cherry_tmp11 = Example_Effects_NativeRuntime_test__clo4();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp321 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp321, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp321)->f0;
+    cherry_exn cherry_tmp12 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp12, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp12)->f0;
       cherry_any_inc(_payload);
-      cherry_exn_dec(cherry_tmp321);
+      cherry_exn_dec(cherry_tmp12);
       cherry_exn tmp1;
-      cherry_exn cherry_tmp322 = cherry_any3_get(_payload);
+      cherry_exn cherry_tmp13 = cherry_any3_get(_payload);
       cherry_any_dec(_payload);
-      tmp1 = cherry_tmp322;
+      tmp1 = cherry_tmp13;
       CHERRY_ASSUME(cherry_exn_is(tmp1, &Example_Effects_NativeRuntime_Second_exn_info), "incomplete match in Example.Effects.NativeRuntime.test");
       cherry_exn_dec(tmp1);
       h = CHERRY_INT_SMALL(11);
     }
     else {
-      cherry_exn _other_3 = cherry_tmp321;
+      cherry_exn _other_3 = cherry_tmp12;
       cherry_inc(_other_3);
-      cherry_exn_dec(cherry_tmp321);
+      cherry_exn_dec(cherry_tmp12);
       cherry_raise(_other_3);
       cherry_dec(g);
       cherry_dec(f);
@@ -3366,20 +3366,20 @@ bool Example_Effects_NativeRuntime_test(void) {
     }
   }
   else {
-    h = cherry_tmp320;
+    h = cherry_tmp11;
   }
   cherry_int i;
-  cherry_int cherry_tmp323 = Example_Effects_NativeRuntime_test__clo41();
+  cherry_int cherry_tmp14 = Example_Effects_NativeRuntime_test__clo5();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp324 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp324, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_exn_dec(cherry_tmp324);
+    cherry_exn cherry_tmp15 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp15, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_exn_dec(cherry_tmp15);
       i = CHERRY_INT_SMALL(9);
     }
     else {
-      cherry_exn _other_4 = cherry_tmp324;
+      cherry_exn _other_4 = cherry_tmp15;
       cherry_inc(_other_4);
-      cherry_exn_dec(cherry_tmp324);
+      cherry_exn_dec(cherry_tmp15);
       cherry_raise(_other_4);
       cherry_dec(h);
       cherry_dec(g);
@@ -3393,10 +3393,10 @@ bool Example_Effects_NativeRuntime_test(void) {
     }
   }
   else {
-    i = cherry_tmp323;
+    i = cherry_tmp14;
   }
   cherry_int j;
-  cherry_int cherry_tmp325 = Example_Effects_Native_invoke(((cherry_fn)&cherry_clo_Example_Effects_Native_locally_defined), false);
+  cherry_int cherry_tmp16 = Example_Effects_Native_invoke(((cherry_fn)&cherry_clo_Example_Effects_Native_locally_defined), false);
   if (CHERRY_EXN_PENDING()) {
     cherry_dec(i);
     cherry_dec(h);
@@ -3410,20 +3410,20 @@ bool Example_Effects_NativeRuntime_test(void) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    j = cherry_tmp325;
+    j = cherry_tmp16;
   }
   cherry_int k;
-  cherry_int cherry_tmp326 = Example_Effects_NativeRuntime_test__clo42();
+  cherry_int cherry_tmp17 = Example_Effects_NativeRuntime_test__clo6();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp327 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp327, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_exn_dec(cherry_tmp327);
+    cherry_exn cherry_tmp18 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp18, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_exn_dec(cherry_tmp18);
       k = CHERRY_INT_SMALL(1);
     }
     else {
-      cherry_exn _other_5 = cherry_tmp327;
+      cherry_exn _other_5 = cherry_tmp18;
       cherry_inc(_other_5);
-      cherry_exn_dec(cherry_tmp327);
+      cherry_exn_dec(cherry_tmp18);
       cherry_raise(_other_5);
       cherry_dec(j);
       cherry_dec(i);
@@ -3439,25 +3439,25 @@ bool Example_Effects_NativeRuntime_test(void) {
     }
   }
   else {
-    k = cherry_tmp326;
+    k = cherry_tmp17;
   }
   cherry_int state;
   cherry_pbuf2_init(&state, CHERRY_INT_SMALL(0), 1);
-  bool cherry_tmp328;
+  bool cherry_tmp19;
   cherry_int frame;
   cherry_pbuf2_init(&frame, CHERRY_INT_SMALL(17), 1);
-  bool cherry_tmp329;
-  Example_Effects_NativeRuntime_test__clo43(&state);
+  bool cherry_tmp20;
+  Example_Effects_NativeRuntime_test__clo7(&state);
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp331 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp331, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload_1 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp331)->f0;
+    cherry_exn cherry_tmp22 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp22, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload_1 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp22)->f0;
       cherry_any_inc(_payload_1);
-      cherry_exn_dec(cherry_tmp331);
+      cherry_exn_dec(cherry_tmp22);
       cherry_int tmp1_1;
-      cherry_int cherry_tmp332 = cherry_any0_get(_payload_1);
+      cherry_int cherry_tmp23 = cherry_any0_get(_payload_1);
       cherry_any_dec(_payload_1);
-      tmp1_1 = cherry_tmp332;
+      tmp1_1 = cherry_tmp23;
       if (cherry_int_eq(tmp1_1, CHERRY_INT_SMALL(1))) {
         cherry_dec(tmp1_1);
       }
@@ -3466,9 +3466,9 @@ bool Example_Effects_NativeRuntime_test(void) {
       }
     }
     else {
-      cherry_exn _other_6 = cherry_tmp331;
+      cherry_exn _other_6 = cherry_tmp22;
       cherry_inc(_other_6);
-      cherry_exn_dec(cherry_tmp331);
+      cherry_exn_dec(cherry_tmp22);
       cherry_raise(_other_6);
       cherry_pbuf2_drop(&frame, 1);
       cherry_pbuf2_drop(&state, 1);
@@ -3489,7 +3489,7 @@ bool Example_Effects_NativeRuntime_test(void) {
   cherry_int l = cherry_pbuf2_read(&state, 0);
   cherry_pbuf2_write(&state, 0, CHERRY_INT_SMALL(0));
   cherry_int m;
-  cherry_int cherry_tmp333 = Example_Effects_Native_reraised(&state);
+  cherry_int cherry_tmp24 = Example_Effects_Native_reraised(&state);
   if (CHERRY_EXN_PENDING()) {
     cherry_pbuf2_drop(&frame, 1);
     cherry_pbuf2_drop(&state, 1);
@@ -3508,26 +3508,26 @@ bool Example_Effects_NativeRuntime_test(void) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    m = cherry_tmp333;
+    m = cherry_tmp24;
   }
   cherry_int n = cherry_pbuf2_read(&state, 0);
   cherry_int o = cherry_pbuf2_read(&frame, 0);
   cherry_string p;
-  cherry_string cherry_tmp334 = Example_Effects_NativeRuntime_test__clo44();
+  cherry_string cherry_tmp25 = Example_Effects_NativeRuntime_test__clo8();
   if (CHERRY_EXN_PENDING()) {
-    cherry_exn cherry_tmp335 = cherry_exn_take();
-    if (cherry_exn_is(cherry_tmp335, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
-      cherry_any _payload_2 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp335)->f0;
+    cherry_exn cherry_tmp26 = cherry_exn_take();
+    if (cherry_exn_is(cherry_tmp26, &Pulse_Lib_NativeExceptions_NativeException_exn_info)) {
+      cherry_any _payload_2 = ((struct Pulse_Lib_NativeExceptions_NativeException_exn_s *)cherry_tmp26)->f0;
       cherry_any_inc(_payload_2);
-      cherry_exn_dec(cherry_tmp335);
-      cherry_string cherry_tmp336 = cherry_any2_get(_payload_2);
+      cherry_exn_dec(cherry_tmp26);
+      cherry_string cherry_tmp27 = cherry_any2_get(_payload_2);
       cherry_any_dec(_payload_2);
-      p = cherry_tmp336;
+      p = cherry_tmp27;
     }
     else {
-      cherry_exn _other_7 = cherry_tmp335;
+      cherry_exn _other_7 = cherry_tmp26;
       cherry_inc(_other_7);
-      cherry_exn_dec(cherry_tmp335);
+      cherry_exn_dec(cherry_tmp26);
       cherry_raise(_other_7);
       cherry_pbuf2_drop(&frame, 1);
       cherry_pbuf2_drop(&state, 1);
@@ -3550,10 +3550,10 @@ bool Example_Effects_NativeRuntime_test(void) {
     }
   }
   else {
-    p = cherry_tmp334;
+    p = cherry_tmp25;
   }
   cherry_string q;
-  cherry_string cherry_tmp337 = Example_Effects_NativeRuntime_return_payload(((cherry_string)&cherry_lit_15));
+  cherry_string cherry_tmp28 = Example_Effects_NativeRuntime_return_payload(((cherry_string)&cherry_lit_owned_fa7258a5f3));
   if (CHERRY_EXN_PENDING()) {
     cherry_pbuf2_drop(&frame, 1);
     cherry_pbuf2_drop(&state, 1);
@@ -3576,7 +3576,7 @@ bool Example_Effects_NativeRuntime_test(void) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    q = cherry_tmp337;
+    q = cherry_tmp28;
   }
   Pulse_Lib_Effects_Rules_outcome__bool_bool raw = Example_Effects_NativeExtraction_raw_outcome(true);
   bool r;
@@ -3588,7 +3588,7 @@ bool Example_Effects_NativeRuntime_test(void) {
     r = raw.val.Raised;
   }
   bool s;
-  bool cherry_tmp338 = Example_Effects_NativeExtraction_handled_bool(true);
+  bool cherry_tmp29 = Example_Effects_NativeExtraction_handled_bool(true);
   if (CHERRY_EXN_PENDING()) {
     cherry_pbuf2_drop(&frame, 1);
     cherry_pbuf2_drop(&state, 1);
@@ -3612,10 +3612,10 @@ bool Example_Effects_NativeRuntime_test(void) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    s = cherry_tmp338;
+    s = cherry_tmp29;
   }
   bool t;
-  bool cherry_tmp339 = Example_Effects_NativeExtraction_handled_bool(false);
+  bool cherry_tmp30 = Example_Effects_NativeExtraction_handled_bool(false);
   if (CHERRY_EXN_PENDING()) {
     cherry_pbuf2_drop(&frame, 1);
     cherry_pbuf2_drop(&state, 1);
@@ -3639,181 +3639,181 @@ bool Example_Effects_NativeRuntime_test(void) {
     { bool cherry_dummy; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }
   }
   else {
-    t = cherry_tmp339;
+    t = cherry_tmp30;
   }
-  bool cherry_tmp340;
-  bool cherry_tmp341;
-  bool cherry_tmp342;
-  bool cherry_tmp343;
-  bool cherry_tmp344;
-  bool cherry_tmp345;
-  bool cherry_tmp346;
-  bool cherry_tmp347;
-  bool cherry_tmp348;
-  bool cherry_tmp349;
-  bool cherry_tmp350;
-  bool cherry_tmp351;
-  bool cherry_tmp352;
-  bool cherry_tmp353;
-  bool cherry_tmp354;
-  bool cherry_tmp355;
-  bool cherry_tmp356;
-  bool cherry_tmp357;
-  bool cherry_tmp358;
-  bool cherry_tmp359 = (cherry_int_eq(a, CHERRY_INT_SMALL(7)));
+  bool cherry_tmp31;
+  bool cherry_tmp32;
+  bool cherry_tmp33;
+  bool cherry_tmp34;
+  bool cherry_tmp35;
+  bool cherry_tmp36;
+  bool cherry_tmp37;
+  bool cherry_tmp38;
+  bool cherry_tmp39;
+  bool cherry_tmp40;
+  bool cherry_tmp41;
+  bool cherry_tmp42;
+  bool cherry_tmp43;
+  bool cherry_tmp44;
+  bool cherry_tmp45;
+  bool cherry_tmp46;
+  bool cherry_tmp47;
+  bool cherry_tmp48;
+  bool cherry_tmp49;
+  bool cherry_tmp50 = (cherry_int_eq(a, CHERRY_INT_SMALL(7)));
   cherry_dec(a);
-  cherry_tmp358 = cherry_tmp359;
-  if (cherry_tmp358) {
-    bool cherry_tmp360 = (cherry_int_eq(b, CHERRY_INT_SMALL(9)));
+  cherry_tmp49 = cherry_tmp50;
+  if (cherry_tmp49) {
+    bool cherry_tmp51 = (cherry_int_eq(b, CHERRY_INT_SMALL(9)));
     cherry_dec(b);
-    cherry_tmp357 = cherry_tmp360;
+    cherry_tmp48 = cherry_tmp51;
   }
   else {
     cherry_dec(b);
-    cherry_tmp357 = false;
+    cherry_tmp48 = false;
   }
-  if (cherry_tmp357) {
-    bool cherry_tmp361 = (cherry_int_eq(c, CHERRY_INT_SMALL(7)));
+  if (cherry_tmp48) {
+    bool cherry_tmp52 = (cherry_int_eq(c, CHERRY_INT_SMALL(7)));
     cherry_dec(c);
-    cherry_tmp356 = cherry_tmp361;
+    cherry_tmp47 = cherry_tmp52;
   }
   else {
     cherry_dec(c);
-    cherry_tmp356 = false;
+    cherry_tmp47 = false;
   }
-  if (cherry_tmp356) {
-    bool cherry_tmp362 = (cherry_int_eq(d, CHERRY_INT_SMALL(9)));
+  if (cherry_tmp47) {
+    bool cherry_tmp53 = (cherry_int_eq(d, CHERRY_INT_SMALL(9)));
     cherry_dec(d);
-    cherry_tmp355 = cherry_tmp362;
+    cherry_tmp46 = cherry_tmp53;
   }
   else {
     cherry_dec(d);
-    cherry_tmp355 = false;
+    cherry_tmp46 = false;
   }
-  if (cherry_tmp355) {
-    bool cherry_tmp363 = (cherry_int_eq(e, CHERRY_INT_SMALL(7)));
+  if (cherry_tmp46) {
+    bool cherry_tmp54 = (cherry_int_eq(e, CHERRY_INT_SMALL(7)));
     cherry_dec(e);
-    cherry_tmp354 = cherry_tmp363;
+    cherry_tmp45 = cherry_tmp54;
   }
   else {
     cherry_dec(e);
-    cherry_tmp354 = false;
+    cherry_tmp45 = false;
   }
-  if (cherry_tmp354) {
-    bool cherry_tmp364 = (cherry_int_eq(f, CHERRY_INT_SMALL(7)));
+  if (cherry_tmp45) {
+    bool cherry_tmp55 = (cherry_int_eq(f, CHERRY_INT_SMALL(7)));
     cherry_dec(f);
-    cherry_tmp353 = cherry_tmp364;
+    cherry_tmp44 = cherry_tmp55;
   }
   else {
     cherry_dec(f);
-    cherry_tmp353 = false;
+    cherry_tmp44 = false;
   }
-  if (cherry_tmp353) {
-    bool cherry_tmp365 = (cherry_int_eq(g, CHERRY_INT_SMALL(9)));
+  if (cherry_tmp44) {
+    bool cherry_tmp56 = (cherry_int_eq(g, CHERRY_INT_SMALL(9)));
     cherry_dec(g);
-    cherry_tmp352 = cherry_tmp365;
+    cherry_tmp43 = cherry_tmp56;
   }
   else {
     cherry_dec(g);
-    cherry_tmp352 = false;
+    cherry_tmp43 = false;
   }
-  if (cherry_tmp352) {
-    bool cherry_tmp366 = (cherry_int_eq(h, CHERRY_INT_SMALL(11)));
+  if (cherry_tmp43) {
+    bool cherry_tmp57 = (cherry_int_eq(h, CHERRY_INT_SMALL(11)));
     cherry_dec(h);
-    cherry_tmp351 = cherry_tmp366;
+    cherry_tmp42 = cherry_tmp57;
   }
   else {
     cherry_dec(h);
-    cherry_tmp351 = false;
+    cherry_tmp42 = false;
   }
-  if (cherry_tmp351) {
-    bool cherry_tmp367 = (cherry_int_eq(i, CHERRY_INT_SMALL(9)));
+  if (cherry_tmp42) {
+    bool cherry_tmp58 = (cherry_int_eq(i, CHERRY_INT_SMALL(9)));
     cherry_dec(i);
-    cherry_tmp350 = cherry_tmp367;
+    cherry_tmp41 = cherry_tmp58;
   }
   else {
     cherry_dec(i);
-    cherry_tmp350 = false;
+    cherry_tmp41 = false;
   }
-  if (cherry_tmp350) {
-    bool cherry_tmp368 = (cherry_int_eq(j, CHERRY_INT_SMALL(7)));
+  if (cherry_tmp41) {
+    bool cherry_tmp59 = (cherry_int_eq(j, CHERRY_INT_SMALL(7)));
     cherry_dec(j);
-    cherry_tmp349 = cherry_tmp368;
+    cherry_tmp40 = cherry_tmp59;
   }
   else {
     cherry_dec(j);
-    cherry_tmp349 = false;
+    cherry_tmp40 = false;
   }
-  if (cherry_tmp349) {
-    bool cherry_tmp369 = (cherry_int_eq(k, CHERRY_INT_SMALL(1)));
+  if (cherry_tmp40) {
+    bool cherry_tmp60 = (cherry_int_eq(k, CHERRY_INT_SMALL(1)));
     cherry_dec(k);
-    cherry_tmp348 = cherry_tmp369;
+    cherry_tmp39 = cherry_tmp60;
   }
   else {
     cherry_dec(k);
-    cherry_tmp348 = false;
+    cherry_tmp39 = false;
   }
-  if (cherry_tmp348) {
-    bool cherry_tmp370 = (cherry_int_eq(l, CHERRY_INT_SMALL(1)));
+  if (cherry_tmp39) {
+    bool cherry_tmp61 = (cherry_int_eq(l, CHERRY_INT_SMALL(1)));
     cherry_dec(l);
-    cherry_tmp347 = cherry_tmp370;
+    cherry_tmp38 = cherry_tmp61;
   }
   else {
     cherry_dec(l);
-    cherry_tmp347 = false;
+    cherry_tmp38 = false;
   }
-  if (cherry_tmp347) {
-    bool cherry_tmp371 = (cherry_int_eq(m, CHERRY_INT_SMALL(50)));
+  if (cherry_tmp38) {
+    bool cherry_tmp62 = (cherry_int_eq(m, CHERRY_INT_SMALL(50)));
     cherry_dec(m);
-    cherry_tmp346 = cherry_tmp371;
+    cherry_tmp37 = cherry_tmp62;
   }
   else {
     cherry_dec(m);
-    cherry_tmp346 = false;
+    cherry_tmp37 = false;
   }
-  if (cherry_tmp346) {
-    bool cherry_tmp372 = (cherry_int_eq(n, CHERRY_INT_SMALL(5)));
+  if (cherry_tmp37) {
+    bool cherry_tmp63 = (cherry_int_eq(n, CHERRY_INT_SMALL(5)));
     cherry_dec(n);
-    cherry_tmp345 = cherry_tmp372;
+    cherry_tmp36 = cherry_tmp63;
   }
   else {
     cherry_dec(n);
-    cherry_tmp345 = false;
+    cherry_tmp36 = false;
   }
-  if (cherry_tmp345) {
-    bool cherry_tmp373 = (cherry_int_eq(o, CHERRY_INT_SMALL(17)));
+  if (cherry_tmp36) {
+    bool cherry_tmp64 = (cherry_int_eq(o, CHERRY_INT_SMALL(17)));
     cherry_dec(o);
-    cherry_tmp344 = cherry_tmp373;
+    cherry_tmp35 = cherry_tmp64;
   }
   else {
     cherry_dec(o);
-    cherry_tmp344 = false;
+    cherry_tmp35 = false;
   }
-  if (cherry_tmp344) {
-    bool cherry_tmp374 = (cherry_str_eq(p, ((cherry_string)&cherry_lit_16)));
+  if (cherry_tmp35) {
+    bool cherry_tmp65 = (cherry_str_eq(p, ((cherry_string)&cherry_lit_ownedowned_6d7f3fcdd6)));
     cherry_dec(p);
-    cherry_tmp343 = cherry_tmp374;
+    cherry_tmp34 = cherry_tmp65;
   }
   else {
     cherry_dec(p);
-    cherry_tmp343 = false;
+    cherry_tmp34 = false;
   }
-  if (cherry_tmp343) {
-    bool cherry_tmp375 = (cherry_str_eq(q, ((cherry_string)&cherry_lit_16)));
+  if (cherry_tmp34) {
+    bool cherry_tmp66 = (cherry_str_eq(q, ((cherry_string)&cherry_lit_ownedowned_6d7f3fcdd6)));
     cherry_dec(q);
-    cherry_tmp342 = cherry_tmp375;
+    cherry_tmp33 = cherry_tmp66;
   }
   else {
     cherry_dec(q);
-    cherry_tmp342 = false;
+    cherry_tmp33 = false;
   }
-  cherry_tmp341 = (cherry_tmp342 && r);
-  cherry_tmp340 = (cherry_tmp341 && s);
-  cherry_tmp329 = (cherry_tmp340 && (!(t)));
+  cherry_tmp32 = (cherry_tmp33 && r);
+  cherry_tmp31 = (cherry_tmp32 && s);
+  cherry_tmp20 = (cherry_tmp31 && (!(t)));
   cherry_pbuf2_drop(&frame, 1);
-  cherry_tmp328 = cherry_tmp329;
+  cherry_tmp19 = cherry_tmp20;
   cherry_pbuf2_drop(&state, 1);
-  return cherry_tmp328;
+  return cherry_tmp19;
 }
 
 
