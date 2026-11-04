@@ -36,7 +36,7 @@ let rec unshadow__aux (b : string) (f : (string -> bool)) (i : Prims.int) : stri
   (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
   let tmp1 = (Prims.strcat "'" tmp) in
   let t = (Prims.strcat b tmp1) in
-  (if (f t) then t else ((unshadow__aux b f) (Prims.op_Plus i Prims.int_one))))
+  (if (f t) then t else (unshadow__aux b f (Prims.op_Plus i Prims.int_one))))
 
 let rec unshadow__go (sset : (FStarC_Syntax_Syntax.bv -> (string -> FStarC_Syntax_Syntax.bv))) (fresh_until : (string -> ((string -> bool) -> string))) (seen : (string) list) (subst : (FStarC_Syntax_Syntax.subst_elt) list) (bs : (FStarC_Syntax_Syntax.binder) list) (bs' : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (match bs with
@@ -58,7 +58,7 @@ let rec unshadow__go (sset : (FStarC_Syntax_Syntax.bv -> (string -> FStarC_Synta
           let tmp5 = (FStarC_Syntax_Syntax.NT ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
           let tmp6 = (tmp5 :: []) in
           let tmp7 = (BatList.append subst tmp6) in
-          ((unshadow__go sset fresh_until) (nbs :: seen) tmp7 bs1 (b2 :: bs') t))
+          (unshadow__go sset fresh_until (nbs :: seen) tmp7 bs1 (b2 :: bs') t))
       ))
   )
 
@@ -69,8 +69,8 @@ let unshadow (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Synta
     { FStarC_Syntax_Syntax.ppname = tmp2;
       index = (bv).FStarC_Syntax_Syntax.index;
       sort = (bv).FStarC_Syntax_Syntax.sort })) in
-  let fresh_until = (fun b f -> (if (f b) then b else ((unshadow__aux b f) Prims.int_zero))) in
-  ((unshadow__go sset fresh_until) [] [] bs [] t))
+  let fresh_until = (fun b f -> (if (f b) then b else (unshadow__aux b f Prims.int_zero))) in
+  (unshadow__go sset fresh_until [] [] bs [] t))
 
 let goal_to_doc (kind : string) (maybe_num : ((Prims.int * Prims.int)) option) (ps : FStarC_Tactics_Types.proofstate) (g : FStarC_Tactics_Types.goal) : PPrint.document =
   (let tmp = (FStarC_Options.print_implicits ()) in

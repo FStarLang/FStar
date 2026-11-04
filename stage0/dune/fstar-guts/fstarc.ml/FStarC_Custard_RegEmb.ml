@@ -197,7 +197,7 @@ let rec whnf__go (st : FStarC_Custard_Extract.state) (head_lid : ((FStarC_Syntax
       (if (Prims.op_Less_Equals fuel Prims.int_zero) then t'1 else (let tmp3 = (head_lid t'1) in
       (match tmp3 with
         | (Some (l')) when (FStarC_Ident.lid_equals l l') -> t'1
-        | tmp4 -> ((whnf__go st head_lid) (Prims.op_Minus fuel Prims.int_one) t'1)
+        | tmp4 -> (whnf__go st head_lid (Prims.op_Minus fuel Prims.int_one) t'1)
       ))))
   ))
 
@@ -215,7 +215,7 @@ let whnf (st : FStarC_Custard_Extract.state) (t : (FStarC_Syntax_Syntax.term') F
     ))) in
   let tmp = (FStarC_Syntax_Util.un_uinst t) in
   let tmp1 = (FStarC_Syntax_Subst.compress tmp) in
-  ((whnf__go st head_lid) (Prims.of_int (20)) tmp1))
+  (whnf__go st head_lid (Prims.of_int (20)) tmp1))
 
 let find_tv (env : ((FStarC_Syntax_Syntax.bv * FStarC_Syntax_Syntax.bv)) list) (b : FStarC_Syntax_Syntax.bv) : (FStarC_Syntax_Syntax.bv) option =
   (let tmp = (List.find_opt (fun tmp -> (match tmp with
@@ -728,7 +728,7 @@ let rec peel_type_args__go (rest : FStarC_Syntax_Syntax.bv) (tvs : (FStarC_Synta
       let tmp11 = (FStarC_Syntax_Syntax.Pat_cons ((match tmp10 with (custard_tup, _, _) -> custard_tup), (match tmp10 with (_, custard_tup, _) -> custard_tup), (match tmp10 with (_, _, custard_tup) -> custard_tup))) in
       let arg = (pat_of tmp11) in
       let tmp12 = (ctor_fv FStarC_Parser_Const.cons_lid) in
-      let tmp13 = ((peel_type_args__go rest) tvs1) in
+      let tmp13 = (peel_type_args__go rest tvs1) in
       let tmp14 = (tmp13, false) in
       let tmp15 = (tmp14 :: []) in
       let tmp16 = ((arg, false) :: tmp15) in
@@ -749,7 +749,7 @@ let peel_type_args (st : FStarC_Custard_Extract.state) (args_bv : FStarC_Syntax_
   let tmp6 = (tmp5, None, fail) in
   let catchall = (FStarC_Syntax_Subst.close_branch tmp6) in
   let tmp7 = (FStarC_Syntax_Syntax.bv_to_name args_bv) in
-  let tmp8 = ((peel_type_args__go rest) tvs) in
+  let tmp8 = (peel_type_args__go rest tvs) in
   let tmp9 = (tmp8, None, body) in
   let tmp10 = (FStarC_Syntax_Subst.close_branch tmp9) in
   let tmp11 = (tmp10 :: (catchall :: [])) in
@@ -915,7 +915,7 @@ let registration (st : FStarC_Custard_Extract.state) (arity_opt : (Prims.int) op
                 let tmp5 = (FStarC_Syntax_Syntax.mk_Total tmp4) in
                 (bs1, tmp5))
             )) else (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int k) in
-            let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 nbs) in
+            let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 nbs) in
             let tmp5 = (FStarC_Format.fmt2 "expected arity at least %s; got %s" tmp3 tmp4) in
             let tmp6 = (NoEmbedding (tmp5)) in
             (raise tmp6)))))

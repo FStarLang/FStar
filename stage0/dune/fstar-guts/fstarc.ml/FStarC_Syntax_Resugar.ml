@@ -59,528 +59,6 @@ let resugar_binder (b : FStarC_Syntax_Syntax.binder) (r : FStarC_Range_Type.rang
   (let tmp = (noenv resugar_binder') in
   (tmp b r))
 
-let resugar_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
-  (let tmp = (noenv resugar_term') in
-  (tmp t))
-
-let filter_pattern_imp (xs : (('tmp * bool)) list) : (('tmp * bool)) list =
-  (let tmp = (FStarC_Options.print_implicits ()) in
-  (if tmp then xs else (BatList.filter (fun tmp1 -> (match tmp1 with
-    | (tmp2, is_implicit) -> (not is_implicit)
-  )) xs)))
-
-let is_tuple_constructor_lid (lid : FStarC_Ident.lident) : bool =
-  ((FStarC_Parser_Const_Tuples.is_tuple_datacon_lid lid) || (FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid lid))
-
-let rec resugar_pat'__aux__map2 (mk : (FStarC_Parser_AST.pattern' -> FStarC_Parser_AST.pattern)) (l1 : (FStarC_Ident.lident) list) (l2 : (FStarC_Parser_AST.pattern) list) : ((FStarC_Ident.lident * FStarC_Parser_AST.pattern)) list =
-  (match (l1, l2) with
-    | ([], []) -> []
-    | ([], (hd :: tl)) -> []
-    | ((hd :: tl), []) -> ((hd, (mk (FStarC_Parser_AST.PatWild (None, [])))) :: ((resugar_pat'__aux__map2 mk) tl []))
-    | ((hd1 :: tl1), (hd2 :: tl2)) -> ((hd1, hd2) :: ((resugar_pat'__aux__map2 mk) tl1 tl2))
-  )
-
-let resugar_bv_as_pat' (env : FStarC_Syntax_DsEnv.env) (v : FStarC_Syntax_Syntax.bv) (aqual : (FStarC_Parser_AST.arg_qualifier) option) (body_bv : (FStarC_Syntax_Syntax.bv) list) (typ_opt : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : FStarC_Parser_AST.pattern =
-  (let mk = (fun a -> (FStarC_Parser_AST.mk_pattern a (FStarC_Syntax_Syntax.range_of_bv v))) in
-  let used = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv v body_bv) in
-  let tmp = (if used then (let tmp = (bv_as_unique_ident v) in
-    let tmp1 = (tmp, aqual, []) in
-    (FStarC_Parser_AST.PatVar ((match tmp1 with (custard_tup, _, _) -> custard_tup), (match tmp1 with (_, custard_tup, _) -> custard_tup), (match tmp1 with (_, _, custard_tup) -> custard_tup)))) else (FStarC_Parser_AST.PatWild (aqual, []))) in
-  let pat = (mk tmp) in
-  (match typ_opt with
-    | None -> pat
-    | (Some ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_unknown; pos = tmp1; hash_code = tmp2; _ })) -> pat
-    | (Some (typ)) -> (let tmp1 = (FStarC_Options.print_bound_var_types ()) in
-      (if tmp1 then (let tmp2 = (resugar_term' env typ) in
-      let tmp3 = (tmp2, None) in
-      let tmp4 = (pat, tmp3) in
-      let tmp5 = (FStarC_Parser_AST.PatAscribed ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
-      (mk tmp5)) else pat))
-  ))
-
-let rec resugar_pat'__resugar_plain_pat_cons (env : FStarC_Syntax_DsEnv.env) (branch_bv : (FStarC_Syntax_Syntax.bv) list) (mk : (FStarC_Parser_AST.pattern' -> FStarC_Parser_AST.pattern)) (to_arg_qual : ((bool) option -> (FStarC_Parser_AST.arg_qualifier) option)) (must_print : ((((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list -> bool)) (resugar_plain_pat_cons' : (FStarC_Syntax_Syntax.fv -> ((FStarC_Parser_AST.pattern) list -> FStarC_Parser_AST.pattern))) (fv : FStarC_Syntax_Syntax.fv) (args : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list) : FStarC_Parser_AST.pattern =
-  (let tmp = (must_print args) in
-  let tmp1 = (not tmp) in
-  let args1 = (if tmp1 then (filter_pattern_imp args) else args) in
-  let args2 = (BatList.map (fun tmp2 -> (match tmp2 with
-      | (p, b) -> ((resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') p (Some (b)))
-    )) args1) in
-  (resugar_plain_pat_cons' fv args2))
-
-and resugar_pat'__aux (env : FStarC_Syntax_DsEnv.env) (branch_bv : (FStarC_Syntax_Syntax.bv) list) (mk : (FStarC_Parser_AST.pattern' -> FStarC_Parser_AST.pattern)) (to_arg_qual : ((bool) option -> (FStarC_Parser_AST.arg_qualifier) option)) (must_print : ((((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list -> bool)) (resugar_plain_pat_cons' : (FStarC_Syntax_Syntax.fv -> ((FStarC_Parser_AST.pattern) list -> FStarC_Parser_AST.pattern))) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (imp_opt : (bool) option) : FStarC_Parser_AST.pattern =
-  (match (p).FStarC_Syntax_Syntax.v with
-    | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (mk (FStarC_Parser_AST.PatConst (c)))
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, args)) when (FStarC_Ident.lid_equals (fv).FStarC_Syntax_Syntax.fv_name FStarC_Parser_Const.nil_lid) -> (let tmp1 = (filter_pattern_imp args) in
-      (match tmp1 with
-        | [] -> (mk (FStarC_Parser_AST.PatList ([])))
-        | tmp2 -> ((resugar_pat'__resugar_plain_pat_cons env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') fv args)
-      ))
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, args)) when (FStarC_Ident.lid_equals (fv).FStarC_Syntax_Syntax.fv_name FStarC_Parser_Const.cons_lid) -> (let tmp1 = (filter_pattern_imp args) in
-      (match tmp1 with
-        | ((hd, false) :: ((tl, false) :: [])) -> (let hd' = ((resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') hd (Some (false))) in
-          let tmp2 = ((resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') tl (Some (false))) in
-          (match tmp2 with
-            | { FStarC_Parser_AST.pat = (FStarC_Parser_AST.PatList (tl')); prange = p1; _ } -> (FStarC_Parser_AST.mk_pattern (FStarC_Parser_AST.PatList ((hd' :: tl'))) p1)
-            | tl' -> (resugar_plain_pat_cons' fv (hd' :: (tl' :: [])))
-          ))
-        | tmp2 -> ((resugar_pat'__resugar_plain_pat_cons env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') fv args)
-      ))
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, [])) -> (mk (FStarC_Parser_AST.PatName ((fv).FStarC_Syntax_Syntax.fv_name)))
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, args)) when (if (is_tuple_constructor_lid (fv).FStarC_Syntax_Syntax.fv_name) then (let tmp1 = (must_print args) in
-    (not tmp1)) else false) -> (let args1 = (BatList.filter_map (fun tmp1 -> (match tmp1 with
-          | (p1, is_implicit) -> (if is_implicit then None else (let tmp2 = ((resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') p1 (Some (false))) in
-            (Some (tmp2))))
-        )) args) in
-      let is_dependent_tuple = (FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid (fv).FStarC_Syntax_Syntax.fv_name) in
-      (mk (FStarC_Parser_AST.PatTuple (args1, is_dependent_tuple))))
-    | (FStarC_Syntax_Syntax.Pat_cons ({ FStarC_Syntax_Syntax.fv_name = tmp; fv_qual = (Some ((FStarC_Syntax_Syntax.Record_ctor (name, fields)))); _ }, tmp1, args)) -> (let tmp2 = (BatList.map (fun f -> (FStarC_Ident.lid_of_ids (f :: []))) fields) in
-      let fields1 = (BatList.rev tmp2) in
-      let tmp3 = (BatList.map (fun tmp3 -> (match tmp3 with
-          | (p1, b) -> ((resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') p1 (Some (b)))
-        )) args) in
-      let args1 = (BatList.rev tmp3) in
-      let args2 = (BatList.rev ((resugar_pat'__aux__map2 mk) fields1 args1)) in
-      (mk (FStarC_Parser_AST.PatRecord (args2))))
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, args)) -> ((resugar_pat'__resugar_plain_pat_cons env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') fv args)
-    | (FStarC_Syntax_Syntax.Pat_var (v)) -> (let tmp = (FStarC_Parser_AST.string_to_op (FStarC_Ident.string_of_id (v).FStarC_Syntax_Syntax.ppname)) in
-      (match tmp with
-        | (Some (op)) -> (mk (FStarC_Parser_AST.PatOp ((FStarC_Ident.mk_ident (op, (FStarC_Ident.range_of_id (v).FStarC_Syntax_Syntax.ppname))))))
-        | None -> (let tmp1 = (to_arg_qual imp_opt) in
-          (resugar_bv_as_pat' env v tmp1 branch_bv None))
-      ))
-    | (FStarC_Syntax_Syntax.Pat_dot_term (tmp)) -> (mk (FStarC_Parser_AST.PatWild ((Some (FStarC_Parser_AST.Implicit)), [])))
-  )
-
-let resugar_pat' (env : FStarC_Syntax_DsEnv.env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (branch_bv : (FStarC_Syntax_Syntax.bv) list) : FStarC_Parser_AST.pattern =
-  (let mk = (fun a -> (FStarC_Parser_AST.mk_pattern a (p).FStarC_Syntax_Syntax.p)) in
-  let to_arg_qual = (fun bopt -> (FStarC_Option.bind bopt (fun b -> (if b then (Some (FStarC_Parser_AST.Implicit)) else None)))) in
-  let must_print = (fun args -> (BatList.exists (fun tmp -> (match tmp with
-      | (pattern, is_implicit) -> (match (pattern).FStarC_Syntax_Syntax.v with
-          | (FStarC_Syntax_Syntax.Pat_var (bv)) -> (if is_implicit then (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv bv branch_bv) else false)
-          | tmp1 -> false
-        )
-    )) args)) in
-  let resugar_plain_pat_cons' = (fun fv args -> (mk (FStarC_Parser_AST.PatApp ((mk (FStarC_Parser_AST.PatName ((fv).FStarC_Syntax_Syntax.fv_name))), args)))) in
-  ((resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons') p None))
-
-let resugar_pat (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (branch_bv : (FStarC_Syntax_Syntax.bv) list) : FStarC_Parser_AST.pattern =
-  (let tmp = (noenv resugar_pat') in
-  (tmp p branch_bv))
-
-let rec resugar_comp_with_pre__aux (env : FStarC_Syntax_DsEnv.env) (mk : (FStarC_Parser_AST.term' -> FStarC_Parser_AST.term)) (l : (FStarC_Parser_AST.term) list) (fl : (FStarC_Syntax_Syntax.cflag) list) : (FStarC_Parser_AST.term) list =
-  (match fl with
-    | [] -> l
-    | (hd :: tl) -> (match hd with
-        | (FStarC_Syntax_Syntax.DECREASES (dec_order)) -> (let d = (match dec_order with
-              | (FStarC_Syntax_Syntax.Decreases_lex ((t :: []))) -> (resugar_term' env t)
-              | (FStarC_Syntax_Syntax.Decreases_lex (ts)) -> (let tmp = (BatList.map (resugar_term' env) ts) in
-                let tmp1 = (FStarC_Parser_AST.LexList (tmp)) in
-                (mk tmp1))
-              | (FStarC_Syntax_Syntax.Decreases_wf (rel, e)) -> (let tmp = (resugar_term' env rel) in
-                let tmp1 = (resugar_term' env e) in
-                let tmp2 = (tmp, tmp1) in
-                let tmp3 = (FStarC_Parser_AST.WFOrder ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
-                (mk tmp3))
-            ) in
-          let e = (mk (FStarC_Parser_AST.Decreases (d))) in
-          ((resugar_comp_with_pre__aux env mk) (e :: l) tl))
-        | tmp -> ((resugar_comp_with_pre__aux env mk) l tl)
-      )
-  )
-
-let may_shorten (lid : FStarC_Ident.lident) : bool =
-  (let tmp = (FStarC_Options.print_real_names ()) in
-  (if tmp then false else (match (FStarC_Ident.string_of_lid lid) with
-    | "Prims.Nil" -> false
-    | "Prims.Cons" -> false
-    | tmp1 -> (not (is_tuple_constructor_lid lid))
-  )))
-
-let maybe_shorten_lid (env : FStarC_Syntax_DsEnv.env) (lid : FStarC_Ident.lident) : FStarC_Ident.lident =
-  (let tmp = (may_shorten lid) in
-  (if tmp then (FStarC_Syntax_DsEnv.shorten_lid env lid) else lid))
-
-let resugar_comp_with_pre (env : FStarC_Syntax_DsEnv.env) (pre : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
-  (let mk = (fun a -> (FStarC_Parser_AST.mk_term a (c).FStarC_Syntax_Syntax.pos FStarC_Parser_AST.Un)) in
-  (match (c).FStarC_Syntax_Syntax.n with
-    | c1 when (let tmp = (FStarC_Util.for_some (fun tmp -> (match tmp with
-        | (FStarC_Syntax_Syntax.DECREASES (tmp1)) -> true
-        | (FStarC_Syntax_Syntax.SMTPAT (tmp1)) -> true
-        | tmp1 -> false
-      )) (c1).FStarC_Syntax_Syntax.flags) in
-    let tmp1 = (not tmp) in
-    (if tmp1 then ((FStarC_Syntax_Util.is_pure_effect (c1).FStarC_Syntax_Syntax.source_effect_name) || (FStarC_Syntax_Util.is_ghost_effect (c1).FStarC_Syntax_Syntax.source_effect_name)) else false)) -> (let t = (resugar_term' env (c1).FStarC_Syntax_Syntax.result_typ) in
-      (if (FStarC_Syntax_Util.is_ghost_effect (c1).FStarC_Syntax_Syntax.source_effect_name) then (mk (FStarC_Parser_AST.Construct (FStarC_Parser_Const.effect_GTot_lid, ((t, FStarC_Parser_AST.Nothing) :: [])))) else (let tmp = (FStarC_Options.print_implicits ()) in
-      (if tmp then (mk (FStarC_Parser_AST.Construct (FStarC_Parser_Const.effect_Tot_lid, ((t, FStarC_Parser_AST.Nothing) :: [])))) else t))))
-    | c1 -> (let tmp = (resugar_term' env (c1).FStarC_Syntax_Syntax.result_typ) in
-      let result = (tmp, FStarC_Parser_AST.Nothing) in
-      let mk_decreases = (fun fl -> ((resugar_comp_with_pre__aux env mk) [] fl)) in
-      let tmp1 = (FStarC_Syntax_Syntax.mk_comp' c1 FStarC_Range_Type.dummyRange) in
-      let tmp2 = (FStarC_Syntax_Util.comp_smt_pats tmp1) in
-      let smt_pats = (match tmp2 with
-          | (Some (pats)) when (let tmp3 = (FStarC_Syntax_Util.head_of pats) in
-          let tmp4 = (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.nil_lid tmp3) in
-          (not tmp4)) -> (pats :: [])
-          | tmp3 -> []
-        ) in
-      (if (FStarC_Ident.lid_equals (c1).FStarC_Syntax_Syntax.source_effect_name FStarC_Parser_Const.effect_Lemma_lid) then (let tmp3 = (FStarC_Syntax_Util.un_squash (c1).FStarC_Syntax_Syntax.result_typ) in
-      let post = (match tmp3 with
-          | (Some (q)) -> (let tmp4 = (resugar_term' env q) in
-            let tmp5 = (FStarC_Parser_AST.Ensures (tmp4)) in
-            let tmp6 = (mk tmp5) in
-            (tmp6 :: []))
-          | None -> []
-        ) in
-      let pre1 = (match pre with
-          | (Some (p)) -> (let tmp4 = (resugar_term' env p) in
-            let tmp5 = (FStarC_Parser_AST.Requires (tmp4)) in
-            let tmp6 = (mk tmp5) in
-            (tmp6 :: []))
-          | None -> []
-        ) in
-      let pats = (BatList.map (resugar_term' env) smt_pats) in
-      let decrease = (mk_decreases (c1).FStarC_Syntax_Syntax.flags) in
-      let tmp4 = (maybe_shorten_lid env (c1).FStarC_Syntax_Syntax.source_effect_name) in
-      let tmp5 = (BatList.map (fun t -> (t, FStarC_Parser_AST.Nothing)) (BatList.append pre1 (BatList.append post (BatList.append decrease pats)))) in
-      let tmp6 = (tmp4, tmp5) in
-      let tmp7 = (FStarC_Parser_AST.Construct ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))) in
-      (mk tmp7)) else (let tmp3 = (FStarC_Options.print_effect_args ()) in
-      (if tmp3 then (let tmp4 = (mk_decreases (c1).FStarC_Syntax_Syntax.flags) in
-      let decrease = (BatList.map (fun t -> (t, FStarC_Parser_AST.Nothing)) tmp4) in
-      let tmp5 = (maybe_shorten_lid env (c1).FStarC_Syntax_Syntax.source_effect_name) in
-      let tmp6 = (tmp5, (result :: decrease)) in
-      let tmp7 = (FStarC_Parser_AST.Construct ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))) in
-      (mk tmp7)) else (let tmp4 = (maybe_shorten_lid env (c1).FStarC_Syntax_Syntax.source_effect_name) in
-      let tmp5 = (tmp4, (result :: [])) in
-      let tmp6 = (FStarC_Parser_AST.Construct ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))) in
-      (mk tmp6))))))
-  ))
-
-let resugar_comp' (env : FStarC_Syntax_DsEnv.env) : ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax -> FStarC_Parser_AST.term) =
-  (resugar_comp_with_pre env None)
-
-let resugar_comp (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
-  (let tmp = (noenv resugar_comp') in
-  (tmp c))
-
-let is_imp_bqual (a : (FStarC_Syntax_Syntax.binder_qualifier) option) : bool =
-  (match a with
-    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) when (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t) -> false
-    | (Some ((FStarC_Syntax_Syntax.Implicit (tmp)))) -> true
-    | (Some ((FStarC_Syntax_Syntax.Meta (tmp)))) -> true
-    | tmp -> false
-  )
-
-let no_imp_bs (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
-  (BatList.filter (fun b -> (not (is_imp_bqual (b).FStarC_Syntax_Syntax.binder_qual))) bs)
-
-let filter_imp_bs (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
-  (let tmp = (FStarC_Options.print_implicits ()) in
-  (if tmp then bs else (no_imp_bs bs)))
-
-let drop_n_bs (n : Prims.int) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let tmp = (FStarC_Syntax_Util.arrow_formals_comp_ln t) in
-  (match tmp with
-    | (bs, c) -> (let bs1 = (match ((fun n l -> BatList.split_at (Z.to_int n) l) n bs) with
-          | (u__1, u__2) -> u__2
-        ) in
-      (FStarC_Syntax_Util.arrow bs1 c))
-  ))
-
-let resugar_typ (env : FStarC_Syntax_DsEnv.env) (datacon_ses : (FStarC_Syntax_Syntax.sigelt) list) (se : FStarC_Syntax_Syntax.sigelt) : ((FStarC_Syntax_Syntax.sigelt) list * FStarC_Parser_AST.tycon) =
-  (match (se).FStarC_Syntax_Syntax.sigel with
-    | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = tylid; us = uvs; params = bs; num_uniform_params = tmp; t = t; mutuals = tmp1; ds = datacons; injective_type_params = tmp2; _ })) -> (let tmp3 = (BatList.partition (fun se1 -> (match (se1).FStarC_Syntax_Syntax.sigel with
-          | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp3; us = tmp4; t = tmp5; ty_lid = inductive_lid; num_ty_params = tmp6; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })) -> (FStarC_Ident.lid_equals inductive_lid tylid)
-          | tmp3 -> (FStarC_Effect.failwith "unexpected")
-        )) datacon_ses) in
-      (match tmp3 with
-        | (current_datacons, other_datacons) -> (let bs1 = (filter_imp_bs bs) in
-          let bs2 = (BatList.map (fun b -> (resugar_binder' env b (t).FStarC_Syntax_Syntax.pos)) bs1) in
-          let tmp4 = (FStarC_Util.for_some FStarC_Syntax_Syntax.uu___is_RecordType (se).FStarC_Syntax_Syntax.sigquals) in
-          let tmp5 = (if tmp4 then ((=) ((fun l -> Z.of_int (BatList.length l)) current_datacons) Prims.int_one) else false) in
-          let tyc = (if tmp5 then (match current_datacons with
-              | (dc :: []) -> (match (dc).FStarC_Syntax_Syntax.sigel with
-                  | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = l; us = univs; t = typ; ty_lid = tmp6; num_ty_params = num; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })) -> (let typ1 = (drop_n_bs num typ) in
-                    let tmp10 = (FStarC_Syntax_Util.arrow_formals_comp_ln typ1) in
-                    let fields = (match tmp10 with
-                        | (bs3, tmp11) -> (let bs4 = (filter_imp_bs bs3) in
-                          (BatList.map (fun b -> (let q = (resugar_bqual env (b).FStarC_Syntax_Syntax.binder_qual) in
-                          let tmp12 = (bv_as_unique_ident (b).FStarC_Syntax_Syntax.binder_bv) in
-                          let tmp13 = (BatList.map (resugar_term' env) (b).FStarC_Syntax_Syntax.binder_attrs) in
-                          let tmp14 = (resugar_term' env ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
-                          (tmp12, q, tmp13, tmp14))) bs4))
-                      ) in
-                    let tmp11 = (BatList.map (resugar_term' env) (se).FStarC_Syntax_Syntax.sigattrs) in
-                    let tmp12 = ((FStarC_Ident.ident_of_lid tylid), bs2, None, tmp11, fields) in
-                    (FStarC_Parser_AST.TyconRecord ((match tmp12 with (custard_tup, _, _, _, _) -> custard_tup), (match tmp12 with (_, custard_tup, _, _, _) -> custard_tup), (match tmp12 with (_, _, custard_tup, _, _) -> custard_tup), (match tmp12 with (_, _, _, custard_tup, _) -> custard_tup), (match tmp12 with (_, _, _, _, custard_tup) -> custard_tup))))
-                  | tmp6 -> (FStarC_Effect.failwith "ggg1")
-                )
-            ) else (let resugar_datacon = (fun constructors se1 -> (match (se1).FStarC_Syntax_Syntax.sigel with
-                | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = l; us = univs; t = typ; ty_lid = tmp6; num_ty_params = num; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })) -> (let typ1 = (drop_n_bs num typ) in
-                  let tmp10 = (resugar_term' env typ1) in
-                  let tmp11 = (FStarC_Parser_AST.VpArbitrary (tmp10)) in
-                  let tmp12 = (Some (tmp11)) in
-                  let tmp13 = (BatList.map (resugar_term' env) (se1).FStarC_Syntax_Syntax.sigattrs) in
-                  let c = ((FStarC_Ident.ident_of_lid l), tmp12, tmp13) in
-                  (c :: constructors))
-                | tmp6 -> (FStarC_Effect.failwith "unexpected")
-              )) in
-            let constructors = (BatList.fold_left resugar_datacon [] current_datacons) in
-            (FStarC_Parser_AST.TyconVariant ((FStarC_Ident.ident_of_lid tylid), bs2, None, constructors)))) in
-          (other_datacons, tyc))
-      ))
-    | tmp -> (FStarC_Effect.failwith "Impossible : only Sig_inductive_typ can be resugared as types")
-  )
-
-let resugar_qualifier (tmp : FStarC_Syntax_Syntax.qualifier) : (FStarC_Parser_AST.qualifier) option =
-  (match tmp with
-    | FStarC_Syntax_Syntax.Assumption -> (Some (FStarC_Parser_AST.Assumption))
-    | FStarC_Syntax_Syntax.InternalAssumption -> None
-    | FStarC_Syntax_Syntax.New -> (Some (FStarC_Parser_AST.New))
-    | FStarC_Syntax_Syntax.Private -> (Some (FStarC_Parser_AST.Private))
-    | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen -> (Some (FStarC_Parser_AST.Unfold_for_unification_and_vcgen))
-    | FStarC_Syntax_Syntax.Visible_default -> None
-    | FStarC_Syntax_Syntax.Irreducible -> (Some (FStarC_Parser_AST.Irreducible))
-    | FStarC_Syntax_Syntax.Inline_for_extraction -> (Some (FStarC_Parser_AST.Inline_for_extraction))
-    | FStarC_Syntax_Syntax.NoExtract -> (Some (FStarC_Parser_AST.NoExtract))
-    | FStarC_Syntax_Syntax.Noeq -> (Some (FStarC_Parser_AST.Noeq))
-    | FStarC_Syntax_Syntax.Unopteq -> (Some (FStarC_Parser_AST.Unopteq))
-    | FStarC_Syntax_Syntax.TotalEffect -> (Some (FStarC_Parser_AST.TotalEffect))
-    | FStarC_Syntax_Syntax.Logic -> None
-    | FStarC_Syntax_Syntax.Reifiable -> (Some (FStarC_Parser_AST.Reifiable))
-    | (FStarC_Syntax_Syntax.Reflectable (tmp1)) -> (Some (FStarC_Parser_AST.Reflectable))
-    | (FStarC_Syntax_Syntax.Discriminator (tmp1)) -> None
-    | (FStarC_Syntax_Syntax.Projector (u__1, u__2)) -> None
-    | (FStarC_Syntax_Syntax.RecordType (u__1, u__2)) -> None
-    | (FStarC_Syntax_Syntax.RecordConstructor (u__1, u__2)) -> None
-    | (FStarC_Syntax_Syntax.Action (tmp1)) -> None
-    | FStarC_Syntax_Syntax.ExceptionConstructor -> None
-    | FStarC_Syntax_Syntax.HasMaskedEffect -> None
-    | FStarC_Syntax_Syntax.Effect -> (Some (FStarC_Parser_AST.Effect_qual))
-    | FStarC_Syntax_Syntax.OnlyName -> None
-  )
-
-let mk_decl (r : FStarC_Range_Type.range) (q : (FStarC_Syntax_Syntax.qualifier) list) (d' : FStarC_Parser_AST.decl') : FStarC_Parser_AST.decl =
-  (let tmp = (BatList.filter_map resugar_qualifier q) in
-  { FStarC_Parser_AST.d = d'; drange = r; quals = tmp; attrs = [] })
-
-let decl'_to_decl (se : FStarC_Syntax_Syntax.sigelt) (d' : FStarC_Parser_AST.decl') : FStarC_Parser_AST.decl =
-  (mk_decl (se).FStarC_Syntax_Syntax.sigrng (se).FStarC_Syntax_Syntax.sigquals d')
-
-let resugar_eff_decl' (env : FStarC_Syntax_DsEnv.env) (ed : FStarC_Syntax_Syntax.eff_decl) : FStarC_Parser_AST.decl =
-  (let r = FStarC_Range_Type.dummyRange in
-  let q = [] in
-  let eff_name = (FStarC_Ident.ident_of_lid (ed).FStarC_Syntax_Syntax.mname) in
-  let eff_binders = [] in
-  (match (ed).FStarC_Syntax_Syntax.combinators with
-    | None -> (mk_decl r (FStarC_Syntax_Syntax.Assumption :: q) (FStarC_Parser_AST.NewEffect ((FStarC_Parser_AST.DeclareEffect (eff_name, eff_binders)))))
-    | (Some (combs)) -> (let field = (fun name ts -> (let tmp = (resugar_term' env (match ts with
-            | (u__1, u__2) -> u__2
-          )) in
-        let tmp1 = ((FStarC_Ident.mk_ident (name, r)), [], None, tmp) in
-        let tmp2 = (FStarC_Parser_AST.TyconAbbrev ((match tmp1 with (custard_tup, _, _, _) -> custard_tup), (match tmp1 with (_, custard_tup, _, _) -> custard_tup), (match tmp1 with (_, _, custard_tup, _) -> custard_tup), (match tmp1 with (_, _, _, custard_tup) -> custard_tup))) in
-        let tmp3 = (tmp2 :: []) in
-        let tmp4 = (false, false, tmp3) in
-        let tmp5 = (FStarC_Parser_AST.Tycon ((match tmp4 with (custard_tup, _, _) -> custard_tup), (match tmp4 with (_, custard_tup, _) -> custard_tup), (match tmp4 with (_, _, custard_tup) -> custard_tup))) in
-        (mk_decl r [] tmp5))) in
-      let tmp = (field "repr" (combs).FStarC_Syntax_Syntax.repr) in
-      let tmp1 = (field "return" (combs).FStarC_Syntax_Syntax.return_repr) in
-      let tmp2 = (field "bind" (combs).FStarC_Syntax_Syntax.bind_repr) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      let tmp5 = (tmp :: tmp4) in
-      let tmp6 = (eff_name, eff_binders, tmp5) in
-      let tmp7 = (FStarC_Parser_AST.DefineEffect ((match tmp6 with (custard_tup, _, _) -> custard_tup), (match tmp6 with (_, custard_tup, _) -> custard_tup), (match tmp6 with (_, _, custard_tup) -> custard_tup))) in
-      let tmp8 = (FStarC_Parser_AST.NewEffect (tmp7)) in
-      (mk_decl r q tmp8))
-  ))
-
-let resugar_pragma (env : FStarC_Syntax_DsEnv.env) (tmp : FStarC_Syntax_Syntax.pragma) : FStarC_Parser_AST.pragma =
-  (match tmp with
-    | FStarC_Syntax_Syntax.ShowOptions -> FStarC_Parser_AST.ShowOptions
-    | (FStarC_Syntax_Syntax.SetOptions (s)) -> (FStarC_Parser_AST.SetOptions (s))
-    | (FStarC_Syntax_Syntax.ResetOptions (s)) -> (FStarC_Parser_AST.ResetOptions (s))
-    | (FStarC_Syntax_Syntax.PushOptions (s)) -> (FStarC_Parser_AST.PushOptions (s))
-    | FStarC_Syntax_Syntax.PopOptions -> FStarC_Parser_AST.PopOptions
-    | FStarC_Syntax_Syntax.RestartSolver -> FStarC_Parser_AST.RestartSolver
-    | FStarC_Syntax_Syntax.PrintEffectsGraph -> FStarC_Parser_AST.PrintEffectsGraph
-    | (FStarC_Syntax_Syntax.Check (t)) -> (let tmp1 = (resugar_term' env t) in
-      (FStarC_Parser_AST.Check (tmp1)))
-    | (FStarC_Syntax_Syntax.Eval (t)) -> (let tmp1 = (resugar_term' env t) in
-      (FStarC_Parser_AST.Eval (tmp1)))
-  )
-
-let universe_to_string (univs : (FStarC_Ident.ident) list) : string =
-  (let tmp = (FStarC_Options.print_universes ()) in
-  (if tmp then (let tmp1 = (BatList.map (fun x -> (FStarC_Ident.string_of_id x)) univs) in
-  (BatString.concat ", " tmp1)) else ""))
-
-let label (s : string) (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
-  (if ((=) s "") then t else (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Labeled (t, s, true)) (t).FStarC_Parser_AST.range FStarC_Parser_AST.Un))
-
-let resugar_sigelt' (env : FStarC_Syntax_DsEnv.env) (se : FStarC_Syntax_Syntax.sigelt) : (FStarC_Parser_AST.decl) option =
-  (let d = (match (se).FStarC_Syntax_Syntax.sigel with
-      | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = tmp; _ })) -> (let tmp1 = (BatList.partition (fun se1 -> (match (se1).FStarC_Syntax_Syntax.sigel with
-            | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp1)) -> true
-            | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp1)) -> true
-            | (FStarC_Syntax_Syntax.Sig_datacon (tmp1)) -> false
-            | tmp1 -> (FStarC_Effect.failwith "Found a sigelt which is neither a type declaration or a data constructor in a sigelt")
-          )) ses) in
-        (match tmp1 with
-          | (decl_typ_ses, datacon_ses) -> (let retrieve_datacons_and_resugar = (fun tmp2 se1 -> (match tmp2 with
-                | (datacon_ses1, tycons) -> (let tmp3 = (resugar_typ env datacon_ses1 se1) in
-                  (match tmp3 with
-                    | (datacon_ses2, tyc) -> (datacon_ses2, (tyc :: tycons))
-                  ))
-              )) in
-            let tmp2 = (BatList.fold_left retrieve_datacons_and_resugar ((BatList.rev datacon_ses), []) decl_typ_ses) in
-            (match tmp2 with
-              | (leftover_datacons, tycons) -> (match leftover_datacons with
-                  | [] -> (let d = (decl'_to_decl se (FStarC_Parser_AST.Tycon (false, false, tycons))) in
-                    (Some (d)))
-                  | (se1 :: []) -> (match (se1).FStarC_Syntax_Syntax.sigel with
-                      | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = l; us = tmp3; t = tmp4; ty_lid = tmp5; num_ty_params = tmp6; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })) -> (let tmp10 = (decl'_to_decl se1 (FStarC_Parser_AST.Exception ((FStarC_Ident.ident_of_lid l), None))) in
-                        (Some (tmp10)))
-                      | tmp3 -> (FStarC_Effect.failwith "wrong format for resguar to Exception")
-                    )
-                  | tmp3 -> (FStarC_Effect.failwith "Should not happen hopefully")
-                )
-            ))
-        ))
-      | (FStarC_Syntax_Syntax.Sig_fail (tmp)) -> None
-      | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = lbs; lids = tmp; _ })) -> (let tmp1 = (FStarC_Util.for_some (fun tmp1 -> (match tmp1 with
-            | (FStarC_Syntax_Syntax.Projector (tmp2, tmp3)) -> true
-            | (FStarC_Syntax_Syntax.Discriminator (tmp2)) -> true
-            | tmp2 -> false
-          )) (se).FStarC_Syntax_Syntax.sigquals) in
-        (if tmp1 then None else (let mk = (fun e -> (FStarC_Syntax_Syntax.mk e (se).FStarC_Syntax_Syntax.sigrng)) in
-        let dummy = (mk FStarC_Syntax_Syntax.Tm_unknown) in
-        let lq_as_q = (fun tmp2 -> (match tmp2 with
-            | FStarC_Parser_AST.LocalRec -> FStarC_Parser_AST.Rec
-            | FStarC_Parser_AST.LocalNoLetQualifier -> FStarC_Parser_AST.NoLetQualifier
-            | FStarC_Parser_AST.LocalUnfold -> (FStarC_Effect.failwith "Impossible")
-          )) in
-        let nopath_lbs = (fun lbs1 -> (let is_rec = (match lbs1 with
-              | (u__1, u__2) -> u__1
-            ) in
-          let lbs0 = (match lbs1 with
-              | (u__1, u__2) -> u__2
-            ) in
-          let nopath = (fun fv -> (let tmp2 = (FStarC_Ident.lid_of_ids ((FStarC_Ident.ident_of_lid (FStarC_Syntax_Syntax.lid_of_fv fv)) :: [])) in
-            (FStarC_Syntax_Syntax.lid_as_fv tmp2 None))) in
-          let lbs01 = (BatList.map (fun lb -> (let tmp2 = (nopath (match (lb).FStarC_Syntax_Syntax.lbname with
-                | (FStar_Pervasives.Inr (v)) -> v
-              )) in
-            let tmp3 = (FStar_Pervasives.Inr (tmp2)) in
-            { FStarC_Syntax_Syntax.lbname = tmp3;
-              lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
-              lbtyp = (lb).FStarC_Syntax_Syntax.lbtyp;
-              lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
-              lbdef = (lb).FStarC_Syntax_Syntax.lbdef;
-              lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
-              lbpos = (lb).FStarC_Syntax_Syntax.lbpos })) lbs0) in
-          (is_rec, lbs01))) in
-        let lbs1 = (nopath_lbs lbs) in
-        let desugared_let = (mk (FStarC_Syntax_Syntax.Tm_let (({ FStarC_Syntax_Syntax.lbs = (match lbs1 with (custard_tup, _) -> custard_tup);
-            lbs1 = (match lbs1 with (_, custard_tup) -> custard_tup);
-            body = dummy } : FStarC_Syntax_Syntax.term'__Tm_let__payload)))) in
-        let t = (resugar_term' env desugared_let) in
-        (match (t).FStarC_Parser_AST.tm with
-          | (FStarC_Parser_AST.Let (isrec, lets, tmp2)) -> (let tmp3 = (lq_as_q isrec) in
-            let tmp4 = (BatList.map (fun x -> (match x with
-                | (u__1, u__2) -> u__2
-              )) lets) in
-            let tmp5 = (tmp3, tmp4) in
-            let tmp6 = (FStarC_Parser_AST.TopLevelLet ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))) in
-            let tmp7 = (decl'_to_decl se tmp6) in
-            (Some (tmp7)))
-          | tmp2 -> (FStarC_Effect.failwith "Should not happen hopefully")
-        ))))
-      | (FStarC_Syntax_Syntax.Sig_assume ({ FStarC_Syntax_Syntax.lid = lid; us = tmp; phi = fml; _ })) -> (let tmp1 = (resugar_term' env fml) in
-        let tmp2 = ((FStarC_Ident.ident_of_lid lid), tmp1) in
-        let tmp3 = (FStarC_Parser_AST.Assume ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
-        let tmp4 = (decl'_to_decl se tmp3) in
-        (Some (tmp4)))
-      | (FStarC_Syntax_Syntax.Sig_new_effect (ed)) -> (let a_decl = (resugar_eff_decl' env ed) in
-        let q = (BatList.filter_map resugar_qualifier (se).FStarC_Syntax_Syntax.sigquals) in
-        (Some ({ FStarC_Parser_AST.d = (a_decl).FStarC_Parser_AST.d;
-          drange = (a_decl).FStarC_Parser_AST.drange;
-          quals = q;
-          attrs = (a_decl).FStarC_Parser_AST.attrs })))
-      | (FStarC_Syntax_Syntax.Sig_sub_effect (e)) -> (let tmp = (FStarC_Option.map (fun ts -> (resugar_term' env (match ts with
-            | (u__1, u__2) -> u__2
-          ))) (e).FStarC_Syntax_Syntax.lift) in
-        let tmp1 = { FStarC_Parser_AST.msource = (e).FStarC_Syntax_Syntax.source;
-            mdest = (e).FStarC_Syntax_Syntax.target;
-            lift_op = tmp } in
-        let tmp2 = (FStarC_Parser_AST.SubEffect (tmp1)) in
-        let tmp3 = (decl'_to_decl se tmp2) in
-        (Some (tmp3)))
-      | (FStarC_Syntax_Syntax.Sig_effect_abbrev ({ FStarC_Syntax_Syntax.lid = lid; root = root; _ })) -> (let rhs = (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Name (root)) (se).FStarC_Syntax_Syntax.sigrng FStarC_Parser_AST.Un) in
-        let tmp = (decl'_to_decl se (FStarC_Parser_AST.Tycon (false, false, ((FStarC_Parser_AST.TyconAbbrev ((FStarC_Ident.ident_of_lid lid), [], None, rhs)) :: [])))) in
-        (Some (tmp)))
-      | (FStarC_Syntax_Syntax.Sig_pragma (p)) -> (let tmp = (resugar_pragma env p) in
-        let tmp1 = (FStarC_Parser_AST.Pragma (tmp)) in
-        let tmp2 = (decl'_to_decl se tmp1) in
-        (Some (tmp2)))
-      | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = lid; us = uvs; t = t; _ })) -> (let tmp = (FStarC_Util.for_some (fun tmp -> (match tmp with
-            | (FStarC_Syntax_Syntax.Projector (tmp1, tmp2)) -> true
-            | (FStarC_Syntax_Syntax.Discriminator (tmp1)) -> true
-            | tmp1 -> false
-          )) (se).FStarC_Syntax_Syntax.sigquals) in
-        (if tmp then None else (let tmp1 = (FStarC_Options.print_universes ()) in
-        let tmp2 = (not tmp1) in
-        let tmp3 = (if tmp2 then true else (FStarC_List.isEmpty uvs)) in
-        let t' = (if tmp3 then (resugar_term' env t) else (let tmp4 = (FStarC_Syntax_Subst.open_univ_vars uvs t) in
-          (match tmp4 with
-            | (uvs1, t1) -> (let universes = (universe_to_string uvs1) in
-              let tmp5 = (resugar_term' env t1) in
-              (label universes tmp5))
-          ))) in
-        let tmp4 = (decl'_to_decl se (FStarC_Parser_AST.Val ((FStarC_Ident.ident_of_lid lid), t'))) in
-        (Some (tmp4)))))
-      | (FStarC_Syntax_Syntax.Sig_splice ({ FStarC_Syntax_Syntax.is_typed = is_typed; lids = ids; tac = t; _ })) -> (let tmp = (BatList.map (fun l -> (FStarC_Ident.ident_of_lid l)) ids) in
-        let tmp1 = (resugar_term' env t) in
-        let tmp2 = (is_typed, tmp, tmp1) in
-        let tmp3 = (FStarC_Parser_AST.Splice ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))) in
-        let tmp4 = (decl'_to_decl se tmp3) in
-        (Some (tmp4)))
-      | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp)) -> None
-      | (FStarC_Syntax_Syntax.Sig_datacon (tmp)) -> None
-    ) in
-  (match d with
-    | (Some (d1)) -> (let tmp = (BatList.map (resugar_term' env) (se).FStarC_Syntax_Syntax.sigattrs) in
-      let tmp1 = { FStarC_Parser_AST.d = (d1).FStarC_Parser_AST.d;
-          drange = (d1).FStarC_Parser_AST.drange;
-          quals = (d1).FStarC_Parser_AST.quals;
-          attrs = tmp } in
-      (Some (tmp1)))
-    | None -> None
-  ))
-
-let resugar_sigelt (se : FStarC_Syntax_Syntax.sigelt) : (FStarC_Parser_AST.decl) option =
-  (let tmp = (noenv resugar_sigelt') in
-  (tmp se))
-
-let resugar_tscheme'' (env : FStarC_Syntax_DsEnv.env) (name : string) (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : FStarC_Parser_AST.decl =
-  (match ts with
-    | (univs, typ) -> (let name1 = (FStarC_Ident.mk_ident (name, (typ).FStarC_Syntax_Syntax.pos)) in
-      let tmp = (resugar_term' env typ) in
-      let tmp1 = (name1, [], None, tmp) in
-      let tmp2 = (FStarC_Parser_AST.TyconAbbrev ((match tmp1 with (custard_tup, _, _, _) -> custard_tup), (match tmp1 with (_, custard_tup, _, _) -> custard_tup), (match tmp1 with (_, _, custard_tup, _) -> custard_tup), (match tmp1 with (_, _, _, custard_tup) -> custard_tup))) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (false, false, tmp3) in
-      let tmp5 = (FStarC_Parser_AST.Tycon ((match tmp4 with (custard_tup, _, _) -> custard_tup), (match tmp4 with (_, custard_tup, _) -> custard_tup), (match tmp4 with (_, _, custard_tup) -> custard_tup))) in
-      (mk_decl (typ).FStarC_Syntax_Syntax.pos [] tmp5))
-  )
-
-let resugar_tscheme' (env : FStarC_Syntax_DsEnv.env) : (((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) -> FStarC_Parser_AST.decl) =
-  (resugar_tscheme'' env "tscheme")
-
-let resugar_tscheme (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : FStarC_Parser_AST.decl =
-  (let tmp = (noenv resugar_tscheme') in
-  (tmp ts))
-
 let serialize_machine_integer_desc (tmp : (FStarC_Const.signedness * FStarC_Const.width)) : (string) list =
   (match tmp with
     | (s, w) -> (let sU = (match s with
@@ -603,7 +81,7 @@ let serialize_machine_integer_desc (tmp : (FStarC_Const.signedness * FStarC_Cons
 let parse_machine_integer_desc : (FStarC_Syntax_Syntax.fv -> (((FStarC_Const.signedness * FStarC_Const.width) * string)) option) =
   (let signs = (FStarC_Const.Unsigned :: (FStarC_Const.Signed :: [])) in
   let widths = (FStarC_Const.Int8 :: (FStarC_Const.Int16 :: (FStarC_Const.Int32 :: (FStarC_Const.Int64 :: [])))) in
-  let tmp = (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__list signs (fun s -> (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__list widths (fun w -> (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__list (serialize_machine_integer_desc (s, w)) (fun desc -> (((s, w), desc) :: []))))))) in
+  let tmp = ((FStarC_Class_Monad.fStarC_Class_Monad_bind__list signs) (fun s -> ((FStarC_Class_Monad.fStarC_Class_Monad_bind__list widths) (fun w -> ((FStarC_Class_Monad.fStarC_Class_Monad_bind__list (serialize_machine_integer_desc (s, w))) (fun desc -> (((s, w), desc) :: []))))))) in
   let descs = (((FStarC_Const.Unsigned, FStarC_Const.Sizet), "FStar.SizeT.__uint_to_t") :: tmp) in
   (fun fv -> (List.find_opt (fun tmp1 -> (match tmp1 with
     | (tmp2, d) -> ((=) d (FStarC_Ident.string_of_lid (FStarC_Syntax_Syntax.lid_of_fv fv)))
@@ -613,6 +91,21 @@ let register_pass (p : (FStarC_Syntax_DsEnv.env -> ((FStarC_Syntax_Syntax.term')
   (let tmp = (!(passes)) in
   let tmp1 = (p :: tmp) in
   ((passes) := tmp1))
+
+let is_tuple_constructor_lid (lid : FStarC_Ident.lident) : bool =
+  ((FStarC_Parser_Const_Tuples.is_tuple_datacon_lid lid) || (FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid lid))
+
+let may_shorten (lid : FStarC_Ident.lident) : bool =
+  (let tmp = (FStarC_Options.print_real_names ()) in
+  (if tmp then false else (match (FStarC_Ident.string_of_lid lid) with
+    | "Prims.Nil" -> false
+    | "Prims.Cons" -> false
+    | tmp1 -> (not (is_tuple_constructor_lid lid))
+  )))
+
+let maybe_shorten_lid (env : FStarC_Syntax_DsEnv.env) (lid : FStarC_Ident.lident) : FStarC_Ident.lident =
+  (let tmp = (may_shorten lid) in
+  (if tmp then (FStarC_Syntax_DsEnv.shorten_lid env lid) else lid))
 
 let maybe_shorten_fv (env : FStarC_Syntax_DsEnv.env) (fv : FStarC_Syntax_Syntax.fv) : FStarC_Ident.lident =
   (let lid = (fv).FStarC_Syntax_Syntax.fv_name in
@@ -659,17 +152,127 @@ let rec resugar_universe (u : FStarC_Syntax_Syntax.universe) (r : FStarC_Range_T
     | FStarC_Syntax_Syntax.U_unknown -> (mk FStarC_Parser_AST.Wild r)
   ))
 
+let is_imp_bqual (a : (FStarC_Syntax_Syntax.binder_qualifier) option) : bool =
+  (match a with
+    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) when (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t) -> false
+    | (Some ((FStarC_Syntax_Syntax.Implicit (tmp)))) -> true
+    | (Some ((FStarC_Syntax_Syntax.Meta (tmp)))) -> true
+    | tmp -> false
+  )
+
+let no_imp_bs (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
+  (BatList.filter (fun b -> (not (is_imp_bqual (b).FStarC_Syntax_Syntax.binder_qual))) bs)
+
+let filter_imp_bs (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
+  (let tmp = (FStarC_Options.print_implicits ()) in
+  (if tmp then bs else (no_imp_bs bs)))
+
+let resugar_bv_as_pat' (env : FStarC_Syntax_DsEnv.env) (v : FStarC_Syntax_Syntax.bv) (aqual : (FStarC_Parser_AST.arg_qualifier) option) (body_bv : (FStarC_Syntax_Syntax.bv) list) (typ_opt : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : FStarC_Parser_AST.pattern =
+  (let mk = (fun a -> (FStarC_Parser_AST.mk_pattern a (FStarC_Syntax_Syntax.range_of_bv v))) in
+  let used = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv v body_bv) in
+  let tmp = (if used then (let tmp = (bv_as_unique_ident v) in
+    let tmp1 = (tmp, aqual, []) in
+    (FStarC_Parser_AST.PatVar ((match tmp1 with (custard_tup, _, _) -> custard_tup), (match tmp1 with (_, custard_tup, _) -> custard_tup), (match tmp1 with (_, _, custard_tup) -> custard_tup)))) else (FStarC_Parser_AST.PatWild (aqual, []))) in
+  let pat = (mk tmp) in
+  (match typ_opt with
+    | None -> pat
+    | (Some ({ FStarC_Syntax_Syntax.n = FStarC_Syntax_Syntax.Tm_unknown; pos = tmp1; hash_code = tmp2; _ })) -> pat
+    | (Some (typ)) -> (let tmp1 = (FStarC_Options.print_bound_var_types ()) in
+      (if tmp1 then (let tmp2 = (resugar_term' env typ) in
+      let tmp3 = (tmp2, None) in
+      let tmp4 = (pat, tmp3) in
+      let tmp5 = (FStarC_Parser_AST.PatAscribed ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
+      (mk tmp5)) else pat))
+  ))
+
 let resugar_bv_as_pat (env : FStarC_Syntax_DsEnv.env) (x : FStarC_Syntax_Syntax.bv) (qual : (FStarC_Syntax_Syntax.binder_qualifier) option) (body_bv : (FStarC_Syntax_Syntax.bv) list) : FStarC_Parser_AST.pattern =
   (let bq = (resugar_bqual env qual) in
   let tmp = (FStarC_Syntax_Subst.compress (x).FStarC_Syntax_Syntax.sort) in
   let tmp1 = (Some (tmp)) in
   (resugar_bv_as_pat' env x bq body_bv tmp1))
 
+let rec resugar_comp_with_pre__aux (env : FStarC_Syntax_DsEnv.env) (mk : (FStarC_Parser_AST.term' -> FStarC_Parser_AST.term)) (l : (FStarC_Parser_AST.term) list) (fl : (FStarC_Syntax_Syntax.cflag) list) : (FStarC_Parser_AST.term) list =
+  (match fl with
+    | [] -> l
+    | (hd :: tl) -> (match hd with
+        | (FStarC_Syntax_Syntax.DECREASES (dec_order)) -> (let d = (match dec_order with
+              | (FStarC_Syntax_Syntax.Decreases_lex ((t :: []))) -> (resugar_term' env t)
+              | (FStarC_Syntax_Syntax.Decreases_lex (ts)) -> (let tmp = (BatList.map (resugar_term' env) ts) in
+                let tmp1 = (FStarC_Parser_AST.LexList (tmp)) in
+                (mk tmp1))
+              | (FStarC_Syntax_Syntax.Decreases_wf (rel, e)) -> (let tmp = (resugar_term' env rel) in
+                let tmp1 = (resugar_term' env e) in
+                let tmp2 = (tmp, tmp1) in
+                let tmp3 = (FStarC_Parser_AST.WFOrder ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+                (mk tmp3))
+            ) in
+          let e = (mk (FStarC_Parser_AST.Decreases (d))) in
+          (resugar_comp_with_pre__aux env mk (e :: l) tl))
+        | tmp -> (resugar_comp_with_pre__aux env mk l tl)
+      )
+  )
+
+let resugar_comp_with_pre (env : FStarC_Syntax_DsEnv.env) (pre : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
+  (let mk = (fun a -> (FStarC_Parser_AST.mk_term a (c).FStarC_Syntax_Syntax.pos FStarC_Parser_AST.Un)) in
+  (match (c).FStarC_Syntax_Syntax.n with
+    | c1 when (let tmp = (FStarC_Util.for_some (fun tmp -> (match tmp with
+        | (FStarC_Syntax_Syntax.DECREASES (tmp1)) -> true
+        | (FStarC_Syntax_Syntax.SMTPAT (tmp1)) -> true
+        | tmp1 -> false
+      )) (c1).FStarC_Syntax_Syntax.flags) in
+    let tmp1 = (not tmp) in
+    (if tmp1 then ((FStarC_Syntax_Util.is_pure_effect (c1).FStarC_Syntax_Syntax.source_effect_name) || (FStarC_Syntax_Util.is_ghost_effect (c1).FStarC_Syntax_Syntax.source_effect_name)) else false)) -> (let t = (resugar_term' env (c1).FStarC_Syntax_Syntax.result_typ) in
+      (if (FStarC_Syntax_Util.is_ghost_effect (c1).FStarC_Syntax_Syntax.source_effect_name) then (mk (FStarC_Parser_AST.Construct (FStarC_Parser_Const.effect_GTot_lid, ((t, FStarC_Parser_AST.Nothing) :: [])))) else (let tmp = (FStarC_Options.print_implicits ()) in
+      (if tmp then (mk (FStarC_Parser_AST.Construct (FStarC_Parser_Const.effect_Tot_lid, ((t, FStarC_Parser_AST.Nothing) :: [])))) else t))))
+    | c1 -> (let tmp = (resugar_term' env (c1).FStarC_Syntax_Syntax.result_typ) in
+      let result = (tmp, FStarC_Parser_AST.Nothing) in
+      let mk_decreases = (fun fl -> (resugar_comp_with_pre__aux env mk [] fl)) in
+      let tmp1 = (FStarC_Syntax_Syntax.mk_comp' c1 FStarC_Range_Type.dummyRange) in
+      let tmp2 = (FStarC_Syntax_Util.comp_smt_pats tmp1) in
+      let smt_pats = (match tmp2 with
+          | (Some (pats)) when (let tmp3 = (FStarC_Syntax_Util.head_of pats) in
+          let tmp4 = (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.nil_lid tmp3) in
+          (not tmp4)) -> (pats :: [])
+          | tmp3 -> []
+        ) in
+      (if (FStarC_Ident.lid_equals (c1).FStarC_Syntax_Syntax.source_effect_name FStarC_Parser_Const.effect_Lemma_lid) then (let tmp3 = (FStarC_Syntax_Util.un_squash (c1).FStarC_Syntax_Syntax.result_typ) in
+      let post = (match tmp3 with
+          | (Some (q)) -> (let tmp4 = (resugar_term' env q) in
+            let tmp5 = (FStarC_Parser_AST.Ensures (tmp4)) in
+            let tmp6 = (mk tmp5) in
+            (tmp6 :: []))
+          | None -> []
+        ) in
+      let pre1 = (match pre with
+          | (Some (p)) -> (let tmp4 = (resugar_term' env p) in
+            let tmp5 = (FStarC_Parser_AST.Requires (tmp4)) in
+            let tmp6 = (mk tmp5) in
+            (tmp6 :: []))
+          | None -> []
+        ) in
+      let pats = (BatList.map (resugar_term' env) smt_pats) in
+      let decrease = (mk_decreases (c1).FStarC_Syntax_Syntax.flags) in
+      let tmp4 = (maybe_shorten_lid env (c1).FStarC_Syntax_Syntax.source_effect_name) in
+      let tmp5 = (BatList.map (fun t -> (t, FStarC_Parser_AST.Nothing)) (BatList.append pre1 (BatList.append post (BatList.append decrease pats)))) in
+      let tmp6 = (tmp4, tmp5) in
+      let tmp7 = (FStarC_Parser_AST.Construct ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))) in
+      (mk tmp7)) else (let tmp3 = (FStarC_Options.print_effect_args ()) in
+      (if tmp3 then (let tmp4 = (mk_decreases (c1).FStarC_Syntax_Syntax.flags) in
+      let decrease = (BatList.map (fun t -> (t, FStarC_Parser_AST.Nothing)) tmp4) in
+      let tmp5 = (maybe_shorten_lid env (c1).FStarC_Syntax_Syntax.source_effect_name) in
+      let tmp6 = (tmp5, (result :: decrease)) in
+      let tmp7 = (FStarC_Parser_AST.Construct ((match tmp6 with (custard_tup, _) -> custard_tup), (match tmp6 with (_, custard_tup) -> custard_tup))) in
+      (mk tmp7)) else (let tmp4 = (maybe_shorten_lid env (c1).FStarC_Syntax_Syntax.source_effect_name) in
+      let tmp5 = (tmp4, (result :: [])) in
+      let tmp6 = (FStarC_Parser_AST.Construct ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))) in
+      (mk tmp6))))))
+  ))
+
 let rec resugar_term_base'__aux (mk : (FStarC_Parser_AST.term' -> FStarC_Parser_AST.term)) (body : FStarC_Parser_AST.term) (tmp : (FStarC_Parser_AST.binder) list) : FStarC_Parser_AST.term =
   (match tmp with
     | [] -> body
     | (hd :: tl) -> (let body1 = (mk (FStarC_Parser_AST.Product ((hd :: []), body))) in
-      ((resugar_term_base'__aux mk) body1 tl))
+      (resugar_term_base'__aux mk body1 tl))
   )
 
 let can_resugar_machine_integer_fv (fv : FStarC_Syntax_Syntax.fv) : bool =
@@ -743,7 +346,7 @@ let rec resugar_term_base'__open_lambda_binders (t : (FStarC_Syntax_Syntax.term'
   (match bs with
     | [] -> (Some (t))
     | (b :: bs1) -> (let tmp = (FStarC_Syntax_Util.abs_one_ln t) in
-      (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp (fun tmp1 -> (match tmp1 with
+      ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp) (fun tmp1 -> (match tmp1 with
         | (tmp2, body) -> (let tmp3 = (FStarC_Syntax_Subst.open_term (b :: []) body) in
           (match tmp3 with
             | (tmp4, body1) -> (resugar_term_base'__open_lambda_binders body1 bs1)
@@ -766,8 +369,8 @@ let rec u___is_list_literal (cons_lid : FStarC_Ident.lident) (nil_lid : FStarC_I
       let args1 = (filter_imp_args args) in
       (match ((hd1).FStarC_Syntax_Syntax.n, args1) with
         | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((hd2, None) :: ((tl, None) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv cons_lid) -> (let tmp2 = (u___is_list_literal cons_lid nil_lid tl) in
-          (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp2 (fun tl1 -> (FStarC_Class_Monad.fStarC_Class_Monad_return__option (hd2 :: tl1)))))
-        | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), []) when (FStarC_Syntax_Syntax.fv_eq_lid fv nil_lid) -> (FStarC_Class_Monad.fStarC_Class_Monad_return__option [])
+          ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp2) (fun tl1 -> (Some ((hd2 :: tl1))))))
+        | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), []) when (FStarC_Syntax_Syntax.fv_eq_lid fv nil_lid) -> (Some ([]))
         | (tmp2, tmp3) -> None
       ))
   ))
@@ -813,10 +416,13 @@ let rec resugar_term_as_op (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Synta
 let rec resugar_calc__resugar_all_steps (resugar_step : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option)) (pack : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) option =
   (let tmp = (resugar_step pack) in
   (match tmp with
-    | (Some ((t, r, j, k))) -> (let tmp1 = ((resugar_calc__resugar_all_steps resugar_step) k) in
-      (FStarC_Option.bind tmp1 (fun tmp2 -> (match tmp2 with
-        | (steps, k1) -> (Some ((((t, r, j) :: steps), k1)))
-      ))))
+    | (Some ((t, r, j, k))) -> (let tmp1 = (resugar_calc__resugar_all_steps resugar_step k) in
+      (match tmp1 with
+        | (Some (x)) -> (match x with
+            | (steps, k1) -> (Some ((((t, r, j) :: steps), k1)))
+          )
+        | None -> None
+      ))
     | None -> (Some (([], pack)))
   ))
 
@@ -926,11 +532,11 @@ let resugar_calc (env : FStarC_Syntax_DsEnv.env) (t0 : (FStarC_Syntax_Syntax.ter
     let tmp4 = (FStarC_Parser_AST.CalcProof ((match tmp3 with (custard_tup, _, _) -> custard_tup), (match tmp3 with (_, custard_tup, _) -> custard_tup), (match tmp3 with (_, _, custard_tup) -> custard_tup))) in
     (mk tmp4))) in
   let tmp = (resugar_calc_finish t0) in
-  (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp (fun tmp1 -> (match tmp1 with
-    | (rel, pack) -> (let tmp2 = ((resugar_calc__resugar_all_steps resugar_step) pack) in
-      (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp2 (fun tmp3 -> (match tmp3 with
+  ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp) (fun tmp1 -> (match tmp1 with
+    | (rel, pack) -> (let tmp2 = (resugar_calc__resugar_all_steps resugar_step pack) in
+      ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp2) (fun tmp3 -> (match tmp3 with
         | (steps, k) -> (let tmp4 = (resugar_init k) in
-          (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp4 (fun x0 -> (let tmp5 = (build_calc rel x0 (BatList.rev steps)) in
+          ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp4) (fun x0 -> (let tmp5 = (build_calc rel x0 (BatList.rev steps)) in
           (Some (tmp5))))))
       ))))
   ))))
@@ -939,7 +545,7 @@ let rec resugar_term_base'__resugar_body (mk : (FStarC_Parser_AST.term' -> FStar
   (match (t).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Match (e, None, None, ((tmp, tmp1, b) :: []))) -> b
     | (FStarC_Parser_AST.Let (tmp, tmp1, b)) -> b
-    | (FStarC_Parser_AST.Ascribed (t1, t2, t3, use_eq)) -> (let tmp = ((resugar_term_base'__resugar_body mk) t1) in
+    | (FStarC_Parser_AST.Ascribed (t1, t2, t3, use_eq)) -> (let tmp = (resugar_term_base'__resugar_body mk t1) in
       let tmp1 = (tmp, t2, t3, use_eq) in
       let tmp2 = (FStarC_Parser_AST.Ascribed ((match tmp1 with (custard_tup, _, _, _) -> custard_tup), (match tmp1 with (_, custard_tup, _, _) -> custard_tup), (match tmp1 with (_, _, custard_tup, _) -> custard_tup), (match tmp1 with (_, _, _, custard_tup) -> custard_tup))) in
       (mk tmp2))
@@ -961,13 +567,102 @@ let rec resugar_term_base'__uncurry (xs : (FStarC_Parser_AST.binder) list) (pats
     | tmp -> (xs, pats, t)
   )
 
+let filter_pattern_imp (xs : (('tmp * bool)) list) : (('tmp * bool)) list =
+  (let tmp = (FStarC_Options.print_implicits ()) in
+  (if tmp then xs else (BatList.filter (fun tmp1 -> (match tmp1 with
+    | (tmp2, is_implicit) -> (not is_implicit)
+  )) xs)))
+
+let rec resugar_pat'__aux__map2 (mk : (FStarC_Parser_AST.pattern' -> FStarC_Parser_AST.pattern)) (l1 : (FStarC_Ident.lident) list) (l2 : (FStarC_Parser_AST.pattern) list) : ((FStarC_Ident.lident * FStarC_Parser_AST.pattern)) list =
+  (match (l1, l2) with
+    | ([], []) -> []
+    | ([], (hd :: tl)) -> []
+    | ((hd :: tl), []) -> ((hd, (mk (FStarC_Parser_AST.PatWild (None, [])))) :: (resugar_pat'__aux__map2 mk tl []))
+    | ((hd1 :: tl1), (hd2 :: tl2)) -> ((hd1, hd2) :: (resugar_pat'__aux__map2 mk tl1 tl2))
+  )
+
+let rec resugar_pat'__resugar_plain_pat_cons (env : FStarC_Syntax_DsEnv.env) (branch_bv : (FStarC_Syntax_Syntax.bv) list) (mk : (FStarC_Parser_AST.pattern' -> FStarC_Parser_AST.pattern)) (to_arg_qual : ((bool) option -> (FStarC_Parser_AST.arg_qualifier) option)) (must_print : ((((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list -> bool)) (resugar_plain_pat_cons' : (FStarC_Syntax_Syntax.fv -> ((FStarC_Parser_AST.pattern) list -> FStarC_Parser_AST.pattern))) (fv : FStarC_Syntax_Syntax.fv) (args : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list) : FStarC_Parser_AST.pattern =
+  (let tmp = (must_print args) in
+  let tmp1 = (not tmp) in
+  let args1 = (if tmp1 then (filter_pattern_imp args) else args) in
+  let args2 = (BatList.map (fun tmp2 -> (match tmp2 with
+      | (p, b) -> (resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' p (Some (b)))
+    )) args1) in
+  (resugar_plain_pat_cons' fv args2))
+
+and resugar_pat'__aux (env : FStarC_Syntax_DsEnv.env) (branch_bv : (FStarC_Syntax_Syntax.bv) list) (mk : (FStarC_Parser_AST.pattern' -> FStarC_Parser_AST.pattern)) (to_arg_qual : ((bool) option -> (FStarC_Parser_AST.arg_qualifier) option)) (must_print : ((((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list -> bool)) (resugar_plain_pat_cons' : (FStarC_Syntax_Syntax.fv -> ((FStarC_Parser_AST.pattern) list -> FStarC_Parser_AST.pattern))) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (imp_opt : (bool) option) : FStarC_Parser_AST.pattern =
+  (match (p).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (mk (FStarC_Parser_AST.PatConst (c)))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, args)) when (FStarC_Ident.lid_equals (fv).FStarC_Syntax_Syntax.fv_name FStarC_Parser_Const.nil_lid) -> (let tmp1 = (filter_pattern_imp args) in
+      (match tmp1 with
+        | [] -> (mk (FStarC_Parser_AST.PatList ([])))
+        | tmp2 -> (resugar_pat'__resugar_plain_pat_cons env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' fv args)
+      ))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, args)) when (FStarC_Ident.lid_equals (fv).FStarC_Syntax_Syntax.fv_name FStarC_Parser_Const.cons_lid) -> (let tmp1 = (filter_pattern_imp args) in
+      (match tmp1 with
+        | ((hd, false) :: ((tl, false) :: [])) -> (let hd' = (resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' hd (Some (false))) in
+          let tmp2 = (resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' tl (Some (false))) in
+          (match tmp2 with
+            | { FStarC_Parser_AST.pat = (FStarC_Parser_AST.PatList (tl')); prange = p1; _ } -> (FStarC_Parser_AST.mk_pattern (FStarC_Parser_AST.PatList ((hd' :: tl'))) p1)
+            | tl' -> (resugar_plain_pat_cons' fv (hd' :: (tl' :: [])))
+          ))
+        | tmp2 -> (resugar_pat'__resugar_plain_pat_cons env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' fv args)
+      ))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, [])) -> (mk (FStarC_Parser_AST.PatName ((fv).FStarC_Syntax_Syntax.fv_name)))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, args)) when (if (is_tuple_constructor_lid (fv).FStarC_Syntax_Syntax.fv_name) then (let tmp1 = (must_print args) in
+    (not tmp1)) else false) -> (let args1 = (BatList.filter_map (fun tmp1 -> (match tmp1 with
+          | (p1, is_implicit) -> (if is_implicit then None else (let tmp2 = (resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' p1 (Some (false))) in
+            (Some (tmp2))))
+        )) args) in
+      let is_dependent_tuple = (FStarC_Parser_Const_Tuples.is_dtuple_datacon_lid (fv).FStarC_Syntax_Syntax.fv_name) in
+      (mk (FStarC_Parser_AST.PatTuple (args1, is_dependent_tuple))))
+    | (FStarC_Syntax_Syntax.Pat_cons ({ FStarC_Syntax_Syntax.fv_name = tmp; fv_qual = (Some ((FStarC_Syntax_Syntax.Record_ctor (name, fields)))); _ }, tmp1, args)) -> (let tmp2 = (BatList.map (fun f -> (FStarC_Ident.lid_of_ids (f :: []))) fields) in
+      let fields1 = (BatList.rev tmp2) in
+      let tmp3 = (BatList.map (fun tmp3 -> (match tmp3 with
+          | (p1, b) -> (resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' p1 (Some (b)))
+        )) args) in
+      let args1 = (BatList.rev tmp3) in
+      let args2 = (BatList.rev (resugar_pat'__aux__map2 mk fields1 args1)) in
+      (mk (FStarC_Parser_AST.PatRecord (args2))))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, tmp, args)) -> (resugar_pat'__resugar_plain_pat_cons env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' fv args)
+    | (FStarC_Syntax_Syntax.Pat_var (v)) -> (let tmp = (FStarC_Parser_AST.string_to_op (FStarC_Ident.string_of_id (v).FStarC_Syntax_Syntax.ppname)) in
+      (match tmp with
+        | (Some (op)) -> (mk (FStarC_Parser_AST.PatOp ((FStarC_Ident.mk_ident (op, (FStarC_Ident.range_of_id (v).FStarC_Syntax_Syntax.ppname))))))
+        | None -> (let tmp1 = (to_arg_qual imp_opt) in
+          (resugar_bv_as_pat' env v tmp1 branch_bv None))
+      ))
+    | (FStarC_Syntax_Syntax.Pat_dot_term (tmp)) -> (mk (FStarC_Parser_AST.PatWild ((Some (FStarC_Parser_AST.Implicit)), [])))
+  )
+
+let resugar_pat' (env : FStarC_Syntax_DsEnv.env) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (branch_bv : (FStarC_Syntax_Syntax.bv) list) : FStarC_Parser_AST.pattern =
+  (let mk = (fun a -> (FStarC_Parser_AST.mk_pattern a (p).FStarC_Syntax_Syntax.p)) in
+  let to_arg_qual = (fun bopt -> (match bopt with
+      | (Some (x)) -> (if x then (Some (FStarC_Parser_AST.Implicit)) else None)
+      | None -> None
+    )) in
+  let must_print = (fun args -> (BatList.exists (fun tmp -> (match tmp with
+      | (pattern, is_implicit) -> (match (pattern).FStarC_Syntax_Syntax.v with
+          | (FStarC_Syntax_Syntax.Pat_var (bv)) -> (if is_implicit then (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv bv branch_bv) else false)
+          | tmp1 -> false
+        )
+    )) args)) in
+  let resugar_plain_pat_cons' = (fun fv args -> (mk (FStarC_Parser_AST.PatApp ((mk (FStarC_Parser_AST.PatName ((fv).FStarC_Syntax_Syntax.fv_name))), args)))) in
+  (resugar_pat'__aux env branch_bv mk to_arg_qual must_print resugar_plain_pat_cons' p None))
+
+let resugar_comp' (env : FStarC_Syntax_DsEnv.env) : ((FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax -> FStarC_Parser_AST.term) =
+  (resugar_comp_with_pre env None)
+
 let resugar_ascription (env : FStarC_Syntax_DsEnv.env) (arg : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) : (FStarC_Parser_AST.term * (FStarC_Parser_AST.term) option * bool) =
   (match arg with
     | (asc, tac_opt, b) -> (let tmp = (match asc with
           | (FStar_Pervasives.Inl (n)) -> (resugar_term' env n)
           | (FStar_Pervasives.Inr (n)) -> (resugar_comp' env n)
         ) in
-      let tmp1 = (FStarC_Option.map (resugar_term' env) tac_opt) in
+      let tmp1 = (match tac_opt with
+          | (Some (x)) -> (let tmp1 = ((resugar_term' env) x) in
+            (Some (tmp1)))
+          | None -> None
+        ) in
       (tmp, tmp1, b))
   )
 
@@ -991,8 +686,12 @@ let resugar_match_returns (env : FStarC_Syntax_DsEnv.env) (scrutinee : (FStarC_S
             )) else ((Some (b1)), asc1)))
         ) in
       (match tmp1 with
-        | (bopt, asc1) -> (let bopt1 = (FStarC_Option.map (fun b1 -> (let tmp2 = (resugar_binder' env b1 r) in
-            (FStarC_Parser_AST.ident_of_binder r tmp2))) bopt) in
+        | (bopt, asc1) -> (let bopt1 = (match bopt with
+              | (Some (x)) -> (let tmp2 = (resugar_binder' env x r) in
+                let tmp3 = (FStarC_Parser_AST.ident_of_binder r tmp2) in
+                (Some (tmp3)))
+              | None -> None
+            ) in
           let tmp2 = (resugar_ascription env asc1) in
           let tmp3 = (match tmp2 with
               | (asc2, None, use_eq) -> (asc2, use_eq)
@@ -1004,10 +703,18 @@ let resugar_match_returns (env : FStarC_Syntax_DsEnv.env) (scrutinee : (FStarC_S
       ))
   )
 
+let universe_to_string (univs : (FStarC_Ident.ident) list) : string =
+  (let tmp = (FStarC_Options.print_universes ()) in
+  (if tmp then (let tmp1 = (BatList.map (fun x -> (FStarC_Ident.string_of_id x)) univs) in
+  (BatString.concat ", " tmp1)) else ""))
+
+let label (s : string) (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
+  (if ((=) s "") then t else (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Labeled (t, s, true)) (t).FStarC_Parser_AST.range FStarC_Parser_AST.Un))
+
 let rec resugar_term_base'__resugar_seq (mk : (FStarC_Parser_AST.term' -> FStarC_Parser_AST.term)) (t : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
   (match (t).FStarC_Parser_AST.tm with
     | (FStarC_Parser_AST.Let (tmp, ((tmp1, (p, t1)) :: []), t2)) -> (mk (FStarC_Parser_AST.Seq (t1, t2)))
-    | (FStarC_Parser_AST.Ascribed (t1, t2, t3, use_eq)) -> (mk (FStarC_Parser_AST.Ascribed (((resugar_term_base'__resugar_seq mk) t1), t2, t3, use_eq)))
+    | (FStarC_Parser_AST.Ascribed (t1, t2, t3, use_eq)) -> (mk (FStarC_Parser_AST.Ascribed ((resugar_term_base'__resugar_seq mk t1), t2, t3, use_eq)))
     | tmp -> t
   )
 
@@ -1113,7 +820,7 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
                   let body2 = (resugar_comp_with_pre env pre body1) in
                   let tmp6 = (BatList.map (fun b -> (resugar_binder' env b (t).FStarC_Syntax_Syntax.pos)) xs3) in
                   let xs4 = (BatList.rev tmp6) in
-                  ((resugar_term_base'__aux mk) body2 xs4))
+                  (resugar_term_base'__aux mk body2 xs4))
               ))
           ))
       ))
@@ -1238,11 +945,7 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
           ) else (let resugar_tuple_type = (fun env1 args2 -> (let typs = (BatList.map (fun tmp13 -> (match tmp13 with
                 | (x, tmp14) -> (resugar_term' env1 x)
               )) args2) in
-            let tmp13 = (match typs with
-                | [] -> (FStarC_Effect.failwith "unsnoc: empty list")
-                | (x :: []) -> ((BatList.rev []), x)
-                | (x :: xs) -> (resugar_term_base'__unsnoc' (x :: []) xs)
-              ) in
+            let tmp13 = (resugar_term_base'__unsnoc' [] typs) in
             (match tmp13 with
               | (pre, last) -> (let tmp14 = (BatList.map (fun u__eta -> (FStar_Pervasives.Inr (u__eta))) pre) in
                 let tmp15 = (tmp14, last) in
@@ -1254,34 +957,22 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
                   | (u__1, u__2) -> u__1
                 )) in
               (match tmp14 with
-                | (bs, tmp15, tmp16) -> (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option (if (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) bs) (Prims.op_Minus n Prims.int_one)) then None else (Some (()))) (fun tmp17 -> (let bs1 = (match ((fun n l -> BatList.split_at (Z.to_int n) l) (Prims.op_Minus n Prims.int_one) bs) with
+                | (bs, tmp15, tmp16) -> ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option (if (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) bs) (Prims.op_Minus n Prims.int_one)) then None else (Some (())))) (fun tmp17 -> (let bs1 = (match ((fun n l -> BatList.split_at (Z.to_int n) l) (Prims.op_Minus n Prims.int_one) bs) with
                       | (u__1, u__2) -> u__1
                     ) in
                   let tmp18 = (FStarC_Class_Monad.fStarC_Class_Monad_mapMi__option (fun i tmp18 -> (match tmp18 with
-                      | (t2, tmp19) -> (match (match ((fun n l -> BatList.split_at (Z.to_int n) l) i bs1) with
+                      | (t2, tmp19) -> (resugar_term_base'__open_lambda_binders t2 (match ((fun n l -> BatList.split_at (Z.to_int n) l) i bs1) with
                           | (u__1, u__2) -> u__1
-                        ) with
-                          | [] -> (Some (t2))
-                          | (b :: bs2) -> (let tmp20 = (FStarC_Syntax_Util.abs_one_ln t2) in
-                            (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp20 (fun tmp21 -> (match tmp21 with
-                              | (tmp22, body) -> (let tmp23 = (FStarC_Syntax_Subst.open_term (b :: []) body) in
-                                (match tmp23 with
-                                  | (tmp24, body1) -> (resugar_term_base'__open_lambda_binders body1 bs2)
-                                ))
-                            ))))
-                        )
+                        ))
                     )) args2) in
-                  (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp18 (fun opened_bs_types -> (let set_binder_sort = (fun t2 b -> { FStarC_Syntax_Syntax.binder_bv = { FStarC_Syntax_Syntax.ppname = ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname;
-                        index = ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.index;
-                        sort = t2 };
+                  ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp18) (fun opened_bs_types -> (let set_binder_sort = (fun t2 b -> { FStarC_Syntax_Syntax.binder_bv = (let tmp19 = (b).FStarC_Syntax_Syntax.binder_bv in
+                      { FStarC_Syntax_Syntax.ppname = (tmp19).FStarC_Syntax_Syntax.ppname;
+                        index = (tmp19).FStarC_Syntax_Syntax.index;
+                        sort = t2 });
                       binder_qual = (b).FStarC_Syntax_Syntax.binder_qual;
                       binder_positivity = (b).FStarC_Syntax_Syntax.binder_positivity;
                       binder_attrs = (b).FStarC_Syntax_Syntax.binder_attrs }) in
-                  let tmp19 = (match opened_bs_types with
-                      | [] -> (FStarC_Effect.failwith "unsnoc: empty list")
-                      | (x :: []) -> ((BatList.rev []), x)
-                      | (x :: xs) -> (fStarC_Syntax_Resugar_resugar_term_base'__unsnoc'__1 (x :: []) xs)
-                    ) in
+                  let tmp19 = (fStarC_Syntax_Resugar_resugar_term_base'__unsnoc'__1 [] opened_bs_types) in
                   (match tmp19 with
                     | (pre_bs_types, last_type) -> (let bs2 = (BatList.map2 (fun b t2 -> (let b1 = (set_binder_sort t2 b) in
                         (resugar_binder' env1 b1 (t2).FStarC_Syntax_Syntax.pos))) bs1 pre_bs_types) in
@@ -1353,7 +1044,7 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
                           let body1 = (resugar_term' env tmp18) in
                           let tmp19 = (decomp handler) in
                           let handler1 = (resugar_term' env tmp19) in
-                          let e1 = ((resugar_term_base'__resugar_body mk) body1) in
+                          let e1 = (resugar_term_base'__resugar_body mk body1) in
                           let branches = (resugar_term_base'__resugar_branches handler1) in
                           (mk (FStarC_Parser_AST.TryWith (e1, branches))))
                       )) with
@@ -1611,7 +1302,7 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
       (mk tmp4))
     | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = e; meta = m; _ })) -> (let resugar_meta_desugared = (fun tmp2 -> (match tmp2 with
           | FStarC_Syntax_Syntax.Sequence -> (let term = (resugar_term' env e) in
-            ((resugar_term_base'__resugar_seq mk) term))
+            (resugar_term_base'__resugar_seq mk term))
           | (FStarC_Syntax_Syntax.Machine_integer (tmp3, tmp4)) -> (resugar_term' env e)
           | FStarC_Syntax_Syntax.Primop -> (resugar_term' env e)
           | FStarC_Syntax_Syntax.Masked_effect -> (resugar_term' env e)
@@ -1630,4 +1321,315 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
 
 let uu___0 : unit =
   (register_pass resugar_term_base')
+
+let resugar_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
+  (let tmp = (noenv resugar_term') in
+  (tmp t))
+
+let resugar_pat (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (branch_bv : (FStarC_Syntax_Syntax.bv) list) : FStarC_Parser_AST.pattern =
+  (let tmp = (noenv resugar_pat') in
+  (tmp p branch_bv))
+
+let resugar_comp (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
+  (let tmp = (noenv resugar_comp') in
+  (tmp c))
+
+let drop_n_bs (n : Prims.int) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let tmp = (FStarC_Syntax_Util.arrow_formals_comp_ln t) in
+  (match tmp with
+    | (bs, c) -> (let bs1 = (match ((fun n l -> BatList.split_at (Z.to_int n) l) n bs) with
+          | (u__1, u__2) -> u__2
+        ) in
+      (FStarC_Syntax_Util.arrow bs1 c))
+  ))
+
+let resugar_typ (env : FStarC_Syntax_DsEnv.env) (datacon_ses : (FStarC_Syntax_Syntax.sigelt) list) (se : FStarC_Syntax_Syntax.sigelt) : ((FStarC_Syntax_Syntax.sigelt) list * FStarC_Parser_AST.tycon) =
+  (match (se).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = tylid; us = uvs; params = bs; num_uniform_params = tmp; t = t; mutuals = tmp1; ds = datacons; injective_type_params = tmp2; _ })) -> (let tmp3 = (BatList.partition (fun se1 -> (match (se1).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp3; us = tmp4; t = tmp5; ty_lid = inductive_lid; num_ty_params = tmp6; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })) -> (FStarC_Ident.lid_equals inductive_lid tylid)
+          | tmp3 -> (FStarC_Effect.failwith "unexpected")
+        )) datacon_ses) in
+      (match tmp3 with
+        | (current_datacons, other_datacons) -> (let bs1 = (filter_imp_bs bs) in
+          let bs2 = (BatList.map (fun b -> (resugar_binder' env b (t).FStarC_Syntax_Syntax.pos)) bs1) in
+          let tmp4 = (FStarC_Util.for_some FStarC_Syntax_Syntax.uu___is_RecordType (se).FStarC_Syntax_Syntax.sigquals) in
+          let tmp5 = (if tmp4 then ((=) ((fun l -> Z.of_int (BatList.length l)) current_datacons) Prims.int_one) else false) in
+          let tyc = (if tmp5 then (match current_datacons with
+              | (dc :: []) -> (match (dc).FStarC_Syntax_Syntax.sigel with
+                  | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = l; us = univs; t = typ; ty_lid = tmp6; num_ty_params = num; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })) -> (let typ1 = (drop_n_bs num typ) in
+                    let tmp10 = (FStarC_Syntax_Util.arrow_formals_comp_ln typ1) in
+                    let fields = (match tmp10 with
+                        | (bs3, tmp11) -> (let bs4 = (filter_imp_bs bs3) in
+                          (BatList.map (fun b -> (let q = (resugar_bqual env (b).FStarC_Syntax_Syntax.binder_qual) in
+                          let tmp12 = (bv_as_unique_ident (b).FStarC_Syntax_Syntax.binder_bv) in
+                          let tmp13 = (BatList.map (resugar_term' env) (b).FStarC_Syntax_Syntax.binder_attrs) in
+                          let tmp14 = (resugar_term' env ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                          (tmp12, q, tmp13, tmp14))) bs4))
+                      ) in
+                    let tmp11 = (BatList.map (resugar_term' env) (se).FStarC_Syntax_Syntax.sigattrs) in
+                    let tmp12 = ((FStarC_Ident.ident_of_lid tylid), bs2, None, tmp11, fields) in
+                    (FStarC_Parser_AST.TyconRecord ((match tmp12 with (custard_tup, _, _, _, _) -> custard_tup), (match tmp12 with (_, custard_tup, _, _, _) -> custard_tup), (match tmp12 with (_, _, custard_tup, _, _) -> custard_tup), (match tmp12 with (_, _, _, custard_tup, _) -> custard_tup), (match tmp12 with (_, _, _, _, custard_tup) -> custard_tup))))
+                  | tmp6 -> (FStarC_Effect.failwith "ggg1")
+                )
+            ) else (let resugar_datacon = (fun constructors se1 -> (match (se1).FStarC_Syntax_Syntax.sigel with
+                | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = l; us = univs; t = typ; ty_lid = tmp6; num_ty_params = num; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })) -> (let typ1 = (drop_n_bs num typ) in
+                  let tmp10 = (resugar_term' env typ1) in
+                  let tmp11 = (FStarC_Parser_AST.VpArbitrary (tmp10)) in
+                  let tmp12 = (Some (tmp11)) in
+                  let tmp13 = (BatList.map (resugar_term' env) (se1).FStarC_Syntax_Syntax.sigattrs) in
+                  let c = ((FStarC_Ident.ident_of_lid l), tmp12, tmp13) in
+                  (c :: constructors))
+                | tmp6 -> (FStarC_Effect.failwith "unexpected")
+              )) in
+            let constructors = (BatList.fold_left resugar_datacon [] current_datacons) in
+            (FStarC_Parser_AST.TyconVariant ((FStarC_Ident.ident_of_lid tylid), bs2, None, constructors)))) in
+          (other_datacons, tyc))
+      ))
+    | tmp -> (FStarC_Effect.failwith "Impossible : only Sig_inductive_typ can be resugared as types")
+  )
+
+let resugar_qualifier (tmp : FStarC_Syntax_Syntax.qualifier) : (FStarC_Parser_AST.qualifier) option =
+  (match tmp with
+    | FStarC_Syntax_Syntax.Assumption -> (Some (FStarC_Parser_AST.Assumption))
+    | FStarC_Syntax_Syntax.InternalAssumption -> None
+    | FStarC_Syntax_Syntax.New -> (Some (FStarC_Parser_AST.New))
+    | FStarC_Syntax_Syntax.Private -> (Some (FStarC_Parser_AST.Private))
+    | FStarC_Syntax_Syntax.Unfold_for_unification_and_vcgen -> (Some (FStarC_Parser_AST.Unfold_for_unification_and_vcgen))
+    | FStarC_Syntax_Syntax.Visible_default -> None
+    | FStarC_Syntax_Syntax.Irreducible -> (Some (FStarC_Parser_AST.Irreducible))
+    | FStarC_Syntax_Syntax.Inline_for_extraction -> (Some (FStarC_Parser_AST.Inline_for_extraction))
+    | FStarC_Syntax_Syntax.NoExtract -> (Some (FStarC_Parser_AST.NoExtract))
+    | FStarC_Syntax_Syntax.Noeq -> (Some (FStarC_Parser_AST.Noeq))
+    | FStarC_Syntax_Syntax.Unopteq -> (Some (FStarC_Parser_AST.Unopteq))
+    | FStarC_Syntax_Syntax.TotalEffect -> (Some (FStarC_Parser_AST.TotalEffect))
+    | FStarC_Syntax_Syntax.Logic -> None
+    | FStarC_Syntax_Syntax.Reifiable -> (Some (FStarC_Parser_AST.Reifiable))
+    | (FStarC_Syntax_Syntax.Reflectable (tmp1)) -> (Some (FStarC_Parser_AST.Reflectable))
+    | (FStarC_Syntax_Syntax.Discriminator (tmp1)) -> None
+    | (FStarC_Syntax_Syntax.Projector (u__1, u__2)) -> None
+    | (FStarC_Syntax_Syntax.RecordType (u__1, u__2)) -> None
+    | (FStarC_Syntax_Syntax.RecordConstructor (u__1, u__2)) -> None
+    | (FStarC_Syntax_Syntax.Action (tmp1)) -> None
+    | FStarC_Syntax_Syntax.ExceptionConstructor -> None
+    | FStarC_Syntax_Syntax.HasMaskedEffect -> None
+    | FStarC_Syntax_Syntax.Effect -> (Some (FStarC_Parser_AST.Effect_qual))
+    | FStarC_Syntax_Syntax.OnlyName -> None
+  )
+
+let mk_decl (r : FStarC_Range_Type.range) (q : (FStarC_Syntax_Syntax.qualifier) list) (d' : FStarC_Parser_AST.decl') : FStarC_Parser_AST.decl =
+  (let tmp = (BatList.filter_map resugar_qualifier q) in
+  { FStarC_Parser_AST.d = d'; drange = r; quals = tmp; attrs = [] })
+
+let decl'_to_decl (se : FStarC_Syntax_Syntax.sigelt) (d' : FStarC_Parser_AST.decl') : FStarC_Parser_AST.decl =
+  (mk_decl (se).FStarC_Syntax_Syntax.sigrng (se).FStarC_Syntax_Syntax.sigquals d')
+
+let resugar_eff_decl' (env : FStarC_Syntax_DsEnv.env) (ed : FStarC_Syntax_Syntax.eff_decl) : FStarC_Parser_AST.decl =
+  (let r = FStarC_Range_Type.dummyRange in
+  let q = [] in
+  let eff_name = (FStarC_Ident.ident_of_lid (ed).FStarC_Syntax_Syntax.mname) in
+  let eff_binders = [] in
+  (match (ed).FStarC_Syntax_Syntax.combinators with
+    | None -> (mk_decl r (FStarC_Syntax_Syntax.Assumption :: q) (FStarC_Parser_AST.NewEffect ((FStarC_Parser_AST.DeclareEffect (eff_name, eff_binders)))))
+    | (Some (combs)) -> (let field = (fun name ts -> (let tmp = (resugar_term' env (match ts with
+            | (u__1, u__2) -> u__2
+          )) in
+        let tmp1 = ((FStarC_Ident.mk_ident (name, r)), [], None, tmp) in
+        let tmp2 = (FStarC_Parser_AST.TyconAbbrev ((match tmp1 with (custard_tup, _, _, _) -> custard_tup), (match tmp1 with (_, custard_tup, _, _) -> custard_tup), (match tmp1 with (_, _, custard_tup, _) -> custard_tup), (match tmp1 with (_, _, _, custard_tup) -> custard_tup))) in
+        let tmp3 = (tmp2 :: []) in
+        let tmp4 = (false, false, tmp3) in
+        let tmp5 = (FStarC_Parser_AST.Tycon ((match tmp4 with (custard_tup, _, _) -> custard_tup), (match tmp4 with (_, custard_tup, _) -> custard_tup), (match tmp4 with (_, _, custard_tup) -> custard_tup))) in
+        (mk_decl r [] tmp5))) in
+      let tmp = (field "repr" (combs).FStarC_Syntax_Syntax.repr) in
+      let tmp1 = (field "return" (combs).FStarC_Syntax_Syntax.return_repr) in
+      let tmp2 = (field "bind" (combs).FStarC_Syntax_Syntax.bind_repr) in
+      let tmp3 = (tmp2 :: []) in
+      let tmp4 = (tmp1 :: tmp3) in
+      let tmp5 = (tmp :: tmp4) in
+      let tmp6 = (eff_name, eff_binders, tmp5) in
+      let tmp7 = (FStarC_Parser_AST.DefineEffect ((match tmp6 with (custard_tup, _, _) -> custard_tup), (match tmp6 with (_, custard_tup, _) -> custard_tup), (match tmp6 with (_, _, custard_tup) -> custard_tup))) in
+      let tmp8 = (FStarC_Parser_AST.NewEffect (tmp7)) in
+      (mk_decl r q tmp8))
+  ))
+
+let resugar_pragma (env : FStarC_Syntax_DsEnv.env) (tmp : FStarC_Syntax_Syntax.pragma) : FStarC_Parser_AST.pragma =
+  (match tmp with
+    | FStarC_Syntax_Syntax.ShowOptions -> FStarC_Parser_AST.ShowOptions
+    | (FStarC_Syntax_Syntax.SetOptions (s)) -> (FStarC_Parser_AST.SetOptions (s))
+    | (FStarC_Syntax_Syntax.ResetOptions (s)) -> (FStarC_Parser_AST.ResetOptions (s))
+    | (FStarC_Syntax_Syntax.PushOptions (s)) -> (FStarC_Parser_AST.PushOptions (s))
+    | FStarC_Syntax_Syntax.PopOptions -> FStarC_Parser_AST.PopOptions
+    | FStarC_Syntax_Syntax.RestartSolver -> FStarC_Parser_AST.RestartSolver
+    | FStarC_Syntax_Syntax.PrintEffectsGraph -> FStarC_Parser_AST.PrintEffectsGraph
+    | (FStarC_Syntax_Syntax.Check (t)) -> (let tmp1 = (resugar_term' env t) in
+      (FStarC_Parser_AST.Check (tmp1)))
+    | (FStarC_Syntax_Syntax.Eval (t)) -> (let tmp1 = (resugar_term' env t) in
+      (FStarC_Parser_AST.Eval (tmp1)))
+  )
+
+let resugar_sigelt' (env : FStarC_Syntax_DsEnv.env) (se : FStarC_Syntax_Syntax.sigelt) : (FStarC_Parser_AST.decl) option =
+  (let d = (match (se).FStarC_Syntax_Syntax.sigel with
+      | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = tmp; _ })) -> (let tmp1 = (BatList.partition (fun se1 -> (match (se1).FStarC_Syntax_Syntax.sigel with
+            | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp1)) -> true
+            | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp1)) -> true
+            | (FStarC_Syntax_Syntax.Sig_datacon (tmp1)) -> false
+            | tmp1 -> (FStarC_Effect.failwith "Found a sigelt which is neither a type declaration or a data constructor in a sigelt")
+          )) ses) in
+        (match tmp1 with
+          | (decl_typ_ses, datacon_ses) -> (let retrieve_datacons_and_resugar = (fun tmp2 se1 -> (match tmp2 with
+                | (datacon_ses1, tycons) -> (let tmp3 = (resugar_typ env datacon_ses1 se1) in
+                  (match tmp3 with
+                    | (datacon_ses2, tyc) -> (datacon_ses2, (tyc :: tycons))
+                  ))
+              )) in
+            let tmp2 = (BatList.fold_left retrieve_datacons_and_resugar ((BatList.rev datacon_ses), []) decl_typ_ses) in
+            (match tmp2 with
+              | (leftover_datacons, tycons) -> (match leftover_datacons with
+                  | [] -> (let d = (decl'_to_decl se (FStarC_Parser_AST.Tycon (false, false, tycons))) in
+                    (Some (d)))
+                  | (se1 :: []) -> (match (se1).FStarC_Syntax_Syntax.sigel with
+                      | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = l; us = tmp3; t = tmp4; ty_lid = tmp5; num_ty_params = tmp6; mutuals = tmp7; injective_type_params = tmp8; proj_disc_lids = tmp9; _ })) -> (let tmp10 = (decl'_to_decl se1 (FStarC_Parser_AST.Exception ((FStarC_Ident.ident_of_lid l), None))) in
+                        (Some (tmp10)))
+                      | tmp3 -> (FStarC_Effect.failwith "wrong format for resguar to Exception")
+                    )
+                  | tmp3 -> (FStarC_Effect.failwith "Should not happen hopefully")
+                )
+            ))
+        ))
+      | (FStarC_Syntax_Syntax.Sig_fail (tmp)) -> None
+      | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = lbs; lids = tmp; _ })) -> (let tmp1 = (FStarC_Util.for_some (fun tmp1 -> (match tmp1 with
+            | (FStarC_Syntax_Syntax.Projector (tmp2, tmp3)) -> true
+            | (FStarC_Syntax_Syntax.Discriminator (tmp2)) -> true
+            | tmp2 -> false
+          )) (se).FStarC_Syntax_Syntax.sigquals) in
+        (if tmp1 then None else (let mk = (fun e -> (FStarC_Syntax_Syntax.mk e (se).FStarC_Syntax_Syntax.sigrng)) in
+        let dummy = (mk FStarC_Syntax_Syntax.Tm_unknown) in
+        let lq_as_q = (fun tmp2 -> (match tmp2 with
+            | FStarC_Parser_AST.LocalRec -> FStarC_Parser_AST.Rec
+            | FStarC_Parser_AST.LocalNoLetQualifier -> FStarC_Parser_AST.NoLetQualifier
+            | FStarC_Parser_AST.LocalUnfold -> (FStarC_Effect.failwith "Impossible")
+          )) in
+        let nopath_lbs = (fun lbs1 -> (let is_rec = (match lbs1 with
+              | (u__1, u__2) -> u__1
+            ) in
+          let lbs0 = (match lbs1 with
+              | (u__1, u__2) -> u__2
+            ) in
+          let nopath = (fun fv -> (let tmp2 = (FStarC_Ident.lid_of_ids ((FStarC_Ident.ident_of_lid (FStarC_Syntax_Syntax.lid_of_fv fv)) :: [])) in
+            (FStarC_Syntax_Syntax.lid_as_fv tmp2 None))) in
+          let lbs01 = (BatList.map (fun lb -> (let tmp2 = (nopath (match (lb).FStarC_Syntax_Syntax.lbname with
+                | (FStar_Pervasives.Inr (v)) -> v
+              )) in
+            let tmp3 = (FStar_Pervasives.Inr (tmp2)) in
+            { FStarC_Syntax_Syntax.lbname = tmp3;
+              lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
+              lbtyp = (lb).FStarC_Syntax_Syntax.lbtyp;
+              lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
+              lbdef = (lb).FStarC_Syntax_Syntax.lbdef;
+              lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
+              lbpos = (lb).FStarC_Syntax_Syntax.lbpos })) lbs0) in
+          (is_rec, lbs01))) in
+        let lbs1 = (nopath_lbs lbs) in
+        let desugared_let = (mk (FStarC_Syntax_Syntax.Tm_let (({ FStarC_Syntax_Syntax.lbs = (match lbs1 with (custard_tup, _) -> custard_tup);
+            lbs1 = (match lbs1 with (_, custard_tup) -> custard_tup);
+            body = dummy } : FStarC_Syntax_Syntax.term'__Tm_let__payload)))) in
+        let t = (resugar_term' env desugared_let) in
+        (match (t).FStarC_Parser_AST.tm with
+          | (FStarC_Parser_AST.Let (isrec, lets, tmp2)) -> (let tmp3 = (lq_as_q isrec) in
+            let tmp4 = (BatList.map (fun x -> (match x with
+                | (u__1, u__2) -> u__2
+              )) lets) in
+            let tmp5 = (tmp3, tmp4) in
+            let tmp6 = (FStarC_Parser_AST.TopLevelLet ((match tmp5 with (custard_tup, _) -> custard_tup), (match tmp5 with (_, custard_tup) -> custard_tup))) in
+            let tmp7 = (decl'_to_decl se tmp6) in
+            (Some (tmp7)))
+          | tmp2 -> (FStarC_Effect.failwith "Should not happen hopefully")
+        ))))
+      | (FStarC_Syntax_Syntax.Sig_assume ({ FStarC_Syntax_Syntax.lid = lid; us = tmp; phi = fml; _ })) -> (let tmp1 = (resugar_term' env fml) in
+        let tmp2 = ((FStarC_Ident.ident_of_lid lid), tmp1) in
+        let tmp3 = (FStarC_Parser_AST.Assume ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+        let tmp4 = (decl'_to_decl se tmp3) in
+        (Some (tmp4)))
+      | (FStarC_Syntax_Syntax.Sig_new_effect (ed)) -> (let a_decl = (resugar_eff_decl' env ed) in
+        let q = (BatList.filter_map resugar_qualifier (se).FStarC_Syntax_Syntax.sigquals) in
+        (Some ({ FStarC_Parser_AST.d = (a_decl).FStarC_Parser_AST.d;
+          drange = (a_decl).FStarC_Parser_AST.drange;
+          quals = q;
+          attrs = (a_decl).FStarC_Parser_AST.attrs })))
+      | (FStarC_Syntax_Syntax.Sig_sub_effect (e)) -> (let tmp = (match (e).FStarC_Syntax_Syntax.lift with
+            | (Some (x)) -> (let tmp = (resugar_term' env (match x with
+                  | (u__1, u__2) -> u__2
+                )) in
+              (Some (tmp)))
+            | None -> None
+          ) in
+        let tmp1 = { FStarC_Parser_AST.msource = (e).FStarC_Syntax_Syntax.source;
+            mdest = (e).FStarC_Syntax_Syntax.target;
+            lift_op = tmp } in
+        let tmp2 = (FStarC_Parser_AST.SubEffect (tmp1)) in
+        let tmp3 = (decl'_to_decl se tmp2) in
+        (Some (tmp3)))
+      | (FStarC_Syntax_Syntax.Sig_effect_abbrev ({ FStarC_Syntax_Syntax.lid = lid; root = root; _ })) -> (let rhs = (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Name (root)) (se).FStarC_Syntax_Syntax.sigrng FStarC_Parser_AST.Un) in
+        let tmp = (decl'_to_decl se (FStarC_Parser_AST.Tycon (false, false, ((FStarC_Parser_AST.TyconAbbrev ((FStarC_Ident.ident_of_lid lid), [], None, rhs)) :: [])))) in
+        (Some (tmp)))
+      | (FStarC_Syntax_Syntax.Sig_pragma (p)) -> (let tmp = (resugar_pragma env p) in
+        let tmp1 = (FStarC_Parser_AST.Pragma (tmp)) in
+        let tmp2 = (decl'_to_decl se tmp1) in
+        (Some (tmp2)))
+      | (FStarC_Syntax_Syntax.Sig_declare_typ ({ FStarC_Syntax_Syntax.lid = lid; us = uvs; t = t; _ })) -> (let tmp = (FStarC_Util.for_some (fun tmp -> (match tmp with
+            | (FStarC_Syntax_Syntax.Projector (tmp1, tmp2)) -> true
+            | (FStarC_Syntax_Syntax.Discriminator (tmp1)) -> true
+            | tmp1 -> false
+          )) (se).FStarC_Syntax_Syntax.sigquals) in
+        (if tmp then None else (let tmp1 = (FStarC_Options.print_universes ()) in
+        let tmp2 = (not tmp1) in
+        let tmp3 = (if tmp2 then true else (FStarC_List.isEmpty uvs)) in
+        let t' = (if tmp3 then (resugar_term' env t) else (let tmp4 = (FStarC_Syntax_Subst.open_univ_vars uvs t) in
+          (match tmp4 with
+            | (uvs1, t1) -> (let universes = (universe_to_string uvs1) in
+              let tmp5 = (resugar_term' env t1) in
+              (label universes tmp5))
+          ))) in
+        let tmp4 = (decl'_to_decl se (FStarC_Parser_AST.Val ((FStarC_Ident.ident_of_lid lid), t'))) in
+        (Some (tmp4)))))
+      | (FStarC_Syntax_Syntax.Sig_splice ({ FStarC_Syntax_Syntax.is_typed = is_typed; lids = ids; tac = t; _ })) -> (let tmp = (BatList.map (fun l -> (FStarC_Ident.ident_of_lid l)) ids) in
+        let tmp1 = (resugar_term' env t) in
+        let tmp2 = (is_typed, tmp, tmp1) in
+        let tmp3 = (FStarC_Parser_AST.Splice ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))) in
+        let tmp4 = (decl'_to_decl se tmp3) in
+        (Some (tmp4)))
+      | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp)) -> None
+      | (FStarC_Syntax_Syntax.Sig_datacon (tmp)) -> None
+    ) in
+  (match d with
+    | (Some (d1)) -> (let tmp = (BatList.map (resugar_term' env) (se).FStarC_Syntax_Syntax.sigattrs) in
+      let tmp1 = { FStarC_Parser_AST.d = (d1).FStarC_Parser_AST.d;
+          drange = (d1).FStarC_Parser_AST.drange;
+          quals = (d1).FStarC_Parser_AST.quals;
+          attrs = tmp } in
+      (Some (tmp1)))
+    | None -> None
+  ))
+
+let resugar_sigelt (se : FStarC_Syntax_Syntax.sigelt) : (FStarC_Parser_AST.decl) option =
+  (let tmp = (noenv resugar_sigelt') in
+  (tmp se))
+
+let resugar_tscheme'' (env : FStarC_Syntax_DsEnv.env) (name : string) (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : FStarC_Parser_AST.decl =
+  (match ts with
+    | (univs, typ) -> (let name1 = (FStarC_Ident.mk_ident (name, (typ).FStarC_Syntax_Syntax.pos)) in
+      let tmp = (resugar_term' env typ) in
+      let tmp1 = (name1, [], None, tmp) in
+      let tmp2 = (FStarC_Parser_AST.TyconAbbrev ((match tmp1 with (custard_tup, _, _, _) -> custard_tup), (match tmp1 with (_, custard_tup, _, _) -> custard_tup), (match tmp1 with (_, _, custard_tup, _) -> custard_tup), (match tmp1 with (_, _, _, custard_tup) -> custard_tup))) in
+      let tmp3 = (tmp2 :: []) in
+      let tmp4 = (false, false, tmp3) in
+      let tmp5 = (FStarC_Parser_AST.Tycon ((match tmp4 with (custard_tup, _, _) -> custard_tup), (match tmp4 with (_, custard_tup, _) -> custard_tup), (match tmp4 with (_, _, custard_tup) -> custard_tup))) in
+      (mk_decl (typ).FStarC_Syntax_Syntax.pos [] tmp5))
+  )
+
+let resugar_tscheme' (env : FStarC_Syntax_DsEnv.env) : (((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) -> FStarC_Parser_AST.decl) =
+  (resugar_tscheme'' env "tscheme")
+
+let resugar_tscheme (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : FStarC_Parser_AST.decl =
+  (let tmp = (noenv resugar_tscheme') in
+  (tmp ts))
 

@@ -127,7 +127,7 @@ let rec canon_point (e : FStar_Reflection_V2_Arith.expr) (ps : (FStarC_Tactics_T
   ))
 
 let canon_point_entry (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.norm (FStarC_NormSteps.primops :: []) ps));
+  (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.norm (FStarC_NormSteps.primops :: []) ps));
   let x = (FStar_Tactics_V2_Derived.cur_goal () ps) in
   let x1 = (FStar_Reflection_V2_Formula.term_as_formula x ps) in
   (match x1 with
@@ -140,7 +140,7 @@ let canon_point_entry (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> u
     | tmp1 -> (let x2 = (FStarC_Tactics_V2_Builtins.term_to_string x ps) in
       let x3 = (Prims.strcat "impossible: " x2) in
       (FStar_Tactics_V2_Derived.fail x3 ps))
-  )))))
+  )))
 
 let canon (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (FStar_Tactics_V2_Derived.pointwise canon_point_entry)

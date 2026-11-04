@@ -377,7 +377,7 @@ let run_tactic_on_all_implicits (rng_tac : FStarC_Range_Type.range) (rng_goal : 
 let solve_implicits (env : FStarC_TypeChecker_Env.env) (tau : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (imps : (FStarC_TypeChecker_Common.implicit) list) : unit =
   (FStarC_Errors.with_ctx "While solving implicits with a tactic" (fun tmp -> (if (env).FStarC_TypeChecker_Env.flychecking then () else (let gs = (run_tactic_on_all_implicits (tau).FStarC_Syntax_Syntax.pos (FStarC_TypeChecker_Env.get_range env) tau env imps) in
   let tmp1 = (FStarC_Options.profile_enabled None "FStarC.TypeChecker") in
-  (if tmp1 then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) gs)) in
+  (if tmp1 then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) gs)) in
   (FStarC_Format.print1 "solve_implicits produced %s goals\n" tmp2)) else ());
   (FStarC_Options.with_saved_options (fun tmp2 -> ((ignore (FStarC_Options.set_options "--no_tactics"));
   (BatList.iter (fun g -> ((FStarC_Options.set (FStarC_Tactics_Types.goal_opts g));
@@ -422,7 +422,7 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
           local_state = (ps).FStarC_Tactics_Types.local_state;
           urgency = (ps).FStarC_Tactics_Types.urgency;
           dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure } in
-      let tmp3 = (if is_typed then (if (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) lids) Prims.int_one) then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 lids) in
+      let tmp3 = (if is_typed then (if (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) lids) Prims.int_one) then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_98 lids) in
         let tmp4 = (FStarC_Format.fmt1 "Typed splice: unexpected lids length (> 1) (%s)" tmp3) in
         (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp4)) else (let tmp3 = (if (match lids with
             | [] -> true
@@ -500,8 +500,8 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
                         | tmp12 -> []
                       ) in
                     (if (not (us_equals uv_t1 actual_uv)) then (let tmp12 = (FStarC_Ident.fStarC_Class_Show_show__lident (BatList.hd lids)) in
-                    let tmp13 = (FStarC_Ident.fStarC_Class_Show_show__list_ident actual_uv) in
-                    let tmp14 = (FStarC_Ident.fStarC_Class_Show_show__list_ident uv_t1) in
+                    let tmp13 = (FStarC_Ident.fStarC_Class_Show_show__list_ident_67 actual_uv) in
+                    let tmp14 = (FStarC_Ident.fStarC_Class_Show_show__list_ident_67 uv_t1) in
                     let tmp15 = (FStarC_Format.fmt3 "Typed splice: val declaration for %s is universe polymorphic in %s, expected %s" tmp12 tmp13 tmp14) in
                     (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp15)) else ()))
                   | tmp5 -> ()
@@ -575,7 +575,7 @@ let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qua
           (BatList.iter (fun lid -> (let tmp4 = (List.find_opt (FStarC_Ident.lid_equals lid) lids') in
           (match tmp4 with
             | None when (not (env).FStarC_TypeChecker_Env.flychecking) -> (let tmp5 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
-              let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 lids') in
+              let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_98 lids') in
               let tmp7 = (FStarC_Format.fmt2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" tmp5 tmp6) in
               (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_SplicedUndef tmp7))
             | tmp5 -> ()

@@ -26,10 +26,10 @@ let u___plugin_l_revert_all : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.l_revert_all" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.l_revert_all (plugin)" l_revert_all (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_binding) FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
 
 let forall_intro (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
-  (Obj.magic ((fun ps -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("fa_intro_lem" :: [])))))) in
+  (fun ps -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("fa_intro_lem" :: [])))))) in
     (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
   (FStar_Tactics_V2_Derived.apply_lemma tmp1 ps);
-  (FStarC_Tactics_V2_Builtins.intro () ps)))))
+  (FStarC_Tactics_V2_Builtins.intro () ps)))
 
 let u___plugin_forall_intro : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.forall_intro" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.forall_intro (plugin)" forall_intro FStarC_Syntax_Embeddings.e_unit FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
@@ -53,10 +53,10 @@ let u___plugin_split : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.split" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.split (plugin)" split FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
 
 let implies_intro (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
-  (Obj.magic ((fun ps -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("imp_intro_lem" :: [])))))) in
+  (fun ps -> (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp1 = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("imp_intro_lem" :: [])))))) in
     (FStarC_Reflection_V2_Data.Tv_FVar (tmp1)))) in
   (FStar_Tactics_V2_Derived.apply_lemma tmp1 ps);
-  (FStarC_Tactics_V2_Builtins.intro () ps)))))
+  (FStarC_Tactics_V2_Builtins.intro () ps)))
 
 let u___plugin_implies_intro : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.implies_intro" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.implies_intro (plugin)" implies_intro FStarC_Syntax_Embeddings.e_unit FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
@@ -125,7 +125,7 @@ let cur_goal (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_
   ))
 
 let rec visit (callback : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (FStar_Tactics_V2_Derived.focus (fun tmp -> (FStar_Tactics_V2_Derived.or_else callback (Obj.magic ((fun tmp1 -> (Obj.magic ((fun ps -> (let x = (cur_goal () ps) in
+  (FStar_Tactics_V2_Derived.focus (fun tmp -> (FStar_Tactics_V2_Derived.or_else callback (fun tmp1 -> (fun ps -> (let x = (cur_goal () ps) in
   let x1 = (FStar_Reflection_V2_Formula.term_as_formula x ps) in
   (match x1 with
     | (FStar_Reflection_V2_Formula.Forall (u__b, u__sort, u__phi)) -> (let x2 = (forall_intros () ps) in
@@ -134,10 +134,10 @@ let rec visit (callback : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> uni
     | (FStar_Reflection_V2_Formula.Implies (p, q)) -> ((ignore (implies_intro () ps));
       (FStar_Tactics_V2_Derived.seq (fun tmp2 -> (visit callback)) l_revert ps))
     | tmp2 -> ()
-  )))))))))))
+  )))))))
 
 let rec simplify_eq_implication (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> ((ignore (FStar_Tactics_V2_Derived.cur_env () ps));
+  (fun ps -> ((ignore (FStar_Tactics_V2_Derived.cur_env () ps));
   let x = (cur_goal () ps) in
   let x1 = (FStar_Tactics_V2_Derived.destruct_equality_implication x ps) in
   (match x1 with
@@ -146,7 +146,7 @@ let rec simplify_eq_implication (tmp : unit) : ((FStarC_Tactics_Types.proofstate
       (ignore (FStarC_Tactics_V2_Builtins.rewrite x2 ps));
       (ignore (FStarC_Tactics_V2_Builtins.clear_top () ps));
       (visit simplify_eq_implication ps))
-  )))))
+  )))
 
 let u___plugin_simplify_eq_implication : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.simplify_eq_implication" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.simplify_eq_implication (plugin)" simplify_eq_implication FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
@@ -161,7 +161,7 @@ let term_eq (t1 : FStarC_Reflection_Types.term) : (FStarC_Reflection_Types.term 
   (FStar_Reflection_TermEq_Simple.term_eq t1)
 
 let rec unfold_definition_and_simplify_eq (tm : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (cur_goal () ps) in
+  (fun ps -> (let x = (cur_goal () ps) in
   let x1 = (FStar_Reflection_V2_Formula.term_as_formula x ps) in
   (match x1 with
     | (FStar_Reflection_V2_Formula.App (hd, arg)) -> (if (term_eq hd tm) then ((FStar_Tactics_V2_Derived.trivial ()) ps) else ())
@@ -173,7 +173,7 @@ let rec unfold_definition_and_simplify_eq (tm : FStarC_Reflection_Types.term) : 
           (ignore (FStarC_Tactics_V2_Builtins.clear_top () ps));
           (visit (fun tmp2 -> (unfold_definition_and_simplify_eq tm)) ps))
       ))
-  )))))
+  )))
 
 let u___plugin_unfold_definition_and_simplify_eq : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.unfold_definition_and_simplify_eq" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.Logic.unfold_definition_and_simplify_eq (plugin)" unfold_definition_and_simplify_eq FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
@@ -190,9 +190,9 @@ let u___plugin_cases_or : unit =
 let cases_bool (b : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (fun ps -> (let x = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("Logic" :: ("Lemmas" :: ("bool_ind" :: [])))))) in
     (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
-  (FStar_Tactics_V2_Derived.seq (fun tmp -> (FStar_Tactics_V2_Derived.apply_lemma (FStar_Reflection_V2_Derived.mk_e_app x (b :: [])))) (fun tmp -> (fun ps1 -> ((ignore (FStar_Tactics_V2_Derived.trytac (Obj.magic ((fun tmp1 -> (Obj.magic ((fun ps2 -> (let x1 = (implies_intro () ps2) in
+  (FStar_Tactics_V2_Derived.seq (fun tmp -> (FStar_Tactics_V2_Derived.apply_lemma (FStar_Reflection_V2_Derived.mk_e_app x (b :: [])))) (fun tmp -> (fun ps1 -> ((ignore (FStar_Tactics_V2_Derived.trytac (fun tmp1 -> (fun ps2 -> (let x1 = (implies_intro () ps2) in
   (ignore (FStarC_Tactics_V2_Builtins.rewrite x1 ps2));
-  (FStarC_Tactics_V2_Builtins.clear_top () ps2)))))))) ps1));
+  (FStarC_Tactics_V2_Builtins.clear_top () ps2)))) ps1));
   ()))) ps)))
 
 let u___plugin_cases_bool : unit =
@@ -271,8 +271,8 @@ let u___plugin_instantiate : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.instantiate" (Prims.of_int (3)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.V2.Logic.instantiate (plugin)" instantiate FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))
 
 let instantiate_as (fa : FStarC_Reflection_Types.term) (x : FStarC_Reflection_Types.term) (s : string) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
-  (Obj.magic ((fun ps -> (let x1 = (instantiate fa x ps) in
-  (FStarC_Tactics_V2_Builtins.rename_to x1 s ps)))))
+  (fun ps -> (let x1 = (instantiate fa x ps) in
+  (FStarC_Tactics_V2_Builtins.rename_to x1 s ps)))
 
 let u___plugin_instantiate_as : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.Logic.instantiate_as" (Prims.of_int (4)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_3 "FStar.Tactics.V2.Logic.instantiate_as (plugin)" instantiate_as FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_string FStarC_Reflection_V2_Embeddings.e_binding tmp tmp1 tmp2 tmp3)))

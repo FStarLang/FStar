@@ -206,12 +206,12 @@ let filter_using_facts_from (using_facts_from : ((((string) list * bool)) list) 
       let tmp1 = ((<>) tmp "") in
       (if tmp1 then (let orig_n = ((fun l -> Z.of_int (BatList.length l)) ds) in
       let new_n = ((fun l -> Z.of_int (BatList.length l)) ds') in
-      (if ((<>) orig_n new_n) then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 orig_n) in
+      (if ((<>) orig_n new_n) then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 orig_n) in
       let tmp3 = (BatList.map FStarC_SMTEncoding_Term.decl_to_string_short ds) in
-      let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp3) in
-      let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 new_n) in
+      let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 tmp3) in
+      let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 new_n) in
       let tmp6 = (BatList.map FStarC_SMTEncoding_Term.decl_to_string_short ds') in
-      let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp6) in
+      let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 tmp6) in
       (FStarC_Format.print4 "Pruned using facts from:\n\tOriginal (%s): [%s];\n\tPruned (%s): [%s]\n" tmp2 tmp4 tmp5 tmp7)) else ())) else ());
       ds')
   )
@@ -225,10 +225,10 @@ let give_now (resetting : bool) (g : given_decls) (s : solver_state) : solver_st
   let tmp = (peek s) in
   (match tmp with
     | (hd, tl) -> (let ds_to_flush = (filter_using_facts_from (s).using_facts_from (s).retain_assumptions (already_given_decl s) decls) in
-      let given = (BatList.fold_left (Obj.magic ((fun given d -> (match d with
+      let given = (BatList.fold_left (fun given d -> (match d with
           | (FStarC_SMTEncoding_Term.Assume (a)) -> (add_name (a).FStarC_SMTEncoding_Term.assumption_name given)
           | tmp1 -> given
-        )))) (hd).given_decl_names ds_to_flush) in
+        )) (hd).given_decl_names ds_to_flush) in
       let hd1 = { pruning_state = (hd).pruning_state;
           given_decl_names = given;
           all_decls_at_level_rev = (g :: (hd).all_decls_at_level_rev);
@@ -296,7 +296,7 @@ let pop (s : solver_state) : solver_state =
 let rec reset__rebuild (rebuild_level : (bool -> (decls_at_level -> (solver_state -> (solver_state * bool))))) (levels : (decls_at_level) list) (s_new : solver_state) : (solver_state * bool) =
   (match levels with
     | (last :: []) -> (rebuild_level false last s_new)
-    | (level :: levels1) -> (let tmp = ((reset__rebuild rebuild_level) levels1 s_new) in
+    | (level :: levels1) -> (let tmp = (reset__rebuild rebuild_level levels1 s_new) in
       (match tmp with
         | (s_new1, now) -> (let s_new2 = (push s_new1) in
           (rebuild_level now level s_new2))
@@ -341,7 +341,7 @@ let reset (using_facts_from : ((((string) list * bool)) list) option) (s : solve
           | tmp2 -> false
         )))
     ))) in
-  let tmp = ((reset__rebuild rebuild_level) (s).levels s_new1) in
+  let tmp = (reset__rebuild rebuild_level (s).levels s_new1) in
   (match tmp with
     | (u__1, u__2) -> u__1
   ))
@@ -426,14 +426,14 @@ let rec flush__aux (s : solver_state) (levels : (decls_at_level) list) : (decls_
     | (level :: levels1) -> (match (level).pruning_roots with
         | (Some (roots)) -> (let hd = (prune_level roots level s) in
           (hd :: levels1))
-        | None -> (let tmp = ((flush__aux s) levels1) in
+        | None -> (let tmp = (flush__aux s levels1) in
           (level :: tmp))
       )
   )
 
 let flush (s : solver_state) : ((FStarC_SMTEncoding_Term.decl) list * solver_state) =
   (let tmp = (FStarC_Options_Ext.enabled "context_pruning") in
-  let s1 = (if tmp then (let tmp1 = ((flush__aux s) (s).levels) in
+  let s1 = (if tmp then (let tmp1 = (flush__aux s (s).levels) in
     { levels = tmp1;
       pending_flushes_rev = (s).pending_flushes_rev;
       using_facts_from = (s).using_facts_from;

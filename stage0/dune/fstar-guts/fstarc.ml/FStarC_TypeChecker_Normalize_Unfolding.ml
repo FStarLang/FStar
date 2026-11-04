@@ -28,19 +28,20 @@ let should_unfold (allow_strict : bool) (c : FStarC_TypeChecker_Cfg.cfg) (should
   let comb_or = (fun l -> (BatList.fold_right (fun tmp tmp1 -> (match (tmp, tmp1) with
       | ((a, b, c1, d), (x, y, z, w)) -> ((a || x), (b || y), (c1 || z), (d || w))
     )) l (false, false, false, false))) in
-  let default_unfolding = (fun tmp -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
+  let default_unfolding = (fun tmp -> (let tmp1 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+    (if tmp1 then (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
     let tmp3 = (FStarC_TypeChecker_Env.delta_depth_of_fv (c).FStarC_TypeChecker_Cfg.tcenv fv) in
     let tmp4 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__delta_depth tmp3) in
     let tmp5 = (FStarC_TypeChecker_Env.fStarC_Class_Show_show__list_delta_level (c).FStarC_TypeChecker_Cfg.delta_level) in
-    (FStarC_Format.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n" tmp2 tmp4 tmp5))));
-    let tmp1 = (FStarC_Util.for_some (fun tmp1 -> (match tmp1 with
+    (FStarC_Format.print3 "should_unfold: Reached a %s with delta_depth = %s\n >> Our delta_level is %s\n" tmp2 tmp4 tmp5)) else ());
+    let tmp2 = (FStarC_Util.for_some (fun tmp2 -> (match tmp2 with
         | FStarC_TypeChecker_Env.NoDelta -> false
         | FStarC_TypeChecker_Env.InliningDelta -> true
         | FStarC_TypeChecker_Env.Eager_unfolding_only -> true
-        | (FStarC_TypeChecker_Env.Unfold (l)) -> (let tmp2 = (FStarC_TypeChecker_Env.delta_depth_of_fv (c).FStarC_TypeChecker_Cfg.tcenv fv) in
-          (FStarC_TypeChecker_Common.delta_depth_greater_than tmp2 l))
+        | (FStarC_TypeChecker_Env.Unfold (l)) -> (let tmp3 = (FStarC_TypeChecker_Env.delta_depth_of_fv (c).FStarC_TypeChecker_Cfg.tcenv fv) in
+          (FStarC_TypeChecker_Common.delta_depth_greater_than tmp3 l))
       )) (c).FStarC_TypeChecker_Cfg.delta_level) in
-    (yesno tmp1))) in
+    (yesno tmp2))) in
   let selective_unfold = ((((((match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only with
       | (Some (v)) -> true
       | tmp -> false
@@ -66,103 +67,113 @@ let should_unfold (allow_strict : bool) (c : FStarC_TypeChecker_Cfg.cfg) (should
     ) in
   let res = (match (qninfo, selective_unfold) with
       | tmp when (FStarC_TypeChecker_Env.qninfo_is_action qninfo) -> (let b = (should_reify c) in
-        (FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
+        let tmp1 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp1 then (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
         let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__bool b) in
-        (FStarC_Format.print2 "should_unfold: For effect action %s, should_reify = %s\n" tmp2 tmp3))));
+        (FStarC_Format.print2 "should_unfold: For effect action %s, should_reify = %s\n" tmp2 tmp3)) else ());
         (if b then reif else no))
       | tmp when (if (not allow_strict) then (let tmp1 = (FStarC_TypeChecker_Env.fv_has_strict_args (c).FStarC_TypeChecker_Cfg.tcenv fv) in
       (match tmp1 with
         | (Some (v)) -> true
         | tmp2 -> false
-      )) else false) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (FStarC_Format.print_string " >> Not unfolding strict_on_arguments definition\n")));
+      )) else false) -> (let tmp1 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp1 then (FStarC_Format.print_string " >> Not unfolding strict_on_arguments definition\n") else ());
         no)
       | tmp when (let tmp1 = (FStarC_TypeChecker_Cfg.find_prim_step c fv) in
       let tmp2 = (match tmp1 with
           | (Some (v)) -> true
           | tmp2 -> false
         ) in
-      (if tmp2 then (not explicitly_requested) else false)) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (FStarC_Format.print_string " >> It's a primop, not unfolding\n")));
+      (if tmp2 then (not explicitly_requested) else false)) -> (let tmp1 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp1 then (FStarC_Format.print_string " >> It's a primop, not unfolding\n") else ());
         no)
-      | ((Some (((FStar_Pervasives.Inr (({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, tmp); lids = tmp1; _ })); sigrng = tmp2; sigquals = qs; sigmeta = tmp3; sigattrs = tmp4; sigopens_and_abbrevs = tmp5; sigopts = tmp6; _ }, tmp7))), tmp8))), tmp9) when (BatList.mem FStarC_Syntax_Syntax.HasMaskedEffect qs) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp10 -> (FStarC_Format.print_string " >> HasMaskedEffect, not unfolding\n")));
+      | ((Some (((FStar_Pervasives.Inr (({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, tmp); lids = tmp1; _ })); sigrng = tmp2; sigquals = qs; sigmeta = tmp3; sigattrs = tmp4; sigopens_and_abbrevs = tmp5; sigopts = tmp6; _ }, tmp7))), tmp8))), tmp9) when (BatList.mem FStarC_Syntax_Syntax.HasMaskedEffect qs) -> (let tmp10 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp10 then (FStarC_Format.print_string " >> HasMaskedEffect, not unfolding\n") else ());
         no)
       | (tmp, true) when (if (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once with
         | (Some (v)) -> true
         | tmp1 -> false
       ) then (FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv) (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_once with
         | (Some (v)) -> v
-      )) else false) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (FStarC_Format.print_string " >> UnfoldOnce\n")));
+      )) else false) -> (let tmp1 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp1 then (FStarC_Format.print_string " >> UnfoldOnce\n") else ());
         once)
       | ((Some (((FStar_Pervasives.Inr (({ FStarC_Syntax_Syntax.sigel = tmp; sigrng = tmp1; sigquals = tmp2; sigmeta = tmp3; sigattrs = attrs1; sigopens_and_abbrevs = tmp4; sigopts = tmp5; _ }, tmp6))), tmp7))), tmp8) when (if ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction then (let tmp9 = (FStarC_Util.find_map attrs1 FStarC_Parser_Const_ExtractAs.is_extract_as_attr) in
       (match tmp9 with
         | (Some (v)) -> true
         | tmp10 -> false
-      )) else false) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp9 -> (FStarC_Format.print_string " >> Has extract_as attribute and we're extracting, unfold!")));
+      )) else false) -> (let tmp9 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp9 then (FStarC_Format.print_string " >> Has extract_as attribute and we're extracting, unfold!") else ());
         yes)
-      | ((Some (((FStar_Pervasives.Inr (({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, tmp); lids = tmp1; _ })); sigrng = tmp2; sigquals = qs; sigmeta = tmp3; sigattrs = tmp4; sigopens_and_abbrevs = tmp5; sigopts = tmp6; _ }, tmp7))), tmp8))), tmp9) when ((is_rec && (not ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta)) && (not ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full)) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp10 -> (FStarC_Format.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n")));
+      | ((Some (((FStar_Pervasives.Inr (({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, tmp); lids = tmp1; _ })); sigrng = tmp2; sigquals = qs; sigmeta = tmp3; sigattrs = tmp4; sigopens_and_abbrevs = tmp5; sigopts = tmp6; _ }, tmp7))), tmp8))), tmp9) when ((is_rec && (not ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta)) && (not ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.zeta_full)) -> (let tmp10 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp10 then (FStarC_Format.print_string " >> It's a recursive definition but we're not doing Zeta, not unfolding\n") else ());
         no)
-      | (tmp, true) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
-        (FStarC_Format.print1 "should_unfold: Reached a %s with selective unfolding\n" tmp2))));
-        let tmp1 = (if ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction then (let tmp1 = (FStarC_TypeChecker_Env.lookup_definition_qninfo (FStarC_TypeChecker_Env.Eager_unfolding_only :: (FStarC_TypeChecker_Env.InliningDelta :: [])) (fv).FStarC_Syntax_Syntax.fv_name qninfo) in
-          let tmp2 = (match tmp1 with
+      | (tmp, true) -> (let tmp1 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp1 then (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
+        (FStarC_Format.print1 "should_unfold: Reached a %s with selective unfolding\n" tmp2)) else ());
+        let tmp2 = (if ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction then (let tmp2 = (FStarC_TypeChecker_Env.lookup_definition_qninfo (FStarC_TypeChecker_Env.Eager_unfolding_only :: (FStarC_TypeChecker_Env.InliningDelta :: [])) (fv).FStarC_Syntax_Syntax.fv_name qninfo) in
+          let tmp3 = (match tmp2 with
               | (Some (v)) -> true
-              | tmp2 -> false
+              | tmp3 -> false
             ) in
-          (yesno tmp2)) else no) in
-        let tmp2 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only with
+          (yesno tmp3)) else no) in
+        let tmp3 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_only with
             | None -> no
-            | (Some (lids)) -> (let tmp2 = (FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv) lids) in
-              (yesno tmp2))
-          ) in
-        let tmp3 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_attr with
-            | None -> no
-            | (Some (lids)) -> (let tmp3 = (FStarC_Util.for_some (fun at -> (FStarC_Util.for_some (fun lid -> (FStarC_Syntax_Util.is_fvar lid at)) lids)) attrs) in
+            | (Some (lids)) -> (let tmp3 = (FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv) lids) in
               (yesno tmp3))
           ) in
-        let tmp4 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully with
+        let tmp4 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_attr with
             | None -> no
-            | (Some (lids)) -> (let tmp4 = (FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv) lids) in
-              (fullyno tmp4))
+            | (Some (lids)) -> (let tmp4 = (FStarC_Util.for_some (fun at -> (FStarC_Util.for_some (fun lid -> (FStarC_Syntax_Util.is_fvar lid at)) lids)) attrs) in
+              (yesno tmp4))
           ) in
-        let tmp5 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_qual with
+        let tmp5 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_fully with
             | None -> no
-            | (Some (qs)) -> (let tmp5 = (FStarC_Util.for_some (fun q -> (FStarC_Util.for_some (fun qual -> (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__qualifier qual) in
-                ((=) tmp5 q))) quals)) qs) in
-              (yesno tmp5))
+            | (Some (lids)) -> (let tmp5 = (FStarC_Util.for_some (FStarC_Syntax_Syntax.fv_eq_lid fv) lids) in
+              (fullyno tmp5))
           ) in
-        let tmp6 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_namespace with
+        let tmp6 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_qual with
+            | None -> no
+            | (Some (qs)) -> (let tmp6 = (FStarC_Util.for_some (fun q -> (FStarC_Util.for_some (fun qual -> (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__qualifier qual) in
+                ((=) tmp6 q))) quals)) qs) in
+              (yesno tmp6))
+          ) in
+        let tmp7 = (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unfold_namespace with
             | None -> no
             | (Some (namespaces)) -> (let p = (FStarC_Ident.path_of_lid (FStarC_Syntax_Syntax.lid_of_fv fv)) in
               let r = (FStarC_Path.fStarC_Path_search_forest__string p namespaces) in
               (yesno r))
           ) in
-        let tmp7 = (tmp6 :: []) in
-        let tmp8 = (tmp5 :: tmp7) in
-        let tmp9 = (tmp4 :: tmp8) in
-        let tmp10 = (tmp3 :: tmp9) in
-        let tmp11 = (tmp2 :: tmp10) in
-        let tmp12 = (tmp1 :: tmp11) in
-        (comb_or tmp12))
+        let tmp8 = (tmp7 :: []) in
+        let tmp9 = (tmp6 :: tmp8) in
+        let tmp10 = (tmp5 :: tmp9) in
+        let tmp11 = (tmp4 :: tmp10) in
+        let tmp12 = (tmp3 :: tmp11) in
+        let tmp13 = (tmp2 :: tmp12) in
+        (comb_or tmp13))
       | tmp when (if (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr with
         | (Some (v)) -> true
         | tmp1 -> false
       ) then (BatList.exists (fun fa -> (FStarC_Syntax_Util.has_attribute attrs fa)) (match ((c).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.dont_unfold_attr with
         | (Some (v)) -> v
-      )) else false) -> ((FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp1 -> (FStarC_Format.print_string " >> forbidden by attribute, not unfolding\n")));
+      )) else false) -> (let tmp1 = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+        (if tmp1 then (FStarC_Format.print_string " >> forbidden by attribute, not unfolding\n") else ());
         no)
       | tmp -> (default_unfolding ())
     ) in
-  (FStarC_TypeChecker_Cfg.log_unfolding c (fun tmp -> (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
+  let tmp = (!(FStarC_TypeChecker_Cfg.dbg_unfolding)) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
   let tmp2 = (FStarC_Range_Ops.fStarC_Class_Show_show__range (FStarC_Syntax_Syntax.range_of_fv fv)) in
   let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__tuple4_bool_bool_bool_bool res) in
-  (FStarC_Format.print3 "should_unfold: For %s (%s), unfolding res = %s\n" tmp1 tmp2 tmp3))));
+  (FStarC_Format.print3 "should_unfold: For %s (%s), unfolding res = %s\n" tmp1 tmp2 tmp3)) else ());
   (match res with
-    | (false, tmp, tmp1, tmp2) -> Should_unfold_no
+    | (false, tmp1, tmp2, tmp3) -> Should_unfold_no
     | (true, false, false, false) -> Should_unfold_yes
     | (true, false, false, true) -> Should_unfold_once
     | (true, true, false, false) -> Should_unfold_fully
     | (true, false, true, false) -> Should_unfold_reify
-    | tmp -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__tuple4_bool_bool_bool_bool res) in
-      let tmp2 = (FStarC_Format.fmt1 "Unexpected unfolding result: %s" tmp1) in
-      (FStarC_Effect.failwith tmp2))
+    | tmp1 -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__tuple4_bool_bool_bool_bool res) in
+      let tmp3 = (FStarC_Format.fmt1 "Unexpected unfolding result: %s" tmp2) in
+      (FStarC_Effect.failwith tmp3))
   ))
 

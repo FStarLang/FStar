@@ -60,7 +60,7 @@ define custard_c_direct
 $(OUTPUT_DIR)/$(subst .,_,$(1)).c: $(CACHE_DIR)/$(1).fst.checked $$(ALL_CHECKED_FILES)
 	$$(call msg, "CUSTARD-C", $(1))
 	$$(FSTAR) $$< --codegen C \
-	  --custard_monomorphize_types true --custard_entry_module $(1) \
+	  --custard_entry_module $(1) \
 	  $$(CUSTARD_FLAGS_$(1)) -o $$@
 	$$(Q)$$(call custard_no_empty_blocks,$$@)
 

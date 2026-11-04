@@ -31,13 +31,13 @@ type expr =
 
 
 let op_let_Bang (m : ((Prims.int * (FStarC_Reflection_Types.term) list) -> ((FStarC_Tactics_Types.proofstate ref) -> (string, ('u___a * (Prims.int * (FStarC_Reflection_Types.term) list))) FStar_Pervasives.either))) (f : ('u___a -> ((Prims.int * (FStarC_Reflection_Types.term) list) -> ((FStarC_Tactics_Types.proofstate ref) -> (string, ('u___b * (Prims.int * (FStarC_Reflection_Types.term) list))) FStar_Pervasives.either)))) (i : (Prims.int * (FStarC_Reflection_Types.term) list)) : ((FStarC_Tactics_Types.proofstate ref) -> (string, ('u___b * (Prims.int * (FStarC_Reflection_Types.term) list))) FStar_Pervasives.either) =
-  (Obj.magic ((fun ps -> (let x = (m i ps) in
+  (fun ps -> (let x = (m i ps) in
   (match x with
     | (FStar_Pervasives.Inr ((x1, j))) -> ((f x1 j) ps)
     | s -> (FStar_Pervasives.Inl ((match s with
         | (FStar_Pervasives.Inl (v)) -> v
       )))
-  )))))
+  )))
 
 let return (x : 'u___a) (i : (Prims.int * (FStarC_Reflection_Types.term) list)) : ((FStarC_Tactics_Types.proofstate ref) -> (string, ('u___a * (Prims.int * (FStarC_Reflection_Types.term) list))) FStar_Pervasives.either) =
   (fun tmp -> (FStar_Pervasives.Inr ((x, i))))
@@ -48,12 +48,12 @@ let liftM2 (f : ('u___a -> ('u___b -> 'u___c))) (x : ((Prims.int * (FStarC_Refle
 let rec find_idx (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> bool))) (l : ('u___a) list) : ((FStarC_Tactics_Types.proofstate ref) -> ((Prims.int * 'u___a)) option) =
   (match l with
     | [] -> (fun tmp -> None)
-    | (x :: xs) -> (Obj.magic ((fun ps -> (let x1 = (f x ps) in
+    | (x :: xs) -> (fun ps -> (let x1 = (f x ps) in
       (if x1 then (Some ((Prims.int_zero, x))) else (let x2 = (find_idx f xs ps) in
       (match x2 with
         | None -> None
         | (Some ((i, x3))) -> (Some (((Prims.op_Plus i Prims.int_one), x3)))
-      )))))))
+      )))))
   )
 
 let atom (t : FStarC_Reflection_Types.term) (tmp : (Prims.int * (FStarC_Reflection_Types.term) list)) : ((FStarC_Tactics_Types.proofstate ref) -> (string, (expr * (Prims.int * (FStarC_Reflection_Types.term) list))) FStar_Pervasives.either) =

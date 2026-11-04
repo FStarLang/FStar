@@ -875,7 +875,7 @@ let int_type (sw : signedness & iwidth) : ML string =
 let mono_advice_for (n:option name) : ML (list string) =
   if not (Options.custard_monomorphize_types ())
   then ["The direct-to-C backend requires --custard_monomorphize_types true \
-         (section 5.0.1)."]
+         (section 5.0.1), its default; do not pass false."]
   else
     (* Section 100.  Rule 4 freezes only on the OCaml path now, so this
        explanation is true only there.  On a C backend a type that is still
@@ -3837,7 +3837,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
          String.concat "" (fl |> List.collect (fun ((f, t), k) ->
            if is_nonplain_ty t && k = want
            then [ind' ^ rc_call op t (cell_field x dt cn f) ^ ";\n"] else [])) in
-       !out ++ CText (ind ^ "if (cherry_is_unique(" ^ x ^ ")) {\n" ^ on "dec" false) ++
+       !out ++ CText (ind ^ "if (cherry_claim(" ^ x ^ ")) {\n" ^ on "dec" false) ++
        finish ind' d x ++
        CText (ind ^ "} else {\n" ^ on "inc" true ^
               ind' ^ rc_call "dec" a.ty x ^ ";\n") ++
@@ -5874,7 +5874,7 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
                    "  " ^ rc_call "dec" (TApp (dt.dt_name, [])) "x" ^ ";\n" ^
                    "  return (" ^ n ^ ")c;\n");
                fn ("static inline " ^ n ^ " " ^ cell_unshare dt c ^ "(" ^ n ^ " x)")
-                  ("  return cherry_is_unique(x) ? x : " ^ copy ^ "(x);\n")
+                  ("  return cherry_claim(x) ? x : " ^ copy ^ "(x);\n")
              end
            end);
          (* The visit of a cell's fields (cherry.h, [cherry_defer]): [op] on
@@ -6202,25 +6202,34 @@ let cherry_iarr_helpers () : ML (list string & list string) =
        (bounds "index" ^
         "  " ^ decl_of t "x" ^ " = ((" ^ s ^ " *)a)->data[cherry_iarray_pos(i)];\n" ^
         (if counted then "  " ^ op "inc" "x" ^ "\n" else "") ^ "  return x;\n");
-    (* A shared or persistent array is copied, as is one with another
-       reference: the copy takes a reference to every element, and the
-       original is released after, so that no element dies in between. *)
+    (* A persistent array is copied, as is one with another reference: the
+       copy takes a reference to every element, and the original is
+       released after, so that no element dies in between.  A shared array
+       of which this is the only reference -- one just taken out of a
+       global [ref], say -- is updated in place, and then the element
+       stored into it has to be made shared ([share_v]). *)
     let unique_or_copy (cap:string) : string =
       "  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
       "  size_t n = c->h.size;\n" ^
+      (if counted then "  bool sh = false;\n" else "") ^
       "  if (!cherry_is_unique(a)) {\n" ^
-      "    " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, " ^ cap ^ ");\n" ^
-      "  " ^ copy ^
-      "    " ^ p ^ "_dec(a);\n    c = d;\n  }\n" in
+      "    if (cherry_is_sole_shared(a)) {\n" ^
+      (if counted then "      sh = true;\n" else "") ^
+      "    } else {\n" ^
+      "      " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, " ^ cap ^ ");\n" ^
+      "    " ^ copy ^
+      "      " ^ p ^ "_dec(a);\n      c = d;\n    }\n  }\n" in
+    let share_v : string =
+      if counted then "  if (sh) " ^ rc_fn "mark" t ^ "(v, CHERRY_SHARE);\n" else "" in
     fn ("static inline cherry_iarray " ^ p ^ "_upd(cherry_iarray a, cherry_int i, " ^ decl_of t "v" ^ ")")
-       (bounds "upd" ^ unique_or_copy "n" ^
+       (bounds "upd" ^ unique_or_copy "n" ^ share_v ^
         "  size_t k = cherry_iarray_pos(i);\n" ^
         (if counted then "  " ^ decl_of t "old" ^ " = c->data[k];\n" else "") ^
         "  c->data[k] = v;\n" ^
         (if counted then "  " ^ op "dec" "old" ^ "\n" else "") ^
         "  return (cherry_iarray)c;\n");
     fn ("static inline cherry_iarray " ^ p ^ "_push(cherry_iarray a, " ^ decl_of t "v" ^ ")")
-       (unique_or_copy "2 * n + 1" ^
+       (unique_or_copy "2 * n + 1" ^ share_v ^
         "  if (n == c->h.cap) {\n" ^
         "    size_t cap = 2 * n + 1;\n" ^
         "    c = (" ^ s ^ " *)realloc(c, sizeof(" ^ s ^ ") + cap * sizeof(c->data[0]));\n" ^

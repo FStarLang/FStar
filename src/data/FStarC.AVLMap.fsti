@@ -23,23 +23,27 @@ open FStarC.Effect
 
 val t (k v : Type0) : Type0
 
-(* A comparison returns a negative, zero or positive number. *)
+(* A comparison returns a negative, zero or positive number.
+
+   The function arguments below are [@@@monomorphize] for Custard (see
+   doc/ref/custard.md 3.2): each map gets its own copy of these functions,
+   calling its comparison and callbacks directly. *)
 type cmp (k : Type0) = k -> k -> FStarC.SmallInt.t
 
 val empty (#k #v : Type0) : t k v
 
-val add (#k #v : Type0) (c : cmp k) (key : k) (value : v) (m : t k v) : t k v
+val add (#k #v : Type0) ([@@@FStar.Attributes.monomorphize] c : cmp k) (key : k) (value : v) (m : t k v) : t k v
 
-val find (#k #v : Type0) (c : cmp k) (key : k) (m : t k v) : option v
+val find (#k #v : Type0) ([@@@FStar.Attributes.monomorphize] c : cmp k) (key : k) (m : t k v) : option v
 
-val remove (#k #v : Type0) (c : cmp k) (key : k) (m : t k v) : t k v
+val remove (#k #v : Type0) ([@@@FStar.Attributes.monomorphize] c : cmp k) (key : k) (m : t k v) : t k v
 
 (* In increasing order of keys. *)
-val fold (#k #v : Type0) (#a : Type) (f : k -> v -> a -> ML a) (m : t k v) (acc : a) : ML a
+val fold (#k #v : Type0) (#a : Type) ([@@@FStar.Attributes.monomorphize] f : k -> v -> a -> ML a) (m : t k v) (acc : a) : ML a
 
-val fold_pure (#k #v : Type0) (#a : Type) (f : k -> v -> a -> a) (m : t k v) (acc : a) : a
+val fold_pure (#k #v : Type0) (#a : Type) ([@@@FStar.Attributes.monomorphize] f : k -> v -> a -> a) (m : t k v) (acc : a) : a
 
-val iter (#k #v : Type0) (f : k -> v -> ML unit) (m : t k v) : ML unit
+val iter (#k #v : Type0) ([@@@FStar.Attributes.monomorphize] f : k -> v -> ML unit) (m : t k v) : ML unit
 
 (* The first [Some] that [f] returns, in increasing order of keys. *)
-val find_map (#k #v : Type0) (#a : Type) (f : k -> v -> ML (option a)) (m : t k v) : ML (option a)
+val find_map (#k #v : Type0) (#a : Type) ([@@@FStar.Attributes.monomorphize] f : k -> v -> ML (option a)) (m : t k v) : ML (option a)

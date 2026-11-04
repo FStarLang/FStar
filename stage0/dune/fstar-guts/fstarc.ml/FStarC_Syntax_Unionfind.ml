@@ -117,23 +117,6 @@ let uvar_id (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range))
   let tmp1 = (chk_v_t u) in
   (FStarC_Unionfind.puf_id tmp tmp1))
 
-let find_decoration (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : FStarC_Syntax_Syntax.uvar_decoration =
-  (let tmp = (find_core u) in
-  (match tmp with
-    | (u__1, u__2) -> u__2
-  ))
-
-let univ_uvar_id (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
-  (let tmp = (get_univ_graph ()) in
-  let tmp1 = (chk_v_u u) in
-  (FStarC_Unionfind.puf_id tmp tmp1))
-
-let equiv (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
-  (let tmp = (get_term_graph ()) in
-  let tmp1 = (chk_v_t u) in
-  let tmp2 = (chk_v_t v) in
-  (FStarC_Unionfind.puf_equivalent tmp tmp1 tmp2))
-
 let fStarC_Class_Deq_op_Equals_Question__ctx_uvar (tmp : FStarC_Syntax_Syntax.ctx_uvar) (tmp1 : FStarC_Syntax_Syntax.ctx_uvar) : bool =
   (let tmp2 = (uvar_id ((tmp).FStarC_Syntax_Syntax.ctx_uvar_head, (tmp).FStarC_Syntax_Syntax.ctx_uvar_head1, (tmp).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
   let tmp3 = (uvar_id ((tmp1).FStarC_Syntax_Syntax.ctx_uvar_head, (tmp1).FStarC_Syntax_Syntax.ctx_uvar_head1, (tmp1).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
@@ -153,6 +136,11 @@ let fStarC_FlatSet_union__ctx_uvar (s1 : (FStarC_Syntax_Syntax.ctx_uvar) list) (
 let fStarC_Class_Setlike_union__ctx_uvar_list_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) (eta : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) list =
   (fStarC_FlatSet_union__ctx_uvar tmp eta)
 
+let univ_uvar_id (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
+  (let tmp = (get_univ_graph ()) in
+  let tmp1 = (chk_v_u u) in
+  (FStarC_Unionfind.puf_id tmp tmp1))
+
 let fStarC_Class_Deq_op_Equals_Question__tuple3_p_uvar_rec_option_version_range (tmp : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (tmp1 : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
   (let tmp2 = (univ_uvar_id tmp) in
   let tmp3 = (univ_uvar_id tmp1) in
@@ -171,6 +159,18 @@ let fStarC_FlatSet_union__tuple3_p_uvar_rec_option_version_range (s1 : ((int * F
 
 let fStarC_Class_Setlike_union__tuple3_p_uvar_rec_option_version_range (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (eta : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
   (fStarC_FlatSet_union__tuple3_p_uvar_rec_option_version_range tmp eta)
+
+let find_decoration (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : FStarC_Syntax_Syntax.uvar_decoration =
+  (let tmp = (find_core u) in
+  (match tmp with
+    | (u__1, u__2) -> u__2
+  ))
+
+let equiv (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
+  (let tmp = (get_term_graph ()) in
+  let tmp1 = (chk_v_t u) in
+  let tmp2 = (chk_v_t v) in
+  (FStarC_Unionfind.puf_equivalent tmp tmp1 tmp2))
 
 let fail_if_ro (tmp : unit) : unit =
   (let tmp1 = (get ()) in
@@ -238,26 +238,6 @@ let fStarC_Class_Ord_op_Less_Question__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uv
 let fStarC_Class_Ord_op_Greater_Question__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (y : FStarC_Syntax_Syntax.ctx_uvar) : bool =
   (let tmp = (fStarC_Class_Ord_cmp__ctx_uvar x y) in
   ((=) tmp FStarC_Order.Gt))
-
-let rec fStarC_RBSet_add__add'__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (s : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset) : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset =
-  (match s with
-    | FStarC_RBSet.L -> (FStarC_RBSet.N (FStarC_RBSet.R, FStarC_RBSet.L, x, FStarC_RBSet.L))
-    | (FStarC_RBSet.N (c, a, y, b)) -> (let tmp = (fStarC_Class_Ord_op_Less_Question__ctx_uvar x y) in
-      (if tmp then (let tmp1 = ((fStarC_RBSet_add__add'__ctx_uvar x) a) in
-      (FStarC_RBSet.balance c tmp1 y b)) else (let tmp1 = (fStarC_Class_Ord_op_Greater_Question__ctx_uvar x y) in
-      (if tmp1 then (let tmp2 = ((fStarC_RBSet_add__add'__ctx_uvar x) b) in
-      (FStarC_RBSet.balance c a y tmp2)) else s))))
-  )
-
-let fStarC_RBSet_add__ctx_uvar (x : FStarC_Syntax_Syntax.ctx_uvar) (s : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset) : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset =
-  (let tmp = ((fStarC_RBSet_add__add'__ctx_uvar x) s) in
-  (FStarC_RBSet.blackroot tmp))
-
-let fStarC_RBSet_from_list__ctx_uvar (xs : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset =
-  (BatList.fold_left (fun s e -> (fStarC_RBSet_add__ctx_uvar e s)) FStarC_RBSet.L xs)
-
-let fStarC_Class_Setlike_from_list__ctx_uvar_rbset_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : (FStarC_Syntax_Syntax.ctx_uvar) FStarC_RBSet.rbset =
-  (fStarC_RBSet_from_list__ctx_uvar tmp)
 
 let univ_equiv (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) (v : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : bool =
   (let tmp = (get_univ_graph ()) in
@@ -358,6 +338,42 @@ let fStarC_FlatSet_diff__tuple3_p_uvar_rec_option_version_range (s1 : ((int * FS
 let fStarC_Class_Setlike_diff__tuple3_p_uvar_rec_option_version_range (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) (s2 : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list =
   (fStarC_FlatSet_diff__tuple3_p_uvar_rec_option_version_range tmp s2)
 
+let reset (tmp : unit) : unit =
+  ((fail_if_ro ());
+  let v = ((vops).next_major ()) in
+  let tmp1 = (empty v) in
+  let tmp2 = { term_graph = (tmp1).term_graph;
+      univ_graph = (tmp1).univ_graph;
+      version = (tmp1).version;
+      ro = false } in
+  (set tmp2))
+
+let set_rw (tmp : unit) : unit =
+  (let s = (get ()) in
+  ((state) := { term_graph = (s).term_graph;
+    univ_graph = (s).univ_graph;
+    version = (s).version;
+    ro = false }))
+
+let set_ro (tmp : unit) : unit =
+  (let s = (get ()) in
+  ((state) := { term_graph = (s).term_graph;
+    univ_graph = (s).univ_graph;
+    version = (s).version;
+    ro = true }))
+
+let with_uf_enabled (f : (unit -> 'u___a)) : 'u___a =
+  (let s = (get ()) in
+  (set_rw ());
+  let restore = (fun tmp -> (if (s).ro then (set_ro ()) else ())) in
+  let tmp = (FStarC_Options.trace_error ()) in
+  let r = (if tmp then (f ()) else (try (f ()) with
+      | u__cexn -> ((restore ());
+        (raise u__cexn))
+    )) in
+  (restore ());
+  r)
+
 let fStarC_Class_Setlike_mem__ctx_uvar_list_ctx_uvar (tmp : FStarC_Syntax_Syntax.ctx_uvar) (eta : (FStarC_Syntax_Syntax.ctx_uvar) list) : bool =
   (fStarC_FlatSet_mem__ctx_uvar tmp eta)
 
@@ -402,40 +418,4 @@ let fStarC_Class_Setlike_equal__ctx_uvar_list_ctx_uvar (tmp : (FStarC_Syntax_Syn
 let uvar_unique_id (u : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : Prims.int =
   (let tmp = (chk_v_t u) in
   (FStarC_Unionfind.puf_unique_id tmp))
-
-let set_ro (tmp : unit) : unit =
-  (let s = (get ()) in
-  ((state) := { term_graph = (s).term_graph;
-    univ_graph = (s).univ_graph;
-    version = (s).version;
-    ro = true }))
-
-let set_rw (tmp : unit) : unit =
-  (let s = (get ()) in
-  ((state) := { term_graph = (s).term_graph;
-    univ_graph = (s).univ_graph;
-    version = (s).version;
-    ro = false }))
-
-let reset (tmp : unit) : unit =
-  ((fail_if_ro ());
-  let v = ((vops).next_major ()) in
-  let tmp1 = (empty v) in
-  let tmp2 = { term_graph = (tmp1).term_graph;
-      univ_graph = (tmp1).univ_graph;
-      version = (tmp1).version;
-      ro = false } in
-  (set tmp2))
-
-let with_uf_enabled (f : (unit -> 'u___a)) : 'u___a =
-  (let s = (get ()) in
-  (set_rw ());
-  let restore = (fun tmp -> (if (s).ro then (set_ro ()) else ())) in
-  let tmp = (FStarC_Options.trace_error ()) in
-  let r = (if tmp then (f ()) else (try (f ()) with
-      | u__cexn -> ((restore ());
-        (raise u__cexn))
-    )) in
-  (restore ());
-  r)
 

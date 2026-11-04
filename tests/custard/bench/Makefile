@@ -47,7 +47,7 @@ $(OUTPUT_DIR)/cherry/%.c: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CHERRY", $*)
 	@mkdir -p $(dir $@)
 	$(FSTAR) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+	  --custard_main $*.main $*.fst -o $@
 
 $(OUTPUT_DIR)/cherry/%.exe: $(OUTPUT_DIR)/cherry/%.c
 	$(call msg, "CC", $*)

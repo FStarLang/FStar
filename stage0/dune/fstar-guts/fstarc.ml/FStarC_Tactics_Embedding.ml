@@ -21,6 +21,205 @@ let fstar_tactics_ref_proofstate : tac_constant =
 let e_ref_proofstate : ((FStarC_Tactics_Types.proofstate ref)) FStarC_Syntax_Embeddings_Base.embedding =
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_ref_proofstate (fstar_tactics_ref_proofstate).t)
 
+let fstar_tactics_proofstate : tac_constant =
+  (fstar_tactics_const ("Types" :: ("proofstate" :: [])))
+
+let fstar_tactics_goal : tac_constant =
+  (fstar_tactics_const ("Types" :: ("goal" :: [])))
+
+let lid_as_data_fv (l : FStarC_Ident.lident) : FStarC_Syntax_Syntax.fv =
+  (FStarC_Syntax_Syntax.lid_as_fv l (Some (FStarC_Syntax_Syntax.Data_ctor)))
+
+let lid_as_data_tm (l : FStarC_Ident.lident) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Syntax.fv_to_tm (lid_as_data_fv l))
+
+let fstar_tactics_data (ns : (string) list) : tac_constant =
+  (let lid = (fstar_stubs_tactics_lid' ns) in
+  let tmp = (lid_as_data_tm lid) in
+  { lid = lid; fv = (lid_as_data_fv lid); t = tmp })
+
+let fstar_tactics_TacticFailure : tac_constant =
+  (fstar_tactics_data ("Common" :: ("TacticFailure" :: [])))
+
+let fstar_tactics_SKIP : tac_constant =
+  (fstar_tactics_data ("Common" :: ("SKIP" :: [])))
+
+let fstar_tactics_Stop : tac_constant =
+  (fstar_tactics_data ("Common" :: ("Stop" :: [])))
+
+let fstar_tactics_direction : tac_constant =
+  (fstar_tactics_const ("Types" :: ("direction" :: [])))
+
+let fstar_tactics_topdown : tac_constant =
+  (fstar_tactics_data ("Types" :: ("TopDown" :: [])))
+
+let fstar_tactics_bottomup : tac_constant =
+  (fstar_tactics_data ("Types" :: ("BottomUp" :: [])))
+
+let fstar_tactics_ctrl_flag : tac_constant =
+  (fstar_tactics_const ("Types" :: ("ctrl_flag" :: [])))
+
+let fstar_tactics_Continue : tac_constant =
+  (fstar_tactics_data ("Types" :: ("Continue" :: [])))
+
+let fstar_tactics_Skip : tac_constant =
+  (fstar_tactics_data ("Types" :: ("Skip" :: [])))
+
+let fstar_tactics_Abort : tac_constant =
+  (fstar_tactics_data ("Types" :: ("Abort" :: [])))
+
+let fstar_tc_core_lid (s : string) : FStarC_Ident.lident =
+  (FStarC_Ident.lid_of_path (BatList.append ("FStar" :: ("Stubs" :: ("TypeChecker" :: ("Core" :: [])))) (s :: [])) FStarC_Range_Type.dummyRange)
+
+let fstar_tc_core_const (s : string) : tac_constant =
+  (let lid = (fstar_tc_core_lid s) in
+  let tmp = (FStarC_Syntax_Syntax.tconst lid) in
+  { lid = lid; fv = (FStarC_Syntax_Syntax.fvconst lid); t = tmp })
+
+let fstar_tc_core_unfold_side : tac_constant =
+  (fstar_tc_core_const "unfold_side")
+
+let fstar_tc_core_data (s : string) : tac_constant =
+  (let lid = (fstar_tc_core_lid s) in
+  let tmp = (lid_as_data_tm lid) in
+  { lid = lid; fv = (lid_as_data_fv lid); t = tmp })
+
+let fstar_tc_core_unfold_side_Left : tac_constant =
+  (fstar_tc_core_data "Left")
+
+let fstar_tc_core_unfold_side_Right : tac_constant =
+  (fstar_tc_core_data "Right")
+
+let fstar_tc_core_unfold_side_Both : tac_constant =
+  (fstar_tc_core_data "Both")
+
+let fstar_tc_core_unfold_side_Neither : tac_constant =
+  (fstar_tc_core_data "Neither")
+
+let fstar_tc_core_tot_or_ghost : tac_constant =
+  (fstar_tc_core_const "tot_or_ghost")
+
+let fstar_tc_core_tot_or_ghost_ETotal : tac_constant =
+  (fstar_tc_core_data "E_Total")
+
+let fstar_tc_core_tot_or_ghost_EGhost : tac_constant =
+  (fstar_tc_core_data "E_Ghost")
+
+let fstar_tactics_guard_policy : tac_constant =
+  (fstar_tactics_const ("Types" :: ("guard_policy" :: [])))
+
+let fstar_tactics_SMT : tac_constant =
+  (fstar_tactics_data ("Types" :: ("SMT" :: [])))
+
+let fstar_tactics_SMTSync : tac_constant =
+  (fstar_tactics_data ("Types" :: ("SMTSync" :: [])))
+
+let fstar_tactics_Goal : tac_constant =
+  (fstar_tactics_data ("Types" :: ("Goal" :: [])))
+
+let fstar_tactics_Drop : tac_constant =
+  (fstar_tactics_data ("Types" :: ("Drop" :: [])))
+
+let fstar_tactics_Force : tac_constant =
+  (fstar_tactics_data ("Types" :: ("Force" :: [])))
+
+let e_proofstate : (FStarC_Tactics_Types.proofstate) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_proofstate (fstar_tactics_proofstate).t)
+
+let e_goal : (FStarC_Tactics_Types.goal) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_goal (fstar_tactics_goal).t)
+
+let mk_emb (em : (FStarC_Range_Type.range -> ('u___a -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax))) (un : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ('u___a) option)) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ('u___a) FStarC_Syntax_Embeddings_Base.embedding =
+  (let tmp = (FStarC_Syntax_Embeddings_Base.term_as_fv t) in
+  (FStarC_Syntax_Embeddings_Base.mk_emb (fun x r u__topt u__norm -> (em r x)) (fun x u__norm -> (un x)) tmp))
+
+let e_direction : (FStarC_Tactics_Types.direction) FStarC_Syntax_Embeddings_Base.embedding =
+  (let embed_direction = (fun rng d -> (match d with
+      | FStarC_Tactics_Types.TopDown -> (fstar_tactics_topdown).t
+      | FStarC_Tactics_Types.BottomUp -> (fstar_tactics_bottomup).t
+    )) in
+  let unembed_direction = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
+    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+    (match tmp1 with
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_topdown).lid) -> (Some (FStarC_Tactics_Types.TopDown))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_bottomup).lid) -> (Some (FStarC_Tactics_Types.BottomUp))
+      | tmp2 -> None
+    ))) in
+  (mk_emb embed_direction unembed_direction (fstar_tactics_direction).t))
+
+let e_ctrl_flag : (FStarC_Tactics_Types.ctrl_flag) FStarC_Syntax_Embeddings_Base.embedding =
+  (let embed_ctrl_flag = (fun rng d -> (match d with
+      | FStarC_Tactics_Types.Continue -> (fstar_tactics_Continue).t
+      | FStarC_Tactics_Types.Skip -> (fstar_tactics_Skip).t
+      | FStarC_Tactics_Types.Abort -> (fstar_tactics_Abort).t
+    )) in
+  let unembed_ctrl_flag = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
+    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+    (match tmp1 with
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Continue).lid) -> (Some (FStarC_Tactics_Types.Continue))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Skip).lid) -> (Some (FStarC_Tactics_Types.Skip))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Abort).lid) -> (Some (FStarC_Tactics_Types.Abort))
+      | tmp2 -> None
+    ))) in
+  (mk_emb embed_ctrl_flag unembed_ctrl_flag (fstar_tactics_ctrl_flag).t))
+
+let e_unfold_side : (FStarC_TypeChecker_Core.side) FStarC_Syntax_Embeddings_Base.embedding =
+  (let embed_unfold_side = (fun rng s -> (match s with
+      | FStarC_TypeChecker_Core.Left -> (fstar_tc_core_unfold_side_Left).t
+      | FStarC_TypeChecker_Core.Right -> (fstar_tc_core_unfold_side_Right).t
+      | FStarC_TypeChecker_Core.Both -> (fstar_tc_core_unfold_side_Both).t
+      | FStarC_TypeChecker_Core.Neither -> (fstar_tc_core_unfold_side_Neither).t
+    )) in
+  let unembed_unfold_side = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
+    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+    (match tmp1 with
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_unfold_side_Left).lid) -> (Some (FStarC_TypeChecker_Core.Left))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_unfold_side_Right).lid) -> (Some (FStarC_TypeChecker_Core.Right))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_unfold_side_Both).lid) -> (Some (FStarC_TypeChecker_Core.Both))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_unfold_side_Neither).lid) -> (Some (FStarC_TypeChecker_Core.Neither))
+      | tmp2 -> None
+    ))) in
+  (mk_emb embed_unfold_side unembed_unfold_side (fstar_tc_core_unfold_side).t))
+
+let e_tot_or_ghost : (FStarC_TypeChecker_Core.tot_or_ghost) FStarC_Syntax_Embeddings_Base.embedding =
+  (let embed_tot_or_ghost = (fun rng s -> (match s with
+      | FStarC_TypeChecker_Core.E_Total -> (fstar_tc_core_tot_or_ghost_ETotal).t
+      | FStarC_TypeChecker_Core.E_Ghost -> (fstar_tc_core_tot_or_ghost_EGhost).t
+    )) in
+  let unembed_tot_or_ghost = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
+    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+    (match tmp1 with
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_tot_or_ghost_ETotal).lid) -> (Some (FStarC_TypeChecker_Core.E_Total))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_tot_or_ghost_EGhost).lid) -> (Some (FStarC_TypeChecker_Core.E_Ghost))
+      | tmp2 -> None
+    ))) in
+  (mk_emb embed_tot_or_ghost unembed_tot_or_ghost (fstar_tc_core_tot_or_ghost).t))
+
+let t_tref : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let tmp = (FStarC_Syntax_Syntax.fv_to_tm (FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.tref_lid None)) in
+  let tmp1 = (FStarC_Syntax_Syntax.mk_Tm_uinst tmp (FStarC_Syntax_Syntax.U_zero :: [])) in
+  (FStarC_Syntax_Syntax.mk_Tm_app tmp1 ((FStarC_Syntax_Syntax.iarg FStarC_Syntax_Syntax.t_term) :: []) FStarC_Range_Type.dummyRange))
+
+let e_guard_policy : (FStarC_Tactics_Types.guard_policy) FStarC_Syntax_Embeddings_Base.embedding =
+  (let embed_guard_policy = (fun rng p -> (match p with
+      | FStarC_Tactics_Types.SMT -> (fstar_tactics_SMT).t
+      | FStarC_Tactics_Types.SMTSync -> (fstar_tactics_SMTSync).t
+      | FStarC_Tactics_Types.Goal -> (fstar_tactics_Goal).t
+      | FStarC_Tactics_Types.Force -> (fstar_tactics_Force).t
+      | FStarC_Tactics_Types.Drop -> (fstar_tactics_Drop).t
+    )) in
+  let unembed_guard_policy = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
+    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+    (match tmp1 with
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_SMT).lid) -> (Some (FStarC_Tactics_Types.SMT))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_SMTSync).lid) -> (Some (FStarC_Tactics_Types.SMTSync))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Goal).lid) -> (Some (FStarC_Tactics_Types.Goal))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Force).lid) -> (Some (FStarC_Tactics_Types.Force))
+      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Drop).lid) -> (Some (FStarC_Tactics_Types.Drop))
+      | tmp2 -> None
+    ))) in
+  (mk_emb embed_guard_policy unembed_guard_policy (fstar_tactics_guard_policy).t))
+
 let unfold_lazy_proofstate (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (FStarC_Syntax_Util.exp_string "(((proofstate)))")
 
@@ -29,12 +228,6 @@ let unfold_lazy_ref_proofstate (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syn
 
 let unfold_lazy_goal (i : FStarC_Syntax_Syntax.lazyinfo) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (FStarC_Syntax_Util.exp_string "(((goal)))")
-
-let fstar_tactics_proofstate : tac_constant =
-  (fstar_tactics_const ("Types" :: ("proofstate" :: [])))
-
-let e_proofstate : (FStarC_Tactics_Types.proofstate) FStarC_Syntax_Embeddings_Base.embedding =
-  (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_proofstate (fstar_tactics_proofstate).t)
 
 let mkFV (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_NBETerm.t =
   (FStarC_TypeChecker_NBETerm.mkFV fv (BatList.rev us) (BatList.rev ts))
@@ -64,12 +257,6 @@ let e_proofstate_nbe : (FStarC_Tactics_Types.proofstate) FStarC_TypeChecker_NBET
     un = unembed_proofstate;
     typ = (fun tmp -> (mkFV (fstar_tactics_proofstate).fv [] []));
     e_typ = (fun tmp -> (fv_as_emb_typ (fstar_tactics_proofstate).fv)) })
-
-let fstar_tactics_goal : tac_constant =
-  (fstar_tactics_const ("Types" :: ("goal" :: [])))
-
-let e_goal : (FStarC_Tactics_Types.goal) FStarC_Syntax_Embeddings_Base.embedding =
-  (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_goal (fstar_tactics_goal).t)
 
 let e_goal_nbe : (FStarC_Tactics_Types.goal) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_goal = (fun u__cb ps -> (let li = ({ FStarC_Syntax_Syntax.blob = (Obj.magic (ps));
@@ -116,26 +303,6 @@ let e_ref_proofstate_nbe : ((FStarC_Tactics_Types.proofstate ref)) FStarC_TypeCh
 let embed (tmp : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (r : FStarC_Range_Type.range) (x : 'u___a) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (FStarC_Syntax_Embeddings_Base.embed tmp x r None FStarC_Syntax_Embeddings_Base.id_norm_cb)
 
-let lid_as_data_fv (l : FStarC_Ident.lident) : FStarC_Syntax_Syntax.fv =
-  (FStarC_Syntax_Syntax.lid_as_fv l (Some (FStarC_Syntax_Syntax.Data_ctor)))
-
-let lid_as_data_tm (l : FStarC_Ident.lident) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Syntax_Syntax.fv_to_tm (lid_as_data_fv l))
-
-let fstar_tactics_data (ns : (string) list) : tac_constant =
-  (let lid = (fstar_stubs_tactics_lid' ns) in
-  let tmp = (lid_as_data_tm lid) in
-  { lid = lid; fv = (lid_as_data_fv lid); t = tmp })
-
-let fstar_tactics_TacticFailure : tac_constant =
-  (fstar_tactics_data ("Common" :: ("TacticFailure" :: [])))
-
-let fstar_tactics_SKIP : tac_constant =
-  (fstar_tactics_data ("Common" :: ("SKIP" :: [])))
-
-let fstar_tactics_Stop : tac_constant =
-  (fstar_tactics_data ("Common" :: ("Stop" :: [])))
-
 let hd'_and_args (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term' * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) =
   (let tm1 = (FStarC_Syntax_Util.unascribe tm) in
   let tmp = (FStarC_Syntax_Util.head_and_args_full tm1) in
@@ -149,7 +316,7 @@ let unembed' (tmp : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (x : (FSta
   (FStarC_Syntax_Embeddings_Base.unembed tmp x FStarC_Syntax_Embeddings_Base.id_norm_cb)
 
 let e_exn : (exn) FStarC_Syntax_Embeddings_Base.embedding =
-  (let embed_exn = (Obj.magic ((fun e rng tmp tmp1 -> (match e with
+  (let embed_exn = (fun e rng tmp tmp1 -> (match e with
       | (FStarC_Tactics_Common.TacticFailure (s)) -> (let tmp2 = (embed (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_document) (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_range)) rng s) in
         let tmp3 = (FStarC_Syntax_Syntax.as_arg tmp2) in
         let tmp4 = (tmp3 :: []) in
@@ -180,11 +347,14 @@ let e_exn : (exn) FStarC_Syntax_Embeddings_Base.embedding =
             let tmp6 = (tmp5 :: []) in
             (FStarC_Syntax_Syntax.mk_Tm_app (fstar_tactics_TacticFailure).t tmp6 rng))
         ))
-    )))) in
+    )) in
   let unembed_exn = (fun t tmp -> (let tmp1 = (hd'_and_args t) in
     (match tmp1 with
       | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((s, tmp2) :: [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_TacticFailure).lid) -> (let tmp3 = (unembed' (FStarC_Syntax_Embeddings.e_tuple2 (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_document) (FStarC_Syntax_Embeddings.e_option FStarC_Syntax_Embeddings.e_range)) s) in
-        (FStarC_Option.bind tmp3 (fun s1 -> (Some ((FStarC_Tactics_Common.TacticFailure (s1)))))))
+        (match tmp3 with
+          | (Some (x)) -> (Some ((FStarC_Tactics_Common.TacticFailure (x))))
+          | None -> None
+        ))
       | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), []) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_SKIP).lid) -> (Some (FStarC_Tactics_Common.SKIP))
       | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), []) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Stop).lid) -> (Some (FStarC_Errors.Stop))
       | tmp2 -> (Some ((FStarC_Tactics_Common.EExn (t))))
@@ -209,7 +379,10 @@ let e_exn_nbe : (exn) FStarC_TypeChecker_NBETerm.embedding =
     )) in
   let unembed_exn = (fun cb t -> (match (FStarC_TypeChecker_NBETerm.nbe_t_of_t t) with
       | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, ((s, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_TacticFailure).lid) -> (let tmp2 = (FStarC_TypeChecker_NBETerm.unembed (FStarC_TypeChecker_NBETerm.e_tuple2 (FStarC_TypeChecker_NBETerm.e_list FStarC_TypeChecker_NBETerm.e_document) (FStarC_TypeChecker_NBETerm.e_option FStarC_TypeChecker_NBETerm.e_range)) cb s) in
-        (FStarC_Option.bind tmp2 (fun s1 -> (Some ((FStarC_Tactics_Common.TacticFailure (s1)))))))
+        (match tmp2 with
+          | (Some (x)) -> (Some ((FStarC_Tactics_Common.TacticFailure (x))))
+          | None -> None
+        ))
       | (FStarC_TypeChecker_NBETerm.Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_SKIP).lid) -> (Some (FStarC_Tactics_Common.SKIP))
       | tmp -> None
     )) in
@@ -218,38 +391,6 @@ let e_exn_nbe : (exn) FStarC_TypeChecker_NBETerm.embedding =
     un = unembed_exn;
     typ = (fun tmp -> (mkFV fv_exn [] []));
     e_typ = (fun tmp -> (fv_as_emb_typ fv_exn)) })
-
-let fstar_tactics_Continue : tac_constant =
-  (fstar_tactics_data ("Types" :: ("Continue" :: [])))
-
-let fstar_tactics_Skip : tac_constant =
-  (fstar_tactics_data ("Types" :: ("Skip" :: [])))
-
-let fstar_tactics_Abort : tac_constant =
-  (fstar_tactics_data ("Types" :: ("Abort" :: [])))
-
-let mk_emb (em : (FStarC_Range_Type.range -> ('u___a -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax))) (un : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ('u___a) option)) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ('u___a) FStarC_Syntax_Embeddings_Base.embedding =
-  (let tmp = (FStarC_Syntax_Embeddings_Base.term_as_fv t) in
-  (FStarC_Syntax_Embeddings_Base.mk_emb (fun x r u__topt u__norm -> (em r x)) (fun x u__norm -> (un x)) tmp))
-
-let fstar_tactics_ctrl_flag : tac_constant =
-  (fstar_tactics_const ("Types" :: ("ctrl_flag" :: [])))
-
-let e_ctrl_flag : (FStarC_Tactics_Types.ctrl_flag) FStarC_Syntax_Embeddings_Base.embedding =
-  (let embed_ctrl_flag = (fun rng d -> (match d with
-      | FStarC_Tactics_Types.Continue -> (fstar_tactics_Continue).t
-      | FStarC_Tactics_Types.Skip -> (fstar_tactics_Skip).t
-      | FStarC_Tactics_Types.Abort -> (fstar_tactics_Abort).t
-    )) in
-  let unembed_ctrl_flag = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
-    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
-    (match tmp1 with
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Continue).lid) -> (Some (FStarC_Tactics_Types.Continue))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Skip).lid) -> (Some (FStarC_Tactics_Types.Skip))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Abort).lid) -> (Some (FStarC_Tactics_Types.Abort))
-      | tmp2 -> None
-    ))) in
-  (mk_emb embed_ctrl_flag unembed_ctrl_flag (fstar_tactics_ctrl_flag).t))
 
 let e_ctrl_flag_nbe : (FStarC_Tactics_Types.ctrl_flag) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_ctrl_flag = (fun cb res -> (match res with
@@ -272,29 +413,6 @@ let e_ctrl_flag_nbe : (FStarC_Tactics_Types.ctrl_flag) FStarC_TypeChecker_NBETer
     typ = (fun tmp -> (mkFV (fstar_tactics_ctrl_flag).fv [] []));
     e_typ = (fun tmp -> (fv_as_emb_typ (fstar_tactics_ctrl_flag).fv)) })
 
-let fstar_tactics_topdown : tac_constant =
-  (fstar_tactics_data ("Types" :: ("TopDown" :: [])))
-
-let fstar_tactics_bottomup : tac_constant =
-  (fstar_tactics_data ("Types" :: ("BottomUp" :: [])))
-
-let fstar_tactics_direction : tac_constant =
-  (fstar_tactics_const ("Types" :: ("direction" :: [])))
-
-let e_direction : (FStarC_Tactics_Types.direction) FStarC_Syntax_Embeddings_Base.embedding =
-  (let embed_direction = (fun rng d -> (match d with
-      | FStarC_Tactics_Types.TopDown -> (fstar_tactics_topdown).t
-      | FStarC_Tactics_Types.BottomUp -> (fstar_tactics_bottomup).t
-    )) in
-  let unembed_direction = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
-    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
-    (match tmp1 with
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_topdown).lid) -> (Some (FStarC_Tactics_Types.TopDown))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_bottomup).lid) -> (Some (FStarC_Tactics_Types.BottomUp))
-      | tmp2 -> None
-    ))) in
-  (mk_emb embed_direction unembed_direction (fstar_tactics_direction).t))
-
 let e_direction_nbe : (FStarC_Tactics_Types.direction) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_direction = (fun cb res -> (match res with
       | FStarC_Tactics_Types.TopDown -> (mkConstruct (fstar_tactics_topdown).fv [] [])
@@ -313,44 +431,6 @@ let e_direction_nbe : (FStarC_Tactics_Types.direction) FStarC_TypeChecker_NBETer
     un = unembed_direction;
     typ = (fun tmp -> (mkFV (fstar_tactics_direction).fv [] []));
     e_typ = (fun tmp -> (fv_as_emb_typ (fstar_tactics_direction).fv)) })
-
-let fstar_tactics_SMT : tac_constant =
-  (fstar_tactics_data ("Types" :: ("SMT" :: [])))
-
-let fstar_tactics_SMTSync : tac_constant =
-  (fstar_tactics_data ("Types" :: ("SMTSync" :: [])))
-
-let fstar_tactics_Goal : tac_constant =
-  (fstar_tactics_data ("Types" :: ("Goal" :: [])))
-
-let fstar_tactics_Force : tac_constant =
-  (fstar_tactics_data ("Types" :: ("Force" :: [])))
-
-let fstar_tactics_Drop : tac_constant =
-  (fstar_tactics_data ("Types" :: ("Drop" :: [])))
-
-let fstar_tactics_guard_policy : tac_constant =
-  (fstar_tactics_const ("Types" :: ("guard_policy" :: [])))
-
-let e_guard_policy : (FStarC_Tactics_Types.guard_policy) FStarC_Syntax_Embeddings_Base.embedding =
-  (let embed_guard_policy = (fun rng p -> (match p with
-      | FStarC_Tactics_Types.SMT -> (fstar_tactics_SMT).t
-      | FStarC_Tactics_Types.SMTSync -> (fstar_tactics_SMTSync).t
-      | FStarC_Tactics_Types.Goal -> (fstar_tactics_Goal).t
-      | FStarC_Tactics_Types.Force -> (fstar_tactics_Force).t
-      | FStarC_Tactics_Types.Drop -> (fstar_tactics_Drop).t
-    )) in
-  let unembed_guard_policy = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
-    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
-    (match tmp1 with
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_SMT).lid) -> (Some (FStarC_Tactics_Types.SMT))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_SMTSync).lid) -> (Some (FStarC_Tactics_Types.SMTSync))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Goal).lid) -> (Some (FStarC_Tactics_Types.Goal))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Force).lid) -> (Some (FStarC_Tactics_Types.Force))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tactics_Drop).lid) -> (Some (FStarC_Tactics_Types.Drop))
-      | tmp2 -> None
-    ))) in
-  (mk_emb embed_guard_policy unembed_guard_policy (fstar_tactics_guard_policy).t))
 
 let e_guard_policy_nbe : (FStarC_Tactics_Types.guard_policy) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_guard_policy = (fun cb p -> (match p with
@@ -372,11 +452,6 @@ let e_guard_policy_nbe : (FStarC_Tactics_Types.guard_policy) FStarC_TypeChecker_
     un = unembed_guard_policy;
     typ = (fun tmp -> (mkFV (fstar_tactics_guard_policy).fv [] []));
     e_typ = (fun tmp -> (fv_as_emb_typ (fstar_tactics_guard_policy).fv)) })
-
-let t_tref : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let tmp = (FStarC_Syntax_Syntax.fv_to_tm (FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.tref_lid None)) in
-  let tmp1 = (FStarC_Syntax_Syntax.mk_Tm_uinst tmp (FStarC_Syntax_Syntax.U_zero :: [])) in
-  (FStarC_Syntax_Syntax.mk_Tm_app tmp1 ((FStarC_Syntax_Syntax.iarg FStarC_Syntax_Syntax.t_term) :: []) FStarC_Range_Type.dummyRange))
 
 let e_tref (a : unit) : (('a ref)) FStarC_Syntax_Embeddings_Base.embedding =
   (let em = (fun r rng u__shadow u__norm -> (FStarC_Syntax_Util.mk_lazy r t_tref FStarC_Syntax_Syntax.Lazy_tref (Some (rng)))) in
@@ -411,42 +486,6 @@ let e_tref_nbe (a : unit) : (('a ref)) FStarC_TypeChecker_NBETerm.embedding =
     (mkFV (FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.tref_lid None) (FStarC_Syntax_Syntax.U_zero :: []) ((FStarC_TypeChecker_NBETerm.as_arg term_t) :: []))));
     e_typ = (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.tref_lid), (FStarC_Syntax_Syntax.ET_abstract :: [])))) })
 
-let fstar_tc_core_lid (s : string) : FStarC_Ident.lident =
-  (FStarC_Ident.lid_of_path (BatList.append ("FStar" :: ("Stubs" :: ("TypeChecker" :: ("Core" :: [])))) (s :: [])) FStarC_Range_Type.dummyRange)
-
-let fstar_tc_core_data (s : string) : tac_constant =
-  (let lid = (fstar_tc_core_lid s) in
-  let tmp = (lid_as_data_tm lid) in
-  { lid = lid; fv = (lid_as_data_fv lid); t = tmp })
-
-let fstar_tc_core_tot_or_ghost_ETotal : tac_constant =
-  (fstar_tc_core_data "E_Total")
-
-let fstar_tc_core_tot_or_ghost_EGhost : tac_constant =
-  (fstar_tc_core_data "E_Ghost")
-
-let fstar_tc_core_const (s : string) : tac_constant =
-  (let lid = (fstar_tc_core_lid s) in
-  let tmp = (FStarC_Syntax_Syntax.tconst lid) in
-  { lid = lid; fv = (FStarC_Syntax_Syntax.fvconst lid); t = tmp })
-
-let fstar_tc_core_tot_or_ghost : tac_constant =
-  (fstar_tc_core_const "tot_or_ghost")
-
-let e_tot_or_ghost : (FStarC_TypeChecker_Core.tot_or_ghost) FStarC_Syntax_Embeddings_Base.embedding =
-  (let embed_tot_or_ghost = (fun rng s -> (match s with
-      | FStarC_TypeChecker_Core.E_Total -> (fstar_tc_core_tot_or_ghost_ETotal).t
-      | FStarC_TypeChecker_Core.E_Ghost -> (fstar_tc_core_tot_or_ghost_EGhost).t
-    )) in
-  let unembed_tot_or_ghost = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
-    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
-    (match tmp1 with
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_tot_or_ghost_ETotal).lid) -> (Some (FStarC_TypeChecker_Core.E_Total))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_tot_or_ghost_EGhost).lid) -> (Some (FStarC_TypeChecker_Core.E_Ghost))
-      | tmp2 -> None
-    ))) in
-  (mk_emb embed_tot_or_ghost unembed_tot_or_ghost (fstar_tc_core_tot_or_ghost).t))
-
 let e_tot_or_ghost_nbe : (FStarC_TypeChecker_Core.tot_or_ghost) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_tot_or_ghost = (fun cb res -> (match res with
       | FStarC_TypeChecker_Core.E_Total -> (mkConstruct (fstar_tc_core_tot_or_ghost_ETotal).fv [] [])
@@ -465,39 +504,6 @@ let e_tot_or_ghost_nbe : (FStarC_TypeChecker_Core.tot_or_ghost) FStarC_TypeCheck
     un = unembed_tot_or_ghost;
     typ = (fun tmp -> (mkFV (fstar_tc_core_tot_or_ghost).fv [] []));
     e_typ = (fun tmp -> (fv_as_emb_typ (fstar_tc_core_tot_or_ghost).fv)) })
-
-let fstar_tc_core_unfold_side_Left : tac_constant =
-  (fstar_tc_core_data "Left")
-
-let fstar_tc_core_unfold_side_Right : tac_constant =
-  (fstar_tc_core_data "Right")
-
-let fstar_tc_core_unfold_side_Both : tac_constant =
-  (fstar_tc_core_data "Both")
-
-let fstar_tc_core_unfold_side_Neither : tac_constant =
-  (fstar_tc_core_data "Neither")
-
-let fstar_tc_core_unfold_side : tac_constant =
-  (fstar_tc_core_const "unfold_side")
-
-let e_unfold_side : (FStarC_TypeChecker_Core.side) FStarC_Syntax_Embeddings_Base.embedding =
-  (let embed_unfold_side = (fun rng s -> (match s with
-      | FStarC_TypeChecker_Core.Left -> (fstar_tc_core_unfold_side_Left).t
-      | FStarC_TypeChecker_Core.Right -> (fstar_tc_core_unfold_side_Right).t
-      | FStarC_TypeChecker_Core.Both -> (fstar_tc_core_unfold_side_Both).t
-      | FStarC_TypeChecker_Core.Neither -> (fstar_tc_core_unfold_side_Neither).t
-    )) in
-  let unembed_unfold_side = (fun t -> (let tmp = (FStarC_Syntax_Subst.compress t) in
-    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
-    (match tmp1 with
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_unfold_side_Left).lid) -> (Some (FStarC_TypeChecker_Core.Left))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_unfold_side_Right).lid) -> (Some (FStarC_TypeChecker_Core.Right))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_unfold_side_Both).lid) -> (Some (FStarC_TypeChecker_Core.Both))
-      | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv (fstar_tc_core_unfold_side_Neither).lid) -> (Some (FStarC_TypeChecker_Core.Neither))
-      | tmp2 -> None
-    ))) in
-  (mk_emb embed_unfold_side unembed_unfold_side (fstar_tc_core_unfold_side).t))
 
 let e_unfold_side_nbe : (FStarC_TypeChecker_Core.side) FStarC_TypeChecker_NBETerm.embedding =
   (let embed_unfold_side = (fun cb res -> (match res with

@@ -8,7 +8,7 @@ let rec repl_ld_tasks_of_deps__aux (wrap : (string -> FStarC_Interactive_Ide_Typ
   (match deps with
     | (intf_or_impl :: deps') -> (let tmp = (wrap intf_or_impl) in
       let tmp1 = (FStarC_Interactive_Ide_Types.LDSingle (tmp)) in
-      let tmp2 = ((repl_ld_tasks_of_deps__aux wrap) deps' final_tasks) in
+      let tmp2 = (repl_ld_tasks_of_deps__aux wrap deps' final_tasks) in
       (tmp1 :: tmp2))
     | [] -> final_tasks
   )
@@ -16,7 +16,7 @@ let rec repl_ld_tasks_of_deps__aux (wrap : (string -> FStarC_Interactive_Ide_Typ
 let repl_ld_tasks_of_deps (deps : (string) list) (final_tasks : (FStarC_Interactive_Ide_Types.repl_task) list) : (FStarC_Interactive_Ide_Types.repl_task) list =
   (let wrap = (fun fname -> (let tmp = (BatUnix.gettimeofday ()) in
     { FStarC_Interactive_Ide_Types.tf_fname = fname; tf_modtime = tmp })) in
-  ((repl_ld_tasks_of_deps__aux wrap) deps final_tasks))
+  (repl_ld_tasks_of_deps__aux wrap deps final_tasks))
 
 let deps_and_repl_ld_tasks_of_our_file (filename : string) : ((string) list * (FStarC_Interactive_Ide_Types.repl_task) list * FStarC_Parser_Dep.deps) =
   (let get_mod_name = (fun fname -> (FStarC_Parser_Dep.lowercase_module_name fname)) in
@@ -207,7 +207,7 @@ type name_tracking_event =
   | NTBinding of (FStarC_Syntax_Syntax.binding, ((FStarC_Ident.lident) list * FStarC_Syntax_Syntax.sigelt)) FStar_Pervasives.either
 
 
-let fresh_name_tracking_hooks (tmp : unit) : (((name_tracking_event) list ref) * FStarC_Syntax_DsEnv.dsenv_hooks * (FStarC_TypeChecker_Env.env -> ((FStarC_Syntax_Syntax.binding, ((FStarC_Ident.lident) list * FStarC_Syntax_Syntax.sigelt)) FStar_Pervasives.either -> unit))) =
+let fresh_name_tracking_hooks (tmp : unit) : (((name_tracking_event) list ref) * FStarC_Syntax_DsEnv.dsenv_hooks * FStarC_TypeChecker_Env.tcenv_hooks) =
   (let events = (ref []) in
   let push_event = (fun evt -> (let tmp1 = (!(events)) in
     let tmp2 = (evt :: tmp1) in
@@ -221,7 +221,7 @@ let fresh_name_tracking_hooks (tmp : unit) : (((name_tracking_event) list ref) *
   (push_event tmp3))) (fun dsenv x l -> (let tmp1 = (FStarC_Syntax_DsEnv.current_module dsenv) in
   let tmp2 = (tmp1, x, l) in
   let tmp3 = (NTAlias ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))) in
-  (push_event tmp3)))), (fun tmp1 s -> (push_event (NTBinding (s))))))
+  (push_event tmp3)))), { FStarC_TypeChecker_Env.tc_push_in_gamma_hook = (fun tmp1 s -> (push_event (NTBinding (s)))) }))
 
 let track_name_changes (env : FStarC_TypeChecker_Env.env) : (FStarC_TypeChecker_Env.env * (FStarC_TypeChecker_Env.env -> (FStarC_TypeChecker_Env.env * (name_tracking_event) list))) =
   (let set_hooks = (fun dshooks tchooks env1 -> (let tmp = (FStarC_Universal.with_dsenv_of_tcenv env1 (fun dsenv -> ((), (FStarC_Syntax_DsEnv.set_ds_hooks dsenv dshooks)))) in
