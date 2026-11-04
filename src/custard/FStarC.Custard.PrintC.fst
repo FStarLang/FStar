@@ -6243,7 +6243,8 @@ let cherry_iarr_helpers () : ML (list string & list string) =
              let l = ty lt in
              let cs = cell_struct d cc in
              fn ("static inline cherry_iarray " ^ p ^ "_of_list(" ^ l ^ " l)")
-                ("  size_t n = 0;\n" ^
+                ("  if (cherry_is_scalar(l)) return cherry_iarray_empty;\n" ^
+                 "  size_t n = 0;\n" ^
                  "  for (" ^ l ^ " q = l; !cherry_is_scalar(q); q = ((" ^ cs ^ " *)q)->" ^ c_var tl ^ ") n++;\n" ^
                  "  " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, n);\n" ^
                  "  size_t j = 0;\n" ^

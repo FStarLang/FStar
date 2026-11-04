@@ -1397,7 +1397,12 @@ let rec expr_uses (acc : HashTable.t string int) (x:expr) : ML unit =
   let sub (es:list expr) : ML unit = List.iter (expr_uses acc) es in
   match x.e with
   | EApp ({ e = EQual (n, _) }, es) -> note n (List.length es); sub es
-  | EQual (n, _) -> note n 0
+  (* A bare address pins the arity in C, where it is a function pointer of
+     that type; Cherry builds a closure instead, which any arity can back.
+     Pinning there kept [let compare s1 s2 = S.compare s1 s2] at the one
+     binder [eta_reduce] left it, because of a [sort_with compare]
+     elsewhere, and every direct call allocated a partial application. *)
+  | EQual (n, _) -> if not (Options.custard_cherry ()) then note n 0
   (* Every other use is final, so nothing below the first two cases needs to
      be distinguished -- only visited. *)
   | _ -> iter_children (expr_uses acc) x
