@@ -91,6 +91,8 @@ let writer_size w = small (size64 !w)
 
 let writer_contents w = !w
 
+(* Boxed: a reader is passed around a lot, and a copy is then one count. *)
+[@@cherry_boxed]
 noeq type reader = {
   data : string;
   size : U64.t;

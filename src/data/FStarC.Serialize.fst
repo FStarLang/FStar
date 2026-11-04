@@ -45,16 +45,22 @@ noeq type writer = {
   wtables : A.array (option D.dyn);
 }
 
+(* Slot [s] of [rtables] holds the values read so far as an [A.array a]
+   (once there is one), and [rcounts] how many there are.  Boxed, since a
+   reader is passed to every deserializer. *)
+[@@cherry_boxed]
 noeq type reader = {
   rbuf    : BB.reader;
   rtables : A.array (option D.dyn);
+  rcounts : A.array I.t;
 }
 
 let writer_create () = { wbuf = BB.writer_create (); wtables = A.make max_slots None }
 let writer_contents w = BB.writer_contents w.wbuf
 let raw_writer w = w.wbuf
 
-let reader_create s off = { rbuf = BB.reader_create s off; rtables = A.make max_slots None }
+let reader_create s off =
+  { rbuf = BB.reader_create s off; rtables = A.make max_slots None; rcounts = A.make max_slots I.zero }
 let raw_reader r = r.rbuf
 
 let malformed #a what = raise (BB.Malformed what)
@@ -149,32 +155,28 @@ let wtable_add (#a:Type0) (h:FStarC.Hash.hash_code) (t:wtable_t a) (x:a) : ML I.
   count := I.(k + one);
   k
 
-let rtable (#a:Type) (r:reader) (s:slot) : ML (ref (option (A.array a)) & ref I.t) =
-  match A.get r.rtables s with
-  | Some d -> D.undyn d
-  | None ->
-    let t : ref (option (A.array a)) & ref I.t = (mk_ref None, mk_ref I.zero) in
-    A.set r.rtables s (Some (D.mkdyn t));
-    t
-
-let rtable_push (#a:Type) (t:ref (option (A.array a)) & ref I.t) (x:a) : ML unit =
-  let (arr, n) = t in
-  let k = !n in
-  (match !arr with
-   | None -> arr := Some (A.make (I.of_int 1024) x)
-   | Some v ->
+(* The tables are looked up in place: the reader is borrowed, so its fields
+   are not counted. *)
+let rtable_push (#a:Type) ([@@@FStar.Attributes.cherry_borrowed] r:reader) (s:slot) (x:a) : ML unit =
+  let k = A.get r.rcounts s in
+  (if k = I.zero then A.set r.rtables s (Some (D.mkdyn (A.make (I.of_int 1024) x)))
+   else match A.get r.rtables s with
+   | Some d ->
+     let v : A.array a = D.undyn d in
      if I.(k >= A.length v) then begin
        let v = A.append v v in
        A.set v k x;
-       arr := Some v
-     end else A.set v k x);
-  n := I.(k + one)
+       A.set r.rtables s (Some (D.mkdyn v))
+     end else A.set v k x
+   | None -> malformed "reader table");
+  A.set r.rcounts s I.(k + one)
 
-let rtable_get (#a:Type) (t:ref (option (A.array a)) & ref I.t) (k:I.t) : ML a =
-  let (arr, n) = t in
-  match !arr with
-  | Some v -> if I.(k < !n) then A.get v k else malformed "bad back-reference"
-  | None -> malformed "bad back-reference"
+let rtable_get (#a:Type) ([@@@FStar.Attributes.cherry_borrowed] r:reader) (s:slot) (k:I.t) : ML a =
+  if I.(k >= zero && k < A.get r.rcounts s) then
+    match A.get r.rtables s with
+    | Some d -> A.get (D.undyn d <: A.array a) k
+    | None -> malformed "bad back-reference"
+  else malformed "bad back-reference"
 
 let write_shared #a {| deq a |} {| hashable a |} s w x f =
   let t = wtable #a w s in
@@ -188,13 +190,12 @@ let write_shared #a {| deq a |} {| hashable a |} s w x f =
     ()
 
 let read_shared #a s r f =
-  let t = rtable #a r s in
   let k = BB.read_uvarint r.rbuf in
   if k = I.zero then begin
     let x = f r in
-    rtable_push t x;
+    rtable_push r s x;
     x
-  end else rtable_get t I.(k - one)
+  end else rtable_get #a r s I.(k - one)
 
 let shared #a {| deq a |} {| hashable a |} s inner = {
   ser = (fun w x -> write_shared s w x inner.ser);
@@ -214,19 +215,18 @@ let dag_node #k {| deq k |} {| hashable k |} s w key f =
 let dag_end w n = BB.write_uvarint w.wbuf I.(n + one)
 
 let rec dag_read #a s r f =
-  let t = rtable #a r s in
   let k = BB.read_uvarint r.rbuf in
   if k = I.zero then begin
     let x = f r in
-    rtable_push t x;
+    rtable_push r s x;
     dag_read s r f
-  end else rtable_get t I.(k - one)
+  end else rtable_get #a r s I.(k - one)
 
 let dag_write_child w n = BB.write_uvarint w.wbuf n
 
 let dag_read_child #a s r =
   let k = BB.read_uvarint r.rbuf in
-  rtable_get (rtable #a r s) k
+  rtable_get #a r s k
 
 let rec ser_elems (#a:Type) ([@@@FStar.Attributes.monomorphize] f:writer -> a -> ML unit)
   (w:writer) (l:list a) : ML unit =
