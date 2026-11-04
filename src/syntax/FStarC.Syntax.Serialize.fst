@@ -474,8 +474,11 @@ and deser_term_node (r:reader) : ML term =
       Tm_refine {b; phi}
     | 9 ->
       let hd = deser_term r in
-      let arg = deser_arg r in
-      Tm_app {hd; arg}
+      (* Not [deser_arg]: the pair is stored flat in the node, so building
+         it separately would allocate a tuple only to take it apart. *)
+      let t = deser_term r in
+      let q = deser_option deser_arg_qualifier r in
+      Tm_app {hd; arg=(t, q)}
     | 10 ->
       let scrutinee = deser_term r in
       let ret_opt = deser_option deser_match_returns r in
