@@ -21,6 +21,11 @@ $(OUTPUT_DIR)/init-locals.checked: $(addprefix $(CACHE_DIR)/, HoistArrays.fst.ch
 	$(Q)CC="$(CC)" CXX="$(CXX)" python3 ../initlocals.py $(OUTPUT_DIR)/init-locals -- $(FSTAR)
 	$(Q)touch $@
 
+all: $(OUTPUT_DIR)/line-comments.checked
+$(OUTPUT_DIR)/line-comments.checked: $(addprefix $(CACHE_DIR)/, PulseComment.fst.checked PulseLineComment.fst.checked) $(FSTAR_EXE) linecomments.py
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 linecomments.py $(OUTPUT_DIR)/line-comments -- $(FSTAR)
+	$(Q)touch $@
+
 # Section 62.1.  Same discovery as tests/custard and for the same reason:
 # CI passes KRML_EXE= and never puts krml on the PATH, so a `command -v
 # krml` guard silently skipped both karamel legs of this suite.
