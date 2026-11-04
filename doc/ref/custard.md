@@ -994,7 +994,9 @@ monomorphization diverges for non-uniform recursion
 - normalizes `Mono` arguments to a canonical form before interning, so that
   syntactically different but convertible arguments share a specialization;
 - keeps a per-`lid` specialization counter, bounded by
-  `--custard_max_specializations` (default 1000);
+  `--custard_max_specializations` (default 10000; the whole compiler needs
+  about 1100 for `FStarC.List.map_acc`, and a runaway such as
+  `tests/custard/MonoFuel.fst` still stops in about a second);
 - keeps a global bound `--custard_fuel`;
 - on exhaustion, reports the *chain* of specialization requests that led there
   (a `spec_key` provenance list), which is the only debuggable way to present
