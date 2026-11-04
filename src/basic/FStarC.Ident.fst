@@ -17,7 +17,9 @@ module GS = FStarC.GenSym
 type ident = {idText:string;
               idRange:range}
 
-[@@ PpxDerivingYoJson; PpxDerivingShow ]
+(* Copied and dropped everywhere: boxed under Cherry, so that doing so
+   counts one reference rather than the ten in its fields. *)
+[@@ PpxDerivingYoJson; PpxDerivingShow; FStar.Attributes.cherry_boxed ]
 type lident = {ns:ipath; //["FStar"; "Basic"]
                ident:ident;    //"lident"
                nsstr:string; // Cached version of the namespace
