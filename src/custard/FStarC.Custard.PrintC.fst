@@ -3748,7 +3748,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
          String.concat "" (fl |> List.collect (fun ((f, t), k) ->
            if is_nonplain_ty t && k = want
            then [ind' ^ rc_call op t (cell_field x dt cn f) ^ ";\n"] else [])) in
-       !out ++ CText (ind ^ "if (cherry_is_unique(" ^ x ^ ")) {\n" ^ on "dec" false) ++
+       !out ++ CText (ind ^ "if (cherry_claim(" ^ x ^ ")) {\n" ^ on "dec" false) ++
        finish ind' d x ++
        CText (ind ^ "} else {\n" ^ on "inc" true ^
               ind' ^ rc_call "dec" a.ty x ^ ";\n") ++
@@ -5782,7 +5782,7 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
                    "  " ^ rc_call "dec" (TApp (dt.dt_name, [])) "x" ^ ";\n" ^
                    "  return (" ^ n ^ ")c;\n");
                fn ("static inline " ^ n ^ " " ^ cell_unshare dt c ^ "(" ^ n ^ " x)")
-                  ("  return cherry_is_unique(x) ? x : " ^ copy ^ "(x);\n")
+                  ("  return cherry_claim(x) ? x : " ^ copy ^ "(x);\n")
              end
            end);
          (* The visit of a cell's fields (cherry.h, [cherry_defer]): [op] on
