@@ -2473,6 +2473,12 @@ CGREP_NarrowOverride += "NarrowOverride_stubs.h"
 CGREP_NarrowOverride += "CUSTARD_F16_LIT(15872U)"
 CNOGREP_NarrowOverride += "uint16_t bits;"
 
+# Section 98.  A string literal that spells the 16-bit vocabulary is not a use
+# of it: the file has to build without the #error.
+C_TESTS += NarrowStrLit
+CGREP_NarrowStrLit += "custard_f16"
+CNOGREP_NarrowStrLit += "CUSTARD_FLOAT16_DEFINED"
+
 # Section 66.  A global at a narrow width takes the *initializer* spelling,
 # not the expression one: a compound literal has automatic storage duration
 # and cannot initialize an object with static storage duration.
