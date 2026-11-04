@@ -1702,15 +1702,6 @@ let narrow_support : string =
     "";
   ]
 
-(* Whether a rendered file mentions the narrow-float vocabulary.  A textual
-   test rather than a flag set while rendering, because the question is about
-   one of the two files and a flag cannot say which -- and because every way
-   of reaching those formats spells one of these four prefixes, so the test
-   is exact rather than approximate. *)
-let mentions_narrow (s:string) : bool =
-  BU.contains s "custard_f16" || BU.contains s "custard_bf16" ||
-  BU.contains s "CUSTARD_F16_" || BU.contains s "CUSTARD_BF16_"
-
 (* Section 5.1.  The sole inhabited erased value: a distinct typedef rather
    than void, so that it can be stored in a variable and returned like any
    other value.  Guarded because two generated headers may meet in one
@@ -6505,6 +6496,53 @@ let idents_between (s:string) (i:SI.t) (j:SI.t) : ML (list (SI.t & string)) =
 
 let idents_of (s:string) : ML (list string) =
   List.map snd (idents_between s SI.zero (String.byte_length s))
+
+(* The offset just past the literal closed by [q] whose body starts at [i]. *)
+let rec skip_literal (s:string) (q:SI.t) (i:SI.t) (n:SI.t) : ML SI.t =
+  if not SI.(i < n) then n else
+  let c = String.byte_at s i in
+  if c = SI.of_char '\\' then skip_literal s q SI.(i + one + one) n
+  else if c = q then SI.(i + one)
+  else skip_literal s q SI.(i + one) n
+
+(* The offset just past the block comment whose body starts at [i]. *)
+let rec skip_block_comment (s:string) (i:SI.t) (n:SI.t) : ML SI.t =
+  if not SI.(i + one < n) then n
+  else if String.byte_at s i = SI.of_char '*'
+       && String.byte_at s SI.(i + one) = SI.of_char '/' then SI.(i + one + one)
+  else skip_block_comment s SI.(i + one) n
+
+let is_narrow_ident (x:string) : bool =
+  BU.starts_with x "custard_f16" || BU.starts_with x "custard_bf16" ||
+  BU.starts_with x "CUSTARD_F16_" || BU.starts_with x "CUSTARD_BF16_"
+
+(* Whether a rendered file mentions the narrow-float vocabulary.  A textual
+   test rather than a flag set while rendering, because the question is about
+   one of the two files and a flag cannot say which -- and because every way
+   of reaching those formats spells an identifier with one of these four
+   prefixes, so the test is exact rather than approximate.  Only identifiers
+   count: string literals and comments are skipped, because the generated
+   code may be a program that prints these names -- Custard's own PrintC,
+   extracted with Cherry, does. *)
+let mentions_narrow (s:string) : ML bool =
+  let n = String.byte_length s in
+  let at (i:SI.t) : ML SI.t = if SI.(i < n) then String.byte_at s i else SI.minus_one in
+  let rec go (i:SI.t) : ML bool =
+    if not SI.(i < n) then false else
+    let c = String.byte_at s i in
+    if c = SI.of_char '"' || c = SI.of_char '\'' then go (skip_literal s c SI.(i + one) n)
+    else if c = SI.of_char '/' && at SI.(i + one) = SI.of_char '/' then
+      go (skip_while s (fun c -> c <> SI.of_char '\n') i n)
+    else if c = SI.of_char '/' && at SI.(i + one) = SI.of_char '*' then
+      go (skip_block_comment s SI.(i + one + one) n)
+    else if is_ident_start c then
+      let k = skip_while s is_ident_char i n in
+      if (c = SI.of_char 'c' || c = SI.of_char 'C') &&
+         is_narrow_ident (String.byte_substring s i k)
+      then true else go k
+    else if is_digit c then go (skip_while s is_ident_char i n)
+    else go SI.(i + one) in
+  go SI.zero
 
 (* The names an item declares. *)
 let declared_names (s:string) : ML (list string) =

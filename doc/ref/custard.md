@@ -19833,6 +19833,12 @@ its correctly-rounded bit pattern precisely so that it does not need
 arithmetic to build one, which is what keeps a static initializer a constant
 expression (§66) and what makes the macros take a `uint16_t`.
 
+The block is emitted into a file when that file *uses* the vocabulary: when
+an identifier in it starts with `custard_f16`, `custard_bf16`, `CUSTARD_F16_`
+or `CUSTARD_BF16_`.  String literals and comments are skipped.  A plain
+substring search fired on Custard's own PrintC extracted with Cherry, which
+prints these names and so has them in literals (`tests/custard/NarrowStrLit.fst`).
+
 What replaces a link-time failure is a *compile*-time one, in the header, at
 the point of use, quoting what to do.  That is a better diagnostic than the
 implementation was a fallback.
