@@ -198,6 +198,12 @@ and env = {
      which is exactly the treatment the two tables around it get. *)
   disc_proj_tab:HashTable.t string (option (qualifier & int & option int));
   erasable_types_tab:HashTable.t string bool;              (* a dictionary of type names to erasable types *)
+  (* The normalizer's cache of [spec_arg_replacements]: for a top-level name,
+     the replacement for each argument position that extraction erases.  The
+     entry depends not only on the name's own type but on the meaning of every
+     name in its binder types, so unlike the tables above it is flushed
+     entirely whenever a declaration is added or revealed. *)
+  spec_arg_tab:HashTable.t string (list (option term));
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                     (* Allow guards when unifying refinements, even when SMT is disabled *)

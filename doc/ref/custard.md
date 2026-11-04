@@ -1042,6 +1042,22 @@ rather than merely large.  `tests/custard/NormBudget.fst` pins the behaviour
 with a definition that is `Tot` for the typechecker and divergent for the
 normalizer; without the budget it hangs, with it it fails in three seconds.
 
+#### Arguments that are erased are not normalized
+
+Issue #4828.  A specification argument (an implicit `prop` or `slprop`, an
+`erased` value, a `squash`) is deleted from the extracted code, but it used to
+be normalized with the full step list first, and one built from many `unfold`
+definitions could take minutes or exhaust the budget on its own.  Under
+`ForExtraction`, `Normalize.rebuild` now consults the type of a stuck
+application's head and does not normalize an argument in such a position: a
+`prop` (or a total function into `prop`) becomes `l_True`, and a value of any
+other non-informative type except `unit` becomes `()`.  Arities are kept,
+since a type argument may be needed; `unit` is kept, since it is how a thunk is
+written; and so are the arguments of a primitive step, which may compute with
+them.  `tests/custard/SpecArgNorm.fst` and
+`tests/custard/pulse/PulseSpecArgNorm.fst` pass such arguments under a budget
+that normalizing them would exhaust.
+
 ### 3.7 Canonicalizing `Mono` arguments for interning
 
 Two call sites should share a specialization when their `Mono` arguments are
