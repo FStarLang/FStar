@@ -1396,10 +1396,8 @@ let with_budget (n:int) (f: unit -> ML 'a) : ML 'a =
    work, since such arguments are typically specifications (an implicit [prop]
    or [slprop]) built from many [unfold] definitions.  [spec_arg_tab] caches,
    per top-level name, the replacement to use at each binder position (see
-   [spec_arg_replacements]).  An entry is only valid for the sigelt it was
-   computed from, which is checked by physical equality, so a definition that
-   is popped and re-pushed (e.g. in the IDE) is recomputed. *)
-let spec_arg_tab : HashTable.t string (sigelt & list (option term)) = HashTable.create 100
+   [spec_arg_replacements]).  The cache lives in the environment
+   ([env.spec_arg_tab]), which flushes it whenever a declaration is added. *)
 
 let rec norm : cfg -> env -> stack -> term -> ML term =
     fun cfg env stack t ->
@@ -2458,49 +2456,47 @@ and norm_binders : cfg -> env -> binders -> ML binders =
 and spec_arg_replacements (cfg:cfg) (fv:fv) : ML (list (option term)) =
   let l = S.lid_of_fv fv in
   if Some? (find_prim_step cfg fv) then [] else
-  match Env.lookup_qname cfg.tcenv l with
-  | Some (Inr (se, _), _) ->
-    let k = Ident.string_of_lid l in
-    (match HashTable.try_find spec_arg_tab k with
-     | Some (se', r) when physical_equality se se' -> r
-     | _ ->
-       let r =
-         match Env.try_lookup_lid cfg.tcenv l with
-         | None -> []
-         | Some ((_, ty), _) ->
-           let bs, _ = U.arrow_formals_comp ty in
-           let env' = Env.push_binders cfg.tcenv bs in
-           let cfg' = Cfg.config [UnfoldUntil delta_constant;
-                                  AllowUnboundUniverses; EraseUniverses;
-                                  Beta; Iota; HNF; Unascribe] env' in
-           let is_prop (t:term) : ML bool =
-             match (U.un_uinst (U.unascribe (SS.compress t))).n with
-             | Tm_fvar fv -> fv_eq_lid fv PC.prop_lid
-             | _ -> false in
-           let rec is_arity (t:term) : ML bool =
-             match (U.unrefine (U.unascribe t)).n with
-             | Tm_type _ -> true
-             | Tm_arrow _ ->
-               let _, c = U.arrow_formals_comp t in
-               is_arity (U.comp_result c)
-             | _ -> false in
-           bs |> List.map (fun (b:binder) ->
-             let sort = b.binder_bv.sort in
-             let pbs, c = U.arrow_formals_comp sort in
-             if is_prop sort then Some U.t_true
-             else if Cons? pbs && U.is_tot_or_gtot_comp c && is_prop (U.comp_result c)
-                     && FStarC.Class.Setlike.is_empty (Free.names (U.arrow pbs (S.mk_Total U.t_true)))
-             then Some (U.abs pbs U.t_true None)
-             else if U.is_exactly_unit sort then None
-             else
-               let nsort = norm cfg' [] [] sort in
-               if U.is_exactly_unit nsort || is_arity nsort then None
-               else if Env.non_informative cfg.tcenv nsort then Some U.exp_unit
-               else None)
-       in
-       HashTable.add spec_arg_tab k (se, r);
-       r)
-  | _ -> []
+  let tab = cfg.tcenv.spec_arg_tab in
+  let k = Ident.string_of_lid l in
+  match HashTable.try_find tab k with
+  | Some r -> r
+  | None ->
+    let r =
+      match Env.try_lookup_lid cfg.tcenv l with
+      | None -> []
+      | Some ((_, ty), _) ->
+        let bs, _ = U.arrow_formals_comp ty in
+        let env' = Env.push_binders cfg.tcenv bs in
+        let cfg' = Cfg.config [UnfoldUntil delta_constant;
+                               AllowUnboundUniverses; EraseUniverses;
+                               Beta; Iota; HNF; Unascribe] env' in
+        let is_prop (t:term) : ML bool =
+          match (U.un_uinst (U.unascribe (SS.compress t))).n with
+          | Tm_fvar fv -> fv_eq_lid fv PC.prop_lid
+          | _ -> false in
+        let rec is_arity (t:term) : ML bool =
+          match (U.unrefine (U.unascribe t)).n with
+          | Tm_type _ -> true
+          | Tm_arrow _ ->
+            let _, c = U.arrow_formals_comp t in
+            is_arity (U.comp_result c)
+          | _ -> false in
+        bs |> List.map (fun (b:binder) ->
+          let sort = b.binder_bv.sort in
+          let pbs, c = U.arrow_formals_comp sort in
+          if is_prop sort then Some U.t_true
+          else if Cons? pbs && U.is_tot_or_gtot_comp c && is_prop (U.comp_result c)
+                  && FStarC.Class.Setlike.is_empty (Free.names (U.arrow pbs (S.mk_Total U.t_true)))
+          then Some (U.abs pbs U.t_true None)
+          else if U.is_exactly_unit sort then None
+          else
+            let nsort = norm cfg' [] [] sort in
+            if U.is_exactly_unit nsort || is_arity nsort then None
+            else if Env.non_informative cfg.tcenv nsort then Some U.exp_unit
+            else None)
+    in
+    HashTable.add tab k r;
+    r
 
 (* The replacement for the next argument of the stuck application [t], if it
    is in a computationally irrelevant position; see [spec_arg_replacements]. *)
