@@ -16,19 +16,17 @@ let compare_int (i : Prims.int) (j : Prims.int) : order =
 let eq (o : order) : bool =
   ((=) o Eq)
 
-let lex (o1 : order) (o2 : (unit -> order)) : order =
-  (match (o1, o2) with
-    | (Lt, tmp) -> Lt
-    | (Eq, tmp) -> (o2 ())
-    | (Gt, tmp) -> Gt
-  )
-
 let rec compare_list (l1 : ('a) list) (l2 : ('a) list) (f : ('a -> ('a -> order))) : order =
   (match (l1, l2) with
     | ([], []) -> Eq
     | ([], tmp) -> Lt
     | (tmp, []) -> Gt
     | ((x :: xs), (y :: ys)) -> (let tmp = (f x y) in
-      (lex tmp (fun tmp1 -> (compare_list xs ys f))))
+      let o2 = (fun tmp1 -> (compare_list xs ys f)) in
+      (match (tmp, o2) with
+        | (Lt, tmp1) -> Lt
+        | (Eq, tmp1) -> (o2 ())
+        | (Gt, tmp1) -> Gt
+      ))
   )
 

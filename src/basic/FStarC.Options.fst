@@ -198,6 +198,8 @@ let defaults = [
   ("custard_entry_module"                      , List []);
   ("custard_c_no_prefix"                       , List []);
   ("custard_static_header"                     , Bool false);
+  ("custard_hoist_locals"                      , Bool false);
+  ("custard_init_locals"                       , String "no");
   ("custard_main"                              , Unset);
   ("target"                                    , Unset);
   ("custard_dump_ir"                           , Bool false);
@@ -205,9 +207,9 @@ let defaults = [
   ("custard_dump_layouts"                     , Bool false);
   ("custard_warn_any"                          , Bool false);
   ("custard_fuel"                              , Int 100000);
-  ("custard_max_specializations"               , Int 1000);
+  ("custard_max_specializations"               , Int 10000);
   ("custard_norm_budget"                       , Int 10000000);
-  ("custard_monomorphize_types"                , Bool false);
+  ("custard_monomorphize_types"                , Unset);
   ("custard_int128"                            , Bool true);
   ("custard_sizet_width"                       , String "native");
   ("custard_split"                             , Bool false);
@@ -469,6 +471,8 @@ let get_custard_entrypoints     ()      = lookup_opt "custard_entrypoints"      
 let get_custard_entry_module    ()      = lookup_opt "custard_entry_module"     (as_list as_string)
 let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      (as_list as_string)
 let get_custard_static_header   ()      = lookup_opt "custard_static_header"    as_bool
+let get_custard_hoist_locals    ()      = lookup_opt "custard_hoist_locals"     as_bool
+let get_custard_init_locals     ()      = lookup_opt "custard_init_locals"      as_string
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_target                  ()      = lookup_opt "target"                   (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
@@ -478,7 +482,7 @@ let get_custard_warn_any ()             = lookup_opt "custard_warn_any"         
 let get_custard_fuel            ()      = lookup_opt "custard_fuel"             as_int
 let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
 let get_custard_norm_budget     ()      = lookup_opt "custard_norm_budget"      as_int
-let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" as_bool
+let get_custard_monomorphize_types () = lookup_opt "custard_monomorphize_types" (as_option as_bool)
 let get_custard_int128          ()      = lookup_opt "custard_int128"           as_bool
 let get_custard_sizet_width     ()      = lookup_opt "custard_sizet_width"      as_string
 let get_custard_split           ()      = lookup_opt "custard_split"           as_bool
@@ -883,6 +887,27 @@ another translation unit may depend on. Two public definitions that would \
 share an unqualified name is an error.");
 
   ( noshort,
+    "custard_hoist_locals",
+    Const (Bool true),
+    text "With --codegen C, place all automatic local declarations at the \
+beginning of each function, keeping initialization at its original execution \
+point. Unsafe moves of variable-length arrays or C++ reference bindings are \
+errors. This does not enable C89 compatibility or initialize uninitialized \
+locals; see --custard_init_locals for that. Not implemented for Cherry or \
+other code generators.");
+
+  ( noshort,
+    "custard_init_locals",
+    EnumStr ["no"; "c23"; "c99"; "c89"],
+    text "With --codegen C, give every automatic local declaration that has \
+no initializer a zero initializer, as krml's -finitialize-locals does: c23 \
+uses = {}; c99 uses designated struct initializers; c89 uses positional \
+ones. Runs after --custard_hoist_locals, so declarations it moves are \
+zero-initialized too, and their original initialization stays an assignment \
+at its execution point. A variable-length array can be initialized only in \
+c23 mode. Not implemented for Cherry or other code generators.");
+
+  ( noshort,
     "custard_static_header",
     Const (Bool true),
     text "With --codegen C, emit a single header containing static function \
@@ -960,7 +985,7 @@ that catches a definition recursing through a monomorphized binder");
     "custard_max_specializations",
     IntStr "positive_integer",
     text "Number of specializations Custard may create for any single \
-definition before giving up (default 1000)");
+definition before giving up (default 10000)");
 
   ( noshort,
     "custard_norm_budget",
@@ -977,7 +1002,8 @@ reduction: building a closure's term is charged for every node it copies \
     "custard_monomorphize_types",
     BoolStr,
     text "Monomorphize type binders too, not just type-class dictionaries and \
-binders explicitly marked [@@monomorphize] (default false)");
+binders explicitly marked [@@monomorphize] (default true for --codegen C \
+and --codegen Cherry, which require it, and false otherwise)");
 
   ( noshort,
     "custard_int128",
@@ -2257,6 +2283,8 @@ let custard_entrypoint_files     () = get_custard_entrypoints ()
 let custard_entry_modules        () = get_custard_entry_module ()
 let custard_c_no_prefix          () = get_custard_c_no_prefix ()
 let custard_static_header        () = get_custard_static_header ()
+let custard_hoist_locals         () = get_custard_hoist_locals ()
+let custard_init_locals          () = get_custard_init_locals ()
 let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()
@@ -2265,7 +2293,10 @@ let custard_warn_any ()             = get_custard_warn_any ()
 let custard_fuel                 () = get_custard_fuel ()
 let custard_max_specializations  () = get_custard_max_specializations ()
 let custard_norm_budget          () = get_custard_norm_budget ()
-let custard_monomorphize_types   () = get_custard_monomorphize_types ()
+let custard_monomorphize_types   () =
+  match get_custard_monomorphize_types () with
+  | Some b -> b
+  | None -> (match codegen () with Some C | Some Cherry -> true | _ -> false)
 let custard_int128               () = get_custard_int128 ()
 let custard_sizet_32             () = get_custard_sizet_width () = "32"
 let codegen_c                    () = match codegen () with

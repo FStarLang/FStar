@@ -30,9 +30,9 @@ let e_erased (d : ('a) FStarC_Syntax_Embeddings_Base.embedding) : (((FStarC_Synt
         let tmp3 = (tmp2, args) in
         (match tmp3 with
           | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((ty, (Some (tmp4))) :: ((a, None) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.hide) -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.unembed d a cbs) in
-            (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun v -> (FStarC_Class_Monad.fStarC_Class_Monad_return__option (Hide (ty, v))))))
+            ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp5) (fun v -> (Some ((Hide (ty, v)))))))
           | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((ty, (Some (tmp4))) :: ((a, None) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.reveal) -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.unembed d a cbs) in
-            (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun v -> (FStarC_Class_Monad.fStarC_Class_Monad_return__option (Reveal (ty, v))))))
+            ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp5) (fun v -> (Some ((Reveal (ty, v)))))))
           | tmp4 -> None
         ))
     ))) in
@@ -65,9 +65,9 @@ let nbe_e_erased (d : ('a) FStarC_TypeChecker_NBETerm.embedding) : ((FStarC_Type
     )) in
   let un = (fun cbs t -> (match (FStarC_TypeChecker_NBETerm.nbe_t_of_t t) with
       | (FStarC_TypeChecker_NBETerm.FV (fv, tmp, ((body, tmp1) :: ((ty, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.hide) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed d cbs body) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp3 (fun v -> (FStarC_Class_Monad.fStarC_Class_Monad_return__option (Hide (ty, v))))))
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp3) (fun v -> (Some ((Hide (ty, v)))))))
       | (FStarC_TypeChecker_NBETerm.FV (fv, tmp, ((body, tmp1) :: ((ty, tmp2) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.reveal) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed d cbs body) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp3 (fun v -> (FStarC_Class_Monad.fStarC_Class_Monad_return__option (Reveal (ty, v))))))
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp3) (fun v -> (Some ((Reveal (ty, v)))))))
       | tmp -> None
     )) in
   (FStarC_TypeChecker_NBETerm.mk_emb em un (Obj.magic ((fun tmp -> (failwith "Prims.magic")))) (fun tmp -> FStarC_Syntax_Syntax.ET_abstract)))

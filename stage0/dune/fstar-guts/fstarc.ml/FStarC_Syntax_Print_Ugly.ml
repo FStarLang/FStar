@@ -498,7 +498,11 @@ and term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
       let tmp3 = (term_to_string e) in
       (FStarC_Format.fmt2 "%s\nin\n%s" tmp2 tmp3))
     | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = e; asc = annot; asc1 = topt; asc2 = b; eff_opt = eff_name; _ })) -> (let annot1 = (match annot with
-          | (FStar_Pervasives.Inl (t)) -> (let tmp2 = (FStarC_Option.map FStarC_Ident.string_of_lid eff_name) in
+          | (FStar_Pervasives.Inl (t)) -> (let tmp2 = (match eff_name with
+                | (Some (x3)) -> (let tmp2 = (FStarC_Ident.string_of_lid x3) in
+                  (Some (tmp2)))
+                | None -> None
+              ) in
             let tmp3 = (FStarC_Option.dflt "default" tmp2) in
             let tmp4 = (term_to_string t) in
             (FStarC_Format.fmt2 "[%s] %s" tmp3 tmp4))

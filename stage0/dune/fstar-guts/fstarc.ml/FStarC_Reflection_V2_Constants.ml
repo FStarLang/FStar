@@ -20,8 +20,325 @@ type refl_constant = {
   t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax;
 }
 
+let fstar_refl_builtins_lid (s : string) : FStarC_Ident.lident =
+  (fstar_refl_lid ("V2" :: ("Builtins" :: (s :: []))))
+
+let mk_inspect_pack_pair (s : string) : (refl_constant * refl_constant) =
+  (let inspect_lid = (fstar_refl_builtins_lid (Prims.strcat "inspect" s)) in
+  let pack_lid = (fstar_refl_builtins_lid (Prims.strcat "pack" s)) in
+  let inspect_fv = (FStarC_Syntax_Syntax.lid_as_fv inspect_lid None) in
+  let pack_fv = (FStarC_Syntax_Syntax.lid_as_fv pack_lid None) in
+  let tmp = (FStarC_Syntax_Syntax.fv_to_tm inspect_fv) in
+  let inspect = { lid = inspect_lid; fv = inspect_fv; t = tmp } in
+  let tmp1 = (FStarC_Syntax_Syntax.fv_to_tm pack_fv) in
+  let pack = { lid = pack_lid; fv = pack_fv; t = tmp1 } in
+  (inspect, pack))
+
+let uu___0 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_ln")
+
+let uu___1 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_fv")
+
+let uu___2 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_bv")
+
+let uu___3 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_namedv")
+
+let uu___4 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_binder")
+
+let uu___5 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_comp")
+
+let uu___6 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_sigelt")
+
+let uu___7 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_lb")
+
+let uu___8 : (refl_constant * refl_constant) =
+  (mk_inspect_pack_pair "_universe")
+
+let fstar_refl_env : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "env")
+
+let mk_refl_types_lid_as_fv (s : string) : FStarC_Syntax_Syntax.fv =
+  (let tmp = (fstar_refl_types_lid s) in
+  (FStarC_Syntax_Syntax.fvconst tmp))
+
+let fstar_refl_env_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "env")
+
+let fstar_refl_namedv : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "namedv")
+
+let fstar_refl_namedv_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "namedv")
+
+let fstar_refl_bv : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "bv")
+
+let fstar_refl_bv_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "bv")
+
+let fstar_refl_fv_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "fv")
+
+let fstar_refl_comp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "comp")
+
+let fstar_refl_comp_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "comp")
+
+let fstar_refl_binding : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "binding")
+
+let fstar_refl_binding_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "binding")
+
+let fstar_refl_binder : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "binder")
+
+let fstar_refl_binder_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "binder")
+
+let fstar_refl_sigelt : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "sigelt")
+
+let fstar_refl_sigelt_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "sigelt")
+
+let fstar_refl_term : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "term")
+
+let fstar_refl_term_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "term")
+
+let fstar_refl_letbinding : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "letbinding")
+
+let fstar_refl_letbinding_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "letbinding")
+
+let fstar_refl_ident : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "ident")
+
+let fstar_refl_ident_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "ident")
+
+let fstar_refl_univ_name : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "univ_name")
+
+let fstar_refl_univ_name_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "univ_name")
+
+let fstar_refl_optionstate : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "optionstate")
+
+let fstar_refl_optionstate_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "optionstate")
+
+let fstar_refl_universe : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "universe")
+
+let fstar_refl_universe_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "universe")
+
+let fstar_refl_universe_uvar : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "universe_uvar")
+
+let fstar_refl_universe_uvar_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "universe_uvar")
+
+let fstar_refl_ctx_uvar_and_subst : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_types_lid_as_term "ctx_uvar_and_subst")
+
+let fstar_refl_ctx_uvar_and_subst_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_types_lid_as_fv "ctx_uvar_and_subst")
+
 let fstar_refl_data_lid (s : string) : FStarC_Ident.lident =
   (fstar_refl_lid ("V2" :: ("Data" :: (s :: []))))
+
+let mk_refl_data_lid_as_term (s : string) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let tmp = (fstar_refl_data_lid s) in
+  (FStarC_Syntax_Syntax.tconst tmp))
+
+let fstar_refl_aqualv : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "aqualv")
+
+let mk_refl_data_lid_as_fv (s : string) : FStarC_Syntax_Syntax.fv =
+  (let tmp = (fstar_refl_data_lid s) in
+  (FStarC_Syntax_Syntax.fvconst tmp))
+
+let fstar_refl_aqualv_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "aqualv")
+
+let fstar_refl_comp_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "comp_view")
+
+let fstar_refl_comp_view_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "comp_view")
+
+let fstar_refl_cflag : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "cflag")
+
+let fstar_refl_cflag_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "cflag")
+
+let fstar_refl_decreases_order : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "decreases_order")
+
+let fstar_refl_decreases_order_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "decreases_order")
+
+let fstar_refl_term_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "term_view")
+
+let fstar_refl_term_view_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "term_view")
+
+let fstar_refl_pattern : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "pattern")
+
+let fstar_refl_pattern_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "pattern")
+
+let fstar_refl_branch : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "branch")
+
+let fstar_refl_branch_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "branch")
+
+let fstar_refl_namedv_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "namedv_view")
+
+let fstar_refl_namedv_view_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "namedv_view")
+
+let fstar_refl_bv_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "bv_view")
+
+let fstar_refl_bv_view_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "bv_view")
+
+let fstar_refl_binder_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "binder_view")
+
+let fstar_refl_binder_view_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "binder_view")
+
+let fstar_integer_literal_lid (s : string) : FStarC_Ident.lident =
+  (FStarC_Ident.lid_of_path ("FStar" :: ("IntegerLiteral" :: (s :: []))) FStarC_Range_Type.dummyRange)
+
+let fstar_refl_int_base_fv : FStarC_Syntax_Syntax.fv =
+  (let tmp = (fstar_integer_literal_lid "int_base") in
+  (FStarC_Syntax_Syntax.fvconst tmp))
+
+let fstar_refl_int_signedness_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "int_signedness")
+
+let fstar_refl_int_width_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "int_width")
+
+let fstar_refl_vconst : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "vconst")
+
+let fstar_refl_vconst_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "vconst")
+
+let fstar_refl_lb_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "lb_view")
+
+let fstar_refl_lb_view_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "lb_view")
+
+let fstar_refl_sigelt_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "sigelt_view")
+
+let fstar_refl_sigelt_view_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "sigelt_view")
+
+let fstar_refl_qualifier : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "qualifier")
+
+let fstar_refl_qualifier_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "qualifier")
+
+let fstar_refl_universe_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_refl_data_lid_as_term "universe_view")
+
+let fstar_refl_universe_view_fv : FStarC_Syntax_Syntax.fv =
+  (mk_refl_data_lid_as_fv "universe_view")
+
+let fstar_syntax_syntax_lid (s : (string) list) : FStarC_Ident.lident =
+  (FStarC_Ident.lid_of_path (FStar_List_Tot_Base.op_At ("FStar" :: ("Stubs" :: ("Syntax" :: ("Syntax" :: [])))) s) FStarC_Range_Type.dummyRange)
+
+let mk_ss_lid_as_term (s : string) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let tmp = (fstar_syntax_syntax_lid (s :: [])) in
+  (FStarC_Syntax_Syntax.tconst tmp))
+
+let fstar_refl_subst_elt : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_ss_lid_as_term "subst_elt")
+
+let mk_ss_lid_as_fv (s : string) : FStarC_Syntax_Syntax.fv =
+  (let tmp = (fstar_syntax_syntax_lid (s :: [])) in
+  (FStarC_Syntax_Syntax.fvconst tmp))
+
+let fstar_refl_subst_elt_fv : FStarC_Syntax_Syntax.fv =
+  (mk_ss_lid_as_fv "subst_elt")
+
+let fstar_refl_subst : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (mk_ss_lid_as_term "subst")
+
+let fstar_refl_subst_fv : FStarC_Syntax_Syntax.fv =
+  (mk_ss_lid_as_fv "subst")
+
+let ref_Mk_namedv_view : refl_constant =
+  (let lid = (fstar_refl_data_lid "Mknamedv_view") in
+  let tmp = (fstar_refl_data_lid "namedv_view") in
+  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("uniq", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)) :: [])))) in
+  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
+  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
+  { lid = lid; fv = fv; t = tmp2 })
+
+let ref_Mk_bv_view : refl_constant =
+  (let lid = (fstar_refl_data_lid "Mkbv_view") in
+  let tmp = (fstar_refl_data_lid "bv_view") in
+  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("index", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)) :: [])))) in
+  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
+  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
+  { lid = lid; fv = fv; t = tmp2 })
+
+let ref_Mk_binding : refl_constant =
+  (let lid = (fstar_refl_data_lid "Mkbinding") in
+  let tmp = (fstar_refl_data_lid "binding") in
+  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("uniq", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)) :: [])))) in
+  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
+  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
+  { lid = lid; fv = fv; t = tmp2 })
+
+let ref_Mk_binder_view : refl_constant =
+  (let lid = (fstar_refl_data_lid "Mkbinder_view") in
+  let tmp = (fstar_refl_data_lid "binder_view") in
+  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("qual", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("attrs", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)) :: []))))) in
+  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
+  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
+  { lid = lid; fv = fv; t = tmp2 })
+
+let ref_Mk_lb : refl_constant =
+  (let lid = (fstar_refl_data_lid "Mklb_view") in
+  let tmp = (fstar_refl_data_lid "lb_view") in
+  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("lb_fv", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("lb_us", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("lb_typ", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("lb_def", FStarC_Range_Type.dummyRange)) :: []))))) in
+  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
+  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
+  { lid = lid; fv = fv; t = tmp2 })
 
 let fstar_refl_data_const (s : string) : refl_constant =
   (let lid = (fstar_refl_data_lid s) in
@@ -29,34 +346,6 @@ let fstar_refl_data_const (s : string) : refl_constant =
   { lid = lid;
     fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (FStarC_Syntax_Syntax.Data_ctor)));
     t = tmp })
-
-let ref_Tv_FVar : refl_constant =
-  (fstar_refl_data_const "Tv_FVar")
-
-let fstar_refl_bv : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "bv")
-
-let ref_Tv_BVar : refl_constant =
-  (fstar_refl_data_const "Tv_BVar")
-
-let fstar_refl_namedv : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "namedv")
-
-let ref_Tv_Var : refl_constant =
-  (fstar_refl_data_const "Tv_Var")
-
-let fstar_refl_universe : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "universe")
-
-let ref_Tv_UInst : refl_constant =
-  (fstar_refl_data_const "Tv_UInst")
-
-let mk_refl_types_lid_as_fv (s : string) : FStarC_Syntax_Syntax.fv =
-  (let tmp = (fstar_refl_types_lid s) in
-  (FStarC_Syntax_Syntax.fvconst tmp))
-
-let fstar_refl_term_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "term")
 
 let ref_Q_Explicit : refl_constant =
   (fstar_refl_data_const "Q_Explicit")
@@ -70,45 +359,30 @@ let ref_Q_Equality : refl_constant =
 let ref_Q_Meta : refl_constant =
   (fstar_refl_data_const "Q_Meta")
 
-let mk_refl_data_lid_as_fv (s : string) : FStarC_Syntax_Syntax.fv =
-  (let tmp = (fstar_refl_data_lid s) in
-  (FStarC_Syntax_Syntax.fvconst tmp))
+let fstar_syntax_syntax_const (s : (string) list) : refl_constant =
+  (let lid = (fstar_syntax_syntax_lid s) in
+  let tmp = (FStarC_Syntax_Syntax.tdataconstr lid) in
+  { lid = lid;
+    fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (FStarC_Syntax_Syntax.Data_ctor)));
+    t = tmp })
 
-let fstar_refl_aqualv_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "aqualv")
+let ref_DB : refl_constant =
+  (fstar_syntax_syntax_const ("DB" :: []))
 
-let ref_Tv_App : refl_constant =
-  (fstar_refl_data_const "Tv_App")
+let ref_DT : refl_constant =
+  (fstar_syntax_syntax_const ("DT" :: []))
 
-let fstar_refl_binder : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "binder")
+let ref_NM : refl_constant =
+  (fstar_syntax_syntax_const ("NM" :: []))
 
-let ref_Tv_Abs : refl_constant =
-  (fstar_refl_data_const "Tv_Abs")
+let ref_NT : refl_constant =
+  (fstar_syntax_syntax_const ("NT" :: []))
 
-let fstar_refl_comp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "comp")
+let ref_UN : refl_constant =
+  (fstar_syntax_syntax_const ("UN" :: []))
 
-let ref_Tv_Arrow : refl_constant =
-  (fstar_refl_data_const "Tv_Arrow")
-
-let ref_Tv_Type : refl_constant =
-  (fstar_refl_data_const "Tv_Type")
-
-let ref_Tv_Refine : refl_constant =
-  (fstar_refl_data_const "Tv_Refine")
-
-let ref_C_Unit : refl_constant =
-  (fstar_refl_data_const "C_Unit")
-
-let ref_C_True : refl_constant =
-  (fstar_refl_data_const "C_True")
-
-let ref_C_False : refl_constant =
-  (fstar_refl_data_const "C_False")
-
-let fstar_integer_literal_lid (s : string) : FStarC_Ident.lident =
-  (FStarC_Ident.lid_of_path ("FStar" :: ("IntegerLiteral" :: (s :: []))) FStarC_Range_Type.dummyRange)
+let ref_UD : refl_constant =
+  (fstar_syntax_syntax_const ("UD" :: []))
 
 let fstar_integer_literal_const (s : string) : refl_constant =
   (let lid = (fstar_integer_literal_lid s) in
@@ -129,21 +403,11 @@ let ref_Oct : refl_constant =
 let ref_Bin : refl_constant =
   (fstar_integer_literal_const "Bin")
 
-let fstar_refl_int_base_fv : FStarC_Syntax_Syntax.fv =
-  (let tmp = (fstar_integer_literal_lid "int_base") in
-  (FStarC_Syntax_Syntax.fvconst tmp))
-
-let ref_C_Int : refl_constant =
-  (fstar_refl_data_const "C_Int")
-
 let ref_Signed : refl_constant =
   (fstar_refl_data_const "Signed")
 
 let ref_Unsigned : refl_constant =
   (fstar_refl_data_const "Unsigned")
-
-let fstar_refl_int_signedness_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "int_signedness")
 
 let ref_Int8 : refl_constant =
   (fstar_refl_data_const "Int8")
@@ -160,8 +424,17 @@ let ref_Int64 : refl_constant =
 let ref_Sizet : refl_constant =
   (fstar_refl_data_const "Sizet")
 
-let fstar_refl_int_width_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "int_width")
+let ref_C_Unit : refl_constant =
+  (fstar_refl_data_const "C_Unit")
+
+let ref_C_True : refl_constant =
+  (fstar_refl_data_const "C_True")
+
+let ref_C_False : refl_constant =
+  (fstar_refl_data_const "C_False")
+
+let ref_C_Int : refl_constant =
+  (fstar_refl_data_const "C_Int")
 
 let ref_C_MachineInt : refl_constant =
   (fstar_refl_data_const "C_MachineInt")
@@ -184,21 +457,6 @@ let ref_C_Real : refl_constant =
 let ref_C_Char : refl_constant =
   (fstar_refl_data_const "C_Char")
 
-let fstar_refl_vconst_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "vconst")
-
-let ref_Tv_Const : refl_constant =
-  (fstar_refl_data_const "Tv_Const")
-
-let fstar_refl_ctx_uvar_and_subst : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "ctx_uvar_and_subst")
-
-let ref_Tv_Uvar : refl_constant =
-  (fstar_refl_data_const "Tv_Uvar")
-
-let ref_Tv_Let : refl_constant =
-  (fstar_refl_data_const "Tv_Let")
-
 let ref_Pat_Constant : refl_constant =
   (fstar_refl_data_const "Pat_Constant")
 
@@ -211,8 +469,62 @@ let ref_Pat_Var : refl_constant =
 let ref_Pat_Dot_Term : refl_constant =
   (fstar_refl_data_const "Pat_Dot_Term")
 
-let fstar_refl_pattern_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "pattern")
+let ref_Uv_Zero : refl_constant =
+  (fstar_refl_data_const "Uv_Zero")
+
+let ref_Uv_Succ : refl_constant =
+  (fstar_refl_data_const "Uv_Succ")
+
+let ref_Uv_Max : refl_constant =
+  (fstar_refl_data_const "Uv_Max")
+
+let ref_Uv_BVar : refl_constant =
+  (fstar_refl_data_const "Uv_BVar")
+
+let ref_Uv_Name : refl_constant =
+  (fstar_refl_data_const "Uv_Name")
+
+let ref_Uv_Unif : refl_constant =
+  (fstar_refl_data_const "Uv_Unif")
+
+let ref_Uv_Unk : refl_constant =
+  (fstar_refl_data_const "Uv_Unk")
+
+let ref_Tv_Var : refl_constant =
+  (fstar_refl_data_const "Tv_Var")
+
+let ref_Tv_BVar : refl_constant =
+  (fstar_refl_data_const "Tv_BVar")
+
+let ref_Tv_FVar : refl_constant =
+  (fstar_refl_data_const "Tv_FVar")
+
+let ref_Tv_UInst : refl_constant =
+  (fstar_refl_data_const "Tv_UInst")
+
+let ref_Tv_App : refl_constant =
+  (fstar_refl_data_const "Tv_App")
+
+let ref_Tv_Abs : refl_constant =
+  (fstar_refl_data_const "Tv_Abs")
+
+let ref_Tv_Arrow : refl_constant =
+  (fstar_refl_data_const "Tv_Arrow")
+
+let ref_Tv_Type : refl_constant =
+  (fstar_refl_data_const "Tv_Type")
+
+let ref_Tv_Refine : refl_constant =
+  (fstar_refl_data_const "Tv_Refine")
+
+let ref_Tv_Const : refl_constant =
+  (fstar_refl_data_const "Tv_Const")
+
+let ref_Tv_Uvar : refl_constant =
+  (fstar_refl_data_const "Tv_Uvar")
+
+let ref_Tv_Let : refl_constant =
+  (fstar_refl_data_const "Tv_Let")
 
 let ref_Tv_Match : refl_constant =
   (fstar_refl_data_const "Tv_Match")
@@ -229,73 +541,6 @@ let ref_Tv_Unknown : refl_constant =
 let ref_Tv_Unsupp : refl_constant =
   (fstar_refl_data_const "Tv_Unsupp")
 
-let fstar_refl_term_view_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "term_view")
-
-let refl_constant_term (rc : refl_constant) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (rc).t
-
-let fstar_refl_builtins_lid (s : string) : FStarC_Ident.lident =
-  (fstar_refl_lid ("V2" :: ("Builtins" :: (s :: []))))
-
-let mk_inspect_pack_pair (s : string) : (refl_constant * refl_constant) =
-  (let inspect_lid = (fstar_refl_builtins_lid (Prims.strcat "inspect" s)) in
-  let pack_lid = (fstar_refl_builtins_lid (Prims.strcat "pack" s)) in
-  let inspect_fv = (FStarC_Syntax_Syntax.lid_as_fv inspect_lid None) in
-  let pack_fv = (FStarC_Syntax_Syntax.lid_as_fv pack_lid None) in
-  let tmp = (FStarC_Syntax_Syntax.fv_to_tm inspect_fv) in
-  let inspect = { lid = inspect_lid; fv = inspect_fv; t = tmp } in
-  let tmp1 = (FStarC_Syntax_Syntax.fv_to_tm pack_fv) in
-  let pack = { lid = pack_lid; fv = pack_fv; t = tmp1 } in
-  (inspect, pack))
-
-let uu___0 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_ln")
-
-let fstar_refl_pack_ln : refl_constant =
-  (match uu___0 with
-    | (fstar_refl_inspect_ln, fstar_refl_pack_ln_) -> fstar_refl_pack_ln_
-  )
-
-let fstar_refl_env : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "env")
-
-let fstar_refl_sigelt : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "sigelt")
-
-let fstar_refl_fv_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "fv")
-
-let fstar_refl_bv_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "bv")
-
-let fstar_refl_universe_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "universe")
-
-let fstar_refl_binder_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "binder")
-
-let fstar_refl_comp_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "comp")
-
-let ref_SMTPAT : refl_constant =
-  (fstar_refl_data_const "SMTPAT")
-
-let ref_Decreases_lex : refl_constant =
-  (fstar_refl_data_const "Decreases_lex")
-
-let ref_Decreases_wf : refl_constant =
-  (fstar_refl_data_const "Decreases_wf")
-
-let fstar_refl_decreases_order_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "decreases_order")
-
-let ref_DECREASES : refl_constant =
-  (fstar_refl_data_const "DECREASES")
-
-let fstar_refl_cflag_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "cflag")
-
 let ref_Mk_comp_view : refl_constant =
   (let lid = (fstar_refl_data_lid "Mkcomp_view") in
   let tmp = (fstar_refl_data_lid "comp_view") in
@@ -305,44 +550,17 @@ let ref_Mk_comp_view : refl_constant =
   let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
   { lid = lid; fv = fv; t = tmp2 })
 
-let fstar_refl_comp_view_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "comp_view")
+let ref_SMTPAT : refl_constant =
+  (fstar_refl_data_const "SMTPAT")
 
-let ref_Uv_Zero : refl_constant =
-  (fstar_refl_data_const "Uv_Zero")
+let ref_DECREASES : refl_constant =
+  (fstar_refl_data_const "DECREASES")
 
-let ref_Uv_Succ : refl_constant =
-  (fstar_refl_data_const "Uv_Succ")
+let ref_Decreases_lex : refl_constant =
+  (fstar_refl_data_const "Decreases_lex")
 
-let ref_Uv_Max : refl_constant =
-  (fstar_refl_data_const "Uv_Max")
-
-let ref_Uv_BVar : refl_constant =
-  (fstar_refl_data_const "Uv_BVar")
-
-let fstar_refl_ident : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "ident")
-
-let ref_Uv_Name : refl_constant =
-  (fstar_refl_data_const "Uv_Name")
-
-let fstar_refl_universe_uvar : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "universe_uvar")
-
-let ref_Uv_Unif : refl_constant =
-  (fstar_refl_data_const "Uv_Unif")
-
-let ref_Uv_Unk : refl_constant =
-  (fstar_refl_data_const "Uv_Unk")
-
-let fstar_refl_universe_view_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "universe_view")
-
-let fstar_refl_ident_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "ident")
-
-let fstar_refl_letbinding : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "letbinding")
+let ref_Decreases_wf : refl_constant =
+  (fstar_refl_data_const "Decreases_wf")
 
 let ref_Sg_Let : refl_constant =
   (fstar_refl_data_const "Sg_Let")
@@ -355,66 +573,6 @@ let ref_Sg_Val : refl_constant =
 
 let ref_Unk : refl_constant =
   (fstar_refl_data_const "Unk")
-
-let fstar_refl_sigelt_view_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "sigelt_view")
-
-let fstar_refl_sigelt_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "sigelt")
-
-let fstar_refl_letbinding_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "letbinding")
-
-let ref_Mk_lb : refl_constant =
-  (let lid = (fstar_refl_data_lid "Mklb_view") in
-  let tmp = (fstar_refl_data_lid "lb_view") in
-  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("lb_fv", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("lb_us", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("lb_typ", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("lb_def", FStarC_Range_Type.dummyRange)) :: []))))) in
-  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
-  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
-  { lid = lid; fv = fv; t = tmp2 })
-
-let fstar_refl_lb_view_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "lb_view")
-
-let ref_Mk_namedv_view : refl_constant =
-  (let lid = (fstar_refl_data_lid "Mknamedv_view") in
-  let tmp = (fstar_refl_data_lid "namedv_view") in
-  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("uniq", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)) :: [])))) in
-  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
-  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
-  { lid = lid; fv = fv; t = tmp2 })
-
-let fstar_refl_namedv_view_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "namedv_view")
-
-let fstar_refl_namedv_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "namedv")
-
-let ref_Mk_bv_view : refl_constant =
-  (let lid = (fstar_refl_data_lid "Mkbv_view") in
-  let tmp = (fstar_refl_data_lid "bv_view") in
-  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("index", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)) :: [])))) in
-  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
-  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
-  { lid = lid; fv = fv; t = tmp2 })
-
-let fstar_refl_bv_view_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "bv_view")
-
-let ref_Mk_binder_view : refl_constant =
-  (let lid = (fstar_refl_data_lid "Mkbinder_view") in
-  let tmp = (fstar_refl_data_lid "binder_view") in
-  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("qual", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("attrs", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)) :: []))))) in
-  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
-  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
-  { lid = lid; fv = fv; t = tmp2 })
-
-let fstar_refl_binder_view_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "binder_view")
 
 let ref_qual_Assumption : refl_constant =
   (fstar_refl_data_const "Assumption")
@@ -458,6 +616,24 @@ let ref_qual_Logic : refl_constant =
 let ref_qual_Reifiable : refl_constant =
   (fstar_refl_data_const "Reifiable")
 
+let ref_qual_Reflectable : refl_constant =
+  (fstar_refl_data_const "Reflectable")
+
+let ref_qual_Discriminator : refl_constant =
+  (fstar_refl_data_const "Discriminator")
+
+let ref_qual_Projector : refl_constant =
+  (fstar_refl_data_const "Projector")
+
+let ref_qual_RecordType : refl_constant =
+  (fstar_refl_data_const "RecordType")
+
+let ref_qual_RecordConstructor : refl_constant =
+  (fstar_refl_data_const "RecordConstructor")
+
+let ref_qual_Action : refl_constant =
+  (fstar_refl_data_const "Action")
+
 let ref_qual_ExceptionConstructor : refl_constant =
   (fstar_refl_data_const "ExceptionConstructor")
 
@@ -470,227 +646,51 @@ let ref_qual_Effect : refl_constant =
 let ref_qual_OnlyName : refl_constant =
   (fstar_refl_data_const "OnlyName")
 
-let ref_qual_Reflectable : refl_constant =
-  (fstar_refl_data_const "Reflectable")
+let refl_constant_term (rc : refl_constant) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (rc).t
 
-let ref_qual_Discriminator : refl_constant =
-  (fstar_refl_data_const "Discriminator")
-
-let ref_qual_Action : refl_constant =
-  (fstar_refl_data_const "Action")
-
-let ref_qual_Projector : refl_constant =
-  (fstar_refl_data_const "Projector")
-
-let ref_qual_RecordType : refl_constant =
-  (fstar_refl_data_const "RecordType")
-
-let ref_qual_RecordConstructor : refl_constant =
-  (fstar_refl_data_const "RecordConstructor")
-
-let fstar_refl_qualifier_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "qualifier")
-
-let fstar_syntax_syntax_lid (s : (string) list) : FStarC_Ident.lident =
-  (FStarC_Ident.lid_of_path (FStar_List_Tot_Base.op_At ("FStar" :: ("Stubs" :: ("Syntax" :: ("Syntax" :: [])))) s) FStarC_Range_Type.dummyRange)
-
-let fstar_syntax_syntax_const (s : (string) list) : refl_constant =
-  (let lid = (fstar_syntax_syntax_lid s) in
-  let tmp = (FStarC_Syntax_Syntax.tdataconstr lid) in
-  { lid = lid;
-    fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (FStarC_Syntax_Syntax.Data_ctor)));
-    t = tmp })
-
-let ref_DB : refl_constant =
-  (fstar_syntax_syntax_const ("DB" :: []))
-
-let ref_DT : refl_constant =
-  (fstar_syntax_syntax_const ("DT" :: []))
-
-let ref_NM : refl_constant =
-  (fstar_syntax_syntax_const ("NM" :: []))
-
-let ref_NT : refl_constant =
-  (fstar_syntax_syntax_const ("NT" :: []))
-
-let ref_UN : refl_constant =
-  (fstar_syntax_syntax_const ("UN" :: []))
-
-let ref_UD : refl_constant =
-  (fstar_syntax_syntax_const ("UD" :: []))
-
-let mk_ss_lid_as_fv (s : string) : FStarC_Syntax_Syntax.fv =
-  (let tmp = (fstar_syntax_syntax_lid (s :: [])) in
-  (FStarC_Syntax_Syntax.fvconst tmp))
-
-let fstar_refl_subst_elt_fv : FStarC_Syntax_Syntax.fv =
-  (mk_ss_lid_as_fv "subst_elt")
-
-let fstar_refl_env_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "env")
-
-let ref_Mk_binding : refl_constant =
-  (let lid = (fstar_refl_data_lid "Mkbinding") in
-  let tmp = (fstar_refl_data_lid "binding") in
-  let tmp1 = (tmp, ((FStarC_Ident.mk_ident ("uniq", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("sort", FStarC_Range_Type.dummyRange)) :: ((FStarC_Ident.mk_ident ("ppname", FStarC_Range_Type.dummyRange)) :: [])))) in
-  let attr = (FStarC_Syntax_Syntax.Record_ctor ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-  let fv = (FStarC_Syntax_Syntax.lid_as_fv lid (Some (attr))) in
-  let tmp2 = (FStarC_Syntax_Syntax.fv_to_tm fv) in
-  { lid = lid; fv = fv; t = tmp2 })
-
-let fstar_refl_binding_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "binding")
-
-let uu___2 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_bv")
+let fstar_refl_pack_ln : refl_constant =
+  (match uu___0 with
+    | (fstar_refl_inspect_ln, fstar_refl_pack_ln_) -> fstar_refl_pack_ln_
+  )
 
 let fstar_refl_pack_bv : refl_constant =
   (match uu___2 with
     | (fstar_refl_inspect_bv, fstar_refl_pack_bv_) -> fstar_refl_pack_bv_
   )
 
-let uu___3 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_namedv")
-
 let fstar_refl_pack_namedv : refl_constant =
   (match uu___3 with
     | (fstar_refl_inspect_namedv, fstar_refl_pack_namedv_) -> fstar_refl_pack_namedv_
   )
-
-let uu___4 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_binder")
 
 let fstar_refl_pack_binder : refl_constant =
   (match uu___4 with
     | (fstar_refl_inspect_binder, fstar_refl_pack_binder_) -> fstar_refl_pack_binder_
   )
 
-let uu___7 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_lb")
-
 let fstar_refl_pack_lb : refl_constant =
   (match uu___7 with
     | (fstar_refl_inspect_lb, fstar_refl_pack_lb_) -> fstar_refl_pack_lb_
   )
-
-let uu___1 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_fv")
 
 let fstar_refl_pack_fv : refl_constant =
   (match uu___1 with
     | (fstar_refl_inspect_fv, fstar_refl_pack_fv_) -> fstar_refl_pack_fv_
   )
 
-let uu___5 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_comp")
-
 let fstar_refl_pack_comp : refl_constant =
   (match uu___5 with
     | (fstar_refl_inspect_comp, fstar_refl_pack_comp_) -> fstar_refl_pack_comp_
   )
-
-let uu___6 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_sigelt")
 
 let fstar_refl_pack_sigelt : refl_constant =
   (match uu___6 with
     | (fstar_refl_inspect_sigelt, fstar_refl_pack_sigelt_) -> fstar_refl_pack_sigelt_
   )
 
-let uu___8 : (refl_constant * refl_constant) =
-  (mk_inspect_pack_pair "_universe")
-
 let fstar_refl_pack_universe : refl_constant =
   (match uu___8 with
     | (fstar_refl_inspect_universe, fstar_refl_pack_universe_) -> fstar_refl_pack_universe_
   )
-
-let fstar_refl_binding : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "binding")
-
-let fstar_refl_term : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "term")
-
-let fstar_refl_univ_name : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "univ_name")
-
-let fstar_refl_univ_name_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "univ_name")
-
-let fstar_refl_optionstate : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_types_lid_as_term "optionstate")
-
-let fstar_refl_optionstate_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "optionstate")
-
-let fstar_refl_universe_uvar_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "universe_uvar")
-
-let fstar_refl_ctx_uvar_and_subst_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_types_lid_as_fv "ctx_uvar_and_subst")
-
-let mk_refl_data_lid_as_term (s : string) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let tmp = (fstar_refl_data_lid s) in
-  (FStarC_Syntax_Syntax.tconst tmp))
-
-let fstar_refl_aqualv : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "aqualv")
-
-let fstar_refl_comp_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "comp_view")
-
-let fstar_refl_cflag : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "cflag")
-
-let fstar_refl_decreases_order : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "decreases_order")
-
-let fstar_refl_term_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "term_view")
-
-let fstar_refl_pattern : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "pattern")
-
-let fstar_refl_branch : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "branch")
-
-let fstar_refl_branch_fv : FStarC_Syntax_Syntax.fv =
-  (mk_refl_data_lid_as_fv "branch")
-
-let fstar_refl_namedv_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "namedv_view")
-
-let fstar_refl_bv_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "bv_view")
-
-let fstar_refl_binder_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "binder_view")
-
-let fstar_refl_vconst : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "vconst")
-
-let fstar_refl_lb_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "lb_view")
-
-let fstar_refl_sigelt_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "sigelt_view")
-
-let fstar_refl_qualifier : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "qualifier")
-
-let fstar_refl_universe_view : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_refl_data_lid_as_term "universe_view")
-
-let mk_ss_lid_as_term (s : string) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let tmp = (fstar_syntax_syntax_lid (s :: [])) in
-  (FStarC_Syntax_Syntax.tconst tmp))
-
-let fstar_refl_subst_elt : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_ss_lid_as_term "subst_elt")
-
-let fstar_refl_subst : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (mk_ss_lid_as_term "subst")
-
-let fstar_refl_subst_fv : FStarC_Syntax_Syntax.fv =
-  (mk_ss_lid_as_fv "subst")
 

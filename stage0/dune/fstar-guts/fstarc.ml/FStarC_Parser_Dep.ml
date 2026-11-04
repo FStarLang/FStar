@@ -49,27 +49,6 @@ type deps = {
   parse_results : (parsing_data) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
 }
 
-let deps_empty (tmp : unit) : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (41))))
-
-let mk_deps (dg : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (fs : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (ns : ((string) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (c : (string) list) (a : (string) FStarC_RBSet.rbset) (i : (string) list) (pr : (parsing_data) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) : deps =
-  (let tmp = (ref a) in
-  { dep_graph = dg;
-    file_system_map = fs;
-    valid_namespaces = ns;
-    cmd_line_files = c;
-    all_files = tmp;
-    interfaces_with_inlining = i;
-    parse_results = pr })
-
-let empty_deps (cmd_line_files : (string) list) : deps =
-  (let tmp = (deps_empty ()) in
-  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  let tmp3 = (FStarC_RBSet.fStarC_Class_Setlike_empty__string_rbset_string ()) in
-  let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (mk_deps tmp tmp1 tmp2 cmd_line_files tmp3 [] tmp4))
-
 let fd_enabled : ((bool) option ref) =
   (ref None)
 
@@ -77,71 +56,27 @@ let debug_fly_deps : (unit -> bool) =
   (let dbg_ = (FStarC_Debug.get_toggle "fly_deps") in
   (fun tmp -> (!(dbg_))))
 
-let fly_deps_enabled (tmp : unit) : bool =
-  (let tmp1 = (!(fd_enabled)) in
-  (match tmp1 with
-    | (Some (b)) -> b
-    | None -> (let tmp2 = (FStarC_Options_Ext.enabled "fly_deps") in
-      let res = (if tmp2 then (let tmp3 = (FStarC_Options.dep ()) in
-        let tmp4 = (match tmp3 with
-            | (Some (v)) -> true
-            | tmp4 -> false
-          ) in
-        let tmp5 = (if tmp4 then true else (FStarC_Options.any_dump_module ())) in
-        (if tmp5 then (let tmp6 = (debug_fly_deps ()) in
-        (if tmp6 then (FStarC_Format.print_string "Ignoring fly_deps because dep or dump_module is on\n") else ());
-        false) else (let tmp6 = (debug_fly_deps ()) in
-        (if tmp6 then (FStarC_Format.print_string "fly_deps is on!\n") else ());
-        true))) else (let tmp3 = (debug_fly_deps ()) in
-        (if tmp3 then (FStarC_Format.print_string "fly_deps is off!\n") else ());
-        false)) in
-      ((fun () -> Stdlib.flush Stdlib.stdout) ());
-      ((fd_enabled) := (Some (res)));
-      res)
-  ))
+let dbg : (bool ref) =
+  (FStarC_Debug.get_toggle "Dep")
 
-let is_valid_namespace (d : deps) (ns : FStarC_Ident.lident) : bool =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (d).valid_namespaces (BatString.lowercase_ascii (FStarC_Ident.string_of_lid ns))) in
-  let res = (match tmp with
-      | (Some (v)) -> true
-      | tmp1 -> false
-    ) in
-  (if (not res) then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident ns) in
-  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) (d).valid_namespaces []) in
-  let tmp3 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun x y -> Z.of_int (BatString.compare x y)) tmp2) in
-  let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp3) in
-  (FStarC_Format.print2 "Could not resolve namespace %s\n valid namespaces are %s\n" tmp1 tmp4)) else ());
-  res)
+let dbg_CheckedFiles : (bool ref) =
+  (FStarC_Debug.get_toggle "CheckedFiles")
 
-type file_kind =
-  | KIntf
-  | KImpl
+let module_name_cache : ((string) option) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
+let module_name_cache_epoch : (Prims.int ref) =
+  (ref (Prims.of_int (-1)))
 
-let is_interface (f : string) : bool =
-  (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) f (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) f) Prims.int_one)) in
-  ((=) tmp 105))
+type variant = {
+  v_tag : (string) option;
+  v_intf : (string) option;
+  v_impl : (string) option;
+}
 
-let split_target (tmp : string) : (string * (string) option) =
-  (FStarC_Target.split_target tmp)
-
-let namespace_of_module (f : string) : (FStarC_Ident.lident) option =
-  (let lid = (FStarC_Ident.lid_of_path (FStarC_Ident.path_of_text f) FStarC_Range_Type.dummyRange) in
-  (match (FStarC_Ident.ns_of_lid lid) with
-    | [] -> None
-    | ns -> (let tmp = (FStarC_Ident.lid_of_ids ns) in
-      (Some (tmp)))
-  ))
-
-let safe_readdir_for_include (d : string) : (string) list =
-  (try ((fun dir -> Array.to_list (Sys.readdir dir)) d) with
-    | u__cexn -> []
-  )
-
-let can_be_namespace_component (s : string) : bool =
-  (let tmp = (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) s) Prims.int_zero) then (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s Prims.int_zero) in
-    ((fun c -> c <= 255 && BatChar.is_letter (Char.chr c)) tmp)) else false) in
-  (if tmp then (BatList.for_all (fun c -> (((FStarC_Util.is_letter_or_digit c) || ((=) c 95)) || ((=) c 39))) ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) else false))
+let module_variants : (((variant) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
 
 let all_file_suffixes (tmp : unit) : (string) list =
   (let tmp1 = (FStarC_Options.lang_extensions ()) in
@@ -158,82 +93,11 @@ let check_and_strip_suffix (f : string) : (string) option =
       ((=) tmp1 ext)) else false) in
     (if tmp1 then (let tmp2 = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) f Prims.int_zero (Prims.op_Minus l lext)) in
     (Some (tmp2))) else None))) tmp) in
-  let tmp1 = (BatList.filter Custard_FStar_Pervasives_Native.fStar_Pervasives_Native_uu___is_Some matches) in
+  let tmp1 = (BatList.filter Fstarc_FStar_Pervasives_Native.fStar_Pervasives_Native_uu___is_Some matches) in
   (match tmp1 with
     | ((Some (m)) :: tmp2) -> (Some (m))
     | tmp2 -> None
   ))
-
-let key_for_target (key : string) (tgt : (string) option) : string =
-  (match tgt with
-    | None -> key
-    | (Some (t)) -> (Prims.strcat key (Prims.strcat "-" t))
-  )
-
-let module_candidate_of_file (ns_prefix : (string) list) (path : string) (filename : string) : ((string * string)) list =
-  (let tmp = (check_and_strip_suffix filename) in
-  (match tmp with
-    | None -> []
-    | (Some (modname)) -> (let tmp1 = (split_target modname) in
-      (match tmp1 with
-        | (m, t) -> (((BatString.concat "." (BatList.append ns_prefix ((key_for_target m t) :: []))), path) :: [])
-      ))
-  ))
-
-let rec hierarchical_modules_for_dir__walk (cwd : string) (include_roots : (string) list) (root : string) (ns_prefix : (string) list) (rel : string) : ((string * string)) list =
-  (let dir = (if ((=) rel "") then root else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) root rel)) in
-  let tmp = (safe_readdir_for_include dir) in
-  ((fun f l -> BatList.flatten (BatList.map f l)) (fun entry -> (let entry1 = (FStarC_Filepath.basename entry) in
-  let rel' = (if ((=) rel "") then entry1 else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) rel entry1)) in
-  let entry_path = ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) root rel') in
-  let tmp1 = (can_be_namespace_component entry1) in
-  let tmp2 = (not tmp1) in
-  let tmp3 = (if tmp2 then (let tmp3 = (check_and_strip_suffix entry1) in
-    (match tmp3 with
-      | None -> true
-      | tmp4 -> false
-    )) else false) in
-  (if tmp3 then [] else (if ((fun f -> try Sys.is_directory f with Sys_error _ -> false) entry_path) then (let tmp4 = (can_be_namespace_component entry1) in
-  let tmp5 = (not tmp4) in
-  (if tmp5 then [] else (if (BatList.mem entry_path include_roots) then [] else ((hierarchical_modules_for_dir__walk cwd include_roots root) (BatList.append ns_prefix (entry1 :: [])) rel')))) else (module_candidate_of_file ns_prefix (if ((=) root cwd) then rel' else entry_path) entry1))))) tmp))
-
-let hierarchical_modules_for_dir (cwd : string) (include_roots : (string) list) (root : string) : ((string * string)) list =
-  ((hierarchical_modules_for_dir__walk cwd include_roots root) [] "")
-
-let check_unique_module_names_for_dir (dir : string) (candidates : ((string * string)) list) : unit =
-  (let seen = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
-  (BatList.iter (fun tmp -> (match tmp with
-    | (longname, path) -> (let tmp1 = (is_interface path) in
-      let tmp2 = (if tmp1 then ":i" else ":") in
-      let key = (Prims.strcat (BatString.lowercase_ascii longname) tmp2) in
-      let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt seen key) in
-      (match tmp3 with
-        | (Some (prev)) -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_DuplicateModuleOrInterface ((FStarC_Errors_Msg.text (FStarC_Format.fmt4 "Module %s is provided by more than one file in include directory %s: %s and %s." longname dir prev path)) :: ((FStarC_Errors_Msg.text "A module must have a unique source file. For example, do not provide both a flat 'X.Y.Z.fst' and a nested 'X/Y/Z.fst' for the same module.") :: [])))
-        | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace seen key path)
-      ))
-  )) candidates))
-
-let build_inclusion_candidates_list (tmp : unit) : ((string * string)) list =
-  (let include_paths = (FStarC_Find.module_include_paths_normalized ()) in
-  let include_paths1 = ((fun l -> BatList.unique l) include_paths) in
-  let include_directories = (BatList.map (fun path -> (path).FStarC_Find.dir) include_paths1) in
-  let tmp1 = (Sys.getcwd ()) in
-  let cwd = (FStarC_Filepath.normalize_file_path tmp1) in
-  ((fun f l -> BatList.flatten (BatList.map f l)) (fun path -> (let candidates = (match (path).FStarC_Find.kind with
-      | FStarC_Find.Recursive -> (hierarchical_modules_for_dir cwd include_directories (path).FStarC_Find.dir)
-      | FStarC_Find.Flat -> (let tmp2 = (safe_readdir_for_include (path).FStarC_Find.dir) in
-        ((fun f l -> BatList.flatten (BatList.map f l)) (fun entry -> (let entry1 = (FStarC_Filepath.basename entry) in
-        let file_path = (if ((=) (path).FStarC_Find.dir cwd) then entry1 else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) (path).FStarC_Find.dir entry1)) in
-        (if ((fun f -> try Sys.is_directory f with Sys_error _ -> false) file_path) then [] else (module_candidate_of_file [] file_path entry1)))) tmp2))
-    ) in
-  (check_unique_module_names_for_dir (path).FStarC_Find.dir candidates);
-  candidates)) include_paths1))
-
-let module_name_cache_epoch : (Prims.int ref) =
-  (ref (Prims.of_int (-1)))
-
-let module_name_cache : ((string) option) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
 let module_name_from_include_path (f : string) : (string) option =
   (let f1 = (FStarC_Filepath.normalize_file_path f) in
@@ -282,6 +146,573 @@ let module_stem_of_file (f : string) : string =
     | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_NotValidFStarFile (BatList.append ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Not a valid FStar file: ‘%s’" f)) :: []) (if (FStarC_Platform.windows && ((=) f "..")) then ((FStarC_Errors_Msg.text "Note: In Windows-compiled versions of F*, a literal\n          asterisk as argument will be expanded to a list of files,\n          **even if quoted**. It is possible you provided such an\n          argument which got expanded to the list of all files in this\n          directory, causing spurious arguments that F* attempts to interpret as files.") :: ((FStarC_Errors_Msg.text "Hint: did you perhaps pass --already_cached '*' or similar? You can add\n          a comma (',*') to prevent the expansion and retain the behavior.") :: [])) else [])))
   ))
 
+let split_target (tmp : string) : (string * (string) option) =
+  (FStarC_Target.split_target tmp)
+
+let module_name_of_file (f : string) : string =
+  (let tmp = (module_stem_of_file f) in
+  let tmp1 = (split_target tmp) in
+  (match tmp1 with
+    | (u__1, u__2) -> u__1
+  ))
+
+let cache_file_name : (string -> string) =
+  (let checked_file_and_exists_flag = (fun fn -> (let mname = (module_name_of_file fn) in
+    let stem = (module_stem_of_file fn) in
+    let bn = (FStarC_Filepath.basename fn) in
+    let tmp = (check_and_strip_suffix bn) in
+    let ext = (match tmp with
+        | (Some (stem1)) -> ((fun s i -> BatString.tail s (Z.to_int i)) bn ((fun s -> Z.of_int (BatUTF8.length s)) stem1))
+        | None -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Impossible: cache_file_name: file without a valid F* extension: %s" fn))
+      ) in
+    let cache_bn = (Prims.strcat stem (Prims.strcat ext ".checked")) in
+    let cache_fn = (if ((=) bn fn) then cache_bn else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) (Filename.dirname fn) cache_bn)) in
+    let tmp1 = (FStarC_Find.find_file (FStarC_Filepath.basename cache_fn)) in
+    (match tmp1 with
+      | (Some (path)) -> (let expected_cache_file = (FStarC_Find.prepend_cache_dir cache_fn) in
+        let tmp2 = (FStarC_Options.dep ()) in
+        let tmp3 = (match tmp2 with
+            | (Some (v)) -> true
+            | tmp3 -> false
+          ) in
+        let tmp4 = (if tmp3 then (let tmp4 = (FStarC_Options.should_be_already_cached mname) in
+          (not tmp4)) else false) in
+        let tmp5 = (if tmp4 then (if (not (Sys.file_exists expected_cache_file)) then true else (let tmp5 = ((fun f g -> let a = Unix.stat f and b = Unix.stat g in a.Unix.st_dev = b.Unix.st_dev && a.Unix.st_ino = b.Unix.st_ino) path expected_cache_file) in
+          (not tmp5))) else false) in
+        (if tmp5 then (FStarC_Errors.fStarC_Errors_log_issue0__list_ocaml_document FStarC_Errors_Codes.Warning_UnexpectedCheckedFile ((PPrint.(^/^) (FStarC_Errors_Msg.text "Did not expect module") (PPrint.(^/^) (PPrint.string mname) (FStarC_Errors_Msg.text "to be already checked."))) :: ((PPrint.(^/^) (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Found it in an unexpected location:") (PPrint.string path)) (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "instead of") (PPrint.string expected_cache_file))) :: []))) else ());
+        let tmp6 = (if (Sys.file_exists expected_cache_file) then ((fun f g -> let a = Unix.stat f and b = Unix.stat g in a.Unix.st_dev = b.Unix.st_dev && a.Unix.st_ino = b.Unix.st_ino) path expected_cache_file) else false) in
+        (if tmp6 then expected_cache_file else path))
+      | None -> (let tmp2 = (!(dbg_CheckedFiles)) in
+        (if tmp2 then (FStarC_Format.print1 "find_file(%s) returned None\n" (FStarC_Filepath.basename cache_fn)) else ());
+        let tmp3 = (FStarC_Options.should_be_already_cached mname) in
+        (if tmp3 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Expected %s to be already checked but could not find it." mname)) :: [])) else ());
+        (FStarC_Find.prepend_cache_dir cache_fn))
+    ))) in
+  let memo = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  let memo1 = (fun f x -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt memo x) in
+    (match tmp with
+      | (Some (res)) -> res
+      | None -> (let res = (f x) in
+        (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace memo x res);
+        res)
+    ))) in
+  (memo1 checked_file_and_exists_flag))
+
+let warned_about : (((((string) option * (string) option)) option) list ref) =
+  (ref [])
+
+type ns_entry = {
+  ne_suffix : string;
+  ne_file : ((string) option * (string) option);
+  ne_shadowed : (((string) option * (string) option)) option;
+}
+
+let ns_index_memo : ((((((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t * ((ns_entry) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t)) option ref) =
+  (ref None)
+
+let prelude_lid : FStarC_Ident.lident =
+  (FStarC_Ident.lid_of_str "FStar.Prelude")
+
+let collect_one_cache : ((((dependence) list * (dependence) list * bool)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (ref tmp))
+
+let root_friends : ((FStarC_Ident.lident) list ref) =
+  (ref [])
+
+let fly_deps_enabled (tmp : unit) : bool =
+  (let tmp1 = (!(fd_enabled)) in
+  (match tmp1 with
+    | (Some (b)) -> b
+    | None -> (let tmp2 = (FStarC_Options_Ext.enabled "fly_deps") in
+      let res = (if tmp2 then (let tmp3 = (FStarC_Options.dep ()) in
+        let tmp4 = (match tmp3 with
+            | (Some (v)) -> true
+            | tmp4 -> false
+          ) in
+        let tmp5 = (if tmp4 then true else (FStarC_Options.any_dump_module ())) in
+        (if tmp5 then (let tmp6 = (debug_fly_deps ()) in
+        (if tmp6 then (FStarC_Format.print_string "Ignoring fly_deps because dep or dump_module is on\n") else ());
+        false) else (let tmp6 = (debug_fly_deps ()) in
+        (if tmp6 then (FStarC_Format.print_string "fly_deps is on!\n") else ());
+        true))) else (let tmp3 = (debug_fly_deps ()) in
+        (if tmp3 then (FStarC_Format.print_string "fly_deps is off!\n") else ());
+        false)) in
+      ((fun () -> Stdlib.flush Stdlib.stdout) ());
+      ((fd_enabled) := (Some (res)));
+      res)
+  ))
+
+let is_interface (f : string) : bool =
+  (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) f (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) f) Prims.int_one)) in
+  ((=) tmp 105))
+
+let implementation_of_file (f : string) : string =
+  (let tmp = (is_interface f) in
+  (if tmp then ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) f Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) f) Prims.int_one)) else f))
+
+let empty_parsing_data : parsing_data =
+  { elts = []; no_prelude = false }
+
+let parsing_data_elt_eq (e1 : parsing_data_elt) (e2 : parsing_data_elt) : bool =
+  (match (e1, e2) with
+    | ((P_begin_module (l1)), (P_begin_module (l2))) -> (FStarC_Ident.lid_equals l1 l2)
+    | ((P_open (b1, l1)), (P_open (b2, l2))) -> (((=) b1 b2) && (FStarC_Ident.lid_equals l1 l2))
+    | ((P_implicit_open_module_or_namespace (k1, l1)), (P_implicit_open_module_or_namespace (k2, l2))) -> (((=) k1 k2) && (FStarC_Ident.lid_equals l1 l2))
+    | ((P_dep (b1, l1)), (P_dep (b2, l2))) -> (((=) b1 b2) && (FStarC_Ident.lid_equals l1 l2))
+    | ((P_alias (i1, l1)), (P_alias (i2, l2))) -> (((=) (FStarC_Ident.string_of_id i1) (FStarC_Ident.string_of_id i2)) && (FStarC_Ident.lid_equals l1 l2))
+    | ((P_lid (l1)), (P_lid (l2))) -> (FStarC_Ident.lid_equals l1 l2)
+    | (P_inline_for_extraction, P_inline_for_extraction) -> true
+    | (tmp, tmp1) -> false
+  )
+
+let string_of_lid (l : FStarC_Ident.lident) (last : bool) : string =
+  (let suffix = (if last then ((FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)) :: []) else []) in
+  let tmp = (BatList.map (fun x -> (FStarC_Ident.string_of_id x)) (FStarC_Ident.ns_of_lid l)) in
+  let names = (BatList.append tmp suffix) in
+  (BatString.concat "." names))
+
+let lowercase_join_longident (l : FStarC_Ident.lident) (last : bool) : string =
+  (let tmp = (string_of_lid l last) in
+  (BatString.lowercase_ascii tmp))
+
+let maybe_module_name_of_file (f : string) : (string) option =
+  (let tmp = (maybe_module_key_of_file f) in
+  (match tmp with
+    | (Some (stem)) -> (let tmp1 = (split_target stem) in
+      let tmp2 = (match tmp1 with
+          | (u__1, u__2) -> u__1
+        ) in
+      (Some (tmp2)))
+    | None -> None
+  ))
+
+let collect_module_or_decls__collect_constant (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (c : FStarC_Const.sconst) : unit =
+  (match c with
+    | (FStarC_Const.Const_machine_int (tmp, tmp1, FStarC_Const.Unsigned, FStarC_Const.Sizet)) -> (let tmp2 = (FStarC_Ident.lid_of_str "fstar.sizeT") in
+      let tmp3 = (false, tmp2) in
+      let tmp4 = (P_dep ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp4))
+    | (FStarC_Const.Const_machine_int (tmp, tmp1, signedness, width)) -> (let u = (match signedness with
+          | FStarC_Const.Unsigned -> "u"
+          | FStarC_Const.Signed -> ""
+        ) in
+      let w = (match width with
+          | FStarC_Const.Int8 -> "8"
+          | FStarC_Const.Int16 -> "16"
+          | FStarC_Const.Int32 -> "32"
+          | FStarC_Const.Int64 -> "64"
+        ) in
+      let tmp2 = (FStarC_Ident.lid_of_str (FStarC_Format.fmt2 "fstar.%sint%s" u w)) in
+      let tmp3 = (false, tmp2) in
+      let tmp4 = (P_dep ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp4))
+    | (FStarC_Const.Const_char (tmp)) -> (let tmp1 = (FStarC_Ident.lid_of_str "fstar.char") in
+      let tmp2 = (false, tmp1) in
+      let tmp3 = (P_dep ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp3))
+    | FStarC_Const.Const_range_of -> (let tmp = (FStarC_Ident.lid_of_str "fstar.range") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2))
+    | FStarC_Const.Const_set_range_of -> (let tmp = (FStarC_Ident.lid_of_str "fstar.range") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2))
+    | (FStarC_Const.Const_real (tmp)) -> (let mm = (maybe_module_name_of_file filename) in
+      (if ((<>) mm (Some ("FStar.Real"))) then (let tmp1 = (FStarC_Ident.lid_of_str "fstar.real") in
+      let tmp2 = (false, tmp1) in
+      let tmp3 = (P_dep ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp3)) else ()))
+    | tmp -> ()
+  )
+
+let collect_module_or_decls__collect_fieldname (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (fn : FStarC_Ident.lident) : unit =
+  (if ((<>) (FStarC_Ident.nsstr fn) "") then (let tmp = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid fn)) in
+  let tmp1 = (false, tmp) in
+  let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+  (add_to_parsing_data tmp2)) else ())
+
+let rec collect_module_or_decls__collect_binders (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (eta : (FStarC_Parser_AST.binder) list) : unit =
+  (BatList.iter (collect_module_or_decls__collect_binder filename num_of_toplevelmods add_to_parsing_data set_no_prelude) eta)
+
+and collect_module_or_decls__collect_binder (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (b : FStarC_Parser_AST.binder) : unit =
+  ((collect_module_or_decls__collect_aqual filename num_of_toplevelmods add_to_parsing_data set_no_prelude (b).FStarC_Parser_AST.aqual);
+  (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (b).FStarC_Parser_AST.battributes);
+  (match b with
+    | { FStarC_Parser_AST.b = (FStarC_Parser_AST.Annotated (tmp, t)); brange = tmp1; blevel = tmp2; aqual = tmp3; battributes = tmp4; _ } -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+    | { FStarC_Parser_AST.b = (FStarC_Parser_AST.NoName (t)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ } -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+    | tmp -> ()
+  ))
+
+and collect_module_or_decls__collect_aqual (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (aq : (FStarC_Parser_AST.arg_qualifier) option) : unit =
+  (match aq with
+    | (Some ((FStarC_Parser_AST.Meta (t)))) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+    | (Some (FStarC_Parser_AST.TypeClassArg)) -> (add_to_parsing_data (P_lid (FStarC_Parser_Const.tcresolve_lid)))
+    | tmp -> ()
+  )
+
+and collect_module_or_decls__collect_term (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (t : FStarC_Parser_AST.term) : unit =
+  (collect_module_or_decls__collect_term' filename num_of_toplevelmods add_to_parsing_data set_no_prelude (t).FStarC_Parser_AST.tm)
+
+and collect_module_or_decls__collect_term' (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (t : FStarC_Parser_AST.term') : unit =
+  (match t with
+    | FStarC_Parser_AST.Wild -> ()
+    | (FStarC_Parser_AST.Const (c)) -> (collect_module_or_decls__collect_constant filename num_of_toplevelmods add_to_parsing_data set_no_prelude c)
+    | (FStarC_Parser_AST.Op (tmp, ts)) -> (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ts)
+    | (FStarC_Parser_AST.Uvar (tmp)) -> ()
+    | (FStarC_Parser_AST.Var (lid)) -> (add_to_parsing_data (P_lid (lid)))
+    | (FStarC_Parser_AST.Projector (lid, tmp)) -> (add_to_parsing_data (P_lid (lid)))
+    | (FStarC_Parser_AST.Discrim (lid)) -> (add_to_parsing_data (P_lid (lid)))
+    | (FStarC_Parser_AST.Name (lid)) -> (add_to_parsing_data (P_lid (lid)))
+    | (FStarC_Parser_AST.Construct (lid, termimps)) -> ((add_to_parsing_data (P_lid (lid)));
+      (BatList.iter (fun tmp -> (match tmp with
+        | (t1, tmp1) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+      )) termimps))
+    | (FStarC_Parser_AST.Function (branches, tmp)) -> (collect_module_or_decls__collect_branches filename num_of_toplevelmods add_to_parsing_data set_no_prelude branches)
+    | (FStarC_Parser_AST.Abs (pats, t1)) -> ((collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude pats);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.App (t1, t2, tmp)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2))
+    | (FStarC_Parser_AST.Let (tmp, patterms, t1)) -> ((BatList.iter (fun tmp1 -> (match tmp1 with
+        | (attrs_opt, (pat, t2)) -> ((ignore (match attrs_opt with
+            | (Some (x)) -> (let tmp2 = ((BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude)) x) in
+              (Some (tmp2)))
+            | None -> None
+          ));
+          (collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude pat);
+          (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2))
+      )) patterms);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.LetOperator (lets, body)) -> ((BatList.iter (fun tmp -> (match tmp with
+        | (ident, pat, def) -> ((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude pat);
+          (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude def))
+      )) lets);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude body))
+    | (FStarC_Parser_AST.LetOpen (lid, t1)) -> ((add_to_parsing_data (P_open (true, lid)));
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.LetOpenRecord (r, rty, e)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude r);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude rty);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e))
+    | (FStarC_Parser_AST.Bind (tmp, t1, t2)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2))
+    | (FStarC_Parser_AST.Seq (t1, t2)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2))
+    | (FStarC_Parser_AST.If (t1, tmp, ret_opt, t2, t3)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (match ret_opt with
+        | None -> ()
+        | (Some ((tmp1, ret, tmp2))) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude ret)
+      );
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t3))
+    | (FStarC_Parser_AST.Match (t1, tmp, ret_opt, bs)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (match ret_opt with
+        | None -> ()
+        | (Some ((tmp1, ret, tmp2))) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude ret)
+      );
+      (collect_module_or_decls__collect_branches filename num_of_toplevelmods add_to_parsing_data set_no_prelude bs))
+    | (FStarC_Parser_AST.TryWith (t1, bs)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (collect_module_or_decls__collect_branches filename num_of_toplevelmods add_to_parsing_data set_no_prelude bs))
+    | (FStarC_Parser_AST.Ascribed (t1, t2, None, tmp)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2))
+    | (FStarC_Parser_AST.Ascribed (t1, t2, (Some (tac)), tmp)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude tac))
+    | (FStarC_Parser_AST.Record (t1, idterms)) -> ((FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
+      (BatList.iter (fun tmp -> (match tmp with
+        | (fn, t2) -> ((collect_module_or_decls__collect_fieldname filename num_of_toplevelmods add_to_parsing_data set_no_prelude fn);
+          (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2))
+      )) idterms))
+    | (FStarC_Parser_AST.Project (t1, f)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (collect_module_or_decls__collect_fieldname filename num_of_toplevelmods add_to_parsing_data set_no_prelude f))
+    | (FStarC_Parser_AST.Product (binders, t1)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.Sum (binders, t1)) -> ((BatList.iter (fun tmp -> (match tmp with
+        | (FStar_Pervasives.Inl (b)) -> (collect_module_or_decls__collect_binder filename num_of_toplevelmods add_to_parsing_data set_no_prelude b)
+        | (FStar_Pervasives.Inr (t2)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2)
+      )) binders);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.QForall (binders, (tmp, ts), t1)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (BatList.iter (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude)) ts);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.QExists (binders, (tmp, ts), t1)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (BatList.iter (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude)) ts);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.QuantOp (tmp, binders, (tmp1, ts), t1)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (BatList.iter (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude)) ts);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.Refine (binder, t1)) -> ((collect_module_or_decls__collect_binder filename num_of_toplevelmods add_to_parsing_data set_no_prelude binder);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1))
+    | (FStarC_Parser_AST.NamedTyp (tmp, t1)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.Paren (t1)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.Requires (t1)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.Ensures (t1)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.Labeled (t1, tmp, tmp1)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.LexList (l)) -> (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) l)
+    | (FStarC_Parser_AST.WFOrder (t1, t2)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.WellFounded") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2))
+    | (FStarC_Parser_AST.Decreases (t1)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.Quote (t1, tmp)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.Antiquote (t1)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.VQuote (t1)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1)
+    | (FStarC_Parser_AST.CalcProof (rel, init, steps)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Calc") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude rel);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude init);
+      (BatList.iter (fun tmp3 -> (match tmp3 with
+        | (rel1, just, next) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude rel1);
+          (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude just);
+          (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude next))
+      )) steps))
+    | (FStarC_Parser_AST.IntroForall (bs, p, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude bs);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e))
+    | (FStarC_Parser_AST.IntroExists (bs, t1, vs, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude bs);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t1);
+      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) vs);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e))
+    | (FStarC_Parser_AST.IntroImplies (p, q, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude q);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e))
+    | (FStarC_Parser_AST.IntroOr (b, p, q, r)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude q);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude r))
+    | (FStarC_Parser_AST.IntroAnd (p, q, r, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude q);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude r);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e))
+    | (FStarC_Parser_AST.ElimForall (bs, p, vs)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude bs);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) vs))
+    | (FStarC_Parser_AST.ElimExists (bs, p, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude bs);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e))
+    | (FStarC_Parser_AST.ElimImplies (p, q, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude q);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e))
+    | (FStarC_Parser_AST.ElimAnd (p, q, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude q);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e))
+    | (FStarC_Parser_AST.ElimOr (p, q, e, e')) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude p);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude q);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude e'))
+    | (FStarC_Parser_AST.ListLiteral (ts)) -> (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ts)
+    | (FStarC_Parser_AST.SeqLiteral (ts)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Seq.Base") in
+      let tmp1 = (false, tmp) in
+      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp2);
+      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ts))
+  )
+
+and collect_module_or_decls__collect_patterns (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (eta : (FStarC_Parser_AST.pattern) list) : unit =
+  (BatList.iter (collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) eta)
+
+and collect_module_or_decls__collect_pattern (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (p : FStarC_Parser_AST.pattern) : unit =
+  (collect_module_or_decls__collect_pattern' filename num_of_toplevelmods add_to_parsing_data set_no_prelude (p).FStarC_Parser_AST.pat)
+
+and collect_module_or_decls__collect_pattern' (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (p : FStarC_Parser_AST.pattern') : unit =
+  (match p with
+    | (FStarC_Parser_AST.PatVar (tmp, aqual, attrs)) -> ((collect_module_or_decls__collect_aqual filename num_of_toplevelmods add_to_parsing_data set_no_prelude aqual);
+      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) attrs))
+    | (FStarC_Parser_AST.PatWild (aqual, attrs)) -> ((collect_module_or_decls__collect_aqual filename num_of_toplevelmods add_to_parsing_data set_no_prelude aqual);
+      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) attrs))
+    | FStarC_Parser_AST.PatRest -> ()
+    | (FStarC_Parser_AST.PatOp (tmp)) -> ()
+    | (FStarC_Parser_AST.PatConst (tmp)) -> ()
+    | (FStarC_Parser_AST.PatVQuote (t)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+    | (FStarC_Parser_AST.PatApp (p1, ps)) -> ((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude p1);
+      (collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude ps))
+    | (FStarC_Parser_AST.PatName (lid)) -> (add_to_parsing_data (P_lid (lid)))
+    | (FStarC_Parser_AST.PatList (ps)) -> (collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude ps)
+    | (FStarC_Parser_AST.PatOr (ps)) -> (collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude ps)
+    | (FStarC_Parser_AST.PatTuple (ps, tmp)) -> (collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude ps)
+    | (FStarC_Parser_AST.PatRecord (lidpats)) -> (BatList.iter (fun tmp -> (match tmp with
+        | (tmp1, p1) -> (collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude p1)
+      )) lidpats)
+    | (FStarC_Parser_AST.PatAscribed (p1, (t, None))) -> ((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude p1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t))
+    | (FStarC_Parser_AST.PatAscribed (p1, (t, (Some (tac))))) -> ((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude p1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude tac))
+  )
+
+and collect_module_or_decls__collect_branches (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (eta : ((FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) option * FStarC_Parser_AST.term)) list) : unit =
+  (BatList.iter (collect_module_or_decls__collect_branch filename num_of_toplevelmods add_to_parsing_data set_no_prelude) eta)
+
+and collect_module_or_decls__collect_branch (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (b : (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) option * FStarC_Parser_AST.term)) : unit =
+  (match b with
+    | (pat, t1, t2) -> ((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude pat);
+      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t2))
+  )
+
+let collect_module_or_decls__collect_tycon_record (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (eta : ((FStarC_Ident.ident * (FStarC_Parser_AST.arg_qualifier) option * (FStarC_Parser_AST.term) list * FStarC_Parser_AST.term)) list) : unit =
+  (BatList.iter (fun tmp -> (match tmp with
+    | (tmp1, aq, attrs, t) -> ((collect_module_or_decls__collect_aqual filename num_of_toplevelmods add_to_parsing_data set_no_prelude aq);
+      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) attrs);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t))
+  )) eta)
+
+let collect_module_or_decls__collect_tycon (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (tc : FStarC_Parser_AST.tycon) : unit =
+  (match tc with
+    | (FStarC_Parser_AST.TyconAbstract (tmp, binders, k)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) k))
+    | (FStarC_Parser_AST.TyconAbbrev (tmp, binders, k, t)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) k);
+      (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t))
+    | (FStarC_Parser_AST.TyconRecord (tmp, binders, k, tmp1, identterms)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) k);
+      (collect_module_or_decls__collect_tycon_record filename num_of_toplevelmods add_to_parsing_data set_no_prelude identterms))
+    | (FStarC_Parser_AST.TyconVariant (tmp, binders, k, identterms)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) k);
+      let tmp1 = (BatList.filter_map Fstarc_FStar_Pervasives_Native.fStar_Pervasives_Native___proj__Mktuple3__item___2 identterms) in
+      (BatList.iter (fun tmp2 -> (match tmp2 with
+        | (FStarC_Parser_AST.VpOfNotation (t)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+        | (FStarC_Parser_AST.VpArbitrary (t)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+        | (FStarC_Parser_AST.VpRecord (record, t)) -> ((collect_module_or_decls__collect_tycon_record filename num_of_toplevelmods add_to_parsing_data set_no_prelude record);
+          (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t))
+      )) tmp1))
+  )
+
+let rec collect_module_or_decls__collect_decl (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (d : FStarC_Parser_AST.decl') : unit =
+  (match d with
+    | (FStarC_Parser_AST.Include (lid, tmp)) -> (add_to_parsing_data (P_open (false, lid)))
+    | (FStarC_Parser_AST.Open (lid, tmp)) -> (add_to_parsing_data (P_open (false, lid)))
+    | (FStarC_Parser_AST.Friend (lid)) -> (let tmp = (lowercase_join_longident lid true) in
+      let tmp1 = (FStarC_Ident.lid_of_str tmp) in
+      let tmp2 = (FStarC_Ident.set_lid_range tmp1 (FStarC_Ident.range_of_lid lid)) in
+      let tmp3 = (true, tmp2) in
+      let tmp4 = (P_dep ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))) in
+      (add_to_parsing_data tmp4))
+    | (FStarC_Parser_AST.ModuleAbbrev (ident, lid)) -> (add_to_parsing_data (P_alias (ident, lid)))
+    | (FStarC_Parser_AST.TopLevelLet (tmp, patterms)) -> (BatList.iter (fun tmp1 -> (match tmp1 with
+        | (pat, t) -> ((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude pat);
+          (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t))
+      )) patterms)
+    | (FStarC_Parser_AST.Splice (tmp, tmp1, t)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+    | (FStarC_Parser_AST.Assume (tmp, t)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+    | (FStarC_Parser_AST.Val (tmp, t)) -> (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude t)
+    | (FStarC_Parser_AST.SubEffect (tmp)) -> ()
+    | (FStarC_Parser_AST.Tycon (tmp, tc, ts)) -> ((if tc then (add_to_parsing_data (P_lid (FStarC_Parser_Const.tcclass_lid))) else ());
+      (BatList.iter (collect_module_or_decls__collect_tycon filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ts))
+    | (FStarC_Parser_AST.Exception (tmp, t)) -> (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
+    | (FStarC_Parser_AST.NewEffect (ed)) -> (collect_module_or_decls__collect_effect_decl filename num_of_toplevelmods add_to_parsing_data set_no_prelude ed)
+    | (FStarC_Parser_AST.DeclToBeDesugared (tbs)) -> ((tbs).FStarC_Parser_AST.dep_scan { FStarC_Parser_AST.scan_term = (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude);
+        scan_binder = (collect_module_or_decls__collect_binder filename num_of_toplevelmods add_to_parsing_data set_no_prelude);
+        scan_pattern = (collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude);
+        add_lident = (fun lid -> (add_to_parsing_data (P_lid (lid))));
+        add_open = (fun lid -> (add_to_parsing_data (P_open (true, lid)))) } (tbs).FStarC_Parser_AST.blob)
+    | (FStarC_Parser_AST.UseLangDecls (tmp)) -> ()
+    | (FStarC_Parser_AST.Pragma (tmp)) -> ()
+    | (FStarC_Parser_AST.DeclSyntaxExtension (u__1, u__2, u__3, u__4)) -> ()
+    | FStarC_Parser_AST.Unparseable -> ()
+    | (FStarC_Parser_AST.TopLevelModule (lid)) -> ((FStarC_Util.incr num_of_toplevelmods);
+      let tmp = (!(num_of_toplevelmods)) in
+      let tmp1 = (Prims.op_Greater tmp Prims.int_one) in
+      (if tmp1 then (let tmp2 = (string_of_lid lid true) in
+      let tmp3 = (FStarC_Format.fmt1 "Automatic dependency analysis demands one module per file (module %s not supported)" tmp2) in
+      (FStarC_Errors.fStarC_Errors_raise_error__lident_string lid FStarC_Errors_Codes.Fatal_OneModulePerFile tmp3)) else ()))
+  )
+
+and collect_module_or_decls__collect_effect_decl (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (ed : FStarC_Parser_AST.effect_decl) : unit =
+  (match ed with
+    | (FStarC_Parser_AST.DeclareEffect (tmp, binders)) -> (collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders)
+    | (FStarC_Parser_AST.DefineEffect (tmp, binders, decls)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude binders);
+      (BatList.iter (fun d -> (collect_module_or_decls__collect_decl filename num_of_toplevelmods add_to_parsing_data set_no_prelude (d).FStarC_Parser_AST.d)) decls))
+  )
+
+let collect_module_or_decls__collect_decls (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (eta : (FStarC_Parser_AST.decl) list) : unit =
+  (BatList.iter (fun x -> ((collect_module_or_decls__collect_decl filename num_of_toplevelmods add_to_parsing_data set_no_prelude (x).FStarC_Parser_AST.d);
+  (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (x).FStarC_Parser_AST.attrs);
+  (match (x).FStarC_Parser_AST.d with
+    | tmp when (BatList.mem FStarC_Parser_AST.Inline_for_extraction (x).FStarC_Parser_AST.quals) -> (add_to_parsing_data P_inline_for_extraction)
+    | tmp -> ()
+  ))) eta)
+
+let collect_module_or_decls__go (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (x : (FStarC_Parser_AST.modul, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either) : unit =
+  (match x with
+    | (FStar_Pervasives.Inl ((FStarC_Parser_AST.Module ({ FStarC_Parser_AST.no_prelude = no_prelude; mname = mname; decls = decls; _ })))) -> ((set_no_prelude no_prelude);
+      (add_to_parsing_data (P_begin_module (mname)));
+      (collect_module_or_decls__collect_decls filename num_of_toplevelmods add_to_parsing_data set_no_prelude decls))
+    | (FStar_Pervasives.Inl ((FStarC_Parser_AST.Interface ({ FStarC_Parser_AST.no_prelude = no_prelude; mname = mname; decls = decls; admitted = tmp; _ })))) -> ((set_no_prelude no_prelude);
+      (add_to_parsing_data (P_begin_module (mname)));
+      (collect_module_or_decls__collect_decls filename num_of_toplevelmods add_to_parsing_data set_no_prelude decls))
+    | (FStar_Pervasives.Inr (decls)) -> ((set_no_prelude true);
+      (collect_module_or_decls__collect_decls filename num_of_toplevelmods add_to_parsing_data set_no_prelude decls))
+  )
+
+let collect_module_or_decls (filename : string) (m : (FStarC_Parser_AST.modul, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either) : parsing_data =
+  (let num_of_toplevelmods = (ref Prims.int_zero) in
+  let pd = (ref empty_parsing_data) in
+  let add_to_parsing_data = (fun elt -> (let tmp = (!(pd)) in
+    let tmp1 = (tmp).elts in
+    let tmp2 = (BatList.exists (fun e -> (parsing_data_elt_eq e elt)) tmp1) in
+    let tmp3 = (not tmp2) in
+    (if tmp3 then (let tmp4 = (!(pd)) in
+    let tmp5 = (!(pd)) in
+    let tmp6 = (tmp5).elts in
+    let tmp7 = (elt :: tmp6) in
+    let tmp8 = { elts = tmp7; no_prelude = (tmp4).no_prelude } in
+    ((pd) := tmp8)) else ()))) in
+  let set_no_prelude = (fun b -> (let tmp = (!(pd)) in
+    let tmp1 = { elts = (tmp).elts; no_prelude = b } in
+    ((pd) := tmp1))) in
+  (collect_module_or_decls__go filename num_of_toplevelmods add_to_parsing_data set_no_prelude m);
+  (!(pd)))
+
+let key_for_target (key : string) (tgt : (string) option) : string =
+  (match tgt with
+    | None -> key
+    | (Some (t)) -> (Prims.strcat key (Prims.strcat "-" t))
+  )
+
 let module_key_of_file (f : string) : string =
   (let tmp = (module_stem_of_file f) in
   let tmp1 = (split_target tmp) in
@@ -289,15 +720,28 @@ let module_key_of_file (f : string) : string =
     | (m, t) -> (key_for_target (BatString.lowercase_ascii m) t)
   ))
 
-type variant = {
-  v_tag : (string) option;
-  v_intf : (string) option;
-  v_impl : (string) option;
-}
+let target_of_file (f : string) : (string) option =
+  (let tmp = (maybe_module_key_of_file f) in
+  (match tmp with
+    | (Some (stem)) -> (let tmp1 = (split_target stem) in
+      (match tmp1 with
+        | (u__1, u__2) -> u__2
+      ))
+    | None -> None
+  ))
 
-let module_variants : (((variant) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
+let lowercase_module_name (f : string) : string =
+  (let tmp = (module_name_of_file f) in
+  (BatString.lowercase_ascii tmp))
+
+let is_implementation (f : string) : bool =
+  (let tmp = (is_interface f) in
+  (not tmp))
+
+type file_kind =
+  | KIntf
+  | KImpl
+
 
 let variants_of (m : string) : (variant) list =
   (let tmp = (!(module_variants)) in
@@ -328,157 +772,6 @@ let select_variant (vs : (variant) list) (k : file_kind) (ctx : (string) option)
         (not tmp1))) app) in
       (FStar_Pervasives.Inl (tmp1))))
   ))
-
-let build_map (fs_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (valid_ns_map : ((string) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (filenames : (string) list) : unit =
-  (let add_fs_entry = (fun key full_path -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt fs_map key) in
-    (match tmp with
-      | (Some ((intf, impl))) -> (let tmp1 = (is_interface full_path) in
-        (if tmp1 then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key ((Some (full_path)), impl)) else (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key (intf, (Some (full_path))))))
-      | None -> (let tmp1 = (is_interface full_path) in
-        (if tmp1 then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key ((Some (full_path)), None)) else (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key (None, (Some (full_path))))))
-    ))) in
-  let add_ns_entry = (fun key full_path -> (let tmp = (split_target key) in
-    let key1 = (match tmp with
-        | (u__1, u__2) -> u__1
-      ) in
-    let tmp1 = (namespace_of_module key1) in
-    (match tmp1 with
-      | None -> ()
-      | (Some (ns)) -> (let ns1 = (FStarC_Ident.string_of_lid ns) in
-        let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt valid_ns_map ns1) in
-        (match tmp2 with
-          | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace valid_ns_map ns1 (key1 :: []))
-          | (Some (keys)) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace valid_ns_map ns1 (key1 :: keys))
-        ))
-    ))) in
-  let add_entry = (fun key full_path -> ((add_fs_entry key full_path);
-    (add_ns_entry key full_path))) in
-  let tmp = (build_inclusion_candidates_list ()) in
-  (BatList.iter (fun tmp1 -> (match tmp1 with
-    | (longname, full_path) -> (add_entry (BatString.lowercase_ascii longname) full_path)
-  )) tmp);
-  (BatList.iter (fun f -> (let tmp1 = (module_key_of_file f) in
-  (add_entry tmp1 f))) filenames);
-  let idx = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun key tmp1 -> (match tmp1 with
-    | (intf, impl) -> (let tmp2 = (split_target key) in
-      (match tmp2 with
-        | (m, t) -> (let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt idx m) in
-          let cur = (match tmp3 with
-              | (Some (l)) -> l
-              | None -> []
-            ) in
-          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace idx m ({ v_tag = t; v_intf = intf; v_impl = impl } :: cur)))
-      ))
-  )) fs_map);
-  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp1 acc -> (key :: acc)) idx []) in
-  (BatList.iter (fun m -> (let tag_str = (fun v -> (match (v).v_tag with
-      | (Some (t)) -> t
-      | None -> ""
-    )) in
-  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt idx m) in
-  let tmp3 = (FStarC_Option.must tmp2) in
-  let tmp4 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun v1 v2 -> ((fun x y -> Z.of_int (BatString.compare x y)) (tag_str v1) (tag_str v2))) tmp3) in
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace idx m tmp4))) tmp1);
-  ((module_variants) := idx);
-  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) fs_map []) in
-  (BatList.iter (fun key -> (let tmp3 = (split_target key) in
-  (match tmp3 with
-    | (tmp4, None) -> ()
-    | (m, t) -> (let pick = (fun k -> (let tmp4 = (variants_of m) in
-        let tmp5 = (select_variant tmp4 k t) in
-        (match tmp5 with
-          | (FStar_Pervasives.Inr ((Some (v)))) -> (file_of_kind k v)
-          | tmp6 -> None
-        ))) in
-      let tmp4 = (pick KIntf) in
-      let tmp5 = (pick KImpl) in
-      let tmp6 = (tmp4, tmp5) in
-      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key tmp6))
-  ))) tmp2))
-
-let ensure_map (deps : deps) : unit =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp acc -> (key :: acc)) (deps).file_system_map []) in
-  let tmp1 = (match tmp with
-      | [] -> true
-      | tmp1 -> false
-    ) in
-  (if tmp1 then (build_map (deps).file_system_map (deps).valid_namespaces (deps).cmd_line_files) else ()))
-
-let selects (deps : deps) (tgt : (string) option) (module_name : FStarC_Ident.lident) (k : file_kind) : bool =
-  ((ensure_map deps);
-  let tmp = (variants_of (BatString.lowercase_ascii (FStarC_Ident.string_of_lid module_name))) in
-  let tmp1 = (select_variant tmp k tgt) in
-  (match tmp1 with
-    | (FStar_Pervasives.Inr ((Some (tmp2)))) -> true
-    | tmp2 -> false
-  ))
-
-let module_has_interface (deps : deps) (target : (string) option) (module_name : FStarC_Ident.lident) : bool =
-  (selects deps target module_name KIntf)
-
-let deps_has_implementation (deps : deps) (target : (string) option) (module_name : FStarC_Ident.lident) : bool =
-  (selects deps target module_name KImpl)
-
-let all_fstar_files_in_dir (dir : string) : (string) list =
-  (let dirs = (FStarC_Find.expand_include_d dir) in
-  ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (let files = (safe_readdir_for_include d) in
-  ((fun f l -> BatList.flatten (BatList.map f l)) (fun f -> (let full_path = ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) d f) in
-  let tmp = (if (not ((fun f -> try Sys.is_directory f with Sys_error _ -> false) full_path)) then (let tmp = (all_file_suffixes ()) in
-    (BatList.exists (fun ext -> (FStarC_Util.ends_with f ext)) tmp)) else false) in
-  (if tmp then (full_path :: []) else []))) files))) dirs))
-
-let expand_directories (files : (string) list) : (string) list =
-  ((fun f l -> BatList.flatten (BatList.map f l)) (fun f -> (if ((fun f -> try Sys.is_directory f with Sys_error _ -> false) f) then (all_fstar_files_in_dir f) else (f :: []))) files)
-
-let all_files_in_include_paths (tmp : unit) : (string) list =
-  (let paths = (FStarC_Find.full_include_path ()) in
-  ((fun f l -> BatList.flatten (BatList.map f l)) (fun path -> (let files = (safe_readdir_for_include path) in
-  let files1 = (BatList.filter (fun f -> (let tmp1 = (all_file_suffixes ()) in
-    (BatList.exists (fun ext -> (FStarC_Util.ends_with f ext)) tmp1))) files) in
-  (BatList.map (fun file -> ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) path file)) files1))) paths))
-
-let deps_try_find (tmp : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (k : string) : (dep_node) option =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp k)
-
-let collect_one_cache : ((((dependence) list * (dependence) list * bool)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
-  (ref tmp))
-
-let dbg : (bool ref) =
-  (FStarC_Debug.get_toggle "Dep")
-
-let debug_print (f : (unit -> unit)) : unit =
-  (let tmp = (!(dbg)) in
-  (if tmp then (f ()) else ()))
-
-let empty_parsing_data : parsing_data =
-  { elts = []; no_prelude = false }
-
-let target_of_file (f : string) : (string) option =
-  (let tmp = (maybe_module_key_of_file f) in
-  (match tmp with
-    | (Some (stem)) -> (let tmp1 = (split_target stem) in
-      (match tmp1 with
-        | (u__1, u__2) -> u__2
-      ))
-    | None -> None
-  ))
-
-let module_name_of_file (f : string) : string =
-  (let tmp = (module_stem_of_file f) in
-  let tmp1 = (split_target tmp) in
-  (match tmp1 with
-    | (u__1, u__2) -> u__1
-  ))
-
-let lowercase_module_name (f : string) : string =
-  (let tmp = (module_name_of_file f) in
-  (BatString.lowercase_ascii tmp))
-
-let is_implementation (f : string) : bool =
-  (let tmp = (is_interface f) in
-  (not tmp))
 
 let display_name (m : string) : string =
   (let tmp = (variants_of m) in
@@ -571,8 +864,13 @@ let peek_past_interfaces (tmp : unit) : bool =
   (if tmp2 then false else (let tmp3 = (FStarC_Options.ide ()) in
   (not tmp3))))
 
-let prelude_lid : FStarC_Ident.lident =
-  (FStarC_Ident.lid_of_str "FStar.Prelude")
+let namespace_of_module (f : string) : (FStarC_Ident.lident) option =
+  (let lid = (FStarC_Ident.lid_of_path (FStarC_Ident.path_of_text f) FStarC_Range_Type.dummyRange) in
+  (match (FStarC_Ident.ns_of_lid lid) with
+    | [] -> None
+    | ns -> (let tmp = (FStarC_Ident.lid_of_ids ns) in
+      (Some (tmp)))
+  ))
 
 let prelude : ((open_kind * FStarC_Ident.lident)) list =
   ((Open_namespace, FStarC_Parser_Const.fstar_ns_lid) :: ((Open_module, prelude_lid) :: []))
@@ -589,7 +887,7 @@ let rec module_of_key__go (key : string) (probe : (string -> (string) option)) (
     | (t :: ts1) -> (let tmp = (probe (key_for_target key t)) in
       (match tmp with
         | (Some (m)) -> (Some (m))
-        | None -> ((module_of_key__go key probe) ts1)
+        | None -> (module_of_key__go key probe ts1)
       ))
   )
 
@@ -606,16 +904,16 @@ let module_of_key (map : (((string) option * (string) option)) FStarC_HashTable.
   (match tmp with
     | (Some (m)) -> (Some (m))
     | None -> (let tmp1 = (FStarC_Target.applicable_tags ctx) in
-      ((module_of_key__go key probe) tmp1))
+      (module_of_key__go key probe tmp1))
   ))
 
 let key_in_context (fs_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (rng : (FStarC_Range_Type.range) option) (m : string) (ctx : (string) option) : (string) option =
   (let i = (select_or_fail rng m KIntf ctx) in
   let f = (select_or_fail rng m KImpl ctx) in
-  let tag_of = (Obj.magic ((fun v -> (match v with
+  let tag_of = (fun v -> (match v with
       | (Some (v1)) -> (v1).v_tag
       | None -> None
-    )))) in
+    )) in
   (match (i, f) with
     | (None, None) -> None
     | tmp -> (if ((match (tag_of i) with
@@ -625,31 +923,18 @@ let key_in_context (fs_map : (((string) option * (string) option)) FStarC_HashTa
         | None -> true
         | tmp1 -> false
       )) then (Some (m)) else (let k = (key_for_target m ctx) in
-      let tmp1 = (FStarC_Option.bind i (fun v -> (v).v_intf)) in
-      let tmp2 = (FStarC_Option.bind f (fun v -> (v).v_impl)) in
+      let tmp1 = (match i with
+          | (Some (x)) -> (x).v_intf
+          | None -> None
+        ) in
+      let tmp2 = (match f with
+          | (Some (x)) -> (x).v_impl
+          | None -> None
+        ) in
       let tmp3 = (tmp1, tmp2) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map k tmp3);
       (Some (k))))
   ))
-
-let string_of_lid (l : FStarC_Ident.lident) (last : bool) : string =
-  (let suffix = (if last then ((FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l)) :: []) else []) in
-  let tmp = (BatList.map (fun x -> (FStarC_Ident.string_of_id x)) (FStarC_Ident.ns_of_lid l)) in
-  let names = (BatList.append tmp suffix) in
-  (BatString.concat "." names))
-
-let lowercase_join_longident (l : FStarC_Ident.lident) (last : bool) : string =
-  (let tmp = (string_of_lid l last) in
-  (BatString.lowercase_ascii tmp))
-
-type ns_entry = {
-  ne_suffix : string;
-  ne_file : ((string) option * (string) option);
-  ne_shadowed : (((string) option * (string) option)) option;
-}
-
-let ns_index_memo : ((((((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t * ((ns_entry) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t)) option ref) =
-  (ref None)
 
 let rec namespace_index__prefixes (m : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (idx : ((ns_entry) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (suffix_exists : ((((string) option * (string) option)) option -> bool)) (k : string) (fn : ((string) option * (string) option)) (acc : string) (segs : (string) list) : unit =
   (match segs with
@@ -666,7 +951,7 @@ let rec namespace_index__prefixes (m : (((string) option * (string) option)) FSt
           | (Some (l)) -> l
         ) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace idx p (e :: cur));
-      ((namespace_index__prefixes m idx suffix_exists k fn) p rest))
+      (namespace_index__prefixes m idx suffix_exists k fn p rest))
   )
 
 let namespace_index (m : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) : ((ns_entry) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
@@ -684,7 +969,7 @@ let namespace_index (m : (((string) option * (string) option)) FStarC_HashTable.
               | tmp2 -> false
             ))
         )) in
-      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k fn -> ((namespace_index__prefixes m idx suffix_exists k fn) "" (FStarC_String.split (46 :: []) k))) m);
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k fn -> (namespace_index__prefixes m idx suffix_exists k fn "" (FStarC_String.split (46 :: []) k))) m);
       let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) idx []) in
       (BatList.iter (fun p -> (let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt idx p) in
       let tmp4 = (FStarC_Option.must tmp3) in
@@ -693,9 +978,6 @@ let namespace_index (m : (((string) option * (string) option)) FStarC_HashTable.
       ((ns_index_memo) := (Some ((m, idx))));
       idx)
   ))
-
-let warned_about : (((((string) option * (string) option)) option) list ref) =
-  (ref [])
 
 let intf_and_impl_to_string (ii : ((string) option * (string) option)) : string =
   (match ii with
@@ -774,7 +1056,7 @@ let deps_from_parsing_data (pd : parsing_data) (original_map : (((string) option
     let tmp10 = (d :: tmp9) in
     ((deps) := tmp10)) else ()))) in
   let dep_edge = (fun module_name is_friend -> (if is_friend then (FriendImplementation (module_name)) else (PreferInterface (module_name)))) in
-  let resolve_dep = (Obj.magic ((fun map lid key is_friend -> (let r1 = (FStarC_Ident.range_of_lid lid) in
+  let resolve_dep = (fun map lid key is_friend -> (let r1 = (FStarC_Ident.range_of_lid lid) in
     let has_range = ((<>) (FStarC_Range_Ops.file_of_range r1) (FStarC_Range_Ops.file_of_range FStarC_Range_Type.dummyRange)) in
     let rng = (Some ((if has_range then r1 else file_range))) in
     let from = (if has_range then (FStarC_Range_Ops.file_of_range r1) else filename) in
@@ -790,7 +1072,7 @@ let deps_from_parsing_data (pd : parsing_data) (original_map : (((string) option
         )) then (let tmp7 = (select_or_fail rng m KImpl tgt1) in
         (check_stable rng from m KImpl tgt1 tmp7)) else ())) else ());
         (key_in_context original_map rng m tgt1))
-    ))))) in
+    ))) in
   let add_dependence_edge = (fun original_or_working_map lid is_friend -> (let key = (lowercase_join_longident lid true) in
     let tmp6 = (!(dbg)) in
     (if tmp6 then (FStarC_Format.print1 "Resolving %s ..\n" key) else ());
@@ -883,6 +1165,364 @@ let deps_from_parsing_data (pd : parsing_data) (original_map : (((string) option
   let tmp9 = (!(has_inline_for_extraction)) in
   (tmp8, tmp9, mo_roots))
 
+let interface_of_internal (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (key : string) : (string) option =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt file_system_map key) in
+  (match tmp with
+    | (Some (((Some (iface)), tmp1))) -> (Some (iface))
+    | tmp1 -> None
+  ))
+
+let has_interface (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (key : string) : bool =
+  (let tmp = (interface_of_internal file_system_map key) in
+  (match tmp with
+    | (Some (v)) -> true
+    | tmp1 -> false
+  ))
+
+let file_of_dep_aux (use_checked_file : bool) (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (all_cmd_line_files : (string) list) (d : dependence) : string =
+  (let cmd_line_has_impl = (fun key -> (FStarC_Util.for_some (fun fn -> (let tmp = (is_implementation fn) in
+    (if tmp then (let tmp1 = (module_key_of_file fn) in
+    ((=) key tmp1)) else false))) all_cmd_line_files)) in
+  let maybe_use_cache_of = (fun f -> (if use_checked_file then (cache_file_name f) else f)) in
+  (match d with
+    | (UseInterface (key)) -> (let tmp = (interface_of_internal file_system_map key) in
+      (match tmp with
+        | None -> (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingInterface (FStarC_Format.fmt1 "Expected an interface for module %s, but couldn't find one" key))
+        | (Some (f)) -> f
+      ))
+    | (PreferInterface (key)) when (has_interface file_system_map key) -> (let tmp = (FStarC_Options.dep ()) in
+      let tmp1 = (match tmp with
+          | None -> true
+          | tmp1 -> false
+        ) in
+      let tmp2 = (if tmp1 then (let tmp2 = (fly_deps_enabled ()) in
+        (not tmp2)) else false) in
+      let tmp3 = (if tmp2 then (cmd_line_has_impl key) else false) in
+      (if tmp3 then (let tmp4 = (FStarC_Options.expose_interfaces ()) in
+      (if tmp4 then (let tmp5 = (implementation_of_internal file_system_map key) in
+      let tmp6 = (FStarC_Option.must tmp5) in
+      (maybe_use_cache_of tmp6)) else (let tmp5 = (implementation_of_internal file_system_map key) in
+      let tmp6 = (FStarC_Option.must tmp5) in
+      let tmp7 = (interface_of_internal file_system_map key) in
+      let tmp8 = (FStarC_Option.must tmp7) in
+      let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string all_cmd_line_files) in
+      let tmp10 = (FStarC_Format.fmt4 "You may have a cyclic dependence on module %s: use --dep full to confirm. Alternatively, invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s.\n\n                                all_cmd_line_files=%s\n" key tmp6 tmp8 tmp9) in
+      let tmp11 = (FStarC_Errors_Msg.text tmp10) in
+      let tmp12 = (tmp11 :: ((FStarC_Errors_Msg.text "If you really want this behavior add the option '--expose_interfaces'.") :: [])) in
+      (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_MissingExposeInterfacesOption tmp12)))) else (let tmp4 = (interface_of_internal file_system_map key) in
+      let tmp5 = (FStarC_Option.must tmp4) in
+      (maybe_use_cache_of tmp5))))
+    | (PreferInterface (key)) -> (let tmp = (implementation_of_internal file_system_map key) in
+      (match tmp with
+        | None -> (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingImplementation (FStarC_Format.fmt1 "Expected an implementation of module %s, but couldn't find one" key))
+        | (Some (f)) -> (maybe_use_cache_of f)
+      ))
+    | (UseImplementation (key)) -> (let tmp = (implementation_of_internal file_system_map key) in
+      (match tmp with
+        | None -> (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingImplementation (FStarC_Format.fmt1 "Expected an implementation of module %s, but couldn't find one" key))
+        | (Some (f)) -> (maybe_use_cache_of f)
+      ))
+    | (FriendImplementation (key)) -> (let tmp = (implementation_of_internal file_system_map key) in
+      (match tmp with
+        | None -> (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingImplementation (FStarC_Format.fmt1 "Expected an implementation of module %s, but couldn't find one" key))
+        | (Some (f)) -> (maybe_use_cache_of f)
+      ))
+  ))
+
+let file_of_dep (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (all_cmd_line_files : (string) list) : (dependence -> string) =
+  (file_of_dep_aux false file_system_map all_cmd_line_files)
+
+let files_of_dependences (fn : string) (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (all_cmd_line_files : (string) list) (deps : (dependence) list) : (string) list =
+  (let tmp = (BatList.map (file_of_dep file_system_map all_cmd_line_files) deps) in
+  (BatList.filter (fun k -> ((<>) k fn)) tmp))
+
+let parsing_data_of_modul (deps : deps) (filename : string) (modul_opt : (FStarC_Parser_AST.modul) option) : (parsing_data * (string) list) =
+  (let modul = (match modul_opt with
+      | None -> (let tmp = (FStarC_Parser_Driver.parse_file filename) in
+        (match tmp with
+          | (ast, tmp1) -> ast
+        ))
+      | (Some (m)) -> m
+    ) in
+  let pd = (collect_module_or_decls filename (FStar_Pervasives.Inl (modul))) in
+  let pd1 = { elts = (BatList.rev (pd).elts); no_prelude = (pd).no_prelude } in
+  let tmp = (deps_from_parsing_data pd1 (deps).file_system_map filename) in
+  (match tmp with
+    | (direct_deps, tmp1, tmp2) -> (let tmp3 = (files_of_dependences filename (deps).file_system_map (deps).cmd_line_files direct_deps) in
+      (pd1, tmp3))
+  ))
+
+let deps_try_find (tmp : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (k : string) : (dep_node) option =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp k)
+
+let empty_dependences (tmp : unit) : ('tmp) list =
+  []
+
+let dependences_of (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (deps : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (all_cmd_line_files : (string) list) (fn : string) : (string) list =
+  (let tmp = (deps_try_find deps fn) in
+  (match tmp with
+    | None -> (empty_dependences ())
+    | (Some ({ edges = deps1; color = tmp1; _ })) -> (files_of_dependences fn file_system_map all_cmd_line_files deps1)
+  ))
+
+let from_graph (deps : deps) (f : string) : (string) list =
+  (let tmp = (deps_try_find (deps).dep_graph f) in
+  (match tmp with
+    | (Some (tmp1)) -> (dependences_of (deps).file_system_map (deps).dep_graph (deps).cmd_line_files f)
+    | None -> (let tmp1 = (parsing_data_of_modul deps f None) in
+      (match tmp1 with
+        | (u__1, u__2) -> u__2
+      ))
+  ))
+
+let deps_of : (deps -> (string -> (string) list)) =
+  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (40)))) in
+  (fun deps f -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cache f) in
+  (match tmp with
+    | (Some (deps1)) -> deps1
+    | None -> (let tmp1 = (fly_deps_enabled ()) in
+      let res = (if tmp1 then (let on_cli = (fun f1 -> (let bf = (FStarC_Filepath.basename f1) in
+          (BatList.exists (fun cli -> ((=) (FStarC_Filepath.basename cli) bf)) (deps).cmd_line_files))) in
+        let tmp2 = (on_cli f) in
+        let tmp3 = (if tmp2 then true else (let tmp3 = (is_interface f) in
+          (if tmp3 then (let tmp4 = (implementation_of_file f) in
+          (on_cli tmp4)) else false))) in
+        (if tmp3 then (let tmp4 = (parsing_data_of_modul deps f None) in
+        (match tmp4 with
+          | (u__1, u__2) -> u__2
+        )) else (from_graph deps f))) else (from_graph deps f)) in
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cache f res);
+      res)
+  ))))
+
+let deps_empty (tmp : unit) : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (41))))
+
+let mk_deps (dg : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (fs : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (ns : ((string) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (c : (string) list) (a : (string) FStarC_RBSet.rbset) (i : (string) list) (pr : (parsing_data) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) : deps =
+  (let tmp = (ref a) in
+  { dep_graph = dg;
+    file_system_map = fs;
+    valid_namespaces = ns;
+    cmd_line_files = c;
+    all_files = tmp;
+    interfaces_with_inlining = i;
+    parse_results = pr })
+
+let empty_deps (cmd_line_files : (string) list) : deps =
+  (let tmp = (deps_empty ()) in
+  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  let tmp3 = (FStarC_RBSet.fStarC_Class_Setlike_empty__string_rbset_string ()) in
+  let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_zero)) in
+  (mk_deps tmp tmp1 tmp2 cmd_line_files tmp3 [] tmp4))
+
+let is_valid_namespace (d : deps) (ns : FStarC_Ident.lident) : bool =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (d).valid_namespaces (BatString.lowercase_ascii (FStarC_Ident.string_of_lid ns))) in
+  let res = (match tmp with
+      | (Some (v)) -> true
+      | tmp1 -> false
+    ) in
+  (if (not res) then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident ns) in
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) (d).valid_namespaces []) in
+  let tmp3 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun x y -> Z.of_int (BatString.compare x y)) tmp2) in
+  let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 tmp3) in
+  (FStarC_Format.print2 "Could not resolve namespace %s\n valid namespaces are %s\n" tmp1 tmp4)) else ());
+  res)
+
+let safe_readdir_for_include (d : string) : (string) list =
+  (try ((fun dir -> Array.to_list (Sys.readdir dir)) d) with
+    | u__cexn -> []
+  )
+
+let can_be_namespace_component (s : string) : bool =
+  (let tmp = (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) s) Prims.int_zero) then (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s Prims.int_zero) in
+    ((fun c -> c <= 255 && BatChar.is_letter (Char.chr c)) tmp)) else false) in
+  (if tmp then (BatList.for_all (fun c -> (((FStarC_Util.is_letter_or_digit c) || ((=) c 95)) || ((=) c 39))) ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) else false))
+
+let module_candidate_of_file (ns_prefix : (string) list) (path : string) (filename : string) : ((string * string)) list =
+  (let tmp = (check_and_strip_suffix filename) in
+  (match tmp with
+    | None -> []
+    | (Some (modname)) -> (let tmp1 = (split_target modname) in
+      (match tmp1 with
+        | (m, t) -> (((BatString.concat "." (BatList.append ns_prefix ((key_for_target m t) :: []))), path) :: [])
+      ))
+  ))
+
+let rec hierarchical_modules_for_dir__walk (cwd : string) (include_roots : (string) list) (root : string) (ns_prefix : (string) list) (rel : string) : ((string * string)) list =
+  (let dir = (if ((=) rel "") then root else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) root rel)) in
+  let tmp = (safe_readdir_for_include dir) in
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun entry -> (let entry1 = (FStarC_Filepath.basename entry) in
+  let rel' = (if ((=) rel "") then entry1 else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) rel entry1)) in
+  let entry_path = ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) root rel') in
+  let tmp1 = (can_be_namespace_component entry1) in
+  let tmp2 = (not tmp1) in
+  let tmp3 = (if tmp2 then (let tmp3 = (check_and_strip_suffix entry1) in
+    (match tmp3 with
+      | None -> true
+      | tmp4 -> false
+    )) else false) in
+  (if tmp3 then [] else (if ((fun f -> try Sys.is_directory f with Sys_error _ -> false) entry_path) then (let tmp4 = (can_be_namespace_component entry1) in
+  let tmp5 = (not tmp4) in
+  (if tmp5 then [] else (if (BatList.mem entry_path include_roots) then [] else (hierarchical_modules_for_dir__walk cwd include_roots root (BatList.append ns_prefix (entry1 :: [])) rel')))) else (module_candidate_of_file ns_prefix (if ((=) root cwd) then rel' else entry_path) entry1))))) tmp))
+
+let hierarchical_modules_for_dir (cwd : string) (include_roots : (string) list) (root : string) : ((string * string)) list =
+  (hierarchical_modules_for_dir__walk cwd include_roots root [] "")
+
+let check_unique_module_names_for_dir (dir : string) (candidates : ((string * string)) list) : unit =
+  (let seen = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  (BatList.iter (fun tmp -> (match tmp with
+    | (longname, path) -> (let tmp1 = (is_interface path) in
+      let tmp2 = (if tmp1 then ":i" else ":") in
+      let key = (Prims.strcat (BatString.lowercase_ascii longname) tmp2) in
+      let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt seen key) in
+      (match tmp3 with
+        | (Some (prev)) -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_DuplicateModuleOrInterface ((FStarC_Errors_Msg.text (FStarC_Format.fmt4 "Module %s is provided by more than one file in include directory %s: %s and %s." longname dir prev path)) :: ((FStarC_Errors_Msg.text "A module must have a unique source file. For example, do not provide both a flat 'X.Y.Z.fst' and a nested 'X/Y/Z.fst' for the same module.") :: [])))
+        | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace seen key path)
+      ))
+  )) candidates))
+
+let build_inclusion_candidates_list (tmp : unit) : ((string * string)) list =
+  (let include_paths = (FStarC_Find.module_include_paths_normalized ()) in
+  let include_paths1 = ((fun l -> BatList.unique l) include_paths) in
+  let include_directories = (BatList.map (fun path -> (path).FStarC_Find.dir) include_paths1) in
+  let tmp1 = (Sys.getcwd ()) in
+  let cwd = (FStarC_Filepath.normalize_file_path tmp1) in
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun path -> (let candidates = (match (path).FStarC_Find.kind with
+      | FStarC_Find.Recursive -> (hierarchical_modules_for_dir cwd include_directories (path).FStarC_Find.dir)
+      | FStarC_Find.Flat -> (let tmp2 = (safe_readdir_for_include (path).FStarC_Find.dir) in
+        ((fun f l -> BatList.flatten (BatList.map f l)) (fun entry -> (let entry1 = (FStarC_Filepath.basename entry) in
+        let file_path = (if ((=) (path).FStarC_Find.dir cwd) then entry1 else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) (path).FStarC_Find.dir entry1)) in
+        (if ((fun f -> try Sys.is_directory f with Sys_error _ -> false) file_path) then [] else (module_candidate_of_file [] file_path entry1)))) tmp2))
+    ) in
+  (check_unique_module_names_for_dir (path).FStarC_Find.dir candidates);
+  candidates)) include_paths1))
+
+let build_map (fs_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (valid_ns_map : ((string) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (filenames : (string) list) : unit =
+  (let add_fs_entry = (fun key full_path -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt fs_map key) in
+    (match tmp with
+      | (Some ((intf, impl))) -> (let tmp1 = (is_interface full_path) in
+        (if tmp1 then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key ((Some (full_path)), impl)) else (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key (intf, (Some (full_path))))))
+      | None -> (let tmp1 = (is_interface full_path) in
+        (if tmp1 then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key ((Some (full_path)), None)) else (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key (None, (Some (full_path))))))
+    ))) in
+  let add_ns_entry = (fun key full_path -> (let tmp = (split_target key) in
+    let key1 = (match tmp with
+        | (u__1, u__2) -> u__1
+      ) in
+    let tmp1 = (namespace_of_module key1) in
+    (match tmp1 with
+      | None -> ()
+      | (Some (ns)) -> (let ns1 = (FStarC_Ident.string_of_lid ns) in
+        let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt valid_ns_map ns1) in
+        (match tmp2 with
+          | None -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace valid_ns_map ns1 (key1 :: []))
+          | (Some (keys)) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace valid_ns_map ns1 (key1 :: keys))
+        ))
+    ))) in
+  let add_entry = (fun key full_path -> ((add_fs_entry key full_path);
+    (add_ns_entry key full_path))) in
+  let tmp = (build_inclusion_candidates_list ()) in
+  (BatList.iter (fun tmp1 -> (match tmp1 with
+    | (longname, full_path) -> (add_entry (BatString.lowercase_ascii longname) full_path)
+  )) tmp);
+  (BatList.iter (fun f -> (let tmp1 = (module_key_of_file f) in
+  (add_entry tmp1 f))) filenames);
+  let idx = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun key tmp1 -> (match tmp1 with
+    | (intf, impl) -> (let tmp2 = (split_target key) in
+      (match tmp2 with
+        | (m, t) -> (let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt idx m) in
+          let cur = (match tmp3 with
+              | (Some (l)) -> l
+              | None -> []
+            ) in
+          (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace idx m ({ v_tag = t; v_intf = intf; v_impl = impl } :: cur)))
+      ))
+  )) fs_map);
+  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp1 acc -> (key :: acc)) idx []) in
+  (BatList.iter (fun m -> (let tag_str = (fun v -> (match (v).v_tag with
+      | (Some (t)) -> t
+      | None -> ""
+    )) in
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt idx m) in
+  let tmp3 = (FStarC_Option.must tmp2) in
+  let tmp4 = ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun v1 v2 -> ((fun x y -> Z.of_int (BatString.compare x y)) (tag_str v1) (tag_str v2))) tmp3) in
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace idx m tmp4))) tmp1);
+  ((module_variants) := idx);
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) fs_map []) in
+  (BatList.iter (fun key -> (let tmp3 = (split_target key) in
+  (match tmp3 with
+    | (tmp4, None) -> ()
+    | (m, t) -> (let pick = (fun k -> (let tmp4 = (variants_of m) in
+        let tmp5 = (select_variant tmp4 k t) in
+        (match tmp5 with
+          | (FStar_Pervasives.Inr ((Some (v)))) -> (file_of_kind k v)
+          | tmp6 -> None
+        ))) in
+      let tmp4 = (pick KIntf) in
+      let tmp5 = (pick KImpl) in
+      let tmp6 = (tmp4, tmp5) in
+      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fs_map key tmp6))
+  ))) tmp2))
+
+let ensure_map (deps : deps) : unit =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp acc -> (key :: acc)) (deps).file_system_map []) in
+  let tmp1 = (match tmp with
+      | [] -> true
+      | tmp1 -> false
+    ) in
+  (if tmp1 then (build_map (deps).file_system_map (deps).valid_namespaces (deps).cmd_line_files) else ()))
+
+let selects (deps : deps) (tgt : (string) option) (module_name : FStarC_Ident.lident) (k : file_kind) : bool =
+  ((ensure_map deps);
+  let tmp = (variants_of (BatString.lowercase_ascii (FStarC_Ident.string_of_lid module_name))) in
+  let tmp1 = (select_variant tmp k tgt) in
+  (match tmp1 with
+    | (FStar_Pervasives.Inr ((Some (tmp2)))) -> true
+    | tmp2 -> false
+  ))
+
+let module_has_interface (deps : deps) (target : (string) option) (module_name : FStarC_Ident.lident) : bool =
+  (selects deps target module_name KIntf)
+
+let deps_has_implementation (deps : deps) (target : (string) option) (module_name : FStarC_Ident.lident) : bool =
+  (selects deps target module_name KImpl)
+
+let interface_of (deps : deps) (module_name : string) : (string) option =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp acc -> (key :: acc)) (deps).file_system_map []) in
+  let tmp1 = (match tmp with
+      | [] -> true
+      | tmp1 -> false
+    ) in
+  (if tmp1 then (build_map (deps).file_system_map (deps).valid_namespaces (deps).cmd_line_files) else ());
+  (interface_of_internal (deps).file_system_map module_name))
+
+let print_digest (dig : ((string * string)) list) : string =
+  (FStarC_Class_Show.fStarC_Class_Show_show__list_tuple2_string_string dig)
+
+let all_fstar_files_in_dir (dir : string) : (string) list =
+  (let dirs = (FStarC_Find.expand_include_d dir) in
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun d -> (let files = (safe_readdir_for_include d) in
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun f -> (let full_path = ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) d f) in
+  let tmp = (if (not ((fun f -> try Sys.is_directory f with Sys_error _ -> false) full_path)) then (let tmp = (all_file_suffixes ()) in
+    (BatList.exists (fun ext -> (FStarC_Util.ends_with f ext)) tmp)) else false) in
+  (if tmp then (full_path :: []) else []))) files))) dirs))
+
+let expand_directories (files : (string) list) : (string) list =
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun f -> (if ((fun f -> try Sys.is_directory f with Sys_error _ -> false) f) then (all_fstar_files_in_dir f) else (f :: []))) files)
+
+let all_files_in_include_paths (tmp : unit) : (string) list =
+  (let paths = (FStarC_Find.full_include_path ()) in
+  ((fun f l -> BatList.flatten (BatList.map f l)) (fun path -> (let files = (safe_readdir_for_include path) in
+  let files1 = (BatList.filter (fun f -> (let tmp1 = (all_file_suffixes ()) in
+    (BatList.exists (fun ext -> (FStarC_Util.ends_with f ext)) tmp1))) files) in
+  (BatList.map (fun file -> ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) path file)) files1))) paths))
+
+let debug_print (f : (unit -> unit)) : unit =
+  (let tmp = (!(dbg)) in
+  (if tmp then (f ()) else ()))
+
 let dep_to_string (tmp : dependence) : string =
   (match tmp with
     | (UseInterface (f)) -> (Prims.strcat "UseInterface " f)
@@ -908,445 +1548,6 @@ let fStarC_Class_Show_show__list_dependence (tmp : (dependence) list) : string =
   (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_dependence tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
-
-let parsing_data_elt_eq (e1 : parsing_data_elt) (e2 : parsing_data_elt) : bool =
-  (match (e1, e2) with
-    | ((P_begin_module (l1)), (P_begin_module (l2))) -> (FStarC_Ident.lid_equals l1 l2)
-    | ((P_open (b1, l1)), (P_open (b2, l2))) -> (((=) b1 b2) && (FStarC_Ident.lid_equals l1 l2))
-    | ((P_implicit_open_module_or_namespace (k1, l1)), (P_implicit_open_module_or_namespace (k2, l2))) -> (((=) k1 k2) && (FStarC_Ident.lid_equals l1 l2))
-    | ((P_dep (b1, l1)), (P_dep (b2, l2))) -> (((=) b1 b2) && (FStarC_Ident.lid_equals l1 l2))
-    | ((P_alias (i1, l1)), (P_alias (i2, l2))) -> (((=) (FStarC_Ident.string_of_id i1) (FStarC_Ident.string_of_id i2)) && (FStarC_Ident.lid_equals l1 l2))
-    | ((P_lid (l1)), (P_lid (l2))) -> (FStarC_Ident.lid_equals l1 l2)
-    | (P_inline_for_extraction, P_inline_for_extraction) -> true
-    | (tmp, tmp1) -> false
-  )
-
-let maybe_module_name_of_file (f : string) : (string) option =
-  (let tmp = (maybe_module_key_of_file f) in
-  (match tmp with
-    | (Some (stem)) -> (let tmp1 = (split_target stem) in
-      let tmp2 = (match tmp1 with
-          | (u__1, u__2) -> u__1
-        ) in
-      (Some (tmp2)))
-    | None -> None
-  ))
-
-let collect_module_or_decls__collect_constant (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (c : FStarC_Const.sconst) : unit =
-  (match c with
-    | (FStarC_Const.Const_machine_int (tmp, tmp1, FStarC_Const.Unsigned, FStarC_Const.Sizet)) -> (let tmp2 = (FStarC_Ident.lid_of_str "fstar.sizeT") in
-      let tmp3 = (false, tmp2) in
-      let tmp4 = (P_dep ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp4))
-    | (FStarC_Const.Const_machine_int (tmp, tmp1, signedness, width)) -> (let u = (match signedness with
-          | FStarC_Const.Unsigned -> "u"
-          | FStarC_Const.Signed -> ""
-        ) in
-      let w = (match width with
-          | FStarC_Const.Int8 -> "8"
-          | FStarC_Const.Int16 -> "16"
-          | FStarC_Const.Int32 -> "32"
-          | FStarC_Const.Int64 -> "64"
-        ) in
-      let tmp2 = (FStarC_Ident.lid_of_str (FStarC_Format.fmt2 "fstar.%sint%s" u w)) in
-      let tmp3 = (false, tmp2) in
-      let tmp4 = (P_dep ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp4))
-    | (FStarC_Const.Const_char (tmp)) -> (let tmp1 = (FStarC_Ident.lid_of_str "fstar.char") in
-      let tmp2 = (false, tmp1) in
-      let tmp3 = (P_dep ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp3))
-    | FStarC_Const.Const_range_of -> (let tmp = (FStarC_Ident.lid_of_str "fstar.range") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2))
-    | FStarC_Const.Const_set_range_of -> (let tmp = (FStarC_Ident.lid_of_str "fstar.range") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2))
-    | (FStarC_Const.Const_real (tmp)) -> (let mm = (maybe_module_name_of_file filename) in
-      (if ((<>) mm (Some ("FStar.Real"))) then (let tmp1 = (FStarC_Ident.lid_of_str "fstar.real") in
-      let tmp2 = (false, tmp1) in
-      let tmp3 = (P_dep ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp3)) else ()))
-    | tmp -> ()
-  )
-
-let collect_module_or_decls__collect_fieldname (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (fn : FStarC_Ident.lident) : unit =
-  (if ((<>) (FStarC_Ident.nsstr fn) "") then (let tmp = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid fn)) in
-  let tmp1 = (false, tmp) in
-  let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-  (add_to_parsing_data tmp2)) else ())
-
-let rec collect_module_or_decls__collect_binders (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) : ((FStarC_Parser_AST.binder) list -> unit) =
-  (BatList.iter (collect_module_or_decls__collect_binder filename num_of_toplevelmods add_to_parsing_data set_no_prelude))
-
-and collect_module_or_decls__collect_binder (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (b : FStarC_Parser_AST.binder) : unit =
-  (((collect_module_or_decls__collect_aqual filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (b).FStarC_Parser_AST.aqual);
-  (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (b).FStarC_Parser_AST.battributes);
-  (match b with
-    | { FStarC_Parser_AST.b = (FStarC_Parser_AST.Annotated (tmp, t)); brange = tmp1; blevel = tmp2; aqual = tmp3; battributes = tmp4; _ } -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-    | { FStarC_Parser_AST.b = (FStarC_Parser_AST.NoName (t)); brange = tmp; blevel = tmp1; aqual = tmp2; battributes = tmp3; _ } -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-    | tmp -> ()
-  ))
-
-and collect_module_or_decls__collect_aqual (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (aq : (FStarC_Parser_AST.arg_qualifier) option) : unit =
-  (match aq with
-    | (Some ((FStarC_Parser_AST.Meta (t)))) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-    | (Some (FStarC_Parser_AST.TypeClassArg)) -> (add_to_parsing_data (P_lid (FStarC_Parser_Const.tcresolve_lid)))
-    | tmp -> ()
-  )
-
-and collect_module_or_decls__collect_term (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (t : FStarC_Parser_AST.term) : unit =
-  ((collect_module_or_decls__collect_term' filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (t).FStarC_Parser_AST.tm)
-
-and collect_module_or_decls__collect_term' (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (t : FStarC_Parser_AST.term') : unit =
-  (match t with
-    | FStarC_Parser_AST.Wild -> ()
-    | (FStarC_Parser_AST.Const (c)) -> ((collect_module_or_decls__collect_constant filename num_of_toplevelmods add_to_parsing_data set_no_prelude) c)
-    | (FStarC_Parser_AST.Op (tmp, ts)) -> (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ts)
-    | (FStarC_Parser_AST.Uvar (tmp)) -> ()
-    | (FStarC_Parser_AST.Var (lid)) -> (add_to_parsing_data (P_lid (lid)))
-    | (FStarC_Parser_AST.Projector (lid, tmp)) -> (add_to_parsing_data (P_lid (lid)))
-    | (FStarC_Parser_AST.Discrim (lid)) -> (add_to_parsing_data (P_lid (lid)))
-    | (FStarC_Parser_AST.Name (lid)) -> (add_to_parsing_data (P_lid (lid)))
-    | (FStarC_Parser_AST.Construct (lid, termimps)) -> ((add_to_parsing_data (P_lid (lid)));
-      (BatList.iter (fun tmp -> (match tmp with
-        | (t1, tmp1) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-      )) termimps))
-    | (FStarC_Parser_AST.Function (branches, tmp)) -> ((collect_module_or_decls__collect_branches filename num_of_toplevelmods add_to_parsing_data set_no_prelude) branches)
-    | (FStarC_Parser_AST.Abs (pats, t1)) -> (((collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude) pats);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.App (t1, t2, tmp)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2))
-    | (FStarC_Parser_AST.Let (tmp, patterms, t1)) -> ((BatList.iter (fun tmp1 -> (match tmp1 with
-        | (attrs_opt, (pat, t2)) -> ((ignore (FStarC_Option.map (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude)) attrs_opt));
-          ((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) pat);
-          ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2))
-      )) patterms);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.LetOperator (lets, body)) -> ((BatList.iter (fun tmp -> (match tmp with
-        | (ident, pat, def) -> (((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) pat);
-          ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) def))
-      )) lets);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) body))
-    | (FStarC_Parser_AST.LetOpen (lid, t1)) -> ((add_to_parsing_data (P_open (true, lid)));
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.LetOpenRecord (r, rty, e)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) r);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) rty);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e))
-    | (FStarC_Parser_AST.Bind (tmp, t1, t2)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2))
-    | (FStarC_Parser_AST.Seq (t1, t2)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2))
-    | (FStarC_Parser_AST.If (t1, tmp, ret_opt, t2, t3)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      (match ret_opt with
-        | None -> ()
-        | (Some ((tmp1, ret, tmp2))) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ret)
-      );
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t3))
-    | (FStarC_Parser_AST.Match (t1, tmp, ret_opt, bs)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      (match ret_opt with
-        | None -> ()
-        | (Some ((tmp1, ret, tmp2))) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ret)
-      );
-      ((collect_module_or_decls__collect_branches filename num_of_toplevelmods add_to_parsing_data set_no_prelude) bs))
-    | (FStarC_Parser_AST.TryWith (t1, bs)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_branches filename num_of_toplevelmods add_to_parsing_data set_no_prelude) bs))
-    | (FStarC_Parser_AST.Ascribed (t1, t2, None, tmp)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2))
-    | (FStarC_Parser_AST.Ascribed (t1, t2, (Some (tac)), tmp)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) tac))
-    | (FStarC_Parser_AST.Record (t1, idterms)) -> ((FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      (BatList.iter (fun tmp -> (match tmp with
-        | (fn, t2) -> (((collect_module_or_decls__collect_fieldname filename num_of_toplevelmods add_to_parsing_data set_no_prelude) fn);
-          ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2))
-      )) idterms))
-    | (FStarC_Parser_AST.Project (t1, f)) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_fieldname filename num_of_toplevelmods add_to_parsing_data set_no_prelude) f))
-    | (FStarC_Parser_AST.Product (binders, t1)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.Sum (binders, t1)) -> ((BatList.iter (fun tmp -> (match tmp with
-        | (FStar_Pervasives.Inl (b)) -> ((collect_module_or_decls__collect_binder filename num_of_toplevelmods add_to_parsing_data set_no_prelude) b)
-        | (FStar_Pervasives.Inr (t2)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2)
-      )) binders);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.QForall (binders, (tmp, ts), t1)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      (BatList.iter (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude)) ts);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.QExists (binders, (tmp, ts), t1)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      (BatList.iter (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude)) ts);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.QuantOp (tmp, binders, (tmp1, ts), t1)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      (BatList.iter (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude)) ts);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.Refine (binder, t1)) -> (((collect_module_or_decls__collect_binder filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binder);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1))
-    | (FStarC_Parser_AST.NamedTyp (tmp, t1)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.Paren (t1)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.Requires (t1)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.Ensures (t1)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.Labeled (t1, tmp, tmp1)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.LexList (l)) -> (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) l)
-    | (FStarC_Parser_AST.WFOrder (t1, t2)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.WellFounded") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2))
-    | (FStarC_Parser_AST.Decreases (t1)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.Quote (t1, tmp)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.Antiquote (t1)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.VQuote (t1)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1)
-    | (FStarC_Parser_AST.CalcProof (rel, init, steps)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Calc") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) rel);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) init);
-      (BatList.iter (fun tmp3 -> (match tmp3 with
-        | (rel1, just, next) -> (((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) rel1);
-          ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) just);
-          ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) next))
-      )) steps))
-    | (FStarC_Parser_AST.IntroForall (bs, p, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) bs);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e))
-    | (FStarC_Parser_AST.IntroExists (bs, t1, vs, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) bs);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) vs);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e))
-    | (FStarC_Parser_AST.IntroImplies (p, q, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) q);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e))
-    | (FStarC_Parser_AST.IntroOr (b, p, q, r)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) q);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) r))
-    | (FStarC_Parser_AST.IntroAnd (p, q, r, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) q);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) r);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e))
-    | (FStarC_Parser_AST.ElimForall (bs, p, vs)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) bs);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) vs))
-    | (FStarC_Parser_AST.ElimExists (bs, p, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) bs);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e))
-    | (FStarC_Parser_AST.ElimImplies (p, q, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) q);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e))
-    | (FStarC_Parser_AST.ElimAnd (p, q, e)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) q);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e))
-    | (FStarC_Parser_AST.ElimOr (p, q, e, e')) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Classical.Sugar") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) q);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) e'))
-    | (FStarC_Parser_AST.ListLiteral (ts)) -> (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ts)
-    | (FStarC_Parser_AST.SeqLiteral (ts)) -> (let tmp = (FStarC_Ident.lid_of_str "FStar.Seq.Base") in
-      let tmp1 = (false, tmp) in
-      let tmp2 = (P_dep ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp2);
-      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ts))
-  )
-
-and collect_module_or_decls__collect_patterns (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) : ((FStarC_Parser_AST.pattern) list -> unit) =
-  (BatList.iter (collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude))
-
-and collect_module_or_decls__collect_pattern (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (p : FStarC_Parser_AST.pattern) : unit =
-  ((collect_module_or_decls__collect_pattern' filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (p).FStarC_Parser_AST.pat)
-
-and collect_module_or_decls__collect_pattern' (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (p : FStarC_Parser_AST.pattern') : unit =
-  (match p with
-    | (FStarC_Parser_AST.PatVar (tmp, aqual, attrs)) -> (((collect_module_or_decls__collect_aqual filename num_of_toplevelmods add_to_parsing_data set_no_prelude) aqual);
-      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) attrs))
-    | (FStarC_Parser_AST.PatWild (aqual, attrs)) -> (((collect_module_or_decls__collect_aqual filename num_of_toplevelmods add_to_parsing_data set_no_prelude) aqual);
-      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) attrs))
-    | FStarC_Parser_AST.PatRest -> ()
-    | (FStarC_Parser_AST.PatOp (tmp)) -> ()
-    | (FStarC_Parser_AST.PatConst (tmp)) -> ()
-    | (FStarC_Parser_AST.PatVQuote (t)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-    | (FStarC_Parser_AST.PatApp (p1, ps)) -> (((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p1);
-      ((collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ps))
-    | (FStarC_Parser_AST.PatName (lid)) -> (add_to_parsing_data (P_lid (lid)))
-    | (FStarC_Parser_AST.PatList (ps)) -> ((collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ps)
-    | (FStarC_Parser_AST.PatOr (ps)) -> ((collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ps)
-    | (FStarC_Parser_AST.PatTuple (ps, tmp)) -> ((collect_module_or_decls__collect_patterns filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ps)
-    | (FStarC_Parser_AST.PatRecord (lidpats)) -> (BatList.iter (fun tmp -> (match tmp with
-        | (tmp1, p1) -> ((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p1)
-      )) lidpats)
-    | (FStarC_Parser_AST.PatAscribed (p1, (t, None))) -> (((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t))
-    | (FStarC_Parser_AST.PatAscribed (p1, (t, (Some (tac))))) -> (((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) p1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) tac))
-  )
-
-and collect_module_or_decls__collect_branches (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) : (((FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) option * FStarC_Parser_AST.term)) list -> unit) =
-  (BatList.iter (collect_module_or_decls__collect_branch filename num_of_toplevelmods add_to_parsing_data set_no_prelude))
-
-and collect_module_or_decls__collect_branch (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (b : (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) option * FStarC_Parser_AST.term)) : unit =
-  (match b with
-    | (pat, t1, t2) -> (((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) pat);
-      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t1);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t2))
-  )
-
-let collect_module_or_decls__collect_tycon_record (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) : (((FStarC_Ident.ident * (FStarC_Parser_AST.arg_qualifier) option * (FStarC_Parser_AST.term) list * FStarC_Parser_AST.term)) list -> unit) =
-  (BatList.iter (fun tmp -> (match tmp with
-    | (tmp1, aq, attrs, t) -> (((collect_module_or_decls__collect_aqual filename num_of_toplevelmods add_to_parsing_data set_no_prelude) aq);
-      (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) attrs);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t))
-  )))
-
-let collect_module_or_decls__collect_tycon (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (tc : FStarC_Parser_AST.tycon) : unit =
-  (match tc with
-    | (FStarC_Parser_AST.TyconAbstract (tmp, binders, k)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) k))
-    | (FStarC_Parser_AST.TyconAbbrev (tmp, binders, k, t)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) k);
-      ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t))
-    | (FStarC_Parser_AST.TyconRecord (tmp, binders, k, tmp1, identterms)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) k);
-      ((collect_module_or_decls__collect_tycon_record filename num_of_toplevelmods add_to_parsing_data set_no_prelude) identterms))
-    | (FStarC_Parser_AST.TyconVariant (tmp, binders, k, identterms)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) k);
-      let tmp1 = (BatList.filter_map Custard_FStar_Pervasives_Native.fStar_Pervasives_Native___proj__Mktuple3__item___2 identterms) in
-      (BatList.iter (fun tmp2 -> (match tmp2 with
-        | (FStarC_Parser_AST.VpOfNotation (t)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-        | (FStarC_Parser_AST.VpArbitrary (t)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-        | (FStarC_Parser_AST.VpRecord (record, t)) -> (((collect_module_or_decls__collect_tycon_record filename num_of_toplevelmods add_to_parsing_data set_no_prelude) record);
-          (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t))
-      )) tmp1))
-  )
-
-let rec collect_module_or_decls__collect_decl (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (d : FStarC_Parser_AST.decl') : unit =
-  (match d with
-    | (FStarC_Parser_AST.Include (lid, tmp)) -> (add_to_parsing_data (P_open (false, lid)))
-    | (FStarC_Parser_AST.Open (lid, tmp)) -> (add_to_parsing_data (P_open (false, lid)))
-    | (FStarC_Parser_AST.Friend (lid)) -> (let tmp = (lowercase_join_longident lid true) in
-      let tmp1 = (FStarC_Ident.lid_of_str tmp) in
-      let tmp2 = (FStarC_Ident.set_lid_range tmp1 (FStarC_Ident.range_of_lid lid)) in
-      let tmp3 = (true, tmp2) in
-      let tmp4 = (P_dep ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))) in
-      (add_to_parsing_data tmp4))
-    | (FStarC_Parser_AST.ModuleAbbrev (ident, lid)) -> (add_to_parsing_data (P_alias (ident, lid)))
-    | (FStarC_Parser_AST.TopLevelLet (tmp, patterms)) -> (BatList.iter (fun tmp1 -> (match tmp1 with
-        | (pat, t) -> (((collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude) pat);
-          ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t))
-      )) patterms)
-    | (FStarC_Parser_AST.Splice (tmp, tmp1, t)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-    | (FStarC_Parser_AST.Assume (tmp, t)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-    | (FStarC_Parser_AST.Val (tmp, t)) -> ((collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-    | (FStarC_Parser_AST.SubEffect (tmp)) -> ()
-    | (FStarC_Parser_AST.Tycon (tmp, tc, ts)) -> ((if tc then (add_to_parsing_data (P_lid (FStarC_Parser_Const.tcclass_lid))) else ());
-      (BatList.iter (collect_module_or_decls__collect_tycon filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ts))
-    | (FStarC_Parser_AST.Exception (tmp, t)) -> (FStarC_Option.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) t)
-    | (FStarC_Parser_AST.NewEffect (ed)) -> ((collect_module_or_decls__collect_effect_decl filename num_of_toplevelmods add_to_parsing_data set_no_prelude) ed)
-    | (FStarC_Parser_AST.DeclToBeDesugared (tbs)) -> ((tbs).FStarC_Parser_AST.dep_scan { FStarC_Parser_AST.scan_term = (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude);
-        scan_binder = (collect_module_or_decls__collect_binder filename num_of_toplevelmods add_to_parsing_data set_no_prelude);
-        scan_pattern = (collect_module_or_decls__collect_pattern filename num_of_toplevelmods add_to_parsing_data set_no_prelude);
-        add_lident = (fun lid -> (add_to_parsing_data (P_lid (lid))));
-        add_open = (fun lid -> (add_to_parsing_data (P_open (true, lid)))) } (tbs).FStarC_Parser_AST.blob)
-    | (FStarC_Parser_AST.UseLangDecls (tmp)) -> ()
-    | (FStarC_Parser_AST.Pragma (tmp)) -> ()
-    | (FStarC_Parser_AST.DeclSyntaxExtension (u__1, u__2, u__3, u__4)) -> ()
-    | FStarC_Parser_AST.Unparseable -> ()
-    | (FStarC_Parser_AST.TopLevelModule (lid)) -> ((FStarC_Util.incr num_of_toplevelmods);
-      let tmp = (!(num_of_toplevelmods)) in
-      let tmp1 = (Prims.op_Greater tmp Prims.int_one) in
-      (if tmp1 then (let tmp2 = (string_of_lid lid true) in
-      let tmp3 = (FStarC_Format.fmt1 "Automatic dependency analysis demands one module per file (module %s not supported)" tmp2) in
-      (FStarC_Errors.fStarC_Errors_raise_error__lident_string lid FStarC_Errors_Codes.Fatal_OneModulePerFile tmp3)) else ()))
-  )
-
-and collect_module_or_decls__collect_effect_decl (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (ed : FStarC_Parser_AST.effect_decl) : unit =
-  (match ed with
-    | (FStarC_Parser_AST.DeclareEffect (tmp, binders)) -> ((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders)
-    | (FStarC_Parser_AST.DefineEffect (tmp, binders, decls)) -> (((collect_module_or_decls__collect_binders filename num_of_toplevelmods add_to_parsing_data set_no_prelude) binders);
-      (BatList.iter (fun d -> ((collect_module_or_decls__collect_decl filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (d).FStarC_Parser_AST.d)) decls))
-  )
-
-let collect_module_or_decls__collect_decls (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) : ((FStarC_Parser_AST.decl) list -> unit) =
-  (BatList.iter (fun x -> (((collect_module_or_decls__collect_decl filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (x).FStarC_Parser_AST.d);
-  (BatList.iter (collect_module_or_decls__collect_term filename num_of_toplevelmods add_to_parsing_data set_no_prelude) (x).FStarC_Parser_AST.attrs);
-  (match (x).FStarC_Parser_AST.d with
-    | tmp when (BatList.mem FStarC_Parser_AST.Inline_for_extraction (x).FStarC_Parser_AST.quals) -> (add_to_parsing_data P_inline_for_extraction)
-    | tmp -> ()
-  ))))
-
-let collect_module_or_decls__go (filename : string) (num_of_toplevelmods : (Prims.int ref)) (add_to_parsing_data : (parsing_data_elt -> unit)) (set_no_prelude : (bool -> unit)) (x : (FStarC_Parser_AST.modul, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either) : unit =
-  (match x with
-    | (FStar_Pervasives.Inl ((FStarC_Parser_AST.Module ({ FStarC_Parser_AST.no_prelude = no_prelude; mname = mname; decls = decls; _ })))) -> ((set_no_prelude no_prelude);
-      (add_to_parsing_data (P_begin_module (mname)));
-      ((collect_module_or_decls__collect_decls filename num_of_toplevelmods add_to_parsing_data set_no_prelude) decls))
-    | (FStar_Pervasives.Inl ((FStarC_Parser_AST.Interface ({ FStarC_Parser_AST.no_prelude = no_prelude; mname = mname; decls = decls; admitted = tmp; _ })))) -> ((set_no_prelude no_prelude);
-      (add_to_parsing_data (P_begin_module (mname)));
-      ((collect_module_or_decls__collect_decls filename num_of_toplevelmods add_to_parsing_data set_no_prelude) decls))
-    | (FStar_Pervasives.Inr (decls)) -> ((set_no_prelude true);
-      ((collect_module_or_decls__collect_decls filename num_of_toplevelmods add_to_parsing_data set_no_prelude) decls))
-  )
-
-let collect_module_or_decls (filename : string) (m : (FStarC_Parser_AST.modul, (FStarC_Parser_AST.decl) list) FStar_Pervasives.either) : parsing_data =
-  (let num_of_toplevelmods = (ref Prims.int_zero) in
-  let pd = (ref empty_parsing_data) in
-  let add_to_parsing_data = (fun elt -> (let tmp = (!(pd)) in
-    let tmp1 = (tmp).elts in
-    let tmp2 = (BatList.exists (fun e -> (parsing_data_elt_eq e elt)) tmp1) in
-    let tmp3 = (not tmp2) in
-    (if tmp3 then (let tmp4 = (!(pd)) in
-    let tmp5 = (!(pd)) in
-    let tmp6 = (tmp5).elts in
-    let tmp7 = (elt :: tmp6) in
-    let tmp8 = { elts = tmp7; no_prelude = (tmp4).no_prelude } in
-    ((pd) := tmp8)) else ()))) in
-  let set_no_prelude = (fun b -> (let tmp = (!(pd)) in
-    let tmp1 = { elts = (tmp).elts; no_prelude = b } in
-    ((pd) := tmp1))) in
-  ((collect_module_or_decls__go filename num_of_toplevelmods add_to_parsing_data set_no_prelude) m);
-  (!(pd)))
 
 let str_of_parsing_data_elt (elt : parsing_data_elt) : string =
   (let str_of_open_kind = (fun tmp -> (match tmp with
@@ -1427,20 +1628,6 @@ let collect_one (original_map : (((string) option * (string) option)) FStarC_Has
       ))
   ))))
 
-let interface_of_internal (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (key : string) : (string) option =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt file_system_map key) in
-  (match tmp with
-    | (Some (((Some (iface)), tmp1))) -> (Some (iface))
-    | tmp1 -> None
-  ))
-
-let has_interface (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (key : string) : bool =
-  (let tmp = (interface_of_internal file_system_map key) in
-  (match tmp with
-    | (Some (v)) -> true
-    | tmp1 -> false
-  ))
-
 let maybe_use_interface (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (file_name : string) : (dependence) list =
   (let module_name = (module_key_of_file file_name) in
   let tmp = (is_implementation file_name) in
@@ -1449,104 +1636,6 @@ let maybe_use_interface (file_system_map : (((string) option * (string) option))
 
 let deps_add_dep (tmp : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (k : string) (v : dep_node) : unit =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tmp k v)
-
-let dbg_CheckedFiles : (bool ref) =
-  (FStarC_Debug.get_toggle "CheckedFiles")
-
-let cache_file_name : (string -> string) =
-  (let checked_file_and_exists_flag = (fun fn -> (let mname = (module_name_of_file fn) in
-    let stem = (module_stem_of_file fn) in
-    let bn = (FStarC_Filepath.basename fn) in
-    let tmp = (check_and_strip_suffix bn) in
-    let ext = (match tmp with
-        | (Some (stem1)) -> ((fun s i -> BatString.tail s (Z.to_int i)) bn ((fun s -> Z.of_int (BatUTF8.length s)) stem1))
-        | None -> (FStarC_Effect.failwith (FStarC_Format.fmt1 "Impossible: cache_file_name: file without a valid F* extension: %s" fn))
-      ) in
-    let cache_bn = (Prims.strcat stem (Prims.strcat ext ".checked")) in
-    let cache_fn = (if ((=) bn fn) then cache_bn else ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) (Filename.dirname fn) cache_bn)) in
-    let tmp1 = (FStarC_Find.find_file (FStarC_Filepath.basename cache_fn)) in
-    (match tmp1 with
-      | (Some (path)) -> (let expected_cache_file = (FStarC_Find.prepend_cache_dir cache_fn) in
-        let tmp2 = (FStarC_Options.dep ()) in
-        let tmp3 = (match tmp2 with
-            | (Some (v)) -> true
-            | tmp3 -> false
-          ) in
-        let tmp4 = (if tmp3 then (let tmp4 = (FStarC_Options.should_be_already_cached mname) in
-          (not tmp4)) else false) in
-        let tmp5 = (if tmp4 then (if (not (Sys.file_exists expected_cache_file)) then true else (let tmp5 = ((fun f g -> let a = Unix.stat f and b = Unix.stat g in a.Unix.st_dev = b.Unix.st_dev && a.Unix.st_ino = b.Unix.st_ino) path expected_cache_file) in
-          (not tmp5))) else false) in
-        (if tmp5 then (FStarC_Errors.fStarC_Errors_log_issue0__list_ocaml_document FStarC_Errors_Codes.Warning_UnexpectedCheckedFile ((PPrint.(^/^) (FStarC_Errors_Msg.text "Did not expect module") (PPrint.(^/^) (PPrint.string mname) (FStarC_Errors_Msg.text "to be already checked."))) :: ((PPrint.(^/^) (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "Found it in an unexpected location:") (PPrint.string path)) (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "instead of") (PPrint.string expected_cache_file))) :: []))) else ());
-        let tmp6 = (if (Sys.file_exists expected_cache_file) then ((fun f g -> let a = Unix.stat f and b = Unix.stat g in a.Unix.st_dev = b.Unix.st_dev && a.Unix.st_ino = b.Unix.st_ino) path expected_cache_file) else false) in
-        (if tmp6 then expected_cache_file else path))
-      | None -> (let tmp2 = (!(dbg_CheckedFiles)) in
-        (if tmp2 then (FStarC_Format.print1 "find_file(%s) returned None\n" (FStarC_Filepath.basename cache_fn)) else ());
-        let tmp3 = (FStarC_Options.should_be_already_cached mname) in
-        (if tmp3 then (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Error_AlreadyCachedAssertionFailure ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Expected %s to be already checked but could not find it." mname)) :: [])) else ());
-        (FStarC_Find.prepend_cache_dir cache_fn))
-    ))) in
-  let memo = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
-  let memo1 = (fun f x -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt memo x) in
-    (match tmp with
-      | (Some (res)) -> res
-      | None -> (let res = (f x) in
-        (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace memo x res);
-        res)
-    ))) in
-  (memo1 checked_file_and_exists_flag))
-
-let file_of_dep_aux (use_checked_file : bool) (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (all_cmd_line_files : (string) list) (d : dependence) : string =
-  (let cmd_line_has_impl = (fun key -> (FStarC_Util.for_some (fun fn -> (let tmp = (is_implementation fn) in
-    (if tmp then (let tmp1 = (module_key_of_file fn) in
-    ((=) key tmp1)) else false))) all_cmd_line_files)) in
-  let maybe_use_cache_of = (fun f -> (if use_checked_file then (cache_file_name f) else f)) in
-  (match d with
-    | (UseInterface (key)) -> (let tmp = (interface_of_internal file_system_map key) in
-      (match tmp with
-        | None -> (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingInterface (FStarC_Format.fmt1 "Expected an interface for module %s, but couldn't find one" key))
-        | (Some (f)) -> f
-      ))
-    | (PreferInterface (key)) when (has_interface file_system_map key) -> (let tmp = (FStarC_Options.dep ()) in
-      let tmp1 = (match tmp with
-          | None -> true
-          | tmp1 -> false
-        ) in
-      let tmp2 = (if tmp1 then (let tmp2 = (fly_deps_enabled ()) in
-        (not tmp2)) else false) in
-      let tmp3 = (if tmp2 then (cmd_line_has_impl key) else false) in
-      (if tmp3 then (let tmp4 = (FStarC_Options.expose_interfaces ()) in
-      (if tmp4 then (let tmp5 = (implementation_of_internal file_system_map key) in
-      let tmp6 = (FStarC_Option.must tmp5) in
-      (maybe_use_cache_of tmp6)) else (let tmp5 = (implementation_of_internal file_system_map key) in
-      let tmp6 = (FStarC_Option.must tmp5) in
-      let tmp7 = (interface_of_internal file_system_map key) in
-      let tmp8 = (FStarC_Option.must tmp7) in
-      let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_128 all_cmd_line_files) in
-      let tmp10 = (FStarC_Format.fmt4 "You may have a cyclic dependence on module %s: use --dep full to confirm. Alternatively, invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s.\n\n                                all_cmd_line_files=%s\n" key tmp6 tmp8 tmp9) in
-      let tmp11 = (FStarC_Errors_Msg.text tmp10) in
-      let tmp12 = (tmp11 :: ((FStarC_Errors_Msg.text "If you really want this behavior add the option '--expose_interfaces'.") :: [])) in
-      (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_MissingExposeInterfacesOption tmp12)))) else (let tmp4 = (interface_of_internal file_system_map key) in
-      let tmp5 = (FStarC_Option.must tmp4) in
-      (maybe_use_cache_of tmp5))))
-    | (PreferInterface (key)) -> (let tmp = (implementation_of_internal file_system_map key) in
-      (match tmp with
-        | None -> (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingImplementation (FStarC_Format.fmt1 "Expected an implementation of module %s, but couldn't find one" key))
-        | (Some (f)) -> (maybe_use_cache_of f)
-      ))
-    | (UseImplementation (key)) -> (let tmp = (implementation_of_internal file_system_map key) in
-      (match tmp with
-        | None -> (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingImplementation (FStarC_Format.fmt1 "Expected an implementation of module %s, but couldn't find one" key))
-        | (Some (f)) -> (maybe_use_cache_of f)
-      ))
-    | (FriendImplementation (key)) -> (let tmp = (implementation_of_internal file_system_map key) in
-      (match tmp with
-        | None -> (FStarC_Errors.fStarC_Errors_raise_error0__string FStarC_Errors_Codes.Fatal_MissingImplementation (FStarC_Format.fmt1 "Expected an implementation of module %s, but couldn't find one" key))
-        | (Some (f)) -> (maybe_use_cache_of f)
-      ))
-  ))
-
-let file_of_dep (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (all_cmd_line_files : (string) list) : (dependence -> string) =
-  (file_of_dep_aux false file_system_map all_cmd_line_files)
 
 let rec build_dep_graph_for_files__discover_one (all_cmd_line_files : (string) list) (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (dep_graph : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (parse_results : (parsing_data) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (get_parsing_data_from_cache : (string -> (parsing_data) option)) (add_interface_for_inlining : (string -> unit)) (file_name : string) : unit =
   (let tmp = (deps_try_find dep_graph file_name) in
@@ -1669,20 +1758,6 @@ let with_file_outchannel (fn : string) (k : (Stdlib.out_channel -> 'u___a)) : 'u
 let dep_graph_copy (dep_graph : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy dep_graph)
 
-let empty_dependences (tmp : unit) : ('tmp) list =
-  []
-
-let files_of_dependences (fn : string) (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (all_cmd_line_files : (string) list) (deps : (dependence) list) : (string) list =
-  (let tmp = (BatList.map (file_of_dep file_system_map all_cmd_line_files) deps) in
-  (BatList.filter (fun k -> ((<>) k fn)) tmp))
-
-let dependences_of (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (deps : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (all_cmd_line_files : (string) list) (fn : string) : (string) list =
-  (let tmp = (deps_try_find deps fn) in
-  (match tmp with
-    | None -> (empty_dependences ())
-    | (Some ({ edges = deps1; color = tmp1; _ })) -> (files_of_dependences fn file_system_map all_cmd_line_files deps1)
-  ))
-
 let rec collect__aux (cycle_detected : ((dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t -> ((string) list -> (string -> unit)))) (all_command_line_files : (string) list) (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (dep_graph : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (mo_files : ((string) list ref)) (cycle : (string) list) (filename : string) : unit =
   (let tmp = (deps_try_find dep_graph filename) in
   let node = (match tmp with
@@ -1711,7 +1786,7 @@ let rec collect__aux (cycle_detected : ((dep_node) FStarC_HashTable.FStarC_HashT
     | Black -> ()
     | White -> ((deps_add_dep dep_graph filename { edges = direct_deps; color = Gray });
       let tmp1 = (dependences_of file_system_map dep_graph all_command_line_files filename) in
-      (BatList.iter (fun k -> ((collect__aux cycle_detected all_command_line_files file_system_map dep_graph mo_files) (k :: cycle) k)) tmp1);
+      (BatList.iter (fun k -> (collect__aux cycle_detected all_command_line_files file_system_map dep_graph mo_files (k :: cycle) k)) tmp1);
       (deps_add_dep dep_graph filename { edges = direct_deps; color = Black });
       let tmp2 = (is_interface filename) in
       let tmp3 = (if tmp2 then (peek_past_interfaces ()) else false) in
@@ -1753,7 +1828,7 @@ let rec topological_dependences_of'__all_friend_deps_1 (file_system_map : (((str
           (FStarC_Format.print2 "Visiting %s: direct deps are %s\n" filename tmp2)) else ());
           (deps_add_dep dep_graph filename { edges = (dep_node).edges; color = Gray });
           let tmp2 = (dependences_of file_system_map dep_graph root_files filename) in
-          let tmp3 = ((topological_dependences_of'__all_friend_deps file_system_map root_files) dep_graph cycle (all_friends, all_files_) tmp2) in
+          let tmp3 = (topological_dependences_of'__all_friend_deps file_system_map root_files dep_graph cycle (all_friends, all_files_) tmp2) in
           (match tmp3 with
             | (all_friends1, all_files1) -> ((deps_add_dep dep_graph filename { edges = (dep_node).edges; color = Black });
               let tmp4 = (!(dbg)) in
@@ -1768,15 +1843,15 @@ let rec topological_dependences_of'__all_friend_deps_1 (file_system_map : (((str
       ))
   )
 
-and topological_dependences_of'__all_friend_deps (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (root_files : (string) list) (dep_graph : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (cycle : (string) list) : (((string) list * (string) list) -> ((string) list -> ((string) list * (string) list))) =
-  (BatList.fold_left (fun all_friends k -> ((topological_dependences_of'__all_friend_deps_1 file_system_map root_files) dep_graph (k :: cycle) all_friends k)))
+and topological_dependences_of'__all_friend_deps (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (root_files : (string) list) (dep_graph : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (cycle : (string) list) (eta : ((string) list * (string) list)) (eta1 : (string) list) : ((string) list * (string) list) =
+  (BatList.fold_left (fun all_friends k -> (topological_dependences_of'__all_friend_deps_1 file_system_map root_files dep_graph (k :: cycle) all_friends k)) eta eta1)
 
 let fStarC_Parser_Dep_remove_dups_fast__string (xs : (string) list) : (string) list =
   (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_empty__string_rbset_string_10 ()) in
   let tmp1 = ([], tmp) in
   let tmp2 = (BatList.fold_left (fun tmp2 x -> (match tmp2 with
-      | (acc, acc_set) -> (let tmp3 = (FStarC_RBSet.fStarC_Class_Setlike_mem__string_rbset_string_4 x acc_set) in
-        (if tmp3 then (acc, acc_set) else (let tmp4 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string x acc_set) in
+      | (acc, acc_set) -> (let tmp3 = (FStarC_RBSet.fStarC_Class_Setlike_mem__string_rbset_string_5 x acc_set) in
+        (if tmp3 then (acc, acc_set) else (let tmp4 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string_7 x acc_set) in
         ((x :: acc), tmp4))))
     )) tmp1 xs) in
   (match tmp2 with
@@ -1784,7 +1859,7 @@ let fStarC_Parser_Dep_remove_dups_fast__string (xs : (string) list) : (string) l
   ))
 
 let topological_dependences_of' (file_system_map : (((string) option * (string) option)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (dep_graph : (dep_node) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (interfaces_needing_inlining : (string) list) (root_files : (string) list) (widened : bool) : ((string) list * bool) =
-  (let tmp = ((topological_dependences_of'__all_friend_deps file_system_map root_files) dep_graph [] ([], []) root_files) in
+  (let tmp = (topological_dependences_of'__all_friend_deps file_system_map root_files dep_graph [] ([], []) root_files) in
   (match tmp with
     | (friends, all_files_0) -> (let tmp1 = (!(dbg)) in
       (if tmp1 then (let tmp2 = (fStarC_Parser_Dep_remove_dups_fast__string friends) in
@@ -1797,7 +1872,7 @@ let topological_dependences_of' (file_system_map : (((string) option * (string) 
           (match tmp4 with
             | (widened1, dep_graph1) -> (let tmp5 = (!(dbg)) in
               (if tmp5 then (FStarC_Format.print_string "==============Phase2==================\n") else ());
-              let tmp6 = ((topological_dependences_of'__all_friend_deps file_system_map root_files) dep_graph1 [] ([], []) root_files) in
+              let tmp6 = (topological_dependences_of'__all_friend_deps file_system_map root_files dep_graph1 [] ([], []) root_files) in
               (match tmp6 with
                 | (tmp7, all_files_) -> (let tmp8 = (!(dbg)) in
                   (if tmp8 then (FStarC_Format.print1 "Phase2 complete: all_files = %s\n" (BatString.concat ", " all_files_)) else ());
@@ -1844,9 +1919,9 @@ let collect (all_cmd_line_files : (string) list) (get_parsing_data_from_cache : 
     (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_CyclicDependence ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Recursive dependency on module %s." filename)) :: ((FStarC_Errors_Msg.text "A full dependency graph was written to dep.graph.") :: []))))) in
   let full_cycle_detection = (fun all_command_line_files file_system_map1 -> (let dep_graph1 = (dep_graph_copy dep_graph) in
     let mo_files = (ref []) in
-    (BatList.iter ((collect__aux cycle_detected all_command_line_files file_system_map1 dep_graph1 mo_files) []) all_command_line_files);
+    (BatList.iter (collect__aux cycle_detected all_command_line_files file_system_map1 dep_graph1 mo_files []) all_command_line_files);
     let tmp1 = (!(mo_files)) in
-    (BatList.iter ((collect__aux cycle_detected all_command_line_files file_system_map1 dep_graph1 mo_files) []) tmp1))) in
+    (BatList.iter (collect__aux cycle_detected all_command_line_files file_system_map1 dep_graph1 mo_files []) tmp1))) in
   (full_cycle_detection all_cmd_line_files3 file_system_map);
   (BatList.iter (fun f -> (let m = (lowercase_module_name f) in
   (FStarC_Options.add_verify_module m))) all_cmd_line_files3);
@@ -1856,7 +1931,7 @@ let collect (all_cmd_line_files : (string) list) (get_parsing_data_from_cache : 
   (match tmp1 with
     | (all_files_, tmp2) -> (let tmp3 = (!(dbg)) in
       (if tmp3 then (FStarC_Format.print1 "Interfaces needing inlining: %s\n" (BatString.concat ", " inlining_ifaces)) else ());
-      let tmp4 = (FStarC_RBSet.fStarC_Class_Setlike_from_list__string_rbset_string all_files_) in
+      let tmp4 = (FStarC_RBSet.fStarC_Class_Setlike_from_list__string_rbset_string_4 all_files_) in
       let d = (mk_deps dep_graph file_system_map valid_namespaces all_cmd_line_files3 tmp4 inlining_ifaces parse_results) in
       (all_files_, d))
   ))))
@@ -1871,15 +1946,6 @@ let print_make (outc : Stdlib.out_channel) (deps : deps) : unit =
   let files = (BatList.map (file_of_dep file_system_map all_cmd_line_files) (dep_node).edges) in
   let files1 = (BatList.map (fun s -> ((fun s c by -> BatString.replace_chars (fun x -> if Char.equal x (Char.chr c) then by else BatString.of_char x) s) s 32 "\\ ")) files) in
   (FStarC_Format.print2 "%s: %s\n\n" f (BatString.concat " " files1)))) keys))
-
-let interface_of (deps : deps) (module_name : string) : (string) option =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp acc -> (key :: acc)) (deps).file_system_map []) in
-  let tmp1 = (match tmp with
-      | [] -> true
-      | tmp1 -> false
-    ) in
-  (if tmp1 then (build_map (deps).file_system_map (deps).valid_namespaces (deps).cmd_line_files) else ());
-  (interface_of_internal (deps).file_system_map module_name))
 
 let print_full (outc : Stdlib.out_channel) (deps : deps) : unit =
   (let pre_tag = (FStarC_Options_Ext.get "dep_pretag") in
@@ -1914,8 +1980,12 @@ let print_full (outc : Stdlib.out_channel) (deps : deps) : unit =
             ((Some (iface)), tmp8))
         ))) in
       (match tmp3 with
-        | (iface_fn, iface_deps) -> (let iface_deps1 = (FStarC_Option.map (BatList.filter (fun iface_dep -> (let tmp4 = (FStarC_Util.for_some (dep_subsumed_by iface_dep) (dep_node).edges) in
-            (not tmp4)))) iface_deps) in
+        | (iface_fn, iface_deps) -> (let iface_deps1 = (match iface_deps with
+              | (Some (x)) -> (let tmp4 = ((BatList.filter (fun iface_dep -> (let tmp4 = (FStarC_Util.for_some (dep_subsumed_by iface_dep) (dep_node).edges) in
+                  (not tmp4)))) x) in
+                (Some (tmp4)))
+              | None -> None
+            ) in
           let files = (BatList.map (file_of_dep_aux true (deps).file_system_map (deps).cmd_line_files) (dep_node).edges) in
           let files1 = (match iface_deps1 with
               | None -> files
@@ -2045,8 +2115,12 @@ let print_dune (outc : Stdlib.out_channel) (deps : deps) : unit =
             ((Some (iface)), tmp8))
         ))) in
       (match tmp3 with
-        | (iface_fn, iface_deps) -> (let iface_deps1 = (FStarC_Option.map (BatList.filter (fun iface_dep -> (let tmp4 = (FStarC_Util.for_some (dep_subsumed_by iface_dep) (dep_node).edges) in
-            (not tmp4)))) iface_deps) in
+        | (iface_fn, iface_deps) -> (let iface_deps1 = (match iface_deps with
+              | (Some (x)) -> (let tmp4 = ((BatList.filter (fun iface_dep -> (let tmp4 = (FStarC_Util.for_some (dep_subsumed_by iface_dep) (dep_node).edges) in
+                  (not tmp4)))) x) in
+                (Some (tmp4)))
+              | None -> None
+            ) in
           let files = (BatList.map (file_of_dep_aux true (deps).file_system_map (deps).cmd_line_files) (dep_node).edges) in
           let files1 = (match iface_deps1 with
               | None -> files
@@ -2120,7 +2194,7 @@ let do_print (outc : Stdlib.out_channel) (fn : string) (deps : deps) : unit =
     let tmp9 = (tmp8 :: []) in
     (FStarC_Util.fprint outc (Prims.strcat comment " Running in directory %s\n") tmp9);
     let tmp10 = ((fun () -> Array.to_list Sys.argv) ()) in
-    let tmp11 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp10) in
+    let tmp11 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 tmp10) in
     let tmp12 = (tmp11 :: []) in
     (FStarC_Util.fprint outc (Prims.strcat comment " Command line arguments: \"%s\"\n") tmp12);
     (FStarC_Util.fprint outc "\n" []))) in
@@ -2178,9 +2252,6 @@ let copy_deps (d : deps) : deps =
     interfaces_with_inlining = (d).interfaces_with_inlining;
     parse_results = (d).parse_results })
 
-let root_friends : ((FStarC_Ident.lident) list ref) =
-  (ref [])
-
 let collect_deps_of_decl (deps : deps) (filename : string) (ds : (FStarC_Parser_AST.decl) list) (scope_parsing_data : (parsing_data_elt) list) (get_parsing_data_from_cache : (string -> (parsing_data) option)) : (string) list =
   (let roots = (match ds with
       | ({ FStarC_Parser_AST.d = (FStarC_Parser_AST.TopLevelModule (l)); drange = tmp; quals = tmp1; attrs = attrs; _ } :: tmp2) -> (let tmp3 = (!(dbg)) in
@@ -2233,7 +2304,7 @@ let collect_deps_of_decl (deps : deps) (filename : string) (ds : (FStarC_Parser_
       let pd1 = { elts = tmp5; no_prelude = (pd).no_prelude } in
       let tmp6 = (deps_from_parsing_data pd1 (deps).file_system_map filename) in
       (match tmp6 with
-        | (direct_deps, u__has_inline_for_extraction, u__additional_roots) -> ((debug_print (fun tmp7 -> (let tmp8 = (FStarC_Parser_AST.fStarC_Class_Show_show__list_decl_170 ds) in
+        | (direct_deps, u__has_inline_for_extraction, u__additional_roots) -> ((debug_print (fun tmp7 -> (let tmp8 = (FStarC_Parser_AST.fStarC_Class_Show_show__list_decl_176 ds) in
           let tmp9 = (fStarC_Class_Show_show__list_dependence direct_deps) in
           let tmp10 = (fStarC_Class_Show_show__list_dependence u__additional_roots) in
           (FStarC_Format.print3 "direct deps of %s is %s, mo_roots=%s\n" tmp8 tmp9 tmp10))));
@@ -2246,7 +2317,7 @@ let collect_deps_of_decl (deps : deps) (filename : string) (ds : (FStarC_Parser_
           let tmp7 = (topological_dependences_of (deps).file_system_map (deps).dep_graph inline_ifaces files1 false) in
           (match tmp7 with
             | (filenames, tmp8) -> (let tmp9 = (!((deps).all_files)) in
-              let tmp10 = (FStarC_RBSet.fStarC_Class_Setlike_from_list__string_rbset_string filenames) in
+              let tmp10 = (FStarC_RBSet.fStarC_Class_Setlike_from_list__string_rbset_string_4 filenames) in
               let tmp11 = (FStarC_RBSet.fStarC_Class_Setlike_union__string_rbset_string_9 tmp9 tmp10) in
               (((deps).all_files) := tmp11);
               filenames)
@@ -2258,22 +2329,6 @@ let all_files (deps : deps) : (string) list =
   (let tmp = (!((deps).all_files)) in
   (FStarC_RBSet.fStarC_Class_Setlike_elems__string_rbset_string tmp))
 
-let parsing_data_of_modul (deps : deps) (filename : string) (modul_opt : (FStarC_Parser_AST.modul) option) : (parsing_data * (string) list) =
-  (let modul = (match modul_opt with
-      | None -> (let tmp = (FStarC_Parser_Driver.parse_file filename) in
-        (match tmp with
-          | (ast, tmp1) -> ast
-        ))
-      | (Some (m)) -> m
-    ) in
-  let pd = (collect_module_or_decls filename (FStar_Pervasives.Inl (modul))) in
-  let pd1 = { elts = (BatList.rev (pd).elts); no_prelude = (pd).no_prelude } in
-  let tmp = (deps_from_parsing_data pd1 (deps).file_system_map filename) in
-  (match tmp with
-    | (direct_deps, tmp1, tmp2) -> (let tmp3 = (files_of_dependences filename (deps).file_system_map (deps).cmd_line_files direct_deps) in
-      (pd1, tmp3))
-  ))
-
 let parsing_data_of (deps : deps) (fn : string) : parsing_data =
   (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (deps).parse_results fn) in
   (match tmp with
@@ -2281,47 +2336,10 @@ let parsing_data_of (deps : deps) (fn : string) : parsing_data =
     | (Some (pd)) -> pd
   ))
 
-let implementation_of_file (f : string) : string =
-  (let tmp = (is_interface f) in
-  (if tmp then ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) f Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) f) Prims.int_one)) else f))
-
-let from_graph (deps : deps) (f : string) : (string) list =
-  (let tmp = (deps_try_find (deps).dep_graph f) in
-  (match tmp with
-    | (Some (tmp1)) -> (dependences_of (deps).file_system_map (deps).dep_graph (deps).cmd_line_files f)
-    | None -> (let tmp1 = (parsing_data_of_modul deps f None) in
-      (match tmp1 with
-        | (u__1, u__2) -> u__2
-      ))
-  ))
-
-let deps_of : (deps -> (string -> (string) list)) =
-  (let cache = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (40)))) in
-  (fun deps f -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cache f) in
-  (match tmp with
-    | (Some (deps1)) -> deps1
-    | None -> (let tmp1 = (fly_deps_enabled ()) in
-      let res = (if tmp1 then (let on_cli = (fun f1 -> (let bf = (FStarC_Filepath.basename f1) in
-          (BatList.exists (fun cli -> ((=) (FStarC_Filepath.basename cli) bf)) (deps).cmd_line_files))) in
-        let tmp2 = (on_cli f) in
-        let tmp3 = (if tmp2 then true else (let tmp3 = (is_interface f) in
-          (if tmp3 then (let tmp4 = (implementation_of_file f) in
-          (on_cli tmp4)) else false))) in
-        (if tmp3 then (let tmp4 = (parsing_data_of_modul deps f None) in
-        (match tmp4 with
-          | (u__1, u__2) -> u__2
-        )) else (from_graph deps f))) else (from_graph deps f)) in
-      (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace cache f res);
-      res)
-  ))))
-
-let print_digest (dig : ((string * string)) list) : string =
-  (FStarC_Class_Show.fStarC_Class_Show_show__list_tuple2_string_string dig)
-
 let fStarC_Class_Show_show__tuple2_parsing_data_list_string (tmp : (parsing_data * (string) list)) : string =
   (match tmp with
     | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__parsing_data x1) in
-      let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string x2) in
+      let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 x2) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat ", " tmp3) in
       let tmp5 = (Prims.strcat tmp1 tmp4) in
@@ -2396,7 +2414,7 @@ let topological_order (deps : deps) (normalize : (string -> string)) : (string) 
   (match tmp1 with
     | None -> ()
     | (Some (m)) -> (let tmp2 = (norm m) in
-      ((topological_order__visit edges order visited) tmp2))
+      (topological_order__visit edges order visited tmp2))
   ))) (deps).cmd_line_files);
   let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp1 acc -> (key :: acc)) edges []) in
   (BatList.iter (topological_order__visit edges order visited) tmp1);

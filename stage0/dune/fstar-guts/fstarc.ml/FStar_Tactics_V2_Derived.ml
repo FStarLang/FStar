@@ -22,9 +22,9 @@ let map_optRO (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___b))
   )
 
 let fail_doc_at (m : (PPrint.document) list) (r : (FStarC_Range_Type.range) option) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
-  (Obj.magic ((fun ps -> (let x = (map_optRO FStarC_Tactics_V2_Builtins.fixup_range r ps) in
+  (fun ps -> (let x = (map_optRO FStarC_Tactics_V2_Builtins.fixup_range r ps) in
   (ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure ((m, x))) ps));
-  (failwith "Prims.magic")))))
+  (failwith "Prims.magic")))
 
 let fail_at (m : string) (r : (FStarC_Range_Type.range) option) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
   (fail_doc_at (FStar_Errors_Msg.mkmsg m) r)
@@ -44,7 +44,7 @@ let op_At (x : ('tmp) list) (eta : ('tmp) list) : ('tmp) list =
   (FStar_List_Tot_Base.op_At x eta)
 
 let focus (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___a))) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a) =
-  (Obj.magic ((fun ps -> (let x = (goals () ps) in
+  (fun ps -> (let x = (goals () ps) in
   (match x with
     | [] -> ((fail "focus: no goals") ps)
     | (g :: gs) -> (let x1 = (smt_goals () ps) in
@@ -58,7 +58,7 @@ let focus (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___a))) : ((
       let x6 = (op_At x5 x1) in
       (ignore (FStarC_Tactics_V2_Builtins.set_smt_goals x6 ps));
       x2)
-  )))))
+  )))
 
 let guard (b : bool) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (if (not b) then (fail "guard failed") else (fun tmp -> ()))
@@ -97,11 +97,11 @@ let fresh_binder_named (s : string) (t : FStarC_Reflection_Types.typ) (ps : (FSt
     attrs = [] } : FStar_Tactics_NamedView.binder))
 
 let try_with (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___a))) (h : (exn -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___a))) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.catch f ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.catch f ps) in
   (match x with
     | (FStar_Pervasives.Inl (e)) -> ((h e) ps)
     | (FStar_Pervasives.Inr (x1)) -> x1
-  )))))
+  )))
 
 let cur_module (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.name =
   (let x = (FStarC_Tactics_V2_Builtins.top_env () ps) in
@@ -137,12 +137,12 @@ let u__cur_goal (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FSta
   ))
 
 let cur_env (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.env) =
-  (Obj.magic ((fun ps -> (let x = (u__cur_goal () ps) in
-  (FStarC_Tactics_Types.goal_env x)))))
+  (fun ps -> (let x = (u__cur_goal () ps) in
+  (FStarC_Tactics_Types.goal_env x)))
 
 let norm_term (s : (FStarC_NormSteps.norm_step) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
-  (Obj.magic ((fun ps -> (let x = (try_with (fun tmp -> (cur_env ())) (Obj.magic ((fun tmp -> (FStarC_Tactics_V2_Builtins.top_env ())))) ps) in
-  (FStarC_Tactics_V2_Builtins.norm_term_env x s t ps)))))
+  (fun ps -> (let x = (try_with (fun tmp -> (cur_env ())) (Obj.magic ((fun tmp -> (FStarC_Tactics_V2_Builtins.top_env ())))) ps) in
+  (FStarC_Tactics_V2_Builtins.norm_term_env x s t ps)))
 
 let cur_goal (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.typ =
   (let x = (u__cur_goal () ps) in
@@ -199,26 +199,26 @@ let divide (n : Prims.int) (l : (unit -> ((FStarC_Tactics_Types.proofstate ref) 
   ))
 
 let rec iterAll (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (goals () ps) in
+  (fun ps -> (let x = (goals () ps) in
   (match x with
     | [] -> ()
     | (tmp :: tmp1) -> ((ignore (divide Prims.int_one t (fun tmp2 -> (iterAll t)) ps));
       ())
-  )))))
+  )))
 
 let seq (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (g : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (focus (fun tmp -> (fun ps -> ((f () ps);
   (iterAll g ps)))))
 
 let smt (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (goals () ps) in
+  (fun ps -> (let x = (goals () ps) in
   let x1 = (smt_goals () ps) in
   let x2 = (x, x1) in
   (match x2 with
     | ([], tmp1) -> ((fail "smt: no active goals") ps)
     | ((g :: gs), gs') -> ((ignore (FStarC_Tactics_V2_Builtins.set_goals gs ps));
       (FStarC_Tactics_V2_Builtins.set_smt_goals (g :: gs') ps))
-  )))))
+  )))
 
 let rec repeat (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'a))) (ps : (FStarC_Tactics_Types.proofstate ref)) : ('a) list =
   (let x = (FStarC_Tactics_V2_Builtins.catch t ps) in
@@ -301,7 +301,7 @@ let destruct_equality_implication (t : FStarC_Reflection_Types.term) (ps : (FSta
 exception Goal_not_trivial
 
 let trivial (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.norm (FStarC_NormSteps.iota :: (FStarC_NormSteps.zeta :: (FStarC_NormSteps.reify_ :: (FStarC_NormSteps.delta :: (FStarC_NormSteps.primops :: (FStarC_NormSteps.simplify :: (FStarC_NormSteps.unmeta :: []))))))) ps));
+  (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.norm (FStarC_NormSteps.iota :: (FStarC_NormSteps.zeta :: (FStarC_NormSteps.reify_ :: (FStarC_NormSteps.delta :: (FStarC_NormSteps.primops :: (FStarC_NormSteps.simplify :: (FStarC_NormSteps.unmeta :: []))))))) ps));
   let x = (cur_goal () ps) in
   let x1 = (FStar_Reflection_V2_Formula.term_as_formula x ps) in
   let tmp1 = (match x1 with
@@ -310,18 +310,18 @@ let trivial (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
       | tmp1 -> (fun ps1 -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core Goal_not_trivial ps1));
         ()))
     ) in
-  (tmp1 ps)))))
+  (tmp1 ps)))
 
 let apply_raw (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (FStarC_Tactics_V2_Builtins.t_apply false false false t)
 
 let pose (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_V2_Data.binding) =
-  (Obj.magic ((fun ps -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("V2" :: ("Derived" :: ("__cut" :: [])))))) in
+  (fun ps -> (let tmp = (FStarC_Reflection_V2_Builtins.pack_ln (let tmp = (FStarC_Reflection_V2_Builtins.pack_fv ("FStar" :: ("Tactics" :: ("V2" :: ("Derived" :: ("__cut" :: [])))))) in
     (FStarC_Reflection_V2_Data.Tv_FVar (tmp)))) in
   (apply tmp ps);
   (flip () ps);
   (exact t ps);
-  (FStarC_Tactics_V2_Builtins.intro () ps)))))
+  (FStarC_Tactics_V2_Builtins.intro () ps)))
 
 let cur_witness (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.term =
   (let x = (u__cur_goal () ps) in

@@ -146,10 +146,10 @@ let rec p_path__go (ps : FStarC_Parser_Pratt.pstate) (acc : (FStarC_Ident.ident)
   let tmp1 = (FStarC_Parser_Pratt.is ps FStarC_Parser_TokenKind.DOT) in
   let tmp2 = (if tmp1 then (((=) k1 FStarC_Parser_TokenKind.IDENT) || ((=) k1 FStarC_Parser_TokenKind.NAME)) else false) in
   (if tmp2 then ((ignore (FStarC_Parser_Pratt.advance ps));
-  ((p_path__go ps) acc1)) else ((BatList.rev acc1), true))) else (FStarC_Parser_Pratt.fail ps))))
+  (p_path__go ps acc1)) else ((BatList.rev acc1), true))) else (FStarC_Parser_Pratt.fail ps))))
 
 let p_path (ps : FStarC_Parser_Pratt.pstate) : ((FStarC_Ident.ident) list * bool) =
-  ((p_path__go ps) [])
+  (p_path__go ps [])
 
 let p_qlident (ps : FStarC_Parser_Pratt.pstate) : FStarC_Ident.lident =
   (let tmp = (p_path ps) in
@@ -163,7 +163,7 @@ let rec projections__fields (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : (FS
   let tmp2 = (if tmp1 then (((=) k1 FStarC_Parser_TokenKind.IDENT) || ((=) k1 FStarC_Parser_TokenKind.NAME)) else false) in
   (if tmp2 then ((ignore (FStarC_Parser_Pratt.advance ps));
   let lid = (p_qlident ps) in
-  let tmp3 = ((projections__fields ps) ()) in
+  let tmp3 = (projections__fields ps ()) in
   (lid :: tmp3)) else (let tmp3 = (FStarC_Parser_Pratt.is ps FStarC_Parser_TokenKind.DOT) in
   let tmp4 = (if tmp3 then (let tmp4 = (!((ps).FStarC_Parser_Pratt.idx)) in
     let tmp5 = ((+) tmp4 1) in
@@ -175,7 +175,7 @@ let rec projections__fields (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : (FS
   [])))
 
 let projections (ps : FStarC_Parser_Pratt.pstate) (i0 : int) (e : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
-  (let fs = ((projections__fields ps) ()) in
+  (let fs = (projections__fields ps ()) in
   let r = (FStarC_Parser_Pratt.loc ps i0) in
   (BatList.fold_left (fun e1 lid -> (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Project (e1, lid)) r FStarC_Parser_AST.Expr)) e fs))
 
@@ -306,12 +306,12 @@ let aqualified_lidentOrUnderscore (ps : FStarC_Parser_Pratt.pstate) : (((FStarC_
 let rec multi_ids__go (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((((FStarC_Parser_AST.arg_qualifier) option * (FStarC_Parser_AST.term) list) * FStarC_Ident.ident)) list =
   (let k = (FStarC_Parser_Pratt.peek_kind ps) in
   (if ((((=) k FStarC_Parser_TokenKind.IDENT) || ((=) k FStarC_Parser_TokenKind.UNDERSCORE)) || (is_aqualified_start_kind k)) then (let q = (aqualified_lidentOrUnderscore ps) in
-  let tmp1 = ((multi_ids__go ps) ()) in
+  let tmp1 = (multi_ids__go ps ()) in
   (q :: tmp1)) else []))
 
 let multi_ids (ps : FStarC_Parser_Pratt.pstate) (min : Prims.int) : ((((FStarC_Parser_AST.arg_qualifier) option * (FStarC_Parser_AST.term) list) * FStarC_Ident.ident)) list =
   ((ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.LPAREN));
-  let ids = ((multi_ids__go ps) ()) in
+  let ids = (multi_ids__go ps ()) in
   (if (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) ids) min) then (FStarC_Parser_Pratt.fail ps) else ());
   (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.COLON));
   ids)
@@ -366,7 +366,7 @@ let rec expand_inline_constraints__for_xs (cts : (FStarC_Parser_AST.term) list) 
   (match xs with
     | [] -> []
     | (x :: xs1) -> (let ps = (expand_inline_constraints__for_cts x cts) in
-      let tmp = ((expand_inline_constraints__for_xs cts) xs1) in
+      let tmp = (expand_inline_constraints__for_xs cts xs1) in
       (FStar_List_Tot_Base.append ps tmp))
   )
 
@@ -582,7 +582,7 @@ let rec indexing_term__go (ps : FStarC_Parser_Pratt.pstate) (e : FStarC_Parser_A
       let r = (FStarC_Parser_Pratt.loc ps iop) in
       let tmp = (FStarC_Range_Ops.union_ranges (e).FStarC_Parser_AST.range r) in
       let e1 = (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Op (op, (e :: (e2 :: [])))) tmp FStarC_Parser_AST.Expr) in
-      ((indexing_term__go ps) e1 ((+) n 1)))
+      (indexing_term__go ps e1 ((+) n 1)))
   ))
 
 let p_uident (ps : FStarC_Parser_Pratt.pstate) : FStarC_Ident.ident =
@@ -600,13 +600,13 @@ let is_atomic_universe_start (ps : FStarC_Parser_Pratt.pstate) : bool =
 let rec universeFrom__args (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : (FStarC_Parser_AST.term) list =
   (let u = (atomicUniverse ps) in
   let tmp1 = (is_atomic_universe_start ps) in
-  (if tmp1 then (let tmp2 = ((universeFrom__args ps) ()) in
+  (if tmp1 then (let tmp2 = (universeFrom__args ps ()) in
   (u :: tmp2)) else (u :: [])))
 
 and universeFrom_rest__args (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : (FStarC_Parser_AST.term) list =
   (let u = (atomicUniverse ps) in
   let tmp1 = (is_atomic_universe_start ps) in
-  (if tmp1 then (let tmp2 = ((universeFrom_rest__args ps) ()) in
+  (if tmp1 then (let tmp2 = (universeFrom_rest__args ps ()) in
   (u :: tmp2)) else (u :: [])))
 
 and universeFrom_rest (ps : FStarC_Parser_Pratt.pstate) (i0 : int) (u1 : FStarC_Parser_AST.term) : FStarC_Parser_AST.term =
@@ -620,7 +620,7 @@ and universeFrom_rest (ps : FStarC_Parser_Pratt.pstate) (i0 : int) (u1 : FStarC_
   let max_follows = (((((=) k1 FStarC_Parser_TokenKind.UNDERSCORE) || ((=) k1 FStarC_Parser_TokenKind.INT)) || ((=) k1 FStarC_Parser_TokenKind.IDENT)) || ((=) k1 FStarC_Parser_TokenKind.LPAREN)) in
   let u2 = (if ((((=) k FStarC_Parser_TokenKind.IDENT) && max_follows) || ((=) k FStarC_Parser_TokenKind.NAME)) then (let max = (p_ident ps) in
     let i1 = (!((ps).FStarC_Parser_Pratt.idx)) in
-    let us = ((universeFrom_rest__args ps) ()) in
+    let us = (universeFrom_rest__args ps ()) in
     (if ((<>) (FStarC_Ident.string_of_id max) (FStarC_Ident.string_of_lid FStarC_Parser_Const.max_lid)) then (FStarC_Errors.log_issue_text (FStarC_Parser_Pratt.rng ps i2 i1) FStarC_Errors_Codes.Error_InvalidUniverseVar (Prims.strcat "A lower case ident " (Prims.strcat (FStarC_Ident.string_of_id max) " was found in a universe context. It should be either max or a universe variable 'usomething."))) else ());
     let tmp1 = (FStarC_Ident.lid_of_ids (max :: [])) in
     let tmp2 = (FStarC_Parser_AST.Var (tmp1)) in
@@ -643,7 +643,7 @@ and universeFrom (ps : FStarC_Parser_Pratt.pstate) : FStarC_Parser_AST.term =
   let max_follows = (((((=) k1 FStarC_Parser_TokenKind.UNDERSCORE) || ((=) k1 FStarC_Parser_TokenKind.INT)) || ((=) k1 FStarC_Parser_TokenKind.IDENT)) || ((=) k1 FStarC_Parser_TokenKind.LPAREN)) in
   let u1 = (if ((((=) k FStarC_Parser_TokenKind.IDENT) && max_follows) || ((=) k FStarC_Parser_TokenKind.NAME)) then (let max = (p_ident ps) in
     let i1 = (!((ps).FStarC_Parser_Pratt.idx)) in
-    let us = ((universeFrom__args ps) ()) in
+    let us = (universeFrom__args ps ()) in
     (if ((<>) (FStarC_Ident.string_of_id max) (FStarC_Ident.string_of_lid FStarC_Parser_Const.max_lid)) then (FStarC_Errors.log_issue_text (FStarC_Parser_Pratt.rng ps i0 i1) FStarC_Errors_Codes.Error_InvalidUniverseVar (Prims.strcat "A lower case ident " (Prims.strcat (FStarC_Ident.string_of_id max) " was found in a universe context. It should be either max or a universe variable 'usomething."))) else ());
     let tmp = (FStarC_Ident.lid_of_ids (max :: [])) in
     let tmp1 = (FStarC_Parser_AST.Var (tmp)) in
@@ -796,7 +796,7 @@ and constructorPattern__args (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : (F
   (let p = (atomicPattern ps) in
   let tmp1 = (FStarC_Parser_Pratt.peek_kind ps) in
   let tmp2 = (is_atomic_pattern_start_kind tmp1) in
-  (if tmp2 then (let tmp3 = ((constructorPattern__args ps) ()) in
+  (if tmp2 then (let tmp3 = (constructorPattern__args ps ()) in
   (p :: tmp3)) else (p :: [])))
 
 and constructorPattern (ps : FStarC_Parser_Pratt.pstate) : FStarC_Parser_AST.pattern =
@@ -806,7 +806,7 @@ and constructorPattern (ps : FStarC_Parser_Pratt.pstate) : FStarC_Parser_AST.pat
     let r_uid = (FStarC_Parser_Pratt.loc ps i0) in
     let tmp1 = (FStarC_Parser_Pratt.peek_kind ps) in
     let tmp2 = (is_atomic_pattern_start_kind tmp1) in
-    (if tmp2 then (let args = ((constructorPattern__args ps) ()) in
+    (if tmp2 then (let args = (constructorPattern__args ps ()) in
     let head = (FStarC_Parser_AST.mk_pattern (FStarC_Parser_AST.PatName (uid)) r_uid) in
     let tmp3 = (FStarC_Parser_Pratt.loc ps i0) in
     (FStarC_Parser_AST.mk_pattern (FStarC_Parser_AST.PatApp (head, args)) tmp3)) else (FStarC_Parser_AST.mk_pattern (FStarC_Parser_AST.PatName (uid)) r_uid))) else (atomicPattern ps)) in
@@ -885,14 +885,14 @@ and genBinder (ps : FStarC_Parser_Pratt.pstate) : (FStarC_Parser_AST.pattern) li
 and only_trailing__pats (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((FStarC_Parser_AST.pattern) list) list =
   (let p = (genBinder ps) in
   let tmp1 = (FStarC_Parser_Pratt.is ps FStarC_Parser_TokenKind.RARROW) in
-  (if tmp1 then (p :: []) else (let tmp2 = ((only_trailing__pats ps) ()) in
+  (if tmp1 then (p :: []) else (let tmp2 = (only_trailing__pats ps ()) in
   (p :: tmp2))))
 
 and only_trailing (ps : FStarC_Parser_Pratt.pstate) : FStarC_Parser_AST.term =
   (let i0 = (!((ps).FStarC_Parser_Pratt.idx)) in
   let t = (FStarC_Parser_Pratt.advance ps) in
   (match (t).FStarC_Parser_Lexer.kind with
-    | FStarC_Parser_TokenKind.FUN -> (let pats = ((only_trailing__pats ps) ()) in
+    | FStarC_Parser_TokenKind.FUN -> (let pats = (only_trailing__pats ps ()) in
       (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.RARROW));
       let e = (p_term ps) in
       let tmp = (FStarC_Parser_Pratt.loc ps i0) in
@@ -1059,7 +1059,7 @@ and indexing_term (ps : FStarC_Parser_Pratt.pstate) : (FStarC_Parser_AST.term * 
   (let i0 = (!((ps).FStarC_Parser_Pratt.idx)) in
   let tmp = (atomic ps) in
   (match tmp with
-    | (e, q) -> (if q then (e, q) else (let tmp1 = ((indexing_term__go ps) e 0) in
+    | (e, q) -> (if q then (e, q) else (let tmp1 = (indexing_term__go ps e 0) in
       (match tmp1 with
         | (e1, n) -> ((if ((=) n 1) then (let tmp2 = (!((ps).FStarC_Parser_Pratt.idx)) in
           let tmp3 = (i0, tmp2) in
@@ -1317,13 +1317,13 @@ let patternBranch (ps : FStarC_Parser_Pratt.pstate) : (bool * (FStarC_Parser_AST
 let rec branches_nonempty__go (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((bool * (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) option * FStarC_Parser_AST.term))) list =
   (let tmp1 = (FStarC_Parser_Pratt.accept ps FStarC_Parser_TokenKind.BAR) in
   (if tmp1 then (let b = (patternBranch ps) in
-  let tmp2 = ((branches_nonempty__go ps) ()) in
+  let tmp2 = (branches_nonempty__go ps ()) in
   (b :: tmp2)) else []))
 
 let branches_nonempty (ps : FStarC_Parser_Pratt.pstate) : ((bool * (FStarC_Parser_AST.pattern * (FStarC_Parser_AST.term) option * FStarC_Parser_AST.term))) list =
   ((ignore (FStarC_Parser_Pratt.accept ps FStarC_Parser_TokenKind.BAR));
   let b = (patternBranch ps) in
-  let tmp = ((branches_nonempty__go ps) ()) in
+  let tmp = (branches_nonempty__go ps ()) in
   (b :: tmp))
 
 let r_try (ps : FStarC_Parser_Pratt.pstate) (tmp : FStarC_Parser_Pratt.ctx) : FStarC_Parser_AST.term =
@@ -1363,13 +1363,13 @@ let is_attribute_start (ps : FStarC_Parser_Pratt.pstate) : bool =
 let rec attribute__go (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : (FStarC_Parser_AST.term) list =
   (let tmp1 = (is_atomic_start ps) in
   (if tmp1 then (let t = (atomicTerm ps) in
-  let tmp2 = ((attribute__go ps) ()) in
+  let tmp2 = (attribute__go ps ()) in
   (t :: tmp2)) else []))
 
 let attribute (ps : FStarC_Parser_Pratt.pstate) : (FStarC_Parser_AST.term) list =
   (let i0 = (!((ps).FStarC_Parser_Pratt.idx)) in
   let tmp = (FStarC_Parser_Pratt.accept ps FStarC_Parser_TokenKind.LBRACK_AT) in
-  (if tmp then (let x = ((attribute__go ps) ()) in
+  (if tmp then (let x = (attribute__go ps ()) in
   (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.RBRACK));
   (match x with
     | (tmp1 :: (tmp2 :: tmp3)) -> (let tmp4 = (FStarC_Parser_Pratt.loc ps i0) in
@@ -1395,7 +1395,7 @@ let rec letbinding__go (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((FStarC
   (let b = (genBinder ps) in
   let tmp1 = (FStarC_Parser_Pratt.peek_kind ps) in
   let tmp2 = (is_genBinder_start_kind tmp1) in
-  (if tmp2 then (let tmp3 = ((letbinding__go ps) ()) in
+  (if tmp2 then (let tmp3 = (letbinding__go ps ()) in
   (b :: tmp3)) else (b :: [])))
 
 let noeq_ctx : FStarC_Parser_Pratt.ctx =
@@ -1434,7 +1434,7 @@ let letbinding (ps : FStarC_Parser_Pratt.pstate) : (bool * (FStarC_Parser_AST.pa
   let lid = (lidentOrOperator ps) in
   let r_lid = (FStarC_Parser_Pratt.loc ps i_lid) in
   let i_lbp = (!((ps).FStarC_Parser_Pratt.idx)) in
-  let lbp = ((letbinding__go ps) ()) in
+  let lbp = (letbinding__go ps ()) in
   let i_lbp1 = (!((ps).FStarC_Parser_Pratt.idx)) in
   let tmp2 = (FStarC_Parser_Pratt.is ps FStarC_Parser_TokenKind.COLON) in
   let ascr_opt = (if tmp2 then (let tmp3 = (ascribeTyp ps) in
@@ -1468,7 +1468,7 @@ let rec r_let__more (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((((FStarC_
     (Some (tmp4))) else None) in
   (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.AND));
   let lb = (letbinding ps) in
-  let tmp4 = ((r_let__more ps) ()) in
+  let tmp4 = (r_let__more ps ()) in
   ((a, lb) :: tmp4)) else []))
 
 let r_let (ps : FStarC_Parser_Pratt.pstate) (tmp : FStarC_Parser_Pratt.ctx) : FStarC_Parser_AST.term =
@@ -1499,7 +1499,7 @@ let r_let (ps : FStarC_Parser_Pratt.pstate) (tmp : FStarC_Parser_Pratt.ctx) : FS
   let i_q1 = (!((ps).FStarC_Parser_Pratt.idx)) in
   let lb = (letbinding ps) in
   let i_lb1 = (!((ps).FStarC_Parser_Pratt.idx)) in
-  let lbs = ((r_let__more ps) ()) in
+  let lbs = (r_let__more ps ()) in
   (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.IN));
   let e = (p_term ps) in
   let lbs1 = ((attrs, lb) :: lbs) in
@@ -1537,7 +1537,7 @@ let rec r_let_op__more (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((FStarC
   (if tmp1 then (let t = (FStarC_Parser_Pratt.advance ps) in
   let op = (mk_id_tok ps t (Prims.strcat "and" (t).FStarC_Parser_Lexer.text)) in
   let b = (letoperatorbinding ps) in
-  let tmp2 = ((r_let_op__more ps) ()) in
+  let tmp2 = (r_let_op__more ps ()) in
   ((op, b) :: tmp2)) else []))
 
 let r_let_op (ps : FStarC_Parser_Pratt.pstate) (tmp : FStarC_Parser_Pratt.ctx) : FStarC_Parser_AST.term =
@@ -1545,7 +1545,7 @@ let r_let_op (ps : FStarC_Parser_Pratt.pstate) (tmp : FStarC_Parser_Pratt.ctx) :
   let t = (FStarC_Parser_Pratt.advance ps) in
   let op = (mk_id_tok ps t (Prims.strcat "let" (t).FStarC_Parser_Lexer.text)) in
   let b = (letoperatorbinding ps) in
-  let tmp1 = ((r_let_op__more ps) ()) in
+  let tmp1 = (r_let_op__more ps ()) in
   let lbs = ((op, b) :: tmp1) in
   (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.IN));
   let e = (p_term ps) in
@@ -1661,7 +1661,7 @@ let calcStep (ps : FStarC_Parser_Pratt.pstate) : (FStarC_Parser_AST.term * FStar
 let rec r_calc__steps (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((FStarC_Parser_AST.term * FStarC_Parser_AST.term * FStarC_Parser_AST.term)) list =
   (let tmp1 = (FStarC_Parser_Pratt.is ps FStarC_Parser_TokenKind.RBRACE) in
   (if tmp1 then [] else (let s = (calcStep ps) in
-  let tmp2 = ((r_calc__steps ps) ()) in
+  let tmp2 = (r_calc__steps ps ()) in
   (s :: tmp2))))
 
 let r_calc (ps : FStarC_Parser_Pratt.pstate) (tmp : FStarC_Parser_Pratt.ctx) : FStarC_Parser_AST.term =
@@ -1671,7 +1671,7 @@ let r_calc (ps : FStarC_Parser_Pratt.pstate) (tmp : FStarC_Parser_Pratt.ctx) : F
   (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.LBRACE));
   let init = (p_noSeqTerm ps) in
   (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.SEMICOLON));
-  let steps = ((r_calc__steps ps) ()) in
+  let steps = (r_calc__steps ps ()) in
   (ignore (FStarC_Parser_Pratt.expect ps FStarC_Parser_TokenKind.RBRACE));
   let tmp1 = (FStarC_Parser_Pratt.loc ps i0) in
   (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.CalcProof (rel, init, steps)) tmp1 FStarC_Parser_AST.Expr))
@@ -1947,12 +1947,12 @@ let left_op (key : FStarC_Parser_TokenKind.token_kind) (l : Prims.int) (name : (
 let rec t_tuple__go (ps : FStarC_Parser_Pratt.pstate) (ctx : FStarC_Parser_Pratt.ctx) (tmp : unit) : (FStarC_Parser_AST.term) list =
   (let tmp1 = (FStarC_Parser_Pratt.accept ps FStarC_Parser_TokenKind.COMMA) in
   (if tmp1 then (let e = (FStarC_Parser_Pratt.term_at ps ctx (Prims.of_int (71))) in
-  let tmp2 = ((t_tuple__go ps ctx) ()) in
+  let tmp2 = (t_tuple__go ps ctx ()) in
   (e :: tmp2)) else []))
 
 let t_tuple (ps : FStarC_Parser_Pratt.pstate) (ctx : FStarC_Parser_Pratt.ctx) (lhs : FStarC_Parser_AST.term) (i0 : int) : FStarC_Parser_AST.term =
   (let i_e = (!((ps).FStarC_Parser_Pratt.idx)) in
-  let rest = ((t_tuple__go ps ctx) ()) in
+  let rest = (t_tuple__go ps ctx ()) in
   (FStarC_Parser_AST.mkTuple (lhs :: rest) (FStarC_Parser_Pratt.rng ps i0 i_e)))
 
 let tok_text (t : FStarC_Parser_Lexer.token) : string =
@@ -2113,7 +2113,7 @@ let constructorDecl (ps : FStarC_Parser_Pratt.pstate) : (FStarC_Ident.ident * (F
 let rec typeDecl__go (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((FStarC_Ident.ident * (FStarC_Parser_AST.constructor_payload) option * (FStarC_Parser_AST.term) list)) list =
   (let tmp1 = (FStarC_Parser_Pratt.is ps FStarC_Parser_TokenKind.BAR) in
   (if tmp1 then (let c = (constructorDecl ps) in
-  let tmp2 = ((typeDecl__go ps) ()) in
+  let tmp2 = (typeDecl__go ps ()) in
   (c :: tmp2)) else []))
 
 let pragma_start_kinds : (FStarC_Parser_TokenKind.token_kind) list =
@@ -2132,7 +2132,7 @@ let typeDecl (ps : FStarC_Parser_Pratt.pstate) : FStarC_Parser_AST.tycon =
       level = FStarC_Parser_AST.Kind }))) else None) in
   let tmp1 = (FStarC_Parser_Pratt.accept ps FStarC_Parser_TokenKind.EQUALS) in
   (if tmp1 then (let k = (FStarC_Parser_Pratt.peek_kind ps) in
-  (if ((=) k FStarC_Parser_TokenKind.BAR) then (let cs = ((typeDecl__go ps) ()) in
+  (if ((=) k FStarC_Parser_TokenKind.BAR) then (let cs = (typeDecl__go ps ()) in
   (FStarC_Parser_AST.check_id lid);
   (FStarC_Parser_AST.TyconVariant (lid, tparams, kopt, cs))) else (let record = (if (((=) k FStarC_Parser_TokenKind.LBRACE) || ((=) k FStarC_Parser_TokenKind.LBRACK_AT_AT_AT)) then (FStarC_Parser_Pratt.attempt ps (fun tmp2 -> (let tmp3 = (FStarC_Parser_Pratt.is ps FStarC_Parser_TokenKind.LBRACK_AT_AT_AT) in
     let attrs = (if tmp3 then (binderAttributes ps) else []) in
@@ -2379,11 +2379,11 @@ let p_decl (ps : FStarC_Parser_Pratt.pstate) : (FStarC_Parser_AST.decl) list =
 let rec parse_decls__go (ps : FStarC_Parser_Pratt.pstate) (tmp : unit) : ((FStarC_Parser_AST.decl) list) list =
   (let tmp1 = (FStarC_Parser_Pratt.is ps FStarC_Parser_TokenKind.EOF) in
   (if tmp1 then [] else (let d = (p_decl ps) in
-  let tmp2 = ((parse_decls__go ps) ()) in
+  let tmp2 = (parse_decls__go ps ()) in
   (d :: tmp2))))
 
 let parse_decls (ps : FStarC_Parser_Pratt.pstate) : (FStarC_Parser_AST.decl) list =
-  (let decls = (run ps (fun tmp -> ((parse_decls__go ps) ()))) in
+  (let decls = (run ps (fun tmp -> (parse_decls__go ps ()))) in
   (BatList.flatten decls))
 
 let parse_tokens (fname : string) (toks : (FStarC_Parser_Lexer.token) list) : (FStarC_Parser_AST.decl) list =
@@ -2419,12 +2419,12 @@ let rec parse_incremental_gen__go (g : FStarC_Parser_Pratt.grammar) (ps : FStarC
     ) in
   (match res with
     | (FStar_Pervasives.Inl (None)) -> ((BatList.rev acc), None)
-    | (FStar_Pervasives.Inl ((Some (ds)))) -> ((parse_incremental_gen__go g ps p_one next_ok) (FStar_List_Tot_Base.rev_acc ds acc))
+    | (FStar_Pervasives.Inl ((Some (ds)))) -> (parse_incremental_gen__go g ps p_one next_ok (FStar_List_Tot_Base.rev_acc ds acc))
     | (FStar_Pervasives.Inr (err)) -> ((BatList.rev acc), (Some (err)))
   ))
 
 let parse_incremental_gen (g : FStarC_Parser_Pratt.grammar) (ps : FStarC_Parser_Pratt.pstate) (p_one : (FStarC_Parser_Pratt.pstate -> ('a) list)) (next_ok : (FStarC_Parser_TokenKind.token_kind -> bool)) : (('a) list * ((FStarC_Errors_Codes.error_code * (PPrint.document) list * FStarC_Range_Type.range)) option) =
-  ((parse_incremental_gen__go g ps p_one next_ok) [])
+  (parse_incremental_gen__go g ps p_one next_ok [])
 
 let rec drop (n : Prims.int) (l : ('a) list) : ('a) list =
   (if (Prims.op_Less_Equals n Prims.int_zero) then l else (match l with

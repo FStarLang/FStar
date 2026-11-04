@@ -594,12 +594,12 @@ let rec str__go (b : Buffer.t) (s : string) (n : int) (start : int) (i : int) : 
   (if (needs_escape c) then ((raw b ((fun s i j -> let n = String.length s in let i = if i > 0 then i else 0 and j = if j < n then j else n in if j <= i then "" else String.sub s i (j - i)) s start i));
   let tmp = (escape_byte c) in
   (raw b tmp);
-  ((str__go b s n) ((+) i 1) ((+) i 1))) else ((str__go b s n) start ((+) i 1)))))
+  (str__go b s n ((+) i 1) ((+) i 1))) else (str__go b s n start ((+) i 1)))))
 
 let str (b : Buffer.t) (s : string) : unit =
   (let n = (String.length s) in
   (raw b "\"");
-  ((str__go b s n) 0 0);
+  (str__go b s n 0 0);
   (raw b "\""))
 
 let cn (b : Buffer.t) (n : string) : unit =
@@ -615,12 +615,12 @@ let rec list___go (b : Buffer.t) (f : ('a -> unit)) (first : bool) (xs : ('a) li
     | [] -> ()
     | (x :: xs1) -> ((if (not first) then (comma b) else ());
       (f x);
-      ((list___go b f) false xs1))
+      (list___go b f false xs1))
   )
 
 let list_ (b : Buffer.t) (f : ('a -> unit)) (xs : ('a) list) : unit =
   ((raw b "[");
-  ((list___go b f) true xs);
+  (list___go b f true xs);
   (raw b "]"))
 
 let c1 (b : Buffer.t) (n : string) : unit =
@@ -1158,7 +1158,7 @@ let rec file___go (b : Buffer.t) (first : bool) (ds : (FStarC_Custard_KrmlAst.de
     | [] -> ()
     | (d :: ds1) -> ((raw b (if first then "\n" else ",\n"));
       (decl_ b d);
-      ((file___go b) false ds1))
+      (file___go b false ds1))
   )
 
 let file_ (b : Buffer.t) (f : (string * (FStarC_Custard_KrmlAst.decl) list)) : unit =
@@ -1167,7 +1167,7 @@ let file_ (b : Buffer.t) (f : (string * (FStarC_Custard_KrmlAst.decl) list)) : u
       (str b n);
       (raw b ",");
       (raw b "[");
-      ((file___go b) true p);
+      (file___go b true p);
       (raw b "]]"))
   )
 
@@ -1176,7 +1176,7 @@ let rec write_file__go (b : Buffer.t) (first : bool) (fs : ((string * (FStarC_Cu
     | [] -> ()
     | (f :: fs1) -> ((raw b (if first then "\n" else ",\n"));
       (file_ b f);
-      ((write_file__go b) false fs1))
+      (write_file__go b false fs1))
   )
 
 let write_file (fn : string) (bf : (Prims.int * ((string * (FStarC_Custard_KrmlAst.decl) list)) list)) : unit =
@@ -1185,7 +1185,7 @@ let write_file (fn : string) (bf : (Prims.int * ((string * (FStarC_Custard_KrmlA
       (raw b "[");
       (int_ b v);
       (raw b ",[");
-      ((write_file__go b) true fs);
+      (write_file__go b true fs);
       (raw b "]]\n");
       (FStarC_Util.maybe_create_parent fn);
       let ch = (Stdlib.open_out_bin fn) in

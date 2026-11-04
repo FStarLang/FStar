@@ -208,7 +208,7 @@ let width_bits (w : iwidth) : Prims.int =
 
 let rec float_lit_of_string__digits (is_digit : (int -> bool)) (cs : (int) list) : ((int) list * (int) list) =
   (match cs with
-    | (c :: cs') when (is_digit c) -> (let tmp = ((float_lit_of_string__digits is_digit) cs') in
+    | (c :: cs') when (is_digit c) -> (let tmp = (float_lit_of_string__digits is_digit cs') in
       (match tmp with
         | (ds, rest) -> ((c :: ds), rest)
       ))
@@ -240,10 +240,10 @@ let float_lit_of_string (s : string) : (float_lit) option =
           | tmp1 -> (false, cs)
         ) in
       (match tmp1 with
-        | (neg, cs1) -> (let tmp2 = ((float_lit_of_string__digits is_digit) cs1) in
+        | (neg, cs1) -> (let tmp2 = (float_lit_of_string__digits is_digit cs1) in
           (match tmp2 with
             | (ipart, cs2) -> (let tmp3 = (match cs2 with
-                  | (46 :: cs3) -> ((float_lit_of_string__digits is_digit) cs3)
+                  | (46 :: cs3) -> (float_lit_of_string__digits is_digit cs3)
                   | tmp3 -> ([], cs2)
                 ) in
               (match tmp3 with
@@ -260,7 +260,7 @@ let float_lit_of_string (s : string) : (float_lit) option =
                             | tmp4 -> (false, cs4)
                           ) in
                         (match tmp4 with
-                          | (eneg, cs5) -> (let tmp5 = ((float_lit_of_string__digits is_digit) cs5) in
+                          | (eneg, cs5) -> (let tmp5 = (float_lit_of_string__digits is_digit cs5) in
                             (match tmp5 with
                               | (ds, cs6) -> (if (match ds with
                                   | [] -> true
@@ -517,13 +517,13 @@ let rec template_of_string__go__digits (cs : (int) list) (ds : (int) list) : ((P
 let rec template_of_string__go (flush : ((int) list -> ((tmpl_piece) list -> (tmpl_piece) list))) (cs : (int) list) (acc : (int) list) (out : (tmpl_piece) list) : (tmpl_piece) list =
   (match cs with
     | [] -> (BatList.rev (flush acc out))
-    | (123 :: (123 :: rest)) -> ((template_of_string__go flush) rest (123 :: acc) out)
+    | (123 :: (123 :: rest)) -> (template_of_string__go flush rest (123 :: acc) out)
     | (123 :: rest) -> (let tmp = (template_of_string__go__digits rest []) in
       (match tmp with
-        | (Some ((n, rest'))) -> ((template_of_string__go flush) rest' [] ((TP_arg (n)) :: (flush acc out)))
-        | None -> ((template_of_string__go flush) rest (123 :: acc) out)
+        | (Some ((n, rest'))) -> (template_of_string__go flush rest' [] ((TP_arg (n)) :: (flush acc out)))
+        | None -> (template_of_string__go flush rest (123 :: acc) out)
       ))
-    | (c :: rest) -> ((template_of_string__go flush) rest (c :: acc) out)
+    | (c :: rest) -> (template_of_string__go flush rest (c :: acc) out)
   )
 
 let template_of_string (s : string) : (tmpl_piece) list =
@@ -532,7 +532,7 @@ let template_of_string (s : string) : (tmpl_piece) list =
       | [] -> out
       | tmp -> ((TP_lit (((fun l -> let b = BatUTF8.Buf.create 16 in List.iter (fun c -> BatUTF8.Buf.add_char b (BatUChar.chr c)) l; BatUTF8.Buf.contents b) (BatList.rev acc)))) :: out)
     )) in
-  ((template_of_string__go flush) cs [] []))
+  (template_of_string__go flush cs [] []))
 
 let uu___is_TP_arg (projectee : tmpl_piece) : bool =
   (match projectee with

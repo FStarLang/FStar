@@ -99,13 +99,13 @@ let rec rn_fields__go (fields : (string) FStarC_HashTable.FStarC_HashTable_hasht
           (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace fields tmp1 f');
           let tmp2 = (rn_cty ts c) in
           let tmp3 = (f', tmp2) in
-          let tmp4 = ((rn_fields__go fields n ts) s1 fs1) in
+          let tmp4 = (rn_fields__go fields n ts s1 fs1) in
           (tmp3 :: tmp4))
       ))
   )
 
-let rn_fields (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (n : FStarC_Custard_Syntax.name) (ts : scope) (eta : ((string * FStarC_Custard_Syntax.cty)) list) : ((string * FStarC_Custard_Syntax.cty)) list =
-  ((rn_fields__go fields n ts) empty_scope eta)
+let rn_fields (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (n : FStarC_Custard_Syntax.name) (ts : scope) (fs : ((string * FStarC_Custard_Syntax.cty)) list) : ((string * FStarC_Custard_Syntax.cty)) list =
+  (rn_fields__go fields n ts empty_scope fs)
 
 let rn_tydef (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (self : FStarC_Custard_Syntax.name) (ts : scope) (b : FStarC_Custard_Syntax.tydef) : FStarC_Custard_Syntax.tydef =
   (match b with
@@ -134,6 +134,44 @@ let rn_types (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__
       ))
     | d1 -> d1
   )
+
+let rec free_tvars_decl__ty (add : (string -> unit)) (c : FStarC_Custard_Syntax.cty) : unit =
+  (match c with
+    | (FStarC_Custard_Syntax.TVar (x)) -> (add x)
+    | (FStarC_Custard_Syntax.TArrow (a, tmp, b)) -> ((free_tvars_decl__ty add a);
+      (free_tvars_decl__ty add b))
+    | (FStarC_Custard_Syntax.TApp (tmp, args)) -> (BatList.iter (free_tvars_decl__ty add) args)
+    | (FStarC_Custard_Syntax.TTuple (args)) -> (BatList.iter (free_tvars_decl__ty add) args)
+    | (FStarC_Custard_Syntax.TBuf (t)) -> (free_tvars_decl__ty add t)
+    | (FStarC_Custard_Syntax.TRef (tmp, t)) -> (free_tvars_decl__ty add t)
+    | (FStarC_Custard_Syntax.TInline (t)) -> (free_tvars_decl__ty add t)
+    | tmp -> ()
+  )
+
+let rec free_tvars_decl__ex (add : (string -> unit)) (x : FStarC_Custard_Syntax.expr) : unit =
+  ((free_tvars_decl__ty add (x).FStarC_Custard_Syntax.ty);
+  (match (x).FStarC_Custard_Syntax.e with
+    | (FStarC_Custard_Syntax.EQual (tmp, args)) -> (BatList.iter (free_tvars_decl__ty add) args)
+    | (FStarC_Custard_Syntax.ELet (tmp, t, tmp1, tmp2)) -> (free_tvars_decl__ty add t)
+    | (FStarC_Custard_Syntax.ECast (tmp, t)) -> (free_tvars_decl__ty add t)
+    | (FStarC_Custard_Syntax.ECoerce (tmp, t)) -> (free_tvars_decl__ty add t)
+    | (FStarC_Custard_Syntax.EFun (bs, tmp)) -> (BatList.iter (fun b -> (free_tvars_decl__ty add (b).FStarC_Custard_Syntax.b_ty)) bs)
+    | tmp -> ()
+  );
+  (FStarC_Custard_Syntax.iter_children (free_tvars_decl__ex add) x))
+
+let free_tvars_decl (bs : (FStarC_Custard_Syntax.binder) list) (ret : FStarC_Custard_Syntax.cty) (body : FStarC_Custard_Syntax.expr) : (string) list =
+  (let acc = (ref []) in
+  let add = (fun x -> (let tmp = (!(acc)) in
+    let tmp1 = (BatList.exists (fun y -> ((=) y x)) tmp) in
+    let tmp2 = (not tmp1) in
+    (if tmp2 then (let tmp3 = (!(acc)) in
+    let tmp4 = (BatList.append tmp3 (x :: [])) in
+    ((acc) := tmp4)) else ()))) in
+  (BatList.iter (fun b -> (free_tvars_decl__ty add (b).FStarC_Custard_Syntax.b_ty)) bs);
+  (free_tvars_decl__ty add ret);
+  (free_tvars_decl__ex add body);
+  (!(acc)))
 
 let rec rn_binders (ts : scope) (s : scope) (bs : (FStarC_Custard_Syntax.binder) list) : ((FStarC_Custard_Syntax.binder) list * scope) =
   (match bs with
@@ -309,18 +347,24 @@ let rn_terms (fields : (string) FStarC_HashTable.FStarC_HashTable_hashtbl_make__
     | (FStarC_Custard_Syntax.DType (tmp)) -> d
     | (FStarC_Custard_Syntax.DLet (l)) -> (let tmp = (bind_all empty_scope (l).FStarC_Custard_Syntax.dl_typars) in
       (match tmp with
-        | (typars, ts) -> (let tmp1 = (rn_binders ts empty_scope (l).FStarC_Custard_Syntax.dl_binders) in
-          (match tmp1 with
-            | (binders, s) -> (let tmp2 = (rn_cty ts (l).FStarC_Custard_Syntax.dl_ret) in
-              let tmp3 = (rn_expr fields ts s (l).FStarC_Custard_Syntax.dl_body) in
-              let tmp4 = { FStarC_Custard_Syntax.dl_name = (l).FStarC_Custard_Syntax.dl_name;
-                  dl_typars = typars;
-                  dl_binders = binders;
-                  dl_ret = tmp2;
-                  dl_eff = (l).FStarC_Custard_Syntax.dl_eff;
-                  dl_body = tmp3;
-                  dl_flags = (l).FStarC_Custard_Syntax.dl_flags } in
-              (FStarC_Custard_Syntax.DLet (tmp4)))
+        | (typars, ts) -> (let tmp1 = (free_tvars_decl (l).FStarC_Custard_Syntax.dl_binders (l).FStarC_Custard_Syntax.dl_ret (l).FStarC_Custard_Syntax.dl_body) in
+          let free = (BatList.filter (fun x -> (let tmp2 = (BatList.exists (fun y -> ((=) y x)) (l).FStarC_Custard_Syntax.dl_typars) in
+            (not tmp2))) tmp1) in
+          let tmp2 = (bind_all ts free) in
+          (match tmp2 with
+            | (tmp3, ts1) -> (let tmp4 = (rn_binders ts1 empty_scope (l).FStarC_Custard_Syntax.dl_binders) in
+              (match tmp4 with
+                | (binders, s) -> (let tmp5 = (rn_cty ts1 (l).FStarC_Custard_Syntax.dl_ret) in
+                  let tmp6 = (rn_expr fields ts1 s (l).FStarC_Custard_Syntax.dl_body) in
+                  let tmp7 = { FStarC_Custard_Syntax.dl_name = (l).FStarC_Custard_Syntax.dl_name;
+                      dl_typars = typars;
+                      dl_binders = binders;
+                      dl_ret = tmp5;
+                      dl_eff = (l).FStarC_Custard_Syntax.dl_eff;
+                      dl_body = tmp6;
+                      dl_flags = (l).FStarC_Custard_Syntax.dl_flags } in
+                  (FStarC_Custard_Syntax.DLet (tmp7)))
+              ))
           ))
       ))
     | (FStarC_Custard_Syntax.DExternal (x)) -> (let tmp = (bind_all empty_scope (x).FStarC_Custard_Syntax.dx_typars) in

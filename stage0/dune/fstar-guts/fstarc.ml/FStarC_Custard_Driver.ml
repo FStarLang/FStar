@@ -205,13 +205,13 @@ let write_unit_iface (st : FStarC_Custard_Extract.state) (homes : (string) FStar
 let rec warn_any__any_cty (cherry : bool) (c : FStarC_Custard_Syntax.cty) : bool =
   (match c with
     | FStarC_Custard_Syntax.TAny -> (not cherry)
-    | (FStarC_Custard_Syntax.TArrow (a, tmp, b)) -> (let tmp1 = ((warn_any__any_cty cherry) a) in
-      (if tmp1 then true else ((warn_any__any_cty cherry) b)))
+    | (FStarC_Custard_Syntax.TArrow (a, tmp, b)) -> (let tmp1 = (warn_any__any_cty cherry a) in
+      (if tmp1 then true else (warn_any__any_cty cherry b)))
     | (FStarC_Custard_Syntax.TApp (tmp, args)) -> (BatList.exists (warn_any__any_cty cherry) args)
     | (FStarC_Custard_Syntax.TTuple (cs)) -> (BatList.exists (warn_any__any_cty cherry) cs)
-    | (FStarC_Custard_Syntax.TBuf (c1)) -> ((warn_any__any_cty cherry) c1)
-    | (FStarC_Custard_Syntax.TRef (tmp, c1)) -> ((warn_any__any_cty cherry) c1)
-    | (FStarC_Custard_Syntax.TInline (c1)) -> ((warn_any__any_cty cherry) c1)
+    | (FStarC_Custard_Syntax.TBuf (c1)) -> (warn_any__any_cty cherry c1)
+    | (FStarC_Custard_Syntax.TRef (tmp, c1)) -> (warn_any__any_cty cherry c1)
+    | (FStarC_Custard_Syntax.TInline (c1)) -> (warn_any__any_cty cherry c1)
     | (FStarC_Custard_Syntax.TVar (tmp)) -> false
     | (FStarC_Custard_Syntax.TInt (u__1, u__2)) -> false
     | (FStarC_Custard_Syntax.TFloat (tmp)) -> false
@@ -249,35 +249,35 @@ let rec warn_any__go (note : (string -> unit)) (at : (string -> (FStarC_Custard_
       (sub (e1 :: (e2 :: []))))
     | (FStarC_Custard_Syntax.EApp (h, es)) -> (sub (h :: es))
     | (FStarC_Custard_Syntax.EFun (bs, b)) -> ((BatList.iter (fun b1 -> (at (Prims.strcat "binder '" (Prims.strcat (b1).FStarC_Custard_Syntax.b_name "'")) (b1).FStarC_Custard_Syntax.b_ty)) bs);
-      ((warn_any__go note at) b))
-    | (FStarC_Custard_Syntax.EMatch (sc, brs)) -> (((warn_any__go note at) sc);
+      (warn_any__go note at b))
+    | (FStarC_Custard_Syntax.EMatch (sc, brs)) -> ((warn_any__go note at sc);
       (BatList.iter (warn_any__go_branch note at) brs))
-    | (FStarC_Custard_Syntax.ETry (e, brs)) -> (((warn_any__go note at) e);
+    | (FStarC_Custard_Syntax.ETry (e, brs)) -> ((warn_any__go note at e);
       (BatList.iter (warn_any__go_branch note at) brs))
     | (FStarC_Custard_Syntax.EIf (c, a, b)) -> (sub (c :: (a :: (b :: []))))
     | (FStarC_Custard_Syntax.ESeq (a, b)) -> (sub (a :: (b :: [])))
     | (FStarC_Custard_Syntax.ECtor (tmp, es)) -> (sub es)
     | (FStarC_Custard_Syntax.ETuple (es)) -> (sub es)
     | (FStarC_Custard_Syntax.EOp (tmp, es)) -> (sub es)
-    | (FStarC_Custard_Syntax.ERaise (e1)) -> ((warn_any__go note at) e1)
+    | (FStarC_Custard_Syntax.ERaise (e1)) -> (warn_any__go note at e1)
     | (FStarC_Custard_Syntax.ERecord (tmp, fs)) -> (let tmp1 = (BatList.map (fun x1 -> (match x1 with
           | (u__1, u__2) -> u__2
         )) fs) in
       (sub tmp1))
-    | (FStarC_Custard_Syntax.EProj (e, tmp, tmp1)) -> ((warn_any__go note at) e)
-    | (FStarC_Custard_Syntax.EDiscrim (e, tmp)) -> ((warn_any__go note at) e)
-    | (FStarC_Custard_Syntax.ECast (e, tmp)) -> ((warn_any__go note at) e)
-    | (FStarC_Custard_Syntax.ECoerce (e, tmp)) -> ((warn_any__go note at) e)
+    | (FStarC_Custard_Syntax.EProj (e, tmp, tmp1)) -> (warn_any__go note at e)
+    | (FStarC_Custard_Syntax.EDiscrim (e, tmp)) -> (warn_any__go note at e)
+    | (FStarC_Custard_Syntax.ECast (e, tmp)) -> (warn_any__go note at e)
+    | (FStarC_Custard_Syntax.ECoerce (e, tmp)) -> (warn_any__go note at e)
     | (FStarC_Custard_Syntax.EWhile (c, b)) -> (sub (c :: (b :: [])))
   ))
 
 and warn_any__go_branch (note : (string -> unit)) (at : (string -> (FStarC_Custard_Syntax.cty -> unit))) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Syntax.expr) option * FStarC_Custard_Syntax.expr)) : unit =
   (match br with
     | (tmp, g, b) -> ((match g with
-        | (Some (g1)) -> ((warn_any__go note at) g1)
+        | (Some (g1)) -> (warn_any__go note at g1)
         | None -> ()
       );
-      ((warn_any__go note at) b))
+      (warn_any__go note at b))
   )
 
 let warn_any (prog : (FStarC_Custard_Syntax.decl) list) : unit =
@@ -286,7 +286,7 @@ let warn_any (prog : (FStarC_Custard_Syntax.decl) list) : unit =
     let tmp1 = (s :: tmp) in
     ((sites) := tmp1))) in
   let cherry = (FStarC_Options.custard_cherry ()) in
-  let at = (fun where c -> (let tmp = ((warn_any__any_cty cherry) c) in
+  let at = (fun where c -> (let tmp = (warn_any__any_cty cherry c) in
     (if tmp then (let tmp1 = (FStarC_Custard_Syntax.fStarC_Class_Show_show__cty c) in
     let tmp2 = (Prims.strcat " has type " tmp1) in
     let tmp3 = (Prims.strcat where tmp2) in
@@ -296,7 +296,7 @@ let warn_any (prog : (FStarC_Custard_Syntax.decl) list) : unit =
   (match d with
     | (FStarC_Custard_Syntax.DLet (l)) -> ((BatList.iter (fun b -> (at (Prims.strcat "binder '" (Prims.strcat (b).FStarC_Custard_Syntax.b_name "'")) (b).FStarC_Custard_Syntax.b_ty)) (l).FStarC_Custard_Syntax.dl_binders);
       (at "result" (l).FStarC_Custard_Syntax.dl_ret);
-      ((warn_any__go note at) (l).FStarC_Custard_Syntax.dl_body))
+      (warn_any__go note at (l).FStarC_Custard_Syntax.dl_body))
     | (FStarC_Custard_Syntax.DType (t)) -> (let fields = (fun owner fs -> (BatList.iter (fun tmp -> (match tmp with
           | (f, c) -> (at (Prims.strcat "field '" (Prims.strcat owner (Prims.strcat "." (Prims.strcat f "'")))) c)
         )) fs)) in
@@ -321,7 +321,7 @@ let warn_any (prog : (FStarC_Custard_Syntax.decl) list) : unit =
         | (hd :: tl) -> true
         | tmp -> false
       ) -> (let tmp = (FStarC_Custard_Syntax.string_of_name (x).FStarC_Custard_Syntax.dx_name) in
-        let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (x).FStarC_Custard_Syntax.dx_typars)) in
+        let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) (x).FStarC_Custard_Syntax.dx_typars)) in
         let tmp2 = (Prims.strcat tmp1 (Prims.strcat " type parameter(s): " (Prims.strcat (BatString.concat ", " (x).FStarC_Custard_Syntax.dx_typars) "."))) in
         let tmp3 = (Prims.strcat "' is external and polymorphic, in " tmp2) in
         let tmp4 = (Prims.strcat tmp tmp3) in
@@ -334,7 +334,7 @@ let warn_any (prog : (FStarC_Custard_Syntax.decl) list) : unit =
   let tmp1 = (BatList.rev tmp) in
   (match tmp1 with
     | [] -> ()
-    | ss -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) ss)) in
+    | ss -> (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) ss)) in
       let tmp3 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
       let tmp4 = (Prims.strcat tmp3 "':") in
       let tmp5 = (Prims.strcat " value(s) in '" tmp4) in

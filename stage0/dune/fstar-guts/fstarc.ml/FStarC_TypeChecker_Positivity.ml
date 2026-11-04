@@ -24,12 +24,12 @@ let rec mutuals_unused_in_type__ok (mutuals_occur_in : ((FStarC_Syntax_Syntax.te
     | (FStarC_Syntax_Syntax.Tm_type (tmp4)) -> true
     | (FStarC_Syntax_Syntax.Tm_fvar (tmp4)) -> false
     | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> false
-    | (FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b; body = t1; rc_opt = tmp4; _ })) -> (let tmp5 = ((mutuals_unused_in_type__binders_ok mutuals_occur_in) (b :: [])) in
-      (if tmp5 then ((mutuals_unused_in_type__ok mutuals_occur_in) t1) else false))
-    | (FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = b; comp = c; _ })) -> (let tmp4 = ((mutuals_unused_in_type__binders_ok mutuals_occur_in) (b :: [])) in
-      (if tmp4 then ((mutuals_unused_in_type__ok_comp mutuals_occur_in) c) else false))
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = bv; phi = t1; _ })) -> (let tmp4 = ((mutuals_unused_in_type__ok mutuals_occur_in) (bv).FStarC_Syntax_Syntax.sort) in
-      (if tmp4 then ((mutuals_unused_in_type__ok mutuals_occur_in) t1) else false))
+    | (FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b; body = t1; rc_opt = tmp4; _ })) -> (let tmp5 = (mutuals_unused_in_type__binders_ok mutuals_occur_in (b :: [])) in
+      (if tmp5 then (mutuals_unused_in_type__ok mutuals_occur_in t1) else false))
+    | (FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = b; comp = c; _ })) -> (let tmp4 = (mutuals_unused_in_type__binders_ok mutuals_occur_in (b :: [])) in
+      (if tmp4 then (mutuals_unused_in_type__ok_comp mutuals_occur_in c) else false))
+    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = bv; phi = t1; _ })) -> (let tmp4 = (mutuals_unused_in_type__ok mutuals_occur_in (bv).FStarC_Syntax_Syntax.sort) in
+      (if tmp4 then (mutuals_unused_in_type__ok mutuals_occur_in t1) else false))
     | (FStarC_Syntax_Syntax.Tm_app (tmp4)) -> (let tmp5 = (FStarC_Syntax_Util.head_and_args_full t) in
       (match tmp5 with
         | (head, args) -> (let tmp6 = (mutuals_occur_in head) in
@@ -38,43 +38,36 @@ let rec mutuals_unused_in_type__ok (mutuals_occur_in : ((FStarC_Syntax_Syntax.te
                   | None -> false
                   | (Some (q)) -> (FStarC_Syntax_Util.contains_unused_attribute (q).FStarC_Syntax_Syntax.aqual_attributes)
                 ) in
-              (if tmp8 then true else ((mutuals_unused_in_type__ok mutuals_occur_in) a)))
+              (if tmp8 then true else (mutuals_unused_in_type__ok mutuals_occur_in a)))
           )) args)))
       ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = t1; ret_opt = tmp4; brs = branches; rc_opt = tmp5; _ })) -> (let tmp6 = ((mutuals_unused_in_type__ok mutuals_occur_in) t1) in
+    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = t1; ret_opt = tmp4; brs = branches; rc_opt = tmp5; _ })) -> (let tmp6 = (mutuals_unused_in_type__ok mutuals_occur_in t1) in
       (if tmp6 then (BatList.for_all (fun tmp7 -> (match tmp7 with
-        | (tmp8, tmp9, br) -> ((mutuals_unused_in_type__ok mutuals_occur_in) br)
+        | (tmp8, tmp9, br) -> (mutuals_unused_in_type__ok mutuals_occur_in br)
       )) branches) else false))
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t1; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp4; _ })) -> ((mutuals_unused_in_type__ok mutuals_occur_in) t1)
-    | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = tmp4; lbs1 = lbs; body = t1; _ })) -> (let tmp5 = (BatList.for_all (fun lb -> (let tmp5 = ((mutuals_unused_in_type__ok mutuals_occur_in) (lb).FStarC_Syntax_Syntax.lbtyp) in
-        (if tmp5 then ((mutuals_unused_in_type__ok mutuals_occur_in) (lb).FStarC_Syntax_Syntax.lbdef) else false))) lbs) in
-      (if tmp5 then ((mutuals_unused_in_type__ok mutuals_occur_in) t1) else false))
+    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t1; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp4; _ })) -> (mutuals_unused_in_type__ok mutuals_occur_in t1)
+    | (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = tmp4; lbs1 = lbs; body = t1; _ })) -> (let tmp5 = (BatList.for_all (fun lb -> (let tmp5 = (mutuals_unused_in_type__ok mutuals_occur_in (lb).FStarC_Syntax_Syntax.lbtyp) in
+        (if tmp5 then (mutuals_unused_in_type__ok mutuals_occur_in (lb).FStarC_Syntax_Syntax.lbdef) else false))) lbs) in
+      (if tmp5 then (mutuals_unused_in_type__ok mutuals_occur_in t1) else false))
     | (FStarC_Syntax_Syntax.Tm_uvar (u__1, u__2)) -> false
     | (FStarC_Syntax_Syntax.Tm_delayed (tmp4)) -> false
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t1; meta = tmp4; _ })) -> ((mutuals_unused_in_type__ok mutuals_occur_in) t1)
+    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t1; meta = tmp4; _ })) -> (mutuals_unused_in_type__ok mutuals_occur_in t1)
     | tmp4 -> false
   ))))
 
-and mutuals_unused_in_type__binders_ok (mutuals_occur_in : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> bool)) : ((FStarC_Syntax_Syntax.binder) list -> bool) =
-  (BatList.for_all (fun b -> ((mutuals_unused_in_type__ok mutuals_occur_in) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)))
+and mutuals_unused_in_type__binders_ok (mutuals_occur_in : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> bool)) (eta : (FStarC_Syntax_Syntax.binder) list) : bool =
+  (BatList.for_all (fun b -> (mutuals_unused_in_type__ok mutuals_occur_in ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)) eta)
 
 and mutuals_unused_in_type__ok_comp (mutuals_occur_in : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> bool)) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : bool =
   (let c1 = (c).FStarC_Syntax_Syntax.n in
-  ((mutuals_unused_in_type__ok mutuals_occur_in) (c1).FStarC_Syntax_Syntax.result_typ))
+  (mutuals_unused_in_type__ok mutuals_occur_in (c1).FStarC_Syntax_Syntax.result_typ))
 
 let mutuals_unused_in_type (mutuals : (FStarC_Ident.lident) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (let mutuals_occur_in = (fun t1 -> (FStarC_Util.for_some (fun lid -> (ty_occurs_in lid t1)) mutuals)) in
-  ((mutuals_unused_in_type__ok mutuals_occur_in) t))
+  (mutuals_unused_in_type__ok mutuals_occur_in t))
 
 let dbg_Positivity : (bool ref) =
   (FStarC_Debug.get_toggle "Positivity")
-
-let debug_positivity (env : FStarC_TypeChecker_Env.env) (msg : (unit -> string)) : unit =
-  (let tmp = (!(dbg_Positivity)) in
-  (if tmp then (let tmp1 = (msg ()) in
-  let tmp2 = (Prims.strcat tmp1 "\n") in
-  let tmp3 = (Prims.strcat "Positivity::" tmp2) in
-  (FStarC_Format.print_string tmp3)) else ()))
 
 let string_of_lids (lids : (FStarC_Ident.lident) list) : string =
   (let tmp = (BatList.map FStarC_Ident.string_of_lid lids) in
@@ -107,7 +100,7 @@ let rec apply_constr_arrow__aux (dlid : FStarC_Ident.lident) (dt : (FStarC_Synta
         | (b1, tail1) -> (let tail2 = (FStarC_Syntax_Subst.subst ((FStarC_Syntax_Syntax.NT ((b1).FStarC_Syntax_Syntax.binder_bv, (match a with
               | (u__1, u__2) -> u__1
             ))) :: []) tail1) in
-          ((apply_constr_arrow__aux dlid dt all_params) tail2 args1))
+          (apply_constr_arrow__aux dlid dt all_params tail2 args1))
       ))
     | (None, tmp2) -> (let tmp3 = (FStarC_Syntax_Print.args_to_string all_params) in
       let tmp4 = (FStarC_Ident.fStarC_Class_Show_show__lident dlid) in
@@ -117,7 +110,7 @@ let rec apply_constr_arrow__aux (dlid : FStarC_Ident.lident) (dt : (FStarC_Synta
   ))
 
 let apply_constr_arrow (dlid : FStarC_Ident.lident) (dt : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (all_params : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  ((apply_constr_arrow__aux dlid dt all_params) dt all_params)
+  (apply_constr_arrow__aux dlid dt all_params dt all_params)
 
 let rec may_be_an_arity__aux (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (let tmp = (FStarC_Syntax_Subst.compress t) in
@@ -179,19 +172,19 @@ let rec may_be_an_arity__aux (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syn
     | (FStarC_Syntax_Syntax.Tm_type (tmp2)) -> true
     | (FStarC_Syntax_Syntax.Tm_arrow (tmp2)) -> (let tmp3 = (FStarC_Syntax_Util.arrow_formals t) in
       (match tmp3 with
-        | (tmp4, t1) -> ((may_be_an_arity__aux env) t1)
+        | (tmp4, t1) -> (may_be_an_arity__aux env t1)
       ))
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = tmp2; _ })) -> ((may_be_an_arity__aux env) (x).FStarC_Syntax_Syntax.sort)
+    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = tmp2; _ })) -> (may_be_an_arity__aux env (x).FStarC_Syntax_Syntax.sort)
     | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = tmp2; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (BatList.exists (fun tmp5 -> (match tmp5 with
         | (p, tmp6, t1) -> (let tmp7 = (FStarC_Syntax_Syntax.pat_bvs p) in
           let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp7) in
           let tmp8 = (FStarC_Syntax_Subst.open_term bs t1) in
           (match tmp8 with
-            | (bs1, t2) -> ((may_be_an_arity__aux env) t2)
+            | (bs1, t2) -> (may_be_an_arity__aux env t2)
           ))
       )) branches)
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t1; meta = tmp2; _ })) -> ((may_be_an_arity__aux env) t1)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t1; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp2; _ })) -> ((may_be_an_arity__aux env) t1)
+    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t1; meta = tmp2; _ })) -> (may_be_an_arity__aux env t1)
+    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t1; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp2; _ })) -> (may_be_an_arity__aux env t1)
     | (FStarC_Syntax_Syntax.Tm_uvar (u__1, u__2)) -> true
     | (FStarC_Syntax_Syntax.Tm_let (tmp2)) -> true
     | (FStarC_Syntax_Syntax.Tm_delayed (tmp2)) -> (FStarC_Effect.failwith "Impossible")
@@ -217,1015 +210,91 @@ let rec min_l (def : Prims.int) (l : ('a) list) (f : ('a -> Prims.int)) : Prims.
     | [] -> def
     | (hd :: tl) -> (let tmp = (f hd) in
       let tmp1 = (min_l def tl f) in
-      (Custard_Prims.prims_min tmp tmp1))
+      (Fstarc_Prims.prims_min tmp tmp1))
   )
 
-let rec max_uniformly_recursive_parameters__aux__aux (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
+let rec max_uniformly_recursive_parameters__aux__aux (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (n : Prims.int) (ls : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (ms : (FStarC_Syntax_Syntax.bv) list) : (Prims.int) option =
   (match (ls, ms) with
     | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((max_uniformly_recursive_parameters__aux__aux f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
+    | ((l :: ls1), (m :: ms1)) -> (let tmp = (compare_name_bv l m) in
+      (if tmp then (max_uniformly_recursive_parameters__aux__aux compare_name_bv (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
     | tmp -> None
   )
 
 let rec max_uniformly_recursive_parameters__aux (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
+  (let tmp = (!(dbg_Positivity)) in
+  (if tmp then (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
+  let tmp2 = (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1) in
+  let tmp3 = (Prims.strcat tmp2 "\n") in
+  let tmp4 = (Prims.strcat "Positivity::" tmp3) in
+  (FStarC_Format.print_string tmp4)) else ());
+  let tmp1 = (BatList.for_all (fun mutual -> (let tmp1 = (ty_occurs_in mutual ty) in
+    (not tmp1))) mutuals) in
+  (if tmp1 then n_params else (let tmp2 = (FStarC_Syntax_Subst.compress ty) in
+  let tmp3 = (tmp2).FStarC_Syntax_Syntax.n in
+  (match tmp3 with
+    | (FStarC_Syntax_Syntax.Tm_name (tmp4)) -> n_params
+    | (FStarC_Syntax_Syntax.Tm_fvar (tmp4)) -> n_params
     | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) f1)
+    | (FStarC_Syntax_Syntax.Tm_type (tmp4)) -> n_params
+    | (FStarC_Syntax_Syntax.Tm_constant (tmp4)) -> n_params
+    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp4 = (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string (x).FStarC_Syntax_Syntax.sort) in
+      let tmp5 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
+      let tmp6 = (match tmp5 with
+          | (tmp6, f1) -> (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string f1)
         ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((max_uniformly_recursive_parameters__aux__aux compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
+      (Fstarc_Prims.prims_min tmp4 tmp6))
+    | (FStarC_Syntax_Syntax.Tm_app (tmp4)) -> (let tmp5 = (FStarC_Syntax_Util.head_and_args_full ty) in
+      (match tmp5 with
+        | (head, args) -> (let tmp6 = (FStarC_Syntax_Util.un_uinst head) in
+          let tmp7 = (tmp6).FStarC_Syntax_Syntax.n in
+          (match tmp7 with
+            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp8 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
+              (if tmp8 then (let tmp9 = (!(dbg_Positivity)) in
+              (if tmp9 then (let tmp10 = (params_to_string ()) in
+              let tmp11 = (FStarC_Syntax_Print.args_to_string args) in
+              let tmp12 = (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp10 tmp11) in
+              let tmp13 = (Prims.strcat tmp12 "\n") in
+              let tmp14 = (Prims.strcat "Positivity::" tmp13) in
+              (FStarC_Format.print_string tmp14)) else ());
+              let tmp10 = (max_uniformly_recursive_parameters__aux__aux compare_name_bv Prims.int_zero args params) in
+              (match tmp10 with
                 | None -> Prims.int_zero
                 | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) arg)
+              )) else (min_l n_params args (fun tmp9 -> (match tmp9 with
+                | (arg, tmp10) -> (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string arg)
               )))))
-            | tmp7 -> (let tmp8 = ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) arg)
+            | tmp8 -> (let tmp9 = (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string head) in
+              let tmp10 = (min_l n_params args (fun tmp10 -> (match tmp10 with
+                  | (arg, tmp11) -> (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string arg)
                 ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
+              (Fstarc_Prims.prims_min tmp9 tmp10))
           ))
       ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
+    | (FStarC_Syntax_Syntax.Tm_abs (tmp4)) -> (let tmp5 = (FStarC_Syntax_Util.abs_formals ty) in
+      (match tmp5 with
+        | (bs, body, tmp6) -> (let tmp7 = (min_l n_params bs (fun b -> (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
+          let tmp8 = (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string body) in
+          (Fstarc_Prims.prims_min tmp7 tmp8))
       ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
+    | (FStarC_Syntax_Syntax.Tm_arrow (tmp4)) -> (let tmp5 = (FStarC_Syntax_Util.arrow_formals ty) in
+      (match tmp5 with
+        | (bs, r) -> (let tmp6 = (min_l n_params bs (fun b -> (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
+          let tmp7 = (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string r) in
+          (Fstarc_Prims.prims_min tmp6 tmp7))
       ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) t1)
+    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp4; brs = branches; rc_opt = tmp5; _ })) -> (let tmp6 = (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string scrutinee) in
+      let tmp7 = (min_l n_params branches (fun tmp7 -> (match tmp7 with
+          | (p, tmp8, t) -> (let tmp9 = (FStarC_Syntax_Syntax.pat_bvs p) in
+            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp9) in
+            let tmp10 = (FStarC_Syntax_Subst.open_term bs t) in
+            (match tmp10 with
+              | (bs1, t1) -> (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string t1)
             ))
         ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__1 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__1 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__1 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__1 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__2 (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (n : Prims.int) (ls : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (ms : (FStarC_Syntax_Syntax.bv) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (compare_name_bv l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__2 compare_name_bv) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__3 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__3 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__3 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__3 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__4 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__4 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__4 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__4 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__5 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__5 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__5 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__5 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__6 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__6 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__6 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__6 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__7 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__7 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__7 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__7 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__8 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__8 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__8 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__8 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__9 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__9 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__9 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__9 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__10 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__10 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__10 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__10 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__11 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__11 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__11 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__11 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__12 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__12 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__12 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__12 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
-  ))))
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__13 (f : ('u___a -> ('u___b -> bool))) (n : Prims.int) (ls : ('u___a) list) (ms : ('u___b) list) : (Prims.int) option =
-  (match (ls, ms) with
-    | (tmp, []) -> (Some (n))
-    | ((l :: ls1), (m :: ms1)) -> (let tmp = (f l m) in
-      (if tmp then ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__13 f) (Prims.op_Plus n Prims.int_one) ls1 ms1) else (Some (n))))
-    | tmp -> None
-  )
-
-let rec fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 (env : FStarC_TypeChecker_Env.env) (mutuals : (FStarC_Ident.lident) list) (params : (FStarC_Syntax_Syntax.bv) list) (n_params : Prims.int) (compare_name_bv : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option) -> (FStarC_Syntax_Syntax.bv -> bool))) (params_to_string : (unit -> string)) (ty : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : Prims.int =
-  ((debug_positivity env (fun tmp -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' ty) in
-  (FStarC_Format.fmt1 "max_uniformly_recursive_parameters.aux? %s" tmp1))));
-  let tmp = (BatList.for_all (fun mutual -> (let tmp = (ty_occurs_in mutual ty) in
-    (not tmp))) mutuals) in
-  (if tmp then n_params else (let tmp1 = (FStarC_Syntax_Subst.compress ty) in
-  let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-  (match tmp2 with
-    | (FStarC_Syntax_Syntax.Tm_name (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_fvar (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_type (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_constant (tmp3)) -> n_params
-    | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = x; phi = f; _ })) -> (let tmp3 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) (x).FStarC_Syntax_Syntax.sort) in
-      let tmp4 = (FStarC_Syntax_Subst.open_term ((FStarC_Syntax_Syntax.mk_binder x) :: []) f) in
-      let tmp5 = (match tmp4 with
-          | (tmp5, f1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) f1)
-        ) in
-      (Custard_Prims.prims_min tmp3 tmp5))
-    | (FStarC_Syntax_Syntax.Tm_app (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.head_and_args_full ty) in
-      (match tmp4 with
-        | (head, args) -> (let tmp5 = (FStarC_Syntax_Util.un_uinst head) in
-          let tmp6 = (tmp5).FStarC_Syntax_Syntax.n in
-          (match tmp6 with
-            | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (let tmp7 = (BatList.exists (FStarC_Syntax_Syntax.fv_eq_lid fv) mutuals) in
-              (if tmp7 then ((debug_positivity env (fun tmp8 -> (let tmp9 = (params_to_string ()) in
-              let tmp10 = (FStarC_Syntax_Print.args_to_string args) in
-              (FStarC_Format.fmt2 "Searching for max matching prefix of params=%s in args=%s" tmp9 tmp10))));
-              let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__aux__13 compare_name_bv) Prims.int_zero args params) in
-              (match tmp8 with
-                | None -> Prims.int_zero
-                | (Some (n)) -> n
-              )) else (min_l n_params args (fun tmp8 -> (match tmp8 with
-                | (arg, tmp9) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) arg)
-              )))))
-            | tmp7 -> (let tmp8 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) head) in
-              let tmp9 = (min_l n_params args (fun tmp9 -> (match tmp9 with
-                  | (arg, tmp10) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) arg)
-                ))) in
-              (Custard_Prims.prims_min tmp8 tmp9))
-          ))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_abs (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.abs_formals ty) in
-      (match tmp4 with
-        | (bs, body, tmp5) -> (let tmp6 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp7 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) body) in
-          (Custard_Prims.prims_min tmp6 tmp7))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_arrow (tmp3)) -> (let tmp4 = (FStarC_Syntax_Util.arrow_formals ty) in
-      (match tmp4 with
-        | (bs, r) -> (let tmp5 = (min_l n_params bs (fun b -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) ((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort))) in
-          let tmp6 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) r) in
-          (Custard_Prims.prims_min tmp5 tmp6))
-      ))
-    | (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = scrutinee; ret_opt = tmp3; brs = branches; rc_opt = tmp4; _ })) -> (let tmp5 = ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) scrutinee) in
-      let tmp6 = (min_l n_params branches (fun tmp6 -> (match tmp6 with
-          | (p, tmp7, t) -> (let tmp8 = (FStarC_Syntax_Syntax.pat_bvs p) in
-            let bs = (BatList.map FStarC_Syntax_Syntax.mk_binder tmp8) in
-            let tmp9 = (FStarC_Syntax_Subst.open_term bs t) in
-            (match tmp9 with
-              | (bs1, t1) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) t1)
-            ))
-        ))) in
-      (Custard_Prims.prims_min tmp5 tmp6))
-    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) t)
-    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp3; _ })) -> ((fStarC_TypeChecker_Positivity_max_uniformly_recursive_parameters__aux__13 env mutuals params n_params compare_name_bv params_to_string) t)
-    | tmp3 -> Prims.int_zero
+      (Fstarc_Prims.prims_min tmp6 tmp7))
+    | (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t; meta = tmp4; _ })) -> (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string t)
+    | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp4; _ })) -> (max_uniformly_recursive_parameters__aux env mutuals params n_params compare_name_bv params_to_string t)
+    | tmp4 -> Prims.int_zero
   ))))
 

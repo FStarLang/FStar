@@ -1539,8 +1539,11 @@ let dbg_NBE : (bool ref) =
 let dbg_UNSOUND_EraseErasableArgs : (bool ref) =
   (FStarC_Debug.get_toggle "UNSOUND_EraseErasableArgs")
 
-let log_top (cfg : cfg) (f : (unit -> unit)) : unit =
-  (if ((cfg).debug).top then (f ()) else ())
+let dbg_unfolding : (bool ref) =
+  (FStarC_Debug.get_toggle "Unfolding")
+
+let primop_time_map : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50))))
 
 let steps_to_string (f : fsteps) : string =
   (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__bool (f).beta) in
@@ -1629,12 +1632,6 @@ let log_nbe (cfg : cfg) (f : (unit -> unit)) : unit =
 let cfg_env (cfg : cfg) : FStarC_TypeChecker_Env.env =
   (cfg).tcenv
 
-let log (cfg : cfg) (f : (unit -> unit)) : unit =
-  (if ((cfg).debug).gen then (f ()) else ())
-
-let log_cfg (cfg : cfg) (f : (unit -> unit)) : unit =
-  (if ((cfg).debug).cfg then (f ()) else ())
-
 let fStarC_Class_Deq_op_Equals_Question__fsteps (tmp : fsteps) (tmp1 : fsteps) : bool =
   (let tmp2 = (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).beta (tmp1).beta) in
   let tmp3 = (if tmp2 then (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).iota (tmp1).iota) else false) in
@@ -1676,16 +1673,6 @@ let find_prim_step (cfg : cfg) (fv : FStarC_Syntax_Syntax.fv) : (FStarC_TypeChec
     | (Some (ps)) when ((ps).FStarC_TypeChecker_Primops_Base.unrepresentable_result && (not ((cfg).steps).unrepresentable_primops)) -> None
     | r -> r
   )
-
-let log_primops (cfg : cfg) (f : (unit -> unit)) : unit =
-  (if ((cfg).debug).primop then (f ()) else ())
-
-let dbg_unfolding : (bool ref) =
-  (FStarC_Debug.get_toggle "Unfolding")
-
-let log_unfolding (cfg : cfg) (f : (unit -> unit)) : unit =
-  (let tmp = (!(dbg_unfolding)) in
-  (if tmp then (f ()) else ()))
 
 let translate_norm_step (s : FStarC_NormSteps.norm_step) : (FStarC_TypeChecker_Env.step) list =
   (match s with
@@ -1751,7 +1738,4 @@ let register_extra_step (p : FStarC_TypeChecker_Primops_Base.primitive_step) : u
   ((match extra_steps with
     | (u__1, u__2) -> u__1
   ) p)
-
-let primop_time_map : (Prims.int) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50))))
 

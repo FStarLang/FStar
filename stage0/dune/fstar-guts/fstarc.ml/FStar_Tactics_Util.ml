@@ -73,9 +73,9 @@ let rec zip (l1 : ('a) list) (l2 : ('b) list) : ((FStarC_Tactics_Types.proofstat
 let rec filter (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> bool))) (tmp : ('u___a) list) : ((FStarC_Tactics_Types.proofstate ref) -> ('u___a) list) =
   (match tmp with
     | [] -> (fun tmp1 -> [])
-    | (hd :: tl) -> (Obj.magic ((fun ps -> (let x = (f hd ps) in
+    | (hd :: tl) -> (fun ps -> (let x = (f hd ps) in
       (if x then (let x1 = (filter f tl ps) in
-      (hd :: x1)) else ((filter f tl) ps))))))
+      (hd :: x1)) else ((filter f tl) ps))))
   )
 
 let rec concatMap (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> ('u___b) list))) (l : ('u___a) list) : ((FStarC_Tactics_Types.proofstate ref) -> ('u___b) list) =

@@ -4,13 +4,8 @@
 let last_basename : ((string * string) ref) =
   (ref ("", ""))
 
-let basename (s : string) : string =
-  ((fun f -> f ()) (fun tmp -> (let tmp1 = (!(last_basename)) in
-  (match tmp1 with
-    | (s', b) -> (if ((==) s s') then b else (let b1 = (Filename.basename s) in
-      ((last_basename) := (s, b1));
-      b1))
-  ))))
+let cwd_cache : ((string) option ref) =
+  (ref None)
 
 let is_ascii_letter (c : int) : bool =
   ((((>=) c (FStarC_SmallInt.of_char 97)) && ((<=) c (FStarC_SmallInt.of_char 122))) || (((>=) c (FStarC_SmallInt.of_char 65)) && ((<=) c (FStarC_SmallInt.of_char 90))))
@@ -20,9 +15,6 @@ let is_absolute_windows (s : string) : bool =
 
 let is_path_absolute (s : string) : bool =
   (((fun path_str -> let module P = BatPathGen.OfString in P.is_absolute (P.of_string path_str)) s) || (is_absolute_windows s))
-
-let cwd_cache : ((string) option ref) =
-  (ref None)
 
 let cached_getcwd (tmp : unit) : string =
   (let tmp1 = (!(cwd_cache)) in
@@ -37,4 +29,12 @@ let normalize_file_path (s : string) : string =
   (if (is_path_absolute s) then ((fun path_str -> let module P = BatPathGen.OfString in P.to_string (P.normalize_in_tree (P.of_string path_str))) s) else (let tmp = (cached_getcwd ()) in
   let tmp1 = ((fun path_str0 path_str1 -> let module P = BatPathGen.OfString in P.to_string (P.Operators.(//@) (P.of_string path_str0) (P.of_string path_str1))) tmp s) in
   ((fun path_str -> let module P = BatPathGen.OfString in P.to_string (P.normalize_in_tree (P.of_string path_str))) tmp1)))
+
+let basename (s : string) : string =
+  ((fun f -> f ()) (fun tmp -> (let tmp1 = (!(last_basename)) in
+  (match tmp1 with
+    | (s', b) -> (if ((==) s s') then b else (let b1 = (Filename.basename s) in
+      ((last_basename) := (s, b1));
+      b1))
+  ))))
 

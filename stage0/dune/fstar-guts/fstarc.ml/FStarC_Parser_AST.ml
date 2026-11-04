@@ -136,16 +136,251 @@ and binder = {
 
 type calc_step = (term * term * term)
 
+type let_qualifier =
+  | NoLetQualifier
+  | Rec
+
+
+type knd = term
+
+type attributes_ = (term) list
+
 type aqual = (arg_qualifier) option
 
-let mk_binder_with_attrs (b : binder') (r : FStarC_Range_Type.range) (l : level) (i : (arg_qualifier) option) (attrs : (term) list) : binder =
-  { b = b; brange = r; blevel = l; aqual = i; battributes = attrs }
+type tycon_record = ((FStarC_Ident.ident * (arg_qualifier) option * (term) list * term)) list
+
+type typ = term
+
+type constructor_payload =
+  | VpOfNotation of term
+  | VpArbitrary of term
+  | VpRecord of ((FStarC_Ident.ident * (arg_qualifier) option * (term) list * term)) list * (term) option
+
+
+type tycon =
+  | TyconAbstract of FStarC_Ident.ident * (binder) list * (term) option
+  | TyconAbbrev of FStarC_Ident.ident * (binder) list * (term) option * term
+  | TyconRecord of FStarC_Ident.ident * (binder) list * (term) option * (term) list * ((FStarC_Ident.ident * (arg_qualifier) option * (term) list * term)) list
+  | TyconVariant of FStarC_Ident.ident * (binder) list * (term) option * ((FStarC_Ident.ident * (constructor_payload) option * (term) list)) list
+
+
+type lift = {
+  msource : FStarC_Ident.lident;
+  mdest : FStarC_Ident.lident;
+  lift_op : (term) option;
+}
+
+type pragma =
+  | ShowOptions
+  | SetOptions of string
+  | ResetOptions of (string) option
+  | PushOptions of (string) option
+  | PopOptions
+  | RestartSolver
+  | PrintEffectsGraph
+  | Check of term
+  | Eval of term
+
+
+type dep_scan_callbacks = {
+  scan_term : (term -> unit);
+  scan_binder : (binder -> unit);
+  scan_pattern : (pattern -> unit);
+  add_lident : (FStarC_Ident.lident -> unit);
+  add_open : (FStarC_Ident.lident -> unit);
+}
+
+type to_be_desugared = {
+  lang_name : string;
+  blob : Obj.t;
+  idents : (FStarC_Ident.ident) list;
+  to_string : (Obj.t -> string);
+  eq : (Obj.t -> (Obj.t -> bool));
+  dep_scan : (dep_scan_callbacks -> (Obj.t -> unit));
+}
+
+type qualifier =
+  | Private
+  | Noeq
+  | Unopteq
+  | Assumption
+  | TotalEffect
+  | Effect_qual
+  | New
+  | Inline
+  | Visible
+  | Unfold_for_unification_and_vcgen
+  | Inline_for_extraction
+  | Irreducible
+  | NoExtract
+  | Reifiable
+  | Reflectable
+  | Opaque
+  | Logic
+
+
+type effect_decl =
+  | DeclareEffect of FStarC_Ident.ident * (binder) list
+  | DefineEffect of FStarC_Ident.ident * (binder) list * (decl) list
+
+
+and decl' =
+  | TopLevelModule of FStarC_Ident.lident
+  | Open of FStarC_Ident.lident * FStarC_Syntax_Syntax.restriction
+  | Friend of FStarC_Ident.lident
+  | Include of FStarC_Ident.lident * FStarC_Syntax_Syntax.restriction
+  | ModuleAbbrev of FStarC_Ident.ident * FStarC_Ident.lident
+  | TopLevelLet of let_qualifier * ((pattern * term)) list
+  | Tycon of bool * bool * (tycon) list
+  | Val of FStarC_Ident.ident * term
+  | Exception of FStarC_Ident.ident * (term) option
+  | NewEffect of effect_decl
+  | SubEffect of lift
+  | Pragma of pragma
+  | Assume of FStarC_Ident.ident * term
+  | Splice of bool * (FStarC_Ident.ident) list * term
+  | DeclSyntaxExtension of string * string * FStarC_Range_Type.range * FStarC_Range_Type.range
+  | UseLangDecls of string
+  | DeclToBeDesugared of to_be_desugared
+  | Unparseable
+
+
+and decl = {
+  d : decl';
+  drange : FStarC_Range_Type.range;
+  quals : (qualifier) list;
+  attrs : (term) list;
+}
+
+type qualifiers = (qualifier) list
+
+type modul__Module__payload = {
+  no_prelude : bool;
+  mname : FStarC_Ident.lident;
+  decls : (decl) list;
+}
+
+type modul__Interface__payload = {
+  no_prelude : bool;
+  mname : FStarC_Ident.lident;
+  decls : (decl) list;
+  admitted : bool;
+}
+
+type modul =
+  | Module of modul__Module__payload
+  | Interface of modul__Interface__payload
+
+
+type file = modul
+
+type inputFragment = (modul, (decl) list) FStar_Pervasives.either
+
+let fStarC_Class_HasRange_pos__decl (tmp : decl) : FStarC_Range_Type.range =
+  (tmp).drange
+
+let fStarC_Errors_raise_error__decl_string (pos : decl) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
+  (let rng = (fStarC_Class_HasRange_pos__decl pos) in
+  let tmp = (FStarC_Errors.fixup_issue_range (Some (rng))) in
+  (match tmp with
+    | (Some (rng1)) -> (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
+      let tmp1 = (FStarC_Errors.maybe_add_backtrace msg1) in
+      let tmp2 = ((FStarC_Errors.error_context).FStarC_Errors.get ()) in
+      let tmp3 = (code, tmp1, rng1, tmp2) in
+      let tmp4 = (FStarC_Errors.Error (tmp3)) in
+      (raise tmp4))
+  ))
+
+let rec as_mlist (cur : ((FStarC_Ident.lident * decl * bool) * (decl) list)) (ds : (decl) list) : modul =
+  (match cur with
+    | ((m_name, m_decl, no_prelude), cur1) -> (match ds with
+        | [] -> (Module (({ no_prelude = no_prelude;
+            mname = m_name;
+            decls = (m_decl :: (BatList.rev cur1)) } : modul__Module__payload)))
+        | (d :: ds1) -> (match (d).d with
+            | (TopLevelModule (m')) -> (fStarC_Errors_raise_error__decl_string d FStarC_Errors_Codes.Fatal_UnexpectedModuleDeclaration "Unexpected module declaration")
+            | tmp -> (as_mlist ((m_name, m_decl, no_prelude), (d :: cur1)) ds1)
+          )
+      )
+  )
+
+let as_frag (ds : (decl) list) : (modul, (decl) list) FStar_Pervasives.either =
+  (let tmp = (match ds with
+      | (d :: ds1) -> (d, ds1)
+      | [] -> (raise FStarC_Errors.Empty_frag)
+    ) in
+  (match tmp with
+    | (d, ds1) -> (match (d).d with
+        | (TopLevelModule (m)) -> (let tmp1 = (FStarC_Options.no_prelude ()) in
+          let no_prelude = (if tmp1 then true else (BatList.exists (fun tmp2 -> (match (tmp2).tm with
+              | (Const ((FStarC_Const.Const_string ("no_prelude", tmp3)))) -> true
+              | tmp3 -> false
+            )) (d).attrs)) in
+          let m1 = (as_mlist ((m, d, no_prelude), []) ds1) in
+          (FStar_Pervasives.Inl (m1)))
+        | tmp1 -> (let ds2 = (d :: ds1) in
+          (BatList.iter (fun tmp2 -> (match tmp2 with
+            | { d = (TopLevelModule (tmp3)); drange = r; quals = tmp4; attrs = tmp5; _ } -> (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_UnexpectedModuleDeclaration "Unexpected module declaration")
+            | tmp3 -> ()
+          )) ds2);
+          (FStar_Pervasives.Inr (ds2)))
+      )
+  ))
 
 let mk_term (t : term') (r : FStarC_Range_Type.range) (l : level) : term =
   { tm = t; range = r; level = l }
 
-let unit_const (r : FStarC_Range_Type.range) : term =
-  (mk_term (Const (FStarC_Const.Const_unit)) r Expr)
+let mkApp (t : term) (args : ((term * imp)) list) (r : FStarC_Range_Type.range) : term =
+  (match args with
+    | [] -> t
+    | tmp -> (match (t).tm with
+        | (Name (s)) -> (mk_term (Construct (s, args)) r Un)
+        | tmp1 -> (BatList.fold_left (fun t1 tmp2 -> (match tmp2 with
+            | (a, imp) -> (mk_term (App (t1, a, imp)) r Un)
+          )) t args)
+      )
+  )
+
+let mkDTuple (args : (term) list) (r : FStarC_Range_Type.range) : term =
+  (let cons = (FStarC_Parser_Const_Tuples.mk_dtuple_data_lid ((fun l -> Z.of_int (BatList.length l)) args) r) in
+  let tmp = (BatList.map (fun x -> (x, Nothing)) args) in
+  (mkApp (mk_term (Name (cons)) r Expr) tmp r))
+
+let mkListLit (r : FStarC_Range_Type.range) (elts : (term) list) : term =
+  (mk_term (ListLiteral (elts)) r Expr)
+
+let mkSeqLit (r : FStarC_Range_Type.range) (elts : (term) list) : term =
+  (mk_term (SeqLiteral (elts)) r Expr)
+
+let mk_pattern (p : pattern') (r : FStarC_Range_Type.range) : pattern =
+  { pat = p; prange = r }
+
+let mk_binder_with_attrs (b : binder') (r : FStarC_Range_Type.range) (l : level) (i : (arg_qualifier) option) (attrs : (term) list) : binder =
+  { b = b; brange = r; blevel = l; aqual = i; battributes = attrs }
+
+let mk_binder (b : binder') (r : FStarC_Range_Type.range) (l : level) (i : (arg_qualifier) option) : binder =
+  (mk_binder_with_attrs b r l i [])
+
+let mkRefinedPattern (pat : pattern) (t : term) (should_bind_pat : bool) (phi_opt : (term) option) (t_range : FStarC_Range_Type.range) (range : FStarC_Range_Type.range) : pattern =
+  (let t1 = (match phi_opt with
+      | None -> t
+      | (Some (phi)) -> (if should_bind_pat then (match (pat).pat with
+          | (PatVar (x, tmp, attrs)) -> (mk_term (Refine ((mk_binder_with_attrs (Annotated (x, t)) t_range Type_level None attrs), phi)) range Type_level)
+          | tmp -> (let x = (FStarC_Ident.gen t_range) in
+            let tmp1 = (FStarC_Ident.lid_of_ids (x :: [])) in
+            let tmp2 = (Var (tmp1)) in
+            let x_var = (mk_term tmp2 (phi).range Formula) in
+            let pat_branch = (pat, None, phi) in
+            let tmp3 = (FStarC_Ident.lid_of_path ("False" :: []) (phi).range) in
+            let tmp4 = (Name (tmp3)) in
+            let tmp5 = (mk_term tmp4 (phi).range Formula) in
+            let otherwise_branch = ((mk_pattern (PatWild (None, [])) (phi).range), None, tmp5) in
+            let phi1 = (mk_term (Match (x_var, None, None, (pat_branch :: (otherwise_branch :: [])))) (phi).range Formula) in
+            (mk_term (Refine ((mk_binder (Annotated (x, t)) t_range Type_level None), phi1)) range Type_level))
+        ) else (let x = (FStarC_Ident.gen (t).range) in
+        (mk_term (Refine ((mk_binder (Annotated (x, t)) t_range Type_level None), phi)) range Type_level)))
+    ) in
+  (mk_pattern (PatAscribed (pat, (t1, None))) range))
 
 let to_string_l (sep : string) (f : ('tmp -> string)) (l : ('tmp) list) : string =
   (let tmp = (BatList.map f l) in
@@ -157,6 +392,13 @@ let imp_to_string (tmp : imp) : string =
     | tmp1 -> ""
   )
 
+let string_of_local_let_qualifier (tmp : local_let_qualifier) : string =
+  (match tmp with
+    | LocalNoLetQualifier -> ""
+    | LocalRec -> "rec"
+    | LocalUnfold -> "unfold"
+  )
+
 let aqual_to_string (q : (arg_qualifier) option) : string =
   (match q with
     | (Some (Equality)) -> "$"
@@ -164,13 +406,6 @@ let aqual_to_string (q : (arg_qualifier) option) : string =
     | None -> ""
     | (Some ((Meta (tmp)))) -> "{||}"
     | (Some (TypeClassArg)) -> "{||}"
-  )
-
-let string_of_local_let_qualifier (tmp : local_let_qualifier) : string =
-  (match tmp with
-    | LocalNoLetQualifier -> ""
-    | LocalRec -> "rec"
-    | LocalUnfold -> "unfold"
   )
 
 let fStarC_Class_Tagged_tag_of__term (tmp : term) : string =
@@ -232,61 +467,7 @@ let fStarC_Class_Tagged_tag_of__term (tmp : term) : string =
     | (LitDoc (tmp1)) -> "LitDoc"
   )
 
-let rec attrs_opt_to_string (o : ((term) list) option) : string =
-  (match o with
-    | None -> ""
-    | (Some (attrs)) -> (let tmp = (BatList.map term_to_string attrs) in
-      let tmp1 = (BatString.concat "; " tmp) in
-      (FStarC_Format.fmt1 "[@ %s]" tmp1))
-  )
-
-and attr_list_to_string (l : (term) list) : string =
-  (match l with
-    | [] -> ""
-    | l1 -> (attrs_opt_to_string (Some (l1)))
-  )
-
-and pat_to_string (x : pattern) : string =
-  (match (x).pat with
-    | (PatWild (None, attrs)) -> (let tmp = (attr_list_to_string attrs) in
-      (Prims.strcat tmp "_"))
-    | (PatWild (tmp, attrs)) -> (let tmp1 = (attr_list_to_string attrs) in
-      let tmp2 = (Prims.strcat tmp1 "_") in
-      (Prims.strcat "#" tmp2))
-    | (PatConst (c)) -> (FStarC_Parser_Const.const_to_string c)
-    | (PatVQuote (t)) -> (let tmp = (term_to_string t) in
-      (FStarC_Format.fmt1 "`%%%s" tmp))
-    | (PatApp (p, ps)) -> (let tmp = (pat_to_string p) in
-      let tmp1 = (to_string_l " " pat_to_string ps) in
-      (FStarC_Format.fmt2 "(%s %s)" tmp tmp1))
-    | (PatVar (i, aq, attrs)) -> (let tmp = (aqual_to_string aq) in
-      let tmp1 = (attr_list_to_string attrs) in
-      (FStarC_Format.fmt3 "%s%s%s" tmp tmp1 (FStarC_Ident.string_of_id i)))
-    | (PatName (l)) -> (FStarC_Ident.string_of_lid l)
-    | (PatList (l)) -> (let tmp = (to_string_l "; " pat_to_string l) in
-      (FStarC_Format.fmt1 "[%s]" tmp))
-    | (PatTuple (l, false)) -> (let tmp = (to_string_l ", " pat_to_string l) in
-      (FStarC_Format.fmt1 "(%s)" tmp))
-    | (PatTuple (l, true)) -> (let tmp = (to_string_l ", " pat_to_string l) in
-      (FStarC_Format.fmt1 "(|%s|)" tmp))
-    | (PatRecord (l)) -> (let tmp = (to_string_l "; " (fun tmp -> (match tmp with
-          | (f, e) -> (let tmp1 = (pat_to_string e) in
-            (FStarC_Format.fmt2 "%s=%s" (FStarC_Ident.string_of_lid f) tmp1))
-        )) l) in
-      (FStarC_Format.fmt1 "{%s}" tmp))
-    | (PatOr (l)) -> (to_string_l "|\n " pat_to_string l)
-    | (PatOp (op)) -> (FStarC_Format.fmt1 "(%s)" (FStarC_Ident.string_of_id op))
-    | (PatAscribed (p, (t, None))) -> (let tmp = (pat_to_string p) in
-      let tmp1 = (term_to_string t) in
-      (FStarC_Format.fmt2 "(%s:%s)" tmp tmp1))
-    | (PatAscribed (p, (t, (Some (tac))))) -> (let tmp = (pat_to_string p) in
-      let tmp1 = (term_to_string t) in
-      let tmp2 = (term_to_string tac) in
-      (FStarC_Format.fmt3 "(%s:%s by %s)" tmp tmp1 tmp2))
-    | PatRest -> ".."
-  )
-
-and try_or_match_to_string (x : term) (scrutinee : term) (branches : ((pattern * (term) option * term)) list) (op_opt : (FStarC_Ident.ident) option) (ret_opt : (((FStarC_Ident.ident) option * term * bool)) option) : string =
+let rec try_or_match_to_string (x : term) (scrutinee : term) (branches : ((pattern * (term) option * term)) list) (op_opt : (FStarC_Ident.ident) option) (ret_opt : (((FStarC_Ident.ident) option * term * bool)) option) : string =
   (let s = (match (x).tm with
       | (Match (u__1, u__2, u__3, u__4)) -> "match"
       | (TryWith (u__1, u__2)) -> "try"
@@ -583,263 +764,83 @@ and term_to_string (x : term) : string =
       (FStarC_Effect.failwith tmp2))
   )
 
-let string_to_op (s : string) : (string) option =
-  (let name_of_op = (fun s1 -> (match s1 with
-      | "Amp" -> (Some ("&"))
-      | "At" -> (Some ("@"))
-      | "Plus" -> (Some ("+"))
-      | "Minus" -> (Some ("-"))
-      | "Tilde" -> (Some ("~"))
-      | "Slash" -> (Some ("/"))
-      | "Backslash" -> (Some ("\\"))
-      | "Less" -> (Some ("<"))
-      | "Equals" -> (Some ("="))
-      | "Greater" -> (Some (">"))
-      | "Underscore" -> (Some ("_"))
-      | "Bar" -> (Some ("|"))
-      | "Bang" -> (Some ("!"))
-      | "Hat" -> (Some ("^"))
-      | "Percent" -> (Some ("%"))
-      | "Star" -> (Some ("*"))
-      | "Question" -> (Some ("?"))
-      | "Colon" -> (Some (":"))
-      | "Dollar" -> (Some ("$"))
-      | "Dot" -> (Some ("."))
-      | "Lbrack" -> (Some ("["))
-      | "Rbrack" -> (Some ("]"))
-      | "Lparen" -> (Some ("("))
-      | "Rparen" -> (Some (")"))
-      | "let" -> (Some (s1))
-      | "and" -> (Some (s1))
-      | "forall" -> (Some (s1))
-      | "exists" -> (Some (s1))
-      | s2 -> (if (FStarC_Util.starts_with s2 "u") then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s2 Prims.int_one) in
-        let tmp1 = ((fun x -> if String.equal x "" then None else try Some (Z.of_string x) with Invalid_argument _ -> None) tmp) in
-        (FStarC_Option.map (fun c -> ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) (Z.to_int c))) tmp1)) else None)
-    )) in
-  (if (FStarC_Util.starts_with s "op_") then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) "op_")) in
-  let frags = (FStarC_Util.split tmp "_") in
-  (BatList.fold_left (fun acc frag -> (let tmp1 = (name_of_op frag) in
-  let tmp2 = (acc, tmp1) in
-  (match tmp2 with
-    | ((Some (acc1)), (Some (op))) -> (Some ((Prims.strcat acc1 op)))
-    | tmp3 -> None
-  ))) (Some ("")) frags)) else None))
-
-let strip_prefix (prefix : string) (s : string) : (string) option =
-  (if (FStarC_Util.starts_with s prefix) then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) prefix)) in
-  (Some (tmp))) else None)
-
-type attributes_ = (term) list
-
-let mk_pattern (p : pattern') (r : FStarC_Range_Type.range) : pattern =
-  { pat = p; prange = r }
-
-type let_qualifier =
-  | NoLetQualifier
-  | Rec
-
-
-type knd = term
-
-type tycon_record = ((FStarC_Ident.ident * (arg_qualifier) option * (term) list * term)) list
-
-type typ = term
-
-type constructor_payload =
-  | VpOfNotation of term
-  | VpArbitrary of term
-  | VpRecord of ((FStarC_Ident.ident * (arg_qualifier) option * (term) list * term)) list * (term) option
-
-
-type tycon =
-  | TyconAbstract of FStarC_Ident.ident * (binder) list * (term) option
-  | TyconAbbrev of FStarC_Ident.ident * (binder) list * (term) option * term
-  | TyconRecord of FStarC_Ident.ident * (binder) list * (term) option * (term) list * ((FStarC_Ident.ident * (arg_qualifier) option * (term) list * term)) list
-  | TyconVariant of FStarC_Ident.ident * (binder) list * (term) option * ((FStarC_Ident.ident * (constructor_payload) option * (term) list)) list
-
-
-type lift = {
-  msource : FStarC_Ident.lident;
-  mdest : FStarC_Ident.lident;
-  lift_op : (term) option;
-}
-
-type pragma =
-  | ShowOptions
-  | SetOptions of string
-  | ResetOptions of (string) option
-  | PushOptions of (string) option
-  | PopOptions
-  | RestartSolver
-  | PrintEffectsGraph
-  | Check of term
-  | Eval of term
-
-
-type dep_scan_callbacks = {
-  scan_term : (term -> unit);
-  scan_binder : (binder -> unit);
-  scan_pattern : (pattern -> unit);
-  add_lident : (FStarC_Ident.lident -> unit);
-  add_open : (FStarC_Ident.lident -> unit);
-}
-
-type to_be_desugared = {
-  lang_name : string;
-  blob : Obj.t;
-  idents : (FStarC_Ident.ident) list;
-  to_string : (Obj.t -> string);
-  eq : (Obj.t -> (Obj.t -> bool));
-  dep_scan : (dep_scan_callbacks -> (Obj.t -> unit));
-}
-
-type qualifier =
-  | Private
-  | Noeq
-  | Unopteq
-  | Assumption
-  | TotalEffect
-  | Effect_qual
-  | New
-  | Inline
-  | Visible
-  | Unfold_for_unification_and_vcgen
-  | Inline_for_extraction
-  | Irreducible
-  | NoExtract
-  | Reifiable
-  | Reflectable
-  | Opaque
-  | Logic
-
-
-type effect_decl =
-  | DeclareEffect of FStarC_Ident.ident * (binder) list
-  | DefineEffect of FStarC_Ident.ident * (binder) list * (decl) list
-
-
-and decl' =
-  | TopLevelModule of FStarC_Ident.lident
-  | Open of FStarC_Ident.lident * FStarC_Syntax_Syntax.restriction
-  | Friend of FStarC_Ident.lident
-  | Include of FStarC_Ident.lident * FStarC_Syntax_Syntax.restriction
-  | ModuleAbbrev of FStarC_Ident.ident * FStarC_Ident.lident
-  | TopLevelLet of let_qualifier * ((pattern * term)) list
-  | Tycon of bool * bool * (tycon) list
-  | Val of FStarC_Ident.ident * term
-  | Exception of FStarC_Ident.ident * (term) option
-  | NewEffect of effect_decl
-  | SubEffect of lift
-  | Pragma of pragma
-  | Assume of FStarC_Ident.ident * term
-  | Splice of bool * (FStarC_Ident.ident) list * term
-  | DeclSyntaxExtension of string * string * FStarC_Range_Type.range * FStarC_Range_Type.range
-  | UseLangDecls of string
-  | DeclToBeDesugared of to_be_desugared
-  | Unparseable
-
-
-and decl = {
-  d : decl';
-  drange : FStarC_Range_Type.range;
-  quals : (qualifier) list;
-  attrs : (term) list;
-}
-
-type qualifiers = (qualifier) list
-
-type decoration =
-  | Qualifier of qualifier
-  | DeclAttributes of (term) list
-
-
-let uu___is_DeclAttributes (projectee : decoration) : bool =
-  (match projectee with
-    | (DeclAttributes (u__0)) -> true
-    | tmp -> false
+and attrs_opt_to_string (o : ((term) list) option) : string =
+  (match o with
+    | None -> ""
+    | (Some (attrs)) -> (let tmp = (BatList.map term_to_string attrs) in
+      let tmp1 = (BatString.concat "; " tmp) in
+      (FStarC_Format.fmt1 "[@ %s]" tmp1))
   )
 
-type modul__Module__payload = {
-  no_prelude : bool;
-  mname : FStarC_Ident.lident;
-  decls : (decl) list;
-}
-
-type modul__Interface__payload = {
-  no_prelude : bool;
-  mname : FStarC_Ident.lident;
-  decls : (decl) list;
-  admitted : bool;
-}
-
-type modul =
-  | Module of modul__Module__payload
-  | Interface of modul__Interface__payload
-
-
-type file = modul
-
-type inputFragment = (modul, (decl) list) FStar_Pervasives.either
-
-let fStarC_Class_HasRange_pos__decl (tmp : decl) : FStarC_Range_Type.range =
-  (tmp).drange
-
-let fStarC_Errors_raise_error__decl_string (pos : decl) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
-  (let rng = (fStarC_Class_HasRange_pos__decl pos) in
-  let tmp = (FStarC_Errors.fixup_issue_range (Some (rng))) in
-  (match tmp with
-    | (Some (rng1)) -> (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
-      let tmp1 = (FStarC_Errors.maybe_add_backtrace msg1) in
-      let tmp2 = ((FStarC_Errors.error_context).FStarC_Errors.get ()) in
-      let tmp3 = (code, tmp1, rng1, tmp2) in
-      let tmp4 = (FStarC_Errors.Error (tmp3)) in
-      (raise tmp4))
-  ))
-
-let rec as_mlist (cur : ((FStarC_Ident.lident * decl * bool) * (decl) list)) (ds : (decl) list) : modul =
-  (match cur with
-    | ((m_name, m_decl, no_prelude), cur1) -> (match ds with
-        | [] -> (Module (({ no_prelude = no_prelude;
-            mname = m_name;
-            decls = (m_decl :: (BatList.rev cur1)) } : modul__Module__payload)))
-        | (d :: ds1) -> (match (d).d with
-            | (TopLevelModule (m')) -> (fStarC_Errors_raise_error__decl_string d FStarC_Errors_Codes.Fatal_UnexpectedModuleDeclaration "Unexpected module declaration")
-            | tmp -> (as_mlist ((m_name, m_decl, no_prelude), (d :: cur1)) ds1)
-          )
-      )
+and attr_list_to_string (l : (term) list) : string =
+  (match l with
+    | [] -> ""
+    | l1 -> (attrs_opt_to_string (Some (l1)))
   )
 
-let as_frag (ds : (decl) list) : (modul, (decl) list) FStar_Pervasives.either =
-  (let tmp = (match ds with
-      | (d :: ds1) -> (d, ds1)
-      | [] -> (raise FStarC_Errors.Empty_frag)
-    ) in
-  (match tmp with
-    | (d, ds1) -> (match (d).d with
-        | (TopLevelModule (m)) -> (let tmp1 = (FStarC_Options.no_prelude ()) in
-          let no_prelude = (if tmp1 then true else (BatList.exists (fun tmp2 -> (match (tmp2).tm with
-              | (Const ((FStarC_Const.Const_string ("no_prelude", tmp3)))) -> true
-              | tmp3 -> false
-            )) (d).attrs)) in
-          let m1 = (as_mlist ((m, d, no_prelude), []) ds1) in
-          (FStar_Pervasives.Inl (m1)))
-        | tmp1 -> (let ds2 = (d :: ds1) in
-          (BatList.iter (fun tmp2 -> (match tmp2 with
-            | { d = (TopLevelModule (tmp3)); drange = r; quals = tmp4; attrs = tmp5; _ } -> (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_UnexpectedModuleDeclaration "Unexpected module declaration")
-            | tmp3 -> ()
-          )) ds2);
-          (FStar_Pervasives.Inr (ds2)))
-      )
+and pat_to_string (x : pattern) : string =
+  (match (x).pat with
+    | (PatWild (None, attrs)) -> (let tmp = (attr_list_to_string attrs) in
+      (Prims.strcat tmp "_"))
+    | (PatWild (tmp, attrs)) -> (let tmp1 = (attr_list_to_string attrs) in
+      let tmp2 = (Prims.strcat tmp1 "_") in
+      (Prims.strcat "#" tmp2))
+    | (PatConst (c)) -> (FStarC_Parser_Const.const_to_string c)
+    | (PatVQuote (t)) -> (let tmp = (term_to_string t) in
+      (FStarC_Format.fmt1 "`%%%s" tmp))
+    | (PatApp (p, ps)) -> (let tmp = (pat_to_string p) in
+      let tmp1 = (to_string_l " " pat_to_string ps) in
+      (FStarC_Format.fmt2 "(%s %s)" tmp tmp1))
+    | (PatVar (i, aq, attrs)) -> (let tmp = (aqual_to_string aq) in
+      let tmp1 = (attr_list_to_string attrs) in
+      (FStarC_Format.fmt3 "%s%s%s" tmp tmp1 (FStarC_Ident.string_of_id i)))
+    | (PatName (l)) -> (FStarC_Ident.string_of_lid l)
+    | (PatList (l)) -> (let tmp = (to_string_l "; " pat_to_string l) in
+      (FStarC_Format.fmt1 "[%s]" tmp))
+    | (PatTuple (l, false)) -> (let tmp = (to_string_l ", " pat_to_string l) in
+      (FStarC_Format.fmt1 "(%s)" tmp))
+    | (PatTuple (l, true)) -> (let tmp = (to_string_l ", " pat_to_string l) in
+      (FStarC_Format.fmt1 "(|%s|)" tmp))
+    | (PatRecord (l)) -> (let tmp = (to_string_l "; " (fun tmp -> (match tmp with
+          | (f, e) -> (let tmp1 = (pat_to_string e) in
+            (FStarC_Format.fmt2 "%s=%s" (FStarC_Ident.string_of_lid f) tmp1))
+        )) l) in
+      (FStarC_Format.fmt1 "{%s}" tmp))
+    | (PatOr (l)) -> (to_string_l "|\n " pat_to_string l)
+    | (PatOp (op)) -> (FStarC_Format.fmt1 "(%s)" (FStarC_Ident.string_of_id op))
+    | (PatAscribed (p, (t, None))) -> (let tmp = (pat_to_string p) in
+      let tmp1 = (term_to_string t) in
+      (FStarC_Format.fmt2 "(%s:%s)" tmp tmp1))
+    | (PatAscribed (p, (t, (Some (tac))))) -> (let tmp = (pat_to_string p) in
+      let tmp1 = (term_to_string t) in
+      let tmp2 = (term_to_string tac) in
+      (FStarC_Format.fmt3 "(%s:%s by %s)" tmp tmp1 tmp2))
+    | PatRest -> ".."
+  )
+
+let mkRefinedBinder (id : FStarC_Ident.ident) (t : term) (should_bind_var : bool) (refopt : (term) option) (m : FStarC_Range_Type.range) (implicit : (arg_qualifier) option) (attrs : (term) list) : binder =
+  (let b = (mk_binder_with_attrs (Annotated (id, t)) m Type_level implicit attrs) in
+  (match refopt with
+    | None -> b
+    | (Some (phi)) -> (if should_bind_var then (mk_binder_with_attrs (Annotated (id, (mk_term (Refine (b, phi)) m Type_level))) m Type_level implicit attrs) else (let x = (FStarC_Ident.gen (t).range) in
+      let b1 = (mk_binder_with_attrs (Annotated (x, t)) m Type_level implicit attrs) in
+      (mk_binder_with_attrs (Annotated (id, (mk_term (Refine (b1, phi)) m Type_level))) m Type_level implicit attrs)))
   ))
 
-type branch = (pattern * (term) option * term)
+let unit_type (r : FStarC_Range_Type.range) : term =
+  (let tmp = (FStarC_Ident.lid_of_str "Prims.unit") in
+  let tmp1 = (Var (tmp)) in
+  (mk_term tmp1 r Expr))
 
-let check_id (id : FStarC_Ident.ident) : unit =
-  (let first_char = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) (FStarC_Ident.string_of_id id) Prims.int_zero Prims.int_one) in
-  (if (not ((=) (BatString.lowercase_ascii first_char) first_char)) then (let tmp = (FStarC_Ident.fStarC_Class_Show_show__ident id) in
-  let tmp1 = (FStarC_Format.fmt1 "Invalid identifer ‘%s’; expected a symbol that begins with a lower-case character" tmp) in
-  (FStarC_Errors.fStarC_Errors_raise_error__ident_string id FStarC_Errors_Codes.Fatal_InvalidIdentifier tmp1)) else ()))
+let ident_of_binder (r : FStarC_Range_Type.range) (b : binder) : FStarC_Ident.ident =
+  (match (b).b with
+    | (Variable (i)) -> i
+    | (Annotated (i, tmp)) -> i
+    | (NoName (tmp)) -> (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_MissingQuantifierBinder "Wildcard binders in quantifiers are not allowed")
+  )
+
+let idents_of_binders (bs : (binder) list) (r : FStarC_Range_Type.range) : (FStarC_Ident.ident) list =
+  (BatList.map (ident_of_binder r) bs)
 
 let name_of_char (c : int) : string =
   (match c with
@@ -886,13 +887,24 @@ let compile_op (s : string) (r : FStarC_Range_Type.range) : string =
       (Prims.strcat "op_" tmp3))
   ))
 
+let mkRefSet (r : FStarC_Range_Type.range) (elts : (term) list) : term =
+  (let empty = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.set_empty r))) r Expr) in
+  let addr_of = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.heap_addr_of_lid r))) r Expr) in
+  let singleton = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.set_singleton r))) r Expr) in
+  let union = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.set_union r))) r Expr) in
+  (BatList.fold_right (fun e tl -> (let e1 = (mkApp addr_of ((e, Nothing) :: []) r) in
+  let single_e = (mkApp singleton ((e1, Nothing) :: []) r) in
+  (mkApp union ((single_e, Nothing) :: ((tl, Nothing) :: [])) r))) elts empty))
+
 let consPat (r : FStarC_Range_Type.range) (hd : pattern) (tl : pattern) : pattern' =
   (PatApp ((mk_pattern (PatName (FStarC_Parser_Const.cons_lid)) r), (hd :: (tl :: []))))
 
-let consTerm (r : FStarC_Range_Type.range) (hd : term) (tl : term) : term =
-  (mk_term (Construct (FStarC_Parser_Const.cons_lid, ((hd, Nothing) :: ((tl, Nothing) :: [])))) r Expr)
-
-type expr = term
+let mk_uminus (t : term) (rminus : FStarC_Range_Type.range) (r : FStarC_Range_Type.range) (l : level) : term =
+  (let t1 = (match (t).tm with
+      | (Const ((FStarC_Const.Const_machine_int (v, b, FStarC_Const.Signed, width)))) -> (Const ((FStarC_Const.Const_machine_int ((Prims.op_Tilde_Minus v), b, FStarC_Const.Signed, width))))
+      | tmp -> (Op ((FStarC_Ident.mk_ident ("~-", rminus)), (t :: [])))
+    ) in
+  (mk_term t1 r l))
 
 let rec extract_named_refinement (remove_parens : bool) (t1 : term) : ((FStarC_Ident.ident * term * (term) option)) option =
   (match (t1).tm with
@@ -901,6 +913,10 @@ let rec extract_named_refinement (remove_parens : bool) (t1 : term) : ((FStarC_I
     | (Paren (t)) when remove_parens -> (extract_named_refinement remove_parens t)
     | tmp -> None
   )
+
+type match_returns_annotation = ((FStarC_Ident.ident) option * term * bool)
+
+type branch = (pattern * (term) option * term)
 
 let mkExplicitApp (t : term) (args : (term) list) (r : FStarC_Range_Type.range) : term =
   (match args with
@@ -914,27 +930,15 @@ let mkExplicitApp (t : term) (args : (term) list) (r : FStarC_Range_Type.range) 
       )
   )
 
+let unit_const (r : FStarC_Range_Type.range) : term =
+  (mk_term (Const (FStarC_Const.Const_unit)) r Expr)
+
 let mkAdmitMagic (r : FStarC_Range_Type.range) : term =
   (let admit_name = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.admit_lid r))) r Expr) in
   let admit = (mkExplicitApp admit_name ((unit_const r) :: []) r) in
   let magic_name = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.magic_lid r))) r Expr) in
   let magic = (mkExplicitApp magic_name ((unit_const r) :: []) r) in
   (mk_term (Seq (admit, magic)) r Expr))
-
-let focusAttrLetBindings (lbs : ((((term) list) option * (bool * (pattern * term)))) list) (r : FStarC_Range_Type.range) : ((((term) list) option * (pattern * term))) list =
-  (let should_filter = (FStarC_Util.for_some (fun tmp -> (match tmp with
-      | (attr, (focus, tmp1)) -> focus
-    )) lbs) in
-  (if should_filter then ((FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Warning_Filtered "Focusing on only some cases in this (mutually) recursive definition");
-  (BatList.map (fun tmp -> (match tmp with
-    | (attr, (f, lb)) -> (if f then (attr, lb) else (let tmp1 = (mkAdmitMagic r) in
-      let tmp2 = ((match lb with
-          | (u__1, u__2) -> u__1
-        ), tmp1) in
-      (attr, tmp2)))
-  )) lbs)) else (BatList.map (fun tmp -> (match tmp with
-    | (attr, (tmp1, lb)) -> (attr, lb)
-  )) lbs)))
 
 let mkWildAdmitMagic (r : FStarC_Range_Type.range) : (pattern * (term) option * term) =
   (let tmp = (mkAdmitMagic r) in
@@ -957,120 +961,45 @@ let focusBranches (branches : ((bool * (pattern * (term) option * term))) list) 
     | (u__1, u__2) -> u__2
   )) branches)))
 
-let focusLetBindings (lbs : ((bool * (pattern * term))) list) (r : FStarC_Range_Type.range) : ((pattern * term)) list =
-  (let should_filter = (FStarC_Util.for_some (fun x -> (match x with
-      | (u__1, u__2) -> u__1
+let focusAttrLetBindings (lbs : ((((term) list) option * (bool * (pattern * term)))) list) (r : FStarC_Range_Type.range) : ((((term) list) option * (pattern * term))) list =
+  (let should_filter = (FStarC_Util.for_some (fun tmp -> (match tmp with
+      | (attr, (focus, tmp1)) -> focus
     )) lbs) in
   (if should_filter then ((FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Warning_Filtered "Focusing on only some cases in this (mutually) recursive definition");
   (BatList.map (fun tmp -> (match tmp with
-    | (f, lb) -> (if f then lb else (let tmp1 = (mkAdmitMagic r) in
-      ((match lb with
-        | (u__1, u__2) -> u__1
-      ), tmp1)))
-  )) lbs)) else (BatList.map (fun x -> (match x with
-    | (u__1, u__2) -> u__2
+    | (attr, (f, lb)) -> (if f then (attr, lb) else (let tmp1 = (mkAdmitMagic r) in
+      let tmp2 = ((match lb with
+          | (u__1, u__2) -> u__1
+        ), tmp1) in
+      (attr, tmp2)))
+  )) lbs)) else (BatList.map (fun tmp -> (match tmp with
+    | (attr, (tmp1, lb)) -> (attr, lb)
   )) lbs)))
 
-let ident_of_binder (r : FStarC_Range_Type.range) (b : binder) : FStarC_Ident.ident =
-  (match (b).b with
-    | (Variable (i)) -> i
-    | (Annotated (i, tmp)) -> i
-    | (NoName (tmp)) -> (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_MissingQuantifierBinder "Wildcard binders in quantifiers are not allowed")
-  )
-
-let idents_of_binders (bs : (binder) list) (r : FStarC_Range_Type.range) : (FStarC_Ident.ident) list =
-  (BatList.map (ident_of_binder r) bs)
-
-type match_returns_annotation = ((FStarC_Ident.ident) option * term * bool)
+let mk_function (branches : ((pattern * (term) option * term)) list) (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : term =
+  (mk_term (Function (branches, r1)) r2 Expr)
 
 let mkCalcStep (rel : term) (just : term) (next : term) : (term * term * term) =
   (rel, just, next)
-
-let mkApp (t : term) (args : ((term * imp)) list) (r : FStarC_Range_Type.range) : term =
-  (match args with
-    | [] -> t
-    | tmp -> (match (t).tm with
-        | (Name (s)) -> (mk_term (Construct (s, args)) r Un)
-        | tmp1 -> (BatList.fold_left (fun t1 tmp2 -> (match tmp2 with
-            | (a, imp) -> (mk_term (App (t1, a, imp)) r Un)
-          )) t args)
-      )
-  )
-
-let mkDTuple (args : (term) list) (r : FStarC_Range_Type.range) : term =
-  (let cons = (FStarC_Parser_Const_Tuples.mk_dtuple_data_lid ((fun l -> Z.of_int (BatList.length l)) args) r) in
-  let tmp = (BatList.map (fun x -> (x, Nothing)) args) in
-  (mkApp (mk_term (Name (cons)) r Expr) tmp r))
-
-let mkListLit (r : FStarC_Range_Type.range) (elts : (term) list) : term =
-  (mk_term (ListLiteral (elts)) r Expr)
-
-let mkRefSet (r : FStarC_Range_Type.range) (elts : (term) list) : term =
-  (let empty = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.set_empty r))) r Expr) in
-  let addr_of = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.heap_addr_of_lid r))) r Expr) in
-  let singleton = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.set_singleton r))) r Expr) in
-  let union = (mk_term (Var ((FStarC_Ident.set_lid_range FStarC_Parser_Const.set_union r))) r Expr) in
-  (BatList.fold_right (fun e tl -> (let e1 = (mkApp addr_of ((e, Nothing) :: []) r) in
-  let single_e = (mkApp singleton ((e1, Nothing) :: []) r) in
-  (mkApp union ((single_e, Nothing) :: ((tl, Nothing) :: [])) r))) elts empty))
-
-let mkRefinedBinder (id : FStarC_Ident.ident) (t : term) (should_bind_var : bool) (refopt : (term) option) (m : FStarC_Range_Type.range) (implicit : (arg_qualifier) option) (attrs : (term) list) : binder =
-  (let b = (mk_binder_with_attrs (Annotated (id, t)) m Type_level implicit attrs) in
-  (match refopt with
-    | None -> b
-    | (Some (phi)) -> (if should_bind_var then (mk_binder_with_attrs (Annotated (id, (mk_term (Refine (b, phi)) m Type_level))) m Type_level implicit attrs) else (let x = (FStarC_Ident.gen (t).range) in
-      let b1 = (mk_binder_with_attrs (Annotated (x, t)) m Type_level implicit attrs) in
-      (mk_binder_with_attrs (Annotated (id, (mk_term (Refine (b1, phi)) m Type_level))) m Type_level implicit attrs)))
-  ))
-
-let mk_binder (b : binder') (r : FStarC_Range_Type.range) (l : level) (i : (arg_qualifier) option) : binder =
-  (mk_binder_with_attrs b r l i [])
-
-let mkRefinedPattern (pat : pattern) (t : term) (should_bind_pat : bool) (phi_opt : (term) option) (t_range : FStarC_Range_Type.range) (range : FStarC_Range_Type.range) : pattern =
-  (let t1 = (match phi_opt with
-      | None -> t
-      | (Some (phi)) -> (if should_bind_pat then (match (pat).pat with
-          | (PatVar (x, tmp, attrs)) -> (mk_term (Refine ((mk_binder_with_attrs (Annotated (x, t)) t_range Type_level None attrs), phi)) range Type_level)
-          | tmp -> (let x = (FStarC_Ident.gen t_range) in
-            let tmp1 = (FStarC_Ident.lid_of_ids (x :: [])) in
-            let tmp2 = (Var (tmp1)) in
-            let x_var = (mk_term tmp2 (phi).range Formula) in
-            let pat_branch = (pat, None, phi) in
-            let tmp3 = (FStarC_Ident.lid_of_path ("False" :: []) (phi).range) in
-            let tmp4 = (Name (tmp3)) in
-            let tmp5 = (mk_term tmp4 (phi).range Formula) in
-            let otherwise_branch = ((mk_pattern (PatWild (None, [])) (phi).range), None, tmp5) in
-            let phi1 = (mk_term (Match (x_var, None, None, (pat_branch :: (otherwise_branch :: [])))) (phi).range Formula) in
-            (mk_term (Refine ((mk_binder (Annotated (x, t)) t_range Type_level None), phi1)) range Type_level))
-        ) else (let x = (FStarC_Ident.gen (t).range) in
-        (mk_term (Refine ((mk_binder (Annotated (x, t)) t_range Type_level None), phi)) range Type_level)))
-    ) in
-  (mk_pattern (PatAscribed (pat, (t1, None))) range))
-
-let mkSeqLit (r : FStarC_Range_Type.range) (elts : (term) list) : term =
-  (mk_term (SeqLiteral (elts)) r Expr)
 
 let mkTuple (args : (term) list) (r : FStarC_Range_Type.range) : term =
   (let cons = (FStarC_Parser_Const_Tuples.mk_tuple_data_lid ((fun l -> Z.of_int (BatList.length l)) args) r) in
   let tmp = (BatList.map (fun x -> (x, Nothing)) args) in
   (mkApp (mk_term (Name (cons)) r Expr) tmp r))
 
-let mk_uminus (t : term) (rminus : FStarC_Range_Type.range) (r : FStarC_Range_Type.range) (l : level) : term =
-  (let t1 = (match (t).tm with
-      | (Const ((FStarC_Const.Const_machine_int (v, b, FStarC_Const.Signed, width)))) -> (Const ((FStarC_Const.Const_machine_int ((Prims.op_Tilde_Minus v), b, FStarC_Const.Signed, width))))
-      | tmp -> (Op ((FStarC_Ident.mk_ident ("~-", rminus)), (t :: [])))
-    ) in
-  (mk_term t1 r l))
+let consTerm (r : FStarC_Range_Type.range) (hd : term) (tl : term) : term =
+  (mk_term (Construct (FStarC_Parser_Const.cons_lid, ((hd, Nothing) :: ((tl, Nothing) :: [])))) r Expr)
 
-type patterns = ((FStarC_Ident.ident) list * ((term) list) list)
+type decoration =
+  | Qualifier of qualifier
+  | DeclAttributes of (term) list
 
-let unit_type (r : FStarC_Range_Type.range) : term =
-  (let tmp = (FStarC_Ident.lid_of_str "Prims.unit") in
-  let tmp1 = (Var (tmp)) in
-  (mk_term tmp1 r Expr))
 
-let mk_function (branches : ((pattern * (term) option * term)) list) (r1 : FStarC_Range_Type.range) (r2 : FStarC_Range_Type.range) : term =
-  (mk_term (Function (branches, r1)) r2 Expr)
+let uu___is_DeclAttributes (projectee : decoration) : bool =
+  (match projectee with
+    | (DeclAttributes (u__0)) -> true
+    | tmp -> false
+  )
 
 let fStarC_Class_Show_show__term (tmp : term) : string =
   (term_to_string tmp)
@@ -1133,11 +1062,86 @@ let mk_decl (d : decl') (r : FStarC_Range_Type.range) (decorations : (decoration
   (let d1 = { d = d; drange = r; quals = []; attrs = [] } in
   (add_decorations d1 decorations))
 
+let check_id (id : FStarC_Ident.ident) : unit =
+  (let first_char = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) (FStarC_Ident.string_of_id id) Prims.int_zero Prims.int_one) in
+  (if (not ((=) (BatString.lowercase_ascii first_char) first_char)) then (let tmp = (FStarC_Ident.fStarC_Class_Show_show__ident id) in
+  let tmp1 = (FStarC_Format.fmt1 "Invalid identifer ‘%s’; expected a symbol that begins with a lower-case character" tmp) in
+  (FStarC_Errors.fStarC_Errors_raise_error__ident_string id FStarC_Errors_Codes.Fatal_InvalidIdentifier tmp1)) else ()))
+
+let focusLetBindings (lbs : ((bool * (pattern * term))) list) (r : FStarC_Range_Type.range) : ((pattern * term)) list =
+  (let should_filter = (FStarC_Util.for_some (fun x -> (match x with
+      | (u__1, u__2) -> u__1
+    )) lbs) in
+  (if should_filter then ((FStarC_Errors.fStarC_Errors_log_issue__range_string r FStarC_Errors_Codes.Warning_Filtered "Focusing on only some cases in this (mutually) recursive definition");
+  (BatList.map (fun tmp -> (match tmp with
+    | (f, lb) -> (if f then lb else (let tmp1 = (mkAdmitMagic r) in
+      ((match lb with
+        | (u__1, u__2) -> u__1
+      ), tmp1)))
+  )) lbs)) else (BatList.map (fun x -> (match x with
+    | (u__1, u__2) -> u__2
+  )) lbs)))
+
 let as_interface (m : modul) : modul =
   (match m with
     | (Module ({ no_prelude = no_prelude; mname = mname; decls = decls; _ })) -> (Interface (({ no_prelude = no_prelude; mname = mname; decls = decls; admitted = true } : modul__Interface__payload)))
     | i -> i
   )
+
+let string_to_op (s : string) : (string) option =
+  (let name_of_op = (fun s1 -> (match s1 with
+      | "Amp" -> (Some ("&"))
+      | "At" -> (Some ("@"))
+      | "Plus" -> (Some ("+"))
+      | "Minus" -> (Some ("-"))
+      | "Tilde" -> (Some ("~"))
+      | "Slash" -> (Some ("/"))
+      | "Backslash" -> (Some ("\\"))
+      | "Less" -> (Some ("<"))
+      | "Equals" -> (Some ("="))
+      | "Greater" -> (Some (">"))
+      | "Underscore" -> (Some ("_"))
+      | "Bar" -> (Some ("|"))
+      | "Bang" -> (Some ("!"))
+      | "Hat" -> (Some ("^"))
+      | "Percent" -> (Some ("%"))
+      | "Star" -> (Some ("*"))
+      | "Question" -> (Some ("?"))
+      | "Colon" -> (Some (":"))
+      | "Dollar" -> (Some ("$"))
+      | "Dot" -> (Some ("."))
+      | "Lbrack" -> (Some ("["))
+      | "Rbrack" -> (Some ("]"))
+      | "Lparen" -> (Some ("("))
+      | "Rparen" -> (Some (")"))
+      | "let" -> (Some (s1))
+      | "and" -> (Some (s1))
+      | "forall" -> (Some (s1))
+      | "exists" -> (Some (s1))
+      | s2 -> (if (FStarC_Util.starts_with s2 "u") then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s2 Prims.int_one) in
+        let tmp1 = ((fun x -> if String.equal x "" then None else try Some (Z.of_string x) with Invalid_argument _ -> None) tmp) in
+        (match tmp1 with
+          | (Some (x)) -> (let tmp2 = ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) (Z.to_int x)) in
+            (Some (tmp2)))
+          | None -> None
+        )) else None)
+    )) in
+  (if (FStarC_Util.starts_with s "op_") then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) "op_")) in
+  let frags = (FStarC_Util.split tmp "_") in
+  (BatList.fold_left (fun acc frag -> (let tmp1 = (name_of_op frag) in
+  let tmp2 = (acc, tmp1) in
+  (match tmp2 with
+    | ((Some (acc1)), (Some (op))) -> (Some ((Prims.strcat acc1 op)))
+    | tmp3 -> None
+  ))) (Some ("")) frags)) else None))
+
+let strip_prefix (prefix : string) (s : string) : (string) option =
+  (if (FStarC_Util.starts_with s prefix) then (let tmp = ((fun s i -> BatString.tail s (Z.to_int i)) s ((fun s -> Z.of_int (BatUTF8.length s)) prefix)) in
+  (Some (tmp))) else None)
+
+type expr = term
+
+type patterns = ((FStarC_Ident.ident) list * ((term) list) list)
 
 let fStarC_Class_HasRange_pos__term (tmp : term) : FStarC_Range_Type.range =
   (tmp).range
@@ -1223,11 +1227,11 @@ let un_curry_abs (ps : (pattern) list) (body : term) : term' =
     | tmp -> (Abs (ps, body))
   )
 
-let fStarC_Class_HasRange_pos__binder_13 (tmp : binder) : FStarC_Range_Type.range =
+let fStarC_Class_HasRange_pos__binder_14 (tmp : binder) : FStarC_Range_Type.range =
   (tmp).brange
 
-let fStarC_Errors_raise_error__binder_string_21 (pos : binder) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
-  (let rng = (fStarC_Class_HasRange_pos__binder_13 pos) in
+let fStarC_Errors_raise_error__binder_string_23 (pos : binder) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
+  (let rng = (fStarC_Class_HasRange_pos__binder_14 pos) in
   let tmp = (FStarC_Errors.fixup_issue_range (Some (rng))) in
   (match tmp with
     | (Some (rng1)) -> (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
@@ -1260,7 +1264,7 @@ let fStarC_Class_PP_pp__imp (tmp : imp) : PPrint.document =
   (let tmp1 = (fStarC_Class_Show_show__imp tmp) in
   (PPrint.arbitrary_string tmp1))
 
-let fStarC_Class_Show_show__option_arg_qualifier_163 (tmp : (arg_qualifier) option) : string =
+let fStarC_Class_Show_show__option_arg_qualifier_169 (tmp : (arg_qualifier) option) : string =
   (match tmp with
     | None -> "None"
     | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__arg_qualifier x) in
@@ -1270,7 +1274,7 @@ let fStarC_Class_Show_show__option_arg_qualifier_163 (tmp : (arg_qualifier) opti
 let fStarC_Class_Show_show__local_let_qualifier (tmp : local_let_qualifier) : string =
   (string_of_local_let_qualifier tmp)
 
-let fStarC_Parser_AST_pp_list'__ident (xs : (FStarC_Ident.ident) list) : PPrint.document =
+let fStarC_Parser_AST_pp_list'__ident_pp_ident_pretty_ident (xs : (FStarC_Ident.ident) list) : PPrint.document =
   (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) FStarC_Ident.fStarC_Class_PP_pp__ident xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
@@ -1280,7 +1284,20 @@ let fStarC_Class_Show_show__quote_kind (tmp : quote_kind) : string =
     | Dynamic -> "Dynamic"
   )
 
-let rec fStarC_Class_PP_pp__tuple3_pattern_option_term_term (tmp : (pattern * (term) option * term)) : PPrint.document =
+let rec fStarC_Class_PP_pp__tuple2_term_imp (tmp : (term * imp)) : PPrint.document =
+  (match tmp with
+    | (a, imp) -> (let tmp1 = (pp_term a) in
+      let tmp2 = (fStarC_Class_PP_pp__imp imp) in
+      let tmp3 = (tmp2 :: []) in
+      let tmp4 = (tmp1 :: tmp3) in
+      (ctor "Arg" tmp4))
+  )
+
+and fStarC_Parser_AST_pp_list'__tuple2_term_imp (xs : ((term * imp)) list) : PPrint.document =
+  (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple2_term_imp xs) in
+  (FStarC_Class_PP.gbrackets tmp))
+
+and fStarC_Class_PP_pp__tuple3_pattern_option_term_term (tmp : (pattern * (term) option * term)) : PPrint.document =
   (match tmp with
     | (p, w, e) -> (let when_doc = (match w with
           | None -> PPrint.empty
@@ -1299,8 +1316,8 @@ and fStarC_Parser_AST_pp_list'__tuple3_pattern_option_term_term (xs : ((pattern 
   (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple3_pattern_option_term_term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
-and fStarC_Parser_AST_pp_list'__pattern (xs : (pattern) list) : PPrint.document =
-  (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__pattern_41 xs) in
+and fStarC_Parser_AST_pp_list'__pattern_pp_pattern (xs : (pattern) list) : PPrint.document =
+  (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__pattern_44 xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
 and fStarC_Class_PP_pp__tuple2_option_list_tuple2_pattern_term (tmp : (((term) list) option * (pattern * term))) : PPrint.document =
@@ -1344,25 +1361,6 @@ and fStarC_Parser_AST_pp_list'__tuple2_lident_term (xs : ((FStarC_Ident.lident *
   (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple2_lident_term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
-and fStarC_Class_PP_pp__binder_50 (tmp : binder) : PPrint.document =
-  (match (tmp).b with
-    | (Variable (i)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Variable" tmp2))
-    | (Annotated (i, t)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp2 = (pp_term t) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Annotated" tmp4))
-    | (NoName (t)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "NoName" tmp2))
-  )
-
-and fStarC_Parser_AST_pp_list'__binder (xs : (binder) list) : PPrint.document =
-  (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__binder_50 xs) in
-  (FStarC_Class_PP.gbrackets tmp))
-
 and pp_binder (b : binder) : PPrint.document =
   (match (b).b with
     | (Variable (i)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
@@ -1377,6 +1375,13 @@ and pp_binder (b : binder) : PPrint.document =
       let tmp1 = (tmp :: []) in
       (ctor "NoName" tmp1))
   )
+
+and fStarC_Class_PP_pp__binder_53 (tmp : binder) : PPrint.document =
+  (pp_binder tmp)
+
+and fStarC_Parser_AST_pp_list'__binder_pp_binder (xs : (binder) list) : PPrint.document =
+  (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__binder_53 xs) in
+  (FStarC_Class_PP.gbrackets tmp))
 
 and fStarC_Class_PP_pp__either_binder_term (tmp : (binder, term) FStar_Pervasives.either) : PPrint.document =
   (match tmp with
@@ -1393,25 +1398,27 @@ and fStarC_Parser_AST_pp_list'__either_binder_term (xs : ((binder, term) FStar_P
   (FStarC_Class_PP.gbrackets tmp))
 
 and fStarC_Class_PP_pp__list_term (tmp : (term) list) : PPrint.document =
-  (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__term tmp) in
-  (FStarC_Class_PP.gbrackets tmp1))
+  (fStarC_Parser_AST_pp_list'__term_pp_term tmp)
 
-and fStarC_Parser_AST_pp_list'__list_term (xs : ((term) list) list) : PPrint.document =
+and fStarC_Parser_AST_pp_list'__list_term_pp_list'_term_pp_term (xs : ((term) list) list) : PPrint.document =
   (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__list_term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
-and fStarC_Class_PP_pp__calc_step (tmp : (term * term * term)) : PPrint.document =
-  (match tmp with
-    | (rel, just, next) -> (let tmp1 = (pp_term rel) in
-      let tmp2 = (pp_term just) in
-      let tmp3 = (pp_term next) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "CalcStep" tmp6))
+and pp_calc_step (cs : (term * term * term)) : PPrint.document =
+  (match cs with
+    | (rel, just, next) -> (let tmp = (pp_term rel) in
+      let tmp1 = (pp_term just) in
+      let tmp2 = (pp_term next) in
+      let tmp3 = (tmp2 :: []) in
+      let tmp4 = (tmp1 :: tmp3) in
+      let tmp5 = (tmp :: tmp4) in
+      (ctor "CalcStep" tmp5))
   )
 
-and fStarC_Parser_AST_pp_list'__calc_step (xs : ((term * term * term)) list) : PPrint.document =
+and fStarC_Class_PP_pp__calc_step (tmp : (term * term * term)) : PPrint.document =
+  (pp_calc_step tmp)
+
+and fStarC_Parser_AST_pp_list'__calc_step_pp_calc_step (xs : ((term * term * term)) list) : PPrint.document =
   (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__calc_step xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
@@ -1423,7 +1430,7 @@ and pp_term (t : term) : PPrint.document =
       let tmp2 = (tmp1 :: []) in
       (ctor "Const" tmp2))
     | (Op (i, args)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Parser_AST_pp_list'__term args) in
+      let tmp1 = (fStarC_Parser_AST_pp_list'__term_pp_term args) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "Op" tmp3))
@@ -1451,7 +1458,7 @@ and pp_term (t : term) : PPrint.document =
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "Function" tmp3))
-    | (Abs (pats, t1)) -> (let tmp = (fStarC_Parser_AST_pp_list'__pattern pats) in
+    | (Abs (pats, t1)) -> (let tmp = (fStarC_Parser_AST_pp_list'__pattern_pp_pattern pats) in
       let tmp1 = (pp_term t1) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
@@ -1583,7 +1590,7 @@ and pp_term (t : term) : PPrint.document =
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "Project" tmp3))
-    | (Product (binders, t1)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder binders) in
+    | (Product (binders, t1)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder_pp_binder binders) in
       let tmp1 = (pp_term t1) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
@@ -1594,13 +1601,13 @@ and pp_term (t : term) : PPrint.document =
       let tmp3 = (tmp :: tmp2) in
       (ctor "Sum" tmp3))
     | (QForall (binders, pats, t1)) -> (let pp_patterns = (fun tmp -> (match tmp with
-          | (idents, patterns_list) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__ident idents) in
-            let tmp2 = (fStarC_Parser_AST_pp_list'__list_term patterns_list) in
+          | (idents, patterns_list) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__ident_pp_ident_pretty_ident idents) in
+            let tmp2 = (fStarC_Parser_AST_pp_list'__list_term_pp_list'_term_pp_term patterns_list) in
             let tmp3 = (tmp2 :: []) in
             let tmp4 = (tmp1 :: tmp3) in
             (ctor "Patterns" tmp4))
         )) in
-      let tmp = (fStarC_Parser_AST_pp_list'__binder binders) in
+      let tmp = (fStarC_Parser_AST_pp_list'__binder_pp_binder binders) in
       let tmp1 = (pp_patterns pats) in
       let tmp2 = (pp_term t1) in
       let tmp3 = (tmp2 :: []) in
@@ -1608,13 +1615,13 @@ and pp_term (t : term) : PPrint.document =
       let tmp5 = (tmp :: tmp4) in
       (ctor "QForall" tmp5))
     | (QExists (binders, pats, t1)) -> (let pp_patterns = (fun tmp -> (match tmp with
-          | (idents, patterns_list) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__ident idents) in
-            let tmp2 = (fStarC_Parser_AST_pp_list'__list_term patterns_list) in
+          | (idents, patterns_list) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__ident_pp_ident_pretty_ident idents) in
+            let tmp2 = (fStarC_Parser_AST_pp_list'__list_term_pp_list'_term_pp_term patterns_list) in
             let tmp3 = (tmp2 :: []) in
             let tmp4 = (tmp1 :: tmp3) in
             (ctor "Patterns" tmp4))
         )) in
-      let tmp = (fStarC_Parser_AST_pp_list'__binder binders) in
+      let tmp = (fStarC_Parser_AST_pp_list'__binder_pp_binder binders) in
       let tmp1 = (pp_patterns pats) in
       let tmp2 = (pp_term t1) in
       let tmp3 = (tmp2 :: []) in
@@ -1622,14 +1629,14 @@ and pp_term (t : term) : PPrint.document =
       let tmp5 = (tmp :: tmp4) in
       (ctor "QExists" tmp5))
     | (QuantOp (i, binders, pats, t1)) -> (let pp_patterns = (fun tmp -> (match tmp with
-          | (idents, patterns_list) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__ident idents) in
-            let tmp2 = (fStarC_Parser_AST_pp_list'__list_term patterns_list) in
+          | (idents, patterns_list) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__ident_pp_ident_pretty_ident idents) in
+            let tmp2 = (fStarC_Parser_AST_pp_list'__list_term_pp_list'_term_pp_term patterns_list) in
             let tmp3 = (tmp2 :: []) in
             let tmp4 = (tmp1 :: tmp3) in
             (ctor "Patterns" tmp4))
         )) in
       let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Parser_AST_pp_list'__binder binders) in
+      let tmp1 = (fStarC_Parser_AST_pp_list'__binder_pp_binder binders) in
       let tmp2 = (pp_patterns pats) in
       let tmp3 = (pp_term t1) in
       let tmp4 = (tmp3 :: []) in
@@ -1656,7 +1663,7 @@ and pp_term (t : term) : PPrint.document =
     | (Ensures (t1)) -> (let tmp = (pp_term t1) in
       let tmp1 = (tmp :: []) in
       (ctor "Ensures" tmp1))
-    | (LexList (ts)) -> (let tmp = (fStarC_Parser_AST_pp_list'__term ts) in
+    | (LexList (ts)) -> (let tmp = (fStarC_Parser_AST_pp_list'__term_pp_term ts) in
       let tmp1 = (tmp :: []) in
       (ctor "LexList" tmp1))
     | (WFOrder (t1, t2)) -> (let tmp = (pp_term t1) in
@@ -1691,21 +1698,21 @@ and pp_term (t : term) : PPrint.document =
       (ctor "VQuote" tmp1))
     | (CalcProof (rel, init, steps)) -> (let tmp = (pp_term rel) in
       let tmp1 = (pp_term init) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__calc_step steps) in
+      let tmp2 = (fStarC_Parser_AST_pp_list'__calc_step_pp_calc_step steps) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "CalcProof" tmp5))
-    | (IntroForall (binders, t1, t2)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder binders) in
+    | (IntroForall (binders, t1, t2)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder_pp_binder binders) in
       let tmp1 = (pp_term t1) in
       let tmp2 = (pp_term t2) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "IntroForall" tmp5))
-    | (IntroExists (binders, t1, ts, t2)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder binders) in
+    | (IntroExists (binders, t1, ts, t2)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder_pp_binder binders) in
       let tmp1 = (pp_term t1) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__term ts) in
+      let tmp2 = (fStarC_Parser_AST_pp_list'__term_pp_term ts) in
       let tmp3 = (pp_term t2) in
       let tmp4 = (tmp3 :: []) in
       let tmp5 = (tmp2 :: tmp4) in
@@ -1738,14 +1745,14 @@ and pp_term (t : term) : PPrint.document =
       let tmp6 = (tmp1 :: tmp5) in
       let tmp7 = (tmp :: tmp6) in
       (ctor "IntroAnd" tmp7))
-    | (ElimForall (binders, t1, ts)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder binders) in
+    | (ElimForall (binders, t1, ts)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder_pp_binder binders) in
       let tmp1 = (pp_term t1) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__term ts) in
+      let tmp2 = (fStarC_Parser_AST_pp_list'__term_pp_term ts) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "ElimForall" tmp5))
-    | (ElimExists (binders, t1, t2)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder binders) in
+    | (ElimExists (binders, t1, t2)) -> (let tmp = (fStarC_Parser_AST_pp_list'__binder_pp_binder binders) in
       let tmp1 = (pp_term t1) in
       let tmp2 = (pp_term t2) in
       let tmp3 = (tmp2 :: []) in
@@ -1775,398 +1782,19 @@ and pp_term (t : term) : PPrint.document =
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "ElimAnd" tmp5))
-    | (ListLiteral (ts)) -> (let tmp = (fStarC_Parser_AST_pp_list'__term ts) in
+    | (ListLiteral (ts)) -> (let tmp = (fStarC_Parser_AST_pp_list'__term_pp_term ts) in
       let tmp1 = (tmp :: []) in
       (ctor "ListLiteral" tmp1))
-    | (SeqLiteral (ts)) -> (let tmp = (fStarC_Parser_AST_pp_list'__term ts) in
+    | (SeqLiteral (ts)) -> (let tmp = (fStarC_Parser_AST_pp_list'__term_pp_term ts) in
       let tmp1 = (tmp :: []) in
       (ctor "SeqLiteral" tmp1))
     | (LitDoc (d)) -> (ctor "LitDoc" (d :: []))
   )
 
-and fStarC_Class_PP_pp__tuple2_term_imp (tmp : (term * imp)) : PPrint.document =
-  (match tmp with
-    | (a, imp) -> (let tmp1 = (pp_term a) in
-      let tmp2 = (fStarC_Class_PP_pp__imp imp) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Arg" tmp4))
-  )
-
-and fStarC_Parser_AST_pp_list'__tuple2_term_imp (xs : ((term * imp)) list) : PPrint.document =
-  (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple2_term_imp xs) in
-  (FStarC_Class_PP.gbrackets tmp))
-
 and fStarC_Class_PP_pp__term (tmp : term) : PPrint.document =
-  (match (tmp).tm with
-    | Wild -> (ctor "Wild" [])
-    | (Const (c)) -> (let tmp1 = (FStarC_Parser_Const.const_to_string c) in
-      let tmp2 = (PPrint.string tmp1) in
-      let tmp3 = (tmp2 :: []) in
-      (ctor "Const" tmp3))
-    | (Op (i, args)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__term args) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Op" tmp4))
-    | (Uvar (id)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident id) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Uvar" tmp2))
-    | (Var (l)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Var" tmp2))
-    | (Name (l)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Name" tmp2))
-    | (Projector (rec_lid, field_id)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__lident rec_lid) in
-      let tmp2 = (FStarC_Ident.fStarC_Class_PP_pp__ident field_id) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Projector" tmp4))
-    | (Construct (l, args)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__tuple2_term_imp args) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Construct" tmp4))
-    | (Function (branches, r)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__tuple3_pattern_option_term_term branches) in
-      let tmp2 = (FStarC_Range_Ops.fStarC_Class_PP_pp__range r) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Function" tmp4))
-    | (Abs (pats, t)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__pattern pats) in
-      let tmp2 = (pp_term t) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Abs" tmp4))
-    | (App (t1, t2, imp)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (fStarC_Class_PP_pp__imp imp) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "App" tmp6))
-    | (Let (q, lbs, body)) -> (let tmp1 = (fStarC_Class_Show_show__local_let_qualifier q) in
-      let tmp2 = (PPrint.string tmp1) in
-      let tmp3 = (fStarC_Parser_AST_pp_list'__tuple2_option_list_tuple2_pattern_term lbs) in
-      let tmp4 = (pp_term body) in
-      let tmp5 = (tmp4 :: []) in
-      let tmp6 = (tmp3 :: tmp5) in
-      let tmp7 = (tmp2 :: tmp6) in
-      (ctor "Let" tmp7))
-    | (LetOperator (lbs, body)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__tuple3_ident_pattern_term lbs) in
-      let tmp2 = (pp_term body) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "LetOperator" tmp4))
-    | (LetOpen (lid, t)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__lident lid) in
-      let tmp2 = (pp_term t) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "LetOpen" tmp4))
-    | (LetOpenRecord (t1, t2, t3)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (pp_term t3) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "LetOpenRecord" tmp6))
-    | (Seq (t1, t2)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Seq" tmp4))
-    | (Bind (i, t1, t2)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp2 = (pp_term t1) in
-      let tmp3 = (pp_term t2) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "Bind" tmp6))
-    | (If (t1, i_opt, mra_opt, t2, t3)) -> (let pp_opt_ident = (fun tmp1 -> (match tmp1 with
-          | None -> (PPrint.string "None")
-          | (Some (i)) -> (FStarC_Ident.fStarC_Class_PP_pp__ident i)
-        )) in
-      let pp_opt_mra = (fun tmp1 -> (match tmp1 with
-          | None -> (PPrint.string "None")
-          | (Some ((i_opt1, t, b))) -> (let tmp2 = (pp_opt_ident i_opt1) in
-            let tmp3 = (pp_term t) in
-            let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__bool b) in
-            let tmp5 = (PPrint.string tmp4) in
-            let tmp6 = (tmp5 :: []) in
-            let tmp7 = (tmp3 :: tmp6) in
-            let tmp8 = (tmp2 :: tmp7) in
-            (ctor "MatchReturns" tmp8))
-        )) in
-      let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_opt_ident i_opt) in
-      let tmp3 = (pp_opt_mra mra_opt) in
-      let tmp4 = (pp_term t2) in
-      let tmp5 = (pp_term t3) in
-      let tmp6 = (tmp5 :: []) in
-      let tmp7 = (tmp4 :: tmp6) in
-      let tmp8 = (tmp3 :: tmp7) in
-      let tmp9 = (tmp2 :: tmp8) in
-      let tmp10 = (tmp1 :: tmp9) in
-      (ctor "If" tmp10))
-    | (Match (t, i_opt, mra_opt, branches)) -> (let pp_opt_ident = (fun tmp1 -> (match tmp1 with
-          | None -> (PPrint.string "None")
-          | (Some (i)) -> (FStarC_Ident.fStarC_Class_PP_pp__ident i)
-        )) in
-      let pp_opt_mra = (fun tmp1 -> (match tmp1 with
-          | None -> (PPrint.string "None")
-          | (Some ((i_opt1, t1, b))) -> (let tmp2 = (pp_opt_ident i_opt1) in
-            let tmp3 = (pp_term t1) in
-            let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__bool b) in
-            let tmp5 = (PPrint.string tmp4) in
-            let tmp6 = (tmp5 :: []) in
-            let tmp7 = (tmp3 :: tmp6) in
-            let tmp8 = (tmp2 :: tmp7) in
-            (ctor "MatchReturns" tmp8))
-        )) in
-      let tmp1 = (pp_term t) in
-      let tmp2 = (pp_opt_ident i_opt) in
-      let tmp3 = (pp_opt_mra mra_opt) in
-      let tmp4 = (fStarC_Parser_AST_pp_list'__tuple3_pattern_option_term_term branches) in
-      let tmp5 = (tmp4 :: []) in
-      let tmp6 = (tmp3 :: tmp5) in
-      let tmp7 = (tmp2 :: tmp6) in
-      let tmp8 = (tmp1 :: tmp7) in
-      (ctor "Match" tmp8))
-    | (TryWith (t, branches)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__tuple3_pattern_option_term_term branches) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "TryWith" tmp4))
-    | (Ascribed (t1, t2, t3_opt, b)) -> (let pp_opt_term = (fun tmp1 -> (match tmp1 with
-          | None -> (PPrint.string "None")
-          | (Some (t)) -> (pp_term t)
-        )) in
-      let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (pp_opt_term t3_opt) in
-      let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__bool b) in
-      let tmp5 = (PPrint.string tmp4) in
-      let tmp6 = (tmp5 :: []) in
-      let tmp7 = (tmp3 :: tmp6) in
-      let tmp8 = (tmp2 :: tmp7) in
-      let tmp9 = (tmp1 :: tmp8) in
-      (ctor "Ascribed" tmp9))
-    | (Record (t_opt, fields)) -> (let pp_opt_term = (fun tmp1 -> (match tmp1 with
-          | None -> (PPrint.string "None")
-          | (Some (t)) -> (pp_term t)
-        )) in
-      let tmp1 = (pp_opt_term t_opt) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__tuple2_lident_term fields) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Record" tmp4))
-    | (Project (t, l)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Project" tmp4))
-    | (Product (binders, t)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__binder binders) in
-      let tmp2 = (pp_term t) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Product" tmp4))
-    | (Sum (binders_or_terms, t)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__either_binder_term binders_or_terms) in
-      let tmp2 = (pp_term t) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Sum" tmp4))
-    | (QForall (binders, pats, t)) -> (let pp_patterns = (fun tmp1 -> (match tmp1 with
-          | (idents, patterns_list) -> (let tmp2 = (fStarC_Parser_AST_pp_list'__ident idents) in
-            let tmp3 = (fStarC_Parser_AST_pp_list'__list_term patterns_list) in
-            let tmp4 = (tmp3 :: []) in
-            let tmp5 = (tmp2 :: tmp4) in
-            (ctor "Patterns" tmp5))
-        )) in
-      let tmp1 = (fStarC_Parser_AST_pp_list'__binder binders) in
-      let tmp2 = (pp_patterns pats) in
-      let tmp3 = (pp_term t) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "QForall" tmp6))
-    | (QExists (binders, pats, t)) -> (let pp_patterns = (fun tmp1 -> (match tmp1 with
-          | (idents, patterns_list) -> (let tmp2 = (fStarC_Parser_AST_pp_list'__ident idents) in
-            let tmp3 = (fStarC_Parser_AST_pp_list'__list_term patterns_list) in
-            let tmp4 = (tmp3 :: []) in
-            let tmp5 = (tmp2 :: tmp4) in
-            (ctor "Patterns" tmp5))
-        )) in
-      let tmp1 = (fStarC_Parser_AST_pp_list'__binder binders) in
-      let tmp2 = (pp_patterns pats) in
-      let tmp3 = (pp_term t) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "QExists" tmp6))
-    | (QuantOp (i, binders, pats, t)) -> (let pp_patterns = (fun tmp1 -> (match tmp1 with
-          | (idents, patterns_list) -> (let tmp2 = (fStarC_Parser_AST_pp_list'__ident idents) in
-            let tmp3 = (fStarC_Parser_AST_pp_list'__list_term patterns_list) in
-            let tmp4 = (tmp3 :: []) in
-            let tmp5 = (tmp2 :: tmp4) in
-            (ctor "Patterns" tmp5))
-        )) in
-      let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__binder binders) in
-      let tmp3 = (pp_patterns pats) in
-      let tmp4 = (pp_term t) in
-      let tmp5 = (tmp4 :: []) in
-      let tmp6 = (tmp3 :: tmp5) in
-      let tmp7 = (tmp2 :: tmp6) in
-      let tmp8 = (tmp1 :: tmp7) in
-      (ctor "QuantOp" tmp8))
-    | (Refine (b, t)) -> (let tmp1 = (pp_binder b) in
-      let tmp2 = (pp_term t) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "Refine" tmp4))
-    | (NamedTyp (i, t)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp2 = (pp_term t) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "NamedTyp" tmp4))
-    | (Paren (t)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Paren" tmp2))
-    | (Requires (t)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Requires" tmp2))
-    | (Ensures (t)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Ensures" tmp2))
-    | (LexList (ts)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__term ts) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "LexList" tmp2))
-    | (WFOrder (t1, t2)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (tmp2 :: []) in
-      let tmp4 = (tmp1 :: tmp3) in
-      (ctor "WFOrder" tmp4))
-    | (Decreases (t)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Decreases" tmp2))
-    | (Labeled (t, s, b)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__bool b) in
-      let tmp3 = (PPrint.string tmp2) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = ((PPrint.string s) :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "Labeled" tmp6))
-    | (Discrim (l)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Discrim" tmp2))
-    | (Antiquote (t)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "Antiquote" tmp2))
-    | (Quote (t, qk)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (fStarC_Class_Show_show__quote_kind qk) in
-      let tmp3 = (PPrint.string tmp2) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp1 :: tmp4) in
-      (ctor "Quote" tmp5))
-    | (VQuote (t)) -> (let tmp1 = (pp_term t) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "VQuote" tmp2))
-    | (CalcProof (rel, init, steps)) -> (let tmp1 = (pp_term rel) in
-      let tmp2 = (pp_term init) in
-      let tmp3 = (fStarC_Parser_AST_pp_list'__calc_step steps) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "CalcProof" tmp6))
-    | (IntroForall (binders, t1, t2)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__binder binders) in
-      let tmp2 = (pp_term t1) in
-      let tmp3 = (pp_term t2) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "IntroForall" tmp6))
-    | (IntroExists (binders, t1, ts, t2)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__binder binders) in
-      let tmp2 = (pp_term t1) in
-      let tmp3 = (fStarC_Parser_AST_pp_list'__term ts) in
-      let tmp4 = (pp_term t2) in
-      let tmp5 = (tmp4 :: []) in
-      let tmp6 = (tmp3 :: tmp5) in
-      let tmp7 = (tmp2 :: tmp6) in
-      let tmp8 = (tmp1 :: tmp7) in
-      (ctor "IntroExists" tmp8))
-    | (IntroImplies (t1, t2, t3)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (pp_term t3) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "IntroImplies" tmp6))
-    | (IntroOr (is_left, t1, t2, t3)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__bool is_left) in
-      let tmp2 = (PPrint.string tmp1) in
-      let tmp3 = (pp_term t1) in
-      let tmp4 = (pp_term t2) in
-      let tmp5 = (pp_term t3) in
-      let tmp6 = (tmp5 :: []) in
-      let tmp7 = (tmp4 :: tmp6) in
-      let tmp8 = (tmp3 :: tmp7) in
-      let tmp9 = (tmp2 :: tmp8) in
-      (ctor "IntroOr" tmp9))
-    | (IntroAnd (t1, t2, t3, t4)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (pp_term t3) in
-      let tmp4 = (pp_term t4) in
-      let tmp5 = (tmp4 :: []) in
-      let tmp6 = (tmp3 :: tmp5) in
-      let tmp7 = (tmp2 :: tmp6) in
-      let tmp8 = (tmp1 :: tmp7) in
-      (ctor "IntroAnd" tmp8))
-    | (ElimForall (binders, t, ts)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__binder binders) in
-      let tmp2 = (pp_term t) in
-      let tmp3 = (fStarC_Parser_AST_pp_list'__term ts) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "ElimForall" tmp6))
-    | (ElimExists (binders, t1, t2)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__binder binders) in
-      let tmp2 = (pp_term t1) in
-      let tmp3 = (pp_term t2) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "ElimExists" tmp6))
-    | (ElimImplies (t1, t2, t3)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (pp_term t3) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "ElimImplies" tmp6))
-    | (ElimOr (t1, t2, t3, t4)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (pp_term t3) in
-      let tmp4 = (pp_term t4) in
-      let tmp5 = (tmp4 :: []) in
-      let tmp6 = (tmp3 :: tmp5) in
-      let tmp7 = (tmp2 :: tmp6) in
-      let tmp8 = (tmp1 :: tmp7) in
-      (ctor "ElimOr" tmp8))
-    | (ElimAnd (t1, t2, t3)) -> (let tmp1 = (pp_term t1) in
-      let tmp2 = (pp_term t2) in
-      let tmp3 = (pp_term t3) in
-      let tmp4 = (tmp3 :: []) in
-      let tmp5 = (tmp2 :: tmp4) in
-      let tmp6 = (tmp1 :: tmp5) in
-      (ctor "ElimAnd" tmp6))
-    | (ListLiteral (ts)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__term ts) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "ListLiteral" tmp2))
-    | (SeqLiteral (ts)) -> (let tmp1 = (fStarC_Parser_AST_pp_list'__term ts) in
-      let tmp2 = (tmp1 :: []) in
-      (ctor "SeqLiteral" tmp2))
-    | (LitDoc (d)) -> (ctor "LitDoc" (d :: []))
-  )
+  (pp_term tmp)
 
-and fStarC_Parser_AST_pp_list'__term (xs : (term) list) : PPrint.document =
+and fStarC_Parser_AST_pp_list'__term_pp_term (xs : (term) list) : PPrint.document =
   (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
@@ -2189,7 +1817,7 @@ and pp_pattern (p : pattern) : PPrint.document =
           | None -> (PPrint.string "None")
           | (Some (i)) -> (fStarC_Class_PP_pp__arg_qualifier i)
         )) in
-      let pp_attrs = (fStarC_Parser_AST_pp_list'__term attrs) in
+      let pp_attrs = (fStarC_Parser_AST_pp_list'__term_pp_term attrs) in
       let tmp = (pp_opt_id i_opt) in
       let tmp1 = (tmp :: (pp_attrs :: [])) in
       (ctor "PatWild" tmp1))
@@ -2201,13 +1829,13 @@ and pp_pattern (p : pattern) : PPrint.document =
       let tmp1 = (tmp :: []) in
       (ctor "PatVQuote" tmp1))
     | (PatApp (p1, ps)) -> (let tmp = (pp_pattern p1) in
-      let tmp1 = (fStarC_Parser_AST_pp_list'__pattern ps) in
+      let tmp1 = (fStarC_Parser_AST_pp_list'__pattern_pp_pattern ps) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "PatApp" tmp3))
-    | (PatVar (i, aq, attrs)) -> (let pp_attrs = (fStarC_Parser_AST_pp_list'__term attrs) in
+    | (PatVar (i, aq, attrs)) -> (let pp_attrs = (fStarC_Parser_AST_pp_list'__term_pp_term attrs) in
       let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_Show_show__option_arg_qualifier_163 aq) in
+      let tmp1 = (fStarC_Class_Show_show__option_arg_qualifier_169 aq) in
       let tmp2 = (PPrint.string tmp1) in
       let tmp3 = (tmp2 :: (pp_attrs :: [])) in
       let tmp4 = (tmp :: tmp3) in
@@ -2215,10 +1843,10 @@ and pp_pattern (p : pattern) : PPrint.document =
     | (PatName (l)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
       let tmp1 = (tmp :: []) in
       (ctor "PatName" tmp1))
-    | (PatList (ps)) -> (let tmp = (fStarC_Parser_AST_pp_list'__pattern ps) in
+    | (PatList (ps)) -> (let tmp = (fStarC_Parser_AST_pp_list'__pattern_pp_pattern ps) in
       let tmp1 = (tmp :: []) in
       (ctor "PatList" tmp1))
-    | (PatTuple (ps, b)) -> (let tmp = (fStarC_Parser_AST_pp_list'__pattern ps) in
+    | (PatTuple (ps, b)) -> (let tmp = (fStarC_Parser_AST_pp_list'__pattern_pp_pattern ps) in
       let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__bool b) in
       let tmp2 = (PPrint.string tmp1) in
       let tmp3 = (tmp2 :: []) in
@@ -2227,7 +1855,7 @@ and pp_pattern (p : pattern) : PPrint.document =
     | (PatRecord (fields)) -> (let tmp = (fStarC_Parser_AST_pp_list'__tuple2_lident_pattern fields) in
       let tmp1 = (tmp :: []) in
       (ctor "PatRecord" tmp1))
-    | (PatOr (ps)) -> (let tmp = (fStarC_Parser_AST_pp_list'__pattern ps) in
+    | (PatOr (ps)) -> (let tmp = (fStarC_Parser_AST_pp_list'__pattern_pp_pattern ps) in
       let tmp1 = (tmp :: []) in
       (ctor "PatOr" tmp1))
     | (PatOp (op)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident op) in
@@ -2247,7 +1875,7 @@ and pp_pattern (p : pattern) : PPrint.document =
     | PatRest -> (ctor "PatRest" [])
   )
 
-and fStarC_Class_PP_pp__pattern_41 (tmp : pattern) : PPrint.document =
+and fStarC_Class_PP_pp__pattern_44 (tmp : pattern) : PPrint.document =
   (pp_pattern tmp)
 
 let string_of_let_qualifier (tmp : let_qualifier) : string =
@@ -2261,7 +1889,7 @@ let fStarC_Class_Show_show__let_qualifier (tmp : let_qualifier) : string =
 
 let fStarC_Class_PP_pp__tuple2_pattern_term (tmp : (pattern * term)) : PPrint.document =
   (match tmp with
-    | (p, t) -> (let tmp1 = (fStarC_Class_PP_pp__pattern_41 p) in
+    | (p, t) -> (let tmp1 = (fStarC_Class_PP_pp__pattern_44 p) in
       let tmp2 = (fStarC_Class_PP_pp__term t) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
@@ -2272,8 +1900,8 @@ let fStarC_Parser_AST_pp_list'__tuple2_pattern_term (xs : ((pattern * term)) lis
   (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple2_pattern_term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
-let fStarC_Class_PP_pp__list_binder_58 (tmp : (binder) list) : PPrint.document =
-  (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__binder_50 tmp) in
+let fStarC_Class_PP_pp__list_binder_61 (tmp : (binder) list) : PPrint.document =
+  (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__binder_53 tmp) in
   (FStarC_Class_PP.gbrackets tmp1))
 
 let fStarC_Class_PP_pp__option_term (tmp : (term) option) : PPrint.document =
@@ -2285,7 +1913,7 @@ let fStarC_Class_PP_pp__option_term (tmp : (term) option) : PPrint.document =
     | None -> (PPrint.string "None")
   )
 
-let fStarC_Class_PP_pp__option_arg_qualifier_60 (tmp : (arg_qualifier) option) : PPrint.document =
+let fStarC_Class_PP_pp__option_arg_qualifier_63 (tmp : (arg_qualifier) option) : PPrint.document =
   (match tmp with
     | (Some (v)) -> (let tmp1 = (fStarC_Class_PP_pp__arg_qualifier v) in
       let tmp2 = (PPrint.(^/^) (PPrint.string "Some") tmp1) in
@@ -2294,15 +1922,15 @@ let fStarC_Class_PP_pp__option_arg_qualifier_60 (tmp : (arg_qualifier) option) :
     | None -> (PPrint.string "None")
   )
 
-let fStarC_Class_PP_pp__list_term_61 (tmp : (term) list) : PPrint.document =
+let fStarC_Class_PP_pp__list_term_64 (tmp : (term) list) : PPrint.document =
   (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__term tmp) in
   (FStarC_Class_PP.gbrackets tmp1))
 
 let fStarC_Class_PP_pp__tuple4_ident_option_arg_qualifier_list_term_term (tmp : (FStarC_Ident.ident * (arg_qualifier) option * (term) list * term)) : PPrint.document =
   (match tmp with
     | (id, q, attrs, tm) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident id) in
-      let tmp2 = (fStarC_Class_PP_pp__option_arg_qualifier_60 q) in
-      let tmp3 = (fStarC_Class_PP_pp__list_term_61 attrs) in
+      let tmp2 = (fStarC_Class_PP_pp__option_arg_qualifier_63 q) in
+      let tmp3 = (fStarC_Class_PP_pp__list_term_64 attrs) in
       let tmp4 = (pp_term tm) in
       let tmp5 = (tmp4 :: []) in
       let tmp6 = (tmp3 :: tmp5) in
@@ -2315,7 +1943,7 @@ let fStarC_Parser_AST_pp_list'__tuple4_ident_option_arg_qualifier_list_term_term
   (let tmp = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__tuple4_ident_option_arg_qualifier_list_term_term xs) in
   (FStarC_Class_PP.gbrackets tmp))
 
-let fStarC_Class_PP_pp__option_term_65 (tmp : (term) option) : PPrint.document =
+let fStarC_Class_PP_pp__option_term_68 (tmp : (term) option) : PPrint.document =
   (match tmp with
     | (Some (v)) -> (let tmp1 = (fStarC_Class_PP_pp__term v) in
       let tmp2 = (PPrint.(^/^) (PPrint.string "Some") tmp1) in
@@ -2333,7 +1961,7 @@ let pp_constructor_payload (cp : constructor_payload) : PPrint.document =
       let tmp1 = (tmp :: []) in
       (ctor "VpArbitrary" tmp1))
     | (VpRecord (fields, tyopt)) -> (let tmp = (fStarC_Parser_AST_pp_list'__tuple4_ident_option_arg_qualifier_list_term_term fields) in
-      let tmp1 = (fStarC_Class_PP_pp__option_term_65 tyopt) in
+      let tmp1 = (fStarC_Class_PP_pp__option_term_68 tyopt) in
       let tmp2 = (tmp1 :: []) in
       let tmp3 = (tmp :: tmp2) in
       (ctor "VpRecord" tmp3))
@@ -2355,7 +1983,7 @@ let fStarC_Class_PP_pp__tuple3_ident_option_constructor_payload_list_ter (tmp : 
   (match tmp with
     | (id, payload, attrs) -> (let tmp1 = (FStarC_Ident.fStarC_Class_PP_pp__ident id) in
       let tmp2 = (fStarC_Class_PP_pp__option_constructor_payload payload) in
-      let tmp3 = (fStarC_Class_PP_pp__list_term_61 attrs) in
+      let tmp3 = (fStarC_Class_PP_pp__list_term_64 attrs) in
       let tmp4 = (tmp3 :: []) in
       let tmp5 = (tmp2 :: tmp4) in
       let tmp6 = (tmp1 :: tmp5) in
@@ -2369,23 +1997,23 @@ let fStarC_Parser_AST_pp_list'__tuple3_ident_option_constructor_payload_list_ter
 let pp_tycon (tc : tycon) : PPrint.document =
   (match tc with
     | (TyconAbstract (i, bs, knd)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_PP_pp__list_binder_58 bs) in
+      let tmp1 = (fStarC_Class_PP_pp__list_binder_61 bs) in
       let tmp2 = (fStarC_Class_PP_pp__option_term knd) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "TyconAbstract" tmp5))
     | (TyconAbbrev (i, bs, knd, t)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_PP_pp__list_binder_58 bs) in
+      let tmp1 = (fStarC_Class_PP_pp__list_binder_61 bs) in
       let tmp2 = (fStarC_Class_PP_pp__option_term knd) in
       let tmp3 = (tmp2 :: ((PPrint.string "_") :: [])) in
       let tmp4 = (tmp1 :: tmp3) in
       let tmp5 = (tmp :: tmp4) in
       (ctor "TyconAbbrev" tmp5))
     | (TyconRecord (i, bs, knd, attrs, fields)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_PP_pp__list_binder_58 bs) in
+      let tmp1 = (fStarC_Class_PP_pp__list_binder_61 bs) in
       let tmp2 = (fStarC_Class_PP_pp__option_term knd) in
-      let tmp3 = (fStarC_Class_PP_pp__list_term_61 attrs) in
+      let tmp3 = (fStarC_Class_PP_pp__list_term_64 attrs) in
       let tmp4 = (fStarC_Parser_AST_pp_list'__tuple4_ident_option_arg_qualifier_list_term_term fields) in
       let tmp5 = (tmp4 :: []) in
       let tmp6 = (tmp3 :: tmp5) in
@@ -2394,7 +2022,7 @@ let pp_tycon (tc : tycon) : PPrint.document =
       let tmp9 = (tmp :: tmp8) in
       (ctor "TyconRecord" tmp9))
     | (TyconVariant (i, bs, knd, ctors)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__ident i) in
-      let tmp1 = (fStarC_Class_PP_pp__list_binder_58 bs) in
+      let tmp1 = (fStarC_Class_PP_pp__list_binder_61 bs) in
       let tmp2 = (fStarC_Class_PP_pp__option_term knd) in
       let tmp3 = (fStarC_Parser_AST_pp_list'__tuple3_ident_option_constructor_payload_list_ter ctors) in
       let tmp4 = (tmp3 :: []) in
@@ -2426,11 +2054,11 @@ let string_of_pragma (p : pragma) : string =
       (Prims.strcat "eval " tmp))
   )
 
-let fStarC_Class_Show_show__pragma_165 (tmp : pragma) : string =
+let fStarC_Class_Show_show__pragma_171 (tmp : pragma) : string =
   (string_of_pragma tmp)
 
 let fStarC_Class_PP_pp__pragma (tmp : pragma) : PPrint.document =
-  (let tmp1 = (fStarC_Class_Show_show__pragma_165 tmp) in
+  (let tmp1 = (fStarC_Class_Show_show__pragma_171 tmp) in
   (PPrint.arbitrary_string tmp1))
 
 let pp_decl' (d : decl') : PPrint.document =
@@ -2439,7 +2067,7 @@ let pp_decl' (d : decl') : PPrint.document =
       let tmp1 = (tmp :: []) in
       (ctor "TopLevelModule" tmp1))
     | (Open (l, r)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
-      let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__restriction_149 r) in
+      let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__restriction_155 r) in
       let tmp2 = (PPrint.string tmp1) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp :: tmp3) in
@@ -2448,7 +2076,7 @@ let pp_decl' (d : decl') : PPrint.document =
       let tmp1 = (tmp :: []) in
       (ctor "Friend" tmp1))
     | (Include (l, r)) -> (let tmp = (FStarC_Ident.fStarC_Class_PP_pp__lident l) in
-      let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__restriction_149 r) in
+      let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__restriction_155 r) in
       let tmp2 = (PPrint.string tmp1) in
       let tmp3 = (tmp2 :: []) in
       let tmp4 = (tmp :: tmp3) in
@@ -2493,7 +2121,7 @@ let pp_decl' (d : decl') : PPrint.document =
     | (NewEffect (eff_def)) -> (ctor "NewEffect" [])
     | (Splice (is_typed, ids, t)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__bool is_typed) in
       let tmp1 = (PPrint.string tmp) in
-      let tmp2 = (fStarC_Parser_AST_pp_list'__ident ids) in
+      let tmp2 = (fStarC_Parser_AST_pp_list'__ident_pp_ident_pretty_ident ids) in
       let tmp3 = (pp_term t) in
       let tmp4 = (tmp3 :: []) in
       let tmp5 = (tmp2 :: tmp4) in
@@ -2517,11 +2145,11 @@ let pp_decl' (d : decl') : PPrint.document =
 let pp_decl (d : decl) : PPrint.document =
   (pp_decl' (d).d)
 
-let fStarC_Class_PP_pp__decl_40 (tmp : decl) : PPrint.document =
+let fStarC_Class_PP_pp__decl_43 (tmp : decl) : PPrint.document =
   (pp_decl tmp)
 
 let fStarC_Class_PP_pp__list_decl (tmp : (decl) list) : PPrint.document =
-  (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__decl_40 tmp) in
+  (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__decl_43 tmp) in
   (FStarC_Class_PP.gbrackets tmp1))
 
 let pp_modul (m : modul) : PPrint.document =
@@ -2541,7 +2169,11 @@ let restriction_to_string (r : FStarC_Syntax_Syntax.restriction) : string =
   (match r with
     | FStarC_Syntax_Syntax.Unrestricted -> ""
     | (FStarC_Syntax_Syntax.AllowList (allow_list)) -> (let tmp = (BatList.map (fun tmp -> (match tmp with
-          | (id, renamed) -> (let tmp1 = (FStarC_Option.map (fun renamed1 -> (Prims.strcat " as " (FStarC_Ident.string_of_id renamed1))) renamed) in
+          | (id, renamed) -> (let tmp1 = (match renamed with
+                | (Some (x)) -> (let tmp1 = (Prims.strcat " as " (FStarC_Ident.string_of_id x)) in
+                  (Some (tmp1)))
+                | None -> None
+              ) in
             let tmp2 = (FStarC_Option.dflt "" tmp1) in
             (Prims.strcat (FStarC_Ident.string_of_id id) tmp2))
         )) allow_list) in
@@ -2608,7 +2240,7 @@ let decl'_to_string (d : decl') : string =
 let decl_to_string (d : decl) : string =
   (decl'_to_string (d).d)
 
-let fStarC_Class_Show_show__decl_168 (tmp : decl) : string =
+let fStarC_Class_Show_show__decl_174 (tmp : decl) : string =
   (decl_to_string tmp)
 
 let lid_of_modul (m : modul) : FStarC_Ident.lident =
@@ -2634,18 +2266,18 @@ let decls_of_modul (m : modul) : (decl) list =
     | (Interface ({ no_prelude = tmp; mname = tmp1; decls = decls; admitted = tmp2; _ })) -> decls
   )
 
-let rec fStarC_Class_Show_show__show_list_aux__list_decl_170 (l : (decl) list) : string =
+let rec fStarC_Class_Show_show__show_list_aux__list_decl_176 (l : (decl) list) : string =
   (match l with
     | [] -> ""
-    | (x :: []) -> (fStarC_Class_Show_show__decl_168 x)
-    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__decl_168 x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_decl_170 xs) in
+    | (x :: []) -> (fStarC_Class_Show_show__decl_174 x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__decl_174 x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_decl_176 xs) in
       let tmp2 = (Prims.strcat ", " tmp1) in
       (Prims.strcat tmp tmp2))
   )
 
-let fStarC_Class_Show_show__list_decl_170 (tmp : (decl) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_decl_170 tmp) in
+let fStarC_Class_Show_show__list_decl_176 (tmp : (decl) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_decl_176 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 

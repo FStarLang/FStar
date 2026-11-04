@@ -12,20 +12,17 @@ type fvar_binding = {
   needs_fuel_and_universe_instantiations : ((FStarC_Ident.ident) list) option;
 }
 
-type env_t = {
-  bvar_bindings : (string, (Prims.int, (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_AVLMap.tree) FStarC_AVLMap.tree;
-  fvar_bindings : (string, fvar_binding) FStarC_AVLMap.tree;
-  fvar_bindings1 : (fvar_binding) list;
-  depth : Prims.int;
-  tcenv : FStarC_TypeChecker_Env.env;
-  warn : bool;
-  nolabels : bool;
-  use_zfuel_name : bool;
-  encode_non_total_function_typ : bool;
-  current_module_name : string;
-  encoding_quantifier : bool;
-  global_cache : (((string) list * FStarC_Ident.lident)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
+type module_encoding = {
+  me_index : (FStarC_SMTEncoding_Pruning.elt_summary) list;
+  me_fvbs : (fvar_binding) list;
+  me_decls : (unit -> (FStarC_SMTEncoding_Term.decls_elt) list);
 }
+
+let dbg_PartialApp : (bool ref) =
+  (FStarC_Debug.get_toggle "PartialApp")
+
+let dbg_Snapshot : (bool ref) =
+  (FStarC_Debug.get_toggle "Snapshot")
 
 type varops_t = {
   push : (unit -> unit);
@@ -43,9 +40,6 @@ type varops_t = {
 
 let escape (s : string) : string =
   ((fun s c1 c2 -> let c1 = BatUChar.chr c1 and c2 = BatUChar.chr c2 in BatUTF8.map (fun x -> if BatUChar.eq x c1 then c2 else x) s) s 39 95)
-
-let dbg_Snapshot : (bool ref) =
-  (FStarC_Debug.get_toggle "Snapshot")
 
 let varops : varops_t =
   (let ctr = (ref (Prims.of_int (100))) in
@@ -112,6 +106,26 @@ let varops : varops_t =
     let tmp4 = (new_scope ()) in
     let tmp5 = (tmp4 :: []) in
     ((scopes) := tmp5))) })
+
+type env_t = {
+  bvar_bindings : (string, (Prims.int, (FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) FStarC_AVLMap.tree) FStarC_AVLMap.tree;
+  fvar_bindings : (string, fvar_binding) FStarC_AVLMap.tree;
+  fvar_bindings1 : (fvar_binding) list;
+  depth : Prims.int;
+  tcenv : FStarC_TypeChecker_Env.env;
+  warn : bool;
+  nolabels : bool;
+  use_zfuel_name : bool;
+  encode_non_total_function_typ : bool;
+  current_module_name : string;
+  encoding_quantifier : bool;
+  global_cache : (((string) list * FStarC_Ident.lident)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
+}
+
+let fresh_fvar (mname : string) (x : string) (s : FStarC_SMTEncoding_Term.sort) : (string * FStarC_SMTEncoding_Term.term) =
+  (let xsym = ((varops).fresh mname x) in
+  let tmp = (FStarC_SMTEncoding_Util.mkFreeV (FStarC_SMTEncoding_Term.mk_fv (xsym, s))) in
+  (xsym, tmp))
 
 let fvb_to_string (fvb : fvar_binding) : string =
   (let term_opt_to_string = (fun tmp -> (match tmp with
@@ -241,8 +255,8 @@ let print_env (e : env_t) : string =
     | (l :: tmp) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident l) in
       (Prims.strcat "...," tmp1))
   ));
-  let tmp = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 allvars) in
-  let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string bvars) in
+  let tmp = (FStarC_Ident.fStarC_Class_Show_show__list_lident_98 allvars) in
+  let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 bvars) in
   (FStarC_Format.fmt2 "{allvars=%s; bvars=%s }" tmp tmp1))
 
 let lookup_term_var (env : env_t) (a : FStarC_Syntax_Syntax.bv) : FStarC_SMTEncoding_Term.term =
@@ -288,9 +302,6 @@ let lookup_lid (env : env_t) (a : FStarC_Ident.lident) : fvar_binding =
 let lookup_free_var_name (env : env_t) (a : FStarC_Ident.lident) : fvar_binding =
   (lookup_lid env a)
 
-let dbg_PartialApp : (bool ref) =
-  (FStarC_Debug.get_toggle "PartialApp")
-
 let force_thunk (fvb : fvar_binding) : FStarC_SMTEncoding_Term.term =
   ((if ((not (fvb).fvb_thunked) || ((<>) (fvb).smt_arity Prims.int_zero)) then (FStarC_Effect.failwith (FStarC_Format.fmt1 "Forcing a non-thunk %s in the SMT encoding" (FStarC_Ident.string_of_lid (fvb).fvar_lid))) else ());
   (FStarC_SMTEncoding_Util.mkFreeV { FStarC_SMTEncoding_Term.u__0 = (fvb).smt_id;
@@ -332,10 +343,10 @@ let rec list_of__aux (f : (Prims.int -> 'u___a)) (i : Prims.int) (out : ('u___a)
   (if ((=) i Prims.int_zero) then (let tmp = (f i) in
   (tmp :: out)) else (let tmp = (f i) in
   let tmp1 = (tmp :: out) in
-  ((list_of__aux f) (Prims.op_Minus i Prims.int_one) tmp1)))
+  (list_of__aux f (Prims.op_Minus i Prims.int_one) tmp1)))
 
 let list_of (i : Prims.int) (f : (Prims.int -> 'u___a)) : ('u___a) list =
-  (if (Prims.op_Less_Equals i Prims.int_zero) then [] else ((list_of__aux f) (Prims.op_Minus i Prims.int_one) []))
+  (if (Prims.op_Less_Equals i Prims.int_zero) then [] else (list_of__aux f (Prims.op_Minus i Prims.int_one) []))
 
 let kick_partial_app (fvb : fvar_binding) : (FStarC_SMTEncoding_Term.term) option =
   (match ((fvb).smt_token, (fvb).needs_fuel_and_universe_instantiations) with
@@ -412,11 +423,6 @@ let push_term_var (env : env_t) (x : FStarC_Syntax_Syntax.bv) (t : FStarC_SMTEnc
     current_module_name = (env).current_module_name;
     encoding_quantifier = (env).encoding_quantifier;
     global_cache = (env).global_cache })
-
-let fresh_fvar (mname : string) (x : string) (s : FStarC_SMTEncoding_Term.sort) : (string * FStarC_SMTEncoding_Term.term) =
-  (let xsym = ((varops).fresh mname x) in
-  let tmp = (FStarC_SMTEncoding_Util.mkFreeV (FStarC_SMTEncoding_Term.mk_fv (xsym, s))) in
-  (xsym, tmp))
 
 let lookup_free_var_sym (env : env_t) (a : FStarC_Ident.lident) : ((FStarC_SMTEncoding_Term.op, FStarC_SMTEncoding_Term.term) FStar_Pervasives.either * (FStarC_SMTEncoding_Term.term) list * Prims.int) =
   (let fvb = (lookup_lid env a) in
@@ -510,12 +516,6 @@ let new_term_constant_from_string (env : env_t) (x : FStarC_Syntax_Syntax.bv) (s
       encoding_quantifier = (env).encoding_quantifier;
       global_cache = (env).global_cache } in
   (ysym, y, tmp1))
-
-type module_encoding = {
-  me_index : (FStarC_SMTEncoding_Pruning.elt_summary) list;
-  me_fvbs : (fvar_binding) list;
-  me_decls : (unit -> (FStarC_SMTEncoding_Term.decls_elt) list);
-}
 
 let fStarC_Class_Show_show__fvar_binding (tmp : fvar_binding) : string =
   (fvb_to_string tmp)

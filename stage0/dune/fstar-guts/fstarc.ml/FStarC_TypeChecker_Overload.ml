@@ -35,6 +35,9 @@ let rec show_base_typ (b : base_typ) : string =
 let fStarC_Class_Show_show__base_typ (tmp : base_typ) : string =
   (show_base_typ tmp)
 
+let reported : (((string * (string) list)) list ref) =
+  (ref [])
+
 let type_of_fv (env : FStarC_TypeChecker_Env.env) (fv : FStarC_Syntax_Syntax.fv) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let tmp = (FStarC_TypeChecker_Env.try_lookup_lid env (FStarC_Syntax_Syntax.lid_of_fv fv)) in
   (match tmp with
@@ -100,14 +103,11 @@ let builtin_coercion (b1 : base_typ) (b2 : base_typ) : bool =
 let rec explicit_shape__go (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (bs : (FStarC_Syntax_Syntax.binder) list) (n : Prims.int) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (match bs with
     | [] -> ([], (FStarC_Syntax_Util.comp_result c))
-    | (b :: bs1) -> (if (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta (b).FStarC_Syntax_Syntax.binder_qual) then ((explicit_shape__go c) bs1 n) else (if (Prims.op_Greater n Prims.int_zero) then ((explicit_shape__go c) bs1 (Prims.op_Minus n Prims.int_one)) else (let tmp = ((explicit_shape__go c) bs1 Prims.int_zero) in
+    | (b :: bs1) -> (if (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta (b).FStarC_Syntax_Syntax.binder_qual) then (explicit_shape__go c bs1 n) else (if (Prims.op_Greater n Prims.int_zero) then (explicit_shape__go c bs1 (Prims.op_Minus n Prims.int_one)) else (let tmp = (explicit_shape__go c bs1 Prims.int_zero) in
       (match tmp with
         | (rest, r) -> ((((b).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort :: rest), r)
       ))))
   )
-
-let reported : (((string * (string) list)) list ref) =
-  (ref [])
 
 let already_reported (l : FStarC_Ident.lident) (cands : (FStarC_Syntax_Syntax.fv) list) : bool =
   (let tmp = (FStarC_Range_Ops.string_of_range (FStarC_Ident.range_of_lid l)) in

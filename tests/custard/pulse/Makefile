@@ -11,6 +11,16 @@ FSTAR_EXE ?= $(FSTAR_ROOT)/stage3/out/bin/fstar.exe
 
 include $(PULSE_ROOT)/mk/test.mk
 
+all: $(OUTPUT_DIR)/hoist-locals.checked
+$(OUTPUT_DIR)/hoist-locals.checked: $(addprefix $(CACHE_DIR)/, HoistArrays.fst.checked HoistVla.fst.checked HoistVlaLate.fst.checked PulseBasic.fst.checked PulseClosure.fst.checked AllocOverflow.fst.checked ArrInit.fst.checked) $(FSTAR_EXE) ../hoistlocals.py
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 ../hoistlocals.py $(OUTPUT_DIR)/hoist-locals -- $(FSTAR)
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/init-locals.checked
+$(OUTPUT_DIR)/init-locals.checked: $(addprefix $(CACHE_DIR)/, HoistArrays.fst.checked HoistVla.fst.checked HoistVlaLate.fst.checked PulseBasic.fst.checked PulseClosure.fst.checked AllocOverflow.fst.checked ArrInit.fst.checked) $(FSTAR_EXE) ../initlocals.py
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 ../initlocals.py $(OUTPUT_DIR)/init-locals -- $(FSTAR)
+	$(Q)touch $@
+
 # Section 62.1.  Same discovery as tests/custard and for the same reason:
 # CI passes KRML_EXE= and never puts krml on the PATH, so a `command -v
 # krml` guard silently skipped both karamel legs of this suite.
@@ -464,6 +474,12 @@ GREP_PulseGlobalArray += "FStar_UInt8.uint_to_t (Prims.of_int (2))"
 NOGREP_PulseGlobalArray += "squares"
 KRML_TESTS += PulseGlobalArray
 
+# Issue #4828.  An argument in a position extraction erases is not normalized,
+# so the 2^14-conjunct slprop and prop passed in such positions fit a budget
+# that normalizing either of them exhausts.
+GREP_TESTS += PulseSpecArgNorm
+GREP_PulseSpecArgNorm += "let pulseSpecArgNorm_main (x : Prims.int) : Prims.int"
+FLAGS_PulseSpecArgNorm = --custard_norm_budget 100000
 # Section 72.2.  A [ghost fn] parameter is erased, and the one binder
 # [keep_thunk] puts back is there for the arity alone.  The failure was in the
 # C compiler, not in Custard, so compiling is the test.
@@ -647,7 +663,7 @@ WARN_ANY = --custard_warn_any --warn_error @367
 $(OUTPUT_DIR)/%.custard.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
-	$(Q)$(FSTAR) --codegen OCaml $(WARN_ANY) --custard_main $*.main $*.fst -o $@
+	$(Q)$(FSTAR) --codegen OCaml $(WARN_ANY) $(FLAGS_$*) --custard_main $*.main $*.fst -o $@
 
 $(OUTPUT_DIR)/%.grepped: $(OUTPUT_DIR)/%.custard.ml
 	$(call msg, "GREP", $(basename $(notdir $@)))
@@ -718,7 +734,7 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	$(Q)mkdir -p $(OUTPUT_DIR)
 	$(Q)$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_main $*.main \
+	  --custard_main $*.main \
 	  $(EXTRA_$*) $*.fst -o $@
 	@# Section 35.3.  These were set here for two rounds and consulted by
 	@# nothing, which is M10-phi-phi's bug in a second directory: an
@@ -778,7 +794,7 @@ $(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CHERRY", $(basename $(notdir $@)))
 	@mkdir -p $(CHERRY_DIR)
 	$(Q)$(FSTAR) $(WARN_ANY) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main $*.main \
+	  --custard_main $*.main \
 	  $(EXTRA_$*) $*.fst -o $@
 
 $(CHERRY_DIR)/%.chexe: $(CHERRY_DIR)/%.chc

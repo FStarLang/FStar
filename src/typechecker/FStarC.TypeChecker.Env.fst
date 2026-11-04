@@ -236,6 +236,7 @@ let consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : 
     HashTable.remove e.fv_delta_depths s;
     HashTable.remove e.strict_args_tab s;
     HashTable.remove e.disc_proj_tab s);
+  if Cons? lids then HashTable.clear e.spec_arg_tab;
   let hidden = lids |> List.fold_left (fun s l -> remove l s) e.iface_hidden in
   { e with iface_todo = remaining; iface_hidden = hidden }
 
@@ -336,6 +337,7 @@ let initial_env deps
     strict_args_tab = HashTable.create 20;
     disc_proj_tab = HashTable.create 50;
     erasable_types_tab = HashTable.create 20;
+    spec_arg_tab = HashTable.create 100;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
@@ -385,7 +387,8 @@ let push_stack env : ML _ =
               fv_delta_depths=HashTable.copy env.fv_delta_depths;
               strict_args_tab=HashTable.copy env.strict_args_tab;
               disc_proj_tab=HashTable.copy env.disc_proj_tab;
-              erasable_types_tab=HashTable.copy env.erasable_types_tab }
+              erasable_types_tab=HashTable.copy env.erasable_types_tab;
+              spec_arg_tab=HashTable.copy env.spec_arg_tab }
 
 let pop_stack () : ML _ =
     match !stack with
@@ -670,6 +673,9 @@ let rec add_sigelt force env se : ML _ = match se.sigel with
         HashTable.remove env.fv_delta_depths s;
         HashTable.remove env.strict_args_tab s;
         HashTable.remove env.disc_proj_tab s);
+      (* A replacement may depend on any name in a binder type (an abstract
+         type becoming concrete, say), so flush them all. *)
+      HashTable.clear env.spec_arg_tab;
       add_se_to_attrtab env se
 
 and add_sigelts force env ses : ML _ =

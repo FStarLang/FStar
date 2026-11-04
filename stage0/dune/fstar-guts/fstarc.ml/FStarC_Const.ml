@@ -34,7 +34,7 @@ let digit_char (d : Prims.int) : string =
   (if ((=) d Prims.int_zero) then "0" else (if ((=) d Prims.int_one) then "1" else (if ((=) d (Prims.of_int (2))) then "2" else (if ((=) d (Prims.of_int (3))) then "3" else (if ((=) d (Prims.of_int (4))) then "4" else (if ((=) d (Prims.of_int (5))) then "5" else (if ((=) d (Prims.of_int (6))) then "6" else (if ((=) d (Prims.of_int (7))) then "7" else (if ((=) d (Prims.of_int (8))) then "8" else (if ((=) d (Prims.of_int (9))) then "9" else (if ((=) d (Prims.of_int (10))) then "a" else (if ((=) d (Prims.of_int (11))) then "b" else (if ((=) d (Prims.of_int (12))) then "c" else (if ((=) d (Prims.of_int (13))) then "d" else (if ((=) d (Prims.of_int (14))) then "e" else "f")))))))))))))))
 
 let rec string_of_int_literal__go (base : Prims.int) (n : Prims.int) (acc : string) : string =
-  (if ((=) n Prims.int_zero) then acc else ((string_of_int_literal__go base) (Prims.op_Slash n base) (Prims.strcat (digit_char (Prims.op_Percent n base)) acc)))
+  (if ((=) n Prims.int_zero) then acc else (string_of_int_literal__go base (Prims.op_Slash n base) (Prims.strcat (digit_char (Prims.op_Percent n base)) acc)))
 
 let string_of_int_literal (i : Prims.int) (b : FStar_IntegerLiteral.int_base) : string =
   (match b with
@@ -48,10 +48,16 @@ let string_of_int_literal (i : Prims.int) (b : FStar_IntegerLiteral.int_base) : 
       (match tmp1 with
         | (base, prefix) -> (let tmp2 = (if (Prims.op_Less i Prims.int_zero) then ("-", (Prims.op_Tilde_Minus i)) else ("", i)) in
           (match tmp2 with
-            | (sign, n) -> (Prims.strcat sign (Prims.strcat prefix (if ((=) n Prims.int_zero) then "0" else ((string_of_int_literal__go base) n ""))))
+            | (sign, n) -> (Prims.strcat sign (Prims.strcat prefix (if ((=) n Prims.int_zero) then "0" else (string_of_int_literal__go base n ""))))
           ))
       ))
   )
+
+let parse_int_literal (s : string) : (Prims.int * FStar_IntegerLiteral.int_base) =
+  (let s' = (if (FStarC_Util.starts_with s "-") then ((fun s i -> BatString.tail s (Z.to_int i)) s Prims.int_one) else s) in
+  let b = (if ((FStarC_Util.starts_with s' "0x") || (FStarC_Util.starts_with s' "0X")) then FStar_IntegerLiteral.Hex else (if ((FStarC_Util.starts_with s' "0o") || (FStarC_Util.starts_with s' "0O")) then FStar_IntegerLiteral.Oct else (if ((FStarC_Util.starts_with s' "0b") || (FStarC_Util.starts_with s' "0B")) then FStar_IntegerLiteral.Bin else FStar_IntegerLiteral.Dec))) in
+  let tmp = (Z.of_string s) in
+  (tmp, b))
 
 let eq_const (c1 : sconst) (c2 : sconst) : bool =
   (match (c1, c2) with
@@ -86,10 +92,4 @@ let within_bounds (value : Prims.int) (signedness : signedness) (width : width) 
   (match tmp with
     | (lower, upper) -> ((Prims.op_Less_Equals lower value) && (Prims.op_Less_Equals value upper))
   ))
-
-let parse_int_literal (s : string) : (Prims.int * FStar_IntegerLiteral.int_base) =
-  (let s' = (if (FStarC_Util.starts_with s "-") then ((fun s i -> BatString.tail s (Z.to_int i)) s Prims.int_one) else s) in
-  let b = (if ((FStarC_Util.starts_with s' "0x") || (FStarC_Util.starts_with s' "0X")) then FStar_IntegerLiteral.Hex else (if ((FStarC_Util.starts_with s' "0o") || (FStarC_Util.starts_with s' "0O")) then FStar_IntegerLiteral.Oct else (if ((FStarC_Util.starts_with s' "0b") || (FStarC_Util.starts_with s' "0B")) then FStar_IntegerLiteral.Bin else FStar_IntegerLiteral.Dec))) in
-  let tmp = (Z.of_string s) in
-  (tmp, b))
 

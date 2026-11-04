@@ -17,7 +17,7 @@ jobs:
       github.event.issue.pull_request &&
       contains(github.event.comment.body, '!rebase') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       pull-requests: write
       contents: write
