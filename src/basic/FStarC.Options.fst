@@ -200,6 +200,7 @@ let defaults = [
   ("custard_static_header"                     , Bool false);
   ("custard_hoist_locals"                      , Bool false);
   ("custard_init_locals"                       , String "no");
+  ("custard_line_comments"                     , Bool false);
   ("custard_main"                              , Unset);
   ("target"                                    , Unset);
   ("custard_dump_ir"                           , Bool false);
@@ -473,6 +474,7 @@ let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      
 let get_custard_static_header   ()      = lookup_opt "custard_static_header"    as_bool
 let get_custard_hoist_locals    ()      = lookup_opt "custard_hoist_locals"     as_bool
 let get_custard_init_locals     ()      = lookup_opt "custard_init_locals"      as_string
+let get_custard_line_comments   ()      = lookup_opt "custard_line_comments"    as_bool
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
 let get_target                  ()      = lookup_opt "target"                   (as_option as_string)
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
@@ -906,6 +908,17 @@ ones. Runs after --custard_hoist_locals, so declarations it moves are \
 zero-initialized too, and their original initialization stays an assignment \
 at its execution point. A variable-length array can be initialized only in \
 c23 mode. Not implemented for Cherry or other code generators.");
+
+  ( noshort,
+    "custard_line_comments",
+    Const (Bool true),
+    text "With --codegen C, write the comments that stand as statements in a \
+function body as C line comments (// ...) framed by an empty // line above \
+and below, as krml's -fline-comments does, instead of block comments. \
+Comments around an expression and comments on top-level declarations stay \
+block comments. A comment with a line ending in a backslash stays a block \
+comment, since a line comment would continue onto the next line. Not \
+implemented for Cherry or other code generators.");
 
   ( noshort,
     "custard_static_header",
@@ -2285,6 +2298,7 @@ let custard_c_no_prefix          () = get_custard_c_no_prefix ()
 let custard_static_header        () = get_custard_static_header ()
 let custard_hoist_locals         () = get_custard_hoist_locals ()
 let custard_init_locals          () = get_custard_init_locals ()
+let custard_line_comments        () = get_custard_line_comments ()
 let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()

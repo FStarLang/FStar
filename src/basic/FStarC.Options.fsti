@@ -225,6 +225,7 @@ val custard_static_header       : unit    -> ML bool
 val custard_hoist_locals        : unit    -> ML bool
 (* "no", "c23", "c99" or "c89". *)
 val custard_init_locals         : unit    -> ML string
+val custard_line_comments       : unit    -> ML bool
 val custard_main                : unit    -> ML (option string)
 val custard_dump_ir             : unit    -> ML bool
 val custard_dump_specializations: unit    -> ML bool

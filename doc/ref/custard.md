@@ -3196,6 +3196,40 @@ fixtures, including variable-length arrays). Each mode is tested with and
 without hoisting. The tests check that no function-body declaration lacks an
 initializer and compile and run the result as C and C++.
 
+### 6.3 Line comments
+
+`--custard_line_comments` is an opt-in, no-argument option of `--codegen C`,
+the counterpart of krml's `-fline-comments`. Comments that stand as
+statements in a function body (section 120: a standalone `comment`, the two
+comments on a value nothing reads, and the comment before an `abort()`) are
+written as C line comments, framed by an empty `//` line above and below:
+
+```c
+  //
+  // the running total
+  //
+```
+
+The two comments on an unread value share one block. Each line of a
+multi-line text becomes a `// ` line of its own, trimmed. An empty comment
+disappears. Comments inside an expression (`/* before */ e /* after */`) stay
+block comments, since a line comment would swallow the rest of the line.
+Comments on top-level declarations and the file banner also stay block
+comments. Without the option, the output is unchanged.
+
+A comment with a line that ends in a backslash, or its `??/` trigraph, keeps
+the block form. In a line comment, that backslash would join the next source
+line to the comment and remove the code on it; GCC's `-Wcomment` reports this.
+Line comments need C99 or later, or C++. Cherry and the other backends reject
+the option. It composes with `--custard_hoist_locals`, which treats a comment
+the same way in either form.
+
+Tests: `tests/custard/pulse/linecomments.py`, on `PulseComment` and
+`PulseLineComment`, with and without hoisting. It checks where the comments go
+and that no comment-only block comment remains in a function body. It compiles
+the result as C11 and C++17 with `-Wall -Wextra -Werror`, runs it, and checks
+that the other backends reject the option.
+
 ## 7. Effects and purity
 
 The custom-rule table of §8 is a *value*-level mechanism: it says what a call
@@ -21968,6 +22002,9 @@ value goes, but the text does not, and what is left is two comments and no
 statement to hang them on. Writing that as `(void)(/* a */ 0 /* b */);` is
 §99's complaint restated --- a cast to void that computes nothing says
 nothing either --- so the comments are emitted as lines of their own.
+
+With `--custard_line_comments` (section 6.3) the statement-position forms
+are written as line comments instead; the inline form is not.
 
 The OCaml backend spells the same node with `(* *)`, which costs nothing and
 is better than dropping the text; the krml backend hands both forms to
