@@ -3784,6 +3784,17 @@ $(CHERRY_DIR)/CherryEtaValue.chgrep: $(CHERRY_DIR)/CherryEtaValue.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryEtaValue.chgrep
 
+# Cherry: a [[@@@cherry_borrowed]] on an implementation binder holds when an
+# interface gives the type and the function is specialized.
+CHERRY_TESTS += CherryBorrowIface
+$(CHERRY_DIR)/CherryBorrowIface.chgrep: $(CHERRY_DIR)/CherryBorrowIface.chc
+	$(Q)grep -q '^static .* CherryBorrowIface_head_or__string(.*{$$' $< \
+	  || { echo "ERROR: CherryBorrowIface_head_or is not specialized"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryBorrowIface_head_or__string(.*{$$/,/^}/p' $< | grep -q '_dec(r)' \
+	  || { echo "ERROR: CherryBorrowIface_head_or owns its borrowed parameter"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryBorrowIface.chgrep
+
 # Cherry: a record update changes a unique record in place instead of
 # building a new cell.
 $(CHERRY_DIR)/CherryRecordUpdate.chgrep: $(CHERRY_DIR)/CherryRecordUpdate.chc
