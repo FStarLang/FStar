@@ -88,6 +88,10 @@ CUSTARD_TESTS += NormForExtraction
 GREP_NormForExtraction += "normForExtraction_step"
 NOGREP_NormForExtraction += "normForExtraction_eval"
 NOGREP_NormForExtraction += "normForExtraction_prog"
+# Issue #4828: an argument extraction erases is not normalized, so a huge
+# [prop] passed to it does not exhaust a small budget.
+CUSTARD_TESTS += SpecArgNorm
+FLAGS_SpecArgNorm = --custard_norm_budget 20000
 NOGREP_NormForExtraction += "type normForExtraction_ast"
 CUSTARD_TESTS += Mymon
 CUSTARD_TESTS += Reify
@@ -1154,6 +1158,11 @@ include $(FSTAR_ROOT)/mk/test.mk
 all: $(OUTPUT_DIR)/hoist-locals.checked
 $(OUTPUT_DIR)/hoist-locals.checked: $(addprefix $(CACHE_DIR)/, HoistLocals.fst.checked RefBind.fst.checked CShortCircuit.fst.checked) $(FSTAR_EXE) hoistlocals.py HoistLocals_stubs.h RefBind_stubs.h
 	$(Q)CC="$(CC)" CXX="$(CXX)" python3 hoistlocals.py $(OUTPUT_DIR)/hoist-locals -- $(FSTAR)
+	$(Q)touch $@
+
+all: $(OUTPUT_DIR)/init-locals.checked
+$(OUTPUT_DIR)/init-locals.checked: $(addprefix $(CACHE_DIR)/, InitLocals.fst.checked HoistLocals.fst.checked) $(FSTAR_EXE) initlocals.py HoistLocals_stubs.h
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 initlocals.py $(OUTPUT_DIR)/init-locals -- $(FSTAR)
 	$(Q)touch $@
 
 all: $(OUTPUT_DIR)/static-header.checked
@@ -3811,7 +3820,7 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryMonoLocalRec
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec
 # A low budget so that a regression fails in seconds rather than a minute.
 FLAGS_CherryMonoLocalRec = --custard_norm_budget 1000000
 

@@ -1049,6 +1049,22 @@ arguments.  An argument such as `go' k false`, a partial application of a
 local `let rec` inside a closure, unfolds forever under zeta;
 `tests/custard/CherryMonoLocalRec.fst` hit error 365 there before.
 
+#### Arguments that are erased are not normalized
+
+Issue #4828.  A specification argument (an implicit `prop` or `slprop`, an
+`erased` value, a `squash`) is deleted from the extracted code, but it used to
+be normalized with the full step list first, and one built from many `unfold`
+definitions could take minutes or exhaust the budget on its own.  Under
+`ForExtraction`, `Normalize.rebuild` now consults the type of a stuck
+application's head and does not normalize an argument in such a position: a
+`prop` (or a total function into `prop`) becomes `l_True`, and a value of any
+other non-informative type except `unit` becomes `()`.  Arities are kept,
+since a type argument may be needed; `unit` is kept, since it is how a thunk is
+written; and so are the arguments of a primitive step, which may compute with
+them.  `tests/custard/SpecArgNorm.fst` and
+`tests/custard/pulse/PulseSpecArgNorm.fst` pass such arguments under a budget
+that normalizing them would exhaust.
+
 ### 3.7 Canonicalizing `Mono` arguments for interning
 
 Two call sites should share a specialization when their `Mono` arguments are
@@ -3127,10 +3143,56 @@ declarations after all C temporaries exist and checks that none remain in the
 residual body. This is separate from the printer's expression `hoist`, which
 turns a statement-shaped expression into a temporary.
 
-This option is not C89 mode, does not zero-initialize locals, and does not
-promise lower stack usage: widening storage scopes can increase a function's
-stack requirements. Use fixed-size assignable storage, or omit the option,
-when a declaration cannot be moved safely.
+This option is not C89 mode, does not zero-initialize locals (see section 6.2,
+`--custard_init_locals`), and does not promise lower stack usage: widening
+storage scopes can increase a function's stack requirements. Use fixed-size
+assignable storage, or omit the option, when a declaration cannot be moved
+safely.
+
+### 6.2 Zero-initialized C locals
+
+`--custard_init_locals {no,c23,c99,c89}` (default `no`) is the Custard
+counterpart of krml's `-finitialize-locals`. With `--codegen C`, every
+automatic local declaration that the printer emits without an initializer gets
+a zero initializer of its type. Declarations that already have an initializer
+are unchanged. Cherry and the other backends reject any mode other than `no`.
+
+The pass runs on the structured function body after `--custard_hoist_locals`
+(section 6.1), just before rendering. So every declaration hoisting moves out of
+place, which loses its initializer, is zeroed, and its original initialization
+stays an assignment at its original execution point. As in krml, this can
+write such a local twice. Uninitialized Pulse slots, branch and match
+temporaries, storage arrays, closure and heap pointers are all covered.
+
+The mode selects the spelling of the zero:
+
+- `c23`: `= {}` for every type, including variable-length arrays. This needs
+  a C23 compiler (`-std=c2x` with GCC 13) or C++.
+- `c99`: a scalar gets `0`, `false`, `NULL` or the narrow-float
+  `CUSTARD_F16_INIT(0U)` / `CUSTARD_BF16_INIT(0U)`. An enum gets its first tag
+  rather than `0`, so that C++ accepts it. A record gets designated
+  initializers for all fields, in declaration order (`{ .f = 0, .g = false }`).
+  A tagged union gets its first tag and zeroes the first constructor that has
+  fields (`{ .tag = K, .val = { .C = 0 } }`). A fixed-size array gets
+  `{ <zero of element> }`.
+- `c89`: the same values, with positional instead of designated initializers.
+
+Foreign and otherwise unknown types get `{ 0 }`, which is valid C for every
+complete object type. C99 and C89 forbid an initializer on a variable-length
+array, so such a declaration is an error (368) in those modes: use `c23`, or
+fixed-size storage. The pass only decides initializers; it does not change
+declaration placement, so it is not a C89 mode by itself either.
+
+Implementation: each `c_local` records a `local_kind` (value of a `cty`,
+fixed or variable-length array of a `cty`, or pointer). `init_locals_body`
+fills in `cl_init` for locals with none, using `local_zero`. Raw-text
+declarations bypassing `c_local` exist only in the Cherry printer.
+
+Tests: `tests/custard/initlocals.py`, run from `tests/custard` (the
+`InitLocals` and `HoistLocals` fixtures) and `tests/custard/pulse` (Pulse
+fixtures, including variable-length arrays). Each mode is tested with and
+without hoisting. The tests check that no function-body declaration lacks an
+initializer and compile and run the result as C and C++.
 
 ## 7. Effects and purity
 
