@@ -50,6 +50,14 @@ let rec add (c : ('k -> ('k -> int))) (key : 'k) (value : 'v) (m : ('k, 'v) tree
       (if ((=) o 0) then (Node (l, key, value, r, h)) else (if ((<) o 0) then (bal (add c key value l) k' v' r) else (bal l k' v' (add c key value r)))))
   )
 
+let rec iter (f : ('k -> ('v -> unit))) (m : ('k, 'v) tree) : unit =
+  (match m with
+    | Leaf -> ()
+    | (Node (l, key, value, r, tmp)) -> ((iter f l);
+      (f key value);
+      (iter f r))
+  )
+
 let rec fold_pure (f : ('k -> ('v -> ('a -> 'a)))) (m : ('k, 'v) tree) (acc : 'a) : 'a =
   (match m with
     | Leaf -> acc
@@ -64,14 +72,6 @@ let rec fold (f : ('k -> ('v -> ('a -> 'a)))) (m : ('k, 'v) tree) (acc : 'a) : '
     | (Node (l, key, value, r, tmp)) -> (let acc1 = (fold f l acc) in
       let acc2 = (f key value acc1) in
       (fold f r acc2))
-  )
-
-let rec iter (f : ('k -> ('v -> unit))) (m : ('k, 'v) tree) : unit =
-  (match m with
-    | Leaf -> ()
-    | (Node (l, key, value, r, tmp)) -> ((iter f l);
-      (f key value);
-      (iter f r))
   )
 
 let rec pop_min (l : ('k, 'v) tree) (key : 'k) (value : 'v) (r : ('k, 'v) tree) : ('k * 'v * ('k, 'v) tree) =

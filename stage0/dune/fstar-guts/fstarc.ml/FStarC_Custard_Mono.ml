@@ -10,6 +10,9 @@ type bclass =
 let chain_reporter : ((unit -> (PPrint.document) list) ref) =
   (ref (fun tmp -> []))
 
+let fvar_arity_cache : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
+
 let norm_bounded (env : FStarC_TypeChecker_Env.env) (what : string) (steps : (FStarC_TypeChecker_Env.step) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (try (FStarC_Custard_Prof.timed "Mono.norm" (fun tmp -> (let tmp1 = (FStarC_Options.custard_norm_budget ()) in
   (FStarC_TypeChecker_Normalize.with_budget tmp1 (fun tmp2 -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize steps env t)))))) with
@@ -147,9 +150,6 @@ let keep_thunk (env : FStarC_TypeChecker_Env.env) (bs : (FStarC_Syntax_Syntax.bi
     | (tmp5 :: rest) -> (BatList.rev (false :: rest))
     | [] -> flags
   ) else flags))
-
-let fvar_arity_cache : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
 let rec is_type_term (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : bool =
   (let tmp = (FStarC_Syntax_Subst.compress t) in
@@ -351,7 +351,7 @@ let is_type_carrying_binder (env : FStarC_TypeChecker_Env.env) (b : FStarC_Synta
 let rec classify_demand__fixpoint (pass : (((FStarC_Syntax_Syntax.binder * bclass)) list -> (bool * ((FStarC_Syntax_Syntax.binder * bclass)) list))) (n : Prims.int) (bcs : ((FStarC_Syntax_Syntax.binder * bclass)) list) : ((FStarC_Syntax_Syntax.binder * bclass)) list =
   (if (Prims.op_Less_Equals n Prims.int_zero) then bcs else (let tmp = (pass bcs) in
   (match tmp with
-    | (changed, bcs1) -> (if changed then ((classify_demand__fixpoint pass) (Prims.op_Minus n Prims.int_one) bcs1) else bcs1)
+    | (changed, bcs1) -> (if changed then (classify_demand__fixpoint pass (Prims.op_Minus n Prims.int_one) bcs1) else bcs1)
   )))
 
 let uu___is_Dropped (projectee : bclass) : bool =
@@ -395,7 +395,7 @@ let classify_demand (env : FStarC_TypeChecker_Env.env) (attrs : ((FStarC_Syntax_
           )) bcs1) in
         let tmp1 = (!(changed)) in
         (tmp1, bcs2))) in
-      let bcs1 = ((classify_demand__fixpoint pass) ((fun l -> Z.of_int (BatList.length l)) bs) bcs) in
+      let bcs1 = (classify_demand__fixpoint pass ((fun l -> Z.of_int (BatList.length l)) bs) bcs) in
       let cs1 = (BatList.map (fun tmp1 -> (match tmp1 with
           | (b, c) -> (match c with
               | Poly -> (let tmp2 = (is_type_binder env b) in
@@ -447,7 +447,7 @@ let rec dead_binders__go (bs_t : (FStarC_Syntax_Syntax.binder) list) (bs_d : (FS
   let in_type = (BatList.exists (fun v -> (FStarC_Syntax_Syntax.bv_eq v (bt).FStarC_Syntax_Syntax.binder_bv)) (BatList.append later res_names)) in
   let in_body = (if (Prims.op_Less_Equals ((fun l -> Z.of_int (BatList.length l)) bs_d) i) then true else (FStarC_Syntax_Syntax.fStarC_Class_Setlike_mem__bv_list_bv (let scrut = ((fun l i -> BatList.nth l (Z.to_int i)) bs_d i) in
     (scrut).FStarC_Syntax_Syntax.binder_bv) live_in_body)) in
-  let tmp = ((dead_binders__go bs_t bs_d live_in_body n res_names) (Prims.op_Plus i Prims.int_one)) in
+  let tmp = (dead_binders__go bs_t bs_d live_in_body n res_names (Prims.op_Plus i Prims.int_one)) in
   (BatList.append (if (in_type || in_body) then [] else (i :: [])) tmp)))
 
 let dead_binders (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (d : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (Prims.int) list =
@@ -459,16 +459,16 @@ let dead_binders (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.t
           let n = ((fun l -> Z.of_int (BatList.length l)) bs_t) in
           let tmp3 = (observable (FStarC_Syntax_Util.comp_result comp)) in
           let tmp4 = (FStarC_Syntax_Free.names tmp3) in
-          ((dead_binders__go bs_t bs_d live_in_body n tmp4) Prims.int_zero))
+          (dead_binders__go bs_t bs_d live_in_body n tmp4 Prims.int_zero))
       ))
   ))
 
 let rec classify_def__extra (env : FStarC_TypeChecker_Env.env) (n : Prims.int) (bs : (FStarC_Syntax_Syntax.binder) list) : (bclass) list =
   (match bs with
     | [] -> []
-    | (b :: bs1) -> (if (Prims.op_Greater n Prims.int_zero) then ((classify_def__extra env) (Prims.op_Minus n Prims.int_one) bs1) else (let tmp = (is_erased_binder env b) in
+    | (b :: bs1) -> (if (Prims.op_Greater n Prims.int_zero) then (classify_def__extra env (Prims.op_Minus n Prims.int_one) bs1) else (let tmp = (is_erased_binder env b) in
       let tmp1 = (if tmp then Dropped else Poly) in
-      let tmp2 = ((classify_def__extra env) Prims.int_zero bs1) in
+      let tmp2 = (classify_def__extra env Prims.int_zero bs1) in
       (tmp1 :: tmp2)))
   )
 
@@ -483,7 +483,7 @@ let classify_def (env : FStarC_TypeChecker_Env.env) (attrs : ((FStarC_Syntax_Syn
     | None -> cs1
     | (Some (d)) -> (let tmp = (FStarC_Syntax_Util.abs_formals d) in
       (match tmp with
-        | (bs, tmp1, tmp2) -> (let tmp3 = ((classify_def__extra env) ((fun l -> Z.of_int (BatList.length l)) cs1) bs) in
+        | (bs, tmp1, tmp2) -> (let tmp3 = (classify_def__extra env ((fun l -> Z.of_int (BatList.length l)) cs1) bs) in
           (BatList.append cs1 tmp3))
       ))
   ))
@@ -522,16 +522,16 @@ let rec classes_to_string__go (why : (FStarC_Syntax_Syntax.binder -> string)) (b
     | ((b :: bs1), []) -> (let tmp = (why b) in
       let tmp1 = (Prims.strcat tmp ">") in
       let tmp2 = (Prims.strcat "<" tmp1) in
-      let tmp3 = ((classes_to_string__go why) bs1 []) in
+      let tmp3 = (classes_to_string__go why bs1 []) in
       (tmp2 :: tmp3))
-    | ([], (c :: cs1)) -> (let tmp = ((classes_to_string__go why) [] cs1) in
+    | ([], (c :: cs1)) -> (let tmp = (classes_to_string__go why [] cs1) in
       ((bclass_to_string c) :: tmp))
     | ((b :: bs1), (c :: cs1)) -> (let tmp = (match c with
           | Dropped -> (let tmp = (why b) in
             (Prims.strcat "Dropped:" tmp))
           | c1 -> (bclass_to_string c1)
         ) in
-      let tmp1 = ((classes_to_string__go why) bs1 cs1) in
+      let tmp1 = (classes_to_string__go why bs1 cs1) in
       (tmp :: tmp1))
   )
 
@@ -540,7 +540,7 @@ let classes_to_string (env : FStarC_TypeChecker_Env.env) (bs : (FStarC_Syntax_Sy
     (if tmp then "type" else (let tmp1 = (is_unit_binder b) in
     (if tmp1 then "unit" else (let tmp2 = (is_dropped_binder env b) in
     (if tmp2 then "erased" else "?"))))))) in
-  let tmp = ((classes_to_string__go why) bs cs) in
+  let tmp = (classes_to_string__go why bs cs) in
   (BatString.concat "; " tmp))
 
 let unit_binders (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (bool) list =
@@ -565,7 +565,7 @@ let rec existential_of_lid__first (env : FStarC_TypeChecker_Env.env) (ds : (FSta
     | [] -> None
     | (c :: ds') -> (let tmp = (ctor_stores_type env c) in
       let tmp1 = (not tmp) in
-      (if tmp1 then ((existential_of_lid__first env) ds') else (let tmp2 = (FStarC_TypeChecker_Env.lookup_sigelt env c) in
+      (if tmp1 then (existential_of_lid__first env ds') else (let tmp2 = (FStarC_TypeChecker_Env.lookup_sigelt env c) in
       (match tmp2 with
         | (Some ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp3; us = tmp4; t = t; ty_lid = tmp5; num_ty_params = num_ty_params; mutuals = tmp6; injective_type_params = tmp7; proj_disc_lids = tmp8; _ })); sigrng = tmp9; sigquals = tmp10; sigmeta = tmp11; sigattrs = tmp12; sigopens_and_abbrevs = tmp13; sigopts = tmp14; _ })) -> (let tmp15 = (FStarC_Syntax_Util.arrow_formals t) in
           (match tmp15 with
@@ -575,17 +575,17 @@ let rec existential_of_lid__first (env : FStarC_TypeChecker_Env.env) (ds : (FSta
               let tmp17 = (existential_of_lid__first__pick fields) in
               (match tmp17 with
                 | (Some (f)) -> (Some ((c, f)))
-                | None -> ((existential_of_lid__first env) ds')
+                | None -> (existential_of_lid__first env ds')
               ))
           ))
-        | tmp3 -> ((existential_of_lid__first env) ds')
+        | tmp3 -> (existential_of_lid__first env ds')
       ))))
   )
 
 let existential_of_lid (env : FStarC_TypeChecker_Env.env) (l : FStarC_Ident.lident) : ((FStarC_Ident.lident * FStarC_Ident.lident)) option =
   (let tmp = (FStarC_TypeChecker_Env.lookup_sigelt env l) in
   (match tmp with
-    | (Some ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = tmp1; us = tmp2; params = tmp3; num_uniform_params = tmp4; t = tmp5; mutuals = tmp6; ds = ds; injective_type_params = tmp7; _ })); sigrng = tmp8; sigquals = tmp9; sigmeta = tmp10; sigattrs = tmp11; sigopens_and_abbrevs = tmp12; sigopts = tmp13; _ })) -> ((existential_of_lid__first env) ds)
+    | (Some ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = tmp1; us = tmp2; params = tmp3; num_uniform_params = tmp4; t = tmp5; mutuals = tmp6; ds = ds; injective_type_params = tmp7; _ })); sigrng = tmp8; sigquals = tmp9; sigmeta = tmp10; sigattrs = tmp11; sigopens_and_abbrevs = tmp12; sigopts = tmp13; _ })) -> (existential_of_lid__first env ds)
     | tmp1 -> None
   ))
 
@@ -636,7 +636,7 @@ let retained_sorts_inst (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_S
   (match tmp with
     | (bs, c) -> (let tmp1 = (BatList.map (is_erased_binder env) bs) in
       let flags = (keep_thunk env bs c tmp1) in
-      let k = (Custard_Prims.prims_min ((fun l -> Z.of_int (BatList.length l)) args) ((fun l -> Z.of_int (BatList.length l)) bs)) in
+      let k = (Fstarc_Prims.prims_min ((fun l -> Z.of_int (BatList.length l)) args) ((fun l -> Z.of_int (BatList.length l)) bs)) in
       let subst = (BatList.map2 (fun b a -> (FStarC_Syntax_Syntax.NT ((b).FStarC_Syntax_Syntax.binder_bv, a))) (match ((fun n l -> BatList.split_at (Z.to_int n) l) k bs) with
           | (u__1, u__2) -> u__1
         ) (match ((fun n l -> BatList.split_at (Z.to_int n) l) k args) with

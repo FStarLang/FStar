@@ -26,9 +26,6 @@ let rec find_coercion__head_of (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_S
 let bool_guard (b : bool) : (unit) option =
   (if b then (Some (())) else None)
 
-let op_let_Question (tmp : ('tmp) option) (f : ('tmp -> ('tmp1) option)) : ('tmp1) option =
-  (FStarC_Option.bind tmp f)
-
 type bind_input = {
   bi_env : FStarC_TypeChecker_Env.env;
   bi_range : FStarC_Range_Type.range;
@@ -105,7 +102,7 @@ let rec check_no_escape__aux__close (escaping_vars : ((FStarC_Syntax_Syntax.term
     | [] -> phi
     | xs -> (if ((=) fuel Prims.int_zero) then phi else (let tmp1 = (BatList.map binder_of xs) in
       let tmp2 = (FStarC_Syntax_Util.close_exists_no_univs tmp1 phi) in
-      ((check_no_escape__aux__close escaping_vars binder_of) (Prims.op_Minus fuel Prims.int_one) tmp2)))
+      (check_no_escape__aux__close escaping_vars binder_of (Prims.op_Minus fuel Prims.int_one) tmp2)))
   ))
 
 let new_implicit_var (reason : string) (r : FStarC_Range_Type.range) (env : FStarC_TypeChecker_Env.env) (k : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (unrefine : bool) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Range_Type.range) * FStarC_TypeChecker_Common.guard_t) =
@@ -202,7 +199,10 @@ let rec first_opt (f : ('u___a -> ('u___b) option)) (xs : ('u___a) list) : ('u__
   (match xs with
     | [] -> None
     | (x :: xs1) -> (let tmp = (f x) in
-      (FStarC_Option.catch tmp (fun tmp1 -> (first_opt f xs1))))
+      (match tmp with
+        | (Some (x1)) -> (Some (x1))
+        | None -> (first_opt f xs1)
+      ))
   )
 
 type isErased =
@@ -229,6 +229,33 @@ let maybe_monadic (env : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.
 
 let dbg_Rel : (bool ref) =
   (FStarC_Debug.get_toggle "Rel")
+
+let dbg_Dec : (bool ref) =
+  (FStarC_Debug.get_toggle "Dec")
+
+let dbg_Extraction : (bool ref) =
+  (FStarC_Debug.get_toggle "Extraction")
+
+let dbg_LayeredEffects : (bool ref) =
+  (FStarC_Debug.get_toggle "LayeredEffects")
+
+let dbg_LayeredEffectsApp : (bool ref) =
+  (FStarC_Debug.get_toggle "LayeredEffectsApp")
+
+let dbg_Pat : (bool ref) =
+  (FStarC_Debug.get_toggle "Pat")
+
+let dbg_ResolveImplicitsHook : (bool ref) =
+  (FStarC_Debug.get_toggle "ResolveImplicitsHook")
+
+let dbg_Return : (bool ref) =
+  (FStarC_Debug.get_toggle "Return")
+
+let dbg_Simplification : (bool ref) =
+  (FStarC_Debug.get_toggle "Simplification")
+
+let dbg_SMTEncodingReify : (bool ref) =
+  (FStarC_Debug.get_toggle "SMTEncodingReify")
 
 let label (reason : (PPrint.document) list) (r : FStarC_Range_Type.range) (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_meta (({ FStarC_Syntax_Syntax.tm = f;
@@ -278,7 +305,7 @@ let instantiate_one_binder (env : FStarC_TypeChecker_Env.env) (r : FStarC_Range_
         | (varg, tmp5, implicits) -> (let aq = (FStarC_Syntax_Util.aqual_of_binder b) in
           let r1 = (varg, t, aq, implicits) in
           let tmp6 = (FStarC_Debug.high ()) in
-          (if tmp6 then (let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__tuple2_syntax_term'_syntax_term' ((match r1 with
+          (if tmp6 then (let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__tuple2_syntax_term'_syntax_term'_90 ((match r1 with
               | (u__1, u__2, u__3, u__4) -> u__1
             ), (match r1 with
               | (u__1, u__2, u__3, u__4) -> u__2
@@ -296,7 +323,7 @@ let rec fStarC_TypeChecker_Util_maybe_instantiate__aux__1 (env : FStarC_TypeChec
       let tmp5 = (instantiate_one_binder env (e).FStarC_Syntax_Syntax.pos b1) in
       (match tmp5 with
         | (tm, ty, aq, g) -> (let subst1 = ((FStarC_Syntax_Syntax.NT ((b1).FStarC_Syntax_Syntax.binder_bv, tm)) :: subst) in
-          let tmp6 = ((fStarC_TypeChecker_Util_maybe_instantiate__aux__1 env e decr_inst) subst1 (decr_inst inst_n) rest) in
+          let tmp6 = (fStarC_TypeChecker_Util_maybe_instantiate__aux__1 env e decr_inst subst1 (decr_inst inst_n) rest) in
           (match tmp6 with
             | (args, bs1, subst2, g') -> (let tmp7 = (FStarC_TypeChecker_Common.fStarC_Class_Monoid_op_Plus_Plus__guard_t g g') in
               (((tm, aq) :: args), bs1, subst2, tmp7))
@@ -307,7 +334,7 @@ let rec fStarC_TypeChecker_Util_maybe_instantiate__aux__1 (env : FStarC_TypeChec
       let tmp5 = (instantiate_one_binder env (e).FStarC_Syntax_Syntax.pos b1) in
       (match tmp5 with
         | (tm, ty, aq, g) -> (let subst1 = ((FStarC_Syntax_Syntax.NT ((b1).FStarC_Syntax_Syntax.binder_bv, tm)) :: subst) in
-          let tmp6 = ((fStarC_TypeChecker_Util_maybe_instantiate__aux__1 env e decr_inst) subst1 (decr_inst inst_n) rest) in
+          let tmp6 = (fStarC_TypeChecker_Util_maybe_instantiate__aux__1 env e decr_inst subst1 (decr_inst inst_n) rest) in
           (match tmp6 with
             | (args, bs1, subst2, g') -> (let tmp7 = (FStarC_TypeChecker_Common.fStarC_Class_Monoid_op_Plus_Plus__guard_t g g') in
               (((tm, aq) :: args), bs1, subst2, tmp7))
@@ -326,10 +353,10 @@ let maybe_add_implicit_binders (env : FStarC_TypeChecker_Env.env) (bs : (FStarC_
       | (Some ((FStarC_Syntax_Syntax.Meta (tmp)))) -> true
       | tmp -> false
     ))) in
-  let pos = (Obj.magic ((fun bs1 -> (match bs1 with
+  let pos = (fun bs1 -> (match bs1 with
       | ({ FStarC_Syntax_Syntax.binder_bv = hd; binder_qual = tmp; binder_positivity = tmp1; binder_attrs = tmp2; _ } :: tmp3) -> (FStarC_Syntax_Syntax.range_of_bv hd)
       | tmp -> (FStarC_TypeChecker_Env.get_range env)
-    )))) in
+    )) in
   (match bs with
     | (b :: tmp) when (is_implicit_binder b) -> bs
     | tmp -> (match (FStarC_TypeChecker_Env.expected_typ env) with
@@ -533,9 +560,6 @@ let short_circuit_head (l : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.sy
       ))
   ))
 
-let dbg_Extraction : (bool ref) =
-  (FStarC_Debug.get_toggle "Extraction")
-
 let short_circuit (head : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (seen_args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_Common.guard_formula =
   (let short_bin_op = (fun f tmp -> (match tmp with
       | [] -> FStarC_TypeChecker_Common.Trivial
@@ -656,49 +680,6 @@ type top_level_effect_action =
   | Mask_effect_silently
   | Mask_effect_and_warn
 
-
-let dbg_Simplification : (bool ref) =
-  (FStarC_Debug.get_toggle "Simplification")
-
-let dbg_Dec : (bool ref) =
-  (FStarC_Debug.get_toggle "Dec")
-
-let pure_or_ghost_pre_and_post (env : FStarC_TypeChecker_Env.env) (comp : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
-  (None, (FStarC_Syntax_Util.comp_result comp))
-
-let rec decorated_pattern_as_term (pat : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : ((FStarC_Syntax_Syntax.bv) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
-  (let mk = (fun f -> (FStarC_Syntax_Syntax.mk f (pat).FStarC_Syntax_Syntax.p)) in
-  let pat_as_arg = (fun tmp -> (match tmp with
-      | (p, i) -> (let tmp1 = (decorated_pattern_as_term p) in
-        (match tmp1 with
-          | (vars, te) -> (vars, (te, (FStarC_Syntax_Syntax.as_aqual_implicit i)))
-        ))
-    )) in
-  (match (pat).FStarC_Syntax_Syntax.v with
-    | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (let tmp = (mk (FStarC_Syntax_Syntax.Tm_constant (c))) in
-      ([], tmp))
-    | (FStarC_Syntax_Syntax.Pat_var (x)) -> (let tmp = (mk (FStarC_Syntax_Syntax.Tm_name (x))) in
-      ((x :: []), tmp))
-    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (BatList.map pat_as_arg pats) in
-      let tmp1 = (BatList.split tmp) in
-      (match tmp1 with
-        | (vars, args) -> (let vars1 = (BatList.flatten vars) in
-          let head = (FStarC_Syntax_Syntax.fv_to_tm fv) in
-          let head1 = (match us_opt with
-              | None -> head
-              | (Some (us)) -> (FStarC_Syntax_Syntax.mk_Tm_uinst head us)
-            ) in
-          let tmp2 = (FStarC_Syntax_Syntax.mk_Tm_app head1 args (pat).FStarC_Syntax_Syntax.p) in
-          (vars1, tmp2))
-      ))
-    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (match eopt with
-        | None -> (FStarC_Effect.failwith "TcUtil::decorated_pattern_as_term: dot pattern not resolved")
-        | (Some (e)) -> ([], e)
-      )
-  ))
-
-let dbg_SMTEncodingReify : (bool ref) =
-  (FStarC_Debug.get_toggle "SMTEncodingReify")
 
 let update_env_sub_eff (env : FStarC_TypeChecker_Env.env) (sub : FStarC_Syntax_Syntax.sub_eff) (r : FStarC_Range_Type.range) : FStarC_TypeChecker_Env.env =
   (let r0 = (env).FStarC_TypeChecker_Env.range in
@@ -821,6 +802,40 @@ let update_env_sub_eff (env : FStarC_TypeChecker_Env.env) (sub : FStarC_Syntax_S
     iface_lids = (env2).FStarC_TypeChecker_Env.iface_lids;
     iface_val_lids = (env2).FStarC_TypeChecker_Env.iface_val_lids })
 
+let pure_or_ghost_pre_and_post (env : FStarC_TypeChecker_Env.env) (comp : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (None, (FStarC_Syntax_Util.comp_result comp))
+
+let rec decorated_pattern_as_term (pat : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : ((FStarC_Syntax_Syntax.bv) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let mk = (fun f -> (FStarC_Syntax_Syntax.mk f (pat).FStarC_Syntax_Syntax.p)) in
+  let pat_as_arg = (fun tmp -> (match tmp with
+      | (p, i) -> (let tmp1 = (decorated_pattern_as_term p) in
+        (match tmp1 with
+          | (vars, te) -> (vars, (te, (FStarC_Syntax_Syntax.as_aqual_implicit i)))
+        ))
+    )) in
+  (match (pat).FStarC_Syntax_Syntax.v with
+    | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (let tmp = (mk (FStarC_Syntax_Syntax.Tm_constant (c))) in
+      ([], tmp))
+    | (FStarC_Syntax_Syntax.Pat_var (x)) -> (let tmp = (mk (FStarC_Syntax_Syntax.Tm_name (x))) in
+      ((x :: []), tmp))
+    | (FStarC_Syntax_Syntax.Pat_cons (fv, us_opt, pats)) -> (let tmp = (BatList.map pat_as_arg pats) in
+      let tmp1 = (BatList.split tmp) in
+      (match tmp1 with
+        | (vars, args) -> (let vars1 = (BatList.flatten vars) in
+          let head = (FStarC_Syntax_Syntax.fv_to_tm fv) in
+          let head1 = (match us_opt with
+              | None -> head
+              | (Some (us)) -> (FStarC_Syntax_Syntax.mk_Tm_uinst head us)
+            ) in
+          let tmp2 = (FStarC_Syntax_Syntax.mk_Tm_app head1 args (pat).FStarC_Syntax_Syntax.p) in
+          (vars1, tmp2))
+      ))
+    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (match eopt with
+        | None -> (FStarC_Effect.failwith "TcUtil::decorated_pattern_as_term: dot pattern not resolved")
+        | (Some (e)) -> ([], e)
+      )
+  ))
+
 let effect_extraction_mode (env : FStarC_TypeChecker_Env.env) (l : FStarC_Ident.lident) : FStarC_Syntax_Syntax.eff_extraction_mode =
   (let tmp = (FStarC_TypeChecker_Env.get_effect_decl env l) in
   (tmp).FStarC_Syntax_Syntax.extraction_mode)
@@ -847,19 +862,4 @@ let remove_reify (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) 
         | tmp7 -> (FStarC_Effect.failwith "Impossible : Reify applied to multiple arguments after normalization.")
       ) else t))
   ))))
-
-let dbg_LayeredEffects : (bool ref) =
-  (FStarC_Debug.get_toggle "LayeredEffects")
-
-let dbg_LayeredEffectsApp : (bool ref) =
-  (FStarC_Debug.get_toggle "LayeredEffectsApp")
-
-let dbg_Pat : (bool ref) =
-  (FStarC_Debug.get_toggle "Pat")
-
-let dbg_ResolveImplicitsHook : (bool ref) =
-  (FStarC_Debug.get_toggle "ResolveImplicitsHook")
-
-let dbg_Return : (bool ref) =
-  (FStarC_Debug.get_toggle "Return")
 

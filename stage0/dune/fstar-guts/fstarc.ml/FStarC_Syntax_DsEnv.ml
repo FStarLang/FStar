@@ -50,76 +50,46 @@ and env = {
   no_prelude : bool;
 }
 
+let ugly_sigelt_to_string_hook : ((FStarC_Syntax_Syntax.sigelt -> string) ref) =
+  (ref (fun tmp -> ""))
+
 let new_sigmap (tmp : unit) : ('tmp) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
-let default_ds_hooks : dsenv_hooks =
-  { ds_push_open_hook = (fun tmp tmp1 -> ());
-    ds_push_include_hook = (fun tmp tmp1 -> ());
-    ds_push_module_abbrev_hook = (fun tmp tmp1 tmp2 -> ()) }
+let empty_include_smap : ((((FStarC_Ident.lident * FStarC_Syntax_Syntax.restriction)) list ref)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (new_sigmap ())
 
-let empty_env (deps : FStarC_Parser_Dep.deps) : env =
-  (let tmp = (new_sigmap ()) in
-  let tmp1 = (new_sigmap ()) in
-  let tmp2 = (new_sigmap ()) in
-  let tmp3 = (new_sigmap ()) in
-  { curmodule = None;
-    curmonad = None;
-    modules = [];
-    scope_mods = [];
-    iface_scope_mods = [];
-    exported_ids = tmp;
-    trans_exported_ids = tmp1;
-    includes = tmp2;
-    sigaccum = [];
-    sigmap = tmp3;
-    iface = false;
-    admitted_iface = false;
-    expect_typ = false;
-    syntax_only = false;
-    ds_hooks = default_ds_hooks;
-    dep_graph = deps;
-    no_prelude = false })
+let empty_exported_id_smap : ((exported_id_kind -> ((string) FStarC_RBSet.rbset ref))) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (new_sigmap ())
 
-type foundname =
-  | Term_name of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list
-  | Eff_name of FStarC_Syntax_Syntax.sigelt * FStarC_Ident.lident
-
-
-let fv_qual_of_se (tmp : FStarC_Syntax_Syntax.sigelt) : (FStarC_Syntax_Syntax.fv_qual) option =
-  (match (tmp).FStarC_Syntax_Syntax.sigel with
-    | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp1; us = tmp2; t = tmp3; ty_lid = l; num_ty_params = tmp4; mutuals = tmp5; injective_type_params = tmp6; proj_disc_lids = tmp7; _ })) -> (let qopt = (FStarC_Util.find_map (tmp).FStarC_Syntax_Syntax.sigquals (fun tmp8 -> (match tmp8 with
-          | (FStarC_Syntax_Syntax.RecordConstructor (tmp9, fs)) -> (Some ((FStarC_Syntax_Syntax.Record_ctor (l, fs))))
-          | tmp9 -> None
-        ))) in
-      (match qopt with
-        | None -> (Some (FStarC_Syntax_Syntax.Data_ctor))
-        | x -> x
-      ))
-    | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp1)) -> None
-    | tmp1 -> None
-  )
-
-let lb_fv (lbs : (FStarC_Syntax_Syntax.letbinding) list) (lid : FStarC_Ident.lident) : FStarC_Syntax_Syntax.fv =
-  (let tmp = (FStarC_Util.find_map lbs (fun lb -> (let fv = (match (lb).FStarC_Syntax_Syntax.lbname with
-        | (FStar_Pervasives.Inr (v)) -> v
-      ) in
-    (if (FStarC_Syntax_Syntax.fv_eq_lid fv lid) then (Some (fv)) else None)))) in
-  (FStarC_Option.must tmp))
-
-let set_bv_range (bv : FStarC_Syntax_Syntax.bv) (r : FStarC_Range_Type.range) : FStarC_Syntax_Syntax.bv =
-  (let id = (FStarC_Ident.set_id_range r (bv).FStarC_Syntax_Syntax.ppname) in
-  { FStarC_Syntax_Syntax.ppname = id;
-    index = (bv).FStarC_Syntax_Syntax.index;
-    sort = (bv).FStarC_Syntax_Syntax.sort })
-
-let bv_to_name (bv : FStarC_Syntax_Syntax.bv) (r : FStarC_Range_Type.range) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Syntax_Syntax.bv_to_name (set_bv_range bv r))
-
-let found_local_binding (r : FStarC_Range_Type.range) (lb : (FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * (bool ref))) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (match lb with
-    | (id', x, tmp) -> (bv_to_name x r)
-  )
+let record_cache_aux_with_filter : ((((unit -> unit) * (unit -> unit)) * (((unit -> (Prims.int * unit)) * ((Prims.int) option -> unit)) * ((unit -> (record_or_dc) list) * (record_or_dc -> unit)))) * (unit -> unit)) =
+  (let record_cache = (ref ([] :: [])) in
+  let push_ = (fun tmp -> (let tmp1 = (!(record_cache)) in
+    let tmp2 = (BatList.hd tmp1) in
+    let tmp3 = (!(record_cache)) in
+    let tmp4 = (tmp2 :: tmp3) in
+    ((record_cache) := tmp4))) in
+  let pop_ = (fun tmp -> (let tmp1 = (!(record_cache)) in
+    let tmp2 = (BatList.tl tmp1) in
+    ((record_cache) := tmp2))) in
+  let snapshot_ = (fun tmp -> (FStarC_Common.snapshot "DsEnv.record_cache" push_ record_cache ())) in
+  let rollback_ = (fun depth -> (FStarC_Common.rollback "DsEnv.record_cache" pop_ record_cache depth)) in
+  let peek = (fun tmp -> (let tmp1 = (!(record_cache)) in
+    (BatList.hd tmp1))) in
+  let insert = (fun r -> (let tmp = (peek ()) in
+    let tmp1 = (r :: tmp) in
+    let tmp2 = (!(record_cache)) in
+    let tmp3 = (BatList.tl tmp2) in
+    let tmp4 = (tmp1 :: tmp3) in
+    ((record_cache) := tmp4))) in
+  let filter = (fun tmp -> (let rc = (peek ()) in
+    let filtered = (BatList.filter (fun r -> (not (r).is_private)) rc) in
+    let tmp1 = (!(record_cache)) in
+    let tmp2 = (BatList.tl tmp1) in
+    let tmp3 = (filtered :: tmp2) in
+    ((record_cache) := tmp3))) in
+  let aux = ((push_, pop_), ((snapshot_, rollback_), (peek, insert))) in
+  (aux, filter))
 
 type 'u___a cont_t =
   | Cont_ok of 'u___a
@@ -202,14 +172,14 @@ let rec resolve_module_name__aux (env : env) (lid : FStarC_Ident.lident) (honor_
       let tmp3 = (BatList.append tmp1 tmp2) in
       let new_lid = (FStarC_Ident.lid_of_path tmp3 (FStarC_Ident.range_of_lid lid)) in
       let tmp4 = (module_is_defined env new_lid) in
-      (if tmp4 then (Some (new_lid)) else ((resolve_module_name__aux env lid honor_ns nslen) q)))
+      (if tmp4 then (Some (new_lid)) else (resolve_module_name__aux env lid honor_ns nslen q)))
     | ((Module_abbrev ((name, modul))) :: tmp) when (((=) nslen Prims.int_zero) && ((=) (FStarC_Ident.string_of_id name) (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)))) -> (Some (modul))
-    | (tmp :: q) -> ((resolve_module_name__aux env lid honor_ns nslen) q)
+    | (tmp :: q) -> (resolve_module_name__aux env lid honor_ns nslen q)
   )
 
 let resolve_module_name (env : env) (lid : FStarC_Ident.lident) (honor_ns : bool) : (FStarC_Ident.lident) option =
   (let nslen = ((fun l -> Z.of_int (BatList.length l)) (FStarC_Ident.ns_of_lid lid)) in
-  ((resolve_module_name__aux env lid honor_ns nslen) (env).scope_mods))
+  (resolve_module_name__aux env lid honor_ns nslen (env).scope_mods))
 
 let get_exported_id_set (e : env) (eta : string) : ((exported_id_kind -> ((string) FStarC_RBSet.rbset ref))) option =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (e).exported_ids eta)
@@ -223,7 +193,7 @@ let rec find_in_module_with_includes_gen__aux (collect : bool) (eikind : exporte
     | [] -> (finish_ ())
     | ((modul, id) :: q) -> (let mname = (FStarC_Ident.string_of_lid modul) in
       let key = (mname, (FStarC_Ident.string_of_id id)) in
-      (if (BatList.mem key seen) then ((find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env) seen found acc q) else (let seen1 = (key :: seen) in
+      (if (BatList.mem key seen) then (find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env seen found acc q) else (let seen1 = (key :: seen) in
       let tmp = (get_exported_id_set env mname) in
       let not_shadowed = (match tmp with
           | None -> true
@@ -236,23 +206,27 @@ let rec find_in_module_with_includes_gen__aux (collect : bool) (eikind : exporte
           | (Some (minc)) -> (let tmp2 = (!(minc)) in
             (BatList.filter_map (fun tmp3 -> (match tmp3 with
               | (ns, restriction) -> (let opt = (FStarC_Syntax_Syntax.is_ident_allowed_by_restriction id restriction) in
-                (FStarC_Option.map (fun id1 -> (ns, id1)) opt))
+                (match opt with
+                  | (Some (x1)) -> (let tmp4 = (ns, x1) in
+                    (Some (tmp4)))
+                  | None -> None
+                ))
             )) tmp2))
         ) in
       let look_into = (if not_shadowed then (let tmp2 = (qual modul id) in
         (find_in_module_ tmp2)) else Cont_ignore) in
       (match look_into with
-        | Cont_ignore -> ((find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env) seen1 found acc (BatList.append mincludes q))
+        | Cont_ignore -> (find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env seen1 found acc (BatList.append mincludes q))
         | Cont_fail -> (finish_ ())
         | (Cont_ok (v)) -> (match found with
-            | None -> (if (not collect) then ((Cont_ok (v)), []) else ((find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env) seen1 (Some ((Cont_ok (v)))) acc (BatList.append mincludes q)))
-            | (Some (tmp2)) -> ((find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env) seen1 found (v :: acc) (BatList.append mincludes q))
+            | None -> (if (not collect) then ((Cont_ok (v)), []) else (find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env seen1 (Some ((Cont_ok (v)))) acc (BatList.append mincludes q)))
+            | (Some (tmp2)) -> (find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env seen1 found (v :: acc) (BatList.append mincludes q))
           )
       ))))
   ))
 
 let find_in_module_with_includes_gen (collect : bool) (eikind : exported_id_kind) (find_in_module_ : (FStarC_Ident.lident -> ('u___a) cont_t)) (find_in_module_default : ('u___a) cont_t) (env : env) (ns : FStarC_Ident.lident) (id : FStarC_Ident.ident) : (('u___a) cont_t * ('u___a) list) =
-  ((find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env) [] None [] ((ns, id) :: []))
+  (find_in_module_with_includes_gen__aux collect eikind find_in_module_ find_in_module_default env [] None [] ((ns, id) :: []))
 
 let find_in_module_with_includes (eikind : exported_id_kind) (find_in_module_ : (FStarC_Ident.lident -> ('u___a) cont_t)) (find_in_module_default : ('u___a) cont_t) (env : env) (ns : FStarC_Ident.lident) (id : FStarC_Ident.ident) : ('u___a) cont_t =
   (let tmp = (find_in_module_with_includes_gen false eikind find_in_module_ find_in_module_default env ns id) in
@@ -291,9 +265,9 @@ let rec try_lookup_id''_gen__aux (collect : bool) (id : FStarC_Ident.ident) (loo
             | (Cont_ok (v)) -> (if (not collect) then (v :: []) else (if (is_local_scope_mod a) then (match acc with
                 | [] -> (v :: [])
                 | tmp1 -> (BatList.rev acc)
-              ) else ((try_lookup_id''_gen__aux collect id lookup_default_id_ is_local_scope_mod step) (BatList.append (BatList.rev alts) (v :: acc)) q)))
+              ) else (try_lookup_id''_gen__aux collect id lookup_default_id_ is_local_scope_mod step (BatList.append (BatList.rev alts) (v :: acc)) q)))
             | Cont_fail -> (BatList.rev acc)
-            | Cont_ignore -> ((try_lookup_id''_gen__aux collect id lookup_default_id_ is_local_scope_mod step) acc q)
+            | Cont_ignore -> (try_lookup_id''_gen__aux collect id lookup_default_id_ is_local_scope_mod step acc q)
           )
       ))
     | [] -> (let tmp = (lookup_default_id_ Cont_fail id) in
@@ -353,7 +327,7 @@ let try_lookup_id''_gen (collect : bool) (env : env) (id : FStarC_Ident.ident) (
       | tmp1 -> (let tmp2 = (proc a) in
         (tmp2, []))
     )) in
-  ((try_lookup_id''_gen__aux collect id lookup_default_id_ is_local_scope_mod step) [] (env).scope_mods))
+  (try_lookup_id''_gen__aux collect id lookup_default_id_ is_local_scope_mod step [] (env).scope_mods))
 
 let resolve_in_open_namespaces''_gen (collect : bool) (env : env) (lid : FStarC_Ident.lident) (eikind : exported_id_kind) (k_local_binding : ((FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * (bool ref)) -> ('u___a) cont_t)) (k_rec_binding : ((FStarC_Ident.ident * FStarC_Ident.lident * (bool ref)) -> ('u___a) cont_t)) (k_record : (record_or_dc -> ('u___a) cont_t)) (f_module : (FStarC_Ident.lident -> ('u___a) cont_t)) (l_default : (('u___a) cont_t -> (FStarC_Ident.ident -> ('u___a) cont_t))) : ('u___a) list =
   (match (FStarC_Ident.ns_of_lid lid) with
@@ -380,6 +354,136 @@ let resolve_in_open_namespaces'_gen (collect : bool) (env : env) (lid : FStarC_I
   (resolve_in_open_namespaces''_gen collect env lid Exported_id_term_type (fun l -> (let tmp = (k_local_binding l) in
   (cont_of_option Cont_fail tmp))) (fun r -> (let tmp = (k_rec_binding r) in
   (cont_of_option Cont_fail tmp))) (fun tmp -> Cont_ignore) f_module l_default))
+
+let resolve_in_open_namespaces' (env : env) (lid : FStarC_Ident.lident) (k_local_binding : ((FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * (bool ref)) -> ('u___a) option)) (k_rec_binding : ((FStarC_Ident.ident * FStarC_Ident.lident * (bool ref)) -> ('u___a) option)) (k_global_def : (FStarC_Ident.lident -> ((FStarC_Syntax_Syntax.sigelt * bool) -> ('u___a) option))) : ('u___a) option =
+  (let tmp = (resolve_in_open_namespaces'_gen false env lid k_local_binding k_rec_binding k_global_def) in
+  (match tmp with
+    | [] -> None
+    | (v :: tmp1) -> (Some (v))
+  ))
+
+let find_binders_for_datacons : (env -> (FStarC_Ident.lident -> ((FStarC_Ident.ident) list) option)) =
+  (let debug = (FStarC_Debug.get_toggle "open_include_restrictions") in
+  (fun env lid -> (let k_global_def = (fun lid1 tmp -> (match tmp with
+      | ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp1; us = tmp2; t = t; ty_lid = tmp3; num_ty_params = num_ty_params; mutuals = tmp4; injective_type_params = tmp5; proj_disc_lids = tmp6; _ })); sigrng = tmp7; sigquals = tmp8; sigmeta = tmp9; sigattrs = tmp10; sigopens_and_abbrevs = tmp11; sigopts = tmp12; _ }, tmp13) -> (let tmp14 = (FStarC_Syntax_Util.arrow_formals_comp_ln t) in
+        let tmp15 = (match tmp14 with
+            | (u__1, u__2) -> u__1
+          ) in
+        let tmp16 = ((fun n l -> BatList.split_at (Z.to_int n) l) num_ty_params tmp15) in
+        let tmp17 = (match tmp16 with
+            | (u__1, u__2) -> u__2
+          ) in
+        let tmp18 = (BatList.map (fun x -> ((x).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname) tmp17) in
+        (Some (tmp18)))
+      | tmp1 -> None
+    )) in
+  let result = (resolve_in_open_namespaces' env lid (fun tmp -> None) (fun tmp -> None) k_global_def) in
+  let tmp = (!(debug)) in
+  (if tmp then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
+  let tmp2 = (FStarC_Ident.fStarC_Class_Show_show__option_list_ident result) in
+  let tmp3 = (Prims.strcat tmp2 "\n") in
+  let tmp4 = (Prims.strcat ") = " tmp3) in
+  let tmp5 = (Prims.strcat tmp1 tmp4) in
+  let tmp6 = (Prims.strcat "find_binders_for_datacons(_, " tmp5) in
+  (FStarC_Format.print_string tmp6)) else ());
+  result)))
+
+let stack : ((env) list ref) =
+  (ref [])
+
+let default_ds_hooks : dsenv_hooks =
+  { ds_push_open_hook = (fun tmp tmp1 -> ());
+    ds_push_include_hook = (fun tmp tmp1 -> ());
+    ds_push_module_abbrev_hook = (fun tmp tmp1 tmp2 -> ()) }
+
+let empty_env (deps : FStarC_Parser_Dep.deps) : env =
+  (let tmp = (new_sigmap ()) in
+  let tmp1 = (new_sigmap ()) in
+  let tmp2 = (new_sigmap ()) in
+  let tmp3 = (new_sigmap ()) in
+  { curmodule = None;
+    curmonad = None;
+    modules = [];
+    scope_mods = [];
+    iface_scope_mods = [];
+    exported_ids = tmp;
+    trans_exported_ids = tmp1;
+    includes = tmp2;
+    sigaccum = [];
+    sigmap = tmp3;
+    iface = false;
+    admitted_iface = false;
+    expect_typ = false;
+    syntax_only = false;
+    ds_hooks = default_ds_hooks;
+    dep_graph = deps;
+    no_prelude = false })
+
+let is_abbrev (env : env) (lid : FStarC_Ident.lident) : ((FStarC_Ident.ident) list) option =
+  (List.find_map (fun tmp -> (match tmp with
+    | (Module_abbrev ((id, ns))) when (FStarC_Ident.lid_equals lid ns) -> (Some ((id :: [])))
+    | tmp1 -> None
+  )) (env).scope_mods)
+
+let rec try_shorten_abbrev__aux (env : env) (ns : (FStarC_Ident.ident) list) (rest : (FStarC_Ident.ident) list) : (((FStarC_Ident.ident) list * (FStarC_Ident.ident) list)) option =
+  (match ns with
+    | [] -> None
+    | (hd :: tl) -> (let tmp = (FStarC_Ident.lid_of_ids (BatList.rev ns)) in
+      let tmp1 = (is_abbrev env tmp) in
+      (match tmp1 with
+        | (Some (short)) -> (Some ((short, rest)))
+        | tmp2 -> (try_shorten_abbrev__aux env tl (hd :: rest))
+      ))
+  )
+
+let try_shorten_abbrev (env : env) (ns : (FStarC_Ident.ident) list) : (((FStarC_Ident.ident) list * (FStarC_Ident.ident) list)) option =
+  (try_shorten_abbrev__aux env (BatList.rev ns) [])
+
+let rec shorten_lid'__tails (l : (FStarC_Ident.ident) list) : ((FStarC_Ident.ident) list) list =
+  (match l with
+    | [] -> ([] :: [])
+    | (tmp :: tl) -> (l :: (shorten_lid'__tails tl))
+  )
+
+type foundname =
+  | Term_name of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list
+  | Eff_name of FStarC_Syntax_Syntax.sigelt * FStarC_Ident.lident
+
+
+let fv_qual_of_se (tmp : FStarC_Syntax_Syntax.sigelt) : (FStarC_Syntax_Syntax.fv_qual) option =
+  (match (tmp).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp1; us = tmp2; t = tmp3; ty_lid = l; num_ty_params = tmp4; mutuals = tmp5; injective_type_params = tmp6; proj_disc_lids = tmp7; _ })) -> (let qopt = (FStarC_Util.find_map (tmp).FStarC_Syntax_Syntax.sigquals (fun tmp8 -> (match tmp8 with
+          | (FStarC_Syntax_Syntax.RecordConstructor (tmp9, fs)) -> (Some ((FStarC_Syntax_Syntax.Record_ctor (l, fs))))
+          | tmp9 -> None
+        ))) in
+      (match qopt with
+        | None -> (Some (FStarC_Syntax_Syntax.Data_ctor))
+        | x -> x
+      ))
+    | (FStarC_Syntax_Syntax.Sig_declare_typ (tmp1)) -> None
+    | tmp1 -> None
+  )
+
+let lb_fv (lbs : (FStarC_Syntax_Syntax.letbinding) list) (lid : FStarC_Ident.lident) : FStarC_Syntax_Syntax.fv =
+  (let tmp = (FStarC_Util.find_map lbs (fun lb -> (let fv = (match (lb).FStarC_Syntax_Syntax.lbname with
+        | (FStar_Pervasives.Inr (v)) -> v
+      ) in
+    (if (FStarC_Syntax_Syntax.fv_eq_lid fv lid) then (Some (fv)) else None)))) in
+  (FStarC_Option.must tmp))
+
+let set_bv_range (bv : FStarC_Syntax_Syntax.bv) (r : FStarC_Range_Type.range) : FStarC_Syntax_Syntax.bv =
+  (let id = (FStarC_Ident.set_id_range r (bv).FStarC_Syntax_Syntax.ppname) in
+  { FStarC_Syntax_Syntax.ppname = id;
+    index = (bv).FStarC_Syntax_Syntax.index;
+    sort = (bv).FStarC_Syntax_Syntax.sort })
+
+let bv_to_name (bv : FStarC_Syntax_Syntax.bv) (r : FStarC_Range_Type.range) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Syntax_Syntax.bv_to_name (set_bv_range bv r))
+
+let found_local_binding (r : FStarC_Range_Type.range) (lb : (FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * (bool ref))) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (match lb with
+    | (id', x, tmp) -> (bv_to_name x r)
+  )
 
 let try_lookup_name_gen (collect : bool) (any_val : bool) (exclude_interf : bool) (env : env) (lid : FStarC_Ident.lident) : (foundname) list =
   (let occurrence_range = (FStarC_Ident.range_of_lid lid) in
@@ -446,6 +550,51 @@ let try_lookup_name (any_val : bool) (exclude_interf : bool) (env : env) (lid : 
     | (v :: tmp1) -> (Some (v))
   ))
 
+let resolve_to_fully_qualified_name (env : env) (l : FStarC_Ident.lident) : (FStarC_Ident.lident) option =
+  (let tmp = (try_lookup_name true false env l) in
+  (match tmp with
+    | (Some ((Term_name (e, attrs)))) -> (let tmp1 = (FStarC_Syntax_Subst.compress e) in
+      let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
+      (match tmp2 with
+        | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (Some ((fv).FStarC_Syntax_Syntax.fv_name))
+        | tmp3 -> None
+      ))
+    | (Some ((Eff_name (o, l1)))) -> (Some (l1))
+    | None -> None
+  ))
+
+let rec shorten_lid'__go (lid0 : FStarC_Ident.lident) (id0 : FStarC_Ident.ident) (pref : (FStarC_Ident.ident) list) (try1 : (FStarC_Ident.lident -> bool)) (nss : ((FStarC_Ident.ident) list) list) : FStarC_Ident.lident =
+  (match nss with
+    | (ns :: rest) -> (let lid' = (FStarC_Ident.lid_of_ns_and_id (BatList.append pref ns) id0) in
+      let tmp = (try1 lid') in
+      (if tmp then lid' else (shorten_lid'__go lid0 id0 pref try1 rest)))
+    | [] -> lid0
+  )
+
+let shorten_lid' (env : env) (lid0 : FStarC_Ident.lident) : FStarC_Ident.lident =
+  (let id0 = (FStarC_Ident.ident_of_lid lid0) in
+  let ns0 = (FStarC_Ident.ns_of_lid lid0) in
+  let tmp = (try_shorten_abbrev env ns0) in
+  let tmp1 = (match tmp with
+      | None -> ([], ns0)
+      | (Some ((ns, rest))) -> (ns, rest)
+    ) in
+  (match tmp1 with
+    | (pref, ns) -> (let suffs = (BatList.rev (shorten_lid'__tails ns)) in
+      let try1 = (fun lid' -> (let tmp2 = (resolve_to_fully_qualified_name env lid') in
+        (match tmp2 with
+          | (Some (lid2)) when (FStarC_Ident.lid_equals lid2 lid0) -> true
+          | tmp3 -> false
+        ))) in
+      (shorten_lid'__go lid0 id0 pref try1 suffs))
+  ))
+
+let shorten_lid (env : env) (lid0 : FStarC_Ident.lident) : FStarC_Ident.lident =
+  (match (env).curmodule with
+    | None -> lid0
+    | tmp -> (shorten_lid' env lid0)
+  )
+
 let try_lookup_lid' (any_val : bool) (exclude_interface : bool) (env : env) (lid : FStarC_Ident.lident) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list)) option =
   (let tmp = (try_lookup_name any_val exclude_interface env lid) in
   (match tmp with
@@ -465,77 +614,6 @@ let drop_attributes (x : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syn
 let try_lookup_lid (env : env) (l : FStarC_Ident.lident) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let tmp = (try_lookup_lid_with_attributes env l) in
   (drop_attributes tmp))
-
-let is_abbrev (env : env) (lid : FStarC_Ident.lident) : ((FStarC_Ident.ident) list) option =
-  (List.find_map (fun tmp -> (match tmp with
-    | (Module_abbrev ((id, ns))) when (FStarC_Ident.lid_equals lid ns) -> (Some ((id :: [])))
-    | tmp1 -> None
-  )) (env).scope_mods)
-
-let rec try_shorten_abbrev__aux (env : env) (ns : (FStarC_Ident.ident) list) (rest : (FStarC_Ident.ident) list) : (((FStarC_Ident.ident) list * (FStarC_Ident.ident) list)) option =
-  (match ns with
-    | [] -> None
-    | (hd :: tl) -> (let tmp = (FStarC_Ident.lid_of_ids (BatList.rev ns)) in
-      let tmp1 = (is_abbrev env tmp) in
-      (match tmp1 with
-        | (Some (short)) -> (Some ((short, rest)))
-        | tmp2 -> ((try_shorten_abbrev__aux env) tl (hd :: rest))
-      ))
-  )
-
-let try_shorten_abbrev (env : env) (ns : (FStarC_Ident.ident) list) : (((FStarC_Ident.ident) list * (FStarC_Ident.ident) list)) option =
-  ((try_shorten_abbrev__aux env) (BatList.rev ns) [])
-
-let rec shorten_lid'__tails (l : (FStarC_Ident.ident) list) : ((FStarC_Ident.ident) list) list =
-  (match l with
-    | [] -> ([] :: [])
-    | (tmp :: tl) -> (l :: (shorten_lid'__tails tl))
-  )
-
-let resolve_to_fully_qualified_name (env : env) (l : FStarC_Ident.lident) : (FStarC_Ident.lident) option =
-  (let tmp = (try_lookup_name true false env l) in
-  (match tmp with
-    | (Some ((Term_name (e, attrs)))) -> (let tmp1 = (FStarC_Syntax_Subst.compress e) in
-      let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
-      (match tmp2 with
-        | (FStarC_Syntax_Syntax.Tm_fvar (fv)) -> (Some ((fv).FStarC_Syntax_Syntax.fv_name))
-        | tmp3 -> None
-      ))
-    | (Some ((Eff_name (o, l1)))) -> (Some (l1))
-    | None -> None
-  ))
-
-let rec shorten_lid'__go (lid0 : FStarC_Ident.lident) (id0 : FStarC_Ident.ident) (pref : (FStarC_Ident.ident) list) (try1 : (FStarC_Ident.lident -> bool)) (nss : ((FStarC_Ident.ident) list) list) : FStarC_Ident.lident =
-  (match nss with
-    | (ns :: rest) -> (let lid' = (FStarC_Ident.lid_of_ns_and_id (BatList.append pref ns) id0) in
-      let tmp = (try1 lid') in
-      (if tmp then lid' else ((shorten_lid'__go lid0 id0 pref try1) rest)))
-    | [] -> lid0
-  )
-
-let shorten_lid' (env : env) (lid0 : FStarC_Ident.lident) : FStarC_Ident.lident =
-  (let id0 = (FStarC_Ident.ident_of_lid lid0) in
-  let ns0 = (FStarC_Ident.ns_of_lid lid0) in
-  let tmp = (try_shorten_abbrev env ns0) in
-  let tmp1 = (match tmp with
-      | None -> ([], ns0)
-      | (Some ((ns, rest))) -> (ns, rest)
-    ) in
-  (match tmp1 with
-    | (pref, ns) -> (let suffs = (BatList.rev (shorten_lid'__tails ns)) in
-      let try1 = (fun lid' -> (let tmp2 = (resolve_to_fully_qualified_name env lid') in
-        (match tmp2 with
-          | (Some (lid2)) when (FStarC_Ident.lid_equals lid2 lid0) -> true
-          | tmp3 -> false
-        ))) in
-      ((shorten_lid'__go lid0 id0 pref try1) suffs))
-  ))
-
-let shorten_lid (env : env) (lid0 : FStarC_Ident.lident) : FStarC_Ident.lident =
-  (match (env).curmodule with
-    | None -> lid0
-    | tmp -> (shorten_lid' env lid0)
-  )
 
 let set_current_module (e : env) (l : FStarC_Ident.lident) : env =
   { curmodule = (Some (l));
@@ -574,6 +652,296 @@ let clear_scope_mods (e : env) : env =
     ds_hooks = (e).ds_hooks;
     dep_graph = (e).dep_graph;
     no_prelude = (e).no_prelude }
+
+let record_cache_aux : (((unit -> unit) * (unit -> unit)) * (((unit -> (Prims.int * unit)) * ((Prims.int) option -> unit)) * ((unit -> (record_or_dc) list) * (record_or_dc -> unit)))) =
+  (match record_cache_aux_with_filter with
+    | (u__1, u__2) -> u__1
+  )
+
+let push_record_cache : (unit -> unit) =
+  (match (match record_cache_aux with
+    | (u__1, u__2) -> u__1
+  ) with
+    | (u__1, u__2) -> u__1
+  )
+
+let push (env : env) : env =
+  (FStarC_Util.atomically (fun tmp -> ((push_record_cache ());
+  let tmp1 = (!(stack)) in
+  let tmp2 = (env :: tmp1) in
+  ((stack) := tmp2);
+  let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (env).exported_ids) in
+  let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (env).trans_exported_ids) in
+  let tmp5 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (env).includes) in
+  let tmp6 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (env).sigmap) in
+  { curmodule = (env).curmodule;
+    curmonad = (env).curmonad;
+    modules = (env).modules;
+    scope_mods = (env).scope_mods;
+    iface_scope_mods = (env).iface_scope_mods;
+    exported_ids = tmp3;
+    trans_exported_ids = tmp4;
+    includes = tmp5;
+    sigaccum = (env).sigaccum;
+    sigmap = tmp6;
+    iface = (env).iface;
+    admitted_iface = (env).admitted_iface;
+    expect_typ = (env).expect_typ;
+    syntax_only = (env).syntax_only;
+    ds_hooks = (env).ds_hooks;
+    dep_graph = (env).dep_graph;
+    no_prelude = (env).no_prelude })))
+
+let snapshot (env : env) : (Prims.int * env) =
+  (FStarC_Common.snapshot "DsEnv" push stack env)
+
+let pop_record_cache : (unit -> unit) =
+  (match (match record_cache_aux with
+    | (u__1, u__2) -> u__1
+  ) with
+    | (u__1, u__2) -> u__2
+  )
+
+let pop (tmp : unit) : env =
+  (FStarC_Util.atomically (fun tmp1 -> (let tmp2 = (!(stack)) in
+  (match tmp2 with
+    | (env :: tl) -> ((pop_record_cache ());
+      ((stack) := tl);
+      env)
+    | tmp3 -> (FStarC_Effect.failwith "Impossible: Too many pops")
+  ))))
+
+let rollback (depth : (Prims.int) option) : env =
+  (FStarC_Common.rollback "DsEnv" pop stack depth)
+
+let unique (any_val : bool) (exclude_interface : bool) (env : env) (lid : FStarC_Ident.lident) : bool =
+  (let filter_scope_mods = (fun tmp -> (match tmp with
+      | (Rec_binding (tmp1)) -> true
+      | tmp1 -> false
+    )) in
+  let tmp = (BatList.filter filter_scope_mods (env).scope_mods) in
+  let this_env = { curmodule = (env).curmodule;
+      curmonad = (env).curmonad;
+      modules = (env).modules;
+      scope_mods = tmp;
+      iface_scope_mods = (env).iface_scope_mods;
+      exported_ids = empty_exported_id_smap;
+      trans_exported_ids = (env).trans_exported_ids;
+      includes = empty_include_smap;
+      sigaccum = (env).sigaccum;
+      sigmap = (env).sigmap;
+      iface = (env).iface;
+      admitted_iface = (env).admitted_iface;
+      expect_typ = (env).expect_typ;
+      syntax_only = (env).syntax_only;
+      ds_hooks = (env).ds_hooks;
+      dep_graph = (env).dep_graph;
+      no_prelude = (env).no_prelude } in
+  let tmp1 = (try_lookup_lid' any_val exclude_interface this_env lid) in
+  (match tmp1 with
+    | None -> true
+    | (Some (tmp2)) -> false
+  ))
+
+let insert_record_cache : (record_or_dc -> unit) =
+  (match (match (match record_cache_aux with
+    | (u__1, u__2) -> u__2
+  ) with
+    | (u__1, u__2) -> u__2
+  ) with
+    | (u__1, u__2) -> u__2
+  )
+
+let extract_record (e : env) (new_globs : ((scope_mod) list ref)) (se : FStarC_Syntax_Syntax.sigelt) : unit =
+  (match (se).FStarC_Syntax_Syntax.sigel with
+    | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = sigs; lids = tmp; _ })) -> (let is_record = (FStarC_Util.for_some (fun tmp1 -> (match tmp1 with
+          | (FStarC_Syntax_Syntax.RecordType (u__1, u__2)) -> true
+          | (FStarC_Syntax_Syntax.RecordConstructor (u__1, u__2)) -> true
+          | tmp2 -> false
+        ))) in
+      let find_dc = (fun dc -> (FStarC_Option.find (fun tmp1 -> (match tmp1 with
+          | { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = lid; us = tmp2; t = tmp3; ty_lid = tmp4; num_ty_params = tmp5; mutuals = tmp6; injective_type_params = tmp7; proj_disc_lids = tmp8; _ })); sigrng = tmp9; sigquals = tmp10; sigmeta = tmp11; sigattrs = tmp12; sigopens_and_abbrevs = tmp13; sigopts = tmp14; _ } -> (FStarC_Ident.lid_equals dc lid)
+          | tmp2 -> false
+        )) sigs)) in
+      (BatList.iter (fun tmp1 -> (match tmp1 with
+        | { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = typename; us = univs; params = parms; num_uniform_params = tmp2; t = tmp3; mutuals = tmp4; ds = (dc :: []); injective_type_params = tmp5; _ })); sigrng = tmp6; sigquals = typename_quals; sigmeta = tmp7; sigattrs = tmp8; sigopens_and_abbrevs = tmp9; sigopts = tmp10; _ } -> (let tmp11 = (find_dc dc) in
+          let tmp12 = (FStarC_Option.must tmp11) in
+          (match tmp12 with
+            | { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = constrname; us = tmp13; t = t; ty_lid = tmp14; num_ty_params = n; mutuals = tmp15; injective_type_params = tmp16; proj_disc_lids = tmp17; _ })); sigrng = tmp18; sigquals = tmp19; sigmeta = tmp20; sigattrs = tmp21; sigopens_and_abbrevs = tmp22; sigopts = tmp23; _ } -> (let tmp24 = (FStarC_Syntax_Util.arrow_formals t) in
+              (match tmp24 with
+                | (all_formals, tmp25) -> (let tmp26 = (FStarC_Util.first_N n all_formals) in
+                  (match tmp26 with
+                    | (u__params, formals) -> (let is_rec = (is_record typename_quals) in
+                      let fields = (BatList.map (fun f -> (((f).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname, (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta (f).FStarC_Syntax_Syntax.binder_qual), ((f).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)) formals) in
+                      let record = { typename = typename;
+                          constrname = (FStarC_Ident.ident_of_lid constrname);
+                          parms = parms;
+                          fields = fields;
+                          is_private = (BatList.mem FStarC_Syntax_Syntax.Private typename_quals);
+                          is_record = is_rec } in
+                      let tmp27 = (!(new_globs)) in
+                      let tmp28 = ((Record_or_dc (record)) :: tmp27) in
+                      ((new_globs) := tmp28);
+                      let add_field = (fun tmp29 -> (match tmp29 with
+                          | (id, tmp30, tmp31) -> (let tmp32 = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid constrname)) in
+                            let modul = (FStarC_Ident.string_of_lid tmp32) in
+                            let tmp33 = (get_exported_id_set e modul) in
+                            (match tmp33 with
+                              | (Some (my_ex)) -> (let my_exported_ids = (my_ex Exported_id_field) in
+                                let tmp34 = (!(my_exported_ids)) in
+                                let tmp35 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string (FStarC_Ident.string_of_id id) tmp34) in
+                                ((my_exported_ids) := tmp35);
+                                let tmp36 = (FStarC_Syntax_Util.mk_field_projector_name_from_ident constrname id) in
+                                let tmp37 = (FStarC_Ident.ident_of_lid tmp36) in
+                                let projname = (FStarC_Ident.string_of_id tmp37) in
+                                let tmp38 = (!(my_exported_ids)) in
+                                let tmp39 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string projname tmp38) in
+                                ((my_exported_ids) := tmp39);
+                                ())
+                              | None -> ()
+                            ))
+                        )) in
+                      (BatList.iter add_field fields);
+                      (insert_record_cache record))
+                  ))
+              ))
+            | tmp13 -> ()
+          ))
+        | tmp2 -> ()
+      )) sigs))
+    | tmp -> ()
+  )
+
+let push_sigelt' (fail_on_dup : bool) (env : env) (s : FStarC_Syntax_Syntax.sigelt) : env =
+  (let globals = (ref (env).scope_mods) in
+  let exclude_interface = (match (s).FStarC_Syntax_Syntax.sigel with
+      | (FStarC_Syntax_Syntax.Sig_let (tmp)) -> true
+      | (FStarC_Syntax_Syntax.Sig_bundle (tmp)) -> true
+      | tmp -> false
+    ) in
+  let lids = (FStarC_Syntax_Util.lids_of_sigelt s) in
+  let lids1 = (BatList.filter (fun lid -> (let tmp = (FStarC_Ident.fStarC_Class_Show_show__ident (FStarC_Ident.ident_of_lid lid)) in
+    let tmp1 = (FStarC_Util.starts_with tmp "uu___is_") in
+    (not tmp1))) lids) in
+  let lids2 = (BatList.filter (fun lid -> (let tmp = (FStarC_Ident.fStarC_Class_Show_show__ident (FStarC_Ident.ident_of_lid lid)) in
+    let tmp1 = (FStarC_Util.starts_with tmp "__proj__") in
+    (not tmp1))) lids1) in
+  (if fail_on_dup then (let tmp = (FStarC_Util.find_map lids2 (fun l -> (let tmp = (unique false exclude_interface env l) in
+    let tmp1 = (not tmp) in
+    (if tmp1 then (Some (l)) else None)))) in
+  (match tmp with
+    | (Some (l)) -> (let tmp1 = (sigmap env) in
+      let sopt = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp1 (FStarC_Ident.string_of_lid l)) in
+      let r = (match sopt with
+          | (Some ((se, tmp2))) -> (let tmp3 = (FStarC_Option.find (FStarC_Ident.lid_equals l) (FStarC_Syntax_Util.lids_of_sigelt se)) in
+            (match tmp3 with
+              | (Some (l1)) -> (FStarC_Range_Ops.string_of_range (FStarC_Ident.range_of_lid l1))
+              | None -> "<unknown>"
+            ))
+          | None -> "<unknown>"
+        ) in
+      (FStarC_Errors.fStarC_Errors_raise_error__lident_list_ocaml_document l FStarC_Errors_Codes.Fatal_DuplicateTopLevelNames ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Duplicate top-level names [%s]" (FStarC_Ident.string_of_lid l))) :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Previously declared at %s" r)) :: []))))
+    | tmp1 -> ()
+  )) else ());
+  (extract_record env globals s);
+  let env1 = { curmodule = (env).curmodule;
+      curmonad = (env).curmonad;
+      modules = (env).modules;
+      scope_mods = (env).scope_mods;
+      iface_scope_mods = (env).iface_scope_mods;
+      exported_ids = (env).exported_ids;
+      trans_exported_ids = (env).trans_exported_ids;
+      includes = (env).includes;
+      sigaccum = (s :: (env).sigaccum);
+      sigmap = (env).sigmap;
+      iface = (env).iface;
+      admitted_iface = (env).admitted_iface;
+      expect_typ = (env).expect_typ;
+      syntax_only = (env).syntax_only;
+      ds_hooks = (env).ds_hooks;
+      dep_graph = (env).dep_graph;
+      no_prelude = (env).no_prelude } in
+  let tmp = (!(globals)) in
+  let env2 = { curmodule = (env1).curmodule;
+      curmonad = (env1).curmonad;
+      modules = (env1).modules;
+      scope_mods = tmp;
+      iface_scope_mods = (env1).iface_scope_mods;
+      exported_ids = (env1).exported_ids;
+      trans_exported_ids = (env1).trans_exported_ids;
+      includes = (env1).includes;
+      sigaccum = (env1).sigaccum;
+      sigmap = (env1).sigmap;
+      iface = (env1).iface;
+      admitted_iface = (env1).admitted_iface;
+      expect_typ = (env1).expect_typ;
+      syntax_only = (env1).syntax_only;
+      ds_hooks = (env1).ds_hooks;
+      dep_graph = (env1).dep_graph;
+      no_prelude = (env1).no_prelude } in
+  let lss = (match (s).FStarC_Syntax_Syntax.sigel with
+      | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = tmp1; _ })) -> (BatList.map (fun se -> ((FStarC_Syntax_Util.lids_of_sigelt se), se)) ses)
+      | tmp1 -> (((FStarC_Syntax_Util.lids_of_sigelt s), s) :: [])
+    ) in
+  let push_top_level_def = (fun id stack_ -> (match stack_ with
+      | ((Top_level_defs (ids)) :: rest) -> ((Top_level_defs ((FStarC_PSMap.add ids (FStarC_Ident.string_of_id id) ()))) :: rest)
+      | tmp1 -> ((Top_level_defs ((FStarC_PSMap.add (FStarC_PSMap.empty ()) (FStarC_Ident.string_of_id id) ()))) :: stack_)
+    )) in
+  let add1 = (fun lid se -> (let tmp1 = (!(globals)) in
+    let tmp2 = (push_top_level_def (FStarC_Ident.ident_of_lid lid) tmp1) in
+    ((globals) := tmp2);
+    let tmp3 = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid lid)) in
+    let modul = (FStarC_Ident.string_of_lid tmp3) in
+    let tmp4 = (get_exported_id_set env2 modul) in
+    (match tmp4 with
+      | (Some (f)) -> (let my_exported_ids = (f Exported_id_term_type) in
+        let tmp5 = (!(my_exported_ids)) in
+        let tmp6 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) tmp5) in
+        ((my_exported_ids) := tmp6))
+      | None -> ()
+    );
+    let tmp5 = (sigmap env2) in
+    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tmp5 (FStarC_Ident.string_of_lid lid) (se, ((env2).iface && (not (env2).admitted_iface))));
+    ())) in
+  (BatList.iter (fun tmp1 -> (match tmp1 with
+    | (lids3, se) -> (let dummysig = (fun l -> (let se1 = (FStarC_Syntax_Syntax.mk_sigelt (FStarC_Syntax_Syntax.Sig_declare_typ (({ FStarC_Syntax_Syntax.lid = l;
+            us = [];
+            t = FStarC_Syntax_Syntax.tun } : FStarC_Syntax_Syntax.sigelt'__Sig_declare_typ__payload)))) in
+        { FStarC_Syntax_Syntax.sigel = (se1).FStarC_Syntax_Syntax.sigel;
+          sigrng = (se1).FStarC_Syntax_Syntax.sigrng;
+          sigquals = (FStarC_Syntax_Syntax.Assumption :: []);
+          sigmeta = (se1).FStarC_Syntax_Syntax.sigmeta;
+          sigattrs = (se1).FStarC_Syntax_Syntax.sigattrs;
+          sigopens_and_abbrevs = (se1).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+          sigopts = (se1).FStarC_Syntax_Syntax.sigopts })) in
+      (BatList.iter (fun lid -> (add1 lid se)) lids3);
+      (match (se).FStarC_Syntax_Syntax.sigel with
+        | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = lid; us = tmp2; t = tmp3; ty_lid = tmp4; num_ty_params = tmp5; mutuals = tmp6; injective_type_params = tmp7; proj_disc_lids = proj_disc_lids; _ })) -> (BatList.iter (fun lid1 -> (add1 lid1 (dummysig lid1))) proj_disc_lids)
+        | tmp2 -> ()
+      );
+      ())
+  )) lss);
+  let tmp1 = (!(globals)) in
+  { curmodule = (env2).curmodule;
+    curmonad = (env2).curmonad;
+    modules = (env2).modules;
+    scope_mods = tmp1;
+    iface_scope_mods = (env2).iface_scope_mods;
+    exported_ids = (env2).exported_ids;
+    trans_exported_ids = (env2).trans_exported_ids;
+    includes = (env2).includes;
+    sigaccum = (env2).sigaccum;
+    sigmap = (env2).sigmap;
+    iface = (env2).iface;
+    admitted_iface = (env2).admitted_iface;
+    expect_typ = (env2).expect_typ;
+    syntax_only = (env2).syntax_only;
+    ds_hooks = (env2).ds_hooks;
+    dep_graph = (env2).dep_graph;
+    no_prelude = (env2).no_prelude })
+
+let push_sigelt_force (env : env) : (FStarC_Syntax_Syntax.sigelt -> env) =
+  (push_sigelt' false env)
 
 let push_bv' (env : env) (x : FStarC_Ident.ident) : (env * FStarC_Syntax_Syntax.bv * (bool ref)) =
   (let r = (FStarC_Ident.range_of_id x) in
@@ -633,40 +1001,6 @@ let push_module_abbrev (env : env) (x : FStarC_Ident.ident) (l : FStarC_Ident.li
   (if tmp then ((((env).ds_hooks).ds_push_module_abbrev_hook env x l);
   (push_scope_mod env (Module_abbrev ((x, l))))) else (FStarC_Errors.fStarC_Errors_raise_error__lident_string l FStarC_Errors_Codes.Fatal_ModuleNotFound (FStarC_Format.fmt1 "Module %s cannot be found" (FStarC_Ident.string_of_lid l)))))
 
-let record_cache_aux_with_filter : ((((unit -> unit) * (unit -> unit)) * (((unit -> (Prims.int * unit)) * ((Prims.int) option -> unit)) * ((unit -> (record_or_dc) list) * (record_or_dc -> unit)))) * (unit -> unit)) =
-  (let record_cache = (ref ([] :: [])) in
-  let push_ = (fun tmp -> (let tmp1 = (!(record_cache)) in
-    let tmp2 = (BatList.hd tmp1) in
-    let tmp3 = (!(record_cache)) in
-    let tmp4 = (tmp2 :: tmp3) in
-    ((record_cache) := tmp4))) in
-  let pop_ = (fun tmp -> (let tmp1 = (!(record_cache)) in
-    let tmp2 = (BatList.tl tmp1) in
-    ((record_cache) := tmp2))) in
-  let snapshot_ = (fun tmp -> (FStarC_Common.snapshot "DsEnv.record_cache" push_ record_cache ())) in
-  let rollback_ = (fun depth -> (FStarC_Common.rollback "DsEnv.record_cache" pop_ record_cache depth)) in
-  let peek = (fun tmp -> (let tmp1 = (!(record_cache)) in
-    (BatList.hd tmp1))) in
-  let insert = (fun r -> (let tmp = (peek ()) in
-    let tmp1 = (r :: tmp) in
-    let tmp2 = (!(record_cache)) in
-    let tmp3 = (BatList.tl tmp2) in
-    let tmp4 = (tmp1 :: tmp3) in
-    ((record_cache) := tmp4))) in
-  let filter = (fun tmp -> (let rc = (peek ()) in
-    let filtered = (BatList.filter (fun r -> (not (r).is_private)) rc) in
-    let tmp1 = (!(record_cache)) in
-    let tmp2 = (BatList.tl tmp1) in
-    let tmp3 = (filtered :: tmp2) in
-    ((record_cache) := tmp3))) in
-  let aux = ((push_, pop_), ((snapshot_, rollback_), (peek, insert))) in
-  (aux, filter))
-
-let record_cache_aux : (((unit -> unit) * (unit -> unit)) * (((unit -> (Prims.int * unit)) * ((Prims.int) option -> unit)) * ((unit -> (record_or_dc) list) * (record_or_dc -> unit)))) =
-  (match record_cache_aux_with_filter with
-    | (u__1, u__2) -> u__1
-  )
-
 let peek_record_cache : (unit -> (record_or_dc) list) =
   (match (match (match record_cache_aux with
     | (u__1, u__2) -> u__2
@@ -700,45 +1034,12 @@ let try_lookup_record_or_dc_by_field_name (env : env) (fieldname : FStarC_Ident.
   (resolve_in_open_namespaces'' env fieldname Exported_id_field (fun tmp -> Cont_ignore) (fun tmp -> Cont_ignore) (fun r -> (Cont_ok (r))) (fun fn -> (let tmp = (find_in_cache fn) in
   (cont_of_option Cont_ignore tmp))) (fun k tmp -> k)))
 
-let resolve_in_open_namespaces' (env : env) (lid : FStarC_Ident.lident) (k_local_binding : ((FStarC_Ident.ident * FStarC_Syntax_Syntax.bv * (bool ref)) -> ('u___a) option)) (k_rec_binding : ((FStarC_Ident.ident * FStarC_Ident.lident * (bool ref)) -> ('u___a) option)) (k_global_def : (FStarC_Ident.lident -> ((FStarC_Syntax_Syntax.sigelt * bool) -> ('u___a) option))) : ('u___a) option =
-  (let tmp = (resolve_in_open_namespaces'_gen false env lid k_local_binding k_rec_binding k_global_def) in
-  (match tmp with
-    | [] -> None
-    | (v :: tmp1) -> (Some (v))
-  ))
-
 let find_data_constructors_for_typ (env : env) (lid : FStarC_Ident.lident) : ((FStarC_Ident.lident) list) option =
   (let k_global_def = (fun lid1 tmp -> (match tmp with
       | ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = tmp1; us = tmp2; params = tmp3; num_uniform_params = tmp4; t = tmp5; mutuals = tmp6; ds = ds; injective_type_params = tmp7; _ })); sigrng = tmp8; sigquals = tmp9; sigmeta = tmp10; sigattrs = tmp11; sigopens_and_abbrevs = tmp12; sigopts = tmp13; _ }, tmp14) -> (Some (ds))
       | tmp1 -> None
     )) in
   (resolve_in_open_namespaces' env lid (fun tmp -> None) (fun tmp -> None) k_global_def))
-
-let find_binders_for_datacons : (env -> (FStarC_Ident.lident -> ((FStarC_Ident.ident) list) option)) =
-  (let debug = (FStarC_Debug.get_toggle "open_include_restrictions") in
-  (fun env lid -> (let k_global_def = (fun lid1 tmp -> (match tmp with
-      | ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = tmp1; us = tmp2; t = t; ty_lid = tmp3; num_ty_params = num_ty_params; mutuals = tmp4; injective_type_params = tmp5; proj_disc_lids = tmp6; _ })); sigrng = tmp7; sigquals = tmp8; sigmeta = tmp9; sigattrs = tmp10; sigopens_and_abbrevs = tmp11; sigopts = tmp12; _ }, tmp13) -> (let tmp14 = (FStarC_Syntax_Util.arrow_formals_comp_ln t) in
-        let tmp15 = (match tmp14 with
-            | (u__1, u__2) -> u__1
-          ) in
-        let tmp16 = ((fun n l -> BatList.split_at (Z.to_int n) l) num_ty_params tmp15) in
-        let tmp17 = (match tmp16 with
-            | (u__1, u__2) -> u__2
-          ) in
-        let tmp18 = (BatList.map (fun x -> ((x).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname) tmp17) in
-        (Some (tmp18)))
-      | tmp1 -> None
-    )) in
-  let result = (resolve_in_open_namespaces' env lid (fun tmp -> None) (fun tmp -> None) k_global_def) in
-  let tmp = (!(debug)) in
-  (if tmp then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
-  let tmp2 = (FStarC_Ident.fStarC_Class_Show_show__option_list_ident result) in
-  let tmp3 = (Prims.strcat tmp2 "\n") in
-  let tmp4 = (Prims.strcat ") = " tmp3) in
-  let tmp5 = (Prims.strcat tmp1 tmp4) in
-  let tmp6 = (Prims.strcat "find_binders_for_datacons(_, " tmp5) in
-  (FStarC_Format.print_string tmp6)) else ());
-  result)))
 
 let try_lookup_record_type (env : env) (typename : FStarC_Ident.lident) : (record_or_dc) option =
   (let find_in_cache = (fun name -> (let tmp = (peek_record_cache ()) in
@@ -774,11 +1075,11 @@ let elab_restriction (f : (env -> (FStarC_Ident.lident -> (FStarC_Syntax_Syntax.
         )) l) in
       let tmp1 = (BatList.flatten tmp) in
       let l1 = (BatList.append l tmp1) in
-      let tmp2 = (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__list (env).modules (fun tmp2 -> (match tmp2 with
-          | (tmp3, { FStarC_Syntax_Syntax.name = tmp4; declarations = declarations; is_interface = tmp5; _ }) -> (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__list declarations (fun sigelt -> (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__list (match (sigelt).FStarC_Syntax_Syntax.sigel with
+      let tmp2 = ((FStarC_Class_Monad.fStarC_Class_Monad_bind__list (env).modules) (fun tmp2 -> (match tmp2 with
+          | (tmp3, { FStarC_Syntax_Syntax.name = tmp4; declarations = declarations; is_interface = tmp5; _ }) -> ((FStarC_Class_Monad.fStarC_Class_Monad_bind__list declarations) (fun sigelt -> ((FStarC_Class_Monad.fStarC_Class_Monad_bind__list (match (sigelt).FStarC_Syntax_Syntax.sigel with
               | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = tmp6; _ })) -> ses
               | tmp6 -> []
-            ) (fun sigelt1 -> (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__list (FStarC_Syntax_Util.lids_of_sigelt sigelt1) (fun lid -> (let tmp6 = (FStarC_Syntax_Util.get_attribute FStarC_Parser_Const.desugar_of_variant_record_lid (sigelt1).FStarC_Syntax_Syntax.sigattrs) in
+            )) (fun sigelt1 -> ((FStarC_Class_Monad.fStarC_Class_Monad_bind__list (FStarC_Syntax_Util.lids_of_sigelt sigelt1)) (fun lid -> (let tmp6 = (FStarC_Syntax_Util.get_attribute FStarC_Parser_Const.desugar_of_variant_record_lid (sigelt1).FStarC_Syntax_Syntax.sigattrs) in
             (match tmp6 with
               | (Some ((({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_string (s, tmp7)))); pos = tmp8; hash_code = tmp9; _ }, None) :: []))) -> (let tmp10 = (FStarC_Ident.lid_of_str s) in
                 let tmp11 = (tmp10, lid) in
@@ -795,7 +1096,7 @@ let elab_restriction (f : (env -> (FStarC_Ident.lident -> (FStarC_Syntax_Syntax.
         )) tmp3) in
       let tmp4 = (BatList.filter (fun tmp4 -> (match tmp4 with
           | (cons, tmp5) -> (let tmp6 = (List.find_opt (fun tmp6 -> (match tmp6 with
-                | (lid, tmp7) -> (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__ident_23 lid cons)
+                | (lid, tmp7) -> (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__ident lid cons)
               )) l1) in
             (match tmp6 with
               | (Some (v)) -> true
@@ -817,18 +1118,30 @@ let elab_restriction (f : (env -> (FStarC_Ident.lident -> (FStarC_Syntax_Syntax.
               ) in
             let tmp9 = (BatList.map (fun binder -> (let tmp9 = (FStarC_Syntax_Util.mk_field_projector_name_from_ident lid binder) in
               let tmp10 = (FStarC_Ident.ident_of_lid tmp9) in
-              let tmp11 = (FStarC_Option.map (fun renamed1 -> (let tmp11 = (FStarC_Ident.lid_of_ids (renamed1 :: [])) in
-                let tmp12 = (FStarC_Syntax_Util.mk_field_projector_name_from_ident tmp11 binder) in
-                (FStarC_Ident.ident_of_lid tmp12))) renamed) in
+              let tmp11 = (match renamed with
+                  | (Some (x)) -> (let tmp11 = (FStarC_Ident.lid_of_ids (x :: [])) in
+                    let tmp12 = (FStarC_Syntax_Util.mk_field_projector_name_from_ident tmp11 binder) in
+                    let tmp13 = (FStarC_Ident.ident_of_lid tmp12) in
+                    (Some (tmp13)))
+                  | None -> None
+                ) in
               (tmp10, tmp11))) tmp8) in
             let tmp10 = (FStarC_Ident.lid_of_ids (id :: [])) in
             let tmp11 = (FStarC_Syntax_Util.mk_discriminator tmp10) in
-            let tmp12 = (FStarC_Option.map (fun renamed1 -> (let tmp12 = (FStarC_Ident.lid_of_ids (renamed1 :: [])) in
-              (FStarC_Syntax_Util.mk_discriminator tmp12))) renamed) in
+            let tmp12 = (match renamed with
+                | (Some (x)) -> (let tmp12 = (FStarC_Ident.lid_of_ids (x :: [])) in
+                  let tmp13 = (FStarC_Syntax_Util.mk_discriminator tmp12) in
+                  (Some (tmp13)))
+                | None -> None
+              ) in
             let tmp13 = (tmp11, tmp12) in
             let tmp14 = (tmp13 :: []) in
             let tmp15 = (BatList.map (fun tmp15 -> (match tmp15 with
-                | (x, y) -> (let tmp16 = (FStarC_Option.map FStarC_Ident.ident_of_lid y) in
+                | (x, y) -> (let tmp16 = (match y with
+                      | (Some (x1)) -> (let tmp16 = (FStarC_Ident.ident_of_lid x1) in
+                        (Some (tmp16)))
+                      | None -> None
+                    ) in
                   ((FStarC_Ident.ident_of_lid x), tmp16))
               )) tmp14) in
             let tmp16 = (BatList.filter (fun tmp16 -> (match tmp16 with
@@ -844,7 +1157,11 @@ let elab_restriction (f : (env -> (FStarC_Ident.lident -> (FStarC_Syntax_Syntax.
             let tmp19 = (BatList.append tmp16 tmp18) in
             let tmp20 = (BatList.append tmp9 tmp19) in
             (BatList.map (fun tmp21 -> (match tmp21 with
-              | (id1, renamed1) -> (let tmp22 = (FStarC_Option.map with_renamed_range renamed1) in
+              | (id1, renamed1) -> (let tmp22 = (match renamed1 with
+                    | (Some (x)) -> (let tmp22 = (with_renamed_range x) in
+                      (Some (tmp22)))
+                    | None -> None
+                  ) in
                 ((with_id_range id1), tmp22))
             )) tmp20))
         )) l2) in
@@ -854,11 +1171,11 @@ let elab_restriction (f : (env -> (FStarC_Ident.lident -> (FStarC_Syntax_Syntax.
           | (id, renamed) -> ((FStarC_Option.dflt id renamed), i)
         )) l3) in
       let tmp8 = (FStarC_Util.find_dup (fun tmp8 tmp9 -> (match (tmp8, tmp9) with
-          | ((x, tmp10), (y, tmp11)) -> (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__ident_23 x y)
+          | ((x, tmp10), (y, tmp11)) -> (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__ident x y)
         )) final_idents) in
       (match tmp8 with
         | (Some ((id, i))) -> (let others = (BatList.filter (fun tmp9 -> (match tmp9 with
-              | (id', i') -> (let tmp10 = (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__ident_23 id id') in
+              | (id', i') -> (let tmp10 = (FStarC_Syntax_Syntax.fStarC_Class_Deq_op_Equals_Question__ident id id') in
                 (if tmp10 then (let tmp11 = (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__int i i') in
                 (not tmp11)) else false))
             )) final_idents) in
@@ -1035,12 +1352,6 @@ let try_lookup_id (env : env) (id : FStarC_Ident.ident) : ((FStarC_Syntax_Syntax
   (try_lookup_id'' env id Exported_id_term_type (fun r -> (let tmp = (found_local_binding (FStarC_Ident.range_of_id id) r) in
   (Cont_ok (tmp)))) (fun tmp -> Cont_fail) (fun tmp -> Cont_ignore) (fun i -> (find_in_module env i (fun tmp tmp1 -> Cont_fail) Cont_ignore)) (fun tmp tmp1 -> Cont_fail))
 
-let empty_exported_id_smap : ((exported_id_kind -> ((string) FStarC_RBSet.rbset ref))) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (new_sigmap ())
-
-let empty_include_smap : ((((FStarC_Ident.lident * FStarC_Syntax_Syntax.restriction)) list ref)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
-  (new_sigmap ())
-
 let try_lookup_lid_with_attributes_no_resolve (env : env) (l : FStarC_Ident.lident) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list)) option =
   (let env' = { curmodule = (env).curmodule;
       curmonad = (env).curmonad;
@@ -1066,9 +1377,9 @@ let rec try_lookup_lid_alternatives__dedup (as_fv : (foundname -> (FStarC_Syntax
     | [] -> []
     | (c :: tl) -> (let tmp = (as_fv c) in
       (match tmp with
-        | None -> ((try_lookup_lid_alternatives__dedup as_fv) seen tl)
+        | None -> (try_lookup_lid_alternatives__dedup as_fv seen tl)
         | (Some (fv)) -> (let tmp1 = (BatList.exists (fun l1 -> (FStarC_Ident.lid_equals l1 (fv).FStarC_Syntax_Syntax.fv_name)) seen) in
-          (if tmp1 then ((try_lookup_lid_alternatives__dedup as_fv) seen tl) else (let tmp2 = ((try_lookup_lid_alternatives__dedup as_fv) ((fv).FStarC_Syntax_Syntax.fv_name :: seen) tl) in
+          (if tmp1 then (try_lookup_lid_alternatives__dedup as_fv seen tl) else (let tmp2 = (try_lookup_lid_alternatives__dedup as_fv ((fv).FStarC_Syntax_Syntax.fv_name :: seen) tl) in
           (fv :: tmp2))))
       ))
   )
@@ -1101,7 +1412,7 @@ let try_lookup_lid_alternatives (env : env) (lid : FStarC_Ident.lident) : (FStar
     | (c0 :: rest) -> (let tmp3 = (as_fv c0) in
       (match tmp3 with
         | None -> []
-        | (Some (fv0)) -> (let tmp4 = ((try_lookup_lid_alternatives__dedup as_fv) ((fv0).FStarC_Syntax_Syntax.fv_name :: []) rest) in
+        | (Some (fv0)) -> (let tmp4 = (try_lookup_lid_alternatives__dedup as_fv ((fv0).FStarC_Syntax_Syntax.fv_name :: []) rest) in
           (match tmp4 with
             | [] -> []
             | alts -> (fv0 :: alts)
@@ -1111,14 +1422,14 @@ let try_lookup_lid_alternatives (env : env) (lid : FStarC_Ident.lident) : (FStar
 
 let fStarC_Class_Show_show__scope_mod (tmp : scope_mod) : string =
   (match tmp with
-    | (Local_bindings (lbs)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string (FStarC_PSMap.keys lbs)) in
+    | (Local_bindings (lbs)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 (FStarC_PSMap.keys lbs)) in
       (FStarC_Format.fmt1 "(Local_bindings %s)" tmp1))
     | (Rec_binding ((id, lid, tmp1))) -> (Prims.strcat "Rec_binding " (Prims.strcat (FStarC_Ident.string_of_id id) (Prims.strcat " " (FStarC_Ident.string_of_lid lid))))
     | (Module_abbrev ((id, lid))) -> (Prims.strcat "Module_abbrev " (Prims.strcat (FStarC_Ident.string_of_id id) (Prims.strcat " " (FStarC_Ident.string_of_lid lid))))
     | (Open_module_or_namespace ((lid, tmp1, tmp2), implicit)) -> (let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__bool implicit) in
       let tmp4 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
       (FStarC_Format.fmt2 "Open_module_or_namespace(implicit=%s) %s" tmp3 tmp4))
-    | (Top_level_defs (lbs)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string (FStarC_PSMap.keys lbs)) in
+    | (Top_level_defs (lbs)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 (FStarC_PSMap.keys lbs)) in
       (FStarC_Format.fmt1 "(Top_level_defs %s)" tmp1))
     | (Record_or_dc (r)) -> (Prims.strcat "Record_or_dc " (FStarC_Ident.string_of_lid (r).typename))
   )
@@ -1143,7 +1454,7 @@ let fStarC_Class_Show_show__env (tmp : env) : string =
   let tmp2 = (BatList.map (fun x -> (match x with
       | (u__1, u__2) -> u__1
     )) (tmp).modules) in
-  let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_86 tmp2) in
+  let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_98 tmp2) in
   let tmp4 = (fStarC_Class_Show_show__list_scope_mod (tmp).scope_mods) in
   (FStarC_Format.fmt3 "DsEnv { curmod=%s; All mods: %s\nScope mods: %s\n }" tmp1 tmp3 tmp4))
 
@@ -1332,35 +1643,6 @@ let try_lookup_record_by_field_name_many (env : env) (fieldnames : (FStarC_Ident
 let expect_typ (e : env) : bool =
   (e).expect_typ
 
-let unique (any_val : bool) (exclude_interface : bool) (env : env) (lid : FStarC_Ident.lident) : bool =
-  (let filter_scope_mods = (fun tmp -> (match tmp with
-      | (Rec_binding (tmp1)) -> true
-      | tmp1 -> false
-    )) in
-  let tmp = (BatList.filter filter_scope_mods (env).scope_mods) in
-  let this_env = { curmodule = (env).curmodule;
-      curmonad = (env).curmonad;
-      modules = (env).modules;
-      scope_mods = tmp;
-      iface_scope_mods = (env).iface_scope_mods;
-      exported_ids = empty_exported_id_smap;
-      trans_exported_ids = (env).trans_exported_ids;
-      includes = empty_include_smap;
-      sigaccum = (env).sigaccum;
-      sigmap = (env).sigmap;
-      iface = (env).iface;
-      admitted_iface = (env).admitted_iface;
-      expect_typ = (env).expect_typ;
-      syntax_only = (env).syntax_only;
-      ds_hooks = (env).ds_hooks;
-      dep_graph = (env).dep_graph;
-      no_prelude = (env).no_prelude } in
-  let tmp1 = (try_lookup_lid' any_val exclude_interface this_env lid) in
-  (match tmp1 with
-    | None -> true
-    | (Some (tmp2)) -> false
-  ))
-
 let push_top_level_rec_binding (env0 : env) (x : FStarC_Ident.ident) : (env * (bool ref)) =
   (let l = (qualify env0 x) in
   let tmp = (unique false true env0 l) in
@@ -1429,67 +1711,8 @@ let set_dep_graph (env : env) (ds : FStarC_Parser_Dep.deps) : env =
     dep_graph = ds;
     no_prelude = (env).no_prelude }
 
-let stack : ((env) list ref) =
-  (ref [])
-
-let pop_record_cache : (unit -> unit) =
-  (match (match record_cache_aux with
-    | (u__1, u__2) -> u__1
-  ) with
-    | (u__1, u__2) -> u__2
-  )
-
-let pop (tmp : unit) : env =
-  (FStarC_Util.atomically (fun tmp1 -> (let tmp2 = (!(stack)) in
-  (match tmp2 with
-    | (env :: tl) -> ((pop_record_cache ());
-      ((stack) := tl);
-      env)
-    | tmp3 -> (FStarC_Effect.failwith "Impossible: Too many pops")
-  ))))
-
-let rollback (depth : (Prims.int) option) : env =
-  (FStarC_Common.rollback "DsEnv" pop stack depth)
-
 let dep_graph (env : env) : FStarC_Parser_Dep.deps =
   (env).dep_graph
-
-let push_record_cache : (unit -> unit) =
-  (match (match record_cache_aux with
-    | (u__1, u__2) -> u__1
-  ) with
-    | (u__1, u__2) -> u__1
-  )
-
-let push (env : env) : env =
-  (FStarC_Util.atomically (fun tmp -> ((push_record_cache ());
-  let tmp1 = (!(stack)) in
-  let tmp2 = (env :: tmp1) in
-  ((stack) := tmp2);
-  let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (env).exported_ids) in
-  let tmp4 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (env).trans_exported_ids) in
-  let tmp5 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (env).includes) in
-  let tmp6 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (env).sigmap) in
-  { curmodule = (env).curmodule;
-    curmonad = (env).curmonad;
-    modules = (env).modules;
-    scope_mods = (env).scope_mods;
-    iface_scope_mods = (env).iface_scope_mods;
-    exported_ids = tmp3;
-    trans_exported_ids = tmp4;
-    includes = tmp5;
-    sigaccum = (env).sigaccum;
-    sigmap = tmp6;
-    iface = (env).iface;
-    admitted_iface = (env).admitted_iface;
-    expect_typ = (env).expect_typ;
-    syntax_only = (env).syntax_only;
-    ds_hooks = (env).ds_hooks;
-    dep_graph = (env).dep_graph;
-    no_prelude = (env).no_prelude })))
-
-let snapshot (env : env) : (Prims.int * env) =
-  (FStarC_Common.snapshot "DsEnv" push stack env)
 
 let set_syntax_only (env : env) (b : bool) : env =
   { curmodule = (env).curmodule;
@@ -1731,221 +1954,6 @@ let as_includes (tmp : (((FStarC_Ident.lident * FStarC_Syntax_Syntax.restriction
     | (Some (l)) -> (ref l)
   )
 
-let insert_record_cache : (record_or_dc -> unit) =
-  (match (match (match record_cache_aux with
-    | (u__1, u__2) -> u__2
-  ) with
-    | (u__1, u__2) -> u__2
-  ) with
-    | (u__1, u__2) -> u__2
-  )
-
-let extract_record (e : env) (new_globs : ((scope_mod) list ref)) (se : FStarC_Syntax_Syntax.sigelt) : unit =
-  (match (se).FStarC_Syntax_Syntax.sigel with
-    | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = sigs; lids = tmp; _ })) -> (let is_record = (FStarC_Util.for_some (fun tmp1 -> (match tmp1 with
-          | (FStarC_Syntax_Syntax.RecordType (u__1, u__2)) -> true
-          | (FStarC_Syntax_Syntax.RecordConstructor (u__1, u__2)) -> true
-          | tmp2 -> false
-        ))) in
-      let find_dc = (fun dc -> (FStarC_Option.find (fun tmp1 -> (match tmp1 with
-          | { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = lid; us = tmp2; t = tmp3; ty_lid = tmp4; num_ty_params = tmp5; mutuals = tmp6; injective_type_params = tmp7; proj_disc_lids = tmp8; _ })); sigrng = tmp9; sigquals = tmp10; sigmeta = tmp11; sigattrs = tmp12; sigopens_and_abbrevs = tmp13; sigopts = tmp14; _ } -> (FStarC_Ident.lid_equals dc lid)
-          | tmp2 -> false
-        )) sigs)) in
-      (BatList.iter (fun tmp1 -> (match tmp1 with
-        | { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = typename; us = univs; params = parms; num_uniform_params = tmp2; t = tmp3; mutuals = tmp4; ds = (dc :: []); injective_type_params = tmp5; _ })); sigrng = tmp6; sigquals = typename_quals; sigmeta = tmp7; sigattrs = tmp8; sigopens_and_abbrevs = tmp9; sigopts = tmp10; _ } -> (let tmp11 = (find_dc dc) in
-          let tmp12 = (FStarC_Option.must tmp11) in
-          (match tmp12 with
-            | { FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = constrname; us = tmp13; t = t; ty_lid = tmp14; num_ty_params = n; mutuals = tmp15; injective_type_params = tmp16; proj_disc_lids = tmp17; _ })); sigrng = tmp18; sigquals = tmp19; sigmeta = tmp20; sigattrs = tmp21; sigopens_and_abbrevs = tmp22; sigopts = tmp23; _ } -> (let tmp24 = (FStarC_Syntax_Util.arrow_formals t) in
-              (match tmp24 with
-                | (all_formals, tmp25) -> (let tmp26 = (FStarC_Util.first_N n all_formals) in
-                  (match tmp26 with
-                    | (u__params, formals) -> (let is_rec = (is_record typename_quals) in
-                      let fields = (BatList.map (fun f -> (((f).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.ppname, (FStarC_Syntax_Syntax.is_bqual_implicit_or_meta (f).FStarC_Syntax_Syntax.binder_qual), ((f).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort)) formals) in
-                      let record = { typename = typename;
-                          constrname = (FStarC_Ident.ident_of_lid constrname);
-                          parms = parms;
-                          fields = fields;
-                          is_private = (BatList.mem FStarC_Syntax_Syntax.Private typename_quals);
-                          is_record = is_rec } in
-                      let tmp27 = (!(new_globs)) in
-                      let tmp28 = ((Record_or_dc (record)) :: tmp27) in
-                      ((new_globs) := tmp28);
-                      let add_field = (fun tmp29 -> (match tmp29 with
-                          | (id, tmp30, tmp31) -> (let tmp32 = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid constrname)) in
-                            let modul = (FStarC_Ident.string_of_lid tmp32) in
-                            let tmp33 = (get_exported_id_set e modul) in
-                            (match tmp33 with
-                              | (Some (my_ex)) -> (let my_exported_ids = (my_ex Exported_id_field) in
-                                let tmp34 = (!(my_exported_ids)) in
-                                let tmp35 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string_4 (FStarC_Ident.string_of_id id) tmp34) in
-                                ((my_exported_ids) := tmp35);
-                                let tmp36 = (FStarC_Syntax_Util.mk_field_projector_name_from_ident constrname id) in
-                                let tmp37 = (FStarC_Ident.ident_of_lid tmp36) in
-                                let projname = (FStarC_Ident.string_of_id tmp37) in
-                                let tmp38 = (!(my_exported_ids)) in
-                                let tmp39 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string_4 projname tmp38) in
-                                ((my_exported_ids) := tmp39);
-                                ())
-                              | None -> ()
-                            ))
-                        )) in
-                      (BatList.iter add_field fields);
-                      (insert_record_cache record))
-                  ))
-              ))
-            | tmp13 -> ()
-          ))
-        | tmp2 -> ()
-      )) sigs))
-    | tmp -> ()
-  )
-
-let push_sigelt' (fail_on_dup : bool) (env : env) (s : FStarC_Syntax_Syntax.sigelt) : env =
-  (let globals = (ref (env).scope_mods) in
-  let exclude_interface = (match (s).FStarC_Syntax_Syntax.sigel with
-      | (FStarC_Syntax_Syntax.Sig_let (tmp)) -> true
-      | (FStarC_Syntax_Syntax.Sig_bundle (tmp)) -> true
-      | tmp -> false
-    ) in
-  let lids = (FStarC_Syntax_Util.lids_of_sigelt s) in
-  let lids1 = (BatList.filter (fun lid -> (let tmp = (FStarC_Ident.fStarC_Class_Show_show__ident (FStarC_Ident.ident_of_lid lid)) in
-    let tmp1 = (FStarC_Util.starts_with tmp "uu___is_") in
-    (not tmp1))) lids) in
-  let lids2 = (BatList.filter (fun lid -> (let tmp = (FStarC_Ident.fStarC_Class_Show_show__ident (FStarC_Ident.ident_of_lid lid)) in
-    let tmp1 = (FStarC_Util.starts_with tmp "__proj__") in
-    (not tmp1))) lids1) in
-  (if fail_on_dup then (let tmp = (FStarC_Util.find_map lids2 (fun l -> (let tmp = (unique false exclude_interface env l) in
-    let tmp1 = (not tmp) in
-    (if tmp1 then (Some (l)) else None)))) in
-  (match tmp with
-    | (Some (l)) -> (let tmp1 = (sigmap env) in
-      let sopt = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp1 (FStarC_Ident.string_of_lid l)) in
-      let r = (match sopt with
-          | (Some ((se, tmp2))) -> (let tmp3 = (FStarC_Option.find (FStarC_Ident.lid_equals l) (FStarC_Syntax_Util.lids_of_sigelt se)) in
-            (match tmp3 with
-              | (Some (l1)) -> (FStarC_Range_Ops.string_of_range (FStarC_Ident.range_of_lid l1))
-              | None -> "<unknown>"
-            ))
-          | None -> "<unknown>"
-        ) in
-      (FStarC_Errors.fStarC_Errors_raise_error__lident_list_ocaml_document l FStarC_Errors_Codes.Fatal_DuplicateTopLevelNames ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Duplicate top-level names [%s]" (FStarC_Ident.string_of_lid l))) :: ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Previously declared at %s" r)) :: []))))
-    | tmp1 -> ()
-  )) else ());
-  (extract_record env globals s);
-  let env1 = { curmodule = (env).curmodule;
-      curmonad = (env).curmonad;
-      modules = (env).modules;
-      scope_mods = (env).scope_mods;
-      iface_scope_mods = (env).iface_scope_mods;
-      exported_ids = (env).exported_ids;
-      trans_exported_ids = (env).trans_exported_ids;
-      includes = (env).includes;
-      sigaccum = (s :: (env).sigaccum);
-      sigmap = (env).sigmap;
-      iface = (env).iface;
-      admitted_iface = (env).admitted_iface;
-      expect_typ = (env).expect_typ;
-      syntax_only = (env).syntax_only;
-      ds_hooks = (env).ds_hooks;
-      dep_graph = (env).dep_graph;
-      no_prelude = (env).no_prelude } in
-  let tmp = (!(globals)) in
-  let env2 = { curmodule = (env1).curmodule;
-      curmonad = (env1).curmonad;
-      modules = (env1).modules;
-      scope_mods = tmp;
-      iface_scope_mods = (env1).iface_scope_mods;
-      exported_ids = (env1).exported_ids;
-      trans_exported_ids = (env1).trans_exported_ids;
-      includes = (env1).includes;
-      sigaccum = (env1).sigaccum;
-      sigmap = (env1).sigmap;
-      iface = (env1).iface;
-      admitted_iface = (env1).admitted_iface;
-      expect_typ = (env1).expect_typ;
-      syntax_only = (env1).syntax_only;
-      ds_hooks = (env1).ds_hooks;
-      dep_graph = (env1).dep_graph;
-      no_prelude = (env1).no_prelude } in
-  let lss = (match (s).FStarC_Syntax_Syntax.sigel with
-      | (FStarC_Syntax_Syntax.Sig_bundle ({ FStarC_Syntax_Syntax.ses = ses; lids = tmp1; _ })) -> (BatList.map (fun se -> ((FStarC_Syntax_Util.lids_of_sigelt se), se)) ses)
-      | tmp1 -> (((FStarC_Syntax_Util.lids_of_sigelt s), s) :: [])
-    ) in
-  let push_top_level_def = (fun id stack_ -> (match stack_ with
-      | ((Top_level_defs (ids)) :: rest) -> ((Top_level_defs ((FStarC_PSMap.add ids (FStarC_Ident.string_of_id id) ()))) :: rest)
-      | tmp1 -> ((Top_level_defs ((FStarC_PSMap.add (FStarC_PSMap.empty ()) (FStarC_Ident.string_of_id id) ()))) :: stack_)
-    )) in
-  let add1 = (fun lid se -> (let tmp1 = (!(globals)) in
-    let tmp2 = (push_top_level_def (FStarC_Ident.ident_of_lid lid) tmp1) in
-    ((globals) := tmp2);
-    let tmp3 = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid lid)) in
-    let modul = (FStarC_Ident.string_of_lid tmp3) in
-    let tmp4 = (get_exported_id_set env2 modul) in
-    (match tmp4 with
-      | (Some (f)) -> (let my_exported_ids = (f Exported_id_term_type) in
-        let tmp5 = (!(my_exported_ids)) in
-        let tmp6 = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string_4 (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) tmp5) in
-        ((my_exported_ids) := tmp6))
-      | None -> ()
-    );
-    let tmp5 = (sigmap env2) in
-    (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tmp5 (FStarC_Ident.string_of_lid lid) (se, ((env2).iface && (not (env2).admitted_iface))));
-    ())) in
-  (BatList.iter (fun tmp1 -> (match tmp1 with
-    | (lids3, se) -> (let dummysig = (fun l -> { FStarC_Syntax_Syntax.sigel = (let scrut = (FStarC_Syntax_Syntax.mk_sigelt (FStarC_Syntax_Syntax.Sig_declare_typ (({ FStarC_Syntax_Syntax.lid = l;
-              us = [];
-              t = FStarC_Syntax_Syntax.tun } : FStarC_Syntax_Syntax.sigelt'__Sig_declare_typ__payload)))) in
-          (scrut).FStarC_Syntax_Syntax.sigel);
-          sigrng = (let scrut = (FStarC_Syntax_Syntax.mk_sigelt (FStarC_Syntax_Syntax.Sig_declare_typ (({ FStarC_Syntax_Syntax.lid = l;
-              us = [];
-              t = FStarC_Syntax_Syntax.tun } : FStarC_Syntax_Syntax.sigelt'__Sig_declare_typ__payload)))) in
-          (scrut).FStarC_Syntax_Syntax.sigrng);
-          sigquals = (FStarC_Syntax_Syntax.Assumption :: []);
-          sigmeta = (let scrut = (FStarC_Syntax_Syntax.mk_sigelt (FStarC_Syntax_Syntax.Sig_declare_typ (({ FStarC_Syntax_Syntax.lid = l;
-              us = [];
-              t = FStarC_Syntax_Syntax.tun } : FStarC_Syntax_Syntax.sigelt'__Sig_declare_typ__payload)))) in
-          (scrut).FStarC_Syntax_Syntax.sigmeta);
-          sigattrs = (let scrut = (FStarC_Syntax_Syntax.mk_sigelt (FStarC_Syntax_Syntax.Sig_declare_typ (({ FStarC_Syntax_Syntax.lid = l;
-              us = [];
-              t = FStarC_Syntax_Syntax.tun } : FStarC_Syntax_Syntax.sigelt'__Sig_declare_typ__payload)))) in
-          (scrut).FStarC_Syntax_Syntax.sigattrs);
-          sigopens_and_abbrevs = (let scrut = (FStarC_Syntax_Syntax.mk_sigelt (FStarC_Syntax_Syntax.Sig_declare_typ (({ FStarC_Syntax_Syntax.lid = l;
-              us = [];
-              t = FStarC_Syntax_Syntax.tun } : FStarC_Syntax_Syntax.sigelt'__Sig_declare_typ__payload)))) in
-          (scrut).FStarC_Syntax_Syntax.sigopens_and_abbrevs);
-          sigopts = (let scrut = (FStarC_Syntax_Syntax.mk_sigelt (FStarC_Syntax_Syntax.Sig_declare_typ (({ FStarC_Syntax_Syntax.lid = l;
-              us = [];
-              t = FStarC_Syntax_Syntax.tun } : FStarC_Syntax_Syntax.sigelt'__Sig_declare_typ__payload)))) in
-          (scrut).FStarC_Syntax_Syntax.sigopts) }) in
-      (BatList.iter (fun lid -> (add1 lid se)) lids3);
-      (match (se).FStarC_Syntax_Syntax.sigel with
-        | (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = lid; us = tmp2; t = tmp3; ty_lid = tmp4; num_ty_params = tmp5; mutuals = tmp6; injective_type_params = tmp7; proj_disc_lids = proj_disc_lids; _ })) -> (BatList.iter (fun lid1 -> (add1 lid1 (dummysig lid1))) proj_disc_lids)
-        | tmp2 -> ()
-      );
-      ())
-  )) lss);
-  let tmp1 = (!(globals)) in
-  { curmodule = (env2).curmodule;
-    curmonad = (env2).curmonad;
-    modules = (env2).modules;
-    scope_mods = tmp1;
-    iface_scope_mods = (env2).iface_scope_mods;
-    exported_ids = (env2).exported_ids;
-    trans_exported_ids = (env2).trans_exported_ids;
-    includes = (env2).includes;
-    sigaccum = (env2).sigaccum;
-    sigmap = (env2).sigmap;
-    iface = (env2).iface;
-    admitted_iface = (env2).admitted_iface;
-    expect_typ = (env2).expect_typ;
-    syntax_only = (env2).syntax_only;
-    ds_hooks = (env2).ds_hooks;
-    dep_graph = (env2).dep_graph;
-    no_prelude = (env2).no_prelude })
-
-let push_sigelt_force (env : env) : (FStarC_Syntax_Syntax.sigelt -> env) =
-  (push_sigelt' false env)
-
 let iface_record_scope_mods (env : env) (m : FStarC_Ident.lident) : (scope_mod) list =
   (let sm = (sigmap env) in
   let globals = (ref []) in
@@ -1990,11 +1998,19 @@ let as_exported_ids (e : (exported_id_kind -> ((string) FStarC_RBSet.rbset ref))
 let inclusion_info (env : env) (l : FStarC_Ident.lident) : module_inclusion_info =
   (let mname = (FStarC_Ident.string_of_lid l) in
   let as_ids_opt = (fun m -> (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt m mname) in
-    (FStarC_Option.map as_exported_ids tmp))) in
+    (match tmp with
+      | (Some (x)) -> (let tmp1 = (as_exported_ids x) in
+        (Some (tmp1)))
+      | None -> None
+    ))) in
   let tmp = (as_ids_opt (env).exported_ids) in
   let tmp1 = (as_ids_opt (env).trans_exported_ids) in
   let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt (env).includes mname) in
-  let tmp3 = (FStarC_Option.map (fun r -> (!(r))) tmp2) in
+  let tmp3 = (match tmp2 with
+      | (Some (x)) -> (let tmp3 = (!(x)) in
+        (Some (tmp3)))
+      | None -> None
+    ) in
   { mii_exported_ids = tmp;
     mii_trans_exported_ids = tmp1;
     mii_includes = tmp3;
@@ -2315,7 +2331,4 @@ let syntax_only (env : env) : bool =
 
 let open_modules (e : env) : ((FStarC_Ident.lident * FStarC_Syntax_Syntax.modul)) list =
   (e).modules
-
-let ugly_sigelt_to_string_hook : ((FStarC_Syntax_Syntax.sigelt -> string) ref) =
-  (ref (fun tmp -> ""))
 

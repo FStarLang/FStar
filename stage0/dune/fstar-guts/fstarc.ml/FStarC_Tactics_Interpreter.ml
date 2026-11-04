@@ -221,12 +221,12 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
           implicits = tmp4 } in
       let g1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_solve_deferred_constraints env g) in
       let tmp5 = (!(dbg_Tac)) in
-      (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (ps3).FStarC_Tactics_Types.all_implicits)) in
+      (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) (ps3).FStarC_Tactics_Types.all_implicits)) in
       let tmp7 = (FStarC_TypeChecker_Common.fStarC_Class_Show_show__list_implicit (ps3).FStarC_Tactics_Types.all_implicits) in
       (FStarC_Format.print2 "Checked %s implicits (1): %s\n" tmp6 tmp7)) else ());
       let tagged_implicits = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_resolve_implicits_tac env g1) in
       let tmp6 = (!(dbg_Tac)) in
-      (if tmp6 then (let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (ps3).FStarC_Tactics_Types.all_implicits)) in
+      (if tmp6 then (let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) (ps3).FStarC_Tactics_Types.all_implicits)) in
       let tmp8 = (FStarC_TypeChecker_Common.fStarC_Class_Show_show__list_implicit (ps3).FStarC_Tactics_Types.all_implicits) in
       (FStarC_Format.print2 "Checked %s implicits (2): %s\n" tmp7 tmp8)) else ());
       (report_implicits rng_goal tagged_implicits))));
@@ -266,6 +266,9 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
       ))
   ))
 
+let u___primitive_steps_ref : ((FStarC_TypeChecker_Primops_Base.primitive_step) list ref) =
+  (ref [])
+
 let embed (tmp : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (r : FStarC_Range_Type.range) (x : 'u___a) : (((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (FStarC_Syntax_Embeddings_Base.embed tmp x r None)
 
@@ -282,9 +285,6 @@ let native_tactics_steps (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primiti
       interpretation_nbe = (fun u__cb u__us -> (FStarC_TypeChecker_NBETerm.dummy_interp (s).FStarC_Tactics_Native.name)) }) in
   let tmp1 = (FStarC_Tactics_Native.list_all ()) in
   (BatList.map step_from_native_step tmp1))
-
-let u___primitive_steps_ref : ((FStarC_TypeChecker_Primops_Base.primitive_step) list ref) =
-  (ref [])
 
 let primitive_steps (tmp : unit) : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (let tmp1 = (native_tactics_steps ()) in

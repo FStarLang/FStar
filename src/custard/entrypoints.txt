@@ -324,7 +324,6 @@ FStarC.Tactics.V2.Builtins.unquote
 FStarC.Tactics.V2.Builtins.unshelve
 FStarC.Tactics.V2.Builtins.uvar_env
 FStarC.Tactics.V2.Builtins.var_retype
-FStarC.Tactics.V2.Builtins.with_compat_pre_core
 FStarC.Tactics.V2.Builtins.with_error_context
 FStarC.Tactics.V2.Builtins.write
 

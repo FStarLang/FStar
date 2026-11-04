@@ -159,8 +159,7 @@ and env = {
   use_eq_strict  :bool;                         (* this flag runs the typechecker in non-subtyping mode *)
                                                 (* i.e. using type equality instead of subtyping *)
   is_iface       :bool;                         (* is the module we're currently checking an interface? *)
-  admit          :bool;                         (* admit VCs in the current module *)
-  phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
+  admit          :bool;                         (* admit VCs: the module is not verified, or TcTerm is elaborating a term that Core checks next *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
   flychecking    :bool;                         (* currently flychecking in IDE, used to for example not run synth tactics *)
   uvar_subtyping :bool;
@@ -171,8 +170,8 @@ and env = {
   typeof_tot_or_gtot_term :env -> term -> must_tot -> ML (term & typ & guard_t); (* typechecker callback; G |- e : (G)Tot t <== g *)
   universe_of :env -> term -> ML universe; (* typechecker callback; G |- e : Tot (Type u) *)
   typeof_well_typed_tot_or_gtot_term :env -> term -> must_tot -> ML (typ & guard_t); (* typechecker callback, uses fast path, with a fallback on the slow path *)
-  teq_nosmt_force: env -> term -> term -> ML bool;        (* callback to the unifier *)
-  subtype_nosmt_force: env -> term -> term -> ML bool;    (* callback to the unifier *)
+  teq_nosmt_force: env -> term -> term -> ML bool;        (* callback to [CoreRel]: decided by Core *)
+  subtype_nosmt_force: env -> term -> term -> ML bool;    (* callback to [CoreRel]: decided by Core *)
   qtbl_name_and_index: option (lident & typ & int) & HashTable.t string int;
      (* ^ the top-level term we're currently processing, its type, and the query counter for it,
        in addition we maintain a counter for query index per lid *)
@@ -198,6 +197,12 @@ and env = {
      which is exactly the treatment the two tables around it get. *)
   disc_proj_tab:HashTable.t string (option (qualifier & int & option int));
   erasable_types_tab:HashTable.t string bool;              (* a dictionary of type names to erasable types *)
+  (* The normalizer's cache of [spec_arg_replacements]: for a top-level name,
+     the replacement for each argument position that extraction erases.  The
+     entry depends not only on the name's own type but on the meaning of every
+     name in its binder types, so unlike the tables above it is flushed
+     entirely whenever a declaration is added or revealed. *)
+  spec_arg_tab:HashTable.t string (list (option term));
   enable_defer_to_tac: bool;                     (* Set by default; unset when running within a tactic itself, since we do not allow
                                                     a tactic to defer problems to another tactic via the attribute mechanism *)
   unif_allow_ref_guards:bool;                     (* Allow guards when unifying refinements, even when SMT is disabled *)
@@ -361,6 +366,10 @@ val push : env -> string -> ML (env)
 val pop : env -> string -> ML (env)
 
 val incr_query_index: env -> ML (env)
+(* Name the SMT queries of the declaration [se] after its first lident (or a
+   fresh name), continuing the count of the queries already issued with that
+   name, so that hints can be correlated with the declarations they are for. *)
+val set_hint_correlator: env -> sigelt -> ML env
 
 val set_range      : env -> Range.t -> env
 
@@ -433,7 +442,6 @@ val lookup_and_inst_datacon: env -> universes -> lident -> ML (typ)
 (* the boolean tells if the lident was actually a inductive *)
 
 val datacons_of_typ        : env -> lident -> ML ((bool & list lident))
-val discard_specs          : env -> ML bool
 val type_hypothesis        : env -> typ -> term -> ML term
 
 val typ_of_datacon         : env -> lident -> ML (lident)
@@ -674,11 +682,6 @@ val is_trivial_guard_formula  : guard_t -> bool
 val trivial_guard             : guard_t
 
 val abstract_guard_n          : list binder -> guard_t -> ML (guard_t)
-
-val abstract_guard            : binder -> guard_t -> ML (guard_t)
-
-
-val apply_guard               : guard_t -> term -> ML (guard_t)
 
 val map_guard                 : guard_t -> (term -> ML term) -> ML guard_t
 

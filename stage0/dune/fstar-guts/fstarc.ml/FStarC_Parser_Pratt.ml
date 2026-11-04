@@ -84,7 +84,7 @@ let raise_lex_error (t : FStarC_Parser_Lexer.token) : 'a =
 
 let rec add_to__go (rs : ('a) rules) (x : 'a) (i : Prims.int) (j : Prims.int) : (('a) list) list =
   (if (Prims.op_Greater_Equals j FStarC_Parser_TokenKind.num_kinds) then [] else (let l = (Array.unsafe_get (rs).by_kind (FStarC_SmallInt.of_int j)) in
-  ((if ((=) j i) then (FStar_List_Tot_Base.append l (x :: [])) else l) :: ((add_to__go rs x i) (Prims.op_Plus j Prims.int_one)))))
+  ((if ((=) j i) then (FStar_List_Tot_Base.append l (x :: [])) else l) :: (add_to__go rs x i (Prims.op_Plus j Prims.int_one)))))
 
 let add_to (rs : ('a) rules) (k : FStarC_Parser_TokenKind.token_kind) (x : 'a) : ('a) rules =
   (match k with
@@ -95,7 +95,7 @@ let add_to (rs : ('a) rules) (k : FStarC_Parser_TokenKind.token_kind) (x : 'a) :
       { by_kind = (rs).by_kind;
         by_keyword = (FStarC_PSMap.add (rs).by_keyword s (FStar_List_Tot_Base.append l (x :: []))) })
     | tmp -> (let i = (FStarC_Parser_TokenKind.kind_index k) in
-      { by_kind = (Array.of_list ((add_to__go rs x i) Prims.int_zero));
+      { by_kind = (Array.of_list (add_to__go rs x i Prims.int_zero));
         by_keyword = (rs).by_keyword })
   )
 

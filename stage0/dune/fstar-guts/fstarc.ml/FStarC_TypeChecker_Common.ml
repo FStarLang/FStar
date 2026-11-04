@@ -266,6 +266,71 @@ let fStarC_Class_Show_show__list_implicit (tmp : (implicit) list) : string =
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
+let fStarC_Class_Show_show__clist_implicit (tmp : (implicit) FStarC_CList.clist) : string =
+  (let tmp1 = (fStarC_Class_Listlike_to_list__implicit_clist_implicit_3 tmp) in
+  (fStarC_Class_Show_show__list_implicit tmp1))
+
+let fStarC_Class_Listlike_cons__tuple4_int_deferred_reason_ref_either_prob (tmp : (Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) (tmp1 : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  (FStarC_CList.CCons (tmp, tmp1))
+
+let fStarC_Class_Listlike_cons__tuple4_int_deferred_reason_ref_either_prob_4 (tmp : (Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) (tmp1 : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  (FStarC_CList.CCons (tmp, tmp1))
+
+let rec decr_delta_depth (tmp : FStarC_Syntax_Syntax.delta_depth) : (FStarC_Syntax_Syntax.delta_depth) option =
+  (match tmp with
+    | (FStarC_Syntax_Syntax.Delta_constant_at_level (u__iconst0)) when u__iconst0 = Prims.int_zero -> None
+    | (FStarC_Syntax_Syntax.Delta_equational_at_level (u__iconst0)) when u__iconst0 = Prims.int_zero -> None
+    | (FStarC_Syntax_Syntax.Delta_constant_at_level (i)) -> (Some ((FStarC_Syntax_Syntax.Delta_constant_at_level ((Prims.op_Minus i Prims.int_one)))))
+    | (FStarC_Syntax_Syntax.Delta_equational_at_level (i)) -> (Some ((FStarC_Syntax_Syntax.Delta_equational_at_level ((Prims.op_Minus i Prims.int_one)))))
+    | (FStarC_Syntax_Syntax.Delta_abstract (d)) -> (decr_delta_depth d)
+  )
+
+let fStarC_Class_Monoid_mplus__clist_tuple4_int_deferred_reason_ref_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) (ys : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  (FStarC_CList.ccat tmp ys)
+
+let fStarC_Class_Monoid_op_Plus_Plus__clist_tuple4_int_deferred_reason_ref_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) (ys : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
+  (fStarC_Class_Monoid_mplus__clist_tuple4_int_deferred_reason_ref_prob tmp ys)
+
+let fStarC_Class_Listlike_view__prob_clist_prob (tmp : (prob) FStarC_CList.clist) : (prob, (prob) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__prob_clist_prob (l : (prob) FStarC_CList.clist) : (prob) list =
+  (match (fStarC_Class_Listlike_view__prob_clist_prob l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__prob_clist_prob xs) in
+      (x :: tmp))
+  )
+
+let fStarC_Class_Listlike_view__tuple4_int_deferred_reason_ref_either_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob), ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__tuple4_int_deferred_reason_ref_either_prob (l : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) list =
+  (match (fStarC_Class_Listlike_view__tuple4_int_deferred_reason_ref_either_prob l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__tuple4_int_deferred_reason_ref_either_prob xs) in
+      (x :: tmp))
+  )
+
+let fStarC_Class_Listlike_cons__tuple2_list_binder_prob_clist_tuple2_list_prob (tmp : ((FStarC_Syntax_Syntax.binder) list * prob)) (tmp1 : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist =
+  (FStarC_CList.CCons (tmp, tmp1))
+
+let fStarC_Class_Listlike_view__tuple2_list_binder_prob_clist_tuple2_list_prob (tmp : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob), (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
+  (FStarC_CList.view tmp)
+
+let rec fStarC_Class_Listlike_to_list__tuple2_list_binder_prob_clist_tuple2_list_prob (l : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob)) list =
+  (match (fStarC_Class_Listlike_view__tuple2_list_binder_prob_clist_tuple2_list_prob l) with
+    | FStarC_Class_Listlike.VNil -> []
+    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__tuple2_list_binder_prob_clist_tuple2_list_prob xs) in
+      (x :: tmp))
+  )
+
+let check_positivity_qual (subtyping : bool) (p0 : (FStarC_Syntax_Syntax.positivity_qualifier) option) (p1 : (FStarC_Syntax_Syntax.positivity_qualifier) option) : bool =
+  (if ((=) p0 p1) then true else (if subtyping then (match (p0, p1) with
+    | ((Some (tmp)), None) -> true
+    | ((Some (FStarC_Syntax_Syntax.BinderUnused)), (Some (FStarC_Syntax_Syntax.BinderStrictlyPositive))) -> true
+    | tmp -> false
+  ) else false))
+
 let fStarC_Class_Binders_freeNames__guard_t (tmp : guard_t) : (FStarC_Syntax_Syntax.bv) list =
   (match (tmp).guard_f with
     | Trivial -> (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__bv_list_bv ())
@@ -323,13 +388,6 @@ let rec fStarC_Class_Listlike_from_list__tuple3_deferred_reason_string_prob (l :
       (fStarC_Class_Listlike_cons__tuple3_deferred_reason_string_prob x tmp))
   )
 
-let check_positivity_qual (subtyping : bool) (p0 : (FStarC_Syntax_Syntax.positivity_qualifier) option) (p1 : (FStarC_Syntax_Syntax.positivity_qualifier) option) : bool =
-  (if ((=) p0 p1) then true else (if subtyping then (match (p0, p1) with
-    | ((Some (tmp)), None) -> true
-    | ((Some (FStarC_Syntax_Syntax.BinderUnused)), (Some (FStarC_Syntax_Syntax.BinderStrictlyPositive))) -> true
-    | tmp -> false
-  ) else false))
-
 let mk_by_tactic (tac : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (f : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (let tmp = (FStarC_Syntax_Syntax.tabbrev FStarC_Parser_Const.by_tactic_lid) in
   let t_by_tactic = (FStarC_Syntax_Syntax.mk_Tm_uinst tmp (FStarC_Syntax_Syntax.U_zero :: [])) in
@@ -353,12 +411,12 @@ let rec one_point_defn__find (as_defn : ((FStarC_Syntax_Syntax.term') FStarC_Syn
       let tmp2 = (tmp1).FStarC_Syntax_Syntax.n in
       let tmp3 = (tmp2, args) in
       (match tmp3 with
-        | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((a, tmp4) :: ((b, tmp5) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.and_lid) -> (let tmp6 = ((one_point_defn__find as_defn) a) in
+        | ((FStarC_Syntax_Syntax.Tm_fvar (fv)), ((a, tmp4) :: ((b, tmp5) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.and_lid) -> (let tmp6 = (one_point_defn__find as_defn a) in
           (match tmp6 with
             | (Some ((v, rest))) -> (let tmp7 = (FStarC_Syntax_Util.mk_conj_simp rest b) in
               let tmp8 = (v, tmp7) in
               (Some (tmp8)))
-            | None -> (let tmp7 = ((one_point_defn__find as_defn) b) in
+            | None -> (let tmp7 = (one_point_defn__find as_defn b) in
               (match tmp7 with
                 | (Some ((v, rest))) -> (let tmp8 = (FStarC_Syntax_Util.mk_conj_simp a rest) in
                   let tmp9 = (v, tmp8) in
@@ -399,7 +457,7 @@ let one_point_defn (x : FStarC_Syntax_Syntax.bv) (hyp : (FStarC_Syntax_Syntax.te
           | tmp4 -> None
         ))
     ))) in
-  ((one_point_defn__find as_defn) hyp))
+  (one_point_defn__find as_defn hyp))
 
 let post_obligation (x : FStarC_Syntax_Syntax.bv) (hyp : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (concl : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (let tmp = (one_point_defn x hyp) in
@@ -419,11 +477,11 @@ let fStarC_Class_Listlike_is_empty__tuple3_deferred_reason_string_prob (l : ((de
 let rec insert_col_info____insert (col : Prims.int) (info : identifier_info) (aux : ((Prims.int * identifier_info)) list) (rest : ((Prims.int * identifier_info)) list) : (((Prims.int * identifier_info)) list * ((Prims.int * identifier_info)) list) =
   (match rest with
     | [] -> (aux, ((col, info) :: []))
-    | ((c, i) :: rest') -> (if (Prims.op_Less col c) then (aux, ((col, info) :: rest)) else ((insert_col_info____insert col info) ((c, i) :: aux) rest'))
+    | ((c, i) :: rest') -> (if (Prims.op_Less col c) then (aux, ((col, info) :: rest)) else (insert_col_info____insert col info ((c, i) :: aux) rest'))
   )
 
 let insert_col_info (col : Prims.int) (info : identifier_info) (col_infos : ((Prims.int * identifier_info)) list) : ((Prims.int * identifier_info)) list =
-  (let tmp = ((insert_col_info____insert col info) [] col_infos) in
+  (let tmp = (insert_col_info____insert col info [] col_infos) in
   (match tmp with
     | (l, r) -> (BatList.append (BatList.rev l) r)
   ))
@@ -458,24 +516,24 @@ let id_info_promote (table : id_info_table) (ty_map : ((FStarC_Syntax_Syntax.ter
     id_info_db = tmp;
     id_info_buffer = [] })
 
-let id_info_table_empty : id_info_table =
-  { id_info_enabled = false;
-    id_info_db = (FStarC_PSMap.empty ());
-    id_info_buffer = [] }
-
 let id_info_toggle (table : id_info_table) (enabled : bool) : id_info_table =
   { id_info_enabled = enabled;
     id_info_db = (table).id_info_db;
     id_info_buffer = (table).id_info_buffer }
 
+let id_info_table_empty : id_info_table =
+  { id_info_enabled = false;
+    id_info_db = (FStarC_PSMap.empty ());
+    id_info_buffer = [] }
+
 let rec find_nearest_preceding_col_info__aux (col : Prims.int) (out : (identifier_info) option) (tmp : ((Prims.int * identifier_info)) list) : (identifier_info) option =
   (match tmp with
     | [] -> out
-    | ((c, i) :: rest) -> (if (Prims.op_Greater c col) then out else ((find_nearest_preceding_col_info__aux col) (Some (i)) rest))
+    | ((c, i) :: rest) -> (if (Prims.op_Greater c col) then out else (find_nearest_preceding_col_info__aux col (Some (i)) rest))
   )
 
-let find_nearest_preceding_col_info (col : Prims.int) (eta : ((Prims.int * identifier_info)) list) : (identifier_info) option =
-  ((find_nearest_preceding_col_info__aux col) None eta)
+let find_nearest_preceding_col_info (col : Prims.int) (tmp : ((Prims.int * identifier_info)) list) : (identifier_info) option =
+  (find_nearest_preceding_col_info__aux col None tmp)
 
 let id_info_at_pos (table : id_info_table) (fn : string) (row : Prims.int) (col : Prims.int) : (identifier_info) option =
   (let rows = (FStarC_PSMap.find_default (table).id_info_db fn (FStarC_PIMap.empty ())) in
@@ -485,62 +543,4 @@ let id_info_at_pos (table : id_info_table) (fn : string) (row : Prims.int) (col 
     | (Some (info)) -> (let last_col = (FStarC_Range_Ops.col_of_pos (FStarC_Range_Ops.end_of_range (info).identifier_range)) in
       (if (Prims.op_Less_Equals col last_col) then (Some (info)) else None))
   ))
-
-let fStarC_Class_Show_show__clist_implicit (tmp : (implicit) FStarC_CList.clist) : string =
-  (let tmp1 = (fStarC_Class_Listlike_to_list__implicit_clist_implicit_3 tmp) in
-  (fStarC_Class_Show_show__list_implicit tmp1))
-
-let fStarC_Class_Listlike_cons__tuple4_int_deferred_reason_ref_either_prob (tmp : (Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) (tmp1 : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
-  (FStarC_CList.CCons (tmp, tmp1))
-
-let fStarC_Class_Listlike_cons__tuple4_int_deferred_reason_ref_either_prob_5 (tmp : (Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) (tmp1 : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
-  (FStarC_CList.CCons (tmp, tmp1))
-
-let rec decr_delta_depth (tmp : FStarC_Syntax_Syntax.delta_depth) : (FStarC_Syntax_Syntax.delta_depth) option =
-  (match tmp with
-    | (FStarC_Syntax_Syntax.Delta_constant_at_level (u__iconst0)) when u__iconst0 = Prims.int_zero -> None
-    | (FStarC_Syntax_Syntax.Delta_equational_at_level (u__iconst0)) when u__iconst0 = Prims.int_zero -> None
-    | (FStarC_Syntax_Syntax.Delta_constant_at_level (i)) -> (Some ((FStarC_Syntax_Syntax.Delta_constant_at_level ((Prims.op_Minus i Prims.int_one)))))
-    | (FStarC_Syntax_Syntax.Delta_equational_at_level (i)) -> (Some ((FStarC_Syntax_Syntax.Delta_equational_at_level ((Prims.op_Minus i Prims.int_one)))))
-    | (FStarC_Syntax_Syntax.Delta_abstract (d)) -> (decr_delta_depth d)
-  )
-
-let fStarC_Class_Monoid_mplus__clist_tuple4_int_deferred_reason_ref_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) (ys : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
-  (FStarC_CList.ccat tmp ys)
-
-let fStarC_Class_Monoid_op_Plus_Plus__clist_tuple4_int_deferred_reason_ref_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) (ys : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist =
-  (fStarC_Class_Monoid_mplus__clist_tuple4_int_deferred_reason_ref_prob tmp ys)
-
-let fStarC_Class_Listlike_view__prob_clist_prob (tmp : (prob) FStarC_CList.clist) : (prob, (prob) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
-  (FStarC_CList.view tmp)
-
-let rec fStarC_Class_Listlike_to_list__prob_clist_prob (l : (prob) FStarC_CList.clist) : (prob) list =
-  (match (fStarC_Class_Listlike_view__prob_clist_prob l) with
-    | FStarC_Class_Listlike.VNil -> []
-    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__prob_clist_prob xs) in
-      (x :: tmp))
-  )
-
-let fStarC_Class_Listlike_view__tuple4_int_deferred_reason_ref_either_prob (tmp : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob), ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
-  (FStarC_CList.view tmp)
-
-let rec fStarC_Class_Listlike_to_list__tuple4_int_deferred_reason_ref_either_prob (l : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) FStarC_CList.clist) : ((Prims.int * deferred_reason * (((unit -> string), string) FStar_Pervasives.either ref) * prob)) list =
-  (match (fStarC_Class_Listlike_view__tuple4_int_deferred_reason_ref_either_prob l) with
-    | FStarC_Class_Listlike.VNil -> []
-    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__tuple4_int_deferred_reason_ref_either_prob xs) in
-      (x :: tmp))
-  )
-
-let fStarC_Class_Listlike_cons__tuple2_list_binder_prob_clist_tuple2_list_prob (tmp : ((FStarC_Syntax_Syntax.binder) list * prob)) (tmp1 : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist =
-  (FStarC_CList.CCons (tmp, tmp1))
-
-let fStarC_Class_Listlike_view__tuple2_list_binder_prob_clist_tuple2_list_prob (tmp : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob), (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) FStarC_Class_Listlike.view_t =
-  (FStarC_CList.view tmp)
-
-let rec fStarC_Class_Listlike_to_list__tuple2_list_binder_prob_clist_tuple2_list_prob (l : (((FStarC_Syntax_Syntax.binder) list * prob)) FStarC_CList.clist) : (((FStarC_Syntax_Syntax.binder) list * prob)) list =
-  (match (fStarC_Class_Listlike_view__tuple2_list_binder_prob_clist_tuple2_list_prob l) with
-    | FStarC_Class_Listlike.VNil -> []
-    | (FStarC_Class_Listlike.VCons (x, xs)) -> (let tmp = (fStarC_Class_Listlike_to_list__tuple2_list_binder_prob_clist_tuple2_list_prob xs) in
-      (x :: tmp))
-  )
 

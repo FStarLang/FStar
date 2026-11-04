@@ -927,6 +927,15 @@ let register_post_rule (f : (FStarC_Ident.lident -> rule)) : unit =
     | No_custard_rule -> (f l)
   ))))
 
+let plugin_roots : ((FStarC_Ident.lident) list ref) =
+  (ref [])
+
+let lifted : ((FStarC_Custard_Syntax.decl) list ref) =
+  (ref [])
+
+let cur_decl : ((FStarC_Custard_Syntax.name) option ref) =
+  (ref None)
+
 let register_pre_rule (f : (FStarC_Ident.lident -> rule)) : unit =
   (let before = (!(ref_lookup_rule)) in
   ((ref_lookup_rule) := (fun l -> (try (f l) with
@@ -1012,9 +1021,6 @@ let lookup_rule (l : FStarC_Ident.lident) : (rule) option =
     | No_custard_rule -> None
   )
 
-let cur_decl : ((FStarC_Custard_Syntax.name) option ref) =
-  (ref None)
-
 let set_current_decl (n : (FStarC_Custard_Syntax.name) option) : unit =
   ((cur_decl) := n)
 
@@ -1099,14 +1105,8 @@ let is_no_unfold_lid (l : FStarC_Ident.lident) : bool =
 let normalizes_arguments (l : FStarC_Ident.lident) : bool =
   ((=) (FStarC_Ident.string_of_lid l) "Pulse.Lib.GlobalArray.mk_static_array")
 
-let plugin_roots : ((FStarC_Ident.lident) list ref) =
-  (ref [])
-
 let registered_roots (tmp : unit) : (FStarC_Ident.lident) list =
   (!(plugin_roots))
-
-let lifted : ((FStarC_Custard_Syntax.decl) list ref) =
-  (ref [])
 
 let take_lifted (tmp : unit) : (FStarC_Custard_Syntax.decl) list =
   (let ds = (!(lifted)) in

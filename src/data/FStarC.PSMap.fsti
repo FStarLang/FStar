@@ -10,13 +10,13 @@ val add: t 'value -> string -> 'value -> t 'value
 val find_default: t 'value -> string -> 'value -> 'value
 val of_list : list (string & 'value) -> t 'value
 val try_find: t 'value -> string -> option 'value
-val fold: t 'value -> (string -> 'value -> 'a -> ML 'a) -> 'a -> ML 'a
-val find_map: t 'value -> (string -> 'value -> ML (option 'a)) -> ML (option 'a)
+val fold (#value #a:Type) (m:t value) ([@@@FStar.Attributes.monomorphize] f: string -> value -> a -> ML a) (acc:a) : ML a
+val find_map (#value #a:Type) (m:t value) ([@@@FStar.Attributes.monomorphize] f: string -> value -> ML (option a)) : ML (option a)
 val modify: t 'value -> string -> (option 'value -> ML 'value) -> ML (t 'value)
 val merge: t 'value -> t 'value -> t 'value
 val remove: t 'value -> string -> t 'value
 val keys : t 'value -> list string
-val iter : t 'value -> (string -> 'value -> ML unit) -> ML unit
+val iter (#value:Type) (m:t value) ([@@@FStar.Attributes.monomorphize] f: string -> value -> ML unit) : ML unit
 
 (* Aliases. We use inline_for_extraction so we don't have to define
 these in the underlying ML file. *)

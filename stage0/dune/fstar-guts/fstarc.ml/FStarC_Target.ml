@@ -30,18 +30,6 @@ let parse_tag (s : string) : ((string) option) option =
   (if tmp then (let tmp1 = (canonical xs) in
   (Some (tmp1))) else None))
 
-let atoms (t : (string) option) : (string) list =
-  (match t with
-    | None -> []
-    | (Some (s)) -> (FStarC_String.split (45 :: []) s)
-  )
-
-let join (t1 : (string) option) (t2 : (string) option) : (string) option =
-  (let tmp = (atoms t1) in
-  let tmp1 = (atoms t2) in
-  let tmp2 = (BatList.append tmp tmp1) in
-  (canonical tmp2))
-
 let split_target (stem : string) : (string * (string) option) =
   (match (FStarC_String.split (45 :: []) stem) with
     | (m :: rest) when (match rest with
@@ -53,6 +41,12 @@ let split_target (stem : string) : (string * (string) option) =
         | None -> (stem, None)
       ))
     | tmp -> (stem, None)
+  )
+
+let atoms (t : (string) option) : (string) list =
+  (match t with
+    | None -> []
+    | (Some (s)) -> (FStarC_String.split (45 :: []) s)
   )
 
 let implies (ctx : (string) option) (t : (string) option) : bool =
@@ -80,6 +74,12 @@ let compatible (t1 : (string) option) (t2 : (string) option) : bool =
   let tmp = (atoms t1) in
   (BatList.for_all (fun a -> (let tmp1 = (BatList.exists (diverge a) bs) in
   (not tmp1))) tmp))
+
+let join (t1 : (string) option) (t2 : (string) option) : (string) option =
+  (let tmp = (atoms t1) in
+  let tmp1 = (atoms t2) in
+  let tmp2 = (BatList.append tmp tmp1) in
+  (canonical tmp2))
 
 let rec prefixes__go (acc : (string) list) (cur : string) (segs : (string) list) : (string) list =
   (match segs with

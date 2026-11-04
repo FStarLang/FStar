@@ -46,6 +46,7 @@ CUSTARD_TESTS += NewtypeInline
 CUSTARD_TESTS += SortBy
 CUSTARD_TESTS += LocalPoly
 CUSTARD_TESTS += MonoHoles
+CUSTARD_TESTS += MonoPolyCaller
 CUSTARD_TESTS += DepParams
 CUSTARD_TESTS += MonoDyn
 CUSTARD_TESTS += MatchGuard
@@ -87,6 +88,10 @@ CUSTARD_TESTS += NormForExtraction
 GREP_NormForExtraction += "normForExtraction_step"
 NOGREP_NormForExtraction += "normForExtraction_eval"
 NOGREP_NormForExtraction += "normForExtraction_prog"
+# Issue #4828: an argument extraction erases is not normalized, so a huge
+# [prop] passed to it does not exhaust a small budget.
+CUSTARD_TESTS += SpecArgNorm
+FLAGS_SpecArgNorm = --custard_norm_budget 20000
 NOGREP_NormForExtraction += "type normForExtraction_ast"
 CUSTARD_TESTS += Mymon
 CUSTARD_TESTS += Reify
@@ -296,6 +301,11 @@ NOGREP_MonoState   = "Obj"
 # all.
 GREP_MonoHoles     = "monoHoles_render__int" "monoHoles_twice__op_Plus"
 NOGREP_MonoHoles   = "set_tag" "fun y"
+
+# Section 3.2b, uniform compilation: a caller's runtime type parameter reaching
+# a [Mono] binder is left free in the specialization.  [reset]'s callback is
+# inlined into [iter], which must still see a [ref].
+NOGREP_MonoPolyCaller = "(0) <- " "fun _"
 
 # Issue #4382: a tuple field lives in the constructor, not behind a pointer to
 # a pair; [@@@custard_inline_field] asks for the same on a named record.
@@ -831,7 +841,7 @@ CODE_GlobalRenameCollision = 374
 FLAGS_GlobalRenameCollision = --codegen C
 EGREP_GlobalRenameCollision = "same_name" "Two declarations cannot share one C name"
 CODE_GlobalRenameSpecCollision = 374
-FLAGS_GlobalRenameSpecCollision = --codegen C --custard_monomorphize_types true
+FLAGS_GlobalRenameSpecCollision = --codegen C
 EGREP_GlobalRenameSpecCollision = "one_instance" "Two declarations cannot share one C name"
 
 REJECT_TESTS += GlobalRenameInvalid GlobalRenameDigit GlobalRenameKeyword
@@ -853,7 +863,7 @@ CODE_GlobalRenameExtern = 374
 FLAGS_GlobalRenameExtern = --codegen C
 EGREP_GlobalRenameExtern = "custard_extern" "already specifies"
 CODE_GlobalRenameImported = 374
-FLAGS_GlobalRenameImported = --codegen C --custard_monomorphize_types true \
+FLAGS_GlobalRenameImported = --codegen C \
   --custard_link $(OUTPUT_DIR)/GlobalRenameIface.cui
 EGREP_GlobalRenameImported = "InterfaceStep" "Two declarations cannot share one C name"
 
@@ -988,14 +998,14 @@ CGREP_NoPrefixX += "NoPrefixX_main(void)"
 
 REJECT_TESTS += MonoExtern
 CODE_MonoExtern = 376
-FLAGS_MonoExtern += --codegen C --custard_monomorphize_types true
+FLAGS_MonoExtern += --codegen C
 FLAGS_MonoExtern += --custard_entry MonoExtern.go
 EGREP_MonoExtern += "is monomorphized, but"
 EGREP_MonoExtern += "external has no body, so the argument would be discarded"
 
 REJECT_TESTS += ExistAdvice
 CODE_ExistAdvice = 364
-FLAGS_ExistAdvice += --codegen C --custard_monomorphize_types true
+FLAGS_ExistAdvice += --codegen C
 FLAGS_ExistAdvice += --custard_entry ExistAdvice.go
 # The advice names the field and says no annotation helps -- it does not tell
 # the reader to write one, which is what it used to do.
@@ -1023,7 +1033,7 @@ CNOGREP_CLamDef += "CLamDef_go(uint32_t k)"
 # asking for a bug report about a correct rejection.
 REJECT_TESTS += ExistChain
 CODE_ExistChain = 368
-FLAGS_ExistChain += --codegen C --custard_monomorphize_types true
+FLAGS_ExistChain += --codegen C
 EGREP_ExistChain += "is an existential package, not an instance of a"
 EGREP_ExistChain += "stores the type ty"
 EGREP_ExistChain += "it is not a Custard"
@@ -1038,7 +1048,7 @@ NOEGREP_ExistChain += "please report it"
 REJECT_TESTS += AttrPos
 REJECT_TESTS += DeclareInCHeaderInvalid
 CODE_DeclareInCHeaderInvalid = 371
-FLAGS_DeclareInCHeaderInvalid += --codegen C --custard_monomorphize_types true
+FLAGS_DeclareInCHeaderInvalid += --codegen C
 FLAGS_DeclareInCHeaderInvalid += --custard_entry DeclareInCHeaderInvalid.abstract_type
 EGREP_DeclareInCHeaderInvalid += "custard_declare_in_c_header"
 EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.definition"
@@ -1048,7 +1058,7 @@ EGREP_DeclareInCHeaderInvalid += "DeclareInCHeaderInvalid.supplied"
 EGREP_DeclareInCHeaderInvalid += "parameter x of" "DeclareInCHeaderInvalid.binder"
 EGREP_DeclareInCHeaderInvalid += "prototype is supplied by an external header"
 CODE_AttrPos = 371
-FLAGS_AttrPos += --codegen C --custard_monomorphize_types true
+FLAGS_AttrPos += --codegen C
 EGREP_AttrPos += "custard_opaque\] on the field contents of AttrPos.Box"
 EGREP_AttrPos += "custard_compile_time\] on the parameter k of AttrPos.scale"
 EGREP_AttrPos += "custard_inline_field\] on the declaration AttrPos.width"
@@ -1064,7 +1074,7 @@ EGREP_AttrPos += "has no .@@custard_extern"
 # they may depend on.
 REJECT_TESTS += ExportGen
 CODE_ExportGen = 377
-FLAGS_ExportGen += --codegen C --custard_monomorphize_types true
+FLAGS_ExportGen += --codegen C
 FLAGS_ExportGen += --custard_entry ExportGen.mk --custard_entry ExportGen.get
 FLAGS_ExportGen += --custard_c_no_prefix ExportGen
 EGREP_ExportGen += "ExportGen_cell__uint32. is part of this unit's interface"
@@ -1074,7 +1084,7 @@ EGREP_ExportGen += "typedef it once, in"
 
 REJECT_TESTS += ColB
 CODE_ColB = 374
-FLAGS_ColB += --codegen C --custard_monomorphize_types true
+FLAGS_ColB += --codegen C
 FLAGS_ColB += --custard_entry ColA.f --custard_entry ColB.f
 FLAGS_ColB += --custard_c_no_prefix ColA --custard_c_no_prefix ColB
 EGREP_ColB += "would name both"
@@ -1088,7 +1098,7 @@ CODE_WideChain = 364
 EGREP_WideChain += "chars)"
 REJECT_TESTS += ListC
 CODE_ListC = 368
-FLAGS_ListC = --codegen C --custard_monomorphize_types true
+FLAGS_ListC = --codegen C
 # Section 100.  The rejection used to be the frozen-type one: [isEmpty] is
 # realized, so rule 4 held [list] polymorphic and the backend never saw it.
 # Now the type is cloned like any other and rejected for the honest reason,
@@ -1105,10 +1115,10 @@ REJECT_TESTS += CNoInt
 REJECT_TESTS += CNoClosure
 REJECT_TESTS += CLamField
 REJECT_TESTS += CPartialCall
-FLAGS_CNoInt     = --codegen C --custard_monomorphize_types true
-FLAGS_CNoClosure = --codegen C --custard_monomorphize_types true
-FLAGS_CLamField  = --codegen C --custard_monomorphize_types true
-FLAGS_CPartialCall = --codegen C --custard_monomorphize_types true
+FLAGS_CNoInt     = --codegen C
+FLAGS_CNoClosure = --codegen C
+FLAGS_CLamField  = --codegen C
+FLAGS_CPartialCall = --codegen C
 CODE_CNoInt      = 368
 CODE_CNoClosure  = 368
 CODE_CLamField   = 368
@@ -1133,7 +1143,7 @@ REJECT_TESTS += FieldAttr
 # The program itself extracts (rule 4b of section 30.9 makes the bundle binder
 # Mono, so nothing is left over); the warning is the whole test, so it is
 # promoted to an error rather than looked for in passing output.
-FLAGS_FieldAttr = --codegen C --custard_monomorphize_types true \
+FLAGS_FieldAttr = --codegen C \
                   --warn_error @371
 CODE_FieldAttr  = 371
 EGREP_FieldAttr = "on the field pimpl_type"
@@ -1494,7 +1504,7 @@ $(OUTPUT_DIR)/%.dc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", $(basename $(notdir $@)))
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen C $(WARN_ANY) $(FLAGS_$*) \
-	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+	  --custard_main $*.main $*.fst -o $@
 	@# The unit is a header and a source (section 24), so the assertions are
 	@# over both: a type declaration lives in the header now, and an
 	@# assertion that something is *absent* means absent from the unit.
@@ -1626,7 +1636,7 @@ $(CHERRY_DIR)/%.chc: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(call msg, "CHERRY", $(basename $(notdir $@)))
 	@mkdir -p $(CHERRY_DIR)
 	$(FSTAR) $(WARN_ANY) $(FLAGS_$*) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main $*.main $*.fst -o $@
+	  --custard_main $*.main $*.fst -o $@
 
 # The runtime (cherry.h and the slow paths in cherry.c) is not generated; it
 # is the one F* installs, found the way a user would find it.
@@ -1673,7 +1683,7 @@ $(OUTPUT_DIR)/ExportLib.c: $(CACHE_DIR)/Export.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-C", ExportLib)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true $(FLAGS_Export) Export.fst -o $@
+	  $(FLAGS_Export) Export.fst -o $@
 
 $(OUTPUT_DIR)/Export.dcpp: $(OUTPUT_DIR)/ExportLib.c ExportUser.cpp
 	$(call msg, "CXX", ExportUser)
@@ -1747,7 +1757,7 @@ $(OUTPUT_DIR)/SepLibC.cui: $(CACHE_DIR)/SepLibC.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", SepLibC)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_unit SepLibC \
+	  --custard_unit SepLibC \
 	  --custard_entry SepLibC.scale --custard_entry SepLibC.manhattan \
 	  --custard_entry SepLibC.origin --odir $(OUTPUT_DIR) SepLibC.fst
 
@@ -1757,7 +1767,6 @@ $(OUTPUT_DIR)/SepLibC.c: $(OUTPUT_DIR)/SepLibC.cui $(FSTAR_EXE)
 $(OUTPUT_DIR)/SepAppC.c: $(CACHE_DIR)/SepAppC.fst.checked $(OUTPUT_DIR)/SepLibC.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", SepAppC)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/SepLibC.cui \
 	  --custard_main SepAppC.main SepAppC.fst -o $@
 	$(Q)for p in $(CGREP_SepAppC); do \
@@ -1793,7 +1802,7 @@ $(OUTPUT_DIR)/NoPrefLib.cui: $(CACHE_DIR)/NoPrefLib.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", NoPrefLib)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_unit NoPrefLib \
+	  --custard_unit NoPrefLib \
 	  --custard_c_no_prefix NoPrefLib \
 	  --custard_entry NoPrefLib.add1 --odir $(OUTPUT_DIR) NoPrefLib.fst
 	$(Q)grep -qF -- "uint32_t add1(uint32_t" $(OUTPUT_DIR)/NoPrefLib.h \
@@ -1806,7 +1815,6 @@ $(OUTPUT_DIR)/NoPrefApp.c: $(CACHE_DIR)/NoPrefApp.fst.checked \
                            $(OUTPUT_DIR)/NoPrefLib.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", NoPrefApp)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/NoPrefLib.cui \
 	  --custard_main NoPrefApp.main NoPrefApp.fst -o $@
 	$(Q)grep -qF -- "add1(41)" $@ \
@@ -1833,7 +1841,7 @@ $(OUTPUT_DIR)/TailLinkLib.cui: $(CACHE_DIR)/TailLinkLib.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", TailLinkLib)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_unit TailLinkLib \
+	  --custard_unit TailLinkLib \
 	  --custard_entry TailLinkLib.add --custard_entry TailLinkLib.between \
 	  --odir $(OUTPUT_DIR) TailLinkLib.fst
 
@@ -1844,7 +1852,6 @@ $(OUTPUT_DIR)/TailLinkApp.c: $(CACHE_DIR)/TailLinkApp.fst.checked \
                              $(OUTPUT_DIR)/TailLinkLib.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", TailLinkApp)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/TailLinkLib.cui \
 	  --custard_main TailLinkApp.main TailLinkApp.fst -o $@
 	$(Q)grep -qF -- "TailLinkLib_add(a, b)" $@ \
@@ -1872,7 +1879,7 @@ $(OUTPUT_DIR)/GlobalRenameIface.cui: $(CACHE_DIR)/GlobalRenameIface.fst.checked 
 	$(call msg, "CUSTARD-UNIT-C", GlobalRenameIface)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_unit GlobalRenameIface \
+	  --custard_unit GlobalRenameIface \
 	  --custard_entry GlobalRenameIface.step --odir $(OUTPUT_DIR) GlobalRenameIface.fst
 	$(Q)grep -qF "uint32_t InterfaceStep(" $(OUTPUT_DIR)/GlobalRenameIface.h
 
@@ -1883,7 +1890,6 @@ $(OUTPUT_DIR)/GlobalRenameApp.c: $(CACHE_DIR)/GlobalRenameApp.fst.checked \
                                $(OUTPUT_DIR)/GlobalRenameIface.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", GlobalRenameApp)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/GlobalRenameIface.cui \
 	  --custard_main GlobalRenameApp.main GlobalRenameApp.fst -o $@
 	$(Q)grep -qF "InterfaceStep(41)" $@
@@ -1922,14 +1928,14 @@ $(OUTPUT_DIR)/InitBase.cui: $(CACHE_DIR)/InitBase.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", InitBase)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_unit InitBase \
+	  --custard_unit InitBase \
 	  --custard_entry InitBase.sum --odir $(OUTPUT_DIR) InitBase.fst
 
 $(OUTPUT_DIR)/InitMiddle.cui: $(CACHE_DIR)/InitMiddle.fst.checked \
                               $(OUTPUT_DIR)/InitBase.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", InitMiddle)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_unit InitMiddle \
+	  --custard_unit InitMiddle \
 	  --custard_link $(OUTPUT_DIR)/InitBase.cui \
 	  --custard_entry InitMiddle.read --odir $(OUTPUT_DIR) InitMiddle.fst
 
@@ -1937,7 +1943,6 @@ $(OUTPUT_DIR)/InitApp.c: $(CACHE_DIR)/InitApp.fst.checked \
                          $(OUTPUT_DIR)/InitMiddle.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", InitApp)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/InitBase.cui \
 	  --custard_link $(OUTPUT_DIR)/InitMiddle.cui \
 	  --custard_main InitApp.main InitApp.fst -o $@
@@ -1965,7 +1970,7 @@ $(OUTPUT_DIR)/PolyLib.cui: $(CACHE_DIR)/PolyLib.fst.checked $(FSTAR_EXE)
 	$(call msg, "CUSTARD-UNIT-C", PolyLib)
 	@mkdir -p $(OUTPUT_DIR)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true --custard_unit PolyLib \
+	  --custard_unit PolyLib \
 	  --custard_entry PolyLib.swap --odir $(OUTPUT_DIR) PolyLib.fst
 	$(Q)grep -qF -- "struct PolyLib_duo__uint32_s" $(OUTPUT_DIR)/PolyLib.h \
 	  || { echo "ERROR: PolyLib did not emit the monomorphized struct"; exit 1; }
@@ -1974,7 +1979,6 @@ $(OUTPUT_DIR)/PolyApp.c: $(CACHE_DIR)/PolyApp.fst.checked \
                          $(OUTPUT_DIR)/PolyLib.cui $(FSTAR_EXE)
 	$(call msg, "CUSTARD-LINK-C", PolyApp)
 	$(FSTAR) --codegen C $(WARN_ANY) \
-	  --custard_monomorphize_types true \
 	  --custard_link $(OUTPUT_DIR)/PolyLib.cui \
 	  --custard_main PolyApp.main PolyApp.fst -o $@
 	$(Q)grep -qF -- "struct PolyLib_duo__uint32_s" $(OUTPUT_DIR)/PolyApp.h \
@@ -2010,7 +2014,7 @@ $(OUTPUT_DIR)/PathApp.checked: $(FSTAR_EXE)
 	$(Q)cd $(OUTPUT_DIR)/path && $(FSTAR_EXE) --cache_dir cache --odir gen \
 	  --cache_checked_modules PathLib.fst > /dev/null
 	$(Q)cd $(OUTPUT_DIR)/path && $(FSTAR_EXE) --cache_dir cache --odir gen \
-	  --codegen C --custard_monomorphize_types true \
+	  --codegen C \
 	  --custard_unit PathLib --custard_entry PathLib.value PathLib.fst > /dev/null
 	@# The very same source, changed.  The unit is now stale.
 	$(Q)printf 'module PathLib\nlet value (_:unit) : FStar.UInt32.t = 2ul\n' \
@@ -2024,7 +2028,6 @@ $(OUTPUT_DIR)/PathApp.checked: $(FSTAR_EXE)
 	  ! $(FSTAR_EXE) --cache_dir cache --warn_error -321 \
 	      --include .. --include ../cache \
 	      --codegen C \
-	      --custard_monomorphize_types true \
 	      --custard_link ../gen/PathLib.cui --custard_main PathApp.main \
 	      -o gen.c ../PathApp.fst > out.txt 2>&1 \
 	  || { echo "ERROR: PathApp linked a stale unit from another directory"; \
@@ -2057,7 +2060,7 @@ $(OUTPUT_DIR)/RelocApp.checked: $(FSTAR_EXE)
 	  --odir gen --cache_checked_modules RelocLib.fst > /dev/null
 	$(Q)cd $(OUTPUT_DIR)/reloc/producer && $(FSTAR_EXE) --cache_dir cache \
 	  --odir gen --codegen C \
-	  --custard_monomorphize_types true --custard_unit RelocLib \
+	  --custard_unit RelocLib \
 	  --custard_entry RelocLib.value RelocLib.fst > /dev/null
 	@# Ship the artifacts and take the build tree away.
 	$(Q)cp $(OUTPUT_DIR)/reloc/producer/gen/RelocLib.cui \
@@ -2075,7 +2078,6 @@ $(OUTPUT_DIR)/RelocApp.checked: $(FSTAR_EXE)
 	$(Q)cd $(OUTPUT_DIR)/reloc/consumer && \
 	  ! $(FSTAR_EXE) --cache_dir cache --odir gen --include . \
 	      --warn_error -321 --codegen C \
-	      --custard_monomorphize_types true \
 	      --custard_link gen/RelocLib.cui --custard_main RelocApp.main \
 	      -o gen/gen.c RelocApp.fst > out.txt 2>&1 \
 	  || { echo "ERROR: RelocApp linked a stale unit that had been moved"; \
@@ -2471,6 +2473,12 @@ CGREP_NarrowOverride += "NarrowOverride_stubs.h"
 CGREP_NarrowOverride += "CUSTARD_F16_LIT(15872U)"
 CNOGREP_NarrowOverride += "uint16_t bits;"
 
+# Section 98.  A string literal that spells the 16-bit vocabulary is not a use
+# of it: the file has to build without the #error.
+C_TESTS += NarrowStrLit
+CGREP_NarrowStrLit += "custard_f16"
+CNOGREP_NarrowStrLit += "CUSTARD_FLOAT16_DEFINED"
+
 # Section 66.  A global at a narrow width takes the *initializer* spelling,
 # not the expression one: a compound literal has automatic storage duration
 # and cannot initialize an object with static storage duration.
@@ -2539,7 +2547,7 @@ EGREP_TemplateML += "codegen C"
 # monomorphized instance, so without the typedef a consumer writes down the
 # mangled name of an internal encoding (EverParse's section 65.4).
 C_TESTS += TypeAbbrev
-FLAGS_TypeAbbrev = --custard_entry_module TypeAbbrev --custard_monomorphize_types true
+FLAGS_TypeAbbrev = --custard_entry_module TypeAbbrev
 CGREP_TypeAbbrev += "typedef TypeAbbrev_point TypeAbbrev_handle_t;"
 CGREP_TypeAbbrev += "typedef uint32_t TypeAbbrev_count_t;"
 CGREP_TypeAbbrev += "typedef TypeAbbrev_cell__point TypeAbbrev_iter_t;"
@@ -2550,7 +2558,7 @@ CNOGREP_TypeAbbrev += "TypeAbbrev_spec_t"
 # the name is left in the same position an abbreviation's is: referred to by
 # nothing, and kept only by being a root.
 C_TESTS += Newtype
-FLAGS_Newtype = --custard_entry_module Newtype --custard_monomorphize_types true
+FLAGS_Newtype = --custard_entry_module Newtype
 CGREP_Newtype += "typedef uint64_t Newtype_wrapper;"
 CGREP_Newtype += "typedef uint32_t Newtype_positive;"
 CGREP_Newtype += "typedef Newtype_point Newtype_boxed;"
@@ -3270,7 +3278,7 @@ EGREP_InitName += "the generated initializer and InitName.init_globals"
 
 REJECT_TESTS += ExtDup
 CODE_ExtDup := 384
-FLAGS_ExtDup := --codegen C --custard_monomorphize_types true
+FLAGS_ExtDup := --codegen C
 EGREP_ExtDup += "the external target \`KCALL2' is declared twice"
 EGREP_ExtDup += "custard_c_header"
 NOEGREP_ExtDup += "has no C representation"
@@ -3420,7 +3428,7 @@ NOGREP_EntryEffect += "(EntryEffect.report"
 # reader to report it as a Custard bug is what sent it to the issue tracker.
 REJECT_TESTS += PolyRootEntry
 CODE_PolyRootEntry = 368
-FLAGS_PolyRootEntry = --codegen C --custard_monomorphize_types true \
+FLAGS_PolyRootEntry = --codegen C \
                       --custard_entry PolyRootEntry.pick
 EGREP_PolyRootEntry += "This declaration is a root, and a root has no call site"
 EGREP_PolyRootEntry += "Root a concrete caller of it instead"
@@ -3767,6 +3775,17 @@ $(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryMoveFields.chgrep
 
+# Cherry: a [[@@@cherry_borrowed]] on an implementation binder holds when an
+# interface gives the type and the function is specialized.
+CHERRY_TESTS += CherryBorrowIface
+$(CHERRY_DIR)/CherryBorrowIface.chgrep: $(CHERRY_DIR)/CherryBorrowIface.chc
+	$(Q)grep -q '^static .* CherryBorrowIface_head_or__string(.*{$$' $< \
+	  || { echo "ERROR: CherryBorrowIface_head_or is not specialized"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryBorrowIface_head_or__string(.*{$$/,/^}/p' $< | grep -q '_dec(r)' \
+	  || { echo "ERROR: CherryBorrowIface_head_or owns its borrowed parameter"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryBorrowIface.chgrep
+
 # Cherry: a record update changes a unique record in place instead of
 # building a new cell.
 $(CHERRY_DIR)/CherryRecordUpdate.chgrep: $(CHERRY_DIR)/CherryRecordUpdate.chc
@@ -3818,7 +3837,9 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec
+# A low budget so that a regression fails in seconds rather than a minute.
+FLAGS_CherryMonoLocalRec = --custard_norm_budget 1000000
 
 # Freeing, marking and comparing deep values with a 1 MB stack.
 CHERRY_CFLAGS_CherryDeep = -O2
@@ -3845,8 +3866,11 @@ $(CHERRY_DIR)/CherryInt.chgrep: $(CHERRY_DIR)/CherryInt.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryInt.chgrep
 
-# Locals of different initializers share one C function.
+# Locals of different initializers share one C function.  Built at -O2 as
+# well (issue 4814): dropping a string literal once inlined must not trip
+# GCC's -Wfree-nonheap-object.
 CHERRY_TESTS += CherryInitScope
+CHERRY_CFLAGS_CherryInitScope = -O2
 
 # A local function whose type is an arrow only through a recursive type
 # function is not lambda-lifted, which would read its result type off its
@@ -3861,7 +3885,7 @@ all: $(CHERRY_DIR)/CherryLiftMatch.chgrep
 # Issue 4715.  An equality test that reaches a dyn is refused, naming the
 # fields that lead to it, rather than emitting a C [==] on cherry_any.
 REJECT_TESTS += CherryDynEq
-FLAGS_CherryDynEq  = --codegen Cherry --custard_monomorphize_types true
+FLAGS_CherryDynEq  = --codegen Cherry
 CODE_CherryDynEq   = 368
 EGREP_CherryDynEq += "an equality test at FStar.Dyn.dyn, in CherryDynEq.main"
 EGREP_CherryDynEq += "field c of constructor W of"
@@ -3870,7 +3894,7 @@ EGREP_CherryDynEq += "then field d of CherryDynEq.cell"
 # A polymorphic method of a runtime dictionary that builds a polymorphic
 # datatype is refused rather than given a layout at a type variable.
 REJECT_TESTS += CherryDynPolyMethod
-FLAGS_CherryDynPolyMethod  = --codegen Cherry --custard_monomorphize_types true
+FLAGS_CherryDynPolyMethod  = --codegen Cherry
 CODE_CherryDynPolyMethod   = 399
 EGREP_CherryDynPolyMethod += "FStar.Pervasives.Native.option<'a"
 
@@ -3892,7 +3916,7 @@ $(CHERRY_DIR)/CherrySepLib.cui: $(CACHE_DIR)/CherrySepLib.fst.checked $(FSTAR_EX
 	$(call msg, "CHERRY-UNIT", CherrySepLib)
 	@mkdir -p $(CHERRY_DIR)
 	$(FSTAR) $(WARN_ANY) --warn_error -377 --codegen Cherry \
-	  --custard_monomorphize_types true --custard_unit CherrySepLib \
+	  --custard_unit CherrySepLib \
 	  $(foreach e,mk g gd boom wrap map protect adder cell arr same count append keep peek,--custard_entry CherrySepLib.$(e)) \
 	  --odir $(CHERRY_DIR) CherrySepLib.fst
 
@@ -3903,7 +3927,6 @@ $(CHERRY_DIR)/CherrySepApp.c: $(CACHE_DIR)/CherrySepApp.fst.checked \
                               $(CHERRY_DIR)/CherrySepLib.cui $(FSTAR_EXE)
 	$(call msg, "CHERRY-LINK", CherrySepApp)
 	$(FSTAR) $(WARN_ANY) --warn_error -377 --codegen Cherry \
-	  --custard_monomorphize_types true \
 	  --custard_link $(CHERRY_DIR)/CherrySepLib.cui \
 	  --custard_main CherrySepApp.main CherrySepApp.fst -o $@
 
@@ -3932,7 +3955,7 @@ $(CHERRY_SPLIT_DIR)/%.chsplit: $(CACHE_DIR)/%.fst.checked %.out.expected $(FSTAR
 	$(call msg, "CHERRY-SPLIT", $*)
 	$(Q)rm -rf $(CHERRY_SPLIT_DIR)/$* && mkdir -p $(CHERRY_SPLIT_DIR)/$*
 	$(FSTAR) $(WARN_ANY) $(FLAGS_$*) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_split \
+	  --custard_split \
 	  --custard_main $*.main $*.fst -o $(CHERRY_SPLIT_DIR)/$*/$*.c
 	$(Q)test -f $(CHERRY_SPLIT_DIR)/$*/$*.$*.c \
 	  || { echo "ERROR: $*'s C output was not split"; exit 1; }
@@ -4133,7 +4156,7 @@ $(HASH_DIR)/CherryHash.chran: hash/CherryHash.fst \
 	    > /dev/null || exit 1; done
 	$(Q)cd hash && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(HASH_ABS) \
 	  --already_cached '*' --odir $(HASH_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryHash.main \
+	  --custard_main CherryHash.main \
 	  CherryHash.fst -o $(HASH_ABS)/CherryHash.c > /dev/null
 	$(call msg, "CC-ASAN", CherryHash)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4160,7 +4183,7 @@ $(TIMING_DIR)/CherryTiming.chran: timing/CherryTiming.fst \
 	    > /dev/null || exit 1; done
 	$(Q)cd timing && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(TIMING_ABS) \
 	  --already_cached '*' --odir $(TIMING_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryTiming.main \
+	  --custard_main CherryTiming.main \
 	  CherryTiming.fst -o $(TIMING_ABS)/CherryTiming.c > /dev/null
 	$(call msg, "CC-ASAN", CherryTiming)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4193,7 +4216,7 @@ $(TIME_DIR)/CherryTime.chran: time/CherryTime.fst $(TIME_SRCS) $(FSTAR_EXE)
 	    > /dev/null || exit 1; done
 	$(Q)cd time && $(FSTAR_EXE) --include $(TIME_ABS)/src --cache_dir $(TIME_ABS) \
 	  --already_cached '*' --odir $(TIME_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryTime.main \
+	  --custard_main CherryTime.main \
 	  CherryTime.fst -o $(TIME_ABS)/CherryTime.c > /dev/null
 	$(call msg, "CC-ASAN", CherryTime)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4224,7 +4247,7 @@ $(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRC
 	    > /dev/null || exit 1; done
 	$(Q)cd intextra && $(FSTAR_EXE) --include $(INTEXTRA_ABS)/src --cache_dir $(INTEXTRA_ABS) \
 	  --already_cached '*' --odir $(INTEXTRA_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryIntExtra.main \
+	  --custard_main CherryIntExtra.main \
 	  CherryIntExtra.fst -o $(INTEXTRA_ABS)/CherryIntExtra.c > /dev/null
 	$(call msg, "CC-ASAN", CherryIntExtra)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4257,7 +4280,7 @@ $(DEBUG_DIR)/%.chran: debug/%.fst $(FSTAR_EXE)
 	  --cache_checked_modules --already_cached 'Prims FStar' $*.fst > /dev/null
 	$(Q)cd debug && $(FSTAR_EXE) --cache_dir $(DEBUG_ABS)/$* \
 	  --already_cached '*' --odir $(DEBUG_ABS)/$* --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main $*.main \
+	  --custard_main $*.main \
 	  $*.fst -o $(DEBUG_ABS)/$*/$*.c > /dev/null
 	$(call msg, "CC", $*)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -I$(DEBUG_ABS)/$* -I$(CHERRY_INC) \
@@ -4289,7 +4312,7 @@ $(SMALLINT_DIR)/CherrySmallInt.chran: smallint/CherrySmallInt.fst \
 	    > /dev/null || exit 1; done
 	$(Q)cd smallint && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(SMALLINT_ABS) \
 	  --already_cached '*' --odir $(SMALLINT_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherrySmallInt.main \
+	  --custard_main CherrySmallInt.main \
 	  CherrySmallInt.fst -o $(SMALLINT_ABS)/CherrySmallInt.c > /dev/null
 	$(call msg, "CC-ASAN", CherrySmallInt)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4319,7 +4342,7 @@ $(FSTARCLIST_DIR)/CherryFStarCList.chran: fstarclist/CherryFStarCList.fst \
 	    > /dev/null || exit 1; done
 	$(Q)cd fstarclist && $(FSTAR_EXE) --include $(FSTARCLIST_ABS)/src --cache_dir $(FSTARCLIST_ABS) \
 	  --already_cached '*' --odir $(FSTARCLIST_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryFStarCList.main \
+	  --custard_main CherryFStarCList.main \
 	  CherryFStarCList.fst -o $(FSTARCLIST_ABS)/CherryFStarCList.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCList)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4349,7 +4372,7 @@ $(FSTARCSTRING_DIR)/CherryFStarCString.chran: fstarcstring/CherryFStarCString.fs
 	    > /dev/null || exit 1; done
 	$(Q)cd fstarcstring && $(FSTAR_EXE) --include $(FSTARCSTRING_ABS)/src --cache_dir $(FSTARCSTRING_ABS) \
 	  --already_cached '*' --odir $(FSTARCSTRING_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryFStarCString.main \
+	  --custard_main CherryFStarCString.main \
 	  CherryFStarCString.fst -o $(FSTARCSTRING_ABS)/CherryFStarCString.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCString)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4384,7 +4407,7 @@ $(FSTARCUTIL_DIR)/CherryFStarCUtil.chran: fstarcutil/CherryFStarCUtil.fst \
 	    > /dev/null || exit 1; done
 	$(Q)cd fstarcutil && $(FSTAR_EXE) --include $(FSTARCUTIL_ABS)/src --cache_dir $(FSTARCUTIL_ABS) \
 	  --already_cached '*' --odir $(FSTARCUTIL_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryFStarCUtil.main \
+	  --custard_main CherryFStarCUtil.main \
 	  CherryFStarCUtil.fst -o $(FSTARCUTIL_ABS)/CherryFStarCUtil.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCUtil)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4417,7 +4440,7 @@ $(FSTARCBASIC_DIR)/CherryFStarCBasic.chran: fstarcbasic/CherryFStarCBasic.fst \
 	    > /dev/null || exit 1; done
 	$(Q)cd fstarcbasic && $(FSTAR_EXE) --include $(FSTARCBASIC_ABS)/src --cache_dir $(FSTARCBASIC_ABS) \
 	  --already_cached '*' --odir $(FSTARCBASIC_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryFStarCBasic.main \
+	  --custard_main CherryFStarCBasic.main \
 	  CherryFStarCBasic.fst -o $(FSTARCBASIC_ABS)/CherryFStarCBasic.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCBasic)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4452,7 +4475,7 @@ $(FSTARCJSON_DIR)/CherryFStarCJson.chran: fstarcjson/CherryFStarCJson.fst \
 	    > /dev/null || exit 1; done
 	$(Q)cd fstarcjson && $(FSTAR_EXE) --include $(FSTARCJSON_ABS)/src --cache_dir $(FSTARCJSON_ABS) \
 	  --already_cached '*' --odir $(FSTARCJSON_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryFStarCJson.main \
+	  --custard_main CherryFStarCJson.main \
 	  CherryFStarCJson.fst -o $(FSTARCJSON_ABS)/CherryFStarCJson.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCJson)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4494,7 +4517,7 @@ $(FSTARCHT_DIR)/CherryFStarCHashTable.chran: fstarchashtable/CherryFStarCHashTab
 	    > /dev/null || exit 1; done
 	$(Q)cd fstarchashtable && $(FSTAR_EXE) --include $(FSTARCHT_ABS)/src --cache_dir $(FSTARCHT_ABS) \
 	  --already_cached '*' --odir $(FSTARCHT_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryFStarCHashTable.main \
+	  --custard_main CherryFStarCHashTable.main \
 	  CherryFStarCHashTable.fst -o $(FSTARCHT_ABS)/CherryFStarCHashTable.c > /dev/null
 	$(call msg, "CC-ASAN", CherryFStarCHashTable)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
@@ -4525,7 +4548,7 @@ $(ARRAY_DIR)/CherryArray.chran: array/CherryArray.fst \
 	    > /dev/null || exit 1; done
 	$(Q)cd array && $(FSTAR_EXE) --include $(HASH_SRC) --cache_dir $(ARRAY_ABS) \
 	  --already_cached '*' --odir $(ARRAY_ABS) --codegen Cherry \
-	  --custard_monomorphize_types true --custard_main CherryArray.main \
+	  --custard_main CherryArray.main \
 	  CherryArray.fst -o $(ARRAY_ABS)/CherryArray.c > /dev/null
 	$(call msg, "CC-ASAN", CherryArray)
 	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \

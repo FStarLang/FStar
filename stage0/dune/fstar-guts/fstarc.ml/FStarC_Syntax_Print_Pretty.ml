@@ -11,69 +11,153 @@ let pp (d : PPrint.document) : string =
   (FStarC_Pprint.pretty_string rfrac width d)
 
 let binder_to_string' (is_arrow : bool) (b : FStarC_Syntax_Syntax.binder) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_binder b FStarC_Range_Type.dummyRange) in
-  let d = (FStarC_Parser_ToDocument.binder_to_document e) in
-  (pp d))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let e = (FStarC_Syntax_Resugar.resugar_binder b FStarC_Range_Type.dummyRange) in
+    let d = (FStarC_Parser_ToDocument.binder_to_document e) in
+    (pp d)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let term_to_doc (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : PPrint.document =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_term tm) in
-  (FStarC_Parser_ToDocument.term_to_document e))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let e = (FStarC_Syntax_Resugar.resugar_term tm) in
+    (FStarC_Parser_ToDocument.term_to_document e)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let term_to_string (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let d = (term_to_doc tm) in
-  (pp d))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let d = (term_to_doc tm) in
+    (pp d)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let pat_to_string (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__bv_list_bv ()) in
-  let e = (FStarC_Syntax_Resugar.resugar_pat p tmp1) in
-  let d = (FStarC_Parser_ToDocument.pat_to_document e) in
-  (pp d))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__bv_list_bv ()) in
+    let e = (FStarC_Syntax_Resugar.resugar_pat p tmp) in
+    let d = (FStarC_Parser_ToDocument.pat_to_document e) in
+    (pp d)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let comp_to_string (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_comp c) in
-  let d = (FStarC_Parser_ToDocument.term_to_document e) in
-  (pp d))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let e = (FStarC_Syntax_Resugar.resugar_comp c) in
+    let d = (FStarC_Parser_ToDocument.term_to_document e) in
+    (pp d)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let term_to_doc' (env : FStarC_Syntax_DsEnv.env) (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : PPrint.document =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_term' env tm) in
-  (FStarC_Parser_ToDocument.term_to_document e))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let e = (FStarC_Syntax_Resugar.resugar_term' env tm) in
+    (FStarC_Parser_ToDocument.term_to_document e)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let term_to_string' (env : FStarC_Syntax_DsEnv.env) (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let d = (term_to_doc' env tm) in
-  (pp d))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let d = (term_to_doc' env tm) in
+    (pp d)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let comp_to_doc (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : PPrint.document =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_comp c) in
-  (FStarC_Parser_ToDocument.term_to_document e))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let e = (FStarC_Syntax_Resugar.resugar_comp c) in
+    (FStarC_Parser_ToDocument.term_to_document e)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let comp_to_doc' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : PPrint.document =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let e = (FStarC_Syntax_Resugar.resugar_comp' env c) in
-  (FStarC_Parser_ToDocument.term_to_document e))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let e = (FStarC_Syntax_Resugar.resugar_comp' env c) in
+    (FStarC_Parser_ToDocument.term_to_document e)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let comp_to_string' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let d = (comp_to_doc' env c) in
-  (pp d))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let d = (comp_to_doc' env c) in
+    (pp d)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let sigelt_to_string (se : FStarC_Syntax_Syntax.sigelt) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let tmp1 = (FStarC_Syntax_Resugar.resugar_sigelt se) in
-  (match tmp1 with
-    | None -> ""
-    | (Some (d)) -> (let d1 = (FStarC_Parser_ToDocument.decl_to_document d) in
-      (pp d1))
-  ))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let tmp = (FStarC_Syntax_Resugar.resugar_sigelt se) in
+    (match tmp with
+      | None -> ""
+      | (Some (d)) -> (let d1 = (FStarC_Parser_ToDocument.decl_to_document d) in
+        (pp d1))
+    )) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let tscheme_to_doc (ts : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : PPrint.document =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let d = (FStarC_Syntax_Resugar.resugar_tscheme ts) in
-  (FStarC_Parser_ToDocument.decl_to_document d))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let d = (FStarC_Syntax_Resugar.resugar_tscheme ts) in
+    (FStarC_Parser_ToDocument.decl_to_document d)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let sigelt_to_doc' (env : FStarC_Syntax_DsEnv.env) (se : FStarC_Syntax_Syntax.sigelt) : PPrint.document =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let tmp1 = (FStarC_Syntax_Resugar.resugar_sigelt' env se) in
-  (match tmp1 with
-    | None -> PPrint.empty
-    | (Some (d)) -> (FStarC_Parser_ToDocument.decl_to_document d)
-  ))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let tmp = (FStarC_Syntax_Resugar.resugar_sigelt' env se) in
+    (match tmp with
+      | None -> PPrint.empty
+      | (Some (d)) -> (FStarC_Parser_ToDocument.decl_to_document d)
+    )) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 
 let sigelt_to_string' (env : FStarC_Syntax_DsEnv.env) (se : FStarC_Syntax_Syntax.sigelt) : string =
-  (FStarC_GenSym.with_frozen_gensym (fun tmp -> (let d = (sigelt_to_doc' env se) in
-  (pp d))))
+  (let v = (!(FStarC_GenSym.gensym_st)) in
+  let r = (try (let d = (sigelt_to_doc' env se) in
+    (pp d)) with
+      | u__cexn -> (((FStarC_GenSym.gensym_st) := v);
+        (raise u__cexn))
+    ) in
+  ((FStarC_GenSym.gensym_st) := v);
+  r)
 

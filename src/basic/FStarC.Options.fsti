@@ -197,12 +197,6 @@ val admit_smt_queries           : unit    -> ML bool
 
 val admit_except                : unit    -> ML (option string)
 
-val compat_pre_core_should_register : unit    -> ML bool
-
-val compat_pre_core_should_check : unit    -> ML bool
-
-val compat_pre_core_set         : unit    -> ML bool
-
 val compat_pre_typed_indexed_effects: unit -> ML bool
 
 val disallow_unification_guards : unit    -> ML bool

@@ -13,450 +13,1140 @@ let embed (e : ('u___a) FStarC_Syntax_Embeddings_Base.embedding) (rng : FStarC_R
 let mk_tactic_interpretation_1 (name : string) (t : ('u___t1 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: [])) -> (let tmp2 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp2 (fun a11 -> (let tmp3 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a2 ncb) in
-      (FStarC_Option.bind tmp3 (fun ps -> (let tmp4 = (!(ps)) in
-      let tmp5 = (FStarC_Tactics_Types.set_ps_psc psc tmp4) in
-      ((ps) := tmp5);
-      let r = (interp_ctx name (fun tmp6 -> (t a11 ps))) in
-      let tmp6 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp6)))))))))
+      (match tmp2 with
+        | (Some (x)) -> (let tmp3 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a2 ncb) in
+          (match tmp3 with
+            | (Some (x1)) -> (let tmp4 = (!(x1)) in
+              let tmp5 = (FStarC_Tactics_Types.set_ps_psc psc tmp4) in
+              ((x1) := tmp5);
+              let r = (interp_ctx name (fun tmp6 -> (t x x1))) in
+              let tmp6 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+              (Some (tmp6)))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_2 (name : string) (t : ('u___t1 -> ('u___t2 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: []))) -> (let tmp3 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp3 (fun a11 -> (let tmp4 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp4 (fun a21 -> (let tmp5 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a3 ncb) in
-      (FStarC_Option.bind tmp5 (fun ps -> (let tmp6 = (!(ps)) in
-      let tmp7 = (FStarC_Tactics_Types.set_ps_psc psc tmp6) in
-      ((ps) := tmp7);
-      let r = (interp_ctx name (fun tmp8 -> (t a11 a21 ps))) in
-      let tmp8 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp8))))))))))))
+      (match tmp3 with
+        | (Some (x)) -> (let tmp4 = (unembed e2 a2 ncb) in
+          (match tmp4 with
+            | (Some (x1)) -> (let tmp5 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a3 ncb) in
+              (match tmp5 with
+                | (Some (x2)) -> (let tmp6 = (!(x2)) in
+                  let tmp7 = (FStarC_Tactics_Types.set_ps_psc psc tmp6) in
+                  ((x2) := tmp7);
+                  let r = (interp_ctx name (fun tmp8 -> (t x x1 x2))) in
+                  let tmp8 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                  (Some (tmp8)))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_3 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: [])))) -> (let tmp4 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp4 (fun a11 -> (let tmp5 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp5 (fun a21 -> (let tmp6 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp6 (fun a31 -> (let tmp7 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a4 ncb) in
-      (FStarC_Option.bind tmp7 (fun ps -> (let tmp8 = (!(ps)) in
-      let tmp9 = (FStarC_Tactics_Types.set_ps_psc psc tmp8) in
-      ((ps) := tmp9);
-      let r = (interp_ctx name (fun tmp10 -> (t a11 a21 a31 ps))) in
-      let tmp10 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp10)))))))))))))))
+      (match tmp4 with
+        | (Some (x)) -> (let tmp5 = (unembed e2 a2 ncb) in
+          (match tmp5 with
+            | (Some (x1)) -> (let tmp6 = (unembed e3 a3 ncb) in
+              (match tmp6 with
+                | (Some (x2)) -> (let tmp7 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a4 ncb) in
+                  (match tmp7 with
+                    | (Some (x3)) -> (let tmp8 = (!(x3)) in
+                      let tmp9 = (FStarC_Tactics_Types.set_ps_psc psc tmp8) in
+                      ((x3) := tmp9);
+                      let r = (interp_ctx name (fun tmp10 -> (t x x1 x2 x3))) in
+                      let tmp10 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                      (Some (tmp10)))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_4 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: []))))) -> (let tmp5 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp5 (fun a11 -> (let tmp6 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp6 (fun a21 -> (let tmp7 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp7 (fun a31 -> (let tmp8 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp8 (fun a41 -> (let tmp9 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a5 ncb) in
-      (FStarC_Option.bind tmp9 (fun ps -> (let tmp10 = (!(ps)) in
-      let tmp11 = (FStarC_Tactics_Types.set_ps_psc psc tmp10) in
-      ((ps) := tmp11);
-      let r = (interp_ctx name (fun tmp12 -> (t a11 a21 a31 a41 ps))) in
-      let tmp12 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp12))))))))))))))))))
+      (match tmp5 with
+        | (Some (x)) -> (let tmp6 = (unembed e2 a2 ncb) in
+          (match tmp6 with
+            | (Some (x1)) -> (let tmp7 = (unembed e3 a3 ncb) in
+              (match tmp7 with
+                | (Some (x2)) -> (let tmp8 = (unembed e4 a4 ncb) in
+                  (match tmp8 with
+                    | (Some (x3)) -> (let tmp9 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a5 ncb) in
+                      (match tmp9 with
+                        | (Some (x4)) -> (let tmp10 = (!(x4)) in
+                          let tmp11 = (FStarC_Tactics_Types.set_ps_psc psc tmp10) in
+                          ((x4) := tmp11);
+                          let r = (interp_ctx name (fun tmp12 -> (t x x1 x2 x3 x4))) in
+                          let tmp12 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                          (Some (tmp12)))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_5 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: [])))))) -> (let tmp6 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp6 (fun a11 -> (let tmp7 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp7 (fun a21 -> (let tmp8 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp8 (fun a31 -> (let tmp9 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp9 (fun a41 -> (let tmp10 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp10 (fun a51 -> (let tmp11 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a6 ncb) in
-      (FStarC_Option.bind tmp11 (fun ps -> (let tmp12 = (!(ps)) in
-      let tmp13 = (FStarC_Tactics_Types.set_ps_psc psc tmp12) in
-      ((ps) := tmp13);
-      let r = (interp_ctx name (fun tmp14 -> (t a11 a21 a31 a41 a51 ps))) in
-      let tmp14 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp14)))))))))))))))))))))
+      (match tmp6 with
+        | (Some (x)) -> (let tmp7 = (unembed e2 a2 ncb) in
+          (match tmp7 with
+            | (Some (x1)) -> (let tmp8 = (unembed e3 a3 ncb) in
+              (match tmp8 with
+                | (Some (x2)) -> (let tmp9 = (unembed e4 a4 ncb) in
+                  (match tmp9 with
+                    | (Some (x3)) -> (let tmp10 = (unembed e5 a5 ncb) in
+                      (match tmp10 with
+                        | (Some (x4)) -> (let tmp11 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a6 ncb) in
+                          (match tmp11 with
+                            | (Some (x5)) -> (let tmp12 = (!(x5)) in
+                              let tmp13 = (FStarC_Tactics_Types.set_ps_psc psc tmp12) in
+                              ((x5) := tmp13);
+                              let r = (interp_ctx name (fun tmp14 -> (t x x1 x2 x3 x4 x5))) in
+                              let tmp14 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                              (Some (tmp14)))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_6 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: []))))))) -> (let tmp7 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp7 (fun a11 -> (let tmp8 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp8 (fun a21 -> (let tmp9 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp9 (fun a31 -> (let tmp10 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp10 (fun a41 -> (let tmp11 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp11 (fun a51 -> (let tmp12 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp12 (fun a61 -> (let tmp13 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a7 ncb) in
-      (FStarC_Option.bind tmp13 (fun ps -> (let tmp14 = (!(ps)) in
-      let tmp15 = (FStarC_Tactics_Types.set_ps_psc psc tmp14) in
-      ((ps) := tmp15);
-      let r = (interp_ctx name (fun tmp16 -> (t a11 a21 a31 a41 a51 a61 ps))) in
-      let tmp16 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp16))))))))))))))))))))))))
+      (match tmp7 with
+        | (Some (x)) -> (let tmp8 = (unembed e2 a2 ncb) in
+          (match tmp8 with
+            | (Some (x1)) -> (let tmp9 = (unembed e3 a3 ncb) in
+              (match tmp9 with
+                | (Some (x2)) -> (let tmp10 = (unembed e4 a4 ncb) in
+                  (match tmp10 with
+                    | (Some (x3)) -> (let tmp11 = (unembed e5 a5 ncb) in
+                      (match tmp11 with
+                        | (Some (x4)) -> (let tmp12 = (unembed e6 a6 ncb) in
+                          (match tmp12 with
+                            | (Some (x5)) -> (let tmp13 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a7 ncb) in
+                              (match tmp13 with
+                                | (Some (x6)) -> (let tmp14 = (!(x6)) in
+                                  let tmp15 = (FStarC_Tactics_Types.set_ps_psc psc tmp14) in
+                                  ((x6) := tmp15);
+                                  let r = (interp_ctx name (fun tmp16 -> (t x x1 x2 x3 x4 x5 x6))) in
+                                  let tmp16 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                  (Some (tmp16)))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_7 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: [])))))))) -> (let tmp8 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp8 (fun a11 -> (let tmp9 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp9 (fun a21 -> (let tmp10 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp10 (fun a31 -> (let tmp11 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp11 (fun a41 -> (let tmp12 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp12 (fun a51 -> (let tmp13 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp13 (fun a61 -> (let tmp14 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp14 (fun a71 -> (let tmp15 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a8 ncb) in
-      (FStarC_Option.bind tmp15 (fun ps -> (let tmp16 = (!(ps)) in
-      let tmp17 = (FStarC_Tactics_Types.set_ps_psc psc tmp16) in
-      ((ps) := tmp17);
-      let r = (interp_ctx name (fun tmp18 -> (t a11 a21 a31 a41 a51 a61 a71 ps))) in
-      let tmp18 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp18)))))))))))))))))))))))))))
+      (match tmp8 with
+        | (Some (x)) -> (let tmp9 = (unembed e2 a2 ncb) in
+          (match tmp9 with
+            | (Some (x1)) -> (let tmp10 = (unembed e3 a3 ncb) in
+              (match tmp10 with
+                | (Some (x2)) -> (let tmp11 = (unembed e4 a4 ncb) in
+                  (match tmp11 with
+                    | (Some (x3)) -> (let tmp12 = (unembed e5 a5 ncb) in
+                      (match tmp12 with
+                        | (Some (x4)) -> (let tmp13 = (unembed e6 a6 ncb) in
+                          (match tmp13 with
+                            | (Some (x5)) -> (let tmp14 = (unembed e7 a7 ncb) in
+                              (match tmp14 with
+                                | (Some (x6)) -> (let tmp15 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a8 ncb) in
+                                  (match tmp15 with
+                                    | (Some (x7)) -> (let tmp16 = (!(x7)) in
+                                      let tmp17 = (FStarC_Tactics_Types.set_ps_psc psc tmp16) in
+                                      ((x7) := tmp17);
+                                      let r = (interp_ctx name (fun tmp18 -> (t x x1 x2 x3 x4 x5 x6 x7))) in
+                                      let tmp18 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                      (Some (tmp18)))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_8 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: []))))))))) -> (let tmp9 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp9 (fun a11 -> (let tmp10 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp10 (fun a21 -> (let tmp11 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp11 (fun a31 -> (let tmp12 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp12 (fun a41 -> (let tmp13 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp13 (fun a51 -> (let tmp14 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp14 (fun a61 -> (let tmp15 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp15 (fun a71 -> (let tmp16 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp16 (fun a81 -> (let tmp17 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a9 ncb) in
-      (FStarC_Option.bind tmp17 (fun ps -> (let tmp18 = (!(ps)) in
-      let tmp19 = (FStarC_Tactics_Types.set_ps_psc psc tmp18) in
-      ((ps) := tmp19);
-      let r = (interp_ctx name (fun tmp20 -> (t a11 a21 a31 a41 a51 a61 a71 a81 ps))) in
-      let tmp20 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp20))))))))))))))))))))))))))))))
+      (match tmp9 with
+        | (Some (x)) -> (let tmp10 = (unembed e2 a2 ncb) in
+          (match tmp10 with
+            | (Some (x1)) -> (let tmp11 = (unembed e3 a3 ncb) in
+              (match tmp11 with
+                | (Some (x2)) -> (let tmp12 = (unembed e4 a4 ncb) in
+                  (match tmp12 with
+                    | (Some (x3)) -> (let tmp13 = (unembed e5 a5 ncb) in
+                      (match tmp13 with
+                        | (Some (x4)) -> (let tmp14 = (unembed e6 a6 ncb) in
+                          (match tmp14 with
+                            | (Some (x5)) -> (let tmp15 = (unembed e7 a7 ncb) in
+                              (match tmp15 with
+                                | (Some (x6)) -> (let tmp16 = (unembed e8 a8 ncb) in
+                                  (match tmp16 with
+                                    | (Some (x7)) -> (let tmp17 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a9 ncb) in
+                                      (match tmp17 with
+                                        | (Some (x8)) -> (let tmp18 = (!(x8)) in
+                                          let tmp19 = (FStarC_Tactics_Types.set_ps_psc psc tmp18) in
+                                          ((x8) := tmp19);
+                                          let r = (interp_ctx name (fun tmp20 -> (t x x1 x2 x3 x4 x5 x6 x7 x8))) in
+                                          let tmp20 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                          (Some (tmp20)))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_9 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: [])))))))))) -> (let tmp10 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp10 (fun a11 -> (let tmp11 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp11 (fun a21 -> (let tmp12 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp12 (fun a31 -> (let tmp13 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp13 (fun a41 -> (let tmp14 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp14 (fun a51 -> (let tmp15 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp15 (fun a61 -> (let tmp16 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp16 (fun a71 -> (let tmp17 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp17 (fun a81 -> (let tmp18 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp18 (fun a91 -> (let tmp19 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a10 ncb) in
-      (FStarC_Option.bind tmp19 (fun ps -> (let tmp20 = (!(ps)) in
-      let tmp21 = (FStarC_Tactics_Types.set_ps_psc psc tmp20) in
-      ((ps) := tmp21);
-      let r = (interp_ctx name (fun tmp22 -> (t a11 a21 a31 a41 a51 a61 a71 a81 a91 ps))) in
-      let tmp22 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp22)))))))))))))))))))))))))))))))))
+      (match tmp10 with
+        | (Some (x)) -> (let tmp11 = (unembed e2 a2 ncb) in
+          (match tmp11 with
+            | (Some (x1)) -> (let tmp12 = (unembed e3 a3 ncb) in
+              (match tmp12 with
+                | (Some (x2)) -> (let tmp13 = (unembed e4 a4 ncb) in
+                  (match tmp13 with
+                    | (Some (x3)) -> (let tmp14 = (unembed e5 a5 ncb) in
+                      (match tmp14 with
+                        | (Some (x4)) -> (let tmp15 = (unembed e6 a6 ncb) in
+                          (match tmp15 with
+                            | (Some (x5)) -> (let tmp16 = (unembed e7 a7 ncb) in
+                              (match tmp16 with
+                                | (Some (x6)) -> (let tmp17 = (unembed e8 a8 ncb) in
+                                  (match tmp17 with
+                                    | (Some (x7)) -> (let tmp18 = (unembed e9 a9 ncb) in
+                                      (match tmp18 with
+                                        | (Some (x8)) -> (let tmp19 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a10 ncb) in
+                                          (match tmp19 with
+                                            | (Some (x9)) -> (let tmp20 = (!(x9)) in
+                                              let tmp21 = (FStarC_Tactics_Types.set_ps_psc psc tmp20) in
+                                              ((x9) := tmp21);
+                                              let r = (interp_ctx name (fun tmp22 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9))) in
+                                              let tmp22 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                              (Some (tmp22)))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_10 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: []))))))))))) -> (let tmp11 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp11 (fun a12 -> (let tmp12 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp12 (fun a21 -> (let tmp13 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp13 (fun a31 -> (let tmp14 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp14 (fun a41 -> (let tmp15 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp15 (fun a51 -> (let tmp16 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp16 (fun a61 -> (let tmp17 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp17 (fun a71 -> (let tmp18 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp18 (fun a81 -> (let tmp19 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp19 (fun a91 -> (let tmp20 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp20 (fun a101 -> (let tmp21 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a11 ncb) in
-      (FStarC_Option.bind tmp21 (fun ps -> (let tmp22 = (!(ps)) in
-      let tmp23 = (FStarC_Tactics_Types.set_ps_psc psc tmp22) in
-      ((ps) := tmp23);
-      let r = (interp_ctx name (fun tmp24 -> (t a12 a21 a31 a41 a51 a61 a71 a81 a91 a101 ps))) in
-      let tmp24 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp24))))))))))))))))))))))))))))))))))))
+      (match tmp11 with
+        | (Some (x)) -> (let tmp12 = (unembed e2 a2 ncb) in
+          (match tmp12 with
+            | (Some (x1)) -> (let tmp13 = (unembed e3 a3 ncb) in
+              (match tmp13 with
+                | (Some (x2)) -> (let tmp14 = (unembed e4 a4 ncb) in
+                  (match tmp14 with
+                    | (Some (x3)) -> (let tmp15 = (unembed e5 a5 ncb) in
+                      (match tmp15 with
+                        | (Some (x4)) -> (let tmp16 = (unembed e6 a6 ncb) in
+                          (match tmp16 with
+                            | (Some (x5)) -> (let tmp17 = (unembed e7 a7 ncb) in
+                              (match tmp17 with
+                                | (Some (x6)) -> (let tmp18 = (unembed e8 a8 ncb) in
+                                  (match tmp18 with
+                                    | (Some (x7)) -> (let tmp19 = (unembed e9 a9 ncb) in
+                                      (match tmp19 with
+                                        | (Some (x8)) -> (let tmp20 = (unembed e10 a10 ncb) in
+                                          (match tmp20 with
+                                            | (Some (x9)) -> (let tmp21 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a11 ncb) in
+                                              (match tmp21 with
+                                                | (Some (x10)) -> (let tmp22 = (!(x10)) in
+                                                  let tmp23 = (FStarC_Tactics_Types.set_ps_psc psc tmp22) in
+                                                  ((x10) := tmp23);
+                                                  let r = (interp_ctx name (fun tmp24 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10))) in
+                                                  let tmp24 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                  (Some (tmp24)))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_11 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: [])))))))))))) -> (let tmp12 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp12 (fun a13 -> (let tmp13 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp13 (fun a21 -> (let tmp14 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp14 (fun a31 -> (let tmp15 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp15 (fun a41 -> (let tmp16 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp16 (fun a51 -> (let tmp17 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp17 (fun a61 -> (let tmp18 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp18 (fun a71 -> (let tmp19 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp19 (fun a81 -> (let tmp20 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp20 (fun a91 -> (let tmp21 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp21 (fun a101 -> (let tmp22 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp22 (fun a111 -> (let tmp23 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a12 ncb) in
-      (FStarC_Option.bind tmp23 (fun ps -> (let tmp24 = (!(ps)) in
-      let tmp25 = (FStarC_Tactics_Types.set_ps_psc psc tmp24) in
-      ((ps) := tmp25);
-      let r = (interp_ctx name (fun tmp26 -> (t a13 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 ps))) in
-      let tmp26 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp26)))))))))))))))))))))))))))))))))))))))
+      (match tmp12 with
+        | (Some (x)) -> (let tmp13 = (unembed e2 a2 ncb) in
+          (match tmp13 with
+            | (Some (x1)) -> (let tmp14 = (unembed e3 a3 ncb) in
+              (match tmp14 with
+                | (Some (x2)) -> (let tmp15 = (unembed e4 a4 ncb) in
+                  (match tmp15 with
+                    | (Some (x3)) -> (let tmp16 = (unembed e5 a5 ncb) in
+                      (match tmp16 with
+                        | (Some (x4)) -> (let tmp17 = (unembed e6 a6 ncb) in
+                          (match tmp17 with
+                            | (Some (x5)) -> (let tmp18 = (unembed e7 a7 ncb) in
+                              (match tmp18 with
+                                | (Some (x6)) -> (let tmp19 = (unembed e8 a8 ncb) in
+                                  (match tmp19 with
+                                    | (Some (x7)) -> (let tmp20 = (unembed e9 a9 ncb) in
+                                      (match tmp20 with
+                                        | (Some (x8)) -> (let tmp21 = (unembed e10 a10 ncb) in
+                                          (match tmp21 with
+                                            | (Some (x9)) -> (let tmp22 = (unembed e11 a11 ncb) in
+                                              (match tmp22 with
+                                                | (Some (x10)) -> (let tmp23 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a12 ncb) in
+                                                  (match tmp23 with
+                                                    | (Some (x11)) -> (let tmp24 = (!(x11)) in
+                                                      let tmp25 = (FStarC_Tactics_Types.set_ps_psc psc tmp24) in
+                                                      ((x11) := tmp25);
+                                                      let r = (interp_ctx name (fun tmp26 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11))) in
+                                                      let tmp26 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                      (Some (tmp26)))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_12 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: []))))))))))))) -> (let tmp13 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp13 (fun a14 -> (let tmp14 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp14 (fun a21 -> (let tmp15 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp15 (fun a31 -> (let tmp16 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp16 (fun a41 -> (let tmp17 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp17 (fun a51 -> (let tmp18 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp18 (fun a61 -> (let tmp19 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp19 (fun a71 -> (let tmp20 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp20 (fun a81 -> (let tmp21 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp21 (fun a91 -> (let tmp22 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp22 (fun a101 -> (let tmp23 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp23 (fun a111 -> (let tmp24 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp24 (fun a121 -> (let tmp25 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a13 ncb) in
-      (FStarC_Option.bind tmp25 (fun ps -> (let tmp26 = (!(ps)) in
-      let tmp27 = (FStarC_Tactics_Types.set_ps_psc psc tmp26) in
-      ((ps) := tmp27);
-      let r = (interp_ctx name (fun tmp28 -> (t a14 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 ps))) in
-      let tmp28 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp28))))))))))))))))))))))))))))))))))))))))))
+      (match tmp13 with
+        | (Some (x)) -> (let tmp14 = (unembed e2 a2 ncb) in
+          (match tmp14 with
+            | (Some (x1)) -> (let tmp15 = (unembed e3 a3 ncb) in
+              (match tmp15 with
+                | (Some (x2)) -> (let tmp16 = (unembed e4 a4 ncb) in
+                  (match tmp16 with
+                    | (Some (x3)) -> (let tmp17 = (unembed e5 a5 ncb) in
+                      (match tmp17 with
+                        | (Some (x4)) -> (let tmp18 = (unembed e6 a6 ncb) in
+                          (match tmp18 with
+                            | (Some (x5)) -> (let tmp19 = (unembed e7 a7 ncb) in
+                              (match tmp19 with
+                                | (Some (x6)) -> (let tmp20 = (unembed e8 a8 ncb) in
+                                  (match tmp20 with
+                                    | (Some (x7)) -> (let tmp21 = (unembed e9 a9 ncb) in
+                                      (match tmp21 with
+                                        | (Some (x8)) -> (let tmp22 = (unembed e10 a10 ncb) in
+                                          (match tmp22 with
+                                            | (Some (x9)) -> (let tmp23 = (unembed e11 a11 ncb) in
+                                              (match tmp23 with
+                                                | (Some (x10)) -> (let tmp24 = (unembed e12 a12 ncb) in
+                                                  (match tmp24 with
+                                                    | (Some (x11)) -> (let tmp25 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a13 ncb) in
+                                                      (match tmp25 with
+                                                        | (Some (x12)) -> (let tmp26 = (!(x12)) in
+                                                          let tmp27 = (FStarC_Tactics_Types.set_ps_psc psc tmp26) in
+                                                          ((x12) := tmp27);
+                                                          let r = (interp_ctx name (fun tmp28 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12))) in
+                                                          let tmp28 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                          (Some (tmp28)))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_13 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ('u___t13 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (e13 : ('u___t13) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: ((a14, tmp13) :: [])))))))))))))) -> (let tmp14 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp14 (fun a15 -> (let tmp15 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp15 (fun a21 -> (let tmp16 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp16 (fun a31 -> (let tmp17 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp17 (fun a41 -> (let tmp18 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp18 (fun a51 -> (let tmp19 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp19 (fun a61 -> (let tmp20 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp20 (fun a71 -> (let tmp21 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp21 (fun a81 -> (let tmp22 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp22 (fun a91 -> (let tmp23 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp23 (fun a101 -> (let tmp24 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp24 (fun a111 -> (let tmp25 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp25 (fun a121 -> (let tmp26 = (unembed e13 a13 ncb) in
-      (FStarC_Option.bind tmp26 (fun a131 -> (let tmp27 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a14 ncb) in
-      (FStarC_Option.bind tmp27 (fun ps -> (let tmp28 = (!(ps)) in
-      let tmp29 = (FStarC_Tactics_Types.set_ps_psc psc tmp28) in
-      ((ps) := tmp29);
-      let r = (interp_ctx name (fun tmp30 -> (t a15 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 a131 ps))) in
-      let tmp30 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp30)))))))))))))))))))))))))))))))))))))))))))))
+      (match tmp14 with
+        | (Some (x)) -> (let tmp15 = (unembed e2 a2 ncb) in
+          (match tmp15 with
+            | (Some (x1)) -> (let tmp16 = (unembed e3 a3 ncb) in
+              (match tmp16 with
+                | (Some (x2)) -> (let tmp17 = (unembed e4 a4 ncb) in
+                  (match tmp17 with
+                    | (Some (x3)) -> (let tmp18 = (unembed e5 a5 ncb) in
+                      (match tmp18 with
+                        | (Some (x4)) -> (let tmp19 = (unembed e6 a6 ncb) in
+                          (match tmp19 with
+                            | (Some (x5)) -> (let tmp20 = (unembed e7 a7 ncb) in
+                              (match tmp20 with
+                                | (Some (x6)) -> (let tmp21 = (unembed e8 a8 ncb) in
+                                  (match tmp21 with
+                                    | (Some (x7)) -> (let tmp22 = (unembed e9 a9 ncb) in
+                                      (match tmp22 with
+                                        | (Some (x8)) -> (let tmp23 = (unembed e10 a10 ncb) in
+                                          (match tmp23 with
+                                            | (Some (x9)) -> (let tmp24 = (unembed e11 a11 ncb) in
+                                              (match tmp24 with
+                                                | (Some (x10)) -> (let tmp25 = (unembed e12 a12 ncb) in
+                                                  (match tmp25 with
+                                                    | (Some (x11)) -> (let tmp26 = (unembed e13 a13 ncb) in
+                                                      (match tmp26 with
+                                                        | (Some (x12)) -> (let tmp27 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a14 ncb) in
+                                                          (match tmp27 with
+                                                            | (Some (x13)) -> (let tmp28 = (!(x13)) in
+                                                              let tmp29 = (FStarC_Tactics_Types.set_ps_psc psc tmp28) in
+                                                              ((x13) := tmp29);
+                                                              let r = (interp_ctx name (fun tmp30 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13))) in
+                                                              let tmp30 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                              (Some (tmp30)))
+                                                            | None -> None
+                                                          ))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_14 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ('u___t13 -> ('u___t14 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (e13 : ('u___t13) FStarC_Syntax_Embeddings_Base.embedding) (e14 : ('u___t14) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: ((a14, tmp13) :: ((a15, tmp14) :: []))))))))))))))) -> (let tmp15 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp15 (fun a16 -> (let tmp16 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp16 (fun a21 -> (let tmp17 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp17 (fun a31 -> (let tmp18 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp18 (fun a41 -> (let tmp19 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp19 (fun a51 -> (let tmp20 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp20 (fun a61 -> (let tmp21 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp21 (fun a71 -> (let tmp22 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp22 (fun a81 -> (let tmp23 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp23 (fun a91 -> (let tmp24 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp24 (fun a101 -> (let tmp25 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp25 (fun a111 -> (let tmp26 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp26 (fun a121 -> (let tmp27 = (unembed e13 a13 ncb) in
-      (FStarC_Option.bind tmp27 (fun a131 -> (let tmp28 = (unembed e14 a14 ncb) in
-      (FStarC_Option.bind tmp28 (fun a141 -> (let tmp29 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a15 ncb) in
-      (FStarC_Option.bind tmp29 (fun ps -> (let tmp30 = (!(ps)) in
-      let tmp31 = (FStarC_Tactics_Types.set_ps_psc psc tmp30) in
-      ((ps) := tmp31);
-      let r = (interp_ctx name (fun tmp32 -> (t a16 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 a131 a141 ps))) in
-      let tmp32 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp32))))))))))))))))))))))))))))))))))))))))))))))))
+      (match tmp15 with
+        | (Some (x)) -> (let tmp16 = (unembed e2 a2 ncb) in
+          (match tmp16 with
+            | (Some (x1)) -> (let tmp17 = (unembed e3 a3 ncb) in
+              (match tmp17 with
+                | (Some (x2)) -> (let tmp18 = (unembed e4 a4 ncb) in
+                  (match tmp18 with
+                    | (Some (x3)) -> (let tmp19 = (unembed e5 a5 ncb) in
+                      (match tmp19 with
+                        | (Some (x4)) -> (let tmp20 = (unembed e6 a6 ncb) in
+                          (match tmp20 with
+                            | (Some (x5)) -> (let tmp21 = (unembed e7 a7 ncb) in
+                              (match tmp21 with
+                                | (Some (x6)) -> (let tmp22 = (unembed e8 a8 ncb) in
+                                  (match tmp22 with
+                                    | (Some (x7)) -> (let tmp23 = (unembed e9 a9 ncb) in
+                                      (match tmp23 with
+                                        | (Some (x8)) -> (let tmp24 = (unembed e10 a10 ncb) in
+                                          (match tmp24 with
+                                            | (Some (x9)) -> (let tmp25 = (unembed e11 a11 ncb) in
+                                              (match tmp25 with
+                                                | (Some (x10)) -> (let tmp26 = (unembed e12 a12 ncb) in
+                                                  (match tmp26 with
+                                                    | (Some (x11)) -> (let tmp27 = (unembed e13 a13 ncb) in
+                                                      (match tmp27 with
+                                                        | (Some (x12)) -> (let tmp28 = (unembed e14 a14 ncb) in
+                                                          (match tmp28 with
+                                                            | (Some (x13)) -> (let tmp29 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a15 ncb) in
+                                                              (match tmp29 with
+                                                                | (Some (x14)) -> (let tmp30 = (!(x14)) in
+                                                                  let tmp31 = (FStarC_Tactics_Types.set_ps_psc psc tmp30) in
+                                                                  ((x14) := tmp31);
+                                                                  let r = (interp_ctx name (fun tmp32 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14))) in
+                                                                  let tmp32 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                                  (Some (tmp32)))
+                                                                | None -> None
+                                                              ))
+                                                            | None -> None
+                                                          ))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_15 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ('u___t13 -> ('u___t14 -> ('u___t15 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (e13 : ('u___t13) FStarC_Syntax_Embeddings_Base.embedding) (e14 : ('u___t14) FStarC_Syntax_Embeddings_Base.embedding) (e15 : ('u___t15) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: ((a14, tmp13) :: ((a15, tmp14) :: ((a16, tmp15) :: [])))))))))))))))) -> (let tmp16 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp16 (fun a17 -> (let tmp17 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp17 (fun a21 -> (let tmp18 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp18 (fun a31 -> (let tmp19 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp19 (fun a41 -> (let tmp20 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp20 (fun a51 -> (let tmp21 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp21 (fun a61 -> (let tmp22 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp22 (fun a71 -> (let tmp23 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp23 (fun a81 -> (let tmp24 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp24 (fun a91 -> (let tmp25 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp25 (fun a101 -> (let tmp26 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp26 (fun a111 -> (let tmp27 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp27 (fun a121 -> (let tmp28 = (unembed e13 a13 ncb) in
-      (FStarC_Option.bind tmp28 (fun a131 -> (let tmp29 = (unembed e14 a14 ncb) in
-      (FStarC_Option.bind tmp29 (fun a141 -> (let tmp30 = (unembed e15 a15 ncb) in
-      (FStarC_Option.bind tmp30 (fun a151 -> (let tmp31 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a16 ncb) in
-      (FStarC_Option.bind tmp31 (fun ps -> (let tmp32 = (!(ps)) in
-      let tmp33 = (FStarC_Tactics_Types.set_ps_psc psc tmp32) in
-      ((ps) := tmp33);
-      let r = (interp_ctx name (fun tmp34 -> (t a17 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 a131 a141 a151 ps))) in
-      let tmp34 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp34)))))))))))))))))))))))))))))))))))))))))))))))))))
+      (match tmp16 with
+        | (Some (x)) -> (let tmp17 = (unembed e2 a2 ncb) in
+          (match tmp17 with
+            | (Some (x1)) -> (let tmp18 = (unembed e3 a3 ncb) in
+              (match tmp18 with
+                | (Some (x2)) -> (let tmp19 = (unembed e4 a4 ncb) in
+                  (match tmp19 with
+                    | (Some (x3)) -> (let tmp20 = (unembed e5 a5 ncb) in
+                      (match tmp20 with
+                        | (Some (x4)) -> (let tmp21 = (unembed e6 a6 ncb) in
+                          (match tmp21 with
+                            | (Some (x5)) -> (let tmp22 = (unembed e7 a7 ncb) in
+                              (match tmp22 with
+                                | (Some (x6)) -> (let tmp23 = (unembed e8 a8 ncb) in
+                                  (match tmp23 with
+                                    | (Some (x7)) -> (let tmp24 = (unembed e9 a9 ncb) in
+                                      (match tmp24 with
+                                        | (Some (x8)) -> (let tmp25 = (unembed e10 a10 ncb) in
+                                          (match tmp25 with
+                                            | (Some (x9)) -> (let tmp26 = (unembed e11 a11 ncb) in
+                                              (match tmp26 with
+                                                | (Some (x10)) -> (let tmp27 = (unembed e12 a12 ncb) in
+                                                  (match tmp27 with
+                                                    | (Some (x11)) -> (let tmp28 = (unembed e13 a13 ncb) in
+                                                      (match tmp28 with
+                                                        | (Some (x12)) -> (let tmp29 = (unembed e14 a14 ncb) in
+                                                          (match tmp29 with
+                                                            | (Some (x13)) -> (let tmp30 = (unembed e15 a15 ncb) in
+                                                              (match tmp30 with
+                                                                | (Some (x14)) -> (let tmp31 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a16 ncb) in
+                                                                  (match tmp31 with
+                                                                    | (Some (x15)) -> (let tmp32 = (!(x15)) in
+                                                                      let tmp33 = (FStarC_Tactics_Types.set_ps_psc psc tmp32) in
+                                                                      ((x15) := tmp33);
+                                                                      let r = (interp_ctx name (fun tmp34 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15))) in
+                                                                      let tmp34 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                                      (Some (tmp34)))
+                                                                    | None -> None
+                                                                  ))
+                                                                | None -> None
+                                                              ))
+                                                            | None -> None
+                                                          ))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_16 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ('u___t13 -> ('u___t14 -> ('u___t15 -> ('u___t16 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (e13 : ('u___t13) FStarC_Syntax_Embeddings_Base.embedding) (e14 : ('u___t14) FStarC_Syntax_Embeddings_Base.embedding) (e15 : ('u___t15) FStarC_Syntax_Embeddings_Base.embedding) (e16 : ('u___t16) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: ((a14, tmp13) :: ((a15, tmp14) :: ((a16, tmp15) :: ((a17, tmp16) :: []))))))))))))))))) -> (let tmp17 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp17 (fun a18 -> (let tmp18 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp18 (fun a21 -> (let tmp19 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp19 (fun a31 -> (let tmp20 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp20 (fun a41 -> (let tmp21 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp21 (fun a51 -> (let tmp22 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp22 (fun a61 -> (let tmp23 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp23 (fun a71 -> (let tmp24 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp24 (fun a81 -> (let tmp25 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp25 (fun a91 -> (let tmp26 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp26 (fun a101 -> (let tmp27 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp27 (fun a111 -> (let tmp28 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp28 (fun a121 -> (let tmp29 = (unembed e13 a13 ncb) in
-      (FStarC_Option.bind tmp29 (fun a131 -> (let tmp30 = (unembed e14 a14 ncb) in
-      (FStarC_Option.bind tmp30 (fun a141 -> (let tmp31 = (unembed e15 a15 ncb) in
-      (FStarC_Option.bind tmp31 (fun a151 -> (let tmp32 = (unembed e16 a16 ncb) in
-      (FStarC_Option.bind tmp32 (fun a161 -> (let tmp33 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a17 ncb) in
-      (FStarC_Option.bind tmp33 (fun ps -> (let tmp34 = (!(ps)) in
-      let tmp35 = (FStarC_Tactics_Types.set_ps_psc psc tmp34) in
-      ((ps) := tmp35);
-      let r = (interp_ctx name (fun tmp36 -> (t a18 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 a131 a141 a151 a161 ps))) in
-      let tmp36 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp36))))))))))))))))))))))))))))))))))))))))))))))))))))))
+      (match tmp17 with
+        | (Some (x)) -> (let tmp18 = (unembed e2 a2 ncb) in
+          (match tmp18 with
+            | (Some (x1)) -> (let tmp19 = (unembed e3 a3 ncb) in
+              (match tmp19 with
+                | (Some (x2)) -> (let tmp20 = (unembed e4 a4 ncb) in
+                  (match tmp20 with
+                    | (Some (x3)) -> (let tmp21 = (unembed e5 a5 ncb) in
+                      (match tmp21 with
+                        | (Some (x4)) -> (let tmp22 = (unembed e6 a6 ncb) in
+                          (match tmp22 with
+                            | (Some (x5)) -> (let tmp23 = (unembed e7 a7 ncb) in
+                              (match tmp23 with
+                                | (Some (x6)) -> (let tmp24 = (unembed e8 a8 ncb) in
+                                  (match tmp24 with
+                                    | (Some (x7)) -> (let tmp25 = (unembed e9 a9 ncb) in
+                                      (match tmp25 with
+                                        | (Some (x8)) -> (let tmp26 = (unembed e10 a10 ncb) in
+                                          (match tmp26 with
+                                            | (Some (x9)) -> (let tmp27 = (unembed e11 a11 ncb) in
+                                              (match tmp27 with
+                                                | (Some (x10)) -> (let tmp28 = (unembed e12 a12 ncb) in
+                                                  (match tmp28 with
+                                                    | (Some (x11)) -> (let tmp29 = (unembed e13 a13 ncb) in
+                                                      (match tmp29 with
+                                                        | (Some (x12)) -> (let tmp30 = (unembed e14 a14 ncb) in
+                                                          (match tmp30 with
+                                                            | (Some (x13)) -> (let tmp31 = (unembed e15 a15 ncb) in
+                                                              (match tmp31 with
+                                                                | (Some (x14)) -> (let tmp32 = (unembed e16 a16 ncb) in
+                                                                  (match tmp32 with
+                                                                    | (Some (x15)) -> (let tmp33 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a17 ncb) in
+                                                                      (match tmp33 with
+                                                                        | (Some (x16)) -> (let tmp34 = (!(x16)) in
+                                                                          let tmp35 = (FStarC_Tactics_Types.set_ps_psc psc tmp34) in
+                                                                          ((x16) := tmp35);
+                                                                          let r = (interp_ctx name (fun tmp36 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16))) in
+                                                                          let tmp36 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                                          (Some (tmp36)))
+                                                                        | None -> None
+                                                                      ))
+                                                                    | None -> None
+                                                                  ))
+                                                                | None -> None
+                                                              ))
+                                                            | None -> None
+                                                          ))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_17 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ('u___t13 -> ('u___t14 -> ('u___t15 -> ('u___t16 -> ('u___t17 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))))))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (e13 : ('u___t13) FStarC_Syntax_Embeddings_Base.embedding) (e14 : ('u___t14) FStarC_Syntax_Embeddings_Base.embedding) (e15 : ('u___t15) FStarC_Syntax_Embeddings_Base.embedding) (e16 : ('u___t16) FStarC_Syntax_Embeddings_Base.embedding) (e17 : ('u___t17) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: ((a14, tmp13) :: ((a15, tmp14) :: ((a16, tmp15) :: ((a17, tmp16) :: ((a18, tmp17) :: [])))))))))))))))))) -> (let tmp18 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp18 (fun a19 -> (let tmp19 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp19 (fun a21 -> (let tmp20 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp20 (fun a31 -> (let tmp21 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp21 (fun a41 -> (let tmp22 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp22 (fun a51 -> (let tmp23 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp23 (fun a61 -> (let tmp24 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp24 (fun a71 -> (let tmp25 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp25 (fun a81 -> (let tmp26 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp26 (fun a91 -> (let tmp27 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp27 (fun a101 -> (let tmp28 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp28 (fun a111 -> (let tmp29 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp29 (fun a121 -> (let tmp30 = (unembed e13 a13 ncb) in
-      (FStarC_Option.bind tmp30 (fun a131 -> (let tmp31 = (unembed e14 a14 ncb) in
-      (FStarC_Option.bind tmp31 (fun a141 -> (let tmp32 = (unembed e15 a15 ncb) in
-      (FStarC_Option.bind tmp32 (fun a151 -> (let tmp33 = (unembed e16 a16 ncb) in
-      (FStarC_Option.bind tmp33 (fun a161 -> (let tmp34 = (unembed e17 a17 ncb) in
-      (FStarC_Option.bind tmp34 (fun a171 -> (let tmp35 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a18 ncb) in
-      (FStarC_Option.bind tmp35 (fun ps -> (let tmp36 = (!(ps)) in
-      let tmp37 = (FStarC_Tactics_Types.set_ps_psc psc tmp36) in
-      ((ps) := tmp37);
-      let r = (interp_ctx name (fun tmp38 -> (t a19 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 a131 a141 a151 a161 a171 ps))) in
-      let tmp38 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp38)))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+      (match tmp18 with
+        | (Some (x)) -> (let tmp19 = (unembed e2 a2 ncb) in
+          (match tmp19 with
+            | (Some (x1)) -> (let tmp20 = (unembed e3 a3 ncb) in
+              (match tmp20 with
+                | (Some (x2)) -> (let tmp21 = (unembed e4 a4 ncb) in
+                  (match tmp21 with
+                    | (Some (x3)) -> (let tmp22 = (unembed e5 a5 ncb) in
+                      (match tmp22 with
+                        | (Some (x4)) -> (let tmp23 = (unembed e6 a6 ncb) in
+                          (match tmp23 with
+                            | (Some (x5)) -> (let tmp24 = (unembed e7 a7 ncb) in
+                              (match tmp24 with
+                                | (Some (x6)) -> (let tmp25 = (unembed e8 a8 ncb) in
+                                  (match tmp25 with
+                                    | (Some (x7)) -> (let tmp26 = (unembed e9 a9 ncb) in
+                                      (match tmp26 with
+                                        | (Some (x8)) -> (let tmp27 = (unembed e10 a10 ncb) in
+                                          (match tmp27 with
+                                            | (Some (x9)) -> (let tmp28 = (unembed e11 a11 ncb) in
+                                              (match tmp28 with
+                                                | (Some (x10)) -> (let tmp29 = (unembed e12 a12 ncb) in
+                                                  (match tmp29 with
+                                                    | (Some (x11)) -> (let tmp30 = (unembed e13 a13 ncb) in
+                                                      (match tmp30 with
+                                                        | (Some (x12)) -> (let tmp31 = (unembed e14 a14 ncb) in
+                                                          (match tmp31 with
+                                                            | (Some (x13)) -> (let tmp32 = (unembed e15 a15 ncb) in
+                                                              (match tmp32 with
+                                                                | (Some (x14)) -> (let tmp33 = (unembed e16 a16 ncb) in
+                                                                  (match tmp33 with
+                                                                    | (Some (x15)) -> (let tmp34 = (unembed e17 a17 ncb) in
+                                                                      (match tmp34 with
+                                                                        | (Some (x16)) -> (let tmp35 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a18 ncb) in
+                                                                          (match tmp35 with
+                                                                            | (Some (x17)) -> (let tmp36 = (!(x17)) in
+                                                                              let tmp37 = (FStarC_Tactics_Types.set_ps_psc psc tmp36) in
+                                                                              ((x17) := tmp37);
+                                                                              let r = (interp_ctx name (fun tmp38 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17))) in
+                                                                              let tmp38 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                                              (Some (tmp38)))
+                                                                            | None -> None
+                                                                          ))
+                                                                        | None -> None
+                                                                      ))
+                                                                    | None -> None
+                                                                  ))
+                                                                | None -> None
+                                                              ))
+                                                            | None -> None
+                                                          ))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_18 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ('u___t13 -> ('u___t14 -> ('u___t15 -> ('u___t16 -> ('u___t17 -> ('u___t18 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))))))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (e13 : ('u___t13) FStarC_Syntax_Embeddings_Base.embedding) (e14 : ('u___t14) FStarC_Syntax_Embeddings_Base.embedding) (e15 : ('u___t15) FStarC_Syntax_Embeddings_Base.embedding) (e16 : ('u___t16) FStarC_Syntax_Embeddings_Base.embedding) (e17 : ('u___t17) FStarC_Syntax_Embeddings_Base.embedding) (e18 : ('u___t18) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: ((a14, tmp13) :: ((a15, tmp14) :: ((a16, tmp15) :: ((a17, tmp16) :: ((a18, tmp17) :: ((a19, tmp18) :: []))))))))))))))))))) -> (let tmp19 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp19 (fun a110 -> (let tmp20 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp20 (fun a21 -> (let tmp21 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp21 (fun a31 -> (let tmp22 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp22 (fun a41 -> (let tmp23 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp23 (fun a51 -> (let tmp24 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp24 (fun a61 -> (let tmp25 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp25 (fun a71 -> (let tmp26 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp26 (fun a81 -> (let tmp27 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp27 (fun a91 -> (let tmp28 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp28 (fun a101 -> (let tmp29 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp29 (fun a111 -> (let tmp30 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp30 (fun a121 -> (let tmp31 = (unembed e13 a13 ncb) in
-      (FStarC_Option.bind tmp31 (fun a131 -> (let tmp32 = (unembed e14 a14 ncb) in
-      (FStarC_Option.bind tmp32 (fun a141 -> (let tmp33 = (unembed e15 a15 ncb) in
-      (FStarC_Option.bind tmp33 (fun a151 -> (let tmp34 = (unembed e16 a16 ncb) in
-      (FStarC_Option.bind tmp34 (fun a161 -> (let tmp35 = (unembed e17 a17 ncb) in
-      (FStarC_Option.bind tmp35 (fun a171 -> (let tmp36 = (unembed e18 a18 ncb) in
-      (FStarC_Option.bind tmp36 (fun a181 -> (let tmp37 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a19 ncb) in
-      (FStarC_Option.bind tmp37 (fun ps -> (let tmp38 = (!(ps)) in
-      let tmp39 = (FStarC_Tactics_Types.set_ps_psc psc tmp38) in
-      ((ps) := tmp39);
-      let r = (interp_ctx name (fun tmp40 -> (t a110 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 a131 a141 a151 a161 a171 a181 ps))) in
-      let tmp40 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp40))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+      (match tmp19 with
+        | (Some (x)) -> (let tmp20 = (unembed e2 a2 ncb) in
+          (match tmp20 with
+            | (Some (x1)) -> (let tmp21 = (unembed e3 a3 ncb) in
+              (match tmp21 with
+                | (Some (x2)) -> (let tmp22 = (unembed e4 a4 ncb) in
+                  (match tmp22 with
+                    | (Some (x3)) -> (let tmp23 = (unembed e5 a5 ncb) in
+                      (match tmp23 with
+                        | (Some (x4)) -> (let tmp24 = (unembed e6 a6 ncb) in
+                          (match tmp24 with
+                            | (Some (x5)) -> (let tmp25 = (unembed e7 a7 ncb) in
+                              (match tmp25 with
+                                | (Some (x6)) -> (let tmp26 = (unembed e8 a8 ncb) in
+                                  (match tmp26 with
+                                    | (Some (x7)) -> (let tmp27 = (unembed e9 a9 ncb) in
+                                      (match tmp27 with
+                                        | (Some (x8)) -> (let tmp28 = (unembed e10 a10 ncb) in
+                                          (match tmp28 with
+                                            | (Some (x9)) -> (let tmp29 = (unembed e11 a11 ncb) in
+                                              (match tmp29 with
+                                                | (Some (x10)) -> (let tmp30 = (unembed e12 a12 ncb) in
+                                                  (match tmp30 with
+                                                    | (Some (x11)) -> (let tmp31 = (unembed e13 a13 ncb) in
+                                                      (match tmp31 with
+                                                        | (Some (x12)) -> (let tmp32 = (unembed e14 a14 ncb) in
+                                                          (match tmp32 with
+                                                            | (Some (x13)) -> (let tmp33 = (unembed e15 a15 ncb) in
+                                                              (match tmp33 with
+                                                                | (Some (x14)) -> (let tmp34 = (unembed e16 a16 ncb) in
+                                                                  (match tmp34 with
+                                                                    | (Some (x15)) -> (let tmp35 = (unembed e17 a17 ncb) in
+                                                                      (match tmp35 with
+                                                                        | (Some (x16)) -> (let tmp36 = (unembed e18 a18 ncb) in
+                                                                          (match tmp36 with
+                                                                            | (Some (x17)) -> (let tmp37 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a19 ncb) in
+                                                                              (match tmp37 with
+                                                                                | (Some (x18)) -> (let tmp38 = (!(x18)) in
+                                                                                  let tmp39 = (FStarC_Tactics_Types.set_ps_psc psc tmp38) in
+                                                                                  ((x18) := tmp39);
+                                                                                  let r = (interp_ctx name (fun tmp40 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18))) in
+                                                                                  let tmp40 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                                                  (Some (tmp40)))
+                                                                                | None -> None
+                                                                              ))
+                                                                            | None -> None
+                                                                          ))
+                                                                        | None -> None
+                                                                      ))
+                                                                    | None -> None
+                                                                  ))
+                                                                | None -> None
+                                                              ))
+                                                            | None -> None
+                                                          ))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_19 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ('u___t13 -> ('u___t14 -> ('u___t15 -> ('u___t16 -> ('u___t17 -> ('u___t18 -> ('u___t19 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r))))))))))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (e13 : ('u___t13) FStarC_Syntax_Embeddings_Base.embedding) (e14 : ('u___t14) FStarC_Syntax_Embeddings_Base.embedding) (e15 : ('u___t15) FStarC_Syntax_Embeddings_Base.embedding) (e16 : ('u___t16) FStarC_Syntax_Embeddings_Base.embedding) (e17 : ('u___t17) FStarC_Syntax_Embeddings_Base.embedding) (e18 : ('u___t18) FStarC_Syntax_Embeddings_Base.embedding) (e19 : ('u___t19) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: ((a14, tmp13) :: ((a15, tmp14) :: ((a16, tmp15) :: ((a17, tmp16) :: ((a18, tmp17) :: ((a19, tmp18) :: ((a20, tmp19) :: [])))))))))))))))))))) -> (let tmp20 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp20 (fun a110 -> (let tmp21 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp21 (fun a21 -> (let tmp22 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp22 (fun a31 -> (let tmp23 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp23 (fun a41 -> (let tmp24 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp24 (fun a51 -> (let tmp25 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp25 (fun a61 -> (let tmp26 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp26 (fun a71 -> (let tmp27 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp27 (fun a81 -> (let tmp28 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp28 (fun a91 -> (let tmp29 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp29 (fun a101 -> (let tmp30 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp30 (fun a111 -> (let tmp31 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp31 (fun a121 -> (let tmp32 = (unembed e13 a13 ncb) in
-      (FStarC_Option.bind tmp32 (fun a131 -> (let tmp33 = (unembed e14 a14 ncb) in
-      (FStarC_Option.bind tmp33 (fun a141 -> (let tmp34 = (unembed e15 a15 ncb) in
-      (FStarC_Option.bind tmp34 (fun a151 -> (let tmp35 = (unembed e16 a16 ncb) in
-      (FStarC_Option.bind tmp35 (fun a161 -> (let tmp36 = (unembed e17 a17 ncb) in
-      (FStarC_Option.bind tmp36 (fun a171 -> (let tmp37 = (unembed e18 a18 ncb) in
-      (FStarC_Option.bind tmp37 (fun a181 -> (let tmp38 = (unembed e19 a19 ncb) in
-      (FStarC_Option.bind tmp38 (fun a191 -> (let tmp39 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a20 ncb) in
-      (FStarC_Option.bind tmp39 (fun ps -> (let tmp40 = (!(ps)) in
-      let tmp41 = (FStarC_Tactics_Types.set_ps_psc psc tmp40) in
-      ((ps) := tmp41);
-      let r = (interp_ctx name (fun tmp42 -> (t a110 a21 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 a131 a141 a151 a161 a171 a181 a191 ps))) in
-      let tmp42 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp42)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+      (match tmp20 with
+        | (Some (x)) -> (let tmp21 = (unembed e2 a2 ncb) in
+          (match tmp21 with
+            | (Some (x1)) -> (let tmp22 = (unembed e3 a3 ncb) in
+              (match tmp22 with
+                | (Some (x2)) -> (let tmp23 = (unembed e4 a4 ncb) in
+                  (match tmp23 with
+                    | (Some (x3)) -> (let tmp24 = (unembed e5 a5 ncb) in
+                      (match tmp24 with
+                        | (Some (x4)) -> (let tmp25 = (unembed e6 a6 ncb) in
+                          (match tmp25 with
+                            | (Some (x5)) -> (let tmp26 = (unembed e7 a7 ncb) in
+                              (match tmp26 with
+                                | (Some (x6)) -> (let tmp27 = (unembed e8 a8 ncb) in
+                                  (match tmp27 with
+                                    | (Some (x7)) -> (let tmp28 = (unembed e9 a9 ncb) in
+                                      (match tmp28 with
+                                        | (Some (x8)) -> (let tmp29 = (unembed e10 a10 ncb) in
+                                          (match tmp29 with
+                                            | (Some (x9)) -> (let tmp30 = (unembed e11 a11 ncb) in
+                                              (match tmp30 with
+                                                | (Some (x10)) -> (let tmp31 = (unembed e12 a12 ncb) in
+                                                  (match tmp31 with
+                                                    | (Some (x11)) -> (let tmp32 = (unembed e13 a13 ncb) in
+                                                      (match tmp32 with
+                                                        | (Some (x12)) -> (let tmp33 = (unembed e14 a14 ncb) in
+                                                          (match tmp33 with
+                                                            | (Some (x13)) -> (let tmp34 = (unembed e15 a15 ncb) in
+                                                              (match tmp34 with
+                                                                | (Some (x14)) -> (let tmp35 = (unembed e16 a16 ncb) in
+                                                                  (match tmp35 with
+                                                                    | (Some (x15)) -> (let tmp36 = (unembed e17 a17 ncb) in
+                                                                      (match tmp36 with
+                                                                        | (Some (x16)) -> (let tmp37 = (unembed e18 a18 ncb) in
+                                                                          (match tmp37 with
+                                                                            | (Some (x17)) -> (let tmp38 = (unembed e19 a19 ncb) in
+                                                                              (match tmp38 with
+                                                                                | (Some (x18)) -> (let tmp39 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a20 ncb) in
+                                                                                  (match tmp39 with
+                                                                                    | (Some (x19)) -> (let tmp40 = (!(x19)) in
+                                                                                      let tmp41 = (FStarC_Tactics_Types.set_ps_psc psc tmp40) in
+                                                                                      ((x19) := tmp41);
+                                                                                      let r = (interp_ctx name (fun tmp42 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19))) in
+                                                                                      let tmp42 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                                                      (Some (tmp42)))
+                                                                                    | None -> None
+                                                                                  ))
+                                                                                | None -> None
+                                                                              ))
+                                                                            | None -> None
+                                                                          ))
+                                                                        | None -> None
+                                                                      ))
+                                                                    | None -> None
+                                                                  ))
+                                                                | None -> None
+                                                              ))
+                                                            | None -> None
+                                                          ))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
 let mk_tactic_interpretation_20 (name : string) (t : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ('u___t6 -> ('u___t7 -> ('u___t8 -> ('u___t9 -> ('u___t10 -> ('u___t11 -> ('u___t12 -> ('u___t13 -> ('u___t14 -> ('u___t15 -> ('u___t16 -> ('u___t17 -> ('u___t18 -> ('u___t19 -> ('u___t20 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___r)))))))))))))))))))))) (e1 : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (e2 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (e3 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (e4 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (e5 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (e6 : ('u___t6) FStarC_Syntax_Embeddings_Base.embedding) (e7 : ('u___t7) FStarC_Syntax_Embeddings_Base.embedding) (e8 : ('u___t8) FStarC_Syntax_Embeddings_Base.embedding) (e9 : ('u___t9) FStarC_Syntax_Embeddings_Base.embedding) (e10 : ('u___t10) FStarC_Syntax_Embeddings_Base.embedding) (e11 : ('u___t11) FStarC_Syntax_Embeddings_Base.embedding) (e12 : ('u___t12) FStarC_Syntax_Embeddings_Base.embedding) (e13 : ('u___t13) FStarC_Syntax_Embeddings_Base.embedding) (e14 : ('u___t14) FStarC_Syntax_Embeddings_Base.embedding) (e15 : ('u___t15) FStarC_Syntax_Embeddings_Base.embedding) (e16 : ('u___t16) FStarC_Syntax_Embeddings_Base.embedding) (e17 : ('u___t17) FStarC_Syntax_Embeddings_Base.embedding) (e18 : ('u___t18) FStarC_Syntax_Embeddings_Base.embedding) (e19 : ('u___t19) FStarC_Syntax_Embeddings_Base.embedding) (e20 : ('u___t20) FStarC_Syntax_Embeddings_Base.embedding) (er : ('u___r) FStarC_Syntax_Embeddings_Base.embedding) (psc : FStarC_TypeChecker_Primops_Base.psc) (ncb : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (us : (FStarC_Syntax_Syntax.universe) list) (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (match args with
     | ((a1, tmp) :: ((a2, tmp1) :: ((a3, tmp2) :: ((a4, tmp3) :: ((a5, tmp4) :: ((a6, tmp5) :: ((a7, tmp6) :: ((a8, tmp7) :: ((a9, tmp8) :: ((a10, tmp9) :: ((a11, tmp10) :: ((a12, tmp11) :: ((a13, tmp12) :: ((a14, tmp13) :: ((a15, tmp14) :: ((a16, tmp15) :: ((a17, tmp16) :: ((a18, tmp17) :: ((a19, tmp18) :: ((a20, tmp19) :: ((a21, tmp20) :: []))))))))))))))))))))) -> (let tmp21 = (unembed e1 a1 ncb) in
-      (FStarC_Option.bind tmp21 (fun a110 -> (let tmp22 = (unembed e2 a2 ncb) in
-      (FStarC_Option.bind tmp22 (fun a22 -> (let tmp23 = (unembed e3 a3 ncb) in
-      (FStarC_Option.bind tmp23 (fun a31 -> (let tmp24 = (unembed e4 a4 ncb) in
-      (FStarC_Option.bind tmp24 (fun a41 -> (let tmp25 = (unembed e5 a5 ncb) in
-      (FStarC_Option.bind tmp25 (fun a51 -> (let tmp26 = (unembed e6 a6 ncb) in
-      (FStarC_Option.bind tmp26 (fun a61 -> (let tmp27 = (unembed e7 a7 ncb) in
-      (FStarC_Option.bind tmp27 (fun a71 -> (let tmp28 = (unembed e8 a8 ncb) in
-      (FStarC_Option.bind tmp28 (fun a81 -> (let tmp29 = (unembed e9 a9 ncb) in
-      (FStarC_Option.bind tmp29 (fun a91 -> (let tmp30 = (unembed e10 a10 ncb) in
-      (FStarC_Option.bind tmp30 (fun a101 -> (let tmp31 = (unembed e11 a11 ncb) in
-      (FStarC_Option.bind tmp31 (fun a111 -> (let tmp32 = (unembed e12 a12 ncb) in
-      (FStarC_Option.bind tmp32 (fun a121 -> (let tmp33 = (unembed e13 a13 ncb) in
-      (FStarC_Option.bind tmp33 (fun a131 -> (let tmp34 = (unembed e14 a14 ncb) in
-      (FStarC_Option.bind tmp34 (fun a141 -> (let tmp35 = (unembed e15 a15 ncb) in
-      (FStarC_Option.bind tmp35 (fun a151 -> (let tmp36 = (unembed e16 a16 ncb) in
-      (FStarC_Option.bind tmp36 (fun a161 -> (let tmp37 = (unembed e17 a17 ncb) in
-      (FStarC_Option.bind tmp37 (fun a171 -> (let tmp38 = (unembed e18 a18 ncb) in
-      (FStarC_Option.bind tmp38 (fun a181 -> (let tmp39 = (unembed e19 a19 ncb) in
-      (FStarC_Option.bind tmp39 (fun a191 -> (let tmp40 = (unembed e20 a20 ncb) in
-      (FStarC_Option.bind tmp40 (fun a201 -> (let tmp41 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a21 ncb) in
-      (FStarC_Option.bind tmp41 (fun ps -> (let tmp42 = (!(ps)) in
-      let tmp43 = (FStarC_Tactics_Types.set_ps_psc psc tmp42) in
-      ((ps) := tmp43);
-      let r = (interp_ctx name (fun tmp44 -> (t a110 a22 a31 a41 a51 a61 a71 a81 a91 a101 a111 a121 a131 a141 a151 a161 a171 a181 a191 a201 ps))) in
-      let tmp44 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
-      (Some (tmp44))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+      (match tmp21 with
+        | (Some (x)) -> (let tmp22 = (unembed e2 a2 ncb) in
+          (match tmp22 with
+            | (Some (x1)) -> (let tmp23 = (unembed e3 a3 ncb) in
+              (match tmp23 with
+                | (Some (x2)) -> (let tmp24 = (unembed e4 a4 ncb) in
+                  (match tmp24 with
+                    | (Some (x3)) -> (let tmp25 = (unembed e5 a5 ncb) in
+                      (match tmp25 with
+                        | (Some (x4)) -> (let tmp26 = (unembed e6 a6 ncb) in
+                          (match tmp26 with
+                            | (Some (x5)) -> (let tmp27 = (unembed e7 a7 ncb) in
+                              (match tmp27 with
+                                | (Some (x6)) -> (let tmp28 = (unembed e8 a8 ncb) in
+                                  (match tmp28 with
+                                    | (Some (x7)) -> (let tmp29 = (unembed e9 a9 ncb) in
+                                      (match tmp29 with
+                                        | (Some (x8)) -> (let tmp30 = (unembed e10 a10 ncb) in
+                                          (match tmp30 with
+                                            | (Some (x9)) -> (let tmp31 = (unembed e11 a11 ncb) in
+                                              (match tmp31 with
+                                                | (Some (x10)) -> (let tmp32 = (unembed e12 a12 ncb) in
+                                                  (match tmp32 with
+                                                    | (Some (x11)) -> (let tmp33 = (unembed e13 a13 ncb) in
+                                                      (match tmp33 with
+                                                        | (Some (x12)) -> (let tmp34 = (unembed e14 a14 ncb) in
+                                                          (match tmp34 with
+                                                            | (Some (x13)) -> (let tmp35 = (unembed e15 a15 ncb) in
+                                                              (match tmp35 with
+                                                                | (Some (x14)) -> (let tmp36 = (unembed e16 a16 ncb) in
+                                                                  (match tmp36 with
+                                                                    | (Some (x15)) -> (let tmp37 = (unembed e17 a17 ncb) in
+                                                                      (match tmp37 with
+                                                                        | (Some (x16)) -> (let tmp38 = (unembed e18 a18 ncb) in
+                                                                          (match tmp38 with
+                                                                            | (Some (x17)) -> (let tmp39 = (unembed e19 a19 ncb) in
+                                                                              (match tmp39 with
+                                                                                | (Some (x18)) -> (let tmp40 = (unembed e20 a20 ncb) in
+                                                                                  (match tmp40 with
+                                                                                    | (Some (x19)) -> (let tmp41 = (unembed FStarC_Tactics_Embedding.e_ref_proofstate a21 ncb) in
+                                                                                      (match tmp41 with
+                                                                                        | (Some (x20)) -> (let tmp42 = (!(x20)) in
+                                                                                          let tmp43 = (FStarC_Tactics_Types.set_ps_psc psc tmp42) in
+                                                                                          ((x20) := tmp43);
+                                                                                          let r = (interp_ctx name (fun tmp44 -> (t x x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20))) in
+                                                                                          let tmp44 = (embed er (FStarC_TypeChecker_Primops_Base.psc_range psc) r ncb) in
+                                                                                          (Some (tmp44)))
+                                                                                        | None -> None
+                                                                                      ))
+                                                                                    | None -> None
+                                                                                  ))
+                                                                                | None -> None
+                                                                              ))
+                                                                            | None -> None
+                                                                          ))
+                                                                        | None -> None
+                                                                      ))
+                                                                    | None -> None
+                                                                  ))
+                                                                | None -> None
+                                                              ))
+                                                            | None -> None
+                                                          ))
+                                                        | None -> None
+                                                      ))
+                                                    | None -> None
+                                                  ))
+                                                | None -> None
+                                              ))
+                                            | None -> None
+                                          ))
+                                        | None -> None
+                                      ))
+                                    | None -> None
+                                  ))
+                                | None -> None
+                              ))
+                            | None -> None
+                          ))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )
 
@@ -496,46 +1186,43 @@ let set_auto_reflect (arity : Prims.int) (p : FStarC_TypeChecker_Primops_Base.pr
     interpretation = (p).FStarC_TypeChecker_Primops_Base.interpretation;
     interpretation_nbe = (p).FStarC_TypeChecker_Primops_Base.interpretation_nbe }
 
-let run_wrap (label : string) (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
-  (interp_ctx label (fun tmp -> (t ps)))
-
 let mk_tac_step_1 (univ_arity : Prims.int) (nm : string) (tmp : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('u___res) FStarC_Syntax_Embeddings_Base.embedding) (tmp2 : ('u___nt1) FStarC_TypeChecker_NBETerm.embedding) (tmp3 : ('u___nres) FStarC_TypeChecker_NBETerm.embedding) (f : ('u___t1 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___res))) (nbe_f : ('u___nt1 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___nres))) : FStarC_TypeChecker_Primops_Base.primitive_step =
   (let lid = (builtin_lid nm) in
   (set_auto_reflect Prims.int_one (FStarC_TypeChecker_Primops_Base.mk2' univ_arity lid tmp tmp2 FStarC_Tactics_Embedding.e_ref_proofstate FStarC_Tactics_Embedding.e_ref_proofstate_nbe tmp1 tmp3 (fun a ps -> (let tmp4 = (f a) in
-  let tmp5 = (run_wrap nm tmp4 ps) in
+  let tmp5 = (interp_ctx nm (fun tmp5 -> (tmp4 ps))) in
   (Some (tmp5)))) (fun a ps -> (let tmp4 = (nbe_f a) in
-  let tmp5 = (run_wrap nm tmp4 ps) in
+  let tmp5 = (interp_ctx nm (fun tmp5 -> (tmp4 ps))) in
   (Some (tmp5)))))))
 
 let mk_tac_step_2 (univ_arity : Prims.int) (nm : string) (tmp : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (tmp2 : ('u___res) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('u___nt1) FStarC_TypeChecker_NBETerm.embedding) (tmp4 : ('u___nt2) FStarC_TypeChecker_NBETerm.embedding) (tmp5 : ('u___nres) FStarC_TypeChecker_NBETerm.embedding) (f : ('u___t1 -> ('u___t2 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___res)))) (nbe_f : ('u___nt1 -> ('u___nt2 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___nres)))) : FStarC_TypeChecker_Primops_Base.primitive_step =
   (let lid = (builtin_lid nm) in
   (set_auto_reflect (Prims.of_int (2)) (FStarC_TypeChecker_Primops_Base.mk3' univ_arity lid tmp tmp3 tmp1 tmp4 FStarC_Tactics_Embedding.e_ref_proofstate FStarC_Tactics_Embedding.e_ref_proofstate_nbe tmp2 tmp5 (fun a b ps -> (let tmp6 = (f a b) in
-  let tmp7 = (run_wrap nm tmp6 ps) in
+  let tmp7 = (interp_ctx nm (fun tmp7 -> (tmp6 ps))) in
   (Some (tmp7)))) (fun a b ps -> (let tmp6 = (nbe_f a b) in
-  let tmp7 = (run_wrap nm tmp6 ps) in
+  let tmp7 = (interp_ctx nm (fun tmp7 -> (tmp6 ps))) in
   (Some (tmp7)))))))
 
 let mk_tac_step_3 (univ_arity : Prims.int) (nm : string) (tmp : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (tmp2 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('u___res) FStarC_Syntax_Embeddings_Base.embedding) (tmp4 : ('u___nt1) FStarC_TypeChecker_NBETerm.embedding) (tmp5 : ('u___nt2) FStarC_TypeChecker_NBETerm.embedding) (tmp6 : ('u___nt3) FStarC_TypeChecker_NBETerm.embedding) (tmp7 : ('u___nres) FStarC_TypeChecker_NBETerm.embedding) (f : ('u___t1 -> ('u___t2 -> ('u___t3 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___res))))) (nbe_f : ('u___nt1 -> ('u___nt2 -> ('u___nt3 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___nres))))) : FStarC_TypeChecker_Primops_Base.primitive_step =
   (let lid = (builtin_lid nm) in
   (set_auto_reflect (Prims.of_int (3)) (FStarC_TypeChecker_Primops_Base.mk4' univ_arity lid tmp tmp4 tmp1 tmp5 tmp2 tmp6 FStarC_Tactics_Embedding.e_ref_proofstate FStarC_Tactics_Embedding.e_ref_proofstate_nbe tmp3 tmp7 (fun a b c ps -> (let tmp8 = (f a b c) in
-  let tmp9 = (run_wrap nm tmp8 ps) in
+  let tmp9 = (interp_ctx nm (fun tmp9 -> (tmp8 ps))) in
   (Some (tmp9)))) (fun a b c ps -> (let tmp8 = (nbe_f a b c) in
-  let tmp9 = (run_wrap nm tmp8 ps) in
+  let tmp9 = (interp_ctx nm (fun tmp9 -> (tmp8 ps))) in
   (Some (tmp9)))))))
 
 let mk_tac_step_4 (univ_arity : Prims.int) (nm : string) (tmp : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (tmp2 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (tmp4 : ('u___res) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('u___nt1) FStarC_TypeChecker_NBETerm.embedding) (tmp6 : ('u___nt2) FStarC_TypeChecker_NBETerm.embedding) (tmp7 : ('u___nt3) FStarC_TypeChecker_NBETerm.embedding) (tmp8 : ('u___nt4) FStarC_TypeChecker_NBETerm.embedding) (tmp9 : ('u___nres) FStarC_TypeChecker_NBETerm.embedding) (f : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___res)))))) (nbe_f : ('u___nt1 -> ('u___nt2 -> ('u___nt3 -> ('u___nt4 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___nres)))))) : FStarC_TypeChecker_Primops_Base.primitive_step =
   (let lid = (builtin_lid nm) in
   (set_auto_reflect (Prims.of_int (4)) (FStarC_TypeChecker_Primops_Base.mk5' univ_arity lid tmp tmp5 tmp1 tmp6 tmp2 tmp7 tmp3 tmp8 FStarC_Tactics_Embedding.e_ref_proofstate FStarC_Tactics_Embedding.e_ref_proofstate_nbe tmp4 tmp9 (fun a b c d ps -> (let tmp10 = (f a b c d) in
-  let tmp11 = (run_wrap nm tmp10 ps) in
+  let tmp11 = (interp_ctx nm (fun tmp11 -> (tmp10 ps))) in
   (Some (tmp11)))) (fun a b c d ps -> (let tmp10 = (nbe_f a b c d) in
-  let tmp11 = (run_wrap nm tmp10 ps) in
+  let tmp11 = (interp_ctx nm (fun tmp11 -> (tmp10 ps))) in
   (Some (tmp11)))))))
 
 let mk_tac_step_5 (univ_arity : Prims.int) (nm : string) (tmp : ('u___t1) FStarC_Syntax_Embeddings_Base.embedding) (tmp1 : ('u___t2) FStarC_Syntax_Embeddings_Base.embedding) (tmp2 : ('u___t3) FStarC_Syntax_Embeddings_Base.embedding) (tmp3 : ('u___t4) FStarC_Syntax_Embeddings_Base.embedding) (tmp4 : ('u___t5) FStarC_Syntax_Embeddings_Base.embedding) (tmp5 : ('u___res) FStarC_Syntax_Embeddings_Base.embedding) (tmp6 : ('u___nt1) FStarC_TypeChecker_NBETerm.embedding) (tmp7 : ('u___nt2) FStarC_TypeChecker_NBETerm.embedding) (tmp8 : ('u___nt3) FStarC_TypeChecker_NBETerm.embedding) (tmp9 : ('u___nt4) FStarC_TypeChecker_NBETerm.embedding) (tmp10 : ('u___nt5) FStarC_TypeChecker_NBETerm.embedding) (tmp11 : ('u___nres) FStarC_TypeChecker_NBETerm.embedding) (f : ('u___t1 -> ('u___t2 -> ('u___t3 -> ('u___t4 -> ('u___t5 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___res))))))) (nbe_f : ('u___nt1 -> ('u___nt2 -> ('u___nt3 -> ('u___nt4 -> ('u___nt5 -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___nres))))))) : FStarC_TypeChecker_Primops_Base.primitive_step =
   (let lid = (builtin_lid nm) in
   (set_auto_reflect (Prims.of_int (5)) (FStarC_TypeChecker_Primops_Base.mk6' univ_arity lid tmp tmp6 tmp1 tmp7 tmp2 tmp8 tmp3 tmp9 tmp4 tmp10 FStarC_Tactics_Embedding.e_ref_proofstate FStarC_Tactics_Embedding.e_ref_proofstate_nbe tmp5 tmp11 (fun a b c d e ps -> (let tmp12 = (f a b c d e) in
-  let tmp13 = (run_wrap nm tmp12 ps) in
+  let tmp13 = (interp_ctx nm (fun tmp13 -> (tmp12 ps))) in
   (Some (tmp13)))) (fun a b c d e ps -> (let tmp12 = (nbe_f a b c d e) in
-  let tmp13 = (run_wrap nm tmp12 ps) in
+  let tmp13 = (interp_ctx nm (fun tmp13 -> (tmp12 ps))) in
   (Some (tmp13)))))))
 

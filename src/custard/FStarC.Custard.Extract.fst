@@ -5089,6 +5089,11 @@ and mono_holes (st:state) (l:Ident.lident)
                       if List.existsb (S.bv_eq v) acc then acc else acc @ [v])
                    acc (elems (Free.names (snd it))) in
   let vs = List.fold_left names_of [] (margs @ msubst) in
+  (* Under --custard_monomorphize_types a type name was rejected by
+     [check_mono_arg] before getting here.  Otherwise types are compiled
+     uniformly and erased, so a type name is not a parameter but stays a free
+     type variable of the specialization. *)
+  let vs = vs |> List.filter (fun v -> not (is_type_bv st v)) in
   (* Sorted so that the order cannot depend on the order the arguments happen
      to be visited in, which would make the key unstable. *)
   List.sortWith (fun a b -> a.index - b.index) vs
@@ -5197,6 +5202,18 @@ and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
    there would be nothing to pass at runtime -- the specialization would have
    to be chosen by a value that does not exist in the emitted program. *)
 and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
+  let is_type_name (v:S.bv) : ML bool =
+    match (SS.compress v.sort).n with
+    | Tm_type _ -> true
+    | _ -> false in
+  (* Without --custard_monomorphize_types every type is compiled uniformly
+     (section 5.0), so a runtime type parameter is simply left free in the
+     specialization (see [mono_holes]): it is a type variable of the emitted
+     code, and that code is the same whatever it is instantiated at. *)
+  let uniform = not (Options.custard_monomorphize_types ()) in
+  match (SS.compress t).n with
+  | Tm_name v when uniform && is_type_name v -> ()
+  | _ ->
   (* An argument that is *nothing but* a runtime value has no shape to
      specialize on, and abstracting it would silently turn monomorphization
      into ordinary runtime passing -- which is the performance cliff the
@@ -5313,10 +5330,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
      in
      custard_error st E.Error_CustardCannotMonomorphize msg
    | _ -> ());
-  let is_type_name (v:S.bv) : ML bool =
-    match (SS.compress v.sort).n with
-    | Tm_type _ -> true
-    | _ -> false in
+  if uniform then () else
   match elems (Free.names t) |> List.filter is_type_name with
   | [] -> ()
   | v :: _ ->
@@ -6464,9 +6478,14 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
                 |> List.map (fun (b:S.binder) ->
                      S.mk_binder (S.new_bv None b.binder_bv.sort)) in
       let hargs = hbs |> List.map (fun (b:S.binder) -> S.as_arg (S.bv_to_name b.binder_bv)) in
+      (* Only the holes are substituted: [Exclude Zeta], because the
+         argument may hold a local [let rec], and unfolding one need not
+         terminate (a closure [let go = go' bf in ... List.iter (go false)]
+         inside [go'] did not). *)
       let inst (t:term) : ML term =
         norm_bounded st "a monomorphized argument"
-                     [TcEnv.AllowUnboundUniverses; TcEnv.Beta]
+                     [TcEnv.AllowUnboundUniverses; TcEnv.Beta;
+                      TcEnv.Exclude TcEnv.Zeta]
                      (U.mk_app t hargs) in
       hbs, List.map (fun (i, t) -> (i, inst t)) margs
     | _ -> [], margs
@@ -6481,6 +6500,21 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
      more parameter than every call supplied, and the argument the
      specialization was keyed on was still a variable in its body. *)
   let bs, c, n_folded, folded_c = Mono.arrow_formals_unfold_folded (tcenv st) ty in
+  (* The binders above are the *type*'s, and the definition's own lambda is
+     beta-reduced away under the spine below.  When an interface supplies the
+     type, binder attributes written on the implementation (such as
+     [[@@@cherry_borrowed]]) live only on that lambda, so they are merged in
+     by position, as in {!attributed_binders}. *)
+  let bs =
+    let dbs, _, _ = U.abs_formals def in
+    let rec merge (bs:binders) (dbs:binders) : ML binders =
+      match bs, dbs with
+      | b :: bs, d :: dbs ->
+        let extra = d.binder_attrs |> List.filter (fun a ->
+                      not (b.binder_attrs |> List.existsb (U.term_eq a))) in
+        { b with binder_attrs = b.binder_attrs @ extra } :: merge bs dbs
+      | _ -> bs in
+    merge bs dbs in
   (* How far the spine may run.  A value may be duplicated freely, so it takes
      the whole arrow; anything else only takes the binders its own lambdas
      absorb.  A [Mono] argument past that point has to be substituted all the

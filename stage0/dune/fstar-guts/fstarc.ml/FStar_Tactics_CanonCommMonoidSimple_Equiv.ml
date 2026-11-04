@@ -30,13 +30,13 @@ let update (x : Prims.int) (xa : 'a) (am : (((Prims.int * 'a)) list * 'a)) : (((
   ))
 
 let fatom (t : FStarC_Reflection_Types.term) (ts : (FStarC_Reflection_Types.term) list) (am : (((Prims.int * FStarC_Reflection_Types.term)) list * FStarC_Reflection_Types.term)) : ((FStarC_Tactics_Types.proofstate ref) -> (exp * (FStarC_Reflection_Types.term) list * (((Prims.int * FStarC_Reflection_Types.term)) list * FStarC_Reflection_Types.term))) =
-  (Obj.magic ((fun ps -> (let x = (where t ts ps) in
+  (fun ps -> (let x = (where t ts ps) in
   (match x with
     | (Some (v)) -> ((Atom (v)), ts, am)
     | None -> (let x1 = (FStar_List_Tot_Base.length ts) in
       let x2 = (FStar_Tactics_V2_Derived.norm_term (FStarC_NormSteps.iota :: (FStarC_NormSteps.zeta :: [])) t ps) in
       ((Atom (x1)), (FStar_List_Tot_Base.op_At ts (x2 :: [])), (update x1 x2 am)))
-  )))))
+  )))
 
 let rec reification_aux (ts : (FStarC_Reflection_Types.term) list) (am : (((Prims.int * FStarC_Reflection_Types.term)) list * FStarC_Reflection_Types.term)) (mult : FStarC_Reflection_Types.term) (unit : FStarC_Reflection_Types.term) (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : (exp * (FStarC_Reflection_Types.term) list * (((Prims.int * FStarC_Reflection_Types.term)) list * FStarC_Reflection_Types.term)) =
   (let x = (FStar_Tactics_V2_SyntaxHelpers.collect_app t ps) in
@@ -165,7 +165,7 @@ let canon_lhs_rhs (eq : FStarC_Reflection_Types.term) (m : FStarC_Reflection_Typ
   )))
 
 let canon_monoid (eq : FStarC_Reflection_Types.term) (m : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.norm (FStarC_NormSteps.iota :: (FStarC_NormSteps.zeta :: [])) ps));
+  (fun ps -> ((ignore (FStarC_Tactics_V2_Builtins.norm (FStarC_NormSteps.iota :: (FStarC_NormSteps.zeta :: [])) ps));
   let x = (FStar_Tactics_V2_Derived.cur_goal () ps) in
   let x1 = (FStar_Tactics_V2_SyntaxHelpers.collect_app x ps) in
   ((match x1 with
@@ -179,7 +179,7 @@ let canon_monoid (eq : FStarC_Reflection_Types.term) (m : FStarC_Reflection_Type
           ) ps1)))
         | tmp -> (FStar_Tactics_V2_Derived.fail "Goal should be squash applied to a binary relation")
       )
-  ) ps)))))
+  ) ps)))
 
 let u___plugin_canon_monoid : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.CanonCommMonoidSimple.Equiv.canon_monoid" (Prims.of_int (3)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.CanonCommMonoidSimple.Equiv.canon_monoid (plugin)" canon_monoid FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))

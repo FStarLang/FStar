@@ -327,13 +327,13 @@ let inspect_sigelt (se : FStarC_Syntax_Syntax.sigelt) : FStarC_Reflection_V2_Dat
   (match (se).FStarC_Syntax_Syntax.sigel with
     | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (r, lbs); lids = tmp; _ })) -> (FStarC_Reflection_V2_Data.Sg_Let (r, lbs))
     | (FStarC_Syntax_Syntax.Sig_inductive_typ ({ FStarC_Syntax_Syntax.lid = lid; us = us; params = param_bs; num_uniform_params = tmp; t = ty; mutuals = tmp1; ds = c_lids; injective_type_params = tmp2; _ })) -> (let nm = (FStarC_Ident.path_of_lid lid) in
-      let inspect_ctor = (Obj.magic ((fun c_lid -> (let tmp3 = (get_env ()) in
+      let inspect_ctor = (fun c_lid -> (let tmp3 = (get_env ()) in
         let tmp4 = (FStarC_TypeChecker_Env.lookup_sigelt tmp3 c_lid) in
         (match tmp4 with
           | (Some ({ FStarC_Syntax_Syntax.sigel = (FStarC_Syntax_Syntax.Sig_datacon ({ FStarC_Syntax_Syntax.lid = lid1; us = us1; t = cty; ty_lid = tmp5; num_ty_params = nparam; mutuals = tmp6; injective_type_params = tmp7; proj_disc_lids = tmp8; _ })); sigrng = tmp9; sigquals = tmp10; sigmeta = tmp11; sigattrs = tmp12; sigopens_and_abbrevs = tmp13; sigopts = tmp14; _ })) -> (let tmp15 = (FStarC_Ident.path_of_lid lid1) in
             (tmp15, cty))
           | tmp5 -> (FStarC_Effect.failwith "impossible: inspect_sigelt: did not find ctor")
-        ))))) in
+        ))) in
       let tmp3 = (BatList.map inspect_ctor c_lids) in
       let tmp4 = (nm, us, param_bs, ty, tmp3) in
       (FStarC_Reflection_V2_Data.Sg_Inductive ((match tmp4 with (custard_tup, _, _, _, _) -> custard_tup), (match tmp4 with (_, custard_tup, _, _, _) -> custard_tup), (match tmp4 with (_, _, custard_tup, _, _) -> custard_tup), (match tmp4 with (_, _, _, custard_tup, _) -> custard_tup), (match tmp4 with (_, _, _, _, custard_tup) -> custard_tup))))

@@ -17,9 +17,10 @@ let and_right (p0 p1 : prop) (_ : this_type (p0 /\ p1)) : prop
 
 //let  pwp_False  : Type0 = Bug2636.and_right Prims.l_False (Bug2636.prop_with_pre Prims.l_False ()) (Bug2636.ThisType)
 
-// This fails to check now, in the application of exact,
-// since the core typechecker returns a guard equal to False.
-[@@expect_failure [189]]
+// This fails to check now: solving the goal instantiates ?p1 with
+// [nonempty (prop_with_pre False ())], and the core typechecker
+// returns a guard equal to False for its well-typedness.
+[@@expect_failure [19]]
 let pwp_False : prop
   = _ by (apply (`and_right);
           dump "A";

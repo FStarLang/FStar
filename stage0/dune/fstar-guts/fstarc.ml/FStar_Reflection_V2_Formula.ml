@@ -29,19 +29,19 @@ type formula =
 
 
 let rec inspect_unascribe (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStar_Tactics_NamedView.named_term_view) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_AscribedT (t1, tmp, tmp1, tmp2)) -> ((inspect_unascribe t1) ps)
     | (FStar_Tactics_NamedView.Tv_AscribedC (t1, tmp, tmp1, tmp2)) -> ((inspect_unascribe t1) ps)
     | tv -> tv
-  )))))
+  )))
 
 let rec collect_app' (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_Types.term * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list)) =
-  (Obj.magic ((fun ps -> (let x = (inspect_unascribe t ps) in
+  (fun ps -> (let x = (inspect_unascribe t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_App (l, r)) -> ((collect_app' (r :: args) l) ps)
     | tmp -> (t, args)
-  )))))
+  )))
 
 let collect_app (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Reflection_Types.term * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list)) =
   (collect_app' [] t)
@@ -64,7 +64,7 @@ let term_eq (t1 : FStarC_Reflection_Types.term) : (FStarC_Reflection_Types.term 
   (FStar_Reflection_TermEq_Simple.term_eq t1)
 
 let term_as_formula' (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> formula) =
-  (Obj.magic ((fun ps -> (let x = (inspect_unascribe t ps) in
+  (fun ps -> (let x = (inspect_unascribe t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_Var (n)) -> (Name (n))
     | (FStar_Tactics_NamedView.Tv_FVar (fv)) -> (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
@@ -132,7 +132,7 @@ let term_as_formula' (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types
     | (FStar_Tactics_NamedView.Tv_BVar (tmp)) -> F_Unknown
     | tmp -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure (((FStar_Errors_Msg.mkmsg "Unexpected: term_as_formula"), None))) ps));
       (failwith "Prims.magic"))
-  )))))
+  )))
 
 let term_as_formula (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> formula) =
   (match (FStar_Reflection_V2_Derived.unsquash_term t) with
@@ -143,9 +143,15 @@ let term_as_formula (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.
 let u___knot_e_comparison (u__thunk : unit) : (comparison) FStarC_Syntax_Embeddings_Base.embedding =
   (FStarC_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Reflection.V2.Formula.comparison" (fun tmp -> (match tmp with
     | ("FStar.Reflection.V2.Formula.Eq", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) tmp1) in
-      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Eq (tmp3)))))))
+      (match tmp2 with
+        | (Some (x)) -> (Some ((Eq (x))))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.BoolEq", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed (FStarC_Syntax_Embeddings.e_option FStarC_Reflection_V2_Embeddings.e_term) tmp1) in
-      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((BoolEq (tmp3)))))))
+      (match tmp2 with
+        | (Some (x)) -> (Some ((BoolEq (x))))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.Lt", []) -> (Some (Lt))
     | ("FStar.Reflection.V2.Formula.Le", []) -> (Some (Le))
     | ("FStar.Reflection.V2.Formula.Gt", []) -> (Some (Gt))
@@ -184,40 +190,109 @@ let u___knot_e_formula (u__thunk : unit) : (formula) FStarC_Syntax_Embeddings_Ba
     | ("FStar.Reflection.V2.Formula.True_", []) -> (Some (True_))
     | ("FStar.Reflection.V2.Formula.False_", []) -> (Some (False_))
     | ("FStar.Reflection.V2.Formula.Comp", (tmp1 :: (tmp2 :: (tmp3 :: [])))) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed e_comparison tmp1) in
-      (FStarC_Option.bind tmp4 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
-      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
-      (FStarC_Option.bind tmp8 (fun tmp9 -> (Some ((Comp (tmp5, tmp7, tmp9)))))))))))))
+      (match tmp4 with
+        | (Some (x)) -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+          (match tmp5 with
+            | (Some (x1)) -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
+              (match tmp6 with
+                | (Some (x2)) -> (Some ((Comp (x, x1, x2))))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.And", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
-      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
-      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((And (tmp4, tmp6))))))))))
+      (match tmp3 with
+        | (Some (x)) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+          (match tmp4 with
+            | (Some (x1)) -> (Some ((And (x, x1))))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.Or", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
-      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
-      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Or (tmp4, tmp6))))))))))
+      (match tmp3 with
+        | (Some (x)) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+          (match tmp4 with
+            | (Some (x1)) -> (Some ((Or (x, x1))))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.Not", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
-      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Not (tmp3)))))))
+      (match tmp2 with
+        | (Some (x)) -> (Some ((Not (x))))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.Implies", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
-      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
-      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Implies (tmp4, tmp6))))))))))
+      (match tmp3 with
+        | (Some (x)) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+          (match tmp4 with
+            | (Some (x1)) -> (Some ((Implies (x, x1))))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.Iff", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
-      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
-      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((Iff (tmp4, tmp6))))))))))
+      (match tmp3 with
+        | (Some (x)) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+          (match tmp4 with
+            | (Some (x1)) -> (Some ((Iff (x, x1))))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.Forall", (tmp1 :: (tmp2 :: (tmp3 :: [])))) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_bv_view tmp1) in
-      (FStarC_Option.bind tmp4 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
-      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
-      (FStarC_Option.bind tmp8 (fun tmp9 -> (Some ((Forall (tmp5, tmp7, tmp9)))))))))))))
+      (match tmp4 with
+        | (Some (x)) -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+          (match tmp5 with
+            | (Some (x1)) -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
+              (match tmp6 with
+                | (Some (x2)) -> (Some ((Forall (x, x1, x2))))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.Exists", (tmp1 :: (tmp2 :: (tmp3 :: [])))) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_bv_view tmp1) in
-      (FStarC_Option.bind tmp4 (fun tmp5 -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
-      (FStarC_Option.bind tmp6 (fun tmp7 -> (let tmp8 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
-      (FStarC_Option.bind tmp8 (fun tmp9 -> (Some ((Exists (tmp5, tmp7, tmp9)))))))))))))
+      (match tmp4 with
+        | (Some (x)) -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+          (match tmp5 with
+            | (Some (x1)) -> (let tmp6 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp3) in
+              (match tmp6 with
+                | (Some (x2)) -> (Some ((Exists (x, x1, x2))))
+                | None -> None
+              ))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.App", (tmp1 :: (tmp2 :: []))) -> (let tmp3 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp1) in
-      (FStarC_Option.bind tmp3 (fun tmp4 -> (let tmp5 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
-      (FStarC_Option.bind tmp5 (fun tmp6 -> (Some ((App (tmp4, tmp6))))))))))
+      (match tmp3 with
+        | (Some (x)) -> (let tmp4 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_term tmp2) in
+          (match tmp4 with
+            | (Some (x1)) -> (Some ((App (x, x1))))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.Name", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_namedv_view tmp1) in
-      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((Name (tmp3)))))))
+      (match tmp2 with
+        | (Some (x)) -> (Some ((Name (x))))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.FV", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Reflection_V2_Embeddings.e_fv tmp1) in
-      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((FV (tmp3)))))))
+      (match tmp2 with
+        | (Some (x)) -> (Some ((FV (x))))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.IntLit", (tmp1 :: [])) -> (let tmp2 = (FStarC_Syntax_Embeddings_Base.extracted_unembed FStarC_Syntax_Embeddings.e_int tmp1) in
-      (FStarC_Option.bind tmp2 (fun tmp3 -> (Some ((IntLit (tmp3)))))))
+      (match tmp2 with
+        | (Some (x)) -> (Some ((IntLit (x))))
+        | None -> None
+      ))
     | ("FStar.Reflection.V2.Formula.F_Unknown", []) -> (Some (F_Unknown))
     | tmp1 -> None
   )) (fun tmp -> (match tmp with

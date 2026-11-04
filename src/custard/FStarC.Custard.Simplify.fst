@@ -1202,7 +1202,13 @@ let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)
    both projector inlining (which needs an exactly saturated use) and the C
    backend (which sees a call with too few arguments).  Dropping a trailing
    binder that is applied to a pure head, and to nothing else, is always sound;
-   the arrow it used to consume moves into the result type. *)
+   the arrow it used to consume moves into the result type.
+
+   It stops while a non-[unit] binder remains, not merely any binder.  On the
+   karamel backends a definition keeps its [unit] binders (Mono's rule 1),
+   and a [fn f (_:unit) : t = (x:_) ...] forwarding to [g x] would otherwise
+   be reduced to [f () = g] and expanded back under [g]'s binder names rather
+   than its own -- the same function, renamed. *)
 
 let rec split_last (es:list 'a) : ML (option (list 'a & 'a)) =
   match es with
@@ -1215,7 +1221,8 @@ let rec split_last (es:list 'a) : ML (option (list 'a & 'a)) =
 let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
   : ML (list binder & expr & cty & eff) =
   match split_last bs, body.e with
-  | Some (bs', b), EApp (f, args) when Cons? bs' ->
+  | Some (bs', b), EApp (f, args)
+      when bs' |> List.existsb (fun (b:binder) -> not (TUnit? b.b_ty)) ->
     (match split_last args with
      | Some (args', { e = EVar v }) when v = b.b_name
                                       && is_pure f.eff

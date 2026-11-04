@@ -45,9 +45,6 @@ let catch (t : unit -> ML (tac 'a)) : ML (tac (either exn 'a)) =
 
 let raise_core (e:exn) : tac unit = TM.traise e
 
-let with_compat_pre_core (n:int) (f : unit -> ML (tac 'a)) : ML (tac 'a) =
-  B.with_compat_pre_core n (f ())
-
 let ctrl_rewrite (d:direction)
                  (t1 : S.term -> ML (tac (bool & ctrl_flag)))
                  (t2 : unit -> ML (tac unit))

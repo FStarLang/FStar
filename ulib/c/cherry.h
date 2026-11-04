@@ -146,6 +146,29 @@ static inline bool cherry_is_unique(const cherry_obj *o) {
   return cherry_rc_load(o) == 1;
 }
 
+/* Whether a shared cell has a single reference, the caller's: no other
+   thread can reach it, so it can be updated in place all the same, as long
+   as what is stored in it is made shared too.  The acquire load pairs with
+   the release in the other threads' decrements, which may have read it. */
+static inline bool cherry_is_sole_shared(const cherry_obj *o) {
+  return __atomic_load_n(&o->rc, __ATOMIC_ACQUIRE) == -1;
+}
+
+/* Whether the caller holds the only reference, so that the cell can be
+   updated or reused in place; a shared cell with a single reference
+   ([cherry_is_sole_shared]) becomes this thread's own again (rc = 1).  What
+   it reaches stays shared, which a cell of this thread's may point to.  The
+   fence pairs with the release in the decrements of the threads that have
+   dropped their references. */
+static inline bool cherry_claim(cherry_obj *o) {
+  int32_t rc = cherry_rc_load(o);
+  if (rc == 1) return true;
+  if (rc != -1) return false;
+  __atomic_thread_fence(__ATOMIC_ACQUIRE);
+  cherry_rc_store(o, 1);
+  return true;
+}
+
 static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
   cherry_obj *o = (cherry_obj *)malloc(size);
   if (o == NULL) abort();
@@ -180,15 +203,18 @@ static inline bool cherry_dec_ref(cherry_obj *o) {
 #define CHERRY_PERSIST 1
 
 /* Mark a cell; true when that changed it, so that its fields have to be
-   marked too.  Only a cell of this thread's own (a positive count) changes.
-   A shared one is left shared even when persisting: other threads may be
-   counting it already, so zeroing its count would race with them.  It is
-   kept alive all the same, by the reference the global never drops, and
-   what it reaches is already shared. */
+   marked too.  Sharing changes only a cell of this thread's own (a positive
+   count).  Persisting changes every cell not persistent yet, shared ones
+   too: a global's value is read without an inc, so it must never be freed
+   nor taken for a sole reference ([cherry_is_sole_shared]), however many
+   times the reference the global holds is given away.  Zeroing a shared
+   count with a plain store assumes that no other thread is counting the
+   cell at the same time: globals are initialized before the program starts
+   any thread. */
 static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
   if (cherry_is_scalar(o)) return false;
   int32_t rc = cherry_rc_load(o);
-  if (rc <= 0) return false;
+  if (rc == 0 || (rc < 0 && mode == CHERRY_SHARE)) return false;
   cherry_rc_store(o, mode == CHERRY_PERSIST ? 0 : -rc);
   return true;
 }
@@ -207,9 +233,18 @@ static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
 typedef void (*cherry_work_fn)(cherry_obj *, int);
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode);
 
+/* A literal is persistent and a scalar is not a cell, so neither reaches
+   [free]; GCC cannot tell once it inlines one into this. */
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
+#endif
 static inline void cherry_dec(cherry_obj *o) {
   if (cherry_dec_ref(o)) free(o);
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 static inline void cherry_mark(cherry_obj *o, int mode) {
   (void)cherry_mark_ref(o, mode);
@@ -239,9 +274,19 @@ static inline bool cherry_int_both_small(cherry_int a, cherry_int b) {
   return ((uintptr_t)a & (uintptr_t)b & 1u) != 0;
 }
 
+/* A big integer cell: sign and magnitude, in 32-bit limbs, least
+   significant first.  Big integers are canonical: a value that fits a small
+   integer is never a cell. */
+typedef struct cherry_bigint {
+  cherry_obj hdr;
+  uint32_t neg;
+  uint32_t len;
+  uint32_t d[];
+} cherry_bigint;
+
 /* An integer literal too large to be a small integer on a 32-bit target: a
    persistent cell (a reference count of zero) in static storage, built at
-   compile time with the layout of [cherry_bigint] (cherry.c), so that evaluating the
+   compile time with the layout of [cherry_bigint], so that evaluating the
    literal allocates nothing.  [CHERRY_INT_WIDE] is a literal that is small
    where small integers have 63 bits, and that cell elsewhere: values stay
    canonical either way. */
@@ -341,6 +386,12 @@ static inline int cherry_int_cmp(cherry_int a, cherry_int b) {
     intptr_t x = cherry_int_val(a), y = cherry_int_val(b);
     return (x > y) - (x < y);
   }
+  /* Being canonical, a big integer is further from zero than any small one.
+     (Testing both explicitly lets GCC see that [b] is not small here.) */
+  if (cherry_is_scalar(a) && !cherry_is_scalar(b))
+    return ((const cherry_bigint *)b)->neg ? 1 : -1;
+  if (cherry_is_scalar(b) && !cherry_is_scalar(a))
+    return ((const cherry_bigint *)a)->neg ? -1 : 1;
   return cherry_big_cmp(a, b);
 }
 
@@ -400,6 +451,7 @@ cherry_int cherry_str_length(cherry_string s);
 uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
+uint64_t cherry_str_compare_u64(cherry_string a, cherry_string b);
 uint64_t cherry_str_fnv1a(cherry_string s);
 /* Nanoseconds of the monotonic clock (FStarC.Timing). */
 uint64_t cherry_now_ns(void);

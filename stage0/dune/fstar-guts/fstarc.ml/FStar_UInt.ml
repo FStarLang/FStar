@@ -8,16 +8,16 @@ let rec to_vec (n : Prims.int) (num : Prims.int) : (bool) list =
   (if ((=) n Prims.int_zero) then (FStar_Seq_Base.empty ()) else (FStar_Seq_Base.append (to_vec (Prims.op_Minus n Prims.int_one) (Prims.op_Slash num (Prims.of_int (2)))) (FStar_Seq_Base.create Prims.int_one ((=) (Prims.op_Percent num (Prims.of_int (2))) Prims.int_one))))
 
 let to_uint_t (m : Prims.int) (a : Prims.int) : Prims.int =
-  (Prims.op_Percent a (Custard_Prims.prims_pow2 m))
+  (Prims.op_Percent a (Fstarc_Prims.prims_pow2 m))
 
 let add_mod (n : Prims.int) (a : Prims.int) (b : Prims.int) : Prims.int =
-  (Prims.op_Percent (Prims.op_Plus a b) (Custard_Prims.prims_pow2 n))
+  (Prims.op_Percent (Prims.op_Plus a b) (Fstarc_Prims.prims_pow2 n))
 
 let sub_mod (n : Prims.int) (a : Prims.int) (b : Prims.int) : Prims.int =
-  (Prims.op_Percent (Prims.op_Minus a b) (Custard_Prims.prims_pow2 n))
+  (Prims.op_Percent (Prims.op_Minus a b) (Fstarc_Prims.prims_pow2 n))
 
 let mul_mod (n : Prims.int) (a : Prims.int) (b : Prims.int) : Prims.int =
-  (Prims.op_Percent (Prims.op_Star a b) (Custard_Prims.prims_pow2 n))
+  (Prims.op_Percent (Prims.op_Star a b) (Fstarc_Prims.prims_pow2 n))
 
 let udiv (n : Prims.int) (eta : Prims.int) (eta1 : Prims.int) : Prims.int =
   (Prims.op_Slash eta eta1)

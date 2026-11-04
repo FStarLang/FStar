@@ -12,7 +12,7 @@ let open_comb (r : FStarC_Range_Type.range) (n : Prims.int) (mname : FStarC_Iden
         let tmp2 = (tmp1 :: []) in
         (tmp :: tmp2))) in
       (tmp, t)) else (if ((=) ((fun l -> Z.of_int (BatList.length l)) us) n) then (FStarC_Syntax_Subst.open_univ_vars us t) else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
-      let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) us)) in
+      let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) us)) in
       let tmp2 = (FStarC_Format.fmt4 "The '%s' combinator of effect %s must be polymorphic in exactly %s universe(s), but it has %s" name (FStarC_Ident.string_of_lid mname) tmp tmp1) in
       (FStarC_Errors.fStarC_Errors_raise_error__range_string r FStarC_Errors_Codes.Fatal_UnexpectedEffect tmp2))))
   )

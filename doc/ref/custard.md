@@ -684,9 +684,15 @@ explicit closure-conversion pass to get here.
 
 **Two things are still rejected**, and deliberately.
 
-- *A hole whose sort is a type.*  Types are erased under uniform compilation
-  (§5.0), so there would be nothing to pass at runtime.  This stays the case
-  (b) rejection it has always been, and option 2's promotion is the fix.
+- *A hole whose sort is a type*, under `--custard_monomorphize_types`.  There
+  every type is specialized, so a runtime type parameter has no
+  representation to pass.  This stays the case (b) rejection it has always
+  been, and option 2's promotion is the fix.  Without the option, types are
+  compiled uniformly (§5.0): the specialization does not depend on the type,
+  so a runtime type parameter — bare, or inside a larger argument — is not a
+  hole at all but stays a free type variable of the specialization.  The
+  renaming pass binds such variables after the definition's own, so that a
+  caller's `'k` and the callee's `'k` cannot be confused.
 - *An argument that is nothing but a hole* — a bare variable.  Here the
   skeleton is the identity function, so nothing is specialized: the value is
   simply passed at runtime.  That is not unsound, it is **dictionary
@@ -988,7 +994,9 @@ monomorphization diverges for non-uniform recursion
 - normalizes `Mono` arguments to a canonical form before interning, so that
   syntactically different but convertible arguments share a specialization;
 - keeps a per-`lid` specialization counter, bounded by
-  `--custard_max_specializations` (default 1000);
+  `--custard_max_specializations` (default 10000; the whole compiler needs
+  about 1100 for `FStarC.List.map_acc`, and a runaway such as
+  `tests/custard/MonoFuel.fst` still stops in about a second);
 - keeps a global bound `--custard_fuel`;
 - on exhaustion, reports the *chain* of specialization requests that led there
   (a `spec_key` provenance list), which is the only debuggable way to present
@@ -1035,6 +1043,29 @@ magnitude below the default, so hitting the budget means something is wrong
 rather than merely large.  `tests/custard/NormBudget.fst` pins the behaviour
 with a definition that is `Tot` for the typechecker and divergent for the
 normalizer; without the budget it hangs, with it it fails in three seconds.
+
+The budget is a backstop, not a licence: a normalization that only has to
+substitute or beta-reduce passes `Exclude Zeta`.  Besides `custard_norm_steps`
+(M9k), that is `specialize` instantiating a definition's monomorphized
+arguments.  An argument such as `go' k false`, a partial application of a
+local `let rec` inside a closure, unfolds forever under zeta;
+`tests/custard/CherryMonoLocalRec.fst` hit error 365 there before.
+
+#### Arguments that are erased are not normalized
+
+Issue #4828.  A specification argument (an implicit `prop` or `slprop`, an
+`erased` value, a `squash`) is deleted from the extracted code, but it used to
+be normalized with the full step list first, and one built from many `unfold`
+definitions could take minutes or exhaust the budget on its own.  Under
+`ForExtraction`, `Normalize.rebuild` now consults the type of a stuck
+application's head and does not normalize an argument in such a position: a
+`prop` (or a total function into `prop`) becomes `l_True`, and a value of any
+other non-informative type except `unit` becomes `()`.  Arities are kept,
+since a type argument may be needed; `unit` is kept, since it is how a thunk is
+written; and so are the arguments of a primitive step, which may compute with
+them.  `tests/custard/SpecArgNorm.fst` and
+`tests/custard/pulse/PulseSpecArgNorm.fst` pass such arguments under a budget
+that normalizing them would exhaust.
 
 ### 3.7 Canonicalizing `Mono` arguments for interning
 
@@ -2899,7 +2930,8 @@ Emission:
 
   This is the backend that has the least to work with, so it is the one that
   most depends on the earlier phases.  It **requires
-  `--custard_monomorphize_types true`** (§5.0.1) — C has no type variables,
+  `--custard_monomorphize_types true`** (§5.0.1), which is the default under
+  `--codegen C` and `--codegen Cherry` — C has no type variables,
   and there is no `Obj.t` to hide behind — and it leans on ANF for evaluation
   order and on the `Layout` fixpoint for the shape of every value.
 
@@ -3044,7 +3076,7 @@ Emission:
 
   | Rejected | Why |
   |---|---|
-  | `TVar`, polymorphic `TApp` | no type variables in C; run with `--custard_monomorphize_types true` |
+  | `TVar`, polymorphic `TApp` | no type variables in C; do not pass `--custard_monomorphize_types false` |
   | `EFun` in a value position | no closures; mark the parameter `[@@@monomorphize]` (§3.1) |
   | abstract types, `Prims.int` in particular | no size, and no width to guess |
   | unbounded integer literals | same |
@@ -19905,6 +19937,12 @@ not part of the implementation that left: Custard emits a narrow literal as
 its correctly-rounded bit pattern precisely so that it does not need
 arithmetic to build one, which is what keeps a static initializer a constant
 expression (§66) and what makes the macros take a `uint16_t`.
+
+The block is emitted into a file when that file *uses* the vocabulary: when
+an identifier in it starts with `custard_f16`, `custard_bf16`, `CUSTARD_F16_`
+or `CUSTARD_BF16_`.  String literals and comments are skipped.  A plain
+substring search fired on Custard's own PrintC extracted with Cherry, which
+prints these names and so has them in literals (`tests/custard/NarrowStrLit.fst`).
 
 What replaces a link-time failure is a *compile*-time one, in the header, at
 the point of use, quoting what to do.  That is a better diagnostic than the

@@ -41,26 +41,36 @@ let symlookup (tcenv : FStarC_TypeChecker_Env.env) (symbol : string) (pos_opt : 
     let tmp = (FStarC_Syntax_DsEnv.resolve_to_fully_qualified_name (tcenv).FStarC_TypeChecker_Env.dsenv lid) in
     let lid1 = (FStarC_Option.dflt lid tmp) in
     let tmp1 = (FStarC_TypeChecker_Env.try_lookup_lid tcenv lid1) in
-    (FStarC_Option.map (fun tmp2 -> (match tmp2 with
-      | ((tmp3, typ), r) -> ((FStar_Pervasives.Inr (lid1)), typ, r)
-    )) tmp1))) in
+    (match tmp1 with
+      | (Some (x)) -> (let tmp2 = (match x with
+            | ((tmp2, typ), r) -> ((FStar_Pervasives.Inr (lid1)), typ, r)
+          ) in
+        (Some (tmp2)))
+      | None -> None
+    ))) in
   let overload_candidates = (fun lid_str -> (let tmp = (lid_of_str lid_str) in
     (FStarC_Syntax_DsEnv.try_lookup_lid_alternatives (tcenv).FStarC_TypeChecker_Env.dsenv tmp))) in
   let docs_of_lid = (fun lid -> None) in
   let def_of_lid = (fun lid -> (let tmp = (FStarC_TypeChecker_Env.lookup_qname tcenv lid) in
-    (FStarC_Option.bind tmp (fun tmp1 -> (match tmp1 with
-      | ((FStar_Pervasives.Inr ((se, tmp2))), tmp3) -> (let tmp4 = (sigelt_to_string tcenv se) in
-        (Some (tmp4)))
-      | tmp2 -> None
-    ))))) in
-  let info_at_pos_opt = (FStarC_Option.bind pos_opt (fun tmp -> (match tmp with
-      | (file, row, col) -> (let tmp1 = (FStarC_TypeChecker_Err.info_at_pos tcenv file row col) in
-        (match tmp1 with
-          | (Some (info)) -> (Some (info))
-          | None -> (let base = (FStarC_Filepath.basename file) in
-            (if ((=) base file) then None else (FStarC_TypeChecker_Err.info_at_pos tcenv base row col)))
-        ))
+    (match tmp with
+      | (Some (x)) -> (match x with
+          | ((FStar_Pervasives.Inr ((se, tmp1))), tmp2) -> (let tmp3 = (sigelt_to_string tcenv se) in
+            (Some (tmp3)))
+          | tmp1 -> None
+        )
+      | None -> None
     ))) in
+  let info_at_pos_opt = (match pos_opt with
+      | (Some (x)) -> (match x with
+          | (file, row, col) -> (let tmp = (FStarC_TypeChecker_Err.info_at_pos tcenv file row col) in
+            (match tmp with
+              | (Some (info)) -> (Some (info))
+              | None -> (let base = (FStarC_Filepath.basename file) in
+                (if ((=) base file) then None else (FStarC_TypeChecker_Err.info_at_pos tcenv base row col)))
+            ))
+        )
+      | None -> None
+    ) in
   let tmp = (match info_at_pos_opt with
       | (Some (tmp)) -> (info_at_pos_opt, [])
       | None -> (if ((=) symbol "") then (None, []) else (let tmp = (info_of_lid_str symbol) in
