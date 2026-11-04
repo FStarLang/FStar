@@ -513,6 +513,13 @@ typedef cherry_obj *cherry_iarray;
 
 typedef struct cherry_iarray_hdr { cherry_obj hdr; size_t size; size_t cap; } cherry_iarray_hdr;
 
+/* The empty array, of every element type: a persistent cell, so counting
+   it does nothing and an update or a push copies it.  Taking an array out
+   of a [ref] to update it in place stores one of these, at no allocation. */
+static CHERRY_UNUSED cherry_iarray_hdr cherry_iarray_empty_cell =
+  { { 0, CHERRY_TAG_IARRAY }, 0, 0 };
+#define cherry_iarray_empty ((cherry_iarray)&cherry_iarray_empty_cell)
+
 static inline cherry_int cherry_iarray_length(cherry_iarray a) {
   return CHERRY_INT_SMALL(((cherry_iarray_hdr *)a)->size);
 }
