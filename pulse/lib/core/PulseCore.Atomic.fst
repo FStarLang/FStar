@@ -22,7 +22,7 @@ Implementation of the core atomic effect over PulseCore.Action.
 For logical atomicity, the representation bridges below expose the existing
 definition rather than assuming a new effect coercion. Their identity bodies
 are verified against the interface. All mask-changing composition and its
-balanced-runner proof remain in the separate LogicalAtomicity.Masks model.
+balanced-runner proof live in PulseCore.Masks.
 *)
 
 open FStar.Ghost

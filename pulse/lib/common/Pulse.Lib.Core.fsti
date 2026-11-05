@@ -647,6 +647,142 @@ val slprop_ref_gather (x: slprop_ref) (#y1 #y2: slprop)
 
 (***** end computation types and combinators *****)
 
+////////////////////////////////////////////////////////////////////
+// Mask-changing actions (explicit library combinators, not a Pulse effect)
+////////////////////////////////////////////////////////////////////
+
+(** `before` and `after` name OPEN invariants: opening adds a name, unlike
+Iris's enabled-invariant masks. These masks are distinct from the `opens`
+footprint of ordinary Pulse computations. Lifted computations must have a
+footprint disjoint from the current mask.
+
+Compose ghost steps around at most one observable step, then restore the
+initial mask before returning to Pulse with run_action or run_closed_action.
+Extraction erases masks and ghost actions, retaining sequencing and the
+lifted primitive; this is not a transaction implementation. *)
+[@@extract_as_impure_effect]
+val action (a:Type u#a) (obs:observability)
+  (before after:inames) (pre:slprop) (post:a -> slprop) : Type u#(max 4 a)
+
+(** The erased, ghost-only counterpart of action. Its result cannot be used
+to compute runtime data. Distinct masks still track unclosed invariants. *)
+[@@erasable]
+val gaction (a:Type u#a) (before after:inames)
+  (pre:slprop) (post:a -> slprop) : Type u#(max 4 a)
+
+inline_for_extraction
+[@@extract_as (`(fun (#a:Type0) (_:unit) (x:a) (_:unit) -> x))]
+val return_action (#a:Type u#a) (mask:inames) (x:a) (post:a -> slprop)
+  : action a Neutral mask mask (post x) post
+
+(** Matching intermediate masks and assertions, with at most one observable
+component. In particular, two physical operations cannot be made atomic. *)
+inline_for_extraction
+[@@extract_as (`(fun (#a #b:Type0) (#o1 #o2 #m1 #m2 #m3 #p #q #r:unit)
+  (f:a) (g:a -> Dv b) -> g f))]
+val bind_action (#a:Type u#a) (#b:Type u#b)
+  (#o1:observability) (#o2:observability { at_most_one_observable o1 o2 })
+  (#m1 #m2 #m3:inames) (#p:slprop) (#q:a -> slprop) (#r:b -> slprop)
+  (f:action a o1 m1 m2 p q)
+  (g:(x:a -> action b o2 m2 m3 (q x) r))
+  : action b (join_obs o1 o2) m1 m3 p r
+
+inline_for_extraction
+[@@extract_as (`(fun (#a:Type0) (#o #m1 #m2 #p #q:unit) (_:unit) (f:a) -> f))]
+val frame_action (#a:Type u#a) (#o:observability)
+  (#m1 #m2:inames) (#p:slprop) (#q:a -> slprop)
+  (r:slprop) (f:action a o m1 m2 p q)
+  : action a o m1 m2 (p ** r) (fun x -> q x ** r)
+
+(** Disjointness prevents the lifted computation from reopening an invariant
+whose body is already held outside it. The open mask is unchanged. *)
+inline_for_extraction
+[@@extract_as (`(fun (#a:Type0) (#o #opens #p #q:unit) (_:unit) (f:a) -> f))]
+val lift_atomic_action (#a:Type u#a) (#o:observability)
+  (#opens:inames) (#p:slprop) (#q:a -> slprop)
+  (mask:inames { mask /! opens })
+  (f:stt_atomic a #o opens p q)
+  : action a o mask mask p q
+
+val lift_ghost_action (#a:Type u#a) (#opens:inames) (#p:slprop) (#q:a -> slprop)
+  (mask:inames { mask /! opens })
+  (f:stt_ghost a opens p q)
+  : gaction a mask mask p q
+
+(** Erase the result as well as the ghost computation on entering action code. *)
+inline_for_extraction
+[@@extract_as (`(fun (#a:Type0) (#m1 #m2 #p #q:unit) (_:unit) -> ()))]
+val ghost_to_action (#a:Type u#a)
+  (#m1 #m2:inames) (#p:slprop) (#q:a -> slprop)
+  (f:gaction a m1 m2 p q)
+  : action (erased a) Neutral m1 m2 p (fun x -> q x)
+
+val bind_gaction (#a:Type u#a) (#b:Type u#b)
+  (#m1 #m2 #m3:inames) (#p:slprop) (#q:a -> slprop) (#r:b -> slprop)
+  (f:gaction a m1 m2 p q)
+  (g:(x:a -> gaction b m2 m3 (q x) r))
+  : gaction b m1 m3 p r
+
+val frame_gaction (#a:Type u#a)
+  (#m1 #m2:inames) (#p:slprop) (#q:a -> slprop)
+  (r:slprop) (f:gaction a m1 m2 p q)
+  : gaction a m1 m2 (p ** r) (fun x -> q x ** r)
+
+(** Only neutral actions may be erased; observable heap effects may not. *)
+val action_to_ghost (#a:Type u#a)
+  (#m1 #m2:inames) (#p:slprop) (#q:a -> slprop)
+  (f:action a Neutral m1 m2 p q)
+  : gaction a m1 m2 p q
+
+(** Transport along equal assertions, not an arbitrary consequence rule. *)
+val sub_gaction (#a:Type u#a) (#m1 #m2:inames)
+  (#p:slprop) (#q:a -> slprop)
+  (p':slprop { p == p' })
+  (q':(a -> slprop) { forall x. q x == q' x })
+  (f:gaction a m1 m2 p q)
+  : gaction a m1 m2 p' q'
+
+(** Equal-mask transport permits non-LIFO closing, not discarding open names. *)
+val reindex_gaction (#a:Type u#a) (#m1 #m2:inames)
+  (#p:slprop) (#q:a -> slprop)
+  (before:inames { before == m1 }) (after:inames { after == m2 })
+  (f:gaction a m1 m2 p q)
+  : gaction a before after p q
+
+(** Execute ghost code at a fixed locality, keeping ownership and its result
+anchored there. No sendability is needed, but this cannot execute another
+thread's observable operations. *)
+val localize_gaction (#a:Type u#a) (#before #after:inames)
+  (#pre:slprop) (#post:a -> slprop) (l:loc_id)
+  (f:gaction a before after pre post)
+  : gaction a before after (on l pre) (fun x -> on l (post x))
+
+(** Run ghost cleanup before returning an independently available runtime value. *)
+inline_for_extraction
+[@@extract_as (`(fun (#a:Type0) (#m1 #m2 #p:unit) (x:a) (_ _:unit) -> x))]
+val finish_gaction (#a:Type u#a) (#m1 #m2:inames) (#p:slprop)
+  (x:a) (post:a -> slprop) (f:gaction unit m1 m2 p (fun _ -> post x))
+  : action a Neutral m1 m2 p post
+
+(** The action must work for EVERY ambient mask disjoint from opens, restoring
+that same mask. This derives ordinary atomic computations with a selective
+footprint; an open invariant cannot escape through this runner. *)
+inline_for_extraction
+[@@extract_as (`(fun (#a:Type0) (#o #p #q:unit) (_:unit) (f:unit -> Dv a) -> f ()))]
+val run_action (#a:Type0) (#o:observability) (#p:slprop) (#q:a -> slprop)
+  (opens:inames)
+  (f:(mask:inames { mask /! opens } -> action a o mask mask p q))
+  : stt_atomic a #o opens p q
+
+(** A closed-to-closed action has the maximal footprint. It cannot be nested
+inside an already-open lexical invariant. This does not grant ownership of
+all invariant bodies. *)
+inline_for_extraction
+[@@extract_as (`(fun (#a:Type0) (#o #p #q:unit) (f:a) -> f))]
+val run_closed_action (#a:Type0) (#o:observability) (#p:slprop) (#q:a -> slprop)
+  (f:action a o emp_inames emp_inames p q)
+  : stt_atomic a #o all_inames p q
+
 (* This tactic is called to find non_informative witnesses.
 It must run fast in the simple cases like unit and squash, but
 also default to tcresolve before failing. *)
