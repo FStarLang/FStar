@@ -6500,6 +6500,21 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
      more parameter than every call supplied, and the argument the
      specialization was keyed on was still a variable in its body. *)
   let bs, c, n_folded, folded_c = Mono.arrow_formals_unfold_folded (tcenv st) ty in
+  (* The binders above are the *type*'s, and the definition's own lambda is
+     beta-reduced away under the spine below.  When an interface supplies the
+     type, binder attributes written on the implementation (such as
+     [[@@@cherry_borrowed]]) live only on that lambda, so they are merged in
+     by position, as in {!attributed_binders}. *)
+  let bs =
+    let dbs, _, _ = U.abs_formals def in
+    let rec merge (bs:binders) (dbs:binders) : ML binders =
+      match bs, dbs with
+      | b :: bs, d :: dbs ->
+        let extra = d.binder_attrs |> List.filter (fun a ->
+                      not (b.binder_attrs |> List.existsb (U.term_eq a))) in
+        { b with binder_attrs = b.binder_attrs @ extra } :: merge bs dbs
+      | _ -> bs in
+    merge bs dbs in
   (* How far the spine may run.  A value may be duplicated freely, so it takes
      the whole arrow; anything else only takes the binders its own lambdas
      absorb.  A [Mono] argument past that point has to be substituted all the

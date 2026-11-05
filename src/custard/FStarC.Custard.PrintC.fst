@@ -2115,6 +2115,23 @@ let typed_local (ind:string) (t:cty) (nm:string) (init:option string) : ML c_bod
   local_decl ind (decl_of t nm) nm (LKValue t) init
     (if binds_by_ref t then Some "a C++ handle with initialization-only semantics" else None)
 
+(* A comment standing as a statement: one block comment per text, or, with
+   --custard_line_comments, one block of line comments for all of them,
+   framed by an empty [//] line above and below as krml's -fline-comments
+   writes it.  Lines are trimmed and empty texts dropped, as there.  A line
+   ending in a backslash (or its trigraph) would splice the next source line
+   into the comment, so such a comment keeps the block form. *)
+let stmt_comment (ind:string) (texts:list string) : ML c_body =
+  let block () = CComment (String.concat "" (texts |> List.map (fun t -> ind ^ "/* " ^ t ^ " */\n"))) in
+  if not (Options.custard_line_comments ()) then block () else
+  let lines =
+    texts |> List.filter (fun t -> t <> "")
+          |> List.collect (fun t -> String.split ['\n'] t |> List.map BU.trim_string) in
+  if Nil? lines then CComment "" else
+  if lines |> List.existsb (fun l -> BU.ends_with l "\\" || BU.ends_with l "??/") then block () else
+  let line (l:string) : string = ind ^ (if l = "" then "//" else "// " ^ l) ^ "\n" in
+  CComment (ind ^ "//\n" ^ String.concat "" (List.map line lines) ^ ind ^ "//\n")
+
 (* Function bodies retain declaration provenance until the last printing step.
    In particular, trial emission of a discarded match arm has no side effects
    on the declarations of the function that survives. *)
@@ -3180,7 +3197,7 @@ and c_expr_doc (out:ref c_body) (ind:string) (e:expr) : ML c_expression =
      its effect into [out] and the value is the unit constant, exactly as an
      impure unit-typed node in an expression position is anywhere else. *)
   | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
-    out := !out ++ CComment (ind ^ "/* " ^ before ^ " */\n");
+    out := !out ++ stmt_comment ind [before];
     c_postfix unit_value
   | EOp ({ po_op = Commented (before, after) }, [b]) ->
     let body = c_rvalue_doc out ind e.ty b in
@@ -3782,7 +3799,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
   | EUnreachable s when Options.custard_cherry () ->
     CText (ind ^ "CHERRY_UNREACHABLE(" ^ debug_what ("unreachable code (" ^ s ^ ")") ^ ");\n")
   | EAbort s | EUnreachable s ->
-    CComment (ind ^ "/* " ^ escape s ^ " */\n") ++ CText (ind ^ "abort();\n")
+    stmt_comment ind [escape s] ++ CText (ind ^ "abort();\n")
 
   (* Section 120.  A comment in statement position.  The standalone form --
      an empty [after] on a unit operand, which is what
@@ -3793,14 +3810,14 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
      (What that costs is that a large operand is hoisted; what it buys is
      that the comment stays attached to the value it is about.) *)
   | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
-    CComment (ind ^ "/* " ^ before ^ " */\n") ++ unit_result ind d
+    stmt_comment ind [before] ++ unit_result ind d
   (* And a comment on a value nothing reads.  The value goes -- that is what
      [D_Ignore] means -- but the comment does not, and [(void)(/* a */ 0 /* b
      */);] is a statement written to hold two comments.  Section 99's point
      exactly: a cast to void that computes nothing says nothing either. *)
   | EOp ({ po_op = Commented (before, after) }, [b])
       when D_Ignore? d && is_droppable b ->
-    CComment (ind ^ "/* " ^ before ^ " */\n" ^ ind ^ "/* " ^ after ^ " */\n")
+    stmt_comment ind [before; after]
   | EOp ({ po_op = BufCreate lt }, [init; len]) ->
     emit_alloc ind d None lt e.ty init len
 
@@ -6243,7 +6260,8 @@ let cherry_iarr_helpers () : ML (list string & list string) =
              let l = ty lt in
              let cs = cell_struct d cc in
              fn ("static inline cherry_iarray " ^ p ^ "_of_list(" ^ l ^ " l)")
-                ("  size_t n = 0;\n" ^
+                ("  if (cherry_is_scalar(l)) return cherry_iarray_empty;\n" ^
+                 "  size_t n = 0;\n" ^
                  "  for (" ^ l ^ " q = l; !cherry_is_scalar(q); q = ((" ^ cs ^ " *)q)->" ^ c_var tl ^ ") n++;\n" ^
                  "  " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, n);\n" ^
                  "  size_t j = 0;\n" ^
