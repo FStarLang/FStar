@@ -5,7 +5,7 @@ Separate opening and closing for ordinary Pulse.Lib.Inv invariants.
 
 The existing invariant predicate, allocation API, locality discipline, and
 later guard are unchanged. Only the proof interface is generalized: the open
-mask in Masks.gaction tracks an outstanding body instead of a lexical block.
+mask in Pulse.Lib.Core.gaction tracks an outstanding body instead of a lexical block.
 Thus multiple invariants may be closed in a different order than they opened.
 
 This is analogous to invariant access through Iris mask-changing updates,
@@ -16,7 +16,7 @@ must balance masks and its action may contain at most one observable step.
 
 open Pulse.Lib.Core
 open Pulse.Lib.Inv
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 
 (** Add i to the open mask and expose p in the caller's locality. Spend one
 credit to remove the later guarding the invariant body. The persistent inv

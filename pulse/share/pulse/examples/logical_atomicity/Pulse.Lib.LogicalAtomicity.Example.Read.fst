@@ -11,12 +11,12 @@ agreement of ghost halves to prove exactly 37 while preserving its state.
 
 The Iris-style accessor/commit discipline and the client ghost callback are
 the same as for an updating operation. One credit is hard-coded for the
-single client invariant. run_closed gives the maximal footprint; the example
+single client invariant. run_closed_action gives the maximal footprint; the example
 does not provide selective-mask nesting or reclaim its invariant/counter.
 *)
 
 open Pulse.Lib.Pervasives
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module T = Pulse.Lib.LogicalAtomicity.Triple
 module B = Pulse.Lib.Box
@@ -62,12 +62,12 @@ val read_attempt (r:B.box U32.t) (inner:inames) (phi:U32.t -> slprop)
   : stt_atomic U32.t all_inames (update r inner phi ** later_credit 1) (fun v -> phi v)
 let read_attempt r inner phi
   : stt_atomic U32.t all_inames (update r inner phi ** later_credit 1) (fun v -> phi v) =
-  M.run_closed (
-    M.bind (M.ghost_to_action (A.open_update emp_inames inner 1 (alpha r) (beta r) (fun n _ -> phi n)))
+  M.run_closed_action (
+    M.bind_action (M.ghost_to_action (A.open_update emp_inames inner 1 (alpha r) (beta r) (fun n _ -> phi n)))
       (fun _ ->
-        M.bind (M.lift_atomic inner (read_opened r inner phi))
+        M.bind_action (M.lift_atomic_action inner (read_opened r inner phi))
           (fun v ->
-            M.finish_ghost v (fun v -> phi v)
+            M.finish_gaction v (fun v -> phi v)
               (A.commit emp_inames inner (alpha r) (update r inner phi) (beta r) (fun n _ -> phi n) v v))))
 
 (** Public read wrapper supplies the one opening credit required by its AU. *)

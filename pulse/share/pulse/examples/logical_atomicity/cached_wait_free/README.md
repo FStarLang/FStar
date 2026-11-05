@@ -36,7 +36,7 @@ which is placeless even when the AU's captured resources are not sendable.
 The new verified [`Locality`](../../../../../lib/pulse/logical_atomicity/Pulse.Lib.LogicalAtomicity.Locality.fsti)
 rules exchange placeless abstract state with a helper while leaving the
 captured state, closing continuation, and result at the caller's locality.
-`Masks.localize` derives ghost-only mask-changing impersonation from the
+`Pulse.Lib.Core.localize_gaction` derives ghost-only mask-changing impersonation from the
 existing semantic locality lemmas; it cannot execute another thread's physical
 operations. Saved-proposition references store the higher-order postconditions
 without putting large propositions into the first-order request log.

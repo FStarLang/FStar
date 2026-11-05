@@ -81,7 +81,7 @@ make -j$(nproc) 3
 make -C pulse/share/pulse/examples/logical_atomicity -j$(nproc)
 ```
 
-The first command verifies and installs the foundational libraries and model.
+The first command verifies PulseCore and installs the foundational libraries.
 The second verifies the small examples and all three child directories,
 extracts their executable clients, and runs all four OCaml harnesses. The parent
 `pulse/share/pulse/examples` target also includes this directory; the examples
@@ -135,7 +135,7 @@ These examples establish partial correctness, not fairness, termination,
 starvation-freedom, or lock-freedom. An operation's postcondition applies if
 it returns; contention or spurious CAS failures can prevent return.
 
-Executable AU attempts use `run_closed` and expose `all_inames`, so they
+Executable AU attempts use `run_closed_action` and expose `all_inames`, so they
 cannot be called inside an already-open lexical invariant. Thread transfer
 requires sendable captured resources or local AU construction, not a generic
 sendability assumption.

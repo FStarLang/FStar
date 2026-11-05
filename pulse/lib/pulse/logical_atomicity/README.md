@@ -4,7 +4,10 @@ This is a library-only prototype: no Pulse syntax, elaboration, or checker
 changes. The semantic model and all combinators are verified; there are no new
 axioms or admitted proofs.
 
-Foundations live in this directory. The separate
+Mask-changing actions are part of `Pulse.Lib.Core`, implemented in
+`PulseCore.Masks`; core invariant opening and closing are in
+`Pulse.Lib.Core.Inv`. This directory builds higher-level logical-atomicity
+abstractions on that core API. The separate
 [examples guide](../../../share/pulse/examples/logical_atomicity/README.md)
 provides a simple-to-complex reading order, worked examples, implementation
 details, and executable validation instructions. Each source file documents
@@ -12,10 +15,13 @@ its proof role, definitions, and limitations.
 
 ## Layers
 
-* `Masks`: actions with distinct initial/final masks, composition, framing, and
-  conversion to ordinary Pulse atomic computations. Its `-model.fst` proves the
-  operations against Pulse's existing semantics. Extraction annotations erase
-  the model and ghost actions, retaining ordinary sequencing and atomic calls.
+* `Pulse.Lib.Core`: `action` and `gaction` with distinct initial/final masks,
+  explicit composition (`bind_action`, `bind_gaction`), framing, and balanced
+  conversion to ordinary Pulse atomic computations (`run_action`,
+  `run_closed_action`). `PulseCore.Masks` proves these operations against
+  Pulse's existing semantics as part of the regular core build, not a separate
+  model. Extraction erases ghost actions, retaining sequencing and atomic calls.
+  Existing `stt_atomic` and `stt_ghost` types and checker behavior are unchanged.
 * `Invariant`: separate opening and closing of existing `Pulse.Lib.Inv`
   invariants, preserving locality and later-credit requirements.
 * `Update`: resource-capturing, first-class mask-changing `wand` and `fupd`,
@@ -29,7 +35,7 @@ its proof role, definitions, and limitations.
   continuation that reestablishes the invariant at the linearization point.
 * `Locality`: opens, aborts, and commits caller-anchored AUs on behalf of another
   thread. Only alpha and beta must be placeless; captured client ownership and
-  phi need not be sendable. `Masks.localize` proves the underlying ghost-only
+  phi need not be sendable. `Pulse.Lib.Core.localize_gaction` proves the underlying ghost-only
   locality change with distinct initial and final masks.
 
 An atomic update hides a resource state and a reusable pure step witness.
@@ -121,7 +127,7 @@ Primary references:
 Masks name **currently open invariants**: their polarity is opposite to Iris's
 available-invariant masks, and they are not Pulse's `opens` footprint.
 Opening adds a name; closing removes it. Reopening an already-open name is
-rejected. Closing need not be LIFO, but `Masks.run` requires a balanced mask
+rejected. Closing need not be LIFO, but `Pulse.Lib.Core.run_action` requires a balanced mask
 before control returns to ordinary Pulse code. Composition permits at most
 one observable action.
 
@@ -135,8 +141,7 @@ the update at the destination from already-sendable ownership.
 
 ## Building and examples
 
-From the F* repository root, verify and install the foundational libraries
-and model:
+From the F* repository root, verify PulseCore and install the libraries:
 
 ```sh
 make -j$(nproc) 3
@@ -155,9 +160,9 @@ limitations, editor setup, and proof/extraction/runtime commands.
 * **Explicit composition.** There is no checker notation, automatic AU
   opening, inferred linearization point, or general atomic-triple proof mode.
   The abstraction remains a library of explicit, verified combinators.
-* **Footprints.** `run_closed` exposes `all_inames` and cannot be called inside
+* **Footprints.** `run_closed_action` exposes `all_inames` and cannot be called inside
   an already-open lexical invariant. Selective client footprints can be
-  derived through the mask-parametric `run` API, but corresponding convenient
+  derived through the mask-parametric `run_action` API, but corresponding convenient
   operation wrappers are not supplied.
 * **Modal rules.** Only the update rules exported by `Update.fsti` are
   available. A complete Iris-style derived-rule collection (mask weakening,

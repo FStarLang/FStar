@@ -16,14 +16,14 @@ callback through Triple.from_invariant to relate the observed old value to
 client ghost ownership. See pulse/lib/pulse/logical_atomicity/README.md.
 
 The proof is partial correctness: contention or spurious CAS failure may
-prevent return. Attempts use run_closed (all_inames footprint); no operation
+prevent return. Attempts use run_closed_action (all_inames footprint); no operation
 may therefore be called inside an already-open lexical invariant. Native
 counter tests are sequential; concurrent queue tests have a separate atomic
 realization, and Helping permits only its winning helper to use this counter.
 *)
 
 open Pulse.Lib.Pervasives
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module T = Pulse.Lib.LogicalAtomicity.Triple
 module B = Pulse.Lib.Box
@@ -71,12 +71,12 @@ val read_attempt (r:B.box U32.t) (inner:inames) (credits:nat) (phi:U32.t -> slpr
 let read_attempt r inner credits phi
   : stt_atomic U32.t all_inames (update r inner credits phi ** later_credit credits)
       (fun _ -> update r inner credits phi) =
-  M.run_closed (
-    M.bind (M.ghost_to_action (A.open_update emp_inames inner credits (alpha r) (beta r) (fun n _ -> phi n)))
+  M.run_closed_action (
+    M.bind_action (M.ghost_to_action (A.open_update emp_inames inner credits (alpha r) (beta r) (fun n _ -> phi n)))
       (fun _ ->
-        M.bind (M.lift_atomic inner (read_opened r inner credits phi))
+        M.bind_action (M.lift_atomic_action inner (read_opened r inner credits phi))
           (fun v ->
-            M.finish_ghost v (fun _ -> update r inner credits phi)
+            M.finish_gaction v (fun _ -> update r inner credits phi)
               (A.abort_opened emp_inames inner (alpha r) (update r inner credits phi) (beta r) (fun n _ -> phi n)))))
 
 (** One physical CAS. Success identifies the current abstract state with
@@ -116,16 +116,16 @@ val try_attempt (r:B.box U32.t) (inner:inames) (credits:nat) (phi:U32.t -> slpro
 let try_attempt r inner credits phi expected
   : stt_atomic bool all_inames (update r inner credits phi ** later_credit credits)
       (fun ok -> if ok then phi expected else update r inner credits phi) =
-  M.run_closed (
-    M.bind (M.ghost_to_action (A.open_update emp_inames inner credits (alpha r) (beta r) (fun n _ -> phi n)))
+  M.run_closed_action (
+    M.bind_action (M.ghost_to_action (A.open_update emp_inames inner credits (alpha r) (beta r) (fun n _ -> phi n)))
       (fun _ ->
-        M.bind (M.lift_atomic inner (cas_opened r inner credits phi expected))
+        M.bind_action (M.lift_atomic_action inner (cas_opened r inner credits phi expected))
           (fun ok ->
             if ok then
-              M.finish_ghost true (fun ok -> if ok then phi expected else update r inner credits phi)
+              M.finish_gaction true (fun ok -> if ok then phi expected else update r inner credits phi)
                 (A.commit emp_inames inner (alpha r) (update r inner credits phi) (beta r) (fun n _ -> phi n) expected ())
             else
-              M.finish_ghost false (fun ok -> if ok then phi expected else update r inner credits phi)
+              M.finish_gaction false (fun ok -> if ok then phi expected else update r inner credits phi)
                 (A.abort_opened emp_inames inner (alpha r) (update r inner credits phi) (beta r) (fun n _ -> phi n)))))
 
 (** Exported logically atomic operation. Returning old entails phi old for

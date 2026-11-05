@@ -24,7 +24,7 @@ module Q = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.State
 module R = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Read
 module V = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Validate
 module Atom = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Atomics
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module U = Pulse.Lib.LogicalAtomicity.Update
 
 let failure_at (#cells:N.arena) (q:Q.big_atomic cells) p
@@ -161,12 +161,12 @@ atomic fn exchange_core (#cells:N.arena) (q:Q.big_atomic cells)
           G.pts_to q.Q.core.Q.model #0.5R (N.value cells node) ** on r.P.caller (P.result r true)) **
         (Q.physical q.Q.core after ** V.published q ver node))
       (Q.body q.Q.core ** post q r node ver p second true)
-      (fun _ -> M.bind_ghost
-        (M.frame_ghost (Q.physical q.Q.core after ** V.published q ver node)
+      (fun _ -> M.bind_gaction
+        (M.frame_gaction (Q.physical q.Q.core after ** V.published q ver node)
           (U.elim_update (Q.mask q) (Q.mask q)
             (P.body cells q.Q.core.Q.model q.Q.core.Q.pending after.H.nodes **
               G.pts_to q.Q.core.Q.model #0.5R (N.value cells node) ** on r.P.caller (P.result r true))))
-        (fun _ -> M.lift_ghost (Q.mask q) (finish_publish q r node ver p second after)));
+        (fun _ -> M.lift_ghost_action (Q.mask q) (finish_publish q r node ver p second after)));
     true
   } else if second {
     rewrite (if second then first_failure q p else emp) as first_failure q p;

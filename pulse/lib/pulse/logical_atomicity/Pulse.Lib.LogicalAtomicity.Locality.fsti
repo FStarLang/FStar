@@ -7,7 +7,7 @@ Caller-local atomic updates for ghost helping.
 An AU can capture non-sendable resources, so a helper cannot simply move the
 AU to its own locality. Instead it owns `on l AU`: the AU, its hidden state,
 and its closing continuation stay anchored to the initiating caller `l`.
-`Masks.localize` executes the ghost protocol there and restores the helper's
+`Pulse.Lib.Core.localize_gaction` executes the ghost protocol there and restores the helper's
 locality afterward, including when opening and closing change the mask.
 
 Only the abstract resources exchanged with the helper must be placeless:
@@ -18,7 +18,7 @@ a closing capability, or provide a progress theorem.
 *)
 
 open Pulse.Lib.Pervasives
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 
 (** The helper owns alpha at its own locality, but the additive abort/commit

@@ -15,7 +15,7 @@ class is not evidence that the intended misuse remains rejected.
 *)
 
 open Pulse.Lib.Pervasives
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module I = Pulse.Lib.LogicalAtomicity.Invariant
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 
@@ -27,23 +27,40 @@ let open_once (i:iname) (p:slprop) = I.open_inv emp_inames i p
 let open_twice (i:iname) (p:slprop) =
   I.open_inv (add_inv emp_inames i) i p
 
-(** Rejected: run_closed cannot expose an unclosed invariant body. *)
+(** Rejected: run_closed_action cannot expose an unclosed invariant body. *)
 [@@expect_failure [12]]
 let escape_open_mask (i:iname) (p:slprop) =
-  M.run_closed #(FStar.Ghost.erased unit) #Neutral
+  M.run_closed_action #(FStar.Ghost.erased unit) #Neutral
     #(inv i p ** later_credit 1) #(fun _ -> inv i p ** p)
     (M.ghost_to_action (I.open_inv emp_inames i p))
 
 (** Positive control: a neutral return may follow one observable action. *)
 let one_observable (p:slprop)
   (f:M.action unit Observable emp_inames emp_inames p (fun _ -> p)) =
-  M.bind f (fun _ -> M.return emp_inames () (fun _ -> p))
+  M.bind_action f (fun _ -> M.return_action emp_inames () (fun _ -> p))
 
 (** Rejected: resource matching does not make two physical steps atomic. *)
 [@@expect_failure [19]]
 let two_observables (p:slprop)
   (f:M.action unit Observable emp_inames emp_inames p (fun _ -> p)) =
-  M.bind f (fun _ -> f)
+  M.bind_action f (fun _ -> f)
+
+(** Positive control: an empty-footprint primitive works under any open mask. *)
+let lift_disjoint (mask:inames) (p:slprop)
+  (f:stt_atomic unit #Observable emp_inames p (fun _ -> p)) =
+  M.lift_atomic_action mask f
+
+(** Rejected: a lifted primitive may not reopen an already-open invariant. *)
+[@@expect_failure [19]]
+let lift_overlapping (i:iname) (p:slprop)
+  (f:stt_atomic unit #Observable (single i) p (fun _ -> p)) =
+  M.lift_atomic_action (single i) f
+
+(** Rejected: ghost erasure cannot hide an observable operation. *)
+[@@expect_failure [189]]
+let erase_observable (p:slprop)
+  (f:M.action unit Observable emp_inames emp_inames p (fun _ -> p)) =
+  M.action_to_ghost f
 
 (** Rejected: owning an AU is not ownership of its opening credit. *)
 [@@expect_failure [19]]
@@ -67,12 +84,12 @@ let commit_once () =
 (** Rejected: the first commit does not return a second closing capability. *)
 [@@expect_failure [19]]
 let commit_twice () =
-  M.bind_ghost (commit_once ()) (fun _ -> commit_once ())
+  M.bind_gaction (commit_once ()) (fun _ -> commit_once ())
 
 (** Rejected: commit has already consumed the additive abort/commit choice. *)
 [@@expect_failure [19]]
 let abort_after_commit () =
-  M.bind_ghost (commit_once ())
+  M.bind_gaction (commit_once ())
     (fun _ -> A.abort emp_inames emp_inames trivial_alpha emp trivial_beta trivial_beta ())
 
 (** Rejected: hidden captured state is not in general sendable. Helping

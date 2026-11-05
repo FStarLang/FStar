@@ -32,7 +32,7 @@ module H = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Model
 module N = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Storage
 module Q = Pulse.Lib.LogicalAtomicity.Example.MSQueue.State
 module D = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Actions
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module U = Pulse.Lib.LogicalAtomicity.Update
 module Atom = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Atomics
@@ -132,7 +132,7 @@ atomic fn read_opened (#cells:N.arena) (q:Q.queue cells) (p:U32.t -> slprop)
       fold opened q p inner credits phi;
       D.delay inner (opened q p inner credits phi ** Q.edge q head next)
         (update q p inner credits phi ** Q.edge q head next)
-        (fun _ -> M.frame_ghost (Q.edge q head next)
+        (fun _ -> M.frame_gaction (Q.edge q head next)
           (A.abort_opened emp_inames inner (Q.model q) (update q p inner credits phi)
             (beta q p) (fun _ y -> phi y)));
       rewrite U.fupd inner emp_inames (update q p inner credits phi ** Q.edge q head next)

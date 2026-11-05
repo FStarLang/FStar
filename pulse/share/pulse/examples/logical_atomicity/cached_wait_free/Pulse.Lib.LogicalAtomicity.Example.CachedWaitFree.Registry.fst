@@ -28,7 +28,7 @@ module MR = Pulse.Lib.MonotonicGhostRef
 module S = FStar.Seq
 module H = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Model
 module N = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Storage
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module U = Pulse.Lib.LogicalAtomicity.Update
 module L = Pulse.Lib.LogicalAtomicity.Locality
@@ -149,7 +149,7 @@ ghost fn delay before after pre post
 {
   slprop_equivs ();
   U.intro_wand before after emp post pre
-    (fun _ -> M.sub_ghost (pre ** emp) (fun _ -> post) (f ()));
+    (fun _ -> M.sub_gaction (pre ** emp) (fun _ -> post) (f ()));
   fold U.fupd before after post;
 }
 
@@ -348,10 +348,10 @@ private ghost fn help_opened cells g outer nodes
     ((held g outer e.req phi old ** beta g e.req.expected e.req.desired old false) **
       (tags e.req phi ** G.pts_to g #0.5R v))
     (entry_body cells g outer nodes e ** G.pts_to g #0.5R v)
-    (fun _ -> M.bind_ghost
-      (M.frame_ghost (tags e.req phi ** G.pts_to g #0.5R v)
+    (fun _ -> M.bind_gaction
+      (M.frame_gaction (tags e.req phi ** G.pts_to g #0.5R v)
         (commit g outer e.req phi old false))
-      (fun _ -> M.lift_ghost outer (finish_help cells g outer nodes e phi v)));
+      (fun _ -> M.lift_ghost_action outer (finish_help cells g outer nodes e phi v)));
 }
 
 private ghost fn prepare_help (cells:N.arena) g outer
@@ -382,11 +382,11 @@ private ghost fn prepare_help (cells:N.arena) g outer
         ((on e.req.caller (au g outer e.req phi) ** later_credit e.req.credits) **
           (tags e.req phi ** G.pts_to g #0.5R (N.value cells node)))
         (entry_body cells g outer after e ** G.pts_to g #0.5R (N.value cells node))
-        (fun _ -> M.bind_ghost
-          (M.frame_ghost (tags e.req phi ** G.pts_to g #0.5R (N.value cells node))
+        (fun _ -> M.bind_gaction
+          (M.frame_gaction (tags e.req phi ** G.pts_to g #0.5R (N.value cells node))
             (open_request g outer e.req phi))
-          (fun _ -> M.bind_ghost
-            (M.lift_ghost e.req.inner (help_opened cells g outer after e phi (N.value cells node)))
+          (fun _ -> M.bind_gaction
+            (M.lift_ghost_action e.req.inner (help_opened cells g outer after e phi (N.value cells node)))
             (fun _ -> U.elim_update e.req.inner outer
               (entry_body cells g outer after e ** G.pts_to g #0.5R (N.value cells node)))));
       rewrite each after as S.append nodes (S.create 1 node);
@@ -418,7 +418,7 @@ let help_one (cells:N.arena) g outer
   (nodes:S.seq (N.id cells) { 0 < S.length nodes })
   (node:N.id cells {
     N.value cells node =!= N.value cells (S.index nodes (S.length nodes - 1)) }) e =
-  M.bind_ghost (M.lift_ghost outer (prepare_help cells g outer nodes node e))
+  M.bind_gaction (M.lift_ghost_action outer (prepare_help cells g outer nodes node e))
     (fun _ -> U.elim_update outer outer
       (entry_body cells g outer (S.append nodes (S.create 1 node)) e **
         G.pts_to g #0.5R (N.value cells node)))
@@ -471,31 +471,31 @@ let rec help_all (cells:N.arena) g outer
       (decreases n)
   =
   if n = 0 then
-    M.lift_ghost outer
+    M.lift_ghost_action outer
       (frame_ghost (G.pts_to g #0.5R (N.value cells node))
         (empty_entries cells g outer nodes (S.append nodes (S.create 1 node)) es))
   else
     let k = n - 1 in
     let after = S.append nodes (S.create 1 node) in
     slprop_equivs ();
-    M.bind_ghost
-      (M.sub_ghost
+    M.bind_gaction
+      (M.sub_gaction
         (entries cells g outer nodes es n ** G.pts_to g #0.5R (N.value cells node))
         (fun _ -> (entry_body cells g outer nodes (S.index es k) **
           G.pts_to g #0.5R (N.value cells node)) ** entries cells g outer nodes es k)
-        (M.lift_ghost outer
+        (M.lift_ghost_action outer
           (frame_ghost (G.pts_to g #0.5R (N.value cells node)) (split_last cells g outer nodes es k))))
-      (fun _ -> M.bind_ghost
-        (M.frame_ghost (entries cells g outer nodes es k) (help_one cells g outer nodes node (S.index es k)))
-        (fun _ -> M.bind_ghost
-          (M.sub_ghost
+      (fun _ -> M.bind_gaction
+        (M.frame_gaction (entries cells g outer nodes es k) (help_one cells g outer nodes node (S.index es k)))
+        (fun _ -> M.bind_gaction
+          (M.sub_gaction
             ((entry_body cells g outer after (S.index es k) **
               G.pts_to g #0.5R (N.value cells node)) ** entries cells g outer nodes es k)
             (fun _ -> (entry_body cells g outer after (S.index es k) **
               entries cells g outer after es k) ** G.pts_to g #0.5R (N.value cells node))
-            (M.frame_ghost (entry_body cells g outer after (S.index es k))
+            (M.frame_gaction (entry_body cells g outer after (S.index es k))
               (help_all cells g outer nodes node es k)))
-          (fun _ -> M.lift_ghost outer
+          (fun _ -> M.lift_ghost_action outer
             (frame_ghost (G.pts_to g #0.5R (N.value cells node)) (join_last cells g outer after es k)))))
 
 ghost fn expose cells g t nodes name
@@ -768,12 +768,12 @@ private ghost fn finish_success (cells:N.arena) g t
       (MR.pts_to t.owner #0.5R (Some name) ** MR.pts_to t.requests #1.0R es **
         on r.caller (result r true)))
     (body cells g t after ** G.pts_to g #0.5R (N.value cells node) ** on r.caller (result r true))
-    (fun _ -> M.bind_ghost
-      (M.frame_ghost
+    (fun _ -> M.bind_gaction
+      (M.frame_gaction
         (MR.pts_to t.owner #0.5R (Some name) ** MR.pts_to t.requests #1.0R es **
           on r.caller (result r true))
         (help_all cells g outer nodes node es (S.length es)))
-      (fun _ -> M.lift_ghost outer
+      (fun _ -> M.lift_ghost_action outer
         (frame_ghost (G.pts_to g #0.5R (N.value cells node) ** on r.caller (result r true))
           (restore_after_help cells g t after name es))));
   rewrite each outer as mask (Some name);
@@ -810,12 +810,12 @@ private ghost fn success_opened (cells:N.arena) g t
     ((held g outer r phi old ** beta g r.expected r.desired old true) **
       (content cells g t nodes (Some name) es ** G.pts_to g #0.5R (N.value cells node) ** tags r phi))
     (body cells g t after ** G.pts_to g #0.5R (N.value cells node) ** on r.caller (result r true))
-    (fun _ -> M.bind_ghost
-      (M.frame_ghost
+    (fun _ -> M.bind_gaction
+      (M.frame_gaction
         (content cells g t nodes (Some name) es ** G.pts_to g #0.5R (N.value cells node) ** tags r phi)
         (commit g outer r phi old true))
-      (fun _ -> M.bind_ghost
-        (M.lift_ghost outer (finish_success cells g t nodes node name es r phi))
+      (fun _ -> M.bind_gaction
+        (M.lift_ghost_action outer (finish_success cells g t nodes node name es r phi))
         (fun _ -> U.elim_update outer outer
           (body cells g t after ** G.pts_to g #0.5R (N.value cells node) ** on r.caller (result r true)))));
   rewrite each outer as mask (Some name);
@@ -859,12 +859,12 @@ ghost fn publish (cells:N.arena) g t
       (content cells g t nodes (Some name) es ** tags r phi **
         G.pts_to g #0.5R (N.value cells (S.index nodes (S.length nodes - 1)))))
     (body cells g t after ** G.pts_to g #0.5R (N.value cells node) ** on r.caller (result r true))
-    (fun _ -> M.bind_ghost
-      (M.frame_ghost (content cells g t nodes (Some name) es ** tags r phi **
+    (fun _ -> M.bind_gaction
+      (M.frame_gaction (content cells g t nodes (Some name) es ** tags r phi **
         G.pts_to g #0.5R (N.value cells (S.index nodes (S.length nodes - 1))))
         (open_request g outer r phi))
-      (fun _ -> M.bind_ghost
-        (M.lift_ghost r.inner (success_opened cells g t nodes node name es r phi))
+      (fun _ -> M.bind_gaction
+        (M.lift_ghost_action r.inner (success_opened cells g t nodes node name es r phi))
         (fun _ -> U.elim_update r.inner outer
           (body cells g t after ** G.pts_to g #0.5R (N.value cells node) ** on r.caller (result r true)))));
   rewrite each outer as mask (Some name);

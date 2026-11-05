@@ -25,7 +25,7 @@ partial-correctness rules, not termination or lock-freedom rules.
 *)
 
 open Pulse.Lib.Pervasives
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module U = Pulse.Lib.LogicalAtomicity.Update
 
 (** One ADDITIVE choice: None selects abort, Some y selects commit.

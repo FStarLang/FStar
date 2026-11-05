@@ -8,12 +8,12 @@ A wand is an existential resource package: hidden `extra` ownership plus
 pure evidence that a suitable ghost runner exists. Keeping code existence
 pure does NOT make its captured resources duplicable. This representation
 supports resource-capturing client continuations without axioms about a new
-modal connective. All execution is delegated to the verified Masks layer.
+modal connective. All execution is delegated to Pulse.Lib.Core's actions.
 The public .fsti gives the Iris analogy and the limits of that analogy.
 *)
 
 open Pulse.Lib.Pervasives
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 
 (** Code that consumes captured state and input at the initial mask. The
 unit thunk delays construction/execution until the package is eliminated. *)
@@ -59,8 +59,8 @@ private ghost fn unpack (before after:inames) (p q:slprop)
 Mask changes occur in the runner, not in unpacking. *)
 let elim_wand before after p q
   : M.gaction unit before after (wand before after p q ** p) (fun _ -> q) =
-  M.bind_ghost
-    (M.lift_ghost before (Pulse.Lib.Core.frame_ghost p (unpack before after p q)))
+  M.bind_gaction
+    (M.lift_ghost_action before (Pulse.Lib.Core.frame_ghost p (unpack before after p q)))
     (fun res -> (dsnd res) ())
 
 (** Capture `p` in an identity runner with empty additional input. *)
@@ -71,7 +71,7 @@ ghost fn return_update (mask:inames) (p:slprop)
   ghost fn identity () requires p ** emp ensures p {};
   star_comm p emp;
   emp_unit p;
-  intro_wand mask mask emp p p (fun _ -> M.lift_ghost mask (identity ()));
+  intro_wand mask mask emp p p (fun _ -> M.lift_ghost_action mask (identity ()));
   fold fupd mask mask p;
 }
 
@@ -96,8 +96,8 @@ ghost fn compose (m1 m2 m3:inames) (p q r:slprop)
   intro_wand m1 m3 p r (dfst f ** dfst g) (fun _ ->
     star_assoc (dfst f) (dfst g) p;
     star_comm (dfst g) p;
-    M.bind_ghost
-      (M.frame_ghost (dfst g) ((dsnd f) ()))
+    M.bind_gaction
+      (M.frame_gaction (dfst g) ((dsnd f) ()))
       (fun _ ->
         star_comm q (dfst g);
         (dsnd g) ()));
@@ -113,7 +113,7 @@ ghost fn frame (m1 m2:inames) (p q r:slprop)
   rewrite each dfst f as f._1;
   intro_wand m1 m2 (p ** r) (q ** r) (dfst f) (fun _ ->
     star_assoc (dfst f) p r;
-    M.frame_ghost r ((dsnd f) ()));
+    M.frame_gaction r ((dsnd f) ()));
 }
 
 (** Package the postprocessing computation with an empty environment and
@@ -126,7 +126,7 @@ ghost fn map (m1 m2:inames) (p q:slprop)
   unfold fupd m1 m2 p;
   emp_unit p;
   intro_wand m2 m2 p q emp (fun _ ->
-    M.lift_ghost m2 (k ()));
+    M.lift_ghost_action m2 (k ()));
   compose m1 m2 m2 emp p q;
   fold fupd m1 m2 q;
 }

@@ -17,7 +17,7 @@ must separately prove its alpha-to-beta step, as the examples demonstrate.
 
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.LogicalAtomicity.Atomic
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module I = Pulse.Lib.LogicalAtomicity.Invariant
 
 (** Reassemble the old invariant payload without using the captured extra;
@@ -72,15 +72,15 @@ private ghost fn make_closing (#a #b:Type0)
     (inv i (payload alpha residual) ** extra) beta phi x
     (inv i (payload alpha residual) ** extra ** residual x)
     (fun _ ->
-      M.bind_ghost
-        (M.lift_ghost (add_inv outer i) (prepare_abort i alpha residual extra x))
-        (fun _ -> M.frame_ghost extra (I.close_inv outer i (payload alpha residual))))
+      M.bind_gaction
+        (M.lift_ghost_action (add_inv outer i) (prepare_abort i alpha residual extra x))
+        (fun _ -> M.frame_gaction extra (I.close_inv outer i (payload alpha residual))))
     (fun y ->
-      M.bind_ghost
-        (M.lift_ghost (add_inv outer i) (prepare_commit i alpha residual beta phi extra finish x y))
+      M.bind_gaction
+        (M.lift_ghost_action (add_inv outer i) (prepare_commit i alpha residual beta phi extra finish x y))
         (fun _ ->
-          M.bind_ghost (M.frame_ghost (phi x y) (I.close_inv outer i (payload alpha residual)))
-            (fun _ -> M.lift_ghost outer (forget_inv i (payload alpha residual) (phi x y)))));
+          M.bind_gaction (M.frame_gaction (phi x y) (I.close_inv outer i (payload alpha residual)))
+            (fun _ -> M.lift_ghost_action outer (forget_inv i (payload alpha residual) (phi x y)))));
   fold A.opened outer (add_inv outer i) alpha
     (inv i (payload alpha residual) ** extra) beta phi;
 }
@@ -101,10 +101,10 @@ ghost fn from_invariant (#a #b:Type0)
   A.intro outer (add_inv outer i) 1 alpha beta phi
     (inv i (payload alpha residual) ** extra)
     (fun _ ->
-      M.bind_ghost
-        (M.sub_ghost ((inv i (payload alpha residual) ** extra) ** later_credit 1)
+      M.bind_gaction
+        (M.sub_gaction ((inv i (payload alpha residual) ** extra) ** later_credit 1)
           (fun _ -> inv i (payload alpha residual) ** payload alpha residual ** extra)
-          (M.frame_ghost extra (I.open_inv outer i (payload alpha residual))))
-        (fun _ -> M.lift_ghost (add_inv outer i)
+          (M.frame_gaction extra (I.open_inv outer i (payload alpha residual))))
+        (fun _ -> M.lift_ghost_action (add_inv outer i)
           (make_closing outer i alpha residual beta phi extra finish)));
 }

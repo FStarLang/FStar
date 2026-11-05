@@ -27,7 +27,7 @@ module P = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Registry
 module Q = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.State
 module R = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Read
 module Atom = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Atomics
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module U = Pulse.Lib.LogicalAtomicity.Update
 module L = Pulse.Lib.LogicalAtomicity.Locality
 
@@ -106,11 +106,11 @@ private ghost fn decide (#cells:N.arena) (q:Q.big_atomic cells) r phi
         (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
           P.tags r phi ** G.pts_to r.P.token ()))
       (Q.body q.Q.core ** post q r p)
-      (fun _ -> M.bind_ghost
-        (M.frame_ghost (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
+      (fun _ -> M.bind_gaction
+        (M.frame_gaction (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
           P.tags r phi ** G.pts_to r.P.token ())
           (P.commit q.Q.core.Q.model (Q.mask q) r phi old false))
-        (fun _ -> M.lift_ghost (Q.mask q) (finish_result q r phi s p false)));
+        (fun _ -> M.lift_ghost_action (Q.mask q) (finish_result q r phi s p false)));
   } else if (expected = desired) {
     drop_ (later_credit r.P.credits);
     rewrite P.model q.Q.core.Q.model old as P.model q.Q.core.Q.model r.P.desired;
@@ -121,11 +121,11 @@ private ghost fn decide (#cells:N.arena) (q:Q.big_atomic cells) r phi
         (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
           P.tags r phi ** G.pts_to r.P.token ()))
       (Q.body q.Q.core ** post q r p)
-      (fun _ -> M.bind_ghost
-        (M.frame_ghost (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
+      (fun _ -> M.bind_gaction
+        (M.frame_gaction (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
           P.tags r phi ** G.pts_to r.P.token ())
           (P.commit q.Q.core.Q.model (Q.mask q) r phi old true))
-        (fun _ -> M.lift_ghost (Q.mask q) (finish_result q r phi s p true)));
+        (fun _ -> M.lift_ghost_action (Q.mask q) (finish_result q r phi s p true)));
   } else {
     unfold P.held;
     fold L.opened r.P.caller (Q.mask q) r.P.inner r.P.credits (P.model q.Q.core.Q.model)
@@ -136,11 +136,11 @@ private ghost fn decide (#cells:N.arena) (q:Q.big_atomic cells) r phi
         (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
           P.tags r phi ** later_credit r.P.credits ** G.pts_to r.P.token ()))
       (Q.body q.Q.core ** post q r p)
-      (fun _ -> M.bind_ghost
-        (M.frame_ghost (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
+      (fun _ -> M.bind_gaction
+        (M.frame_gaction (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
           P.tags r phi ** later_credit r.P.credits ** G.pts_to r.P.token ())
           (P.abort q.Q.core.Q.model (Q.mask q) r phi))
-        (fun _ -> M.lift_ghost (Q.mask q) (finish_registration q r phi s p)));
+        (fun _ -> M.lift_ghost_action (Q.mask q) (finish_registration q r phi s p)));
   }
 }
 
@@ -172,15 +172,15 @@ atomic fn backup_core (#cells:N.arena) (q:Q.big_atomic cells) r phi
       (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
         P.tags r phi ** later_credit r.P.credits ** G.pts_to r.P.token () ** R.observed q old p))
     (Q.body q.Q.core ** post q r p ** R.observed q old p)
-    (fun _ -> M.bind_ghost
-      (M.frame_ghost
+    (fun _ -> M.bind_gaction
+      (M.frame_gaction
         (Q.state q.Q.core s ** P.initialized q.Q.core.Q.pending q.Q.name **
           P.tags r phi ** later_credit r.P.credits ** G.pts_to r.P.token () ** R.observed q old p)
         (P.open_request q.Q.core.Q.model (Q.mask q) r phi))
-      (fun _ -> M.bind_ghost
-        (M.lift_ghost r.P.inner
+      (fun _ -> M.bind_gaction
+        (M.lift_ghost_action r.P.inner
           (frame_ghost (R.observed q old p) (decide q r phi s p)))
-        (fun _ -> M.frame_ghost (R.observed q old p)
+        (fun _ -> M.frame_gaction (R.observed q old p)
           (U.elim_update r.P.inner (Q.mask q) (Q.body q.Q.core ** post q r p)))));
   p
 }

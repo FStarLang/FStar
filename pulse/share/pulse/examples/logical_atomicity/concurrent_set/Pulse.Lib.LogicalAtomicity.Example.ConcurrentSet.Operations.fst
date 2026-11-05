@@ -31,7 +31,7 @@ module H = Pulse.Lib.LogicalAtomicity.Example.ConcurrentSet.Model
 module N = Pulse.Lib.LogicalAtomicity.Example.ConcurrentSet.Storage
 module Q = Pulse.Lib.LogicalAtomicity.Example.ConcurrentSet.State
 module D = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Actions
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module U = Pulse.Lib.LogicalAtomicity.Update
 

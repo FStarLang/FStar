@@ -25,7 +25,7 @@ module H = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Model
 module N = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Storage
 module Atom = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Atomics
 module P = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Registry
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module I = Pulse.Lib.LogicalAtomicity.Invariant
 module U = Pulse.Lib.LogicalAtomicity.Update
 
@@ -251,29 +251,29 @@ let with_body (#cells:N.arena) (#a:Type0) (q:big_atomic cells)
   : stt_atomic a #PulseCore.Observability.Observable all_inames (shared q ** later_credit 1 ** pre)
       (fun x -> shared q ** post x) =
   slprop_equivs ();
-  M.run_closed (
-    M.bind
-      (M.ghost_to_action (M.sub_ghost
+  M.run_closed_action (
+    M.bind_action
+      (M.ghost_to_action (M.sub_gaction
         (shared q ** later_credit 1 ** pre)
         (fun _ -> (body q.core ** P.initialized q.core.pending q.name ** pre) **
           inv q.name (body q.core))
-        (M.frame_ghost (P.initialized q.core.pending q.name ** pre)
+        (M.frame_gaction (P.initialized q.core.pending q.name ** pre)
           (I.open_inv emp_inames q.name (body q.core)))))
-      (fun _ -> M.bind
-        (M.frame (inv q.name (body q.core)) (M.lift_atomic (mask q) (step ())))
-        (fun x -> M.finish_ghost x (fun x -> shared q ** post x)
-          (M.bind_ghost
-            (M.sub_ghost
+      (fun _ -> M.bind_action
+        (M.frame_action (inv q.name (body q.core)) (M.lift_atomic_action (mask q) (step ())))
+        (fun x -> M.finish_gaction x (fun x -> shared q ** post x)
+          (M.bind_gaction
+            (M.sub_gaction
               ((U.fupd (mask q) (mask q) (body q.core ** post x) **
                 P.initialized q.core.pending q.name) ** inv q.name (body q.core))
               (fun _ -> (inv q.name (body q.core) ** body q.core) **
                 (P.initialized q.core.pending q.name ** post x))
-              (M.frame_ghost
+              (M.frame_gaction
                 (P.initialized q.core.pending q.name ** inv q.name (body q.core))
                 (U.elim_update (mask q) (mask q) (body q.core ** post x))))
-            (fun _ -> M.sub_ghost
+            (fun _ -> M.sub_gaction
               ((inv q.name (body q.core) ** body q.core) **
                 (P.initialized q.core.pending q.name ** post x))
               (fun _ -> shared q ** post x)
-              (M.frame_ghost (P.initialized q.core.pending q.name ** post x)
+              (M.frame_gaction (P.initialized q.core.pending q.name ** post x)
                 (I.close_inv emp_inames q.name (body q.core))))))))

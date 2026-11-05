@@ -19,7 +19,7 @@ invariant or opening credit; it is not a generic concurrent sharing rule.
 *)
 
 open Pulse.Lib.Pervasives
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module U = Pulse.Lib.LogicalAtomicity.Update
 
@@ -33,7 +33,7 @@ ghost fn delay (inner:inames) (pre post:slprop)
 {
   slprop_equivs ();
   U.intro_wand inner emp_inames emp post pre
-    (fun _ -> M.sub_ghost (pre ** emp) (fun _ -> post) (f ()));
+    (fun _ -> M.sub_gaction (pre ** emp) (fun _ -> post) (f ()));
   fold U.fupd inner emp_inames post;
 }
 
@@ -57,14 +57,14 @@ let with_update #s #a #r inner footprint credits alpha beta phi extra keep post 
   : stt_atomic r all_inames
       ((A.atomic_update emp_inames inner credits alpha beta phi ** later_credit credits) ** extra)
       (fun r -> post r ** keep) =
-  M.run_closed (
-    M.bind (M.ghost_to_action (M.frame_ghost extra
+  M.run_closed_action (
+    M.bind_action (M.ghost_to_action (M.frame_gaction extra
       (A.open_update emp_inames inner credits alpha beta phi)))
       (fun _ ->
-        M.bind (M.lift_atomic inner (step ()))
+        M.bind_action (M.lift_atomic_action inner (step ()))
           (fun r ->
-            M.finish_ghost r (fun r -> post r ** keep)
-              (M.frame_ghost keep (U.elim_update inner emp_inames (post r))))))
+            M.finish_gaction r (fun r -> post r ** keep)
+              (M.frame_gaction keep (U.elim_update inner emp_inames (post r))))))
 
 (** Empty-footprint identity used as the owned-state abort/commit callback. *)
 private ghost fn identity (p:slprop) () preserves p {}
@@ -84,14 +84,14 @@ ghost fn from_owned_at (#s #a:Type0) (mask:inames)
     drop_ (later_credit 0);
     slprop_equivs ();
     A.intro_closing mask mask alpha (alpha x) beta (fun _ y -> beta x y) x emp
-      (fun _ -> M.sub_ghost (emp ** alpha x) (fun _ -> alpha x)
-        (M.lift_ghost mask (identity (alpha x) ())))
-      (fun y -> M.sub_ghost (emp ** beta x y) (fun _ -> beta x y)
-        (M.lift_ghost mask (identity (beta x y) ())));
+      (fun _ -> M.sub_gaction (emp ** alpha x) (fun _ -> alpha x)
+        (M.lift_ghost_action mask (identity (alpha x) ())))
+      (fun y -> M.sub_gaction (emp ** beta x y) (fun _ -> beta x y)
+        (M.lift_ghost_action mask (identity (beta x y) ())));
     fold A.opened mask mask alpha (alpha x) beta (fun _ y -> beta x y);
   };
   A.intro mask mask 0 alpha beta (fun _ y -> beta x y) (alpha x)
-    (fun _ -> M.lift_ghost mask (step ()));
+    (fun _ -> M.lift_ghost_action mask (step ()));
 }
 
 ghost fn from_owned (#s #a:Type0) (alpha:s -> slprop) (beta:s -> a -> slprop) (x:s)

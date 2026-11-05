@@ -7,7 +7,7 @@ Locality-preserving bridge from core to ordinary invariants.
 
 Pulse.Lib.Inv hides a core invariant at a storage locality together with
 transport functions to/from the caller's locality. We unpack precisely that
-representation, use Masks to move its core body, and restore the wrapper.
+representation, use Pulse.Lib.Core.Inv to move its core body, and restore the wrapper.
 We must not identify `somewhere (later p)` with plain p: both locality
 transport and later-credit elimination are real proof obligations.
 
@@ -18,7 +18,7 @@ axiom. The public interface deliberately hides these implementation views.
 open Pulse.Lib.Pervasives
 module I = Pulse.Lib.Inv
 module C = Pulse.Lib.Core.Inv
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 
 (** Erased witnesses for the caller/storage localities and reversible ghost
 transport. They describe the original invariant wrapper's representation. *)
@@ -113,20 +113,20 @@ let open_inv mask i p
   : M.gaction unit mask (add_inv mask i)
       (inv i p ** later_credit 1) (fun _ -> inv i p ** p) =
   slprop_equivs ();
-  M.bind_ghost #(view p) #unit
+  M.bind_gaction #(view p) #unit
     #mask #mask #(add_inv mask i)
     #_ #_ #(fun _ -> inv i p ** p)
-    (M.lift_ghost mask (frame_ghost (later_credit 1) (unpack i p)))
+    (M.lift_ghost_action mask (frame_ghost (later_credit 1) (unpack i p)))
     (fun v ->
       assert (held i p v == C.inv i (on v.there p) ** rest p v)
         by (FStar.Tactics.V2.trefl ());
-      M.bind_ghost #unit #unit
+      M.bind_gaction #unit #unit
         #mask #(add_inv mask i) #(add_inv mask i)
         #_ #_ #(fun _ -> inv i p ** p)
-        (M.sub_ghost (held i p v ** later_credit 1)
+        (M.sub_gaction (held i p v ** later_credit 1)
           (fun _ -> held i p v ** C.somewhere (later (on v.there p)) ** later_credit 1)
-          (M.frame_ghost (rest p v ** later_credit 1) (M.open_invariant mask i (on v.there p))))
-        (fun _ -> M.lift_ghost (add_inv mask i) (expose i p v)))
+          (M.frame_gaction (rest p v ** later_credit 1) (C.open_invariant mask i (on v.there p))))
+        (fun _ -> M.lift_ghost_action (add_inv mask i) (expose i p v)))
 
 (** Conceal p, restore the core invariant resource, and repack the wrapper.
 This removes only i, so unrelated open invariants may remain outstanding. *)
@@ -134,17 +134,17 @@ let close_inv mask i p
   : M.gaction unit (add_inv mask i) mask
       (inv i p ** p) (fun _ -> inv i p) =
   slprop_equivs ();
-  M.bind_ghost #(view p) #unit
+  M.bind_gaction #(view p) #unit
     #(add_inv mask i) #(add_inv mask i) #mask #_ #_ #(fun _ -> inv i p)
-    (M.lift_ghost (add_inv mask i) (frame_ghost p (unpack i p)))
+    (M.lift_ghost_action (add_inv mask i) (frame_ghost p (unpack i p)))
     (fun v ->
       assert (held i p v == C.inv i (on v.there p) ** rest p v)
         by (FStar.Tactics.V2.trefl ());
-      M.bind_ghost (M.lift_ghost (add_inv mask i) (conceal i p v))
+      M.bind_gaction (M.lift_ghost_action (add_inv mask i) (conceal i p v))
         (fun _ ->
-          M.bind_ghost #unit #unit
+          M.bind_gaction #unit #unit
             #(add_inv mask i) #mask #mask #_ #_ #(fun _ -> inv i p)
-            (M.sub_ghost (held i p v ** C.somewhere (later (on v.there p)))
+            (M.sub_gaction (held i p v ** C.somewhere (later (on v.there p)))
               (fun _ -> held i p v)
-              (M.frame_ghost (rest p v) (M.close_invariant mask i (on v.there p))))
-            (fun _ -> M.lift_ghost mask (repack i p v))))
+              (M.frame_gaction (rest p v) (C.close_invariant mask i (on v.there p))))
+            (fun _ -> M.lift_ghost_action mask (repack i p v))))

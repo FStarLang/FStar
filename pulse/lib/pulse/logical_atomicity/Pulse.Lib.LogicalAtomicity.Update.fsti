@@ -13,12 +13,12 @@ and arbitrary Iris proof-mode rules are not supplied by this interface.
 
 The captured resources are spatial, not implicitly persistent or sendable.
 Eliminating the package consumes it; merely owning it does not execute it.
-See Masks for the reversed mask polarity and the single-observable-step
+See Pulse.Lib.Core for the reversed mask polarity and the single-observable-step
 restriction when an update is composed with executable code.
 *)
 
 open Pulse.Lib.Pervasives
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 
 (** An owned, one-use mask-changing implication. Captured state is hidden;
 the caller must still supply `p` at elimination time. *)

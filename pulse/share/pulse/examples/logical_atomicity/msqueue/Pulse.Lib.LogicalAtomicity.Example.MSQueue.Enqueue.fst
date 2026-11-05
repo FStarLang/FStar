@@ -34,7 +34,7 @@ module H = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Model
 module N = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Storage
 module Q = Pulse.Lib.LogicalAtomicity.Example.MSQueue.State
 module D = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Actions
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module U = Pulse.Lib.LogicalAtomicity.Update
 module Atom = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Atomics
@@ -139,7 +139,7 @@ atomic fn link_opened (#cells:N.arena) (q:Q.queue cells) (p:U32.t -> slprop)
       D.delay inner
         ((closing q n inner credits phi xs ** beta q n xs ()) ** Q.edge q tail n)
         (attempt_post q p tail n inner credits phi true)
-        (fun _ -> M.frame_ghost (Q.edge q tail n)
+        (fun _ -> M.frame_gaction (Q.edge q tail n)
           (A.commit emp_inames inner (Q.model q) (update q n inner credits phi)
             (beta q n) (fun _ _ -> phi ()) xs ()));
       true
@@ -158,7 +158,7 @@ atomic fn link_opened (#cells:N.arena) (q:Q.queue cells) (p:U32.t -> slprop)
       D.delay inner
         (opened q n inner credits phi ** (N.ticket cells n ** p (N.value cells n)))
         (attempt_post q p tail n inner credits phi false)
-        (fun _ -> M.frame_ghost (N.ticket cells n ** p (N.value cells n))
+        (fun _ -> M.frame_gaction (N.ticket cells n ** p (N.value cells n))
           (A.abort_opened emp_inames inner (Q.model q) (update q n inner credits phi)
             (beta q n) (fun _ _ -> phi ())));
       false

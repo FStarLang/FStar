@@ -16,7 +16,7 @@ module N = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Storage
 module Q = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.State
 module Atom = Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Atomics
 module D = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Actions
-module M = Pulse.Lib.LogicalAtomicity.Masks
+module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module U = Pulse.Lib.LogicalAtomicity.Update
 
@@ -73,7 +73,7 @@ atomic fn backup_opened (#cells:N.arena) (q:Q.big_atomic cells)
     D.delay inner
       ((closing q inner credits phi v ** beta q v (N.value cells (Q.node_of p))) ** observed q old p)
       (post q old phi p)
-      (fun _ -> M.frame_ghost (observed q old p)
+      (fun _ -> M.frame_gaction (observed q old p)
         (A.commit emp_inames inner (Q.model q) (update q inner credits phi)
           (beta q) (fun _ v -> phi v) v (N.value cells (Q.node_of p))));
     p
