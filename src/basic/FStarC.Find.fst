@@ -35,7 +35,6 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
 type normalized_include_path_cache = {
   paths: list module_include_path;
   source_roots: list (module_include_path & string);
-  has_flat_root: bool;
 }
 
 let _full_include : ref (option (list string)) = mk_ref None
@@ -234,7 +233,6 @@ let normalized_module_include_paths () : ML normalized_include_path_cache =
     let normalized = {
       paths;
       source_roots = List.map (fun path -> path, path.dir ^ "/") paths;
-      has_flat_root = List.existsb (fun path -> path.kind = Flat) paths;
     } in
     _module_include_paths_normalized := Some normalized;
     normalized
@@ -245,15 +243,13 @@ let module_include_paths_normalized () : ML (list module_include_path) =
 let relative_source_path_normalized =
   cached_fun relative_source_path_cache fun filename ->
     let paths = normalized_module_include_paths () in
-    let filename_dir =
-      if paths.has_flat_root then Some (Filepath.dirname filename) else None
-    in
+    let filename_dir = Filepath.dirname filename in
     let best =
       paths.source_roots
       |> List.fold_left (fun best (path, prefix) ->
         if BU.starts_with filename prefix
            && (match path.kind with
-               | Flat -> filename_dir = Some path.dir
+               | Flat -> filename_dir = path.dir
                | Recursive -> true)
            && (match best with
                | Some dir -> String.length path.dir > String.length dir
