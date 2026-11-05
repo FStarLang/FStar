@@ -236,6 +236,7 @@ let consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : 
     HashTable.remove e.fv_delta_depths s;
     HashTable.remove e.strict_args_tab s;
     HashTable.remove e.disc_proj_tab s);
+  if Cons? lids then HashTable.clear e.spec_arg_tab;
   let hidden = lids |> List.fold_left (fun s l -> remove l s) e.iface_hidden in
   { e with iface_todo = remaining; iface_hidden = hidden }
 
@@ -303,7 +304,6 @@ let initial_env deps
     use_eq_strict=false;
     is_iface=false;
     admit=false;
-    phase1=false;
     nocoerce=false;
     failhard=false;
     flychecking=false;
@@ -337,6 +337,7 @@ let initial_env deps
     strict_args_tab = HashTable.create 20;
     disc_proj_tab = HashTable.create 50;
     erasable_types_tab = HashTable.create 20;
+    spec_arg_tab = HashTable.create 100;
     enable_defer_to_tac=true;
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
@@ -386,7 +387,8 @@ let push_stack env : ML _ =
               fv_delta_depths=HashTable.copy env.fv_delta_depths;
               strict_args_tab=HashTable.copy env.strict_args_tab;
               disc_proj_tab=HashTable.copy env.disc_proj_tab;
-              erasable_types_tab=HashTable.copy env.erasable_types_tab }
+              erasable_types_tab=HashTable.copy env.erasable_types_tab;
+              spec_arg_tab=HashTable.copy env.spec_arg_tab }
 
 let pop_stack () : ML _ =
     match !stack with
@@ -439,6 +441,31 @@ let incr_query_index env : ML _ =
       add_query_index (l, next);
       HashTable.add tbl (string_of_lid l) next;
       {env with qtbl_name_and_index=Some (l, typ, next), tbl}
+
+let set_hint_correlator (env:env) (se:sigelt) : ML _ =
+    (* if the tbl has a counter for lid, we use that, else we start from 0;
+       this is useful when we verify the extracted interface alongside *)
+    let tbl = env.qtbl_name_and_index |> snd in
+    let get_n lid =
+      match HashTable.try_find tbl (show lid) with
+      | Some n -> n
+      | None -> 0
+    in
+    let typ =
+      match se.sigel with
+      | Sig_inductive_typ {t}
+      | Sig_datacon {t}
+      | Sig_declare_typ {t} -> t
+      | Sig_let {lbs=(_, lb::_)} -> lb.lbtyp
+      | _ -> S.tun
+    in
+    let lid =
+      match U.lids_of_sigelt se with
+      | [] -> Ident.lid_add_suffix env.curmodule
+                                   (GenSym.next_id () |> show) // GM: Should we really touch the gensym?
+      | l::_ -> l
+    in
+    {env with qtbl_name_and_index=Some (lid, typ, get_n lid), tbl}
 
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
@@ -646,6 +673,9 @@ let rec add_sigelt force env se : ML _ = match se.sigel with
         HashTable.remove env.fv_delta_depths s;
         HashTable.remove env.strict_args_tab s;
         HashTable.remove env.disc_proj_tab s);
+      (* A replacement may depend on any name in a binder type (an abstract
+         type becoming concrete, say), so flush them all. *)
+      HashTable.clear env.spec_arg_tab;
       add_se_to_attrtab env se
 
 and add_sigelts force env ses : ML _ =
@@ -864,16 +894,6 @@ let datacons_of_typ env lid : ML _ =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_inductive_typ {ds=dcs} }, _), _) -> true, dcs
     | _ -> false, []
-
-(* No specification composed by the type-checker will ever be looked at: phase 1
-   of two-phase type-checking only elaborates the term and throws its types
-   away, and under [--admit_smt_queries] no verification condition is ever
-   discharged.
-
-   Deliberately *not* conditioned on [--lax]: the type we infer for a
-   definition must not depend on whether we are verifying it. *)
-let discard_specs env : ML bool =
-  env.phase1 || Options.admit_smt_queries ()
 
 (* The logical content of a binder's type, to be restated wherever the binder
    is eliminated by substitution.  On top of the refinement formula we also
@@ -1950,13 +1970,6 @@ let abstract_guard_n bs g : ML _ =
     | NonTrivial f ->
         let f' = U.abs bs f (Some (U.residual_tot U.ktype0)) in
         ({ g with guard_f = NonTrivial f' })
-
-let abstract_guard b g : ML _ =
-    abstract_guard_n [b] g
-
-let apply_guard g e : ML guard_t = match g.guard_f with
-  | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial <| S.mk_Tm_app f [as_arg e] f.pos}
 
 let map_guard g map = match g.guard_f with
   | Trivial -> g

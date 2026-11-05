@@ -75,13 +75,16 @@ val deep_transform_to_unary_applications (t:T.term) : r:T.term { t == r }
 val map_seal (s:FStar.Sealed.sealed 't) (f: 't -> 'u) : FStar.Sealed.sealed 'u
 val float_one : FStar.Float64.float64
 val lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term)
+(* Is [t] the head of a field projection [e.f] that ToSyntax left
+   unresolved?  Such a head only has a meaningful type once applied to [e]. *)
+val is_unresolved_projector (t:T.term) : bool
 val new_implicit_var : reason:string -> range -> env -> typ -> unrefine:bool -> Dv term
 val try_solve_single_valued_implicits : env -> list term -> Dv unit
 module T = FStar.Tactics.V2
-val tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool) : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues)
+val tc_term_elab (g:env) (t:T.term) (instantiate_imps:bool) : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues)
 val teq_nosmt_force (g:env) (ty1 ty2:T.term) : Dv bool
-val teq_nosmt_force_phase1 (g:env) (ty1 ty2:T.term) : Dv bool
-val teq_nosmt_phase1 (g:env) (ty1 ty2:T.term) : Dv bool
+val teq_nosmt_force_elab (g:env) (ty1 ty2:T.term) : Dv bool
+val teq_nosmt_elab (g:env) (ty1 ty2:T.term) : Dv bool
 val whnf_lax (g:env) (t:T.term) : T.term
 val hnf_lax (g:env) (t:T.term) : T.term
 val beta_lax (g:env) (t:T.term) : T.term

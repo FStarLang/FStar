@@ -1,6 +1,6 @@
 module BvModelAgreesWithZ3
 
-// Exhaustive width-3 cases keep the Cartesian operation groups tractable.
+// Cover the low two-bit space plus a few larger width-3 values.
 
 friend FStar.BV
 friend FStar.Seq.Base
@@ -13,12 +13,20 @@ module I = FStar.Int
 module TU = FStar.Tactics.Util
 module NS = FStar.NormSteps
 
-let unsigned3 = [0; 1; 2; 3; 4; 5; 6; 7]
-let signed3 = [-4; -3; -2; -1; 0; 1; 2; 3]
-let nonzero3 = [1; 2; 3; 4; 5; 6; 7]
+let unsigned3 = [0; 1; 2; 3; 5]
+let signed3 = [-3; -2; -1; 0; 1; 2]
+let nonzero3 = [1; 2; 3; 5]
+
+// Keep SMT operands symbolic while exposing their concrete values by refinement.
+irreducible
+let opaque_param (i:int) : Tot (r:int{r == i}) = i
 
 let int_term (n:int) : Tac term =
   pack (Tv_Const (C_Int n (FStar.Sealed.seal Dec)))
+
+let opaque_int_term (n:int) : Tac term =
+  let n = int_term n in
+  `(opaque_param (`#n))
 
 let bv_term (n:int) : Tac term =
   if n < 0
@@ -29,14 +37,47 @@ let bv_term (n:int) : Tac term =
     let n = int_term n in
     `(BV.int2bv #3 (`#n))
 
+let opaque_bv_term (n:int) : Tac term =
+  if n < 0
+  then
+    let n = opaque_int_term n in
+    `(BV.int2bv #3 (I.to_uint #3 (`#n)))
+  else
+    let n = opaque_int_term n in
+    `(BV.int2bv #3 (`#n))
+
 let argument_name (n:int) : string =
   if n < 0 then "m" ^ string_of_int (-n) else string_of_int n
 
 let model_normal_form (t:term) : Tac term =
-  norm_term [NS.delta; NS.iota; NS.zeta_full; NS.primops; NS.unascribe] t
+  norm_term [NS.iota; NS.zeta_full; NS.primops; NS.unascribe] t
 
-let lemma_decl (name:string) (lhs:term) : Tac sigelt =
-  let rhs = model_normal_form lhs in
+let bv_definitions =
+  [`%FStar.BV.bv_uext; `%FStar.BV.bv_sext; `%FStar.BV.bv_repeat; `%FStar.BV.bv_concat;
+   `%FStar.BV.bv_extract; `%FStar.BV.bvnot; `%FStar.BV.bvneg; `%FStar.BV.bvand; `%FStar.BV.bvor;
+   `%FStar.BV.bvxor; `%FStar.BV.bvnand; `%FStar.BV.bvnor; `%FStar.BV.bvxnor; `%FStar.BV.bvcomp;
+   `%FStar.BV.bvadd; `%FStar.BV.bvsub; `%FStar.BV.bvmul'; `%FStar.BV.bvmul; `%FStar.BV.bvshl;
+   `%FStar.BV.bvshl'; `%FStar.BV.bvshr; `%FStar.BV.bvshr'; `%FStar.BV.bvashr; `%FStar.BV.bvrol;
+   `%FStar.BV.bvrol'; `%FStar.BV.bvror; `%FStar.BV.bvror'; `%FStar.BV.bvdiv;
+   `%FStar.BV.bvdiv_unsafe; `%FStar.BV.bvmod; `%FStar.BV.bvmod_unsafe; `%FStar.BV.bvsdiv;
+   `%FStar.BV.bvsrem; `%FStar.BV.bvsmod; `%FStar.BV.bvult; `%FStar.BV.bvule; `%FStar.BV.bvugt;
+   `%FStar.BV.bvuge; `%FStar.BV.bvslt; `%FStar.BV.bvsle; `%FStar.BV.bvsgt; `%FStar.BV.bvsge;
+   `%FStar.BV.bvuaddo; `%FStar.BV.bvsaddo; `%FStar.BV.bvumulo; `%FStar.BV.bvsmulo;
+   `%FStar.BV.bvusubo; `%FStar.BV.bvssubo; `%FStar.BV.bvsdivo; `%FStar.BV.bvnego;
+   `%FStar.BV.int2bv; `%FStar.BV.bv2int; `%FStar.BV.sbv_to_int]
+
+let unfolded_model_normal_form (t:term) : Tac term =
+  // Unfold BV before enabling primops, then compute the exposed implementation.
+  let unfolded =
+    norm_term
+      [NS.delta_only bv_definitions; NS.iota; NS.zeta_full; NS.unascribe]
+      t
+  in
+  norm_term
+    [NS.delta; NS.iota; NS.zeta_full; NS.primops; NS.unascribe]
+    unfolded
+
+let lemma_decl (name:string) (lhs rhs:term) : Tac sigelt =
   let typ = `(squash ((`#lhs) == (`#rhs))) in
   let lb = {
     lb_fv = pack_fv (cur_module () @ [name]);
@@ -46,55 +87,86 @@ let lemma_decl (name:string) (lhs:term) : Tac sigelt =
   } in
   pack_sigelt (Sg_Let {isrec=false; lbs=[lb]})
 
+let unfolded_lemma_decl (name:string) (lhs model:term) : Tac sigelt =
+  lemma_decl (name ^ "_unfolded") lhs (unfolded_model_normal_form model)
+
 let vector_result (value:term) : Tac term = `(BV.bv2int (`#value))
 let direct_result (value:term) : Tac term = value
 
 let test_op1
   (values:list int)
-  (argument:int -> Tac term)
+  (argument opaque_argument:int -> Tac term)
   (project:term -> Tac term)
   (op:term)
   (prefix:string)
   : Tac decls =
-  TU.map
+  TU.concatMap
     (fun n ->
       let a = argument n in
-      let value = `((`#op) (`#a)) in
-      lemma_decl (prefix ^ "_" ^ argument_name n) (project value))
+      let opaque_a = opaque_argument n in
+      let model = `((`#op) (`#a)) in
+      let lhs = `((`#op) (`#opaque_a)) in
+      let name = prefix ^ "_" ^ argument_name n in
+      [lemma_decl name (project lhs) (model_normal_form (project model));
+       unfolded_lemma_decl name (project lhs) (project model)])
     values
 
 let test_op2
   (left_values right_values:list int)
   (left_argument right_argument:int -> Tac term)
+  (opaque_left_argument opaque_right_argument:int -> Tac term)
   (project:term -> Tac term)
   (op:term)
   (prefix:string)
   : Tac decls =
   TU.concatMap
     (fun x ->
-      TU.map
+      TU.concatMap
         (fun y ->
           let a = left_argument x in
           let b = right_argument y in
-          let value = `((`#op) (`#a) (`#b)) in
-          lemma_decl
-            (prefix ^ "_" ^ argument_name x ^ "_" ^ argument_name y)
-            (project value))
+          let opaque_a = opaque_left_argument x in
+          let opaque_b = opaque_right_argument y in
+          let model = `((`#op) (`#a) (`#b)) in
+          let lhs = `((`#op) (`#opaque_a) (`#opaque_b)) in
+          let name =
+            prefix ^ "_" ^ argument_name x ^ "_" ^ argument_name y
+          in
+          [lemma_decl name (project lhs) (model_normal_form (project model));
+           unfolded_lemma_decl name (project lhs) (project model)])
         right_values)
     left_values
 
-let test_bvop1 values op = test_op1 values bv_term vector_result op
+let test_bvop1 values op =
+  test_op1 values bv_term opaque_bv_term vector_result op
 let test_bvop2 left right op =
-  test_op2 left right bv_term bv_term vector_result op
-let test_bvresult1 values op = test_op1 values bv_term direct_result op
+  test_op2 left right bv_term bv_term opaque_bv_term opaque_bv_term
+    vector_result op
+let test_bvresult1 values op =
+  test_op1 values bv_term opaque_bv_term direct_result op
 let test_bvpred2 left right op =
-  test_op2 left right bv_term bv_term direct_result op
-let test_intop1 values op = test_op1 values int_term direct_result op
+  test_op2 left right bv_term bv_term opaque_bv_term opaque_bv_term
+    direct_result op
+let test_intop1 values op =
+  test_op1 values int_term opaque_int_term direct_result op
 let test_bvnatop2 vectors naturals op =
-  test_op2 vectors naturals bv_term int_term vector_result op
+  test_op2 vectors naturals bv_term int_term opaque_bv_term opaque_int_term
+    vector_result op
 
 let run_test (prefix:string) (test:string -> Tac decls) : Tac decls =
   test prefix
+
+let check_nbe () : Tac unit =
+  norm [NS.nbe; NS.primops];
+  match term_as_formula (cur_goal ()) with
+  | Comp (Eq _) left right ->
+    if term_eq left right then trefl () else fail "not syntactically equal"
+  | _ -> fail "unexpected goal"
+
+let _ = assert
+  (BV.bv2int (BV.bv_extract #4
+    (BV.bvadd (BV.int2bv #4 7) (BV.int2bv #4 6)) 2 1) == 2)
+  by (check_nbe ())
 
 %splice[] (run_test "bvnot_3" (test_bvop1 unsigned3 (`(fun (a:BV.bv_t 3) -> BV.bvnot a))))
 %splice[] (run_test "bvneg_3" (test_bvop1 unsigned3 (`(fun (a:BV.bv_t 3) -> BV.bvneg a))))

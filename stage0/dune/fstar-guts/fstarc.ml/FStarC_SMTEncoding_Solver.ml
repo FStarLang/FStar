@@ -200,10 +200,14 @@ let quake_bounds (tmp : unit) : (Prims.int * Prims.int) =
   let lo1 = (if (Prims.op_Less lo Prims.int_one) then Prims.int_one else (if (Prims.op_Greater lo hi1) then hi1 else lo)) in
   (lo1, hi1))
 
+let max_z3_rlimit : Prims.int =
+  (Prims.parse_int "4294967295")
+
 let convert_rlimit (r : Prims.int) : Prims.int =
   (let tmp = (FStarC_Options.z3_version ()) in
   let tmp1 = (FStarC_Misc.version_ge tmp "4.12.3") in
-  (if tmp1 then (Prims.op_Star (Prims.of_int (500000)) r) else (Prims.op_Star (Prims.of_int (544656)) r)))
+  let z3_rlimit = (if tmp1 then (Prims.op_Star (Prims.of_int (500000)) r) else (Prims.op_Star (Prims.of_int (544656)) r)) in
+  (if (Prims.op_Greater z3_rlimit max_z3_rlimit) then max_z3_rlimit else z3_rlimit))
 
 let goal_block (settings : query_settings) (g : FStarC_SMTEncoding_ErrorReporting.goal) : (FStarC_SMTEncoding_Term.decl) list =
   (let n = (settings).query_fuel in
@@ -405,7 +409,7 @@ let rec ask_config__rounds (settings : query_settings) (decided : (goal_state ->
   (if (Prims.op_Less_Equals n Prims.int_zero) then (BatList.append active acc) else (let active1 = (run_round settings active) in
   let tmp = (BatList.partition decided active1) in
   (match tmp with
-    | (done__, active2) -> ((ask_config__rounds settings decided) (Prims.op_Minus n Prims.int_one) active2 (BatList.append done__ acc))
+    | (done__, active2) -> (ask_config__rounds settings decided (Prims.op_Minus n Prims.int_one) active2 (BatList.append done__ acc))
   )))
 
 let ask_config (settings : query_settings) (goals : (goal_state) list) : (goal_state) list =
@@ -414,7 +418,7 @@ let ask_config (settings : query_settings) (goals : (goal_state) list) : (goal_s
     | (lo, hi) -> (let decided = (fun gst -> (let tmp1 = (FStarC_Options.quake_keep ()) in
         let tmp2 = (not tmp1) in
         (if tmp2 then ((Prims.op_Greater_Equals (gst).gs_nsuccess lo) || (Prims.op_Greater (gst).gs_nfailure (Prims.op_Minus hi lo))) else false))) in
-      ((ask_config__rounds settings decided) hi goals []))
+      (ask_config__rounds settings decided hi goals []))
   ))
 
 let rec ask_configs (configs : (query_settings) list) (goals : (goal_state) list) : (goal_state) list =
@@ -464,7 +468,7 @@ let ask_solver_quake (configs : (query_settings) list) : answer =
   let ngoals = ((fun l -> Z.of_int (BatList.length l)) goals) in
   let nfail = ((fun l -> Z.of_int (BatList.length l)) (ans).failed) in
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int (Prims.op_Minus ngoals nfail)) in
-  let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ngoals) in
+  let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ngoals) in
   let ratio = (FStarC_Format.fmt2 "%s/%s" tmp2 tmp3) in
   let ratio1 = (if ((=) nfail Prims.int_zero) then (FStarC_Format.colorize_green ratio) else (FStarC_Format.colorize_red ratio)) in
   (FStarC_Format.print2 "Quake: query %s \tproved %s goals\n" name ratio1)) else ());
@@ -480,7 +484,7 @@ let rec ask_solver_recover__try_hammer (cfg : query_settings) (try_factor : (Pri
     | (IncreaseRLimit (factor)) -> (try_factor factor)
     | (RestartAnd (h1)) -> ((FStarC_Errors.fStarC_Errors_diag__range_list_ocaml_document (cfg).query_range ((FStarC_Errors_Msg.text "Trying a solver restart") :: []));
       (((((cfg).query_env).FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.solver).FStarC_TypeChecker_Env.refresh (Some ((((cfg).query_env).FStarC_SMTEncoding_Env.tcenv).FStarC_TypeChecker_Env.proof_ns)));
-      ((ask_solver_recover__try_hammer cfg try_factor) h1))
+      (ask_solver_recover__try_hammer cfg try_factor h1))
   )
 
 let rec pp_hammer (h : recovery_hammer) : PPrint.document =
@@ -502,12 +506,12 @@ let rec ask_solver_recover__aux (r : answer) (cfg : query_settings) (try_factor 
         hi = (r).hi;
         tried_recovery = true;
         failed = (r).failed }
-    | (h :: hs) -> (let r1 = ((ask_solver_recover__try_hammer cfg try_factor) h) in
+    | (h :: hs) -> (let r1 = (ask_solver_recover__try_hammer cfg try_factor h) in
       (if (r1).ok then (let tmp = (pp_hammer h) in
       let tmp1 = (PPrint.(^/^) (FStarC_Errors_Msg.text "This query succeeded after ") tmp) in
       let tmp2 = (tmp1 :: ((FStarC_Errors_Msg.text "Increase the rlimit in the file or simplify the proof. This is only succeeding due to --proof_recovery being given.") :: [])) in
       (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document (cfg).query_range FStarC_Errors_Codes.Warning_ProofRecovery tmp2);
-      r1) else ((ask_solver_recover__aux r cfg try_factor) hs)))
+      r1) else (ask_solver_recover__aux r cfg try_factor hs)))
   )
 
 let ask_solver_recover (configs : (query_settings) list) : answer =
@@ -529,7 +533,7 @@ let ask_solver_recover (configs : (query_settings) list) : answer =
         query_goals = (cfg).query_goals;
         query_term = (cfg).query_term } in
     (ask_solver_quake (cfg1 :: [])))) in
-  ((ask_solver_recover__aux r cfg try_factor) ((IncreaseRLimit ((Prims.of_int (2)))) :: ((IncreaseRLimit ((Prims.of_int (4)))) :: ((IncreaseRLimit ((Prims.of_int (8)))) :: ((RestartAnd ((IncreaseRLimit ((Prims.of_int (8)))))) :: [])))))))) else (ask_solver_quake configs)))
+  (ask_solver_recover__aux r cfg try_factor ((IncreaseRLimit ((Prims.of_int (2)))) :: ((IncreaseRLimit ((Prims.of_int (4)))) :: ((IncreaseRLimit ((Prims.of_int (8)))) :: ((RestartAnd ((IncreaseRLimit ((Prims.of_int (8)))))) :: [])))))))) else (ask_solver_quake configs)))
 
 let failing_query_ctr : (Prims.int ref) =
   (ref Prims.int_zero)
@@ -607,7 +611,7 @@ let encode_and_ask (use_env_msg : ((unit -> string)) option) (tcenv : FStarC_Typ
             (if tmp6 then (let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' q) in
             let tmp8 = (FStarC_SMTEncoding_ErrorReporting.goals_of goals) in
             let tmp9 = ((fun l -> Z.of_int (BatList.length l)) tmp8) in
-            let tmp10 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 tmp9) in
+            let tmp10 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 tmp9) in
             let tmp11 = (FStarC_Format.fmt2 "Encoded query %s\nwith %s goals" tmp7 tmp10) in
             (FStarC_Errors.fStarC_Errors_diag__range_string (FStarC_TypeChecker_Env.get_range tcenv1) tmp11)) else ());
             let env = (FStarC_SMTEncoding_Encode.get_current_env tcenv1) in

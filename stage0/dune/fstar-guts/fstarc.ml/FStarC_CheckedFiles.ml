@@ -4,67 +4,20 @@
 let cache_version_number : Prims.int =
   (Prims.of_int (102))
 
+let dbg : (bool ref) =
+  (FStarC_Debug.get_toggle "CheckedFiles")
+
 type tc_result_t =
   | Unknown of string
   | Invalid of string
   | Valid of string
 
 
-let dbg : (bool ref) =
-  (FStarC_Debug.get_toggle "CheckedFiles")
-
-let debug (f : (unit -> unit)) : unit =
-  (let tmp = (!(dbg)) in
-  (if tmp then (f ()) else ()))
-
 let mcache : ((tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (50))))
 
-let try_find_in_cache (checked_fn : string) : ((tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) option =
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt mcache checked_fn)
-
-let add_and_return (checked_fn : string) (elt : (tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) : (tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either) =
-  ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace mcache checked_fn elt);
-  elt)
-
-type checked_file_entry_stage1 = {
-  version : Prims.int;
-  digest : string;
-  parsing_data : FStarC_Parser_Dep.parsing_data;
-}
-
-let load_checked_file (fn : string) (checked_fn : string) : (tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either) =
-  ((debug (fun tmp -> (FStarC_Format.print1 "Trying to load checked file result %s\n" checked_fn)));
-  let elt = (try_find_in_cache checked_fn) in
-  (if (match elt with
-    | (Some (v)) -> true
-    | tmp -> false
-  ) then (FStarC_Option.must elt) else (let add_and_return_ = (add_and_return checked_fn) in
-  (if (not (Sys.file_exists checked_fn)) then (let msg = (FStarC_Format.fmt1 "checked file %s does not exist" checked_fn) in
-  (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg))))) else (let entry = (FStarC_Util.load_1value_from_file3 checked_fn) in
-  (match entry with
-    | None -> (let msg = (FStarC_Format.fmt1 "checked file %s is corrupt" checked_fn) in
-      (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg)))))
-    | (Some ((checked_digest, x))) -> (if ((<>) (x).version cache_version_number) then (let msg = (FStarC_Format.fmt1 "checked file %s has incorrect version" checked_fn) in
-      (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg))))) else (let current_digest = (FStarC_Util.digest_of_file fn) in
-      (if ((<>) (x).digest current_digest) then ((debug (fun tmp -> (FStarC_Format.print4 "Checked file %s is stale since incorrect digest of %s, expected: %s, found: %s\n" checked_fn fn current_digest (x).digest)));
-      let msg = (FStarC_Format.fmt2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn) in
-      (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg))))) else (add_and_return_ ((Unknown (checked_digest)), (FStar_Pervasives.Inr ((x).parsing_data)))))))
-  ))))))
-
-let load_parsing_data_from_cache (file_name : string) : (FStarC_Parser_Dep.parsing_data) option =
-  (FStarC_Errors.with_ctx (Prims.strcat "While loading parsing data from " file_name) (fun tmp -> (let cache_file = (try (let tmp1 = (FStarC_Parser_Dep.cache_file_name file_name) in
-    (Some (tmp1))) with
-      | u__cexn -> None
-    ) in
-  (match cache_file with
-    | None -> None
-    | (Some (cache_file1)) -> (let tmp1 = (load_checked_file file_name cache_file1) in
-      (match tmp1 with
-        | (tmp2, (FStar_Pervasives.Inl (msg))) -> None
-        | (tmp2, (FStar_Pervasives.Inr (data))) -> (Some (data))
-      ))
-  ))))
+let last_failure : ((string) option ref) =
+  (ref None)
 
 type tc_result = {
   checked_module : FStarC_Syntax_Syntax.modul;
@@ -73,6 +26,40 @@ type tc_result = {
   tc_time : Prims.int;
   extraction_time : Prims.int;
 }
+
+let add_and_return (checked_fn : string) (elt : (tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) : (tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either) =
+  ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace mcache checked_fn elt);
+  elt)
+
+let try_find_in_cache (checked_fn : string) : ((tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either)) option =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt mcache checked_fn)
+
+type checked_file_entry_stage1 = {
+  version : Prims.int;
+  digest : string;
+  parsing_data : FStarC_Parser_Dep.parsing_data;
+}
+
+let load_checked_file (fn : string) (checked_fn : string) : (tc_result_t * (string, FStarC_Parser_Dep.parsing_data) FStar_Pervasives.either) =
+  (let tmp = (!(dbg)) in
+  (if tmp then (FStarC_Format.print1 "Trying to load checked file result %s\n" checked_fn) else ());
+  let elt = (try_find_in_cache checked_fn) in
+  (if (match elt with
+    | (Some (v)) -> true
+    | tmp1 -> false
+  ) then (FStarC_Option.must elt) else (let add_and_return_ = (add_and_return checked_fn) in
+  (if (not (Sys.file_exists checked_fn)) then (let msg = (FStarC_Format.fmt1 "checked file %s does not exist" checked_fn) in
+  (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg))))) else (let entry = (FStarC_Util.load_1value_from_file3 checked_fn) in
+  (match entry with
+    | None -> (let msg = (FStarC_Format.fmt1 "checked file %s is corrupt" checked_fn) in
+      (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg)))))
+    | (Some ((checked_digest, x))) -> (if ((<>) (x).version cache_version_number) then (let msg = (FStarC_Format.fmt1 "checked file %s has incorrect version" checked_fn) in
+      (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg))))) else (let current_digest = (FStarC_Util.digest_of_file fn) in
+      (if ((<>) (x).digest current_digest) then (let tmp1 = (!(dbg)) in
+      (if tmp1 then (FStarC_Format.print4 "Checked file %s is stale since incorrect digest of %s, expected: %s, found: %s\n" checked_fn fn current_digest (x).digest) else ());
+      let msg = (FStarC_Format.fmt2 "checked file %s is stale (digest mismatch for %s)" checked_fn fn) in
+      (add_and_return_ ((Invalid (msg)), (FStar_Pervasives.Inl (msg))))) else (add_and_return_ ((Unknown (checked_digest)), (FStar_Pervasives.Inr ((x).parsing_data)))))))
+  ))))))
 
 type tc_result_stored = {
   stored_checked_module : FStarC_Syntax_Syntax.modul;
@@ -120,9 +107,6 @@ let load_tc_result (checked_fn : string) : ((((string * string)) list * tc_resul
     | tmp -> None
   ))
 
-let last_failure : ((string) option ref) =
-  (ref None)
-
 let rec hash_dependences__hash_deps (module_name : string) (maybe_add_iface_hash : (((string * string)) list -> (string, ((string * string)) list) FStar_Pervasives.either)) (out : ((string * string)) list) (l : (string) list) : (string, ((string * string)) list) FStar_Pervasives.either =
   (match l with
     | [] -> (maybe_add_iface_hash out)
@@ -130,7 +114,8 @@ let rec hash_dependences__hash_deps (module_name : string) (maybe_add_iface_hash
       let tmp = (try_find_in_cache cache_fn) in
       let digest = (match tmp with
           | None -> (let msg = (FStarC_Format.fmt2 "For dependency %s, cache file %s is not loaded" fn cache_fn) in
-            (debug (fun tmp1 -> (FStarC_Format.print1 "%s\n" msg)));
+            let tmp1 = (!(dbg)) in
+            (if tmp1 then (FStarC_Format.print1 "%s\n" msg) else ());
             (FStar_Pervasives.Inl (msg)))
           | (Some (((Invalid (msg)), tmp1))) -> (FStar_Pervasives.Inl (msg))
           | (Some (((Valid (dig)), tmp1))) -> (FStar_Pervasives.Inr (dig))
@@ -139,7 +124,7 @@ let rec hash_dependences__hash_deps (module_name : string) (maybe_add_iface_hash
       (match digest with
         | (FStar_Pervasives.Inl (msg)) -> (FStar_Pervasives.Inl (msg))
         | (FStar_Pervasives.Inr (dig)) -> (let mn = (FStarC_Parser_Dep.lowercase_module_name fn) in
-          ((hash_dependences__hash_deps module_name maybe_add_iface_hash) ((mn, dig) :: out) deps))
+          (hash_dependences__hash_deps module_name maybe_add_iface_hash ((mn, dig) :: out) deps))
       ))
   )
 
@@ -174,59 +159,61 @@ let hash_dependences (deps : FStarC_Parser_Dep.deps) (fn : string) (deps_of_fn :
         let tmp7 = (("source", source_hash) :: tmp6) in
         (FStar_Pervasives.Inr (tmp7)))
     )) in
-  ((hash_dependences__hash_deps module_name maybe_add_iface_hash) [] binary_deps1))))
+  (hash_dependences__hash_deps module_name maybe_add_iface_hash [] binary_deps1))))
 
 let load_checked_file_with_tc_result (deps : FStarC_Parser_Dep.deps) (fn : string) (checked_fn : string) : (string, tc_result) FStar_Pervasives.either =
-  ((debug (fun tmp -> (FStarC_Format.print1 "Trying to load checked file with tc result %s\n" checked_fn)));
-  let vanished = (fun tmp -> (let msg = (FStarC_Format.fmt1 "checked file %s changed while it was being read" checked_fn) in
+  (let tmp = (!(dbg)) in
+  (if tmp then (FStarC_Format.print1 "Trying to load checked file with tc result %s\n" checked_fn) else ());
+  let vanished = (fun tmp1 -> (let msg = (FStarC_Format.fmt1 "checked file %s changed while it was being read" checked_fn) in
     (ignore (add_and_return checked_fn ((Invalid (msg)), (FStar_Pervasives.Inl (msg)))));
     (FStar_Pervasives.Inl (msg)))) in
   let elt = (load_checked_file fn checked_fn) in
   (match elt with
-    | ((Invalid (msg)), tmp) -> (FStar_Pervasives.Inl (msg))
-    | ((Valid (tmp)), tmp1) -> (let tmp2 = (load_tc_result checked_fn) in
-      (match tmp2 with
+    | ((Invalid (msg)), tmp1) -> (FStar_Pervasives.Inl (msg))
+    | ((Valid (tmp1)), tmp2) -> (let tmp3 = (load_tc_result checked_fn) in
+      (match tmp3 with
         | None -> (vanished ())
-        | (Some ((tmp3, tc_result))) -> (FStar_Pervasives.Inr (tc_result))
+        | (Some ((tmp4, tc_result))) -> (FStar_Pervasives.Inr (tc_result))
       ))
-    | ((Unknown (checked_digest)), parsing_data) -> (let tmp = (FStarC_Parser_Dep.deps_of deps fn) in
-      let tmp1 = (hash_dependences deps fn tmp) in
-      (match tmp1 with
+    | ((Unknown (checked_digest)), parsing_data) -> (let tmp1 = (FStarC_Parser_Dep.deps_of deps fn) in
+      let tmp2 = (hash_dependences deps fn tmp1) in
+      (match tmp2 with
         | (FStar_Pervasives.Inl (msg)) -> (let elt1 = ((Invalid (msg)), parsing_data) in
           (ignore (add_and_return checked_fn elt1));
           (FStar_Pervasives.Inl (msg)))
-        | (FStar_Pervasives.Inr (deps_dig')) -> (let tmp2 = (load_tc_result checked_fn) in
-          (match tmp2 with
+        | (FStar_Pervasives.Inr (deps_dig')) -> (let tmp3 = (load_tc_result checked_fn) in
+          (match tmp3 with
             | None -> (vanished ())
             | (Some ((deps_dig, tc_result))) -> (let module_name = (FStarC_Parser_Dep.module_name_of_file fn) in
-              let tmp3 = (if ((=) deps_dig deps_dig') then true else (FStarC_Options.should_be_already_cached module_name)) in
-              (if tmp3 then (let elt1 = ((Valid (checked_digest)), parsing_data) in
+              let tmp4 = (if ((=) deps_dig deps_dig') then true else (FStarC_Options.should_be_already_cached module_name)) in
+              (if tmp4 then (let elt1 = ((Valid (checked_digest)), parsing_data) in
               (ignore (add_and_return checked_fn elt1));
-              let validate_iface_cache = (fun tmp4 -> (let tmp5 = (FStarC_Parser_Dep.module_key_of_file fn) in
-                let iface = (FStarC_Parser_Dep.interface_of deps tmp5) in
+              let validate_iface_cache = (fun tmp5 -> (let tmp6 = (FStarC_Parser_Dep.module_key_of_file fn) in
+                let iface = (FStarC_Parser_Dep.interface_of deps tmp6) in
                 (match iface with
                   | None -> ()
                   | (Some (iface1)) -> (try (let iface_checked_fn = (FStarC_Parser_Dep.cache_file_name iface1) in
-                    let tmp6 = (try_find_in_cache iface_checked_fn) in
-                    (match tmp6 with
+                    let tmp7 = (try_find_in_cache iface_checked_fn) in
+                    (match tmp7 with
                       | (Some (((Unknown (iface_digest)), parsing_data1))) -> ((ignore (add_and_return iface_checked_fn ((Valid (iface_digest)), parsing_data1)));
                         ())
-                      | tmp7 -> ()
+                      | tmp8 -> ()
                     )) with
                       | u__cexn -> ()
                     )
                 ))) in
               (validate_iface_cache ());
-              (FStar_Pervasives.Inr (tc_result))) else ((debug (fun tmp4 -> (let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) deps_dig')) in
-              let tmp6 = (FStarC_Parser_Dep.print_digest deps_dig') in
-              let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) deps_dig)) in
-              let tmp8 = (FStarC_Parser_Dep.print_digest deps_dig) in
-              (FStarC_Format.print4 "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n" tmp5 tmp6 tmp7 tmp8);
-              (if ((=) ((fun l -> Z.of_int (BatList.length l)) deps_dig) ((fun l -> Z.of_int (BatList.length l)) deps_dig')) then (BatList.iter2 (fun tmp9 tmp10 -> (match (tmp9, tmp10) with
-                | ((x, y), (x', y')) -> (if (((<>) x x') || ((<>) y y')) then (let tmp11 = (FStarC_Parser_Dep.print_digest ((x, y) :: [])) in
-                  let tmp12 = (FStarC_Parser_Dep.print_digest ((x', y') :: [])) in
-                  (FStarC_Format.print2 "Differ at: Expected %s\n Got %s\n" tmp11 tmp12)) else ())
-              )) deps_dig deps_dig') else ()))));
+              (FStar_Pervasives.Inr (tc_result))) else (let tmp5 = (!(dbg)) in
+              (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) deps_dig')) in
+              let tmp7 = (FStarC_Parser_Dep.print_digest deps_dig') in
+              let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) deps_dig)) in
+              let tmp9 = (FStarC_Parser_Dep.print_digest deps_dig) in
+              (FStarC_Format.print4 "FAILING to load.\nHashes computed (%s):\n%s\n\nHashes read (%s):\n%s\n" tmp6 tmp7 tmp8 tmp9);
+              (if ((=) ((fun l -> Z.of_int (BatList.length l)) deps_dig) ((fun l -> Z.of_int (BatList.length l)) deps_dig')) then (BatList.iter2 (fun tmp10 tmp11 -> (match (tmp10, tmp11) with
+                | ((x, y), (x', y')) -> (if (((<>) x x') || ((<>) y y')) then (let tmp12 = (FStarC_Parser_Dep.print_digest ((x, y) :: [])) in
+                  let tmp13 = (FStarC_Parser_Dep.print_digest ((x', y') :: [])) in
+                  (FStarC_Format.print2 "Differ at: Expected %s\n Got %s\n" tmp12 tmp13)) else ())
+              )) deps_dig deps_dig') else ())) else ());
               let msg = (FStarC_Format.fmt1 "checked file %s is stale (dependence hash mismatch, use --debug CheckedFiles for more details)" checked_fn) in
               let elt1 = ((Invalid (msg)), (FStar_Pervasives.Inl (msg))) in
               (ignore (add_and_return checked_fn elt1));
@@ -249,7 +236,8 @@ let load_module_from_cache_internal : (bool -> (FStarC_Parser_Dep.deps -> (strin
     (match tmp2 with
       | (FStar_Pervasives.Inl (msg)) -> ((fail msg cache_file);
         None)
-      | (FStar_Pervasives.Inr (tc_result)) -> ((debug (fun tmp3 -> (FStarC_Format.print1 "Successfully loaded module from checked file %s\n" cache_file)));
+      | (FStar_Pervasives.Inr (tc_result)) -> (let tmp3 = (!(dbg)) in
+        (if tmp3 then (FStarC_Format.print1 "Successfully loaded module from checked file %s\n" cache_file) else ());
         (Some (tc_result)))
     ))) in
   let load_with_profiling = (fun fn1 -> (FStarC_Profiling.profile (load_it fn1) None "FStarC.CheckedFiles")) in
@@ -267,6 +255,20 @@ let load_module_from_cache_internal : (bool -> (FStarC_Parser_Dep.deps -> (strin
     | (Some (tmp4)) -> (load_with_profiling fn)
   )) else (load_with_profiling fn)))))))
 
+let load_parsing_data_from_cache (file_name : string) : (FStarC_Parser_Dep.parsing_data) option =
+  (FStarC_Errors.with_ctx (Prims.strcat "While loading parsing data from " file_name) (fun tmp -> (let cache_file = (try (let tmp1 = (FStarC_Parser_Dep.cache_file_name file_name) in
+    (Some (tmp1))) with
+      | u__cexn -> None
+    ) in
+  (match cache_file with
+    | None -> None
+    | (Some (cache_file1)) -> (let tmp1 = (load_checked_file file_name cache_file1) in
+      (match tmp1 with
+        | (tmp2, (FStar_Pervasives.Inl (msg))) -> None
+        | (tmp2, (FStar_Pervasives.Inr (data))) -> (Some (data))
+      ))
+  ))))
+
 let load_module_from_cache (env : FStarC_TypeChecker_Env.env) (eta : string) : (tc_result) option =
   (load_module_from_cache_internal false (FStarC_TypeChecker_Env.dep_graph env) eta)
 
@@ -280,52 +282,56 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env) (file_name : string
   (let tmp = (FStarC_Options.cache_checked_modules ()) in
   let tmp1 = (if tmp then (let tmp1 = (FStarC_Options.cache_off ()) in
     (not tmp1)) else false) in
-  (if tmp1 then ((debug (fun tmp2 -> (let tmp3 = (FStarC_Parser_Dep.fStarC_Class_Show_show__tuple2_parsing_data_list_string parsing_data_and_direct_deps) in
-  (FStarC_Format.print2 "Storing checked file for %s with %s dependences\n" file_name tmp3))));
-  let tmp2 = (FStarC_Parser_Dep.fly_deps_enabled ()) in
-  (if tmp2 then (let tmp3 = (FStarC_Parser_Dep.module_key_of_file file_name) in
-  let i_fn_opt = (FStarC_Parser_Dep.interface_of (FStarC_TypeChecker_Env.dep_graph env) tmp3) in
+  (if tmp1 then (let tmp2 = (!(dbg)) in
+  (if tmp2 then (let tmp3 = (FStarC_Parser_Dep.fStarC_Class_Show_show__tuple2_parsing_data_list_string parsing_data_and_direct_deps) in
+  (FStarC_Format.print2 "Storing checked file for %s with %s dependences\n" file_name tmp3)) else ());
+  let tmp3 = (FStarC_Parser_Dep.fly_deps_enabled ()) in
+  (if tmp3 then (let tmp4 = (FStarC_Parser_Dep.module_key_of_file file_name) in
+  let i_fn_opt = (FStarC_Parser_Dep.interface_of (FStarC_TypeChecker_Env.dep_graph env) tmp4) in
   (match i_fn_opt with
     | None -> ()
-    | (Some (iface)) -> ((debug (fun tmp4 -> (FStarC_Format.print1 "Tryng to load interface %s from cache before storing\n" iface)));
+    | (Some (iface)) -> (let tmp5 = (!(dbg)) in
+      (if tmp5 then (FStarC_Format.print1 "Tryng to load interface %s from cache before storing\n" iface) else ());
       (ignore (load_module_from_cache_internal true (FStarC_TypeChecker_Env.dep_graph env) iface));
       ())
   )) else ());
-  let tmp3 = (FStarC_Options.output_to ()) in
-  let cache_file = (match tmp3 with
+  let tmp4 = (FStarC_Options.output_to ()) in
+  let cache_file = (match tmp4 with
       | (Some (fn)) -> fn
       | None -> (FStarC_Parser_Dep.cache_file_name file_name)
     ) in
-  let tmp4 = (FStarC_Options.output_to ()) in
-  let tmp5 = (match tmp4 with
+  let tmp5 = (FStarC_Options.output_to ()) in
+  let tmp6 = (match tmp5 with
       | None -> true
-      | tmp5 -> false
+      | tmp6 -> false
     ) in
-  let tmp6 = (if tmp5 then (let tmp6 = (FStarC_Options.force ()) in
-    (not tmp6)) else false) in
-  let already_valid = (if tmp6 then (let tmp7 = (try_find_in_cache cache_file) in
-    (match tmp7 with
-      | (Some (((Valid (tmp8)), tmp9))) -> true
-      | tmp8 -> false
+  let tmp7 = (if tmp6 then (let tmp7 = (FStarC_Options.force ()) in
+    (not tmp7)) else false) in
+  let already_valid = (if tmp7 then (let tmp8 = (try_find_in_cache cache_file) in
+    (match tmp8 with
+      | (Some (((Valid (tmp9)), tmp10))) -> true
+      | tmp9 -> false
     )) else false) in
-  (if already_valid then (debug (fun tmp7 -> (FStarC_Format.print1 "Not rewriting checked file %s: it is already present and valid\n" cache_file))) else (match parsing_data_and_direct_deps with
+  (if already_valid then (let tmp8 = (!(dbg)) in
+  (if tmp8 then (FStarC_Format.print1 "Not rewriting checked file %s: it is already present and valid\n" cache_file) else ())) else (match parsing_data_and_direct_deps with
     | (parsing_data, deps_of_fn) -> (let digest = (hash_dependences (FStarC_TypeChecker_Env.dep_graph env) file_name deps_of_fn) in
       (match digest with
-        | (FStar_Pervasives.Inr (hashes)) -> (let tmp7 = (FStarC_Util.digest_of_file file_name) in
+        | (FStar_Pervasives.Inr (hashes)) -> (let tmp8 = (FStarC_Util.digest_of_file file_name) in
           let stage1 = { version = cache_version_number;
-              digest = tmp7;
+              digest = tmp8;
               parsing_data = parsing_data } in
           let stored = { stored_checked_module = (tc_result).checked_module;
               stored_mii = (tc_result).mii;
               stored_smt_index = ((tc_result).smt_encoding).FStarC_SMTEncoding_Env.me_index;
               stored_smt_fvbs = ((tc_result).smt_encoding).FStarC_SMTEncoding_Env.me_fvbs } in
           let stage2 = { deps_dig = hashes; tc_res = stored } in
-          let tmp8 = (((tc_result).smt_encoding).FStarC_SMTEncoding_Env.me_decls ()) in
-          let checked_digest = (store_values_to_cache cache_file stage1 stage2 tmp8) in
+          let tmp9 = (((tc_result).smt_encoding).FStarC_SMTEncoding_Env.me_decls ()) in
+          let checked_digest = (store_values_to_cache cache_file stage1 stage2 tmp9) in
           (ignore (add_and_return cache_file ((Valid (checked_digest)), (FStar_Pervasives.Inr (parsing_data)))));
           ())
-        | (FStar_Pervasives.Inl (msg)) -> ((debug (fun tmp7 -> (let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string deps_of_fn) in
-          (FStarC_Format.print2 "FAILING to store cache file for %s, with deps %s\n" file_name tmp8))));
+        | (FStar_Pervasives.Inl (msg)) -> (let tmp8 = (!(dbg)) in
+          (if tmp8 then (let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 deps_of_fn) in
+          (FStarC_Format.print2 "FAILING to store cache file for %s, with deps %s\n" file_name tmp9)) else ());
           (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document (FStarC_Range_Type.mk_range file_name (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero) (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero)) FStarC_Errors_Codes.Warning_FileNotWritten ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Checked file %s was not written." cache_file)) :: ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (PPrint.string "Reason:") (FStarC_Errors_Msg.text msg)) :: []))))
       ))
   ))) else ()))
@@ -336,7 +342,7 @@ let rec scan_deps_and_check_cache_validity__try_load_all (filenames : (string) l
     | (fn :: rest) -> (let tmp = (load_module_from_cache_internal false dep_graph fn) in
       (match tmp with
         | None -> None
-        | (Some (tcres)) -> ((scan_deps_and_check_cache_validity__try_load_all filenames dep_graph) rest)
+        | (Some (tcres)) -> (scan_deps_and_check_cache_validity__try_load_all filenames dep_graph rest)
       ))
   )
 
@@ -347,7 +353,15 @@ let scan_deps_and_check_cache_validity (file : string) : (((string) list * FStar
     | None -> None
     | (Some (checked_fn1)) -> (let tmp2 = (FStarC_Parser_Dep.with_fly_deps_disabled (fun tmp2 -> (FStarC_Dependencies.find_deps_if_needed (file :: []) load_parsing_data_from_cache))) in
       (match tmp2 with
-        | (filenames, dep_graph) -> ((scan_deps_and_check_cache_validity__try_load_all filenames dep_graph) filenames)
+        | (filenames, dep_graph) -> (scan_deps_and_check_cache_validity__try_load_all filenames dep_graph filenames)
       ))
   ))))
+
+let is_validated_in_cache (fn : string) : bool =
+  (let tmp = (FStarC_Parser_Dep.cache_file_name fn) in
+  let tmp1 = (try_find_in_cache tmp) in
+  (match tmp1 with
+    | (Some (((Valid (tmp2)), tmp3))) -> true
+    | tmp2 -> false
+  ))
 

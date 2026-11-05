@@ -1,9 +1,12 @@
 name: CI
 
 on:
+  # Only run on pushes to master; PRs and the merge queue are covered by
+  # the pull_request and merge_group triggers. Other branches can use
+  # workflow_dispatch.
   push:
-    branches-ignore:
-    - _**
+    branches:
+    - master
   pull_request:
   workflow_dispatch:
   merge_group:
@@ -17,7 +20,7 @@ jobs:
   # It is a bit excessive to run them on every push.
 
   ci:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@master
         with:
@@ -30,7 +33,7 @@ jobs:
 
   # Branch protection points here
   ciok:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ cancelled() || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'failure') }}
     # ^ Workaround for insane github behavior: https://github.com/actions/runner/issues/2566
     needs:

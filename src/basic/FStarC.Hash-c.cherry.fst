@@ -31,9 +31,13 @@ type hash_code = U64.t
 
 let mask63 (x:U64.t) : U64.t = U64.logand x 0x7fffffffffffffffUL
 
+(* Avoiding arithmetic on integers beyond 2^62, big integers in Cherry,
+   unless the result is one. *)
 let to_int (h:hash_code) : int =
-  let n = U64.v h in
-  if n >= 0x4000000000000000 then n - 0x8000000000000000 else n
+  if U64.lt h 0x4000000000000000UL then U64.v h
+  else if U64.lt h 0x8000000000000000UL then
+    - (U64.v (U64.sub_mod 0x8000000000000000UL h))
+  else U64.v h - 0x8000000000000000
 
 let cmp_hash (x y:hash_code) : int = to_int (mask63 (U64.sub_mod x y))
 
@@ -53,7 +57,8 @@ let rec mix_chunks (acc:hash_code) (n:nat) : Tot hash_code (decreases n) =
 (* Integers that fit are their own hash code, as in the OCaml build. *)
 let of_int (i:int) : hash_code =
   if -0x4000000000000000 <= i && i < 0x4000000000000000 then
-    U64.uint_to_t (i % 0x8000000000000000)
+    (if i >= 0 then U64.uint_to_t i
+     else mask63 (U64.sub_mod 0UL (U64.uint_to_t (- i))))
   else if i < 0 then mix_chunks 2UL (-i)
   else mix_chunks 1UL i
 

@@ -86,9 +86,11 @@ type ins_info = {
 let rec instrument_body (ii : ins_info) (t : term) : Tac term =
   match inspect_unascribe t with
   // descend into matches
-  | Tv_Match t ret_opt brs -> begin
+  | Tv_Match t _ brs -> begin
     let brs' = map (ins_br ii) brs in
-    pack (Tv_Match t ret_opt brs')
+    (* The branches no longer have the type of the match's annotation, if
+       any: drop it. *)
+    pack (Tv_Match t None brs')
     end
   // descend into lets
   | Tv_Let r attrs b t1 t2 -> begin

@@ -1390,6 +1390,15 @@ let with_budget (n:int) (f: unit -> ML 'a) : ML 'a =
   budget := saved;
   r
 
+(* Issue #4828.  When normalizing for extraction, an argument of a stuck
+   application whose binder is computationally irrelevant is erased by every
+   backend, so normalizing it is wasted work -- and it can be a great deal of
+   work, since such arguments are typically specifications (an implicit [prop]
+   or [slprop]) built from many [unfold] definitions.  [spec_arg_tab] caches,
+   per top-level name, the replacement to use at each binder position (see
+   [spec_arg_replacements]).  The cache lives in the environment
+   ([env.spec_arg_tab]), which flushes it whenever a declaration is added. *)
+
 let rec norm : cfg -> env -> stack -> term -> ML term =
     fun cfg env stack t ->
         charge_step ();
@@ -1725,6 +1734,7 @@ let rec norm : cfg -> env -> stack -> term -> ML term =
               match s with
               | Match _ :: _
               | Arg _ :: _
+              | Projector _ :: _
               | App (_, {n=Tm_constant (FC.Const_reify _)}, _, _) :: _
               | MemoLazy _ :: _ when cfg.steps.beta ->
                 true
@@ -2405,6 +2415,12 @@ and norm_comp : cfg -> env -> comp -> ML comp =
                   DECREASES (l |> List.map (norm cfg env []) |> Decreases_lex)
                 | DECREASES (Decreases_wf (rel, e)) ->
                   DECREASES (Decreases_wf (norm cfg env [] rel, norm cfg env [] e))
+                (* Patterns are otherwise left alone, but the solutions of
+                   their unification variables must be compressed (or
+                   removed, by [remove_uvar_solutions]) as everywhere else:
+                   the elaborated term is what is kept. *)
+                | SMTPAT p when cfg.steps.compress_uvars ->
+                  SMTPAT (norm cfg env [] p)
                 | f -> f) in
               let result_typ = norm cfg env [] ct.result_typ in
               { mk_Comp ({ct with result_typ  = result_typ;
@@ -2426,6 +2442,78 @@ and norm_binders : cfg -> env -> binders -> ML binders =
             ([], env)
             bs in
         List.rev nbs
+
+(* Issue #4828.  For each binder of [fv]'s type, the term that may stand for
+   an argument in that position when extracting, or [None] if the argument has
+   to be kept:
+
+   - a [prop] (or a total function into [prop]) is replaced by [l_True]
+     (under the same binders).  It is a type, so it is replaced by one, and
+     backends that compile types still see a well-formed one; but which
+     proposition it is cannot matter at run time.
+   - a value of a non-informative type other than [unit] -- [slprop],
+     [erased t], [squash p], or any type marked [erasable] -- is replaced by
+     [()], as [push_args_env] already does for an argument marked [erasable].
+     Arities ([Type], [eqtype], [a -> Type], ...) are kept: backends that
+     compile types need them.  So is [unit], which is how a thunk is written.
+
+   A primitive step may need its arguments ([FStar.Ghost.reveal (hide x)]),
+   so its arguments are never replaced. *)
+and spec_arg_replacements (cfg:cfg) (fv:fv) : ML (list (option term)) =
+  let l = S.lid_of_fv fv in
+  if Some? (find_prim_step cfg fv) then [] else
+  let tab = cfg.tcenv.spec_arg_tab in
+  let k = Ident.string_of_lid l in
+  match HashTable.try_find tab k with
+  | Some r -> r
+  | None ->
+    let r =
+      match Env.try_lookup_lid cfg.tcenv l with
+      | None -> []
+      | Some ((_, ty), _) ->
+        let bs, _ = U.arrow_formals_comp ty in
+        let env' = Env.push_binders cfg.tcenv bs in
+        let cfg' = Cfg.config [UnfoldUntil delta_constant;
+                               AllowUnboundUniverses; EraseUniverses;
+                               Beta; Iota; HNF; Unascribe] env' in
+        let is_prop (t:term) : ML bool =
+          match (U.un_uinst (U.unascribe (SS.compress t))).n with
+          | Tm_fvar fv -> fv_eq_lid fv PC.prop_lid
+          | _ -> false in
+        let rec is_arity (t:term) : ML bool =
+          match (U.unrefine (U.unascribe t)).n with
+          | Tm_type _ -> true
+          | Tm_arrow _ ->
+            let _, c = U.arrow_formals_comp t in
+            is_arity (U.comp_result c)
+          | _ -> false in
+        bs |> List.map (fun (b:binder) ->
+          let sort = b.binder_bv.sort in
+          let pbs, c = U.arrow_formals_comp sort in
+          if is_prop sort then Some U.t_true
+          else if Cons? pbs && U.is_tot_or_gtot_comp c && is_prop (U.comp_result c)
+                  && FStarC.Class.Setlike.is_empty (Free.names (U.arrow pbs (S.mk_Total U.t_true)))
+          then Some (U.abs pbs U.t_true None)
+          else if U.is_exactly_unit sort then None
+          else
+            let nsort = norm cfg' [] [] sort in
+            if U.is_exactly_unit nsort || is_arity nsort then None
+            else if Env.non_informative cfg.tcenv nsort then Some U.exp_unit
+            else None)
+    in
+    HashTable.add tab k r;
+    r
+
+(* The replacement for the next argument of the stuck application [t], if it
+   is in a computationally irrelevant position; see [spec_arg_replacements]. *)
+and spec_arg_replacement (cfg:cfg) (t:term) : ML (option term) =
+  let hd, args = U.head_and_args_full t in
+  match (U.un_uinst (SS.compress hd)).n with
+  | Tm_fvar fv ->
+    let rs = spec_arg_replacements cfg fv in
+    let n = List.length args in
+    if n < List.length rs then List.nth rs n else None
+  | _ -> None
 
 and maybe_simplify cfg env stack tm : ML (term & bool) =
     let tm', renorm = maybe_simplify_aux cfg env stack tm in
@@ -2952,6 +3040,12 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : ML term =
            let t = extend_app t (arg, aq) r in
            rebuild cfg env_arg stack t
         ) else (
+          (* Issue #4828: do not normalize an argument extraction will erase. *)
+          match (if cfg.steps.for_extraction then spec_arg_replacement cfg t else None) with
+          | Some a ->
+            let t = S.extend_app t (a, aq) r in
+            rebuild cfg env stack t
+          | None ->
           (* If the argument was already normalized+memoized, reuse it. *)
           match read_memo cfg m with
           | Some (_, a) ->

@@ -105,7 +105,6 @@ val comp_to_string         : comp -> ML (tac string)
 val term_to_doc            : term -> ML (tac Pprint.document)
 val comp_to_doc            : comp -> ML (tac Pprint.document)
 val range_to_string        : Range.t -> ML (tac string)
-val with_compat_pre_core   : int -> tac 'a -> ML (tac 'a)
 
 val get_vconfig            : unit -> ML (tac FStar.VConfig.vconfig)
 val set_vconfig            : FStar.VConfig.vconfig -> ML (tac unit)

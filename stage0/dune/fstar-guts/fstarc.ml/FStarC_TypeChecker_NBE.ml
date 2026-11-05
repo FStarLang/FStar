@@ -47,7 +47,7 @@ let rec translate_univ__aux (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) 
   (match u1 with
     | (FStarC_Syntax_Syntax.U_bvar (i)) -> (if (Prims.op_Less i ((fun l -> Z.of_int (BatList.length l)) bs)) then (let u' = ((fun l i -> BatList.nth l (Z.to_int i)) bs i) in
       (un_univ u')) else (if (((cfg).core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.allow_unbound_universes then FStarC_Syntax_Syntax.U_zero else (FStarC_Effect.failwith "Universe index out of bounds")))
-    | (FStarC_Syntax_Syntax.U_succ (u2)) -> (let tmp = ((translate_univ__aux cfg bs) u2) in
+    | (FStarC_Syntax_Syntax.U_succ (u2)) -> (let tmp = (translate_univ__aux cfg bs u2) in
       (FStarC_Syntax_Syntax.U_succ (tmp)))
     | (FStarC_Syntax_Syntax.U_max (us)) -> (let tmp = (BatList.map (translate_univ__aux cfg bs) us) in
       (FStarC_Syntax_Syntax.U_max (tmp)))
@@ -95,11 +95,11 @@ let rec fStarC_TypeChecker_NBE_map_rev__aux__1 (f : ('u___a -> 'u___b)) (l : ('u
     | [] -> acc
     | (x :: xs) -> (let tmp = (f x) in
       let tmp1 = (tmp :: acc) in
-      ((fStarC_TypeChecker_NBE_map_rev__aux__1 f) xs tmp1))
+      (fStarC_TypeChecker_NBE_map_rev__aux__1 f xs tmp1))
   )
 
 let map_rev (f : ('u___a -> 'u___b)) (l : ('u___a) list) : ('u___b) list =
-  ((fStarC_TypeChecker_NBE_map_rev__aux__1 f) l [])
+  (fStarC_TypeChecker_NBE_map_rev__aux__1 f l [])
 
 let try_in_cache (cfg : config) (fv : FStarC_Syntax_Syntax.fv) : (FStarC_TypeChecker_NBETerm.t) option =
   (let lid = (fv).FStarC_Syntax_Syntax.fv_name in
@@ -212,9 +212,9 @@ let zeta_false (cfg : config) : config =
 let rec pickBranch__pickBranch_aux__matches_pat__matches_args (cfg : config) (out : (FStarC_TypeChecker_NBETerm.t) list) (a : ((FStarC_TypeChecker_NBETerm.t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (p : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * bool)) list) : ((FStarC_TypeChecker_NBETerm.t) list, bool) FStar_Pervasives.either =
   (match (a, p) with
     | ([], []) -> (FStar_Pervasives.Inl (out))
-    | (((t, tmp) :: rest_a), ((p1, tmp1) :: rest_p)) -> (let tmp2 = ((pickBranch__pickBranch_aux__matches_pat cfg) t p1) in
+    | (((t, tmp) :: rest_a), ((p1, tmp1) :: rest_p)) -> (let tmp2 = (pickBranch__pickBranch_aux__matches_pat cfg t p1) in
       (match tmp2 with
-        | (FStar_Pervasives.Inl (s)) -> ((pickBranch__pickBranch_aux__matches_pat__matches_args cfg) (BatList.append out s) rest_a rest_p)
+        | (FStar_Pervasives.Inl (s)) -> (pickBranch__pickBranch_aux__matches_pat__matches_args cfg (BatList.append out s) rest_a rest_p)
         | m -> m
       ))
     | tmp -> (FStar_Pervasives.Inr (false))
@@ -254,14 +254,14 @@ and pickBranch__pickBranch_aux__matches_pat (cfg : config) (scrutinee0 : FStarC_
         let tmp = (matches_const scrutinee s) in
         (if tmp then (FStar_Pervasives.Inl ([])) else (FStar_Pervasives.Inr (false))))
       | (FStarC_Syntax_Syntax.Pat_cons (fv, u__us_opt, arg_pats)) -> (match (scrutinee).FStarC_TypeChecker_NBETerm.nbe_t with
-          | (FStarC_TypeChecker_NBETerm.Construct (fv', u__us, args_rev)) -> (if (FStarC_Syntax_Syntax.fv_eq fv fv') then ((pickBranch__pickBranch_aux__matches_pat__matches_args cfg) [] (BatList.rev args_rev) arg_pats) else (FStar_Pervasives.Inr (false)))
+          | (FStarC_TypeChecker_NBETerm.Construct (fv', u__us, args_rev)) -> (if (FStarC_Syntax_Syntax.fv_eq fv fv') then (pickBranch__pickBranch_aux__matches_pat__matches_args cfg [] (BatList.rev args_rev) arg_pats) else (FStar_Pervasives.Inr (false)))
           | tmp -> (FStar_Pervasives.Inr (true))
         )
     ) in
   let res_to_string = (fun tmp -> (match tmp with
       | (FStar_Pervasives.Inr (b)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__bool b) in
         (Prims.strcat "Inr " tmp1))
-      | (FStar_Pervasives.Inl (bs)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) bs)) in
+      | (FStar_Pervasives.Inl (bs)) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) bs)) in
         (Prims.strcat "Inl " tmp1))
     )) in
   (debug cfg (fun tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string scrutinee) in
@@ -273,18 +273,18 @@ and pickBranch__pickBranch_aux__matches_pat (cfg : config) (scrutinee0 : FStarC_
 let rec pickBranch__pickBranch_aux (cfg : config) (scrut : FStarC_TypeChecker_NBETerm.t) (branches : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) (branches0 : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_TypeChecker_NBETerm.t) list)) option =
   (match branches with
     | [] -> None
-    | ((p, u__wopt, e) :: branches1) -> (let tmp = ((pickBranch__pickBranch_aux__matches_pat cfg) scrut p) in
+    | ((p, u__wopt, e) :: branches1) -> (let tmp = (pickBranch__pickBranch_aux__matches_pat cfg scrut p) in
       (match tmp with
         | (FStar_Pervasives.Inl (matches)) -> ((debug cfg (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Print.fStarC_Class_Show_show__withinfo_t_pat' p) in
           (FStarC_Format.print1 "Pattern %s matches\n" tmp2))));
           (Some ((e, matches))))
-        | (FStar_Pervasives.Inr (false)) -> ((pickBranch__pickBranch_aux cfg) scrut branches1 branches0)
+        | (FStar_Pervasives.Inr (false)) -> (pickBranch__pickBranch_aux cfg scrut branches1 branches0)
         | (FStar_Pervasives.Inr (true)) -> None
       ))
   )
 
 let pickBranch (cfg : config) (scrut : FStarC_TypeChecker_NBETerm.t) (branches : (((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_TypeChecker_NBETerm.t) list)) option =
-  ((pickBranch__pickBranch_aux cfg) scrut branches branches)
+  (pickBranch__pickBranch_aux cfg scrut branches branches)
 
 let mkRec (i : Prims.int) (b : FStarC_Syntax_Syntax.letbinding) (bs : (FStarC_Syntax_Syntax.letbinding) list) (env : (FStarC_TypeChecker_NBETerm.t) list) : FStarC_TypeChecker_NBETerm.t =
   (let tmp = (let_rec_arity b) in
@@ -396,7 +396,7 @@ and iapp (cfg : config) (f : FStarC_TypeChecker_NBETerm.t) (args : ((FStarC_Type
       let n_univs = ((fun l -> Z.of_int (BatList.length l)) (lb).FStarC_Syntax_Syntax.lbunivs) in
       (debug cfg (fun tmp2 -> (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__either_bv_fv (lb).FStarC_Syntax_Syntax.lbname) in
       let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int arity) in
-      let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 n_args_rev) in
+      let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 n_args_rev) in
       (FStarC_Format.print3 "Reached iapp for %s with arity %s and n_args = %s\n" tmp3 tmp4 tmp5))));
       (if (Prims.op_Greater_Equals n_args_rev arity) then (let tmp2 = (FStarC_Syntax_Util.unascribe (lb).FStarC_Syntax_Syntax.lbdef) in
       let tmp3 = (tmp2).FStarC_Syntax_Syntax.n in
@@ -509,7 +509,11 @@ and translate_flag (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (f 
   )
 
 and translate_residual_comp (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (c : FStarC_Syntax_Syntax.residual_comp) : FStarC_TypeChecker_NBETerm.residual_comp =
-  (let tmp = (if (((cfg).core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction then None else (FStarC_Option.map (translate cfg bs) (c).FStarC_Syntax_Syntax.residual_typ)) in
+  (let tmp = (if (((cfg).core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction then None else (match (c).FStarC_Syntax_Syntax.residual_typ with
+      | (Some (x)) -> (let tmp = ((translate cfg bs) x) in
+        (Some (tmp)))
+      | None -> None
+    )) in
   let tmp1 = (BatList.map (translate_flag cfg bs) (c).FStarC_Syntax_Syntax.residual_flags) in
   { FStarC_TypeChecker_NBETerm.residual_effect = (c).FStarC_Syntax_Syntax.residual_effect;
     residual_typ = tmp;
@@ -530,9 +534,13 @@ and readback_flag (cfg : config) (f : FStarC_TypeChecker_NBETerm.cflag) : FStarC
   )
 
 and readback_residual_comp (cfg : config) (c : FStarC_TypeChecker_NBETerm.residual_comp) : FStarC_Syntax_Syntax.residual_comp =
-  (let tmp = (FStarC_Option.map (fun x -> ((debug cfg (fun tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string x) in
-    (FStarC_Format.print1 "Reading back residualtype %s\n" tmp1))));
-    (readback cfg x))) (c).FStarC_TypeChecker_NBETerm.residual_typ) in
+  (let tmp = (match (c).FStarC_TypeChecker_NBETerm.residual_typ with
+      | (Some (x)) -> ((debug cfg (fun tmp -> (let tmp1 = (FStarC_TypeChecker_NBETerm.t_to_string x) in
+        (FStarC_Format.print1 "Reading back residualtype %s\n" tmp1))));
+        let tmp = (readback cfg x) in
+        (Some (tmp)))
+      | None -> None
+    ) in
   let tmp1 = (BatList.map (readback_flag cfg) (c).FStarC_TypeChecker_NBETerm.residual_flags) in
   { FStarC_Syntax_Syntax.residual_effect = (c).FStarC_TypeChecker_NBETerm.residual_effect;
     residual_typ = tmp;
@@ -937,7 +945,7 @@ and translate__process_pattern (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.
   (let tmp = (match (p).FStarC_Syntax_Syntax.v with
       | (FStarC_Syntax_Syntax.Pat_constant (c)) -> (bs, (FStarC_Syntax_Syntax.Pat_constant (c)))
       | (FStarC_Syntax_Syntax.Pat_cons (fvar, us_opt, args)) -> (let tmp = (BatList.fold_left (fun tmp tmp1 -> (match (tmp, tmp1) with
-            | ((bs1, args1), (arg, b)) -> (let tmp2 = ((translate__process_pattern cfg) bs1 arg) in
+            | ((bs1, args1), (arg, b)) -> (let tmp2 = (translate__process_pattern cfg bs1 arg) in
               (match tmp2 with
                 | (bs', arg') -> (bs', ((arg', b) :: args1))
               ))
@@ -954,8 +962,12 @@ and translate__process_pattern (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.
         let tmp1 = (readback cfg tmp) in
         let x = (FStarC_Syntax_Syntax.gen_bv' (bvar).FStarC_Syntax_Syntax.ppname None tmp1) in
         (((FStarC_TypeChecker_NBETerm.mkAccuVar x) :: bs), (FStarC_Syntax_Syntax.Pat_var (x))))
-      | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (let tmp = (FStarC_Option.map (fun e -> (let tmp = (translate cfg bs e) in
-          (readback cfg tmp))) eopt) in
+      | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (let tmp = (match eopt with
+            | (Some (x)) -> (let tmp = (translate cfg bs x) in
+              let tmp1 = (readback cfg tmp) in
+              (Some (tmp1)))
+            | None -> None
+          ) in
         let tmp1 = (FStarC_Syntax_Syntax.Pat_dot_term (tmp)) in
         (bs, tmp1))
     ) in
@@ -1183,7 +1195,7 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
         )) in
       let make_branches = (fun tmp2 -> (let cfg1 = (zeta_false cfg) in
         (BatList.map (fun tmp3 -> (match tmp3 with
-          | (pat, when_clause, e1) -> (let tmp4 = ((translate__process_pattern cfg1) bs pat) in
+          | (pat, when_clause, e1) -> (let tmp4 = (translate__process_pattern cfg1 bs pat) in
             (match tmp4 with
               | (bs', pat') -> (let tmp5 = (translate cfg1 bs' e1) in
                 let tmp6 = (readback cfg1 tmp5) in
@@ -1309,7 +1321,7 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
   ))
 
 let normalize (psteps : (FStarC_TypeChecker_Primops_Base.primitive_step) list) (steps : (FStarC_TypeChecker_Env.step) list) (env : FStarC_TypeChecker_Env.env) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let cfg = (FStarC_TypeChecker_Cfg.config' psteps steps env) in
+  (let cfg = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Cfg_config' psteps steps env) in
   let cfg1 = { FStarC_TypeChecker_Cfg.steps = (let tmp = (cfg).FStarC_TypeChecker_Cfg.steps in
       { FStarC_TypeChecker_Cfg.beta = (tmp).FStarC_TypeChecker_Cfg.beta;
         iota = (tmp).FStarC_TypeChecker_Cfg.iota;

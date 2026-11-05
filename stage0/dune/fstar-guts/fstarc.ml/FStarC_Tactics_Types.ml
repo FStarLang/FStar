@@ -79,6 +79,17 @@ let goal_of_goal_ty (env : FStarC_TypeChecker_Env.env) (typ : (FStarC_Syntax_Syn
       (g, g_u))
   ))
 
+type direction =
+  | TopDown
+  | BottomUp
+
+
+type ctrl_flag =
+  | Continue
+  | Skip
+  | Abort
+
+
 let fStarC_Class_Show_show__guard_policy (tmp : guard_policy) : string =
   (match tmp with
     | Goal -> "Goal"
@@ -92,17 +103,6 @@ let fStarC_Class_Show_show__guard_policy (tmp : guard_policy) : string =
 let fStarC_Class_PP_pp__guard_policy (tmp : guard_policy) : PPrint.document =
   (let tmp1 = (fStarC_Class_Show_show__guard_policy tmp) in
   (PPrint.arbitrary_string tmp1))
-
-type direction =
-  | TopDown
-  | BottomUp
-
-
-type ctrl_flag =
-  | Continue
-  | Skip
-  | Abort
-
 
 let check_goal_solved (goal : goal) : bool =
   (let tmp = (check_goal_solved' goal) in

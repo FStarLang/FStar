@@ -2130,6 +2130,14 @@ let flatten_refinement t =
   in
   aux t false
 
+let mk_exists_unrefined (u:universe) (x:bv) (body:term) : ML term =
+  match (Subst.compress (flatten_refinement x.sort)).n with
+  | Tm_refine {b=y; phi} ->
+    let bs, phi = Subst.open_term [mk_binder y] phi in
+    let phi = Subst.subst [NT((List.hd bs).binder_bv, bv_to_name x)] phi in
+    mk_exists u { x with sort = y.sort } (mk_conj phi body)
+  | _ -> mk_exists u x body
+
 let contains_strictly_positive_attribute (attrs:list attribute)
 : ML bool
 = has_attribute attrs PC.binder_strictly_positive_attr

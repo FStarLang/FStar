@@ -8,18 +8,18 @@ let rec close_fields__close (bound : (string -> bool)) (c : FStarC_Custard_Synta
     | (FStarC_Custard_Syntax.TApp (n, args)) -> (let tmp = (BatList.map (close_fields__close bound) args) in
       let tmp1 = (n, tmp) in
       (FStarC_Custard_Syntax.TApp ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
-    | (FStarC_Custard_Syntax.TArrow (a, e, b)) -> (let tmp = ((close_fields__close bound) a) in
-      let tmp1 = ((close_fields__close bound) b) in
+    | (FStarC_Custard_Syntax.TArrow (a, e, b)) -> (let tmp = (close_fields__close bound a) in
+      let tmp1 = (close_fields__close bound b) in
       let tmp2 = (tmp, e, tmp1) in
       (FStarC_Custard_Syntax.TArrow ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))))
     | (FStarC_Custard_Syntax.TTuple (cs)) -> (let tmp = (BatList.map (close_fields__close bound) cs) in
       (FStarC_Custard_Syntax.TTuple (tmp)))
-    | (FStarC_Custard_Syntax.TBuf (c1)) -> (let tmp = ((close_fields__close bound) c1) in
+    | (FStarC_Custard_Syntax.TBuf (c1)) -> (let tmp = (close_fields__close bound c1) in
       (FStarC_Custard_Syntax.TBuf (tmp)))
-    | (FStarC_Custard_Syntax.TRef (k, c1)) -> (let tmp = ((close_fields__close bound) c1) in
+    | (FStarC_Custard_Syntax.TRef (k, c1)) -> (let tmp = (close_fields__close bound c1) in
       let tmp1 = (k, tmp) in
       (FStarC_Custard_Syntax.TRef ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
-    | (FStarC_Custard_Syntax.TInline (c1)) -> (let tmp = ((close_fields__close bound) c1) in
+    | (FStarC_Custard_Syntax.TInline (c1)) -> (let tmp = (close_fields__close bound c1) in
       (FStarC_Custard_Syntax.TInline (tmp)))
     | c1 -> c1
   )
@@ -28,11 +28,11 @@ let close_fields (d : FStarC_Custard_Syntax.decl) : FStarC_Custard_Syntax.decl =
   (match d with
     | (FStarC_Custard_Syntax.DType (dt)) -> (let bound = (fun v -> (BatList.exists (fun p -> ((=) p v)) (dt).FStarC_Custard_Syntax.dt_params)) in
       let fields = (fun fs -> (BatList.map (fun tmp -> (match tmp with
-          | (f, c) -> (let tmp1 = ((close_fields__close bound) c) in
+          | (f, c) -> (let tmp1 = (close_fields__close bound c) in
             (f, tmp1))
         )) fs)) in
       let tmp = (match (dt).FStarC_Custard_Syntax.dt_body with
-          | (FStarC_Custard_Syntax.TAbbrev (c)) -> (let tmp = ((close_fields__close bound) c) in
+          | (FStarC_Custard_Syntax.TAbbrev (c)) -> (let tmp = (close_fields__close bound c) in
             (FStarC_Custard_Syntax.TAbbrev (tmp)))
           | (FStarC_Custard_Syntax.TRecord (fs)) -> (let tmp = (fields fs) in
             (FStarC_Custard_Syntax.TRecord (tmp)))
@@ -103,7 +103,7 @@ let dtype_erased (t : tbl) (d : FStarC_Custard_Syntax.dtype) : bool =
 
 let rec erasure_fixpoint__loop (step : (unit -> bool)) (fuel : Prims.int) : unit =
   (if (Prims.op_Less_Equals fuel Prims.int_zero) then () else (let tmp = (step ()) in
-  (if tmp then ((erasure_fixpoint__loop step) (Prims.op_Minus fuel Prims.int_one)) else ())))
+  (if tmp then (erasure_fixpoint__loop step (Prims.op_Minus fuel Prims.int_one)) else ())))
 
 let erasure_fixpoint (t : tbl) : unit =
   (let step = (fun tmp -> (let changed = (ref false) in
@@ -122,7 +122,7 @@ let erasure_fixpoint (t : tbl) : unit =
     (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace (t).erased k nw)) else ()))))) (t).types);
     (!(changed)))) in
   let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun tmp tmp1 n -> (Prims.op_Plus n Prims.int_one)) (t).types Prims.int_one) in
-  ((erasure_fixpoint__loop step) tmp))
+  (erasure_fixpoint__loop step tmp))
 
 let ctors_of_tydef (d : FStarC_Custard_Syntax.dtype) : ((FStarC_Custard_Syntax.name * ((string * FStarC_Custard_Syntax.cty)) list)) list =
   (match (d).FStarC_Custard_Syntax.dt_body with
@@ -180,14 +180,14 @@ let rec acyclic_candidates__go (cands : (FStarC_Custard_Syntax.cty) FStarC_HashT
     | [] -> false
     | (m :: rest) -> (if ((=) m k) then true else (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt seen m) in
       (match tmp with
-        | (Some (tmp1)) -> ((acyclic_candidates__go cands k seen) rest)
+        | (Some (tmp1)) -> (acyclic_candidates__go cands k seen rest)
         | None -> ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace seen m true);
           let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt cands m) in
           (match tmp1 with
             | (Some (rep')) -> (let tmp2 = (names_of_cty rep') in
               let tmp3 = (BatList.append tmp2 rest) in
-              ((acyclic_candidates__go cands k seen) tmp3))
-            | None -> ((acyclic_candidates__go cands k seen) rest)
+              (acyclic_candidates__go cands k seen tmp3))
+            | None -> (acyclic_candidates__go cands k seen rest)
           ))
       )))
   )
@@ -196,7 +196,7 @@ let acyclic_candidates (cands : (FStarC_Custard_Syntax.cty) FStarC_HashTable.FSt
   (let ok = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.iter (fun k rep -> (let seen = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (10)))) in
   let tmp = (names_of_cty rep) in
-  let tmp1 = ((acyclic_candidates__go cands k seen) tmp) in
+  let tmp1 = (acyclic_candidates__go cands k seen tmp) in
   let tmp2 = (not tmp1) in
   (if tmp2 then (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace ok k rep) else ()))) cands);
   ok)
@@ -278,7 +278,7 @@ let rec eta_ctors__go (fields : (((string * FStarC_Custard_Syntax.cty)) list) FS
         | (Some (fs)) when (Prims.op_Less ((fun l -> Z.of_int (BatList.length l)) es1) ((fun l -> Z.of_int (BatList.length l)) fs)) -> (let tmp2 = (eta_ctors__drop () ((fun l -> Z.of_int (BatList.length l)) es1) fs) in
           let bs = (BatList.map (fun tmp3 -> (match tmp3 with
               | (f, c) -> (let tmp4 = (fresh ()) in
-                { FStarC_Custard_Syntax.b_name = tmp4; b_ty = c })
+                { FStarC_Custard_Syntax.b_name = tmp4; b_ty = (uninline c) })
             )) tmp2) in
           let args = (BatList.map (fun b -> (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EVar ((b).FStarC_Custard_Syntax.b_name)) (b).FStarC_Custard_Syntax.b_ty FStarC_Custard_Syntax.E_Pure)) bs) in
           let res = (BatList.fold_right (fun b c -> (FStarC_Custard_Syntax.TArrow ((b).FStarC_Custard_Syntax.b_ty, FStarC_Custard_Syntax.E_Pure, c))) bs (x).FStarC_Custard_Syntax.ty) in
@@ -304,7 +304,7 @@ let eta_ctors (t : tbl) (prog : (FStarC_Custard_Syntax.decl) list) : (FStarC_Cus
     let tmp3 = (!((t).fresh)) in
     (FStarC_Custard_Syntax.uniq "_eta" tmp3))) in
   (BatList.map (fun d -> (match d with
-    | (FStarC_Custard_Syntax.DLet (dl)) -> (let tmp = ((eta_ctors__go fields fresh) (dl).FStarC_Custard_Syntax.dl_body) in
+    | (FStarC_Custard_Syntax.DLet (dl)) -> (let tmp = (eta_ctors__go fields fresh (dl).FStarC_Custard_Syntax.dl_body) in
       let tmp1 = { FStarC_Custard_Syntax.dl_name = (dl).FStarC_Custard_Syntax.dl_name;
           dl_typars = (dl).FStarC_Custard_Syntax.dl_typars;
           dl_binders = (dl).FStarC_Custard_Syntax.dl_binders;
@@ -324,7 +324,7 @@ let layout_to_string (l : FStarC_Custard_Syntax.layout) : string =
       let tmp2 = (Prims.strcat " : " tmp1) in
       let tmp3 = (Prims.strcat (nt).FStarC_Custard_Syntax.nt_field tmp2) in
       (Prims.strcat "newtype(" tmp3))
-    | (FStarC_Custard_Syntax.L_struct (cs)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) cs)) in
+    | (FStarC_Custard_Syntax.L_struct (cs)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) cs)) in
       let tmp1 = (Prims.strcat tmp " ctors)") in
       (Prims.strcat "struct(" tmp1))
     | (FStarC_Custard_Syntax.L_abbrev (c)) -> (let tmp = (FStarC_Custard_Syntax.fStarC_Class_Show_show__cty c) in

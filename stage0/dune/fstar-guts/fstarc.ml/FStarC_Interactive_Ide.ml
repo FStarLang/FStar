@@ -5,7 +5,11 @@ let repl_current_qid : ((string) option ref) =
   (ref None)
 
 let json_of_opt (json_of_a : ('tmp -> FStarC_Json.json)) (opt_a : ('tmp) option) : FStarC_Json.json =
-  (let tmp = (FStarC_Option.map json_of_a opt_a) in
+  (let tmp = (match opt_a with
+      | (Some (x)) -> (let tmp = (json_of_a x) in
+        (Some (tmp)))
+      | None -> None
+    ) in
   (FStarC_Option.dflt FStarC_Json.JsonNull tmp))
 
 let json_of_message (level : string) (js_contents : FStarC_Json.json) : FStarC_Json.json =
@@ -178,8 +182,16 @@ let unpack_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state) (jso
         let tmp5 = (try_arg "context") in
         let tmp6 = (FStarC_Interactive_Ide_Types.js_optional_lookup_context tmp5) in
         let tmp7 = (try_arg "location") in
-        let tmp8 = (FStarC_Option.map FStarC_Interactive_JsonHelper.js_assoc tmp7) in
-        let tmp9 = (FStarC_Option.map (read_position "[location]") tmp8) in
+        let tmp8 = (match tmp7 with
+            | (Some (x)) -> (let tmp8 = (FStarC_Interactive_JsonHelper.js_assoc x) in
+              (Some (tmp8)))
+            | None -> None
+          ) in
+        let tmp9 = (match tmp8 with
+            | (Some (x)) -> (let tmp9 = ((read_position "[location]") x) in
+              (Some (tmp9)))
+            | None -> None
+          ) in
         let tmp10 = (arg "requested-info") in
         let tmp11 = (FStarC_Interactive_JsonHelper.js_list FStarC_Interactive_JsonHelper.js_str tmp10) in
         let tmp12 = (try_arg "symbol-range") in
@@ -188,14 +200,22 @@ let unpack_interactive_query (st : FStarC_Interactive_Ide_Types.repl_state) (jso
       | "compute" -> (let tmp3 = (arg "term") in
         let tmp4 = (FStarC_Interactive_JsonHelper.js_str tmp3) in
         let tmp5 = (try_arg "rules") in
-        let tmp6 = (FStarC_Option.map (FStarC_Interactive_JsonHelper.js_list FStarC_Interactive_Ide_Types.js_reductionrule) tmp5) in
+        let tmp6 = (match tmp5 with
+            | (Some (x)) -> (let tmp6 = ((FStarC_Interactive_JsonHelper.js_list FStarC_Interactive_Ide_Types.js_reductionrule) x) in
+              (Some (tmp6)))
+            | None -> None
+          ) in
         let tmp7 = (tmp4, tmp6) in
         (FStarC_Interactive_Ide_Types.Compute ((match tmp7 with (custard_tup, _) -> custard_tup), (match tmp7 with (_, custard_tup) -> custard_tup))))
       | "search" -> (let tmp3 = (arg "terms") in
         let tmp4 = (FStarC_Interactive_JsonHelper.js_str tmp3) in
         (FStarC_Interactive_Ide_Types.Search (tmp4)))
       | "vfs-add" -> (let tmp3 = (try_arg "filename") in
-        let tmp4 = (FStarC_Option.map FStarC_Interactive_JsonHelper.js_str tmp3) in
+        let tmp4 = (match tmp3 with
+            | (Some (x)) -> (let tmp4 = (FStarC_Interactive_JsonHelper.js_str x) in
+              (Some (tmp4)))
+            | None -> None
+          ) in
         let tmp5 = (arg "contents") in
         let tmp6 = (FStarC_Interactive_JsonHelper.js_str tmp5) in
         let tmp7 = (tmp4, tmp6) in
@@ -305,16 +325,16 @@ let rec snippets_of_fstar_option__arg_snippets_of_type (mk_field : (string -> st
     | (FStarC_Options.SimpleStr (desc)) -> ((mk_field desc) :: [])
     | (FStarC_Options.EnumStr (strs)) -> strs
     | (FStarC_Options.OpenEnumStr (strs, desc)) -> (BatList.append strs ((mk_field desc) :: []))
-    | (FStarC_Options.PostProcessed (tmp, elem_spec)) -> ((snippets_of_fstar_option__arg_snippets_of_type mk_field) elem_spec)
-    | (FStarC_Options.Accumulated (elem_spec)) -> ((snippets_of_fstar_option__arg_snippets_of_type mk_field) elem_spec)
-    | (FStarC_Options.ReverseAccumulated (elem_spec)) -> ((snippets_of_fstar_option__arg_snippets_of_type mk_field) elem_spec)
-    | (FStarC_Options.WithSideEffect (tmp, elem_spec)) -> ((snippets_of_fstar_option__arg_snippets_of_type mk_field) elem_spec)
+    | (FStarC_Options.PostProcessed (tmp, elem_spec)) -> (snippets_of_fstar_option__arg_snippets_of_type mk_field elem_spec)
+    | (FStarC_Options.Accumulated (elem_spec)) -> (snippets_of_fstar_option__arg_snippets_of_type mk_field elem_spec)
+    | (FStarC_Options.ReverseAccumulated (elem_spec)) -> (snippets_of_fstar_option__arg_snippets_of_type mk_field elem_spec)
+    | (FStarC_Options.WithSideEffect (tmp, elem_spec)) -> (snippets_of_fstar_option__arg_snippets_of_type mk_field elem_spec)
   )
 
 let snippets_of_fstar_option (name : string) (typ : FStarC_Options.opt_type) : (string) list =
   (let mk_field = (fun field_name -> (Prims.strcat "${" (Prims.strcat field_name "}"))) in
   let mk_snippet = (fun name1 argstring -> (Prims.strcat "--" (Prims.strcat name1 (if ((<>) argstring "") then (Prims.strcat " " argstring) else "")))) in
-  (BatList.map (mk_snippet name) ((snippets_of_fstar_option__arg_snippets_of_type mk_field) typ)))
+  (BatList.map (mk_snippet name) (snippets_of_fstar_option__arg_snippets_of_type mk_field typ)))
 
 let sig_of_fstar_option (name : string) (typ : FStarC_Options.opt_type) : string =
   (let flag = (Prims.strcat "--" name) in
@@ -330,17 +350,21 @@ let fstar_options_list_cache : (fstar_option) list =
   )) FStarC_Options.defaults);
   let tmp = (BatList.filter_map (fun tmp -> (match tmp with
       | (u__shortname, name, typ, doc) -> (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt m name) in
-        (FStarC_Option.map (fun default_value -> (let tmp2 = (snippets_of_fstar_option name typ) in
-        let tmp3 = (if ((=) doc PPrint.empty) then None else (let tmp3 = (FStarC_Errors_Msg.renderdoc doc) in
-          (Some (tmp3)))) in
-        { opt_name = name;
-          opt_sig = (sig_of_fstar_option name typ);
-          opt_value = FStarC_Options.Unset;
-          opt_default = default_value;
-          opt_type = typ;
-          opt_snippets = tmp2;
-          opt_documentation = tmp3;
-          opt_permission_level = (if (FStarC_Options.settable name) then OptSet else OptReadOnly) })) tmp1))
+        (match tmp1 with
+          | (Some (x)) -> (let tmp2 = (snippets_of_fstar_option name typ) in
+            let tmp3 = (if ((=) doc PPrint.empty) then None else (let tmp3 = (FStarC_Errors_Msg.renderdoc doc) in
+              (Some (tmp3)))) in
+            let tmp4 = { opt_name = name;
+                opt_sig = (sig_of_fstar_option name typ);
+                opt_value = FStarC_Options.Unset;
+                opt_default = x;
+                opt_type = typ;
+                opt_snippets = tmp2;
+                opt_documentation = tmp3;
+                opt_permission_level = (if (FStarC_Options.settable name) then OptSet else OptReadOnly) } in
+            (Some (tmp4)))
+          | None -> None
+        ))
     )) FStarC_Options.all_specs_with_types) in
   ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) (fun o1 o2 -> ((fun x y -> Z.of_int (BatString.compare x y)) (BatString.lowercase_ascii (o1).opt_name) (BatString.lowercase_ascii (o2).opt_name))) tmp))
 
@@ -513,7 +537,7 @@ let rec run_repl_ld_transactions__revert_many (debug : (string -> (FStarC_Intera
           repl_names = (st').FStarC_Interactive_Ide_Types.repl_names;
           repl_buffered_input_queries = (st').FStarC_Interactive_Ide_Types.repl_buffered_input_queries;
           repl_lang = (st').FStarC_Interactive_Ide_Types.repl_lang } in
-      ((run_repl_ld_transactions__revert_many debug) st'1 entries))
+      (run_repl_ld_transactions__revert_many debug st'1 entries))
   )
 
 let run_repl_transaction (st : FStarC_Interactive_Ide_Types.repl_state) (push_kind : (FStarC_Interactive_Ide_Types.push_kind) option) (must_rollback : bool) (task : FStarC_Interactive_Ide_Types.repl_task) : (bool * FStarC_Interactive_Ide_Types.repl_state) =
@@ -571,7 +595,7 @@ let rec run_repl_ld_transactions__aux (progress_callback : (FStarC_Interactive_I
               repl_names = (st1).FStarC_Interactive_Ide_Types.repl_names;
               repl_buffered_input_queries = (st1).FStarC_Interactive_Ide_Types.repl_buffered_input_queries;
               repl_lang = (st1).FStarC_Interactive_Ide_Types.repl_lang } in
-          ((run_repl_ld_transactions__aux progress_callback debug) tmp3 tasks1 [])) else (FStar_Pervasives.Inr (st1)))
+          (run_repl_ld_transactions__aux progress_callback debug tmp3 tasks1 [])) else (FStar_Pervasives.Inr (st1)))
       ))
     | ((task :: tasks1), (prev :: previous1)) -> (let tmp = (FStarC_Interactive_PushHelper.update_task_timestamps task) in
       let tmp1 = ((=) (match (match prev with
@@ -580,17 +604,17 @@ let rec run_repl_ld_transactions__aux (progress_callback : (FStarC_Interactive_I
           | (u__1, u__2) -> u__1
         ) tmp) in
       (if tmp1 then ((debug "Skipping" task);
-      ((run_repl_ld_transactions__aux progress_callback debug) st tasks1 previous1)) else (let tmp2 = ((run_repl_ld_transactions__revert_many debug) st (prev :: previous1)) in
-      ((run_repl_ld_transactions__aux progress_callback debug) tmp2 (task :: tasks1) []))))
-    | (tasks1, previous1) -> (let tmp = ((run_repl_ld_transactions__revert_many debug) st previous1) in
-      ((run_repl_ld_transactions__aux progress_callback debug) tmp tasks1 []))
+      (run_repl_ld_transactions__aux progress_callback debug st tasks1 previous1)) else (let tmp2 = (run_repl_ld_transactions__revert_many debug st (prev :: previous1)) in
+      (run_repl_ld_transactions__aux progress_callback debug tmp2 (task :: tasks1) []))))
+    | (tasks1, previous1) -> (let tmp = (run_repl_ld_transactions__revert_many debug st previous1) in
+      (run_repl_ld_transactions__aux progress_callback debug tmp tasks1 []))
   )
 
 let run_repl_ld_transactions (st : FStarC_Interactive_Ide_Types.repl_state) (tasks : (FStarC_Interactive_Ide_Types.repl_task) list) (progress_callback : (FStarC_Interactive_Ide_Types.repl_task -> unit)) : (FStarC_Interactive_Ide_Types.repl_state, FStarC_Interactive_Ide_Types.repl_state) FStar_Pervasives.either =
   (let debug = (fun verb task -> (let tmp = (!(dbg)) in
     (if tmp then (let tmp1 = (FStarC_Interactive_Ide_Types.string_of_repl_task task) in
     (FStarC_Format.print2 "%s %s" verb tmp1)) else ()))) in
-  ((run_repl_ld_transactions__aux progress_callback debug) st tasks (BatList.rev (st).FStarC_Interactive_Ide_Types.repl_deps_stack)))
+  (run_repl_ld_transactions__aux progress_callback debug st tasks (BatList.rev (st).FStarC_Interactive_Ide_Types.repl_deps_stack)))
 
 let write_progress (stage : (string) option) (contents_alist : ((string * FStarC_Json.json)) list) : unit =
   (let stage1 = (match stage with
@@ -827,18 +851,18 @@ let run_push (st : FStarC_Interactive_Ide_Types.repl_state) (query : FStarC_Inte
 let rec load_partial_checked_file__pred (until_lid : string) (lids : (FStarC_Ident.lident) list) : bool =
   (match lids with
     | [] -> false
-    | (lid :: lids1) -> (if ((=) (FStarC_Ident.string_of_lid lid) until_lid) then true else ((load_partial_checked_file__pred until_lid) lids1))
+    | (lid :: lids1) -> (if ((=) (FStarC_Ident.string_of_lid lid) until_lid) then true else (load_partial_checked_file__pred until_lid lids1))
   )
 
 let rec trunc_modul__filter (pred : (FStarC_Syntax_Syntax.sigelt -> bool)) (decls : (FStarC_Syntax_Syntax.sigelt) list) (acc : (FStarC_Syntax_Syntax.sigelt) list) : (bool * (FStarC_Syntax_Syntax.sigelt) list) =
   (match decls with
     | [] -> (false, (BatList.rev acc))
     | (d :: ds) -> (let tmp = (pred d) in
-      (if tmp then (true, (BatList.rev acc)) else ((trunc_modul__filter pred) ds (d :: acc))))
+      (if tmp then (true, (BatList.rev acc)) else (trunc_modul__filter pred ds (d :: acc))))
   )
 
 let trunc_modul (m : FStarC_Syntax_Syntax.modul) (pred : (FStarC_Syntax_Syntax.sigelt -> bool)) : (bool * FStarC_Syntax_Syntax.modul) =
-  (let tmp = ((trunc_modul__filter pred) (m).FStarC_Syntax_Syntax.declarations []) in
+  (let tmp = (trunc_modul__filter pred (m).FStarC_Syntax_Syntax.declarations []) in
   (match tmp with
     | (found, decls) -> (found, { FStarC_Syntax_Syntax.name = (m).FStarC_Syntax_Syntax.name;
         declarations = decls;
@@ -851,7 +875,7 @@ let load_partial_checked_file (env : FStarC_TypeChecker_Env.env) (filename : str
     | None -> (FStarC_Effect.failwith (Prims.strcat "cannot find checked file for " filename))
     | (Some (tc_result)) -> (let tmp1 = (FStarC_Universal.with_dsenv_of_tcenv env (fun ds -> ((), (FStarC_Syntax_DsEnv.set_current_module ds ((tc_result).FStarC_CheckedFiles.checked_module).FStarC_Syntax_Syntax.name)))) in
       (match tmp1 with
-        | (tmp2, env1) -> (let pred = (fun se -> ((load_partial_checked_file__pred until_lid) (FStarC_Syntax_Util.lids_of_sigelt se))) in
+        | (tmp2, env1) -> (let pred = (fun se -> (load_partial_checked_file__pred until_lid (FStarC_Syntax_Util.lids_of_sigelt se))) in
           let tmp3 = (trunc_modul (tc_result).FStarC_CheckedFiles.checked_module pred) in
           (match tmp3 with
             | (found_decl, m) -> (if (not found_decl) then (FStarC_Effect.failwith (Prims.strcat "did not find declaration with lident " until_lid)) else (let tmp4 = (FStarC_ToSyntax_ToSyntax.add_partial_modul_to_env m (tc_result).FStarC_CheckedFiles.mii) in
@@ -1222,7 +1246,7 @@ let run_compute (st : FStarC_Interactive_Ide_Types.repl_state) (term : string) (
       | (Some (rules1)) -> rules1
       | None -> (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Iota :: (FStarC_TypeChecker_Env.Zeta :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))))
     ) (FStarC_TypeChecker_Env.Inlining :: (FStarC_TypeChecker_Env.Eager_unfolding :: ((FStarC_TypeChecker_Env.DontUnfoldAttr ((FStarC_Parser_Const.tac_opaque_attr :: []))) :: (FStarC_TypeChecker_Env.Primops :: []))))) in
-  let normalize_term = (fun tcenv rules2 t -> (FStarC_TypeChecker_Normalize.normalize rules2 tcenv t)) in
+  let normalize_term = (fun tcenv rules2 t -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize rules2 tcenv t)) in
   (run_with_parsed_and_tc_term st term Prims.int_zero Prims.int_zero (fun tcenv def -> (let normalized = (normalize_term tcenv rules1 def) in
   let tmp = (FStarC_Interactive_QueryHelper.term_to_string tcenv normalized) in
   let tmp1 = (FStarC_Json.JsonStr (tmp)) in
@@ -1295,7 +1319,7 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state) (search_str : stri
   let st_matches = (fun candidate term -> (let found = (match (term).st_term with
         | (NameContainsStr (str)) -> (BatString.exists (FStarC_Ident.string_of_lid (candidate).sc_lid) str)
         | (TypeContainsLid (lid)) -> (let tmp = (sc_fvars tcenv candidate) in
-          (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident_7 lid tmp))
+          (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident_8 lid tmp))
       ) in
     ((<>) found (term).st_negate))) in
   let parse = (fun search_str1 -> (let parse_one = (fun term -> (let negate = (FStarC_Util.starts_with term "-") in

@@ -248,11 +248,44 @@ let rn_types (fields:HashTable.t string string) (d:decl) : ML decl =
     DType { t with dt_params = params; dt_body = rn_tydef fields t.dt_name ts t.dt_body }
   | d -> d
 
+(* The type variables a definition mentions, in order of first occurrence. *)
+let free_tvars_decl (bs:list binder) (ret:cty) (body:expr) : ML (list string) =
+  let acc : ref (list string) = alloc [] in
+  let add (x:string) : ML unit =
+    if not (List.existsb (fun y -> y = x) !acc) then acc := !acc @ [x] in
+  let rec ty (c:cty) : ML unit =
+    match c with
+    | TVar x -> add x
+    | TArrow (a, _, b) -> ty a; ty b
+    | TApp (_, args) | TTuple args -> List.iter ty args
+    | TBuf t | TRef (_, t) | TInline t -> ty t
+    | _ -> () in
+  let rec ex (x:expr) : ML unit =
+    ty x.ty;
+    (match x.e with
+     | EQual (_, args) -> List.iter ty args
+     | ELet (_, t, _, _) | ECast (_, t) | ECoerce (_, t) -> ty t
+     | EFun (bs, _) -> bs |> List.iter (fun b -> ty b.b_ty)
+     | _ -> ());
+    iter_children ex x in
+  bs |> List.iter (fun b -> ty b.b_ty);
+  ty ret;
+  ex body;
+  !acc
+
 let rn_terms (fields:HashTable.t string string) (d:decl) : ML decl =
   match d with
   | DType _ -> d
   | DLet l ->
     let typars, ts = bind_all empty_scope l.dl_typars in
+    (* A specialization may mention type variables it does not bind: without
+       --custard_monomorphize_types, a monomorphized argument's type keeps
+       the caller's type parameters free.  They are bound after the
+       declaration's own, so that the two cannot end up with the same
+       name. *)
+    let free = free_tvars_decl l.dl_binders l.dl_ret l.dl_body |> List.filter (fun x ->
+                 not (List.existsb (fun y -> y = x) l.dl_typars)) in
+    let _, ts = bind_all ts free in
     (* Type and value names share a namespace in neither backend, so a value
        binder is free to reuse a type variable's name. *)
     let binders, s = rn_binders ts empty_scope l.dl_binders in

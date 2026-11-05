@@ -365,7 +365,7 @@ type op =
   | BufFree                (** [buf] *)
   | BufNull                (** no arguments; the element type is the node's *)
   | BufIsNull              (** [buf] *)
-  | BufBlit                (** [src; srcidx; dst; dstidx; len] *)
+  | BufBlit                (** [src; dst; len] *)
   (** Section 71.  A run whose contents are known at compile time: the
       arguments are the elements, and the node's type is the [TBuf].
 
@@ -464,6 +464,16 @@ type op =
   | ExnPending
   | ExnTake
   | ExnExit
+  (** C: [Pulse.Lib.Closure] (custard.md, section 136).  [ClosureNew f] boxes
+      the function [f] with what it captures and is a [custard_closure *];
+      [Simplify.lift_lambdas] leaves [f] either a top-level name or a
+      partial application of one to the captured variables.
+      [ClosureCall c], at the boxed function's own arrow type, is the
+      function in the box: it is only meaningful as the head of an
+      application to every argument of that arrow.  A closure is freed with
+      [BufFree]. *)
+  | ClosureNew
+  | ClosureCall
 
 (** The machine type a primitive operation works at. *)
 type prim_ty =

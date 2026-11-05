@@ -1509,8 +1509,8 @@ and rc_live (o:owned) (e:expr) : ML expr =
     rc_live o { e with e = EOp ({ po_op = PBuf "write"; po_ty = None }, [b; i; v]) }
   | EOp ({ po_op = BufFree }, [b]) when is_pbuf b.ty ->
     rc_live o { e with e = EOp ({ po_op = PBuf "free"; po_ty = None }, [b]) }
-  | EOp ({ po_op = BufBlit }, [s; si; d; di; n]) when is_pbuf s.ty ->
-    rc_live o { e with e = EOp ({ po_op = PBuf "blit"; po_ty = None }, [s; si; d; di; n]) }
+  | EOp ({ po_op = BufBlit }, [s; d; n]) when is_pbuf s.ty ->
+    rc_live o { e with e = EOp ({ po_op = PBuf "blit"; po_ty = None }, [s; d; n]) }
   | EOp ({ po_op = BufLit }, es) when List.existsb (fun (a:expr) -> is_np a.ty) es ->
     unsupported "a constant array of reference-counted values"
   | EOp (op, args) when PBuf? op.po_op ->

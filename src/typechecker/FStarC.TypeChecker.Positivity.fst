@@ -710,7 +710,7 @@ let already_unfolded (ilid:lident)
          List.length args >= n &&
          (let args = fst (L.splitAt n args) in
           List.fold_left2 
-            (fun b a a' -> b && Rel.teq_nosmt_force env (fst a) (fst a'))
+            (fun b a a' -> b && FStarC.TypeChecker.CoreRel.teq_nosmt_force env (fst a) (fst a'))
             true
             args
             l))

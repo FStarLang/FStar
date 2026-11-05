@@ -58,7 +58,7 @@ and t' =
   | Refinement of (t -> t) * (unit -> (t * (FStarC_Syntax_Syntax.arg_qualifier) option))
   | Reflect of t
   | Quote of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Syntax_Syntax.quoteinfo
-  | Lazy of (FStarC_Syntax_Syntax.lazyinfo, (FStar_Dyn.dyn * FStarC_Syntax_Syntax.emb_typ)) FStar_Pervasives.either * (((unit -> t), t) FStar_Pervasives.either ref)
+  | Lazy of (FStarC_Syntax_Syntax.lazyinfo, (Obj.t * FStarC_Syntax_Syntax.emb_typ)) FStar_Pervasives.either * (((unit -> t), t) FStar_Pervasives.either ref)
   | Meta of t * (((unit -> FStarC_Syntax_Syntax.metadata), FStarC_Syntax_Syntax.metadata) FStar_Pervasives.either ref)
   | TopLevelLet of FStarC_Syntax_Syntax.letbinding * Prims.int * ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list
   | TopLevelRec of FStarC_Syntax_Syntax.letbinding * Prims.int * (bool) list * ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list
@@ -84,30 +84,101 @@ type 'a embedding = {
   e_typ : (unit -> FStarC_Syntax_Syntax.emb_typ);
 }
 
-let unembed (e : ('u___a) embedding) (eta : nbe_cbs) (eta1 : t) : ('u___a) option =
-  ((e).un eta eta1)
-
-let embed (e : ('u___a) embedding) (eta : nbe_cbs) (eta1 : 'u___a) : t =
-  ((e).em eta eta1)
-
 let mk_emb (em : (nbe_cbs -> ('u___a -> t))) (un : (nbe_cbs -> (t -> ('u___a) option))) (typ : (unit -> t)) (et : (unit -> FStarC_Syntax_Syntax.emb_typ)) : ('u___a) embedding =
   { em = em; un = un; typ = typ; e_typ = et }
 
-let embed_as (ea : ('u___a) embedding) (ab : ('u___a -> 'u___b)) (ba : ('u___b -> 'u___a)) (ot : (t) option) : ('u___b) embedding =
-  (mk_emb (fun cbs x -> (embed ea cbs (ba x))) (fun cbs t -> (let tmp = (unembed ea cbs t) in
-  (FStarC_Option.map ab tmp))) (fun tmp -> (match ot with
-    | (Some (t)) -> t
-    | None -> ((ea).typ ())
-  )) (ea).e_typ)
-
 let mk_rt (r : FStarC_Range_Type.range) (t : t') : t =
   { nbe_t = t; nbe_r = r }
+
+let mk_t (t : t') : t =
+  (mk_rt FStarC_Range_Type.dummyRange t)
+
+let mk_emb' (em : (nbe_cbs -> ('u___a -> t'))) (un : (nbe_cbs -> (t' -> ('u___a) option))) (typ : (unit -> t)) (et : (unit -> FStarC_Syntax_Syntax.emb_typ)) : ('u___a) embedding =
+  (mk_emb (fun cbs x -> (let tmp = (em cbs x) in
+  (mk_t tmp))) (fun cbs x -> (un cbs (x).nbe_t)) typ et)
 
 let mkFV (i : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : t =
   (mk_rt (FStarC_Syntax_Syntax.range_of_fv i) (FV (i, us, ts)))
 
 let lid_as_typ (l : FStarC_Ident.lident) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : t =
   (mkFV (FStarC_Syntax_Syntax.lid_as_fv l None) us ts)
+
+let e_issue : (FStarC_Errors_Issue.issue) embedding =
+  (let t_issue = (FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_issue) in
+  let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (Obj.magic (blob));
+      lkind = FStarC_Syntax_Syntax.Lazy_issue;
+      ltyp = t_issue;
+      rng = rng } : FStarC_Syntax_Syntax.lazyinfo)) in
+  let em = (fun cb iss -> (let tmp = (FStarC_Thunk.mk (fun tmp -> (FStarC_Effect.failwith "Cannot unembed issue"))) in
+    let tmp1 = ((FStar_Pervasives.Inl ((li iss FStarC_Range_Type.dummyRange))), tmp) in
+    (Lazy ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))) in
+  let un = (fun cb t -> (match t with
+      | (Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_issue; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (blob)) in
+        (Some (tmp3)))
+      | tmp -> None
+    )) in
+  (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.issue_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_issue)))
+
+let e_document : (PPrint.document) embedding =
+  (let t_document = (FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_document) in
+  let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (Obj.magic (blob));
+      lkind = FStarC_Syntax_Syntax.Lazy_doc;
+      ltyp = t_document;
+      rng = rng } : FStarC_Syntax_Syntax.lazyinfo)) in
+  let em = (fun cb doc -> (let tmp = (FStarC_Thunk.mk (fun tmp -> (FStarC_Effect.failwith "Cannot unembed document"))) in
+    let tmp1 = ((FStar_Pervasives.Inl ((li doc FStarC_Range_Type.dummyRange))), tmp) in
+    (Lazy ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))) in
+  let un = (fun cb t -> (match t with
+      | (Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_doc; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (Obj.magic (blob)) in
+        (Some (tmp3)))
+      | tmp -> None
+    )) in
+  (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.document_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_document)))
+
+let mkConstruct (i : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : t =
+  (mk_t (Construct (i, us, ts)))
+
+let e_order : (FStarC_Order.order) embedding =
+  (let ord_Lt_lid = (FStarC_Ident.lid_of_path ("FStar" :: ("Order" :: ("Lt" :: []))) FStarC_Range_Type.dummyRange) in
+  let ord_Eq_lid = (FStarC_Ident.lid_of_path ("FStar" :: ("Order" :: ("Eq" :: []))) FStarC_Range_Type.dummyRange) in
+  let ord_Gt_lid = (FStarC_Ident.lid_of_path ("FStar" :: ("Order" :: ("Gt" :: []))) FStarC_Range_Type.dummyRange) in
+  (ignore (FStarC_Syntax_Syntax.tdataconstr ord_Lt_lid));
+  (ignore (FStarC_Syntax_Syntax.tdataconstr ord_Eq_lid));
+  (ignore (FStarC_Syntax_Syntax.tdataconstr ord_Gt_lid));
+  let ord_Lt_fv = (FStarC_Syntax_Syntax.lid_as_fv ord_Lt_lid (Some (FStarC_Syntax_Syntax.Data_ctor))) in
+  let ord_Eq_fv = (FStarC_Syntax_Syntax.lid_as_fv ord_Eq_lid (Some (FStarC_Syntax_Syntax.Data_ctor))) in
+  let ord_Gt_fv = (FStarC_Syntax_Syntax.lid_as_fv ord_Gt_lid (Some (FStarC_Syntax_Syntax.Data_ctor))) in
+  let embed_order = (fun cb o -> (match o with
+      | FStarC_Order.Lt -> (mkConstruct ord_Lt_fv [] [])
+      | FStarC_Order.Eq -> (mkConstruct ord_Eq_fv [] [])
+      | FStarC_Order.Gt -> (mkConstruct ord_Gt_fv [] [])
+    )) in
+  let unembed_order = (fun cb t -> (match (t).nbe_t with
+      | (Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv ord_Lt_lid) -> (Some (FStarC_Order.Lt))
+      | (Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv ord_Eq_lid) -> (Some (FStarC_Order.Eq))
+      | (Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv ord_Gt_lid) -> (Some (FStarC_Order.Gt))
+      | tmp -> None
+    )) in
+  let fv_as_emb_typ = (fun fv -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name), []))) in
+  let fv = (FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.order_lid None) in
+  (mk_emb embed_order unembed_order (fun tmp -> (mkFV fv [] [])) (fun tmp -> (fv_as_emb_typ fv))))
+
+let unembed (e : ('u___a) embedding) (eta : nbe_cbs) (eta1 : t) : ('u___a) option =
+  ((e).un eta eta1)
+
+let embed (e : ('u___a) embedding) (eta : nbe_cbs) (eta1 : 'u___a) : t =
+  ((e).em eta eta1)
+
+let embed_as (ea : ('u___a) embedding) (ab : ('u___a -> 'u___b)) (ba : ('u___b -> 'u___a)) (ot : (t) option) : ('u___b) embedding =
+  (mk_emb (fun cbs x -> (embed ea cbs (ba x))) (fun cbs t -> (let tmp = (unembed ea cbs t) in
+  (match tmp with
+    | (Some (x)) -> (let tmp1 = (ab x) in
+      (Some (tmp1)))
+    | None -> None
+  ))) (fun tmp -> (match ot with
+    | (Some (t)) -> t
+    | None -> ((ea).typ ())
+  )) (ea).e_typ)
 
 let e_any : (t) embedding =
   (let em = (fun u__cb a -> a) in
@@ -116,13 +187,6 @@ let e_any : (t) embedding =
 
 let e_abstract_nbe_term : (t) embedding =
   (embed_as e_any (fun x -> x) (fun x -> x) None)
-
-let mk_t (t : t') : t =
-  (mk_rt FStarC_Range_Type.dummyRange t)
-
-let mk_emb' (em : (nbe_cbs -> ('u___a -> t'))) (un : (nbe_cbs -> (t' -> ('u___a) option))) (typ : (unit -> t)) (et : (unit -> FStarC_Syntax_Syntax.emb_typ)) : ('u___a) embedding =
-  (mk_emb (fun cbs x -> (let tmp = (em cbs x) in
-  (mk_t tmp))) (fun cbs x -> (un cbs (x).nbe_t)) typ et)
 
 let e_bool : (bool) embedding =
   (let em = (fun u__cb a -> (Constant ((Bool (a))))) in
@@ -139,12 +203,6 @@ let eq_atom (a1 : atom) (a2 : atom) : FStarC_TypeChecker_TermEqAndSimplify.eq_re
   (match (a1, a2) with
     | ((Var (bv1)), (Var (bv2))) -> (equal_if (FStarC_Syntax_Syntax.bv_eq bv1 bv2))
     | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-  )
-
-let eq_and (f : FStarC_TypeChecker_TermEqAndSimplify.eq_result) (g : (unit -> FStarC_TypeChecker_TermEqAndSimplify.eq_result)) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (match f with
-    | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (g ())
-    | tmp -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
   )
 
 let eq_inj (r1 : FStarC_TypeChecker_TermEqAndSimplify.eq_result) (r2 : FStarC_TypeChecker_TermEqAndSimplify.eq_result) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
@@ -185,7 +243,10 @@ and eq_args (env : FStarC_TypeChecker_Env.env) (as1 : ((t * (FStarC_Syntax_Synta
   (match (as1, as2) with
     | ([], []) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
     | ((x :: xs), (y :: ys)) -> (let tmp = (eq_arg env x y) in
-      (eq_and tmp (fun tmp1 -> (eq_args env xs ys))))
+      (match tmp with
+        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env xs ys)
+        | tmp1 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+      ))
     | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
   )
 
@@ -193,7 +254,10 @@ and eq_t (env : FStarC_TypeChecker_Env.env) (t1 : t) (t2 : t) : FStarC_TypeCheck
   (match ((t1).nbe_t, (t2).nbe_t) with
     | ((Lam (tmp)), (Lam (tmp1))) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
     | ((Accu (a1, as1)), (Accu (a2, as2))) -> (let tmp = (eq_atom a1 a2) in
-      (eq_and tmp (fun tmp1 -> (eq_args env as1 as2))))
+      (match tmp with
+        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env as1 as2)
+        | tmp1 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+      ))
     | ((Construct (v1, us1, args1)), (Construct (v2, us2, args2))) -> (if (FStarC_Syntax_Syntax.fv_eq v1 v2) then ((if ((<>) ((fun l -> Z.of_int (BatList.length l)) args1) ((fun l -> Z.of_int (BatList.length l)) args2)) then (FStarC_Effect.failwith "eq_t, different number of args on Construct") else ());
       let tmp = (FStarC_TypeChecker_Env.num_datacon_non_injective_ty_params env (FStarC_Syntax_Syntax.lid_of_fv v1)) in
       (match tmp with
@@ -212,7 +276,10 @@ and eq_t (env : FStarC_TypeChecker_Env.env) (t1 : t) (t2 : t) : FStarC_TypeCheck
       )) else FStarC_TypeChecker_TermEqAndSimplify.NotEqual)
     | ((FV (v1, us1, args1)), (FV (v2, us2, args2))) -> (if (FStarC_Syntax_Syntax.fv_eq v1 v2) then (let tmp = (FStarC_Syntax_Util.eq_univs_list us1 us2) in
       let tmp1 = (equal_iff tmp) in
-      (eq_and tmp1 (fun tmp2 -> (eq_args env args1 args2)))) else FStarC_TypeChecker_TermEqAndSimplify.Unknown)
+      (match tmp1 with
+        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env args1 args2)
+        | tmp2 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+      )) else FStarC_TypeChecker_TermEqAndSimplify.Unknown)
     | ((Constant (c1)), (Constant (c2))) -> (eq_constant c1 c2)
     | ((Type_t (u1)), (Type_t (u2))) -> (let tmp = (FStarC_Syntax_Util.eq_univs u1 u2) in
       (equal_iff tmp))
@@ -228,9 +295,12 @@ and eq_t (env : FStarC_TypeChecker_Env.env) (t1 : t) (t2 : t) : FStarC_TypeCheck
           | (u__1, u__2) -> u__1
         ) in
       let tmp4 = (eq_t env tmp1 tmp3) in
-      (eq_and tmp4 (fun tmp5 -> (let tmp6 = (r1 (mkAccuVar x)) in
-      let tmp7 = (r2 (mkAccuVar x)) in
-      (eq_t env tmp6 tmp7)))))
+      (match tmp4 with
+        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (let tmp5 = (r1 (mkAccuVar x)) in
+          let tmp6 = (r2 (mkAccuVar x)) in
+          (eq_t env tmp5 tmp6))
+        | tmp5 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+      ))
     | (Unknown, Unknown) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
     | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
   )
@@ -243,22 +313,6 @@ let e_string : (string) embedding =
     )) in
   (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.string_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_string)))
 
-let e_document : (PPrint.document) embedding =
-  (let t_document = (FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_document) in
-  let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
-      lkind = FStarC_Syntax_Syntax.Lazy_doc;
-      ltyp = t_document;
-      rng = rng } : FStarC_Syntax_Syntax.lazyinfo)) in
-  let em = (fun cb doc -> (let tmp = (FStarC_Thunk.mk (fun tmp -> (FStarC_Effect.failwith "Cannot unembed document"))) in
-    let tmp1 = ((FStar_Pervasives.Inl ((li doc FStarC_Range_Type.dummyRange))), tmp) in
-    (Lazy ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))) in
-  let un = (fun cb t -> (match t with
-      | (Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_doc; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn blob) in
-        (Some (tmp3)))
-      | tmp -> None
-    )) in
-  (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.document_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_document)))
-
 let lazy_embed (et : (unit -> FStarC_Syntax_Syntax.emb_typ)) (x : 'u___a) (f : (unit -> t)) : t =
   (let tmp = (!(FStarC_Options.debug_embedding)) in
   (if tmp then (let tmp1 = (et ()) in
@@ -267,7 +321,7 @@ let lazy_embed (et : (unit -> FStarC_Syntax_Syntax.emb_typ)) (x : 'u___a) (f : (
   let tmp1 = (!(FStarC_Options.eager_embedding)) in
   (if tmp1 then (f ()) else (let thunk = (FStarC_Thunk.mk f) in
   let tmp2 = (et ()) in
-  let li = ((FStar_Dyn.mkdyn x), tmp2) in
+  let li = ((Obj.magic (x)), tmp2) in
   (mk_t (Lazy ((FStar_Pervasives.Inr (li)), thunk))))))
 
 let type_of (e : ('u___a) embedding) : t =
@@ -275,9 +329,6 @@ let type_of (e : ('u___a) embedding) : t =
 
 let as_iarg (a : t) : (t * (FStarC_Syntax_Syntax.arg_qualifier) option) =
   (a, (FStarC_Syntax_Syntax.as_aqual_implicit true))
-
-let mkConstruct (i : FStarC_Syntax_Syntax.fv) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : t =
-  (mk_t (Construct (i, us, ts)))
 
 let lid_as_constr (l : FStarC_Ident.lident) (us : (FStarC_Syntax_Syntax.universe) list) (ts : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : t =
   (mkConstruct (FStarC_Syntax_Syntax.lid_as_fv l (Some (FStarC_Syntax_Syntax.Data_ctor))) us ts)
@@ -299,7 +350,7 @@ let lazy_unembed (et : (unit -> FStarC_Syntax_Syntax.emb_typ)) (x : t) (f : (t -
       let tmp6 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__emb_typ tmp5) in
       let tmp7 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__emb_typ et') in
       (FStarC_Format.print2 "Unembed cancellation failed\n\t%s <> %s\n" tmp6 tmp7)) else ());
-      res) else (let a = (FStar_Dyn.undyn b) in
+      res) else (let a = (Obj.magic (b)) in
       let tmp3 = (!(FStarC_Options.debug_embedding)) in
       (if tmp3 then (let tmp4 = (et ()) in
       let tmp5 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__emb_typ tmp4) in
@@ -317,11 +368,23 @@ let rec fStarC_TypeChecker_NBETerm_e_list__un__1 (ea : ('a) embedding) (etyp : (
   (lazy_unembed etyp trm (fun trm1 -> (match (trm1).nbe_t with
     | (Construct (fv, tmp, tmp1)) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.nil_lid) -> (Some ([]))
     | (Construct (fv, tmp, ((tl, None) :: ((hd, None) :: ((tmp1, (Some ({ FStarC_Syntax_Syntax.aqual_implicit = true; aqual_attributes = tmp2; _ }))) :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.cons_lid) -> (let tmp3 = (unembed ea cb hd) in
-      (FStarC_Option.bind tmp3 (fun hd1 -> (let tmp4 = ((fStarC_TypeChecker_NBETerm_e_list__un__1 ea etyp) cb tl) in
-      (FStarC_Option.bind tmp4 (fun tl1 -> (Some ((hd1 :: tl1)))))))))
+      (match tmp3 with
+        | (Some (x)) -> (let tmp4 = (fStarC_TypeChecker_NBETerm_e_list__un__1 ea etyp cb tl) in
+          (match tmp4 with
+            | (Some (x1)) -> (Some ((x :: x1)))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | (Construct (fv, tmp, ((tl, None) :: ((hd, None) :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.cons_lid) -> (let tmp1 = (unembed ea cb hd) in
-      (FStarC_Option.bind tmp1 (fun hd1 -> (let tmp2 = ((fStarC_TypeChecker_NBETerm_e_list__un__1 ea etyp) cb tl) in
-      (FStarC_Option.bind tmp2 (fun tl1 -> (Some ((hd1 :: tl1)))))))))
+      (match tmp1 with
+        | (Some (x)) -> (let tmp2 = (fStarC_TypeChecker_NBETerm_e_list__un__1 ea etyp cb tl) in
+          (match tmp2 with
+            | (Some (x1)) -> (Some ((x :: x1)))
+            | None -> None
+          ))
+        | None -> None
+      ))
     | tmp -> None
   )))
 
@@ -416,11 +479,11 @@ let e_tuple5 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (ec : ('u___c) 
     )) in
   let un = (fun cb trm -> (lazy_unembed etyp trm (fun trm1 -> (match (trm1).nbe_t with
       | (Construct (fvar, us, ((e, tmp) :: ((d, tmp1) :: ((c, tmp2) :: ((b, tmp3) :: ((a, tmp4) :: (tmp5 :: (tmp6 :: (tmp7 :: (tmp8 :: (tmp9 :: [])))))))))))) when (FStarC_Syntax_Syntax.fv_eq_lid fvar FStarC_Parser_Const_Tuples.lid_Mktuple5) -> (let tmp10 = (unembed ea cb a) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp10 (fun a1 -> (let tmp11 = (unembed eb cb b) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp11 (fun b1 -> (let tmp12 = (unembed ec cb c) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp12 (fun c1 -> (let tmp13 = (unembed ed cb d) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp13 (fun d1 -> (let tmp14 = (unembed ee cb e) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp14 (fun e1 -> (Some ((a1, b1, c1, d1, e1))))))))))))))))))
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp10) (fun a1 -> (let tmp11 = (unembed eb cb b) in
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp11) (fun b1 -> (let tmp12 = (unembed ec cb c) in
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp12) (fun c1 -> (let tmp13 = (unembed ed cb d) in
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp13) (fun d1 -> (let tmp14 = (unembed ee cb e) in
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp14) (fun e1 -> (Some ((a1, b1, c1, d1, e1))))))))))))))))))
       | tmp -> None
     )))) in
   (mk_emb em un (fun tmp -> (let tmp1 = (type_of ee) in
@@ -525,22 +588,6 @@ let arg_as_int (a : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) : (Prims.
     | (u__1, u__2) -> u__1
   ))
 
-let e_issue : (FStarC_Errors_Issue.issue) embedding =
-  (let t_issue = (FStarC_Syntax_Embeddings_Base.type_of FStarC_Syntax_Embeddings.e_issue) in
-  let li = (fun blob rng -> ({ FStarC_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
-      lkind = FStarC_Syntax_Syntax.Lazy_issue;
-      ltyp = t_issue;
-      rng = rng } : FStarC_Syntax_Syntax.lazyinfo)) in
-  let em = (fun cb iss -> (let tmp = (FStarC_Thunk.mk (fun tmp -> (FStarC_Effect.failwith "Cannot unembed issue"))) in
-    let tmp1 = ((FStar_Pervasives.Inl ((li iss FStarC_Range_Type.dummyRange))), tmp) in
-    (Lazy ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))) in
-  let un = (fun cb t -> (match t with
-      | (Lazy ((FStar_Pervasives.Inl ({ FStarC_Syntax_Syntax.blob = blob; lkind = FStarC_Syntax_Syntax.Lazy_issue; ltyp = tmp; rng = tmp1; _ })), tmp2)) -> (let tmp3 = (FStar_Dyn.undyn blob) in
-        (Some (tmp3)))
-      | tmp -> None
-    )) in
-  (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.issue_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_issue)))
-
 let e_option (ea : ('u___a) embedding) : (('u___a) option) embedding =
   (let etyp = (fun tmp -> (let tmp1 = ((ea).e_typ ()) in
     let tmp2 = (tmp1 :: []) in
@@ -562,7 +609,10 @@ let e_option (ea : ('u___a) embedding) : (('u___a) option) embedding =
   let un = (fun cb trm -> (lazy_unembed etyp trm (fun trm1 -> (match (trm1).nbe_t with
       | (Construct (fvar, us, args)) when (FStarC_Syntax_Syntax.fv_eq_lid fvar FStarC_Parser_Const.none_lid) -> (Some (None))
       | (Construct (fvar, us, ((a, tmp) :: (tmp1 :: [])))) when (FStarC_Syntax_Syntax.fv_eq_lid fvar FStarC_Parser_Const.some_lid) -> (let tmp2 = (unembed ea cb a) in
-        (FStarC_Option.bind tmp2 (fun a1 -> (Some ((Some (a1)))))))
+        (match tmp2 with
+          | (Some (x)) -> (Some ((Some (x))))
+          | None -> None
+        ))
       | tmp -> None
     )))) in
   (mk_emb em un (fun tmp -> (let tmp1 = (type_of ea) in
@@ -616,7 +666,7 @@ let rec args_eq (as1 : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list)
   (match (as1, as2) with
     | ([], []) -> true
     | (((x, qx) :: xs), ((y, qy) :: ys)) -> (let tmp = (term_eq x y) in
-      let tmp1 = (if tmp then ((=) qx qy) else false) in
+      let tmp1 = (if tmp then (FStarC_Syntax_Util.eq_aqual qx qy) else false) in
       (if tmp1 then (args_eq xs ys) else false))
     | (tmp, tmp1) -> false
   )
@@ -800,8 +850,12 @@ let arrow_as_prim_step_1 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (f 
   (let tmp = (BatList.hd args) in
   (match tmp with
     | (x, tmp1) -> (let tmp2 = (unembed ea cb x) in
-      (FStarC_Option.map (fun x1 -> (let tmp3 = (f x1) in
-      (embed eb cb tmp3))) tmp2))
+      (match tmp2 with
+        | (Some (x1)) -> (let tmp3 = (f x1) in
+          let tmp4 = (embed eb cb tmp3) in
+          (Some (tmp4)))
+        | None -> None
+      ))
   ))
 
 let arrow_as_prim_step_2 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (ec : ('u___c) embedding) (f : ('u___a -> ('u___b -> 'u___c))) (repr_f : FStarC_Ident.lident) (cb : nbe_cbs) (u__us : (FStarC_Syntax_Syntax.universe) list) (args : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (t) option =
@@ -810,11 +864,17 @@ let arrow_as_prim_step_2 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (ec
     | (x, tmp1) -> (let tmp2 = (BatList.hd (BatList.tl args)) in
       (match tmp2 with
         | (y, tmp3) -> (let tmp4 = (unembed ea cb x) in
-          (FStarC_Option.bind tmp4 (fun x1 -> (let tmp5 = (unembed eb cb y) in
-          (FStarC_Option.bind tmp5 (fun y1 -> (let tmp6 = (f x1) in
-          let tmp7 = (tmp6 y1) in
-          let tmp8 = (embed ec cb tmp7) in
-          (Some (tmp8)))))))))
+          (match tmp4 with
+            | (Some (x1)) -> (let tmp5 = (unembed eb cb y) in
+              (match tmp5 with
+                | (Some (x2)) -> (let tmp6 = (f x1) in
+                  let tmp7 = (tmp6 x2) in
+                  let tmp8 = (embed ec cb tmp7) in
+                  (Some (tmp8)))
+                | None -> None
+              ))
+            | None -> None
+          ))
       ))
   ))
 
@@ -826,13 +886,22 @@ let arrow_as_prim_step_3 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (ec
         | (y, tmp3) -> (let tmp4 = (BatList.hd (BatList.tl (BatList.tl args))) in
           (match tmp4 with
             | (z, tmp5) -> (let tmp6 = (unembed ea cb x) in
-              (FStarC_Option.bind tmp6 (fun x1 -> (let tmp7 = (unembed eb cb y) in
-              (FStarC_Option.bind tmp7 (fun y1 -> (let tmp8 = (unembed ec cb z) in
-              (FStarC_Option.bind tmp8 (fun z1 -> (let tmp9 = (f x1) in
-              let tmp10 = (tmp9 y1) in
-              let tmp11 = (tmp10 z1) in
-              let tmp12 = (embed ed cb tmp11) in
-              (Some (tmp12))))))))))))
+              (match tmp6 with
+                | (Some (x1)) -> (let tmp7 = (unembed eb cb y) in
+                  (match tmp7 with
+                    | (Some (x2)) -> (let tmp8 = (unembed ec cb z) in
+                      (match tmp8 with
+                        | (Some (x3)) -> (let tmp9 = (f x1) in
+                          let tmp10 = (tmp9 x2) in
+                          let tmp11 = (tmp10 x3) in
+                          let tmp12 = (embed ed cb tmp11) in
+                          (Some (tmp12)))
+                        | None -> None
+                      ))
+                    | None -> None
+                  ))
+                | None -> None
+              ))
           ))
       ))
   ))
@@ -866,8 +935,8 @@ let e_tuple2 (ea : ('u___a) embedding) (eb : ('u___b) embedding) : (('u___a * 'u
     (lid_as_constr FStarC_Parser_Const_Tuples.lid_Mktuple2 (FStarC_Syntax_Syntax.U_zero :: (FStarC_Syntax_Syntax.U_zero :: [])) tmp12))))) in
   let un = (fun cb trm -> (lazy_unembed etyp trm (fun trm1 -> (match (trm1).nbe_t with
       | (Construct (fvar, us, ((b, tmp) :: ((a, tmp1) :: (tmp2 :: (tmp3 :: [])))))) when (FStarC_Syntax_Syntax.fv_eq_lid fvar FStarC_Parser_Const_Tuples.lid_Mktuple2) -> (let tmp4 = (unembed ea cb a) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp4 (fun a1 -> (let tmp5 = (unembed eb cb b) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp5 (fun b1 -> (Some ((a1, b1)))))))))
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp4) (fun a1 -> (let tmp5 = (unembed eb cb b) in
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp5) (fun b1 -> (Some ((a1, b1)))))))))
       | tmp -> None
     )))) in
   (mk_emb em un (fun tmp -> (let tmp1 = (type_of eb) in
@@ -910,9 +979,9 @@ let e_tuple3 (ea : ('u___a) embedding) (eb : ('u___b) embedding) (ec : ('u___c) 
     )) in
   let un = (fun cb trm -> (lazy_unembed etyp trm (fun trm1 -> (match (trm1).nbe_t with
       | (Construct (fvar, us, ((c, tmp) :: ((b, tmp1) :: ((a, tmp2) :: (tmp3 :: (tmp4 :: (tmp5 :: [])))))))) when (FStarC_Syntax_Syntax.fv_eq_lid fvar FStarC_Parser_Const_Tuples.lid_Mktuple3) -> (let tmp6 = (unembed ea cb a) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp6 (fun a1 -> (let tmp7 = (unembed eb cb b) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp7 (fun b1 -> (let tmp8 = (unembed ec cb c) in
-        (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp8 (fun c1 -> (Some ((a1, b1, c1))))))))))))
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp6) (fun a1 -> (let tmp7 = (unembed eb cb b) in
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp7) (fun b1 -> (let tmp8 = (unembed ec cb c) in
+        ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp8) (fun c1 -> (Some ((a1, b1, c1))))))))))))
       | tmp -> None
     )))) in
   (mk_emb em un (fun tmp -> (let tmp1 = (type_of ec) in
@@ -957,9 +1026,15 @@ let e_either (ea : ('u___a) embedding) (eb : ('u___b) embedding) : (('u___a, 'u_
     )))) in
   let un = (fun cb trm -> (lazy_unembed etyp trm (fun trm1 -> (match (trm1).nbe_t with
       | (Construct (fvar, us, ((a, tmp) :: (tmp1 :: (tmp2 :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fvar FStarC_Parser_Const.inl_lid) -> (let tmp3 = (unembed ea cb a) in
-        (FStarC_Option.bind tmp3 (fun a1 -> (Some ((FStar_Pervasives.Inl (a1)))))))
+        (match tmp3 with
+          | (Some (x)) -> (Some ((FStar_Pervasives.Inl (x))))
+          | None -> None
+        ))
       | (Construct (fvar, us, ((b, tmp) :: (tmp1 :: (tmp2 :: []))))) when (FStarC_Syntax_Syntax.fv_eq_lid fvar FStarC_Parser_Const.inr_lid) -> (let tmp3 = (unembed eb cb b) in
-        (FStarC_Option.bind tmp3 (fun b1 -> (Some ((FStar_Pervasives.Inr (b1)))))))
+        (match tmp3 with
+          | (Some (x)) -> (Some ((FStar_Pervasives.Inr (x))))
+          | None -> None
+        ))
       | tmp -> None
     )))) in
   (mk_emb em un (fun tmp -> (let tmp1 = (type_of eb) in
@@ -974,31 +1049,6 @@ let e_vconfig : (FStar_VConfig.vconfig) embedding =
   (let em = (fun cb r -> (FStarC_Effect.failwith "e_vconfig NBE")) in
   let un = (fun cb t -> (FStarC_Effect.failwith "e_vconfig NBE")) in
   (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.vconfig_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_vconfig)))
-
-let e_order : (FStarC_Order.order) embedding =
-  (let ord_Lt_lid = (FStarC_Ident.lid_of_path ("FStar" :: ("Order" :: ("Lt" :: []))) FStarC_Range_Type.dummyRange) in
-  let ord_Eq_lid = (FStarC_Ident.lid_of_path ("FStar" :: ("Order" :: ("Eq" :: []))) FStarC_Range_Type.dummyRange) in
-  let ord_Gt_lid = (FStarC_Ident.lid_of_path ("FStar" :: ("Order" :: ("Gt" :: []))) FStarC_Range_Type.dummyRange) in
-  (ignore (FStarC_Syntax_Syntax.tdataconstr ord_Lt_lid));
-  (ignore (FStarC_Syntax_Syntax.tdataconstr ord_Eq_lid));
-  (ignore (FStarC_Syntax_Syntax.tdataconstr ord_Gt_lid));
-  let ord_Lt_fv = (FStarC_Syntax_Syntax.lid_as_fv ord_Lt_lid (Some (FStarC_Syntax_Syntax.Data_ctor))) in
-  let ord_Eq_fv = (FStarC_Syntax_Syntax.lid_as_fv ord_Eq_lid (Some (FStarC_Syntax_Syntax.Data_ctor))) in
-  let ord_Gt_fv = (FStarC_Syntax_Syntax.lid_as_fv ord_Gt_lid (Some (FStarC_Syntax_Syntax.Data_ctor))) in
-  let embed_order = (fun cb o -> (match o with
-      | FStarC_Order.Lt -> (mkConstruct ord_Lt_fv [] [])
-      | FStarC_Order.Eq -> (mkConstruct ord_Eq_fv [] [])
-      | FStarC_Order.Gt -> (mkConstruct ord_Gt_fv [] [])
-    )) in
-  let unembed_order = (fun cb t -> (match (t).nbe_t with
-      | (Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv ord_Lt_lid) -> (Some (FStarC_Order.Lt))
-      | (Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv ord_Eq_lid) -> (Some (FStarC_Order.Eq))
-      | (Construct (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv ord_Gt_lid) -> (Some (FStarC_Order.Gt))
-      | tmp -> None
-    )) in
-  let fv_as_emb_typ = (fun fv -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name), []))) in
-  let fv = (FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.order_lid None) in
-  (mk_emb embed_order unembed_order (fun tmp -> (mkFV fv [] [])) (fun tmp -> (fv_as_emb_typ fv))))
 
 let e_unit : (unit) embedding =
   (let em = (fun u__cb a -> (Constant (Unit))) in
@@ -1055,15 +1105,30 @@ let e_norm_step : (FStarC_NormSteps.norm_step) embedding =
       | (FV (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_zeta_full) -> (Some (FStarC_NormSteps.ZetaFull))
       | (FV (fv, tmp, [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_unascribe) -> (Some (FStarC_NormSteps.Unascribe))
       | (FV (fv, tmp, ((l, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_unfoldonly) -> (let tmp2 = (unembed (e_list e_string) cb l) in
-        (FStarC_Option.bind tmp2 (fun ss -> (Some ((FStarC_NormSteps.UnfoldOnly (ss)))))))
+        (match tmp2 with
+          | (Some (x)) -> (Some ((FStarC_NormSteps.UnfoldOnly (x))))
+          | None -> None
+        ))
       | (FV (fv, tmp, ((l, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_unfoldfully) -> (let tmp2 = (unembed (e_list e_string) cb l) in
-        (FStarC_Option.bind tmp2 (fun ss -> (Some ((FStarC_NormSteps.UnfoldFully (ss)))))))
+        (match tmp2 with
+          | (Some (x)) -> (Some ((FStarC_NormSteps.UnfoldFully (x))))
+          | None -> None
+        ))
       | (FV (fv, tmp, ((l, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_unfoldattr) -> (let tmp2 = (unembed (e_list e_string) cb l) in
-        (FStarC_Option.bind tmp2 (fun ss -> (Some ((FStarC_NormSteps.UnfoldAttr (ss)))))))
+        (match tmp2 with
+          | (Some (x)) -> (Some ((FStarC_NormSteps.UnfoldAttr (x))))
+          | None -> None
+        ))
       | (FV (fv, tmp, ((l, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_unfoldqual) -> (let tmp2 = (unembed (e_list e_string) cb l) in
-        (FStarC_Option.bind tmp2 (fun ss -> (Some ((FStarC_NormSteps.UnfoldQual (ss)))))))
+        (match tmp2 with
+          | (Some (x)) -> (Some ((FStarC_NormSteps.UnfoldQual (x))))
+          | None -> None
+        ))
       | (FV (fv, tmp, ((l, tmp1) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.steps_unfoldnamespace) -> (let tmp2 = (unembed (e_list e_string) cb l) in
-        (FStarC_Option.bind tmp2 (fun ss -> (Some ((FStarC_NormSteps.UnfoldNamespace (ss)))))))
+        (match tmp2 with
+          | (Some (x)) -> (Some ((FStarC_NormSteps.UnfoldNamespace (x))))
+          | None -> None
+        ))
       | tmp -> (let tmp1 = (t_to_string t0) in
         let tmp2 = (FStarC_Format.fmt1 "Not an embedded norm_step: %s" tmp1) in
         (FStarC_Errors.fStarC_Errors_log_issue0__string FStarC_Errors_Codes.Warning_NotEmbedded tmp2);

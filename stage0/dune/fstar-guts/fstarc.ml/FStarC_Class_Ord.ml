@@ -20,10 +20,34 @@ type 'a ord = {
   cmp : ('a -> ('a -> FStarC_Order.order));
 }
 
+let fStarC_Class_Ord_op_Less_Equals_Question__int_2 (x : Prims.int) (y : Prims.int) : bool =
+  (let tmp = (fStarC_Class_Ord_cmp__int_1 x y) in
+  ((<>) tmp FStarC_Order.Gt))
+
+let rec fStarC_Class_Ord_sort__insert__int (x : Prims.int) (xs : (Prims.int) list) : (Prims.int) list =
+  (match xs with
+    | [] -> (x :: [])
+    | (y :: ys) -> (let tmp = (fStarC_Class_Ord_op_Less_Equals_Question__int_2 x y) in
+      (if tmp then (x :: (y :: ys)) else (let tmp1 = (fStarC_Class_Ord_sort__insert__int x ys) in
+      (y :: tmp1))))
+  )
+
+let rec fStarC_Class_Ord_sort__int (xs : (Prims.int) list) : (Prims.int) list =
+  (match xs with
+    | [] -> []
+    | (x :: xs1) -> (let tmp = (fStarC_Class_Ord_sort__int xs1) in
+      (fStarC_Class_Ord_sort__insert__int x tmp))
+  )
+
 let fStarC_Class_Ord_cmp__tuple2_int_string (tmp : (Prims.int * string)) (tmp1 : (Prims.int * string)) : FStarC_Order.order =
   (match (tmp, tmp1) with
     | ((x1, x2), (y1, y2)) -> (let tmp2 = (fStarC_Class_Ord_cmp__int_1 x1 y1) in
-      (FStarC_Order.lex tmp2 (fun tmp3 -> (fStarC_Class_Ord_cmp__string x2 y2))))
+      let o2 = (fun tmp3 -> (fStarC_Class_Ord_cmp__string x2 y2)) in
+      (match (tmp2, o2) with
+        | (FStarC_Order.Lt, tmp3) -> FStarC_Order.Lt
+        | (FStarC_Order.Eq, tmp3) -> (o2 ())
+        | (FStarC_Order.Gt, tmp3) -> FStarC_Order.Gt
+      ))
   )
 
 let fStarC_Class_Ord_op_Less_Equals_Question__tuple2_int_string (x : (Prims.int * string)) (y : (Prims.int * string)) : bool =
@@ -60,23 +84,4 @@ let fStarC_Class_Ord_op_Less_Question__ocaml_int (x : int) (y : int) : bool =
 let fStarC_Class_Ord_op_Greater_Question__ocaml_int (x : int) (y : int) : bool =
   (let tmp = (fStarC_Class_Ord_cmp__ocaml_int x y) in
   ((=) tmp FStarC_Order.Gt))
-
-let fStarC_Class_Ord_op_Less_Equals_Question__int_5 (x : Prims.int) (y : Prims.int) : bool =
-  (let tmp = (fStarC_Class_Ord_cmp__int_1 x y) in
-  ((<>) tmp FStarC_Order.Gt))
-
-let rec fStarC_Class_Ord_sort__insert__int (x : Prims.int) (xs : (Prims.int) list) : (Prims.int) list =
-  (match xs with
-    | [] -> (x :: [])
-    | (y :: ys) -> (let tmp = (fStarC_Class_Ord_op_Less_Equals_Question__int_5 x y) in
-      (if tmp then (x :: (y :: ys)) else (let tmp1 = (fStarC_Class_Ord_sort__insert__int x ys) in
-      (y :: tmp1))))
-  )
-
-let rec fStarC_Class_Ord_sort__int (xs : (Prims.int) list) : (Prims.int) list =
-  (match xs with
-    | [] -> []
-    | (x :: xs1) -> (let tmp = (fStarC_Class_Ord_sort__int xs1) in
-      (fStarC_Class_Ord_sort__insert__int x tmp))
-  )
 

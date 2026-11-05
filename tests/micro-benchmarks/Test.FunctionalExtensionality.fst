@@ -22,6 +22,21 @@ module F = FStar.FunctionalExtensionality
 let eta_is_eq #a (#b:a -> Type) (f: (x:a -> b x)) : (f == (fun (x:a) -> f x)) =
   ()
 
+(* Nor by conversion: were [h] and [fun (x:nat) -> h x] definitionally
+   equal, the extensionality axiom would equate any two [int -> int]
+   functions that agree on [nat], from which [False] follows. *)
+let to_eq (#a:Type) (#x #y:a) (r:equals x y) : Lemma (x == y) = ()
+
+[@@expect_failure [19]]
+let eta_by_conversion (h:int -> int) : Lemma (eq2 #(nat -> int) h (fun (x:nat) -> h x)) =
+  to_eq (Refl #(nat -> int) #h <: equals #(nat -> int) h (fun (x:nat) -> h x))
+
+[@@expect_failure [19]]
+let on_domain_by_conversion (h:int -> int)
+  : Lemma (eq2 #(nat -> int) (fun (x:nat) -> h x) (on_domain nat #(fun _ -> int) h)) =
+  to_eq (Refl #(nat -> int) #(on_domain nat #(fun _ -> int) h)
+         <: equals #(nat -> int) (fun (x:nat) -> h x) (on_domain nat #(fun _ -> int) h))
+
 (** Illustrating the use of F.on_dom to restrict the domain of a
     function for use with the extensionality axiom *)
 

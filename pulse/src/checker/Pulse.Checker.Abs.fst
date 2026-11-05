@@ -92,23 +92,23 @@ let rec exists_as_binders (g: env) (t: slprop) : T.Tac (env & list (var & binder
   | _ ->
     g, [], t
 
-let tc_term_phase1_with_type_twice g t ty =
-  // If we call phase1 TC only once, then the universe instantiation in
+let tc_term_elab_with_type_twice g t ty =
+  // If we call the elaborating TC only once, then the universe instantiation in
   // coercion-inserted reveal calls remains a uvar.
-  let ty, eff = tc_term_phase1_with_type g t ty in
-  let ty, eff = tc_term_phase1_with_type g t ty in
+  let ty, eff = tc_term_elab_with_type g t ty in
+  let ty, eff = tc_term_elab_with_type g t ty in
   ty, eff
 
 let preproc_ascription (g: env) (c: comp) : T.Tac (env & list (var & binder & option qualifier) & comp) =
   let preproc_inames is : T.Tac R.term =
-    let is, _ = tc_term_phase1_with_type g is tm_inames in
+    let is, _ = tc_term_elab_with_type g is tm_inames in
     let is = T.norm_well_typed_term (elab_env g)
       [primops; iota; zeta; delta_attr ["Pulse.Lib.Core.unfold_check_opens"]]
       is in
     is in
   let preproc_stcomp (c: st_comp) : T.Tac (env & list (var & binder & option qualifier) & st_comp) = 
     let {u;res;pre;post} = c in
-    let res, u = tc_type_phase1 g res in
+    let res, u = tc_type_elab g res in
     let g, bs, pre =
       let pre = purify_spec g { ctxt_now = tm_emp; ctxt_old = None } pre in
       exists_as_binders g pre in
@@ -120,10 +120,10 @@ let preproc_ascription (g: env) (c: comp) : T.Tac (env & list (var & binder & op
           { ctxt_old = Some pre; ctxt_now = tm_emp }
           post in
     let post = close_term post x in
-    let res, u = tc_type_phase1 g res in // FIXME: unification fails to fill in u....
+    let res, u = tc_type_elab g res in // FIXME: unification fails to fill in u....
     g, bs, ({u;res;pre;post} <: st_comp) in
   match c with
-  | C_Tot t -> g, [], C_Tot (fst (tc_type_phase1 g t))
+  | C_Tot t -> g, [], C_Tot (fst (tc_type_elab g t))
   | C_ST c ->
     let g, bs, c = preproc_stcomp c in
     g, bs, C_ST c
@@ -158,7 +158,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
   = let Tm_Abs { b; q; ascription; body } = prog.term in
     let x = fresh env in
     let px = b.binder_ppname, x in
-    let x_ty, _ = tc_type_phase1 env b.binder_ty in
+    let x_ty, _ = tc_type_elab env b.binder_ty in
     let b = { b with binder_ty = x_ty } in
     let env = push_binding env x (fst px) x_ty in
     let body = open_st_term_nv body px in
@@ -181,7 +181,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         let c = open_comp_with c (U.term_of_nvar px) in
         match c with
         | C_Tot tannot -> (
-          let tannot, _ = tc_type_phase1 env tannot in
+          let tannot, _ = tc_type_elab env tannot in
           let t = RU.hnf_lax (elab_env env) tannot in
           //retain the original annotation, so that we check it wrt the inferred type in maybe_rewrite_body_typing
           let t = close_term t x in

@@ -276,15 +276,60 @@ let is_type_param (env:TcEnv.env) (b:binder) : ML bool =
    reading the same arity.  Exempting it split them: a definition whose type
    was an abbreviation of such an arrow lost the binder from its own lambdas,
    by [classify], and kept it in the emitted arrow, by [ty_of_typ], and the two
-   met at a call site as an ill-typed partial application. *)
+   met at a call site as an ill-typed partial application.
+
+   "Exactly [unit]" is decided up to ascriptions and to beta and iota
+   reduction, not on the sort as it happens to be written: the places that
+   ask about one binder do not all see the same form of its sort.
+   [ty_of_typ] reads the binders of an arrow off a normalized type, where an
+   [err: (if use_error_handler then error_handler else unit)] specialized to
+   [false] is already [unit]; a call site reads the same binder off the sort
+   of the callee, or of the variable passed for it, where it is still a
+   [match].  Reading the tag split them: the emitted arrow kept the binder and
+   the call deleted its argument, which KaRaMeL rejects (EverParse's probes
+   under [--use_error_handler_macro]).  Whether the sort reached here with an
+   ascription around it is just as accidental -- it depends on the
+   elaboration the definition was stored with. *)
+let is_unit_sort (env:TcEnv.env) (t:typ) : ML bool =
+  let t = U.unascribe t in
+  U.is_exactly_unit t ||
+  (match (SS.compress t).n with
+   | Tm_match _ | Tm_let _ | Tm_app _ ->
+     let t' = norm_bounded env "the type of a binder"
+                [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
+                 TcEnv.Beta; TcEnv.Iota; TcEnv.Weak; TcEnv.HNF] t in
+     U.is_exactly_unit (U.unascribe t')
+   | _ -> false)
+
 let is_dropped_binder (env:TcEnv.env) (b:binder) : ML bool =
   let sort = b.binder_bv.sort in
-  not (U.is_exactly_unit sort) &&
+  not (is_unit_sort env sort) &&
   not (is_type_binder env b) &&
   Prof.timed "Mono.must_erase" (fun () ->
     TcUtil.must_erase_for_extraction env sort)
 
-let is_unit_binder (b:binder) : ML bool = U.is_unit b.binder_bv.sort
+let is_unit_binder (env:TcEnv.env) (b:binder) : ML bool =
+  U.is_unit b.binder_bv.sort || is_unit_sort env b.binder_bv.sort
+
+(* Whether rule 1 keeps a unit-shaped binder of a definition as a parameter,
+   rather than deleting it.
+
+   A definition's unit binder is the one place that deleted it: an arrow type
+   keeps it ([erased_binders] does not flag it) and so does a call through a
+   variable of that type ([unit_binders] passes [()] for it).  A direct call
+   to the definition reads the classification and agrees with it either way,
+   but a definition passed as a *function value* is typed by its parameters
+   and received at the arrow, and the two disagree by exactly that binder:
+   karamel rejects [h g] for [g (x:u32) (u:unit) (y:u32)] passed where [u32 ->
+   unit -> u32 -> u32] is expected, and EverParse's probes under
+   [--use_error_handler_macro], whose [err] is such a binder, are the same.
+
+   On the karamel backends keeping it costs nothing: karamel deletes [unit]
+   parameters itself, from definitions, calls and arrow types alike, and only
+   keeps them where a function is used as a value -- which is where they are
+   needed.  Elsewhere the binder is still deleted. *)
+let krml_keeps_unit_params () : ML bool =
+  List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"]
 
 let fvar_arity_cache : HashTable.t string bool = HashTable.create 100
 
@@ -363,7 +408,7 @@ let is_erased_term (env:TcEnv.env) (t:term) : ML bool =
 let classes_to_string (env:TcEnv.env) (bs:binders) (cs:list bclass) : ML string =
   let why (b:binder) : ML string =
     if is_type_binder env b then "type"
-    else if is_unit_binder b then "unit"
+    else if is_unit_binder env b then "unit"
     else if is_dropped_binder env b then "erased"
     else "?" in
   let rec go (bs:binders) (cs:list bclass) : ML (list string) =
@@ -642,7 +687,7 @@ let retained_names (env:TcEnv.env) (t:typ) : ML (list string) =
    {!keep_thunk} put back is there for its arity and for nothing else. *)
 let unit_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = arrow_formals_unfold env t in
-  bs |> List.map (fun b -> U.is_unit b.binder_bv.sort || is_erased_binder env b)
+  bs |> List.map (fun b -> is_unit_binder env b || is_erased_binder env b)
 
 let type_binders (env:TcEnv.env) (t:typ) : ML (list bool) =
   let bs, _ = arrow_formals_unfold env t in
@@ -761,14 +806,7 @@ let is_type_carrying_binder (env:TcEnv.env) (b:binder) : ML bool =
      | _ -> false)
   | _ -> false
 
-(* [demanded] is section 30.11's rule 4c: names that something marked
-   [@@custard_compile_time] is applied to, computed from the *body* and so
-   supplied by the caller, since a classification otherwise only sees a type.
-   They are seeded as [Mono] before rule 5's fixpoint, which is the point --
-   the demand has to propagate to whatever the demanded binder's type mentions
-   exactly as a written annotation would. *)
-let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
-                    (def:option term) (demanded:list int) : ML (list bclass) =
+let def_binders (env:TcEnv.env) (t:typ) (def:option term) : ML (binders & comp) =
   let bs, comp = arrow_formals_unfold env t in
   (* Section 33.3.  An attribute written on a binder can reach a
      classification by two routes, and only one of them is always open.  The
@@ -797,10 +835,22 @@ let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
               if Nil? bd.binder_attrs then b
               else { b with binder_attrs = b.binder_attrs @ bd.binder_attrs })
         else b) in
+  bs, comp
+
+(* [demanded] is section 30.11's rule 4c: names that something marked
+   [@@custard_compile_time] is applied to, computed from the *body* and so
+   supplied by the caller, since a classification otherwise only sees a type.
+   They are seeded as [Mono] before rule 5's fixpoint, which is the point --
+   the demand has to propagate to whatever the demanded binder's type mentions
+   exactly as a written annotation would. *)
+let classify_demand (env:TcEnv.env) (attrs:list attribute) (t:typ)
+                    (def:option term) (demanded:list int) : ML (list bclass) =
+  let bs, comp = def_binders env t def in
   let all_mono = U.has_attribute attrs PC.monomorphize_attr in
   let mono_types = Options.custard_monomorphize_types () in
   let init (i:int) (b:binder) : ML bclass =
-    if is_dropped_binder env b || is_unit_binder b                (* rule 1 *)
+    if is_dropped_binder env b ||                                 (* rule 1 *)
+       (is_unit_binder env b && not (krml_keeps_unit_params ()))
     then Dropped
     else if U.has_attribute b.binder_attrs PC.monomorphize_attr   (* rule 3 *)
     then Mono
@@ -993,6 +1043,12 @@ let classify_def (env:TcEnv.env) (attrs:list attribute) (t:typ) (def:option term
         if n > 0 then extra (n - 1) bs
         else (if is_erased_binder env b then Dropped else Poly) :: extra 0 bs in
     cs @ extra (List.length cs) bs
+
+let soft_binders (env:TcEnv.env) (t:typ) (def:option term) : ML (list bool) =
+  let bs, _ = def_binders env t def in
+  bs |> List.map (fun (b:binder) ->
+    U.has_attribute b.binder_attrs PC.monomorphize_attr &&
+    Cons? (fst (arrow_formals_unfold env b.binder_bv.sort)))
 
 let has_mono (cs:list bclass) : ML bool =
   cs |> List.existsb Mono?

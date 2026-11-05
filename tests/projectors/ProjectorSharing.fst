@@ -84,3 +84,11 @@ let _ = assert_norm ((let p = Mkr3 1 in
    [assert_norm], since projectors reduce there too. *)
 let _ = assert ((let p = Mkr2 1 in Mkr2?._1 (p 5) + Mkr2?._1 (p 99)) == 104)
 let _ = assert ((let q = S1 in S1? (q 5) && S2? (q 3)) == false)
+
+(* Ascriptions must not force projectees to be read back before projection. *)
+let _ = assert_norm (Mkr2?._1 ((Mkr2 1 5) <: r2) == 5)
+let _ = assert_norm (S1? ((S1 5) <: s) == true)
+let _ = assert_norm (S2? ((S1 5) <: s) == false)
+let _ = assert_norm
+  ((let p = (Mkr2 1 <: int -> r2) in
+    Mkr2?._1 (p 5) + Mkr2?._1 (p 99)) == 104)

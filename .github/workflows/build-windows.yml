@@ -113,6 +113,10 @@ jobs:
         with:
           name: package-src
       - run: tar xzf fstar-src.tar.gz
+      # Install packages with Cygwin depexts from a non-Cygwin shell: Cygwin's
+      # setup.exe may upgrade cygwin1.dll and kill the running bash otherwise.
+      - shell: pwsh
+        run: opam install conf-gmp conf-pkg-config
       - run: eval $(opam env) && opam install . --deps-only
         working-directory: fstar
 

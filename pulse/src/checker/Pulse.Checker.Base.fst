@@ -606,9 +606,20 @@ let is_stateful_application (g:env) (e:term)
 : T.Tac (option st_term) = 
   RU.record_stats "Pulse.is_stateful_application" fun _ -> 
   let head, args = T.collect_app_ln e in
+  (* For a projection [r.f args], the type of the bare head is that of the
+     field name [f] as written (e.g. a typeclass method), not of the projector
+     chosen once the type of [r] is known; so check [r.f] as the head. *)
+  let head, args =
+    if RU.is_unresolved_projector head then
+      match args with
+      | (r, T.Q_Explicit) :: rest ->
+        RU.mk_app_flat head [(r, T.Q_Explicit)] (T.range_of_term e), rest
+      | _ -> head, args
+    else head, args
+  in
   match args with
   | _ :: _ -> (
-    match RU.tc_term_phase1 (elab_env g) head false with
+    match RU.tc_term_elab (elab_env g) head false with
     | None, _ -> None
     | Some (_, ht, _), _ -> 
       let head_t = wr ht (T.range_of_term ht) in
@@ -862,7 +873,7 @@ let hoist_st_lambda
 : T.Tac (option st_term)
 = match tt with
   | Inr { term = Tm_ST { t = e; args = arg::args }; range } -> (
-    let _, e_ty, _ = CP.tc_term_phase1 g e in
+    let _, e_ty, _ = CP.tc_term_elab g e in
     match R.inspect_ln e_ty with
     | R.Tv_Arrow bv _ ->
       let bv = R.inspect_binder bv in

@@ -66,7 +66,7 @@ krml: $(OUT)/DPE.krml
 # representation for a type variable.
 $(OUT)/DPE.c: dpe/DPE.fst
 	@mkdir -p $(OUT)
-	$(FSTAR) --codegen C --custard_monomorphize_types true \
+	$(FSTAR) --codegen C \
 	  $(foreach t,$(EXTERN_TYPES),--custard_extern_type '$(t)@dice_externs.h') \
 	  dpe/DPE.fst -o $@
 

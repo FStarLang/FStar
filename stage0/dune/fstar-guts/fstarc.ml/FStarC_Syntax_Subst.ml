@@ -199,13 +199,13 @@ let rec compose_uvar_subst__aux (should_retain : (FStarC_Syntax_Syntax.bv -> boo
             )) else []))
           | tmp1 -> []
         )) hd_subst) in
-      let tmp = ((compose_uvar_subst__aux should_retain) rest) in
+      let tmp = (compose_uvar_subst__aux should_retain rest) in
       (BatList.append hd tmp))
   )
 
 let compose_uvar_subst (u : FStarC_Syntax_Syntax.ctx_uvar) (s0 : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range)) (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range)) : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range) =
   (let should_retain = (fun x -> (FStarC_Util.for_some (fun b -> (FStarC_Syntax_Syntax.bv_eq x (b).FStarC_Syntax_Syntax.binder_bv)) (u).FStarC_Syntax_Syntax.ctx_uvar_binders)) in
-  let tmp = ((compose_uvar_subst__aux should_retain) (BatList.append (match s0 with
+  let tmp = (compose_uvar_subst__aux should_retain (BatList.append (match s0 with
       | (u__1, u__2) -> u__1
     ) (match s with
       | (u__1, u__2) -> u__1
@@ -284,7 +284,11 @@ let subst_ascription' (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStar
           | (FStar_Pervasives.Inr (c)) -> (let tmp = (subst_comp' s c) in
             (FStar_Pervasives.Inr (tmp)))
         ) in
-      let tmp = (FStarC_Option.map (subst' s) topt) in
+      let tmp = (match topt with
+          | (Some (x)) -> (let tmp = ((subst' s) x) in
+            (Some (tmp)))
+          | None -> None
+        ) in
       (annot1, tmp, use_eq))
   )
 
@@ -330,7 +334,11 @@ let subst_binder' (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Sy
 let push_subst_rc (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range)) (lopt : (FStarC_Syntax_Syntax.residual_comp) option) : (FStarC_Syntax_Syntax.residual_comp) option =
   (match lopt with
     | None -> None
-    | (Some (rc)) -> (let residual_typ = (FStarC_Option.map (subst' s) (rc).FStarC_Syntax_Syntax.residual_typ) in
+    | (Some (rc)) -> (let residual_typ = (match (rc).FStarC_Syntax_Syntax.residual_typ with
+          | (Some (x)) -> (let tmp = ((subst' s) x) in
+            (Some (tmp)))
+          | None -> None
+        ) in
       let rc1 = { FStarC_Syntax_Syntax.residual_effect = (rc).FStarC_Syntax_Syntax.residual_effect;
           residual_typ = residual_typ;
           residual_flags = (rc).FStarC_Syntax_Syntax.residual_flags } in
@@ -353,7 +361,7 @@ let rec subst_pat'__aux (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FSt
         ) in
       let us_opt1 = (subst_univs_opt tmp1 us_opt) in
       let tmp2 = (BatList.fold_left (fun tmp2 tmp3 -> (match (tmp2, tmp3) with
-          | ((pats1, n1), (p1, imp)) -> (let tmp4 = ((subst_pat'__aux s) n1 p1) in
+          | ((pats1, n1), (p1, imp)) -> (let tmp4 = (subst_pat'__aux s n1 p1) in
             (match tmp4 with
               | (p2, m) -> (((p2, imp) :: pats1), m)
             ))
@@ -370,13 +378,17 @@ let rec subst_pat'__aux (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FSt
       ({ FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_var (x1));
         p = (p).FStarC_Syntax_Syntax.p }, (Prims.op_Plus n Prims.int_one)))
     | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (let s1 = (shift_subst' n s) in
-      let eopt1 = (FStarC_Option.map (subst' s1) eopt) in
+      let eopt1 = (match eopt with
+          | (Some (x)) -> (let tmp = ((subst' s1) x) in
+            (Some (tmp)))
+          | None -> None
+        ) in
       ({ FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_dot_term (eopt1));
         p = (p).FStarC_Syntax_Syntax.p }, n))
   )
 
-let subst_pat' (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range)) (eta : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * Prims.int) =
-  ((subst_pat'__aux s) Prims.int_zero eta)
+let subst_pat' (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range)) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * Prims.int) =
+  (subst_pat'__aux s Prims.int_zero p)
 
 let subst_args' (s : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range)) : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'tmp)) list -> (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'tmp)) list) =
   (BatList.map (subst_arg' s))
@@ -591,12 +603,6 @@ let open_term' (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syn
       (bs', tmp1, opening))
   ))
 
-let open_term (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
-  (let tmp = (open_term' bs t) in
-  (match tmp with
-    | (b, t1, tmp1) -> (b, t1)
-  ))
-
 let subst_comp (s : (FStarC_Syntax_Syntax.subst_elt) list) (t : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax =
   (subst_comp' ((s :: []), FStarC_Syntax_Syntax.NoUseRange) t)
 
@@ -607,14 +613,10 @@ let open_comp (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Synt
       (bs', tmp1))
   ))
 
-let subst_ascription (s : (FStarC_Syntax_Syntax.subst_elt) list) (asc : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool) =
-  (subst_ascription' ((s :: []), FStarC_Syntax_Syntax.NoUseRange) asc)
-
-let open_ascription (bs : (FStarC_Syntax_Syntax.binder) list) (asc : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) : ((FStarC_Syntax_Syntax.binder) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) =
-  (let tmp = (open_binders' bs) in
+let open_term (bs : (FStarC_Syntax_Syntax.binder) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (open_term' bs t) in
   (match tmp with
-    | (bs', opening) -> (let tmp1 = (subst_ascription opening asc) in
-      (bs', tmp1))
+    | (b, t1, tmp1) -> (b, t1)
   ))
 
 let rec open_pat__open_pat_aux (sub : (FStarC_Syntax_Syntax.subst_elt) list) (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) : ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t * (FStarC_Syntax_Syntax.subst_elt) list) =
@@ -640,7 +642,11 @@ let rec open_pat__open_pat_aux (sub : (FStarC_Syntax_Syntax.subst_elt) list) (p 
       let sub1 = ((FStarC_Syntax_Syntax.DB (Prims.int_zero, x')) :: tmp2) in
       ({ FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_var (x'));
         p = (p).FStarC_Syntax_Syntax.p }, sub1))
-    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (let eopt1 = (FStarC_Option.map (subst sub) eopt) in
+    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (let eopt1 = (match eopt with
+          | (Some (x)) -> (let tmp = ((subst sub) x) in
+            (Some (tmp)))
+          | None -> None
+        ) in
       ({ FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_dot_term (eopt1));
         p = (p).FStarC_Syntax_Syntax.p }, sub))
   )
@@ -666,6 +672,16 @@ let open_branch (br : ((FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo
   (let tmp = (open_branch' br) in
   (match tmp with
     | (br1, tmp1) -> br1
+  ))
+
+let subst_ascription (s : (FStarC_Syntax_Syntax.subst_elt) list) (asc : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool) =
+  (subst_ascription' ((s :: []), FStarC_Syntax_Syntax.NoUseRange) asc)
+
+let open_ascription (bs : (FStarC_Syntax_Syntax.binder) list) (asc : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) : ((FStarC_Syntax_Syntax.binder) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool)) =
+  (let tmp = (open_binders' bs) in
+  (match tmp with
+    | (bs', opening) -> (let tmp1 = (subst_ascription opening asc) in
+      (bs', tmp1))
   ))
 
 let open_let_rec (lbs : (FStarC_Syntax_Syntax.letbinding) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Syntax_Syntax.letbinding) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
@@ -700,6 +716,18 @@ let open_let_rec (lbs : (FStarC_Syntax_Syntax.letbinding) list) (t : (FStarC_Syn
           let t1 = (subst let_rec_opening t) in
           (lbs2, t1))
       ))
+  ))
+
+let univ_var_opening (us : (FStarC_Ident.ident) list) : ((FStarC_Syntax_Syntax.subst_elt) list * (FStarC_Ident.ident) list) =
+  (let n = (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) us) Prims.int_one) in
+  let s = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i u -> (FStarC_Syntax_Syntax.UN ((Prims.op_Minus n i), (FStarC_Syntax_Syntax.U_name (u))))) us) in
+  (s, us))
+
+let open_univ_vars (us : (FStarC_Ident.ident) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
+  (let tmp = (univ_var_opening us) in
+  (match tmp with
+    | (s, us') -> (let t1 = (subst s t) in
+      (us', t1))
   ))
 
 let set_use_range (r : FStarC_Range_Type.range) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
@@ -773,7 +801,11 @@ let rec close_pat__aux (sub : (FStarC_Syntax_Syntax.subst_elt) list) (p : (FStar
       let sub1 = ((FStarC_Syntax_Syntax.NM (x1, Prims.int_zero)) :: tmp1) in
       ({ FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_var (x1));
         p = (p).FStarC_Syntax_Syntax.p }, sub1))
-    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (let eopt1 = (FStarC_Option.map (subst sub) eopt) in
+    | (FStarC_Syntax_Syntax.Pat_dot_term (eopt)) -> (let eopt1 = (match eopt with
+          | (Some (x)) -> (let tmp = ((subst sub) x) in
+            (Some (tmp)))
+          | None -> None
+        ) in
       ({ FStarC_Syntax_Syntax.v = (FStarC_Syntax_Syntax.Pat_dot_term (eopt1));
         p = (p).FStarC_Syntax_Syntax.p }, sub))
   )
@@ -802,18 +834,6 @@ let close_ascription (bs : (FStarC_Syntax_Syntax.binder) list) (asc : (((FStarC_
 let close_comp (bs : (FStarC_Syntax_Syntax.binder) list) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax =
   (let tmp = (closing_subst bs) in
   (subst_comp tmp c))
-
-let univ_var_opening (us : (FStarC_Ident.ident) list) : ((FStarC_Syntax_Syntax.subst_elt) list * (FStarC_Ident.ident) list) =
-  (let n = (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) us) Prims.int_one) in
-  let s = ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i u -> (FStarC_Syntax_Syntax.UN ((Prims.op_Minus n i), (FStarC_Syntax_Syntax.U_name (u))))) us) in
-  (s, us))
-
-let open_univ_vars (us : (FStarC_Ident.ident) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
-  (let tmp = (univ_var_opening us) in
-  (match tmp with
-    | (s, us') -> (let t1 = (subst s t) in
-      (us', t1))
-  ))
 
 let univ_var_closing (us : (FStarC_Ident.ident) list) : (FStarC_Syntax_Syntax.subst_elt) list =
   (let n = (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) us) Prims.int_one) in
@@ -869,6 +889,16 @@ let subst_binder (s : (FStarC_Syntax_Syntax.subst_elt) list) (b : FStarC_Syntax_
 let subst_decreasing_order (s : (FStarC_Syntax_Syntax.subst_elt) list) (tmp : FStarC_Syntax_Syntax.decreases_order) : FStarC_Syntax_Syntax.decreases_order =
   (subst_dec_order' ((s :: []), FStarC_Syntax_Syntax.NoUseRange) tmp)
 
+let open_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
+  (let tmp = (open_binders' bs) in
+  (match tmp with
+    | (u__1, u__2) -> u__1
+  ))
+
+let opening_of_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.subst_elt) list =
+  (let n = (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) bs) Prims.int_one) in
+  ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i b -> (FStarC_Syntax_Syntax.DB ((Prims.op_Minus n i), (b).FStarC_Syntax_Syntax.binder_bv))) bs))
+
 let closing_of_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.subst_elt) list =
   (closing_subst bs)
 
@@ -887,14 +917,4 @@ let compress_subst (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
     | (FStarC_Syntax_Syntax.Tm_delayed ({ FStarC_Syntax_Syntax.tm = t1; substs = u__1; substs1 = u__2; _ })) -> (push_subst_aux false (u__1, u__2) t1)
     | tmp -> t
   )
-
-let open_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.binder) list =
-  (let tmp = (open_binders' bs) in
-  (match tmp with
-    | (u__1, u__2) -> u__1
-  ))
-
-let opening_of_binders (bs : (FStarC_Syntax_Syntax.binder) list) : (FStarC_Syntax_Syntax.subst_elt) list =
-  (let n = (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) bs) Prims.int_one) in
-  ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i b -> (FStarC_Syntax_Syntax.DB ((Prims.op_Minus n i), (b).FStarC_Syntax_Syntax.binder_bv))) bs))
 

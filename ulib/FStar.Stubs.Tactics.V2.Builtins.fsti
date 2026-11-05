@@ -256,10 +256,8 @@ val t_commute_applied_match : unit -> Tac unit
     See tests/bug-reports/Bug2635.fst for some examples
 
     Update 11/14/2022: with the introduction of the core typechecker,
-    this primitive should no longer be necessary. Try using the compat pre core
-    flags, or `with_compat_pre_core` primitive if your code breaks without
-    this.*)
-[@@deprecated "This will soon be removed, please use compat pre core settings if needed"]
+    this primitive should no longer be necessary.*)
+[@@deprecated "This will soon be removed"]
 val gather_or_solve_explicit_guards_for_resolved_goals : unit -> Tac unit
 
 (** [ctrl_rewrite] will traverse the current goal, and call [ctrl]
@@ -446,11 +444,6 @@ val comp_to_doc : comp -> TacRO Pprint.document
 
 (** Print a source range as a string *)
 val range_to_string : range -> TacRO string
-
-(** Runs the input tactic `f` with compat pre core setting `n`.
-It is an escape hatch for maintaining backward compatibility
-for code that breaks with the core typechecker. *)
-val with_compat_pre_core : #a:Type -> n:int -> f:(unit -> Tac a) -> Tac a
 
 (** Get the [vconfig], including fuel, ifuel, rlimit, etc,
 associated with the current goal. *)

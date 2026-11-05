@@ -40,6 +40,10 @@ let rec arith_expr_to_bv (e:expr) : Tac unit =
         apply_lemma (`int2bv_div);
         apply_lemma (`cong_bvdiv);
         arith_expr_to_bv e1
+    | NatToBv (Shl (Lit _) _) | Shl (Lit _) _ ->
+        apply_lemma (`int2bv_shl);
+        norm [primops];
+        trefl ()
     | NatToBv (Shl e1 _) | Shl e1 _ ->
         apply_lemma (`int2bv_shl);
         apply_lemma (`cong_bvshl);

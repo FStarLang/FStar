@@ -3,16 +3,28 @@
 
 type 'a tac = ((FStarC_Tactics_Types.proofstate ref) -> 'a)
 
+let dbg_Core : (bool ref) =
+  (FStarC_Debug.get_toggle "Core")
+
+let dbg_CoreEq : (bool ref) =
+  (FStarC_Debug.get_toggle "CoreEq")
+
+let dbg_RegisterGoal : (bool ref) =
+  (FStarC_Debug.get_toggle "RegisterGoal")
+
+let dbg_TacFail : (bool ref) =
+  (FStarC_Debug.get_toggle "TacFail")
+
+let goal_ctr : (Prims.int ref) =
+  (ref Prims.int_zero)
+
+let nwarn : (Prims.int ref) =
+  (ref Prims.int_zero)
+
 let bind (t1 : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (t2 : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___b))) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___b =
   (let x = (t1 ps) in
   let tmp = (t2 x) in
   (tmp ps))
-
-let fStarC_Class_Monad_bind__fn (tmp : ((FStarC_Tactics_Types.proofstate ref) -> 'a)) (t2 : ('a -> ((FStarC_Tactics_Types.proofstate ref) -> 'b))) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'b =
-  (bind tmp t2 ps)
-
-let fStarC_Class_Monad_op_let_Bang__fn (tmp : ((FStarC_Tactics_Types.proofstate ref) -> 'a)) (t2 : ('a -> ((FStarC_Tactics_Types.proofstate ref) -> 'b))) : ((FStarC_Tactics_Types.proofstate ref) -> 'b) =
-  (fStarC_Class_Monad_bind__fn tmp t2)
 
 let get (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Tactics_Types.proofstate =
   (!(ps))
@@ -22,9 +34,6 @@ let ret (x : 'u___a) (tmp : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
 
 let cur_goals : ((FStarC_Tactics_Types.proofstate ref) -> (FStarC_Tactics_Types.goal) list) =
   (bind get (fun ps -> (ret (ps).FStarC_Tactics_Types.goals)))
-
-let dbg_TacFail : (bool ref) =
-  (FStarC_Debug.get_toggle "TacFail")
 
 let fail_doc (msg : (PPrint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'u___a =
   (let tmp = (!(dbg_TacFail)) in
@@ -38,7 +47,7 @@ let fail (msg : string) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a) =
   (fail_doc ((FStarC_Errors_Msg.text msg) :: []))
 
 let cur_goal : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
-  (bind cur_goals (Obj.magic ((fun tmp -> (match tmp with
+  (bind cur_goals (fun tmp -> (match tmp with
     | [] -> (fail "No more goals")
     | (hd :: tl) -> (let tmp1 = (FStarC_Tactics_Types.check_goal_solved' hd) in
       (match tmp1 with
@@ -48,7 +57,7 @@ let cur_goal : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.go
           (FStarC_Format.print2 "!!!!!!!!!!!! GOAL IS ALREADY SOLVED! %s\nsol is %s\n" tmp2 tmp3);
           (ret hd))
       ))
-  )))))
+  )))
 
 exception Bad of string
 
@@ -63,9 +72,6 @@ let rec check_valid_goal__aux (e : FStarC_TypeChecker_Env.env) : unit =
       (raise tmp4)) else ());
       (check_valid_goal__aux e1))
   )
-
-let nwarn : (Prims.int ref) =
-  (ref Prims.int_zero)
 
 let check_valid_goal (g : FStarC_Tactics_Types.goal) : unit =
   (let tmp = (FStarC_Options.defensive ()) in
@@ -112,9 +118,6 @@ let replace_cur (g : FStarC_Tactics_Types.goal) : ((FStarC_Tactics_Types.proofst
     urgency = (ps).FStarC_Tactics_Types.urgency;
     dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure }))))
 
-let fStarC_Class_Monad_return__fn (tmp : 'a) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
-  (ret tmp)
-
 let run (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) (ps : FStarC_Tactics_Types.proofstate) : ('u___a * FStarC_Tactics_Types.proofstate) =
   (let ps1 = (ref ps) in
   let x = (t ps1) in
@@ -139,7 +142,7 @@ let mark_goal_implicit_already_checked (g : FStarC_Tactics_Types.goal) : unit =
 
 let get_phi (g : FStarC_Tactics_Types.goal) : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option =
   (let tmp = (FStarC_Tactics_Types.goal_type g) in
-  let tmp1 = (FStarC_TypeChecker_Normalize.unfold_whnf (FStarC_Tactics_Types.goal_env g) tmp) in
+  let tmp1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf (FStarC_Tactics_Types.goal_env g) tmp) in
   (FStarC_Syntax_Util.un_squash tmp1))
 
 let is_irrelevant (g : FStarC_Tactics_Types.goal) : bool =
@@ -169,19 +172,9 @@ let catch (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Tac
       ((FStar_Pervasives.Inl (u__cexn)), ps))
   ))))
 
-let if_verbose_tac (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
-  (bind get (Obj.magic ((fun ps1 -> (if (ps1).FStarC_Tactics_Types.tac_verb_dbg then (f ()) else (ret ()))))) ps)
-
-let if_verbose (f : (unit -> unit)) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (if_verbose_tac (fun tmp -> ((f ());
-  (ret ()))))
-
-let do_log (ps : FStarC_Tactics_Types.proofstate) (f : (unit -> unit)) : unit =
-  (if (ps).FStarC_Tactics_Types.tac_verb_dbg then (f ()) else ())
-
 let log (f : (unit -> unit)) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
   (let tmp = (!(ps)) in
-  (do_log tmp f))
+  (if (tmp).FStarC_Tactics_Types.tac_verb_dbg then (f ()) else ()))
 
 let add_implicits (i : (FStarC_TypeChecker_Common.implicit) list) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (bind get (fun ps -> (set { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
@@ -243,10 +236,10 @@ let trytac (t : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a)) : ((FStarC_Ta
   )))
 
 let cur_goal_maybe_solved : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Tactics_Types.goal) =
-  (bind cur_goals (Obj.magic ((fun tmp -> (match tmp with
+  (bind cur_goals (fun tmp -> (match tmp with
     | [] -> (fail "No more goals")
     | (hd :: tl) -> (ret hd)
-  )))))
+  )))
 
 let getopts : ((FStarC_Tactics_Types.proofstate ref) -> (string, FStarC_Options.option_val) FStarC_AVLMap.tree) =
   (bind (trytac cur_goal_maybe_solved) (fun tmp -> (match tmp with
@@ -480,9 +473,6 @@ let set_smt_goals (gs : (FStarC_Tactics_Types.goal) list) : ((FStarC_Tactics_Typ
     urgency = (ps).FStarC_Tactics_Types.urgency;
     dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure })))
 
-let dbg_CoreEq : (bool ref) =
-  (FStarC_Debug.get_toggle "CoreEq")
-
 let is_goal_safe_as_well_typed (g : FStarC_Tactics_Types.goal) : bool =
   (let uv = (g).FStarC_Tactics_Types.goal_ctx_uvar in
   let tmp = (FStarC_Syntax_Util.ctx_uvar_typedness_deps uv) in
@@ -492,12 +482,6 @@ let is_goal_safe_as_well_typed (g : FStarC_Tactics_Types.goal) : bool =
       (FStarC_Syntax_Syntax.fStarC_Class_Setlike_is_empty__ctx_uvar_list_ctx_uvar tmp2))
     | tmp2 -> false
   ))) tmp))
-
-let dbg_Core : (bool ref) =
-  (FStarC_Debug.get_toggle "Core")
-
-let dbg_RegisterGoal : (bool ref) =
-  (FStarC_Debug.get_toggle "RegisterGoal")
 
 let register_goal (g : FStarC_Tactics_Types.goal) : unit =
   (let tmp = (FStarC_Options.compat_pre_core_should_register ()) in
@@ -582,7 +566,7 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit =
   let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__ctx_uvar uv) in
   (FStarC_Format.print2 "(%s) Registering goal for %s\n" tmp8 tmp9)) else ());
   let goal_ty = (FStarC_Syntax_Util.ctx_uvar_typ uv) in
-  let tmp8 = (FStarC_TypeChecker_Core.compute_term_type env1 goal_ty) in
+  let tmp8 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Core_compute_term_type env1 goal_ty) in
   (match tmp8 with
     | (FStar_Pervasives.Inl ((tmp9, tmp10, None))) -> ()
     | (FStar_Pervasives.Inl ((tmp9, tmp10, (Some ((g1, tok)))))) -> (FStarC_TypeChecker_Core.commit_guard tok)
@@ -595,19 +579,16 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit =
 
 let rec fStarC_Class_Monad_mapM__fn (f : ('a -> ((FStarC_Tactics_Types.proofstate ref) -> 'b))) (l : ('a) list) : ((FStarC_Tactics_Types.proofstate ref) -> ('b) list) =
   (match l with
-    | [] -> (fStarC_Class_Monad_return__fn [])
+    | [] -> (ret [])
     | (x :: xs) -> (let tmp = (f x) in
-      (fStarC_Class_Monad_op_let_Bang__fn tmp (fun y -> (let tmp1 = (fStarC_Class_Monad_mapM__fn f xs) in
-      (fStarC_Class_Monad_op_let_Bang__fn tmp1 (fun ys -> (fStarC_Class_Monad_return__fn (y :: ys))))))))
+      ((bind tmp) (fun y -> (let tmp1 = (fStarC_Class_Monad_mapM__fn f xs) in
+      ((bind tmp1) (fun ys -> (ret (y :: ys))))))))
   )
 
 let rec fStarC_Class_Monad_foldM_left__fn (f : ('a -> ('b -> ((FStarC_Tactics_Types.proofstate ref) -> 'a)))) (e : 'a) (xs : ('b) list) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
   (match xs with
-    | [] -> (fStarC_Class_Monad_return__fn e)
+    | [] -> (ret e)
     | (x :: xs1) -> (let tmp = (f e x) in
-      (fStarC_Class_Monad_op_let_Bang__fn tmp (fun e' -> (fStarC_Class_Monad_foldM_left__fn f e' xs1))))
+      ((bind tmp) (fun e' -> (fStarC_Class_Monad_foldM_left__fn f e' xs1))))
   )
-
-let goal_ctr : (Prims.int ref) =
-  (ref Prims.int_zero)
 
