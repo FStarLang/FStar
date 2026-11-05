@@ -53,7 +53,7 @@ let fresh_anf (g:env) =
   let g = { g with anf_ctr = Sealed.seal (id + 1) } in
   g, id
 
-let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal []
+let default_context : Pulse.RuntimeUtils.context = FStar.Sealed.seal Pulse.RuntimeUtils.empty_context_repr
 
 let mk_env (f:RT.fstar_top_env) : env =
   { f; bs = []; f_bs=f; ctxt = default_context; anf_ctr = Sealed.seal 0 }
@@ -217,7 +217,7 @@ let reset_context g g' = { g with ctxt = g'.ctxt }
 let get_context g = g.ctxt
 
 let range_of_env (g:env) = 
-    let ctx = T.unseal g.ctxt in
+    let ctx = (T.unseal g.ctxt).elts in
     match 
       T.tryPick
         (fun (_, r) ->
@@ -240,11 +240,11 @@ let ctx_to_string (c:list (string & option range)) : T.Tac string =
       Printf.sprintf "\n\tContext:\n\t%s" (String.concat "\n\t" (T.map ctxt_elt_to_string c))
 
 let ctxt_to_list (g:env) : T.Tac (list string) =
-  let ctx = T.unseal g.ctxt in
+  let ctx = (T.unseal g.ctxt).elts in
   T.map ctxt_elt_to_string ctx
 
 let print_context (g:env) : T.Tac string = 
-  let ctx = T.unseal g.ctxt in
+  let ctx = (T.unseal g.ctxt).elts in
   match ctx with
   | [] -> ""
   | _ -> 
