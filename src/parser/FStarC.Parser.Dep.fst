@@ -379,33 +379,33 @@ let empty_parsing_data = { elts = []; no_prelude = false }
 instance serializable_parsing_data : FStarC.Serialize.serializable parsing_data =
   let open FStarC.Serialize in
   let open FStarC.Syntax.Serialize in
-  let ser_open_kind w k = write_tag w (match k with Open_module -> 0 | Open_namespace -> 1) in
+  let ser_open_kind w k = write_tag w (match k with Open_module -> 0uy | Open_namespace -> 1uy) in
   let ser_elt w (e:parsing_data_elt) : ML unit =
     match e with
-    | P_begin_module l -> write_tag w 0; ser w l
-    | P_open (b, l) -> write_tag w 1; ser w b; ser w l
-    | P_implicit_open_module_or_namespace (k, l) -> write_tag w 2; ser_open_kind w k; ser w l
-    | P_dep (b, l) -> write_tag w 3; ser w b; ser w l
-    | P_alias (i, l) -> write_tag w 4; ser w i; ser w l
-    | P_lid l -> write_tag w 5; ser w l
-    | P_inline_for_extraction -> write_tag w 6
+    | P_begin_module l -> write_tag w 0uy; ser w l
+    | P_open (b, l) -> write_tag w 1uy; ser w b; ser w l
+    | P_implicit_open_module_or_namespace (k, l) -> write_tag w 2uy; ser_open_kind w k; ser w l
+    | P_dep (b, l) -> write_tag w 3uy; ser w b; ser w l
+    | P_alias (i, l) -> write_tag w 4uy; ser w i; ser w l
+    | P_lid l -> write_tag w 5uy; ser w l
+    | P_inline_for_extraction -> write_tag w 6uy
   in
   let deser_elt r : ML parsing_data_elt =
     match read_tag r with
-    | 0 -> P_begin_module (deser r)
-    | 1 -> let b : bool = deser r in let l : lident = deser r in P_open (b, l)
-    | 2 ->
+    | 0uy -> P_begin_module (deser r)
+    | 1uy -> let b : bool = deser r in let l : lident = deser r in P_open (b, l)
+    | 2uy ->
       let k =
         match read_tag r with
-        | 0 -> Open_module
-        | 1 -> Open_namespace
+        | 0uy -> Open_module
+        | 1uy -> Open_namespace
         | t -> bad_tag "open_kind" t in
       let l : lident = deser r in
       P_implicit_open_module_or_namespace (k, l)
-    | 3 -> let b : bool = deser r in let l : lident = deser r in P_dep (b, l)
-    | 4 -> let i : ident = deser r in let l : lident = deser r in P_alias (i, l)
-    | 5 -> P_lid (deser r)
-    | 6 -> P_inline_for_extraction
+    | 3uy -> let b : bool = deser r in let l : lident = deser r in P_dep (b, l)
+    | 4uy -> let i : ident = deser r in let l : lident = deser r in P_alias (i, l)
+    | 5uy -> P_lid (deser r)
+    | 6uy -> P_inline_for_extraction
     | t -> bad_tag "parsing_data_elt" t
   in
   {

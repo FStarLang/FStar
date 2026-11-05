@@ -47,7 +47,7 @@ private let push (w:writer) (b:U64.t) : ML unit =
   w := "";
   w := push_byte cur b
 
-let write_byte w b = push w (u64 b)
+let write_byte w b = push w (FStar.Int.Cast.uint8_to_uint64 b)
 
 private let rec uvarint (w:writer) (n:U64.t) : ML unit =
   if U64.lt n 128UL then push w n
@@ -101,19 +101,22 @@ noeq type reader = {
 
 let reader_create s off = { data = s; size = size64 s; pos = mk_ref (u64 off) }
 
-let reader_pos r = small !r.pos
+let reader_pos ([@@@FStar.Attributes.cherry_borrowed] r) = small !r.pos
 
 private let malformed (#a:Type) (what:string) : ML a = raise (Malformed what)
 
-let read_byte r =
+(* The functions reading borrow the reader: they are called on a field of a
+   [FStarC.Serialize.reader], often in tail position, which would otherwise
+   make it owned and cost a count on every call. *)
+let read_byte ([@@@FStar.Attributes.cherry_borrowed] r) =
   let i = !r.pos in
   if U64.gte i r.size then malformed "unexpected end of input"
   else begin
     r.pos := U64.add_mod i 1UL;
-    small (byte_at64 r.data i)
+    FStar.Int.Cast.uint64_to_uint8 (byte_at64 r.data i)
   end
 
-private let rec uvarint_from (r:reader) (i:U64.t) (acc:U64.t) (sh:U32.t) : ML U64.t =
+private let rec uvarint_from ([@@@FStar.Attributes.cherry_borrowed] r:reader) (i:U64.t) (acc:U64.t) (sh:U32.t) : ML U64.t =
   if U64.gte i r.size || U32.gt sh 63ul then malformed "bad varint"
   else begin
     let c = byte_at64 r.data i in
@@ -122,11 +125,11 @@ private let rec uvarint_from (r:reader) (i:U64.t) (acc:U64.t) (sh:U32.t) : ML U6
     else uvarint_from r (U64.add_mod i 1UL) acc (U32.add sh 7ul)
   end
 
-let read_uvarint r = small (uvarint_from r !r.pos 0UL 0ul)
+let read_uvarint ([@@@FStar.Attributes.cherry_borrowed] r) = small (uvarint_from r !r.pos 0UL 0ul)
 
-let read_varint r = small (unzigzag (uvarint_from r !r.pos 0UL 0ul))
+let read_varint ([@@@FStar.Attributes.cherry_borrowed] r) = small (unzigzag (uvarint_from r !r.pos 0UL 0ul))
 
-private let raw (r:reader) (len:U64.t) : ML string =
+private let raw ([@@@FStar.Attributes.cherry_borrowed] r:reader) (len:U64.t) : ML string =
   let i = !r.pos in
   if U64.gte len 0x8000000000000000UL || U64.lt (U64.sub_mod r.size i) len then
     malformed "unexpected end of input"
@@ -135,11 +138,11 @@ private let raw (r:reader) (len:U64.t) : ML string =
     slice64 r.data i (U64.add_mod i len)
   end
 
-let read_raw r len = raw r (u64 len)
+let read_raw ([@@@FStar.Attributes.cherry_borrowed] r) len = raw r (u64 len)
 
-let read_string r = raw r (uvarint_from r !r.pos 0UL 0ul)
+let read_string ([@@@FStar.Attributes.cherry_borrowed] r) = raw r (uvarint_from r !r.pos 0UL 0ul)
 
-let read_int r =
+let read_int ([@@@FStar.Attributes.cherry_borrowed] r) =
   let u = uvarint_from r !r.pos 0UL 0ul in
   if U64.logand u 1UL = 0UL then I.to_int (small (unzigzag (U64.shift_right u 1ul)))
   else

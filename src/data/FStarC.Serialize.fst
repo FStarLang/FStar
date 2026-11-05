@@ -76,10 +76,10 @@ let deserialize #a {| serializable a |} s =
   if BB.reader_pos r.rbuf <> FStarC.String.byte_length s then malformed "trailing data";
   x
 
-let write_tag w t = BB.write_byte w.wbuf (I.of_int t)
-let read_tag r = I.to_int (BB.read_byte r.rbuf)
+let write_tag w t = BB.write_byte w.wbuf t
+let read_tag r = BB.read_byte r.rbuf
 
-let bad_tag #a ty t = malformed (Format.fmt2 "bad tag %s for %s" (string_of_int t) ty)
+let bad_tag #a ty t = malformed (Format.fmt2 "bad tag %s for %s" (string_of_int (FStar.UInt8.v t)) ty)
 
 instance serializable_unit : serializable unit = {
   ser = (fun _ _ -> ());
@@ -87,11 +87,11 @@ instance serializable_unit : serializable unit = {
 }
 
 instance serializable_bool : serializable bool = {
-  ser = (fun w b -> BB.write_byte w.wbuf (if b then I.one else I.zero));
+  ser = (fun w b -> BB.write_byte w.wbuf (if b then 1uy else 0uy));
   deser = (fun r ->
     let b = BB.read_byte r.rbuf in
-    if b = I.zero then false
-    else if b = I.one then true
+    if b = 0uy then false
+    else if b = 1uy then true
     else malformed "bad bool");
 }
 
@@ -251,13 +251,13 @@ let deser_list #a f r =
 
 let ser_option #a f w o =
   match o with
-  | None -> write_tag w 0
-  | Some v -> write_tag w 1; f w v
+  | None -> write_tag w 0uy
+  | Some v -> write_tag w 1uy; f w v
 
 let deser_option #a f r =
   match read_tag r with
-  | 0 -> None
-  | 1 -> Some (f r)
+  | 0uy -> None
+  | 1uy -> Some (f r)
   | t -> bad_tag "option" t
 
 let string_slot = new_slot "string"
@@ -282,12 +282,12 @@ instance serializable_either #a #b (_ : serializable a) (_ : serializable b)
   : serializable (either a b) = {
   ser = (fun w x ->
     match x with
-    | Inl v -> write_tag w 0; ser w v
-    | Inr v -> write_tag w 1; ser w v);
+    | Inl v -> write_tag w 0uy; ser w v
+    | Inr v -> write_tag w 1uy; ser w v);
   deser = (fun r ->
     match read_tag r with
-    | 0 -> Inl (deser r)
-    | 1 -> Inr (deser r)
+    | 0uy -> Inl (deser r)
+    | 1uy -> Inr (deser r)
     | t -> bad_tag "either" t);
 }
 

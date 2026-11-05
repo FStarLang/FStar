@@ -62,11 +62,11 @@ class serializable (a:Type) = {
 val serialize   (#a:Type) {| serializable a |} (x:a) : ML string
 val deserialize (#a:Type) {| serializable a |} (s:string) : ML a
 
-(* Constructor tags, [0 <= t < 256]. *)
-val write_tag : writer -> int -> ML unit
-val read_tag  : reader -> ML int
+(* Constructor tags. *)
+val write_tag : writer -> FStar.UInt8.t -> ML unit
+val read_tag  : reader -> ML FStar.UInt8.t
 (* A tag that does not belong to the type being read. *)
-val bad_tag (#a:Type) (ty:string) (t:int) : ML a
+val bad_tag (#a:Type) (ty:string) (t:FStar.UInt8.t) : ML a
 
 instance val serializable_unit   : serializable unit
 instance val serializable_bool   : serializable bool

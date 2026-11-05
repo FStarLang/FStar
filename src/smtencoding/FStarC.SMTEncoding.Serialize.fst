@@ -29,49 +29,49 @@ module I = FStarC.SmallInt
 (* Sorts and operators are written directly to the byte buffer, without
    sharing, since they are also part of the keys of hash-consed terms. *)
 
-let tag (b:BB.writer) (t:int) : ML unit = BB.write_byte b (I.of_int t)
-let untag (b:BB.reader) : ML int = I.to_int (BB.read_byte b)
+let tag (b:BB.writer) (t:FStar.UInt8.t) : ML unit = BB.write_byte b t
+let untag (b:BB.reader) : ML FStar.UInt8.t = BB.read_byte b
 
 let rec enc_sort (b:BB.writer) (s:sort) : ML unit =
   match s with
-  | Bool_sort -> tag b 0
-  | Int_sort -> tag b 1
-  | String_sort -> tag b 2
-  | Term_sort -> tag b 3
-  | Fuel_sort -> tag b 4
-  | BitVec_sort n -> tag b 5; BB.write_int b n
-  | Array (s1, s2) -> tag b 6; enc_sort b s1; enc_sort b s2
-  | Arrow (s1, s2) -> tag b 7; enc_sort b s1; enc_sort b s2
-  | Sort n -> tag b 8; BB.write_string b n
+  | Bool_sort -> tag b 0uy
+  | Int_sort -> tag b 1uy
+  | String_sort -> tag b 2uy
+  | Term_sort -> tag b 3uy
+  | Fuel_sort -> tag b 4uy
+  | BitVec_sort n -> tag b 5uy; BB.write_int b n
+  | Array (s1, s2) -> tag b 6uy; enc_sort b s1; enc_sort b s2
+  | Arrow (s1, s2) -> tag b 7uy; enc_sort b s1; enc_sort b s2
+  | Sort n -> tag b 8uy; BB.write_string b n
 
 let rec dec_sort (b:BB.reader) : ML sort =
   match untag b with
-  | 0 -> Bool_sort
-  | 1 -> Int_sort
-  | 2 -> String_sort
-  | 3 -> Term_sort
-  | 4 -> Fuel_sort
-  | 5 -> BitVec_sort (BB.read_int b)
-  | 6 ->
+  | 0uy -> Bool_sort
+  | 1uy -> Int_sort
+  | 2uy -> String_sort
+  | 3uy -> Term_sort
+  | 4uy -> Fuel_sort
+  | 5uy -> BitVec_sort (BB.read_int b)
+  | 6uy ->
     let s1 = dec_sort b in
     let s2 = dec_sort b in
     Array (s1, s2)
-  | 7 ->
+  | 7uy ->
     let s1 = dec_sort b in
     let s2 = dec_sort b in
     Arrow (s1, s2)
-  | 8 -> Sort (BB.read_string b)
+  | 8uy -> Sort (BB.read_string b)
   | t -> bad_tag "sort" t
 
 let rec enc_sorts (b:BB.writer) (l:list sort) : ML unit =
   match l with
-  | [] -> tag b 0
-  | s :: l -> tag b 1; enc_sort b s; enc_sorts b l
+  | [] -> tag b 0uy
+  | s :: l -> tag b 1uy; enc_sort b s; enc_sorts b l
 
 let rec dec_sorts (b:BB.reader) : ML (list sort) =
   match untag b with
-  | 0 -> []
-  | 1 ->
+  | 0uy -> []
+  | 1uy ->
     let s = dec_sort b in
     let l = dec_sorts b in
     s :: l
@@ -84,150 +84,150 @@ instance serializable_sort : serializable sort = {
 
 let enc_op (b:BB.writer) (o:op) : ML unit =
   match o with
-  | TrueOp -> tag b 0
-  | FalseOp -> tag b 1
-  | Not -> tag b 2
-  | And -> tag b 3
-  | Or -> tag b 4
-  | Imp -> tag b 5
-  | Iff -> tag b 6
-  | Eq -> tag b 7
-  | LT -> tag b 8
-  | LTE -> tag b 9
-  | GT -> tag b 10
-  | GTE -> tag b 11
-  | Add -> tag b 12
-  | Sub -> tag b 13
-  | Div -> tag b 14
-  | RealDiv -> tag b 15
-  | Mul -> tag b 16
-  | Minus -> tag b 17
-  | Mod -> tag b 18
-  | BvAnd -> tag b 19
-  | BvXor -> tag b 20
-  | BvOr -> tag b 21
-  | BvAdd -> tag b 22
-  | BvSub -> tag b 23
-  | BvShl -> tag b 24
-  | BvShr -> tag b 25
-  | BvUdiv -> tag b 26
-  | BvMod -> tag b 27
-  | BvMul -> tag b 28
-  | BvUlt -> tag b 29
-  | BvConcat -> tag b 30
-  | BvRepeat x -> tag b 31; BB.write_int b x
-  | BvExtRol -> tag b 32
-  | BvExtRor -> tag b 33
-  | BvRol x -> tag b 34; BB.write_int b x
-  | BvRor x -> tag b 35; BB.write_int b x
-  | BvUext x -> tag b 36; BB.write_int b x
-  | BvSext x -> tag b 37; BB.write_int b x
-  | BvExtract (x, y) -> tag b 38; BB.write_int b x; BB.write_int b y
-  | BvNot -> tag b 39
-  | BvNeg -> tag b 40
-  | BvNand -> tag b 41
-  | BvNor -> tag b 42
-  | BvXnor -> tag b 43
-  | BvComp -> tag b 44
-  | BvUle -> tag b 45
-  | BvUgt -> tag b 46
-  | BvUge -> tag b 47
-  | BvSlt -> tag b 48
-  | BvSle -> tag b 49
-  | BvSgt -> tag b 50
-  | BvSge -> tag b 51
-  | BvSdiv -> tag b 52
-  | BvSrem -> tag b 53
-  | BvSmod -> tag b 54
-  | BvAshr -> tag b 55
-  | BvNego -> tag b 56
-  | BvUaddo -> tag b 57
-  | BvSaddo -> tag b 58
-  | BvUmulo -> tag b 59
-  | BvSmulo -> tag b 60
-  | BvUsubo -> tag b 61
-  | BvSsubo -> tag b 62
-  | BvSdivo -> tag b 63
-  | NatToBv x -> tag b 64; BB.write_int b x
-  | BvToNat -> tag b 65
-  | SBvToInt -> tag b 66
-  | ITE -> tag b 67
-  | Var x -> tag b 68; BB.write_string b x
+  | TrueOp -> tag b 0uy
+  | FalseOp -> tag b 1uy
+  | Not -> tag b 2uy
+  | And -> tag b 3uy
+  | Or -> tag b 4uy
+  | Imp -> tag b 5uy
+  | Iff -> tag b 6uy
+  | Eq -> tag b 7uy
+  | LT -> tag b 8uy
+  | LTE -> tag b 9uy
+  | GT -> tag b 10uy
+  | GTE -> tag b 11uy
+  | Add -> tag b 12uy
+  | Sub -> tag b 13uy
+  | Div -> tag b 14uy
+  | RealDiv -> tag b 15uy
+  | Mul -> tag b 16uy
+  | Minus -> tag b 17uy
+  | Mod -> tag b 18uy
+  | BvAnd -> tag b 19uy
+  | BvXor -> tag b 20uy
+  | BvOr -> tag b 21uy
+  | BvAdd -> tag b 22uy
+  | BvSub -> tag b 23uy
+  | BvShl -> tag b 24uy
+  | BvShr -> tag b 25uy
+  | BvUdiv -> tag b 26uy
+  | BvMod -> tag b 27uy
+  | BvMul -> tag b 28uy
+  | BvUlt -> tag b 29uy
+  | BvConcat -> tag b 30uy
+  | BvRepeat x -> tag b 31uy; BB.write_int b x
+  | BvExtRol -> tag b 32uy
+  | BvExtRor -> tag b 33uy
+  | BvRol x -> tag b 34uy; BB.write_int b x
+  | BvRor x -> tag b 35uy; BB.write_int b x
+  | BvUext x -> tag b 36uy; BB.write_int b x
+  | BvSext x -> tag b 37uy; BB.write_int b x
+  | BvExtract (x, y) -> tag b 38uy; BB.write_int b x; BB.write_int b y
+  | BvNot -> tag b 39uy
+  | BvNeg -> tag b 40uy
+  | BvNand -> tag b 41uy
+  | BvNor -> tag b 42uy
+  | BvXnor -> tag b 43uy
+  | BvComp -> tag b 44uy
+  | BvUle -> tag b 45uy
+  | BvUgt -> tag b 46uy
+  | BvUge -> tag b 47uy
+  | BvSlt -> tag b 48uy
+  | BvSle -> tag b 49uy
+  | BvSgt -> tag b 50uy
+  | BvSge -> tag b 51uy
+  | BvSdiv -> tag b 52uy
+  | BvSrem -> tag b 53uy
+  | BvSmod -> tag b 54uy
+  | BvAshr -> tag b 55uy
+  | BvNego -> tag b 56uy
+  | BvUaddo -> tag b 57uy
+  | BvSaddo -> tag b 58uy
+  | BvUmulo -> tag b 59uy
+  | BvSmulo -> tag b 60uy
+  | BvUsubo -> tag b 61uy
+  | BvSsubo -> tag b 62uy
+  | BvSdivo -> tag b 63uy
+  | NatToBv x -> tag b 64uy; BB.write_int b x
+  | BvToNat -> tag b 65uy
+  | SBvToInt -> tag b 66uy
+  | ITE -> tag b 67uy
+  | Var x -> tag b 68uy; BB.write_string b x
 
 let dec_op (b:BB.reader) : ML op =
   match untag b with
-  | 0 -> TrueOp
-  | 1 -> FalseOp
-  | 2 -> Not
-  | 3 -> And
-  | 4 -> Or
-  | 5 -> Imp
-  | 6 -> Iff
-  | 7 -> Eq
-  | 8 -> LT
-  | 9 -> LTE
-  | 10 -> GT
-  | 11 -> GTE
-  | 12 -> Add
-  | 13 -> Sub
-  | 14 -> Div
-  | 15 -> RealDiv
-  | 16 -> Mul
-  | 17 -> Minus
-  | 18 -> Mod
-  | 19 -> BvAnd
-  | 20 -> BvXor
-  | 21 -> BvOr
-  | 22 -> BvAdd
-  | 23 -> BvSub
-  | 24 -> BvShl
-  | 25 -> BvShr
-  | 26 -> BvUdiv
-  | 27 -> BvMod
-  | 28 -> BvMul
-  | 29 -> BvUlt
-  | 30 -> BvConcat
-  | 31 -> BvRepeat (BB.read_int b)
-  | 32 -> BvExtRol
-  | 33 -> BvExtRor
-  | 34 -> BvRol (BB.read_int b)
-  | 35 -> BvRor (BB.read_int b)
-  | 36 -> BvUext (BB.read_int b)
-  | 37 -> BvSext (BB.read_int b)
-  | 38 ->
+  | 0uy -> TrueOp
+  | 1uy -> FalseOp
+  | 2uy -> Not
+  | 3uy -> And
+  | 4uy -> Or
+  | 5uy -> Imp
+  | 6uy -> Iff
+  | 7uy -> Eq
+  | 8uy -> LT
+  | 9uy -> LTE
+  | 10uy -> GT
+  | 11uy -> GTE
+  | 12uy -> Add
+  | 13uy -> Sub
+  | 14uy -> Div
+  | 15uy -> RealDiv
+  | 16uy -> Mul
+  | 17uy -> Minus
+  | 18uy -> Mod
+  | 19uy -> BvAnd
+  | 20uy -> BvXor
+  | 21uy -> BvOr
+  | 22uy -> BvAdd
+  | 23uy -> BvSub
+  | 24uy -> BvShl
+  | 25uy -> BvShr
+  | 26uy -> BvUdiv
+  | 27uy -> BvMod
+  | 28uy -> BvMul
+  | 29uy -> BvUlt
+  | 30uy -> BvConcat
+  | 31uy -> BvRepeat (BB.read_int b)
+  | 32uy -> BvExtRol
+  | 33uy -> BvExtRor
+  | 34uy -> BvRol (BB.read_int b)
+  | 35uy -> BvRor (BB.read_int b)
+  | 36uy -> BvUext (BB.read_int b)
+  | 37uy -> BvSext (BB.read_int b)
+  | 38uy ->
     let x = BB.read_int b in
     let y = BB.read_int b in
     BvExtract (x, y)
-  | 39 -> BvNot
-  | 40 -> BvNeg
-  | 41 -> BvNand
-  | 42 -> BvNor
-  | 43 -> BvXnor
-  | 44 -> BvComp
-  | 45 -> BvUle
-  | 46 -> BvUgt
-  | 47 -> BvUge
-  | 48 -> BvSlt
-  | 49 -> BvSle
-  | 50 -> BvSgt
-  | 51 -> BvSge
-  | 52 -> BvSdiv
-  | 53 -> BvSrem
-  | 54 -> BvSmod
-  | 55 -> BvAshr
-  | 56 -> BvNego
-  | 57 -> BvUaddo
-  | 58 -> BvSaddo
-  | 59 -> BvUmulo
-  | 60 -> BvSmulo
-  | 61 -> BvUsubo
-  | 62 -> BvSsubo
-  | 63 -> BvSdivo
-  | 64 -> NatToBv (BB.read_int b)
-  | 65 -> BvToNat
-  | 66 -> SBvToInt
-  | 67 -> ITE
-  | 68 -> Var (BB.read_string b)
+  | 39uy -> BvNot
+  | 40uy -> BvNeg
+  | 41uy -> BvNand
+  | 42uy -> BvNor
+  | 43uy -> BvXnor
+  | 44uy -> BvComp
+  | 45uy -> BvUle
+  | 46uy -> BvUgt
+  | 47uy -> BvUge
+  | 48uy -> BvSlt
+  | 49uy -> BvSle
+  | 50uy -> BvSgt
+  | 51uy -> BvSge
+  | 52uy -> BvSdiv
+  | 53uy -> BvSrem
+  | 54uy -> BvSmod
+  | 55uy -> BvAshr
+  | 56uy -> BvNego
+  | 57uy -> BvUaddo
+  | 58uy -> BvSaddo
+  | 59uy -> BvUmulo
+  | 60uy -> BvSmulo
+  | 61uy -> BvUsubo
+  | 62uy -> BvSsubo
+  | 63uy -> BvSdivo
+  | 64uy -> NatToBv (BB.read_int b)
+  | 65uy -> BvToNat
+  | 66uy -> SBvToInt
+  | 67uy -> ITE
+  | 68uy -> Var (BB.read_string b)
   | t -> bad_tag "op" t
 
 (* Terms *)
@@ -260,42 +260,42 @@ let node (w:writer)
 
 let rec intern (w:writer) (t:term) : ML I.t =
   match t with
-  | Integer s -> node w (fun b str _ -> tag b 0; str s)
-  | String s -> node w (fun b str _ -> tag b 1; str s)
+  | Integer s -> node w (fun b str _ -> tag b 0uy; str s)
+  | String s -> node w (fun b str _ -> tag b 1uy; str s)
   | Real x ->
     node w (fun b _ _ ->
-      tag b 2;
+      tag b 2uy;
       BB.write_int b (FStarC.Real.mantissa x);
       BB.write_int b (FStarC.Real.exponent x))
-  | BoundV n -> node w (fun b _ _ -> tag b 3; BB.write_int b n)
+  | BoundV n -> node w (fun b _ _ -> tag b 3uy; BB.write_int b n)
   | FreeV (FV n s f) ->
-    node w (fun b str _ -> tag b 4; str n; enc_sort b s; tag b (if f then 1 else 0))
+    node w (fun b str _ -> tag b 4uy; str n; enc_sort b s; tag b (if f then 1uy else 0uy))
   | App o args r ->
     let ids = intern_list w args in
-    node w (fun b _ rng -> tag b 5; enc_op b o; enc_ids b ids; rng r)
+    node w (fun b _ rng -> tag b 5uy; enc_op b o; enc_ids b ids; rng r)
   | Quant q pats wopt sorts body r ->
     let pids = List.map (intern_list w) pats in
     let bid = intern w body in
     node w (fun b _ rng ->
-      tag b 6;
-      tag b (match q with | Forall -> 0 | Exists -> 1);
+      tag b 6uy;
+      tag b (match q with | Forall -> 0uy | Exists -> 1uy);
       BB.write_uvarint b (I.of_int (List.length pids));
       List.iter (enc_ids b) pids;
       (match wopt with
-       | None -> tag b 0
-       | Some n -> tag b 1; BB.write_int b n);
+       | None -> tag b 0uy
+       | Some n -> tag b 1uy; BB.write_int b n);
       enc_sorts b sorts;
       BB.write_uvarint b bid;
       rng r)
   | Let es body ->
     let ids = intern_list w es in
     let bid = intern w body in
-    node w (fun b _ _ -> tag b 7; enc_ids b ids; BB.write_uvarint b bid)
+    node w (fun b _ _ -> tag b 7uy; enc_ids b ids; BB.write_uvarint b bid)
   | Labeled t msg r ->
     let id = intern w t in
     let msg = List.map Errors.Msg.renderdoc msg in
     node w (fun b str rng ->
-      tag b 8;
+      tag b 8uy;
       BB.write_uvarint b id;
       BB.write_uvarint b (I.of_int (List.length msg));
       List.iter str msg;
@@ -318,42 +318,42 @@ let read_ids (r:reader) : ML (list term) =
 let read_node (r:reader) : ML term =
   let b = raw_reader r in
   match untag b with
-  | 0 -> Integer (deser r)
-  | 1 -> String (deser r)
-  | 2 ->
+  | 0uy -> Integer (deser r)
+  | 1uy -> String (deser r)
+  | 2uy ->
     let m = BB.read_int b in
     let e = BB.read_int b in
     Real (FStarC.Real.mk m e)
-  | 3 -> BoundV (BB.read_int b)
-  | 4 ->
+  | 3uy -> BoundV (BB.read_int b)
+  | 4uy ->
     let n : string = deser r in
     let s = dec_sort b in
     let f = untag b in
-    FreeV (FV n s (f <> 0))
-  | 5 ->
+    FreeV (FV n s (f <> 0uy))
+  | 5uy ->
     let o = dec_op b in
     let args = read_ids r in
     let rng : range = deser r in
     App o args rng
-  | 6 ->
-    let q = (match untag b with | 0 -> Forall | 1 -> Exists | t -> bad_tag "qop" t) in
+  | 6uy ->
+    let q = (match untag b with | 0uy -> Forall | 1uy -> Exists | t -> bad_tag "qop" t) in
     let np = BB.read_uvarint b in
     let pats = read_n read_ids r np [] in
     let wopt =
       match untag b with
-      | 0 -> None
-      | 1 -> Some (BB.read_int b)
+      | 0uy -> None
+      | 1uy -> Some (BB.read_int b)
       | t -> bad_tag "option int" t
     in
     let sorts = dec_sorts b in
     let body : term = dag_read_child term_slot r in
     let rng : range = deser r in
     Quant q pats wopt sorts body rng
-  | 7 ->
+  | 7uy ->
     let es = read_ids r in
     let body : term = dag_read_child term_slot r in
     Let es body
-  | 8 ->
+  | 8uy ->
     let t : term = dag_read_child term_slot r in
     let n = BB.read_uvarint b in
     let msg : list string = read_n (fun r -> deser r) r n [] in
@@ -370,15 +370,15 @@ instance serializable_smt_term : serializable term = {
 
 let ser_fact_db_id (w:writer) (f:fact_db_id) : ML unit =
   match f with
-  | Name l -> write_tag w 0; ser w l
-  | Namespace l -> write_tag w 1; ser w l
-  | Tag s -> write_tag w 2; ser w s
+  | Name l -> write_tag w 0uy; ser w l
+  | Namespace l -> write_tag w 1uy; ser w l
+  | Tag s -> write_tag w 2uy; ser w s
 
 let deser_fact_db_id (r:reader) : ML fact_db_id =
   match read_tag r with
-  | 0 -> Name (deser r)
-  | 1 -> Namespace (deser r)
-  | 2 -> Tag (deser r)
+  | 0uy -> Name (deser r)
+  | 1uy -> Namespace (deser r)
+  | 2uy -> Tag (deser r)
   | t -> bad_tag "fact_db_id" t
 
 let ser_assumption (w:writer) (a:assumption) : ML unit =
@@ -396,59 +396,59 @@ let deser_assumption (r:reader) : ML assumption =
 
 let rec ser_decl (w:writer) (d:decl) : ML unit =
   match d with
-  | DefPrelude -> write_tag w 0
-  | DeclFun n args s c -> write_tag w 1; ser w n; ser w args; ser w s; ser w c
+  | DefPrelude -> write_tag w 0uy
+  | DeclFun n args s c -> write_tag w 1uy; ser w n; ser w args; ser w s; ser w c
   | DefineFun n args s t c ->
-    write_tag w 2; ser w n; ser w args; ser w s; ser w t; ser w c
-  | Assume a -> write_tag w 3; ser_assumption w a
-  | Caption s -> write_tag w 4; ser w s
-  | Module n ds -> write_tag w 5; ser w n; ser_list ser_decl w ds
-  | Eval t -> write_tag w 6; ser w t
-  | Echo s -> write_tag w 7; ser w s
-  | RetainAssumptions l -> write_tag w 8; ser w l
-  | Push n -> write_tag w 9; ser w n
-  | Pop n -> write_tag w 10; ser w n
-  | CheckSat -> write_tag w 11
-  | SetOption k v -> write_tag w 12; ser w k; ser w v
-  | GetStatistics -> write_tag w 13
-  | GetReasonUnknown -> write_tag w 14
-  | EmptyLine -> write_tag w 15
+    write_tag w 2uy; ser w n; ser w args; ser w s; ser w t; ser w c
+  | Assume a -> write_tag w 3uy; ser_assumption w a
+  | Caption s -> write_tag w 4uy; ser w s
+  | Module n ds -> write_tag w 5uy; ser w n; ser_list ser_decl w ds
+  | Eval t -> write_tag w 6uy; ser w t
+  | Echo s -> write_tag w 7uy; ser w s
+  | RetainAssumptions l -> write_tag w 8uy; ser w l
+  | Push n -> write_tag w 9uy; ser w n
+  | Pop n -> write_tag w 10uy; ser w n
+  | CheckSat -> write_tag w 11uy
+  | SetOption k v -> write_tag w 12uy; ser w k; ser w v
+  | GetStatistics -> write_tag w 13uy
+  | GetReasonUnknown -> write_tag w 14uy
+  | EmptyLine -> write_tag w 15uy
 
 let rec deser_decl (r:reader) : ML decl =
   match read_tag r with
-  | 0 -> DefPrelude
-  | 1 ->
+  | 0uy -> DefPrelude
+  | 1uy ->
     let n : string = deser r in
     let args : list sort = deser r in
     let s : sort = deser r in
     let c : caption = deser r in
     DeclFun n args s c
-  | 2 ->
+  | 2uy ->
     let n : string = deser r in
     let args : list sort = deser r in
     let s : sort = deser r in
     let t : term = deser r in
     let c : caption = deser r in
     DefineFun n args s t c
-  | 3 -> Assume (deser_assumption r)
-  | 4 -> Caption (deser r)
-  | 5 ->
+  | 3uy -> Assume (deser_assumption r)
+  | 4uy -> Caption (deser r)
+  | 5uy ->
     let n : string = deser r in
     let ds = deser_list deser_decl r in
     Module n ds
-  | 6 -> Eval (deser r)
-  | 7 -> Echo (deser r)
-  | 8 -> RetainAssumptions (deser r)
-  | 9 -> Push (deser r)
-  | 10 -> Pop (deser r)
-  | 11 -> CheckSat
-  | 12 ->
+  | 6uy -> Eval (deser r)
+  | 7uy -> Echo (deser r)
+  | 8uy -> RetainAssumptions (deser r)
+  | 9uy -> Push (deser r)
+  | 10uy -> Pop (deser r)
+  | 11uy -> CheckSat
+  | 12uy ->
     let k : string = deser r in
     let v : string = deser r in
     SetOption k v
-  | 13 -> GetStatistics
-  | 14 -> GetReasonUnknown
-  | 15 -> EmptyLine
+  | 13uy -> GetStatistics
+  | 14uy -> GetReasonUnknown
+  | 15uy -> EmptyLine
   | t -> bad_tag "decl" t
 
 instance serializable_decl : serializable decl = {
@@ -474,47 +474,47 @@ instance serializable_decls_elt : serializable decls_elt = {
 
 let ser_asum_kind (w:writer) (k:asum_kind) : ML unit =
   match k with
-  | Sum_triggers t -> write_tag w 0; ser w t
-  | Sum_ambient b -> write_tag w 1; ser w b
-  | Sum_drop -> write_tag w 2
+  | Sum_triggers t -> write_tag w 0uy; ser w t
+  | Sum_ambient b -> write_tag w 1uy; ser w b
+  | Sum_drop -> write_tag w 2uy
 
 let deser_asum_kind (r:reader) : ML asum_kind =
   match read_tag r with
-  | 0 -> Sum_triggers (deser r)
-  | 1 -> Sum_ambient (deser r)
-  | 2 -> Sum_drop
+  | 0uy -> Sum_triggers (deser r)
+  | 1uy -> Sum_ambient (deser r)
+  | 2uy -> Sum_drop
   | t -> bad_tag "asum_kind" t
 
 let ser_decl_summary (w:writer) (s:decl_summary) : ML unit =
   match s with
   | Sum_assume a ->
-    write_tag w 0;
+    write_tag w 0uy;
     ser w a.asum_name;
     ser w a.asum_free_names;
     ser w a.asum_pretyping;
     ser_asum_kind w a.asum_kind
-  | Sum_declfun n -> write_tag w 1; ser w n
-  | Sum_definefun (n, l) -> write_tag w 2; ser w n; ser w l
-  | Sum_retain l -> write_tag w 3; ser w l
-  | Sum_ignored -> write_tag w 4
-  | Sum_other d -> write_tag w 5; ser w d
+  | Sum_declfun n -> write_tag w 1uy; ser w n
+  | Sum_definefun (n, l) -> write_tag w 2uy; ser w n; ser w l
+  | Sum_retain l -> write_tag w 3uy; ser w l
+  | Sum_ignored -> write_tag w 4uy
+  | Sum_other d -> write_tag w 5uy; ser w d
 
 let deser_decl_summary (r:reader) : ML decl_summary =
   match read_tag r with
-  | 0 ->
+  | 0uy ->
     let asum_name : string = deser r in
     let asum_free_names : list string = deser r in
     let asum_pretyping : bool = deser r in
     let asum_kind = deser_asum_kind r in
     Sum_assume { asum_name; asum_free_names; asum_pretyping; asum_kind }
-  | 1 -> Sum_declfun (deser r)
-  | 2 ->
+  | 1uy -> Sum_declfun (deser r)
+  | 2uy ->
     let n : string = deser r in
     let l : list string = deser r in
     Sum_definefun (n, l)
-  | 3 -> Sum_retain (deser r)
-  | 4 -> Sum_ignored
-  | 5 -> Sum_other (deser r)
+  | 3uy -> Sum_retain (deser r)
+  | 4uy -> Sum_ignored
+  | 5uy -> Sum_other (deser r)
   | t -> bad_tag "decl_summary" t
 
 instance serializable_elt_summary : serializable elt_summary = {

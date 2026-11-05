@@ -103,9 +103,13 @@ private assume val take : reader -> I.t -> ML string
 
 private let malformed (#a:Type) (what:string) : ML a = raise (Malformed what)
 
+(* Both are an OCaml [int]. *)
+[@@custard_extern "(fun b -> b)"]
+private assume val to_u8 : I.t -> FStar.UInt8.t
+
 let read_byte r =
   let b = next_byte r in
-  if b = I.minus_one then malformed "unexpected end of input" else b
+  if b = I.minus_one then malformed "unexpected end of input" else to_u8 b
 
 let read_uvarint r =
   let u = next_uvarint r in

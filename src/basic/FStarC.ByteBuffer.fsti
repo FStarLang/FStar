@@ -37,8 +37,8 @@ exception Malformed of string
 new val writer : Type0
 
 val writer_create : unit -> ML writer
-(* A byte, [0 <= b < 256]. *)
-val write_byte : writer -> I.t -> ML unit
+(* A byte. *)
+val write_byte : writer -> FStar.UInt8.t -> ML unit
 (* An unsigned varint of a non-negative argument. *)
 val write_uvarint : writer -> I.t -> ML unit
 (* A zigzag-encoded signed varint. *)
@@ -56,7 +56,7 @@ new val reader : Type0
 (* A reader of the bytes of [s] from offset [off] on. *)
 val reader_create : s:string -> off:I.t -> ML reader
 val reader_pos : reader -> ML I.t
-val read_byte : reader -> ML I.t
+val read_byte : reader -> ML FStar.UInt8.t
 val read_uvarint : reader -> ML I.t
 val read_varint : reader -> ML I.t
 val read_raw : reader -> len:I.t -> ML string
