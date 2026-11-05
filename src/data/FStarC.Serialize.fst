@@ -129,19 +129,27 @@ let wtable (#a:Type0) (w:writer) (s:slot) : ML (wtable_t a) =
   match A.get w.wtables s with
   | Some d -> D.undyn d
   | None ->
-    let t : wtable_t a = (HT.create #_ #deq_hash_code #hashable_hash_code #_ 1024, mk_ref I.zero) in
+    let t : wtable_t a = (HT.create #_ #deq_hash_code #hashable_hash_code #_ 64, mk_ref I.zero) in
     A.set w.wtables s (Some (D.mkdyn t));
     t
 
-let rec assoc_deq (#a:Type0) {| deq a |} (x:a) (l:list (a & I.t)) : ML (option I.t) =
+(* Searches the [fuel] most recently added values of a bucket only.  Sharing
+   is an optimization, so missing an older equal value is harmless; it keeps
+   lookups cheap when many distinct values have the same hash (e.g. the
+   physically distinct copies of a term, which [hash_code] cannot tell
+   apart). *)
+let rec assoc_deq (#a:Type0) {| deq a |} (fuel:I.t) (x:a) (l:list (a & I.t)) : ML (option I.t) =
   match l with
   | [] -> None
-  | (y, k) :: l -> if x =? y then Some k else assoc_deq x l
+  | (y, k) :: l ->
+    if x =? y then Some k
+    else if fuel = I.zero then None
+    else assoc_deq I.(fuel - one) x l
 
 let wtable_find (#a:Type0) {| deq a |} (h:FStarC.Hash.hash_code) (t:wtable_t a) (x:a)
   : ML (option I.t) =
   match HT.try_find #_ #deq_hash_code #hashable_hash_code #_ (fst t) h with
-  | Some l -> assoc_deq x l
+  | Some l -> assoc_deq (I.of_int 32) x l
   | None -> None
 
 (* Numbers [x] as the next value of [t]. *)
@@ -159,7 +167,7 @@ let wtable_add (#a:Type0) (h:FStarC.Hash.hash_code) (t:wtable_t a) (x:a) : ML I.
    are not counted. *)
 let rtable_push (#a:Type) ([@@@FStar.Attributes.cherry_borrowed] r:reader) (s:slot) (x:a) : ML unit =
   let k = A.get r.rcounts s in
-  (if k = I.zero then A.set r.rtables s (Some (D.mkdyn (A.make (I.of_int 1024) x)))
+  (if k = I.zero then A.set r.rtables s (Some (D.mkdyn (A.make (I.of_int 16) x)))
    else match A.get r.rtables s with
    | Some d ->
      let v : A.array a = D.undyn d in

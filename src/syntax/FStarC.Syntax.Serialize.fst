@@ -65,8 +65,10 @@ let range_eq (r1 r2 : range) : bool =
   rng_eq (def_range r1) (def_range r2) && rng_eq (use_range r1) (use_range r2)
 
 let deq_range : deq range = { (=?) = (fun r1 r2 -> range_eq r1 r2) }
-let hashable_range : hashable range =
-  { hash = (fun r -> H.mix (rng_hash (def_range r)) (rng_hash (use_range r))) }
+let range_hash (r:range) : H.hash_code =
+  H.mix (rng_hash (def_range r)) (rng_hash (use_range r))
+
+let hashable_range : hashable range = { hash = (fun r -> range_hash r) }
 
 let range_slot = new_slot "range"
 
@@ -85,7 +87,10 @@ let ident_eq (i1 i2 : ident) : bool =
   string_of_id i1 = string_of_id i2 && range_eq (range_of_id i1) (range_of_id i2)
 
 let deq_ident : deq ident = { (=?) = (fun i1 i2 -> ident_eq i1 i2) }
-let hashable_ident : hashable ident = { hash = (fun i -> H.of_string (string_of_id i)) }
+(* The range is part of the hash: a name typically occurs at many ranges, and
+   hashing by name alone would put all of them in the same bucket. *)
+let hashable_ident : hashable ident =
+  { hash = (fun i -> H.mix (H.of_string (string_of_id i)) (range_hash (range_of_id i))) }
 
 let ident_slot = new_slot "ident"
 
@@ -110,7 +115,8 @@ let deq_lident : deq lident = {
     ident_eq (ident_of_lid l1) (ident_of_lid l2) &&
     idents_eq (ns_of_lid l1) (ns_of_lid l2))
 }
-let hashable_lident : hashable lident = { hash = (fun l -> H.of_string (string_of_lid l)) }
+let hashable_lident : hashable lident =
+  { hash = (fun l -> H.mix (H.of_string (string_of_lid l)) (range_hash (range_of_id (ident_of_lid l)))) }
 
 let lident_slot = new_slot "lident"
 
@@ -233,7 +239,16 @@ let deser_univs (r:reader) : ML universes = deser_list deser_univ r
 (* Terms *)
 
 let deq_term : deq term = { (=?) = (fun t1 t2 -> Util.physical_equality t1 t2) }
-let hashable_term : hashable term = { hash = (fun t -> t.hash_code) }
+(* [hash_code] ignores ranges, so structurally equal copies of a term at
+   different places would all land in the same bucket.  Mix in the
+   positions (but not the file name, which is costly to hash). *)
+let pos_hash (r:range) : H.hash_code =
+  let d = def_range r in
+  let u = use_range r in
+  H.mix (H.of_int (int_of_pos (start_of_rng d)))
+    (H.mix (H.of_int (int_of_pos (end_of_rng d))) (H.of_int (int_of_pos (start_of_rng u))))
+
+let hashable_term : hashable term = { hash = (fun t -> H.mix t.hash_code (pos_hash t.pos)) }
 
 let deq_bv : deq bv = { (=?) = (fun x1 x2 -> Util.physical_equality x1 x2) }
 let hashable_bv : hashable bv = { hash = (fun x -> H.mix (H.of_int x.index) x.sort.hash_code) }

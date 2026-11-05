@@ -25,7 +25,9 @@ private assume new type buf : Type0
 
 type writer = buf
 
-[@@custard_extern "(fun () -> Buffer.create 65536)"]
+(* Small to start with: [FStarC.SMTEncoding.Serialize] makes one per node,
+   for its key, and a large block goes straight to the major heap. *)
+[@@custard_extern "(fun () -> Buffer.create 64)"]
 let writer_create _ = admit ()
 
 [@@custard_extern "(fun b x -> Buffer.add_char b (Char.chr x))"]
