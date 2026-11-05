@@ -31,16 +31,23 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
       HashTable.add cache s v;
       v
 
-(* caches *)
-type normalized_include_path_cache = {
-  paths: list module_include_path;
-  source_roots: list (module_include_path & string);
+type source_root_trie = {
+  flat_root: option string;
+  recursive_root: option string;
+  children: list (string & source_root_trie);
 }
 
+type normalized_include_path_cache = {
+  paths: list module_include_path;
+  source_roots: source_root_trie;
+}
+
+(* "A/B.fst" resolves to "/work/lib/A/B.fst", whose owning root yields
+   "A/B.fst". Module lookup and ranges share the root index; clear invalidates
+   it together with resolution and final-name caches. *)
 let _full_include : ref (option (list string)) = mk_ref None
 let _module_include_paths_normalized : ref (option normalized_include_path_cache) = mk_ref None
 let find_file_cache : HashTable.t string (option string) = HashTable.create 100
-let relative_source_path_cache : HashTable.t string (option string) = HashTable.create 100
 let source_file_name_cache : HashTable.t string string = HashTable.create 100
 
 (* Bumped every time the include path (or anything else affecting file
@@ -50,7 +57,6 @@ let _epoch : ref int = mk_ref 0
 
 let clear () : ML unit =
   HashTable.clear find_file_cache;
-  HashTable.clear relative_source_path_cache;
   HashTable.clear source_file_name_cache;
   _full_include := None;
   _module_include_paths_normalized := None;
@@ -222,6 +228,69 @@ let full_include_path () : ML _ =
     _full_include := Some res;
     res
 
+let empty_source_root_trie = {
+  flat_root = None;
+  recursive_root = None;
+  children = [];
+}
+
+let rec insert_source_root_child
+  (component:string)
+  (components:list string)
+  (root:module_include_path)
+  (children:list (string & source_root_trie))
+: list (string & source_root_trie) =
+  match children with
+  | [] ->
+    [component, insert_source_root components root empty_source_root_trie]
+  | (key, child) :: rest ->
+    if key = component
+    then (key, insert_source_root components root child) :: rest
+    else (key, child) :: insert_source_root_child component components root rest
+
+and insert_source_root
+  (components:list string)
+  (root:module_include_path)
+  (trie:source_root_trie)
+: source_root_trie =
+  match components with
+  | [] ->
+    (match root.kind with
+     | Flat -> { trie with flat_root = Some root.dir }
+     | Recursive -> { trie with recursive_root = Some root.dir })
+  | component :: rest ->
+    { trie with children =
+        insert_source_root_child component rest root trie.children }
+
+let rec find_source_root_child
+  (component:string)
+  (children:list (string & source_root_trie))
+: option source_root_trie =
+  match children with
+  | [] -> None
+  | (key, child) :: rest ->
+    if key = component then Some child
+    else find_source_root_child component rest
+
+let rec find_source_root
+  (components:list string)
+  (trie:source_root_trie)
+  (best:option string)
+: option string =
+  let best =
+    match components, trie.flat_root, trie.recursive_root with
+    | [], _, _ -> best
+    | [_], Some root, _ -> Some root
+    | _, _, Some root -> Some root
+    | _ -> best
+  in
+  match components with
+  | [] -> best
+  | component :: rest ->
+    (match find_source_root_child component trie.children with
+     | None -> best
+     | Some child -> find_source_root rest child best)
+
 let normalized_module_include_paths () : ML normalized_include_path_cache =
   match !_module_include_paths_normalized with
   | Some paths -> paths
@@ -232,7 +301,10 @@ let normalized_module_include_paths () : ML normalized_include_path_cache =
     in
     let normalized = {
       paths;
-      source_roots = List.map (fun path -> path, path.dir ^ "/") paths;
+      source_roots =
+        List.fold_left (fun trie path ->
+          insert_source_root (String.split ['/'] path.dir) path trie)
+          empty_source_root_trie paths;
     } in
     _module_include_paths_normalized := Some normalized;
     normalized
@@ -240,25 +312,11 @@ let normalized_module_include_paths () : ML normalized_include_path_cache =
 let module_include_paths_normalized () : ML (list module_include_path) =
   (normalized_module_include_paths ()).paths
 
-let relative_source_path_normalized =
-  cached_fun relative_source_path_cache fun filename ->
-    let paths = normalized_module_include_paths () in
-    let filename_dir = Filepath.dirname filename in
-    let best =
-      paths.source_roots
-      |> List.fold_left (fun best (path, prefix) ->
-        if BU.starts_with filename prefix
-           && (match path.kind with
-               | Flat -> filename_dir = path.dir
-               | Recursive -> true)
-           && (match best with
-               | Some dir -> String.length path.dir > String.length dir
-               | None -> true)
-        then Some path.dir
-        else best) None
-    in
-    best |> Option.map (fun dir ->
-      BU.substring_from filename (String.length dir + 1))
+let relative_source_path_normalized (filename:string) : ML (option string) =
+  let roots = (normalized_module_include_paths ()).source_roots in
+  find_source_root (String.split ['/'] filename) roots None
+  |> Option.map (fun dir ->
+    BU.substring_from filename (String.length dir + 1))
 
 let relative_source_path (filename:string) : ML (option string) =
   relative_source_path_normalized (Filepath.normalize_file_path filename)
