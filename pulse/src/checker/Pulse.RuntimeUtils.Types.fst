@@ -23,4 +23,16 @@ module Pulse.RuntimeUtils.Types
 (* Ranges are unsealed: range-observing reflection functions are now unsealed in ulib. *)
 let range = FStar.Range.range
 
-type context = FStar.Sealed.Inhabited.sealed #(list (string & option range)) []
+(* A context: its elements, innermost first, and their rendered strings as
+   pushed onto F*'s error context by Pulse.RuntimeUtils.with_context.
+   Contexts are only extended by consing (Pulse.RuntimeUtils.extend_context),
+   which renders the new element once and shares [rendered] with the parent
+   context, so with_context never re-renders a context. *)
+noeq type context_repr = {
+  elts : list (string & option range);
+  rendered : list string;
+}
+
+let empty_context_repr : context_repr = { elts = []; rendered = [] }
+
+type context = FStar.Sealed.Inhabited.sealed #context_repr empty_context_repr

@@ -5658,11 +5658,11 @@ build does not make.
 1. **Nothing, for the plugin itself.**  There are no hand-written
    realizations left: `Pulse.RuntimeUtils` and `Pulse.Extract.CompilerLib`
    are implemented in F\* under `pulse/src/syntax_extension`, extracted with
-   the plugin, and `pulse/src/ml` is gone.  The only OCaml is two
-   `@@custard_extern` declarations in `*-ocaml.fst` files (an `Ephemeron`
-   memo table, and `Cfg.translate_norm_steps`, named externally to avoid
-   reaching the compiler's `FStarC.NormSteps.norm_step` type from a unit that
-   also sees ulib's copy of it).  Two lessons from the port: a checker
+   the plugin, and `pulse/src/ml` is gone.  The only OCaml is one
+   `@@custard_extern` declaration in a `*-ocaml.fst` file
+   (`Cfg.translate_norm_steps`, named externally to avoid reaching the
+   compiler's `FStarC.NormSteps.norm_step` type from a unit that also sees
+   ulib's copy of it).  Two lessons from the port: a checker
    *interface* whose implementation lives in another unit must not declare
    type abbreviations (Custard treats them as realized and expects the
    implementation to define them by name), so `Pulse.RuntimeUtils.range` and
