@@ -41,6 +41,7 @@ type normalized_include_path_cache = {
 let _full_include : ref (option (list string)) = mk_ref None
 let _module_include_paths_normalized : ref (option normalized_include_path_cache) = mk_ref None
 let find_file_cache : HashTable.t string (option string) = HashTable.create 100
+let relative_source_path_cache : HashTable.t string (option string) = HashTable.create 100
 let source_file_name_cache : HashTable.t string string = HashTable.create 100
 
 (* Bumped every time the include path (or anything else affecting file
@@ -50,6 +51,7 @@ let _epoch : ref int = mk_ref 0
 
 let clear () : ML unit =
   HashTable.clear find_file_cache;
+  HashTable.clear relative_source_path_cache;
   HashTable.clear source_file_name_cache;
   _full_include := None;
   _module_include_paths_normalized := None;
@@ -240,26 +242,27 @@ let normalized_module_include_paths () : ML normalized_include_path_cache =
 let module_include_paths_normalized () : ML (list module_include_path) =
   (normalized_module_include_paths ()).paths
 
-let relative_source_path_normalized (filename:string) : ML (option string) =
-  let paths = normalized_module_include_paths () in
-  let filename_dir =
-    if paths.has_flat_root then Some (Filepath.dirname filename) else None
-  in
-  let best =
-    paths.source_roots
-    |> List.fold_left (fun best (path, prefix) ->
-      if BU.starts_with filename prefix
-         && (match path.kind with
-             | Flat -> filename_dir = Some path.dir
-             | Recursive -> true)
-         && (match best with
-             | Some dir -> String.length path.dir > String.length dir
-             | None -> true)
-      then Some path.dir
-      else best) None
-  in
-  best |> Option.map (fun dir ->
-    BU.substring_from filename (String.length dir + 1))
+let relative_source_path_normalized =
+  cached_fun relative_source_path_cache fun filename ->
+    let paths = normalized_module_include_paths () in
+    let filename_dir =
+      if paths.has_flat_root then Some (Filepath.dirname filename) else None
+    in
+    let best =
+      paths.source_roots
+      |> List.fold_left (fun best (path, prefix) ->
+        if BU.starts_with filename prefix
+           && (match path.kind with
+               | Flat -> filename_dir = Some path.dir
+               | Recursive -> true)
+           && (match best with
+               | Some dir -> String.length path.dir > String.length dir
+               | None -> true)
+        then Some path.dir
+        else best) None
+    in
+    best |> Option.map (fun dir ->
+      BU.substring_from filename (String.length dir + 1))
 
 let relative_source_path (filename:string) : ML (option string) =
   relative_source_path_normalized (Filepath.normalize_file_path filename)
