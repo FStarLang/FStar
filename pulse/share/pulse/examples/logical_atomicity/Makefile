@@ -35,7 +35,8 @@ $(OUTPUT_DIR)/Helping.ml: $(ALL_CHECKED_FILES)
 # Reuse the task tests' native fork/sleep and the library lock realization.
 REALIZATIONS := $(PULSE_ROOT)/lib/pulse/lib/ml/Pulse_Lib_SpinLock.ml \
 	$(PULSE_ROOT)/test/pool/pulse_task/ml/Pulse_Lib_Core.ml \
-	$(PULSE_ROOT)/test/pool/pulse_task/ml/Pulse_Lib_Sleep.ml
+	$(PULSE_ROOT)/test/pool/pulse_task/ml/Pulse_Lib_Sleep.ml \
+	Pulse_Lib_Primitives.ml
 
 RUNTIME_MODULES := Counter.ml Read.ml Helping.ml
 

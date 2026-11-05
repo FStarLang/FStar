@@ -118,8 +118,11 @@ read-only behavior, and 32 two-helper runs. The larger examples have their own
 [cached-atomic harness](cached_wait_free/runtime_test.ml) with forced
 interleavings; their guides describe the runtime coverage and backend assumptions.
 
-The older harnesses reuse existing native lock, fork, and sleep realizations. The
-handwritten harnesses are not verified and must respect erased ownership
+The small harness reuses existing native lock, fork, and sleep realizations.
+Its test-local [`Pulse_Lib_Primitives.ml`](Pulse_Lib_Primitives.ml) serializes
+each read, write, and CAS with a mutex; it never extracts the sequential F*
+primitive model or locks across a complete logical-atomic operation.
+The handwritten harnesses and realizations are not verified and must respect erased ownership
 preconditions. Their observations supplement the F* contracts, rather than
 establishing correctness for all schedules. The queue and cached-atomic
 handwritten primitive backends are additional trust boundaries documented

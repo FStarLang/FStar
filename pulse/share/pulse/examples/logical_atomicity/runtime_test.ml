@@ -18,10 +18,28 @@ let u32 n = FStar_UInt32.uint_to_t (Prims.parse_int n)
    later-credit ownership is ghost and is not supplied by this OCaml value. *)
 let credits = Prims.int_one
 
+let check_native_atomics () =
+  let r = ref (u32 "0") in
+  Pulse_Lib_Primitives.write_atomic r (u32 "1");
+  assert (Pulse_Lib_Primitives.read_atomic r = u32 "1");
+  assert (not (Pulse_Lib_Primitives.cas r (u32 "0") (u32 "2")));
+  let increment () =
+    let rec retry () =
+      let old = Pulse_Lib_Primitives.read_atomic r in
+      let next = FStar_UInt32.add_mod old (u32 "1") in
+      if not (Pulse_Lib_Primitives.cas r old next) then retry ()
+    in
+    for _ = 1 to 100 do retry () done
+  in
+  let threads = List.init 4 (fun _ -> Thread.create increment ()) in
+  List.iter Thread.join threads;
+  assert (Pulse_Lib_Primitives.read_atomic r = u32 "401")
+
 (** Run bounded regressions and fail on any violated observation. Native task
    teardown currently leaves workers running; process exit bounds these
    helper tests' pool lifetimes. *)
 let () =
+  check_native_atomics ();
   let r, old = Counter.pulse_Lib_LogicalAtomicity_Example_Counter_client_once () in
   assert (old = u32 "0" && !r = u32 "1");
   let old = Counter.pulse_Lib_LogicalAtomicity_Example_Counter_fetch_add r credits () in
