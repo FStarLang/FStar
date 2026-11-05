@@ -36,17 +36,12 @@ module C = FStarC.Parser.Const
 module SS = FStarC.Syntax.Subst
 module Free = FStarC.Syntax.Free
 open FStarC.Class.Setlike
+include FStarC.TypeChecker.CommonBase
 
 
 let as_tprob (p:prob) : ML (problem typ) = match p with
    | TProb p -> p
    | _ -> failwith "Expected a TProb"
-
-instance showable_guard_formula : showable guard_formula = {
-  show = (function
-          | Trivial      -> "Trivial"
-          | NonTrivial f -> "NonTrivial " ^ show f)
-}
 
 instance showable_deferred_reason : showable deferred_reason = {
   show = (function
@@ -88,26 +83,6 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
        | _ -> fail()
         end
      | _ -> fail()
-
-let mk_by_tactic tac f
-  : ML term =
-    let t_by_tactic = S.mk_Tm_uinst (tabbrev C.by_tactic_lid) [U_zero] in
-    S.mk_Tm_app t_by_tactic [S.as_arg tac; S.as_arg f] Range.dummyRange
-
-let rec delta_depth_greater_than l m = match l, m with
-    | Delta_equational_at_level i, Delta_equational_at_level j -> i > j
-    | Delta_constant_at_level i,   Delta_constant_at_level j   -> i > j
-    | Delta_abstract d, _                                      -> delta_depth_greater_than d m
-    | _, Delta_abstract d                                      -> delta_depth_greater_than l d
-    | Delta_equational_at_level _, _                           -> true
-    | _, Delta_equational_at_level _                           -> false
-
-let rec decr_delta_depth = function
-    | Delta_constant_at_level 0
-    | Delta_equational_at_level 0 -> None
-    | Delta_constant_at_level i   -> Some (Delta_constant_at_level (i - 1))
-    | Delta_equational_at_level i -> Some (Delta_equational_at_level (i - 1))
-    | Delta_abstract d            -> decr_delta_depth d
 
 (***********************************************************************************)
 (* A table of file -> starting row -> starting col -> identifier info              *)
@@ -285,15 +260,6 @@ let weaken_guard_formula g fml : ML guard_t =
   | NonTrivial f ->
     { g with guard_f = check_trivial (U.mk_imp fml f) }
 
-
-let check_positivity_qual subtyping p0 p1
-  = if p0 = p1 then true
-    else if subtyping
-    then match p0, p1 with
-         | Some _, None -> true
-         | Some BinderUnused, Some BinderStrictlyPositive -> true
-         | _ -> false
-    else false
 
 let one_point_defn (x:bv) (hyp:term) : ML (option (term & term)) =
   let is_x (t:term) =

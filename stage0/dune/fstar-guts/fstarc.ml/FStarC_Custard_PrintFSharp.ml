@@ -700,11 +700,11 @@ let external_target (n : FStarC_Custard_Syntax.name) : (string) option =
 let rec col_after__go (c : Prims.int) (s : string) (n : Prims.int) (i : Prims.int) : Prims.int =
   (if (Prims.op_Less_Equals i Prims.int_zero) then (Prims.op_Plus c n) else (let tmp = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s (Prims.op_Minus i Prims.int_one)) in
   let tmp1 = ((=) tmp 10) in
-  (if tmp1 then (Prims.op_Minus n i) else ((col_after__go c s n) (Prims.op_Minus i Prims.int_one)))))
+  (if tmp1 then (Prims.op_Minus n i) else (col_after__go c s n (Prims.op_Minus i Prims.int_one)))))
 
 let col_after (c : Prims.int) (s : string) : Prims.int =
   (let n = ((fun s -> Z.of_int (BatUTF8.length s)) s) in
-  ((col_after__go c s n) n))
+  (col_after__go c s n n))
 
 let spaces (n : Prims.int) : string =
   (if (Prims.op_Less_Equals n Prims.int_zero) then "" else ((fun i c -> BatUTF8.init (Z.to_int i) (fun _ -> BatUChar.chr c)) n 32))
@@ -819,7 +819,7 @@ let tuple_index (f : string) : Prims.int =
 
 let rec fStarC_Custard_PrintFSharp_by_position__go__1 (k : Prims.int) (at : (Prims.int -> string)) (i : Prims.int) : (string) list =
   (if (Prims.op_Greater i k) then [] else (let tmp = (at i) in
-  let tmp1 = ((fStarC_Custard_PrintFSharp_by_position__go__1 k at) (Prims.op_Plus i Prims.int_one)) in
+  let tmp1 = (fStarC_Custard_PrintFSharp_by_position__go__1 k at (Prims.op_Plus i Prims.int_one)) in
   (tmp :: tmp1)))
 
 let by_position (k : Prims.int) (dflt : string) (fs : ((string * string)) list) : (string) list =
@@ -832,7 +832,7 @@ let by_position (k : Prims.int) (dflt : string) (fs : ((string * string)) list) 
       | (Some (s)) -> s
       | None -> dflt
     ))) in
-  ((fStarC_Custard_PrintFSharp_by_position__go__1 k at) Prims.int_one))
+  (fStarC_Custard_PrintFSharp_by_position__go__1 k at Prims.int_one))
 
 let qualified_label (n : FStarC_Custard_Syntax.name) (f : string) : string =
   (let tmp = (is_builtin_type n) in
@@ -910,7 +910,7 @@ let line_width : Prims.int =
 
 let rec term__go (k : Prims.int) (at : (Prims.int -> (FStarC_Custard_Syntax.expr) option)) (i : Prims.int) : ((FStarC_Custard_Syntax.expr) option) list =
   (if (Prims.op_Greater i k) then [] else (let tmp = (at i) in
-  let tmp1 = ((term__go k at) (Prims.op_Plus i Prims.int_one)) in
+  let tmp1 = (term__go k at (Prims.op_Plus i Prims.int_one)) in
   (tmp :: tmp1)))
 
 let ambiguous_label (n : FStarC_Custard_Syntax.name) (f : string) : bool =
@@ -1277,7 +1277,7 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
             let tmp3 = ((=) tmp2 i) in
             (if tmp3 then (Some (e1)) else None))
         )) fs)) in
-      let tmp1 = ((term__go k at) Prims.int_one) in
+      let tmp1 = (term__go k at Prims.int_one) in
       let tmp2 = (join_at ind "(" ", " (fun ind' o -> (match o with
           | (Some (e1)) -> (term ind' e1)
           | None -> "(Unchecked.defaultof<_>)"
@@ -1439,27 +1439,19 @@ and term (ind : string) (e : FStarC_Custard_Syntax.expr) : string =
       let tmp2 = (term tmp1 b) in
       let tmp3 = (Prims.strcat tmp2 ") = 0)") in
       (Prims.strcat pre tmp3)))
-    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp; _ }, (src :: (si :: (dst :: (di :: (len :: []))))))) -> (let pre = "(Array.blit " in
+    | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufBlit; po_ty = tmp; _ }, (src :: (dst :: (len :: []))))) -> (let pre = "(Array.blit " in
       let tmp1 = (after ind pre) in
       let tmp2 = (term tmp1 src) in
-      let tmp3 = (Prims.strcat tmp2 " ") in
+      let tmp3 = (Prims.strcat tmp2 " 0 ") in
       let pre1 = (Prims.strcat pre tmp3) in
       let tmp4 = (after ind pre1) in
-      let tmp5 = (index tmp4 si) in
-      let tmp6 = (Prims.strcat tmp5 " ") in
+      let tmp5 = (term tmp4 dst) in
+      let tmp6 = (Prims.strcat tmp5 " 0 ") in
       let pre2 = (Prims.strcat pre1 tmp6) in
       let tmp7 = (after ind pre2) in
-      let tmp8 = (term tmp7 dst) in
-      let tmp9 = (Prims.strcat tmp8 " ") in
-      let pre3 = (Prims.strcat pre2 tmp9) in
-      let tmp10 = (after ind pre3) in
-      let tmp11 = (index tmp10 di) in
-      let tmp12 = (Prims.strcat tmp11 " ") in
-      let pre4 = (Prims.strcat pre3 tmp12) in
-      let tmp13 = (after ind pre4) in
-      let tmp14 = (index tmp13 len) in
-      let tmp15 = (Prims.strcat tmp14 ")") in
-      (Prims.strcat pre4 tmp15))
+      let tmp8 = (index tmp7 len) in
+      let tmp9 = (Prims.strcat tmp8 ")") in
+      (Prims.strcat pre2 tmp9))
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufSub; po_ty = tmp; _ }, tmp1)) -> "(failwith \"Custard: pointer arithmetic has no F# representation\")"
     | (FStarC_Custard_Syntax.EOp ({ FStarC_Custard_Syntax.po_op = FStarC_Custard_Syntax.BufLit; po_ty = tmp; _ }, elems)) -> (let tmp1 = (join_at ind "[| " "; " term elems) in
       (Prims.strcat tmp1 " |]"))

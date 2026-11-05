@@ -40,7 +40,6 @@ module Range = FStarC.Range
 module E = FStarC.Errors
 module Basic = FStarC.Tactics.V2.Basic
 module TM = FStarC.Tactics.Monad
-module WeakMemo = Pulse.RuntimeUtils.WeakMemo
 open Pulse.RuntimeUtils.Types
 
 (* This unit is checked with --lax, so the equality proof is trivial. *)
@@ -72,35 +71,18 @@ let ctxt_elt_as_string (sr : ctx_elt) : ML string =
   | None -> s
   | Some r -> "@" ^ Range.string_of_range r ^ ": " ^ s
 
+(* The same (often very long) context is passed to with_context on every call
+   into the F* typechecker, so rendering every element on every call would be
+   quadratic overall.  Instead, each element is rendered once, here, and its
+   string is consed onto the (shared) rendered strings of the parent. *)
 let extend_context (tag:string) (r:option range) (ctx:context) : context =
-  co ((tag, (co r <: option Range.range)) :: (co ctx <: list ctx_elt))
-
-(* The rendered strings of a context, memoized per context.  Contexts are
-   immutable lists extended by consing (extend_context), and the same (often
-   very long) context is passed to with_context on every call into the F*
-   typechecker, so rendering every element on every call would be quadratic
-   overall.  The memo table has weak keys, so that dead contexts can be
-   collected; the cached strings are exactly those computed by
-   ctxt_elt_as_string. *)
-#push-options "--warn_error -272" //intentional top-level effect
-let ctx_memo : (list ctx_elt -> ML (option (list string))) & (list ctx_elt -> list string -> ML unit) =
-  WeakMemo.create ()
-#pop-options
-
-let rec context_strings (c:list ctx_elt) : ML (list string) =
-  match c with
-  | [] -> []
-  | sr::tl ->
-    match fst ctx_memo c with
-    | Some ss -> ss
-    | None ->
-      let ss = ctxt_elt_as_string sr :: context_strings tl in
-      snd ctx_memo c ss;
-      ss
+  let c : context_repr = co ctx in
+  let s = ml_tot (fun () -> ctxt_elt_as_string (tag, co r)) in
+  co { elts = (tag, r) :: c.elts; rendered = s :: c.rendered }
 
 let with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a =
   mk_tac (fun ps ->
-    E.with_ctxs (context_strings (co c)) (fun _ -> run_tac f ps))
+    E.with_ctxs (co c <: context_repr).rendered (fun _ -> run_tac f ps))
 
 let with_error_bound (r:range) (f:unit -> T.Tac 'a) : T.Tac 'a =
   mk_tac (fun ps -> E.with_error_bound (rr r) (fun _ -> run_tac f ps))
@@ -133,7 +115,7 @@ let with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a =
 
 let print_context (c:context) : T.Tac string =
   mk_tac (fun _ ->
-    String.concat "\n>" (List.map ctxt_elt_as_string (co c <: list ctx_elt)))
+    String.concat "\n>" (co c <: context_repr).rendered)
 
 let debug_at_level_no_module (s:string) : bool =
   ml_tot (fun () -> !(Debug.get_toggle s))
@@ -250,7 +232,7 @@ let lax_check_term_with_unknown_universes (g:env) (t:T.term) : Dv (option T.term
           | _ ->
             let g = TcEnv.set_range g e.pos in
             let must_tot = false in
-            let g = { g with TcEnv.instantiate_imp = false; phase1 = true; admit = true } in
+            let g = { g with TcEnv.instantiate_imp = false; admit = true } in
             let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
             let _ = Rel.resolve_implicits g guard in
             let uvs = FlatSet.union (Free.uvars e) (Free.uvars t) in
@@ -276,12 +258,12 @@ let is_unresolved_projector (t:T.term) : bool =
     | S.Tm_fvar { fv_qual = Some (S.Unresolved_projector _) } -> true
     | _ -> false)
 
-let phase1 (g:env) : TcEnv.env =
-  { (co g <: TcEnv.env) with TcEnv.phase1 = true; admit = true }
+let elaboration_env (g:env) : TcEnv.env =
+  { (co g <: TcEnv.env) with TcEnv.admit = true }
 
 let new_implicit_var (reason:string) (r:range) (g:env) (e:typ) (unrefine:bool) : Dv term =
   ml_dv (fun () ->
-    let uvar, _, _ = FStarC.TypeChecker.Util.new_implicit_var reason (rr r) (phase1 g) (co e) unrefine in
+    let uvar, _, _ = FStarC.TypeChecker.Util.new_implicit_var reason (rr r) (elaboration_env g) (co e) unrefine in
     co uvar)
 
 let try_solve_single_valued_implicits (g:env) (ts:list term) : Dv unit =
@@ -296,15 +278,15 @@ let try_solve_single_valued_implicits (g:env) (ts:list term) : Dv unit =
                imp_range = t.pos }
       | _ -> None) ts
     in
-    ignore (Rel.try_solve_single_valued_implicits (phase1 g) false imps))
+    ignore (Rel.try_solve_single_valued_implicits (elaboration_env g) false imps))
 
-let tc_term_phase1 (g:env) (t:T.term) (instantiate_imps:bool)
+let tc_term_elab (g:env) (t:T.term) (instantiate_imps:bool)
   : Dv (option (T.term & T.term & T.tot_or_ghost) & T.issues) =
   ml_dv (fun () ->
     let e : S.term = co t in
     let issues, res = E.catch_errors (fun _ ->
       let g = TcEnv.set_range (co g) e.pos in
-      let g = { g with TcEnv.phase1 = true; admit = true; instantiate_imp = instantiate_imps } in
+      let g = { g with TcEnv.admit = true; instantiate_imp = instantiate_imps } in
       let e, c, guard = FStarC.TypeChecker.TcTerm.tc_tot_or_gtot_term g e in
       let t = U.comp_result c in
       let c = FStarC.TypeChecker.Normalize.maybe_ghost_to_pure g c in
@@ -327,14 +309,14 @@ let teq_nosmt_force (g:env) (ty1 ty2:T.term) : Dv bool =
     | Some true -> true
     | _ -> false)
 
-let teq_nosmt_force_phase1 (g:env) (ty1 ty2:T.term) : Dv bool =
-  teq_nosmt_force (co (phase1 g)) ty1 ty2
+let teq_nosmt_force_elab (g:env) (ty1 ty2:T.term) : Dv bool =
+  teq_nosmt_force (co (elaboration_env g)) ty1 ty2
 
-let teq_nosmt_phase1 (g:env) (ty1 ty2:T.term) : Dv bool =
+let teq_nosmt_elab (g:env) (ty1 ty2:T.term) : Dv bool =
   ml_dv (fun () ->
     let ty1 : S.term = co ty1 in
     let _, res = E.catch_errors (fun _ ->
-      Rel.teq_nosmt (TcEnv.set_range (phase1 g) ty1.pos) ty1 (co ty2)) in
+      Rel.teq_nosmt (TcEnv.set_range (elaboration_env g) ty1.pos) ty1 (co ty2)) in
     match res with
     | Some (Some _) -> true
     | _ -> false)

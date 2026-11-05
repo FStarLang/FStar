@@ -353,7 +353,10 @@ and pat_to_string (x : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo
       let tmp5 = (BatString.concat " " tmp4) in
       (FStarC_Format.fmt3 "(%s%s%s)" tmp tmp3 tmp5))
     | (FStarC_Syntax_Syntax.Pat_dot_term (topt)) -> (let tmp = (FStarC_Options.print_bound_var_types ()) in
-      (if tmp then (let tmp1 = (if ((=) topt None) then "_" else (let tmp1 = (FStarC_Option.must topt) in
+      (if tmp then (let tmp1 = (if (match topt with
+          | None -> true
+          | tmp1 -> false
+        ) then "_" else (let tmp1 = (FStarC_Option.must topt) in
         (term_to_string tmp1))) in
       (FStarC_Format.fmt1 ".%s" tmp1)) else "._"))
     | (FStarC_Syntax_Syntax.Pat_var (x1)) -> (let tmp = (FStarC_Options.print_bound_var_types ()) in
@@ -495,7 +498,11 @@ and term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
       let tmp3 = (term_to_string e) in
       (FStarC_Format.fmt2 "%s\nin\n%s" tmp2 tmp3))
     | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = e; asc = annot; asc1 = topt; asc2 = b; eff_opt = eff_name; _ })) -> (let annot1 = (match annot with
-          | (FStar_Pervasives.Inl (t)) -> (let tmp2 = (FStarC_Option.map FStarC_Ident.string_of_lid eff_name) in
+          | (FStar_Pervasives.Inl (t)) -> (let tmp2 = (match eff_name with
+                | (Some (x3)) -> (let tmp2 = (FStarC_Ident.string_of_lid x3) in
+                  (Some (tmp2)))
+                | None -> None
+              ) in
             let tmp3 = (FStarC_Option.dflt "default" tmp2) in
             let tmp4 = (term_to_string t) in
             (FStarC_Format.fmt2 "[%s] %s" tmp3 tmp4))

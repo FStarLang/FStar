@@ -30,7 +30,7 @@ let test4 (f : (unit -> #x:int -> unit -> unit)) =
   let blah = f () () in
   ()
 
-(* Reports over `f ()` *)
+(* Reports over `f` *)
 [@(expect_failure [66])]
 let test5 (f : (#i:int -> unit -> #x:int -> unit -> unit)) =
   let blah = f () () in

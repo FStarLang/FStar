@@ -81,11 +81,10 @@ let test10 =
   assert p3;
   assert (p2 \/ p3)
 
-(* Two errors: the existential is a precondition of
-   [FStar.Classical.Sugar.indefinite_description1], hence now an obligation of
-   its own rather than a conjunct of the definition's single verification
-   condition.  (Z3 cannot find the witness for it either way.) *)
-[@@expect_failure [19; 19]]
+(* The existential is a precondition of
+   [FStar.Classical.Sugar.indefinite_description1], which Z3 cannot prove (it
+   cannot find the witness); the assertion follows from its postcondition. *)
+[@@expect_failure [19]]
 let test_elim_exists () : unit
 = eliminate exists (n: nat). (n = 0)
   with assert(n = 0)

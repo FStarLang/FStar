@@ -71,7 +71,7 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
     )) (fun tmp -> (match tmp with
       | (universes, elt_t, (l, blob)) -> (let tmp1 = (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_any ()) in
         let tmp2 = (emb_typ tmp1) in
-        let tmp3 = (blob, tmp2) in
+        let tmp3 = ((Obj.magic (blob)), tmp2) in
         let tmp4 = (FStar_Pervasives.Inr (tmp3)) in
         let tmp5 = (FStarC_Thunk.mk (fun tmp5 -> (FStarC_TypeChecker_NBETerm.mk_t (FStarC_TypeChecker_NBETerm.FV ((FStarC_Syntax_Syntax.lid_as_fv FStarC_Parser_Const.immutable_array_of_list_lid None), universes, ((FStarC_TypeChecker_NBETerm.as_arg l) :: [])))))) in
         let tmp6 = (tmp4, tmp5) in
@@ -79,7 +79,7 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
         (FStarC_TypeChecker_NBETerm.mk_t tmp7))
     )) (fun universes elt_t tmp -> (match tmp with
       | (l, lst) -> (let blob = (Array.of_list lst) in
-        (Some ((universes, elt_t, (l, (FStar_Dyn.mkdyn blob))))))
+        (Some ((universes, elt_t, (l, (Obj.magic (blob)))))))
     )) univs args)) in
   let of_list_op = (FStarC_Parser_Const.immutable_array_of_list_lid, (Prims.of_int (2)), Prims.int_one, (mixed_binary_op (fun tmp -> (match tmp with
       | (elt_t, tmp1) -> (Some (elt_t))
@@ -106,7 +106,7 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
         (FStarC_Syntax_Syntax.mk tmp10 r))
     )) (fun r universes elt_t tmp -> (match tmp with
       | (l, lst) -> (let blob = (Array.of_list lst) in
-        (Some ((universes, elt_t, (l, (FStar_Dyn.mkdyn blob))))))
+        (Some ((universes, elt_t, (l, (Obj.magic (blob)))))))
     ))), nbe_of_list) in
   let arg1_as_elt_t = (fun x -> (Some ((match x with
       | (u__1, u__2) -> u__1
@@ -116,18 +116,18 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
       )) in
     let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
     (match tmp1 with
-      | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = blob; lkind = (FStarC_Syntax_Syntax.Lazy_embedding ((FStarC_Syntax_Syntax.ET_app (head, tmp2)), tmp3)); ltyp = tmp4; rng = tmp5; _ })) when ((=) head (FStarC_Ident.string_of_lid FStarC_Parser_Const.immutable_array_t_lid)) -> (Some (blob))
+      | (FStarC_Syntax_Syntax.Tm_lazy ({ FStarC_Syntax_Syntax.blob = blob; lkind = (FStarC_Syntax_Syntax.Lazy_embedding ((FStarC_Syntax_Syntax.ET_app (head, tmp2)), tmp3)); ltyp = tmp4; rng = tmp5; _ })) when ((=) head (FStarC_Ident.string_of_lid FStarC_Parser_Const.immutable_array_t_lid)) -> (Some ((Obj.magic (blob))))
       | tmp2 -> None
     ))) in
   let arg2_as_blob_nbe = (fun x -> (match (let scrut = (match x with
         | (u__1, u__2) -> u__1
       ) in
     (scrut).FStarC_TypeChecker_NBETerm.nbe_t) with
-      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inr ((blob, (FStarC_Syntax_Syntax.ET_app (head, tmp))))), tmp1)) when ((=) head (FStarC_Ident.string_of_lid FStarC_Parser_Const.immutable_array_t_lid)) -> (Some (blob))
+      | (FStarC_TypeChecker_NBETerm.Lazy ((FStar_Pervasives.Inr ((blob, (FStarC_Syntax_Syntax.ET_app (head, tmp))))), tmp1)) when ((=) head (FStarC_Ident.string_of_lid FStarC_Parser_Const.immutable_array_t_lid)) -> (Some ((Obj.magic (blob))))
       | tmp -> None
     )) in
   let embed_int = (fun r i -> (FStarC_TypeChecker_Primops_Base.embed_simple FStarC_Syntax_Embeddings.e_int r i)) in
-  let run_op = (fun blob -> (let tmp = (FStar_Dyn.undyn blob) in
+  let run_op = (fun blob -> (let tmp = (Obj.magic (blob)) in
     let tmp1 = ((fun a -> Z.of_int (Array.length a)) tmp) in
     (Some (tmp1)))) in
   let nbe_length = (fun u__cbs univs args -> (FStarC_TypeChecker_NBETerm.mixed_binary_op (fun tmp -> (match tmp with
@@ -136,10 +136,10 @@ let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   let length_op = (FStarC_Parser_Const.immutable_array_length_lid, (Prims.of_int (2)), Prims.int_one, (mixed_binary_op arg1_as_elt_t arg2_as_blob embed_int (fun u__r u__universes tmp blob -> (run_op blob))), nbe_length) in
   let nbe_index = (fun u__cbs univs args -> (FStarC_TypeChecker_NBETerm.mixed_ternary_op (fun tmp -> (match tmp with
       | (elt_t, tmp1) -> (Some (elt_t))
-    )) arg2_as_blob_nbe FStarC_TypeChecker_NBETerm.arg_as_int (fun tm -> tm) (fun u__universes u__t blob i -> (let tmp = (FStar_Dyn.undyn blob) in
+    )) arg2_as_blob_nbe FStarC_TypeChecker_NBETerm.arg_as_int (fun tm -> tm) (fun u__universes u__t blob i -> (let tmp = (Obj.magic (blob)) in
     let tmp1 = ((fun a i -> Array.get a (Z.to_int i)) tmp i) in
     (Some (tmp1)))) univs args)) in
-  let index_op = (FStarC_Parser_Const.immutable_array_index_lid, (Prims.of_int (3)), Prims.int_one, (mixed_ternary_op arg1_as_elt_t arg2_as_blob arg_as_int (fun r tm -> tm) (fun r u__universes u__t blob i -> (let tmp = (FStar_Dyn.undyn blob) in
+  let index_op = (FStarC_Parser_Const.immutable_array_index_lid, (Prims.of_int (3)), Prims.int_one, (mixed_ternary_op arg1_as_elt_t arg2_as_blob arg_as_int (fun r tm -> tm) (fun r u__universes u__t blob i -> (let tmp = (Obj.magic (blob)) in
     let tmp1 = ((fun a i -> Array.get a (Z.to_int i)) tmp i) in
     (Some (tmp1))))), nbe_index) in
   let s1 = (as_primitive_step true of_list_op) in

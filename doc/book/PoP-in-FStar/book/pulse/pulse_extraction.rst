@@ -119,7 +119,7 @@ Then we extract it to C as follows (the commands are run in the ``pulse`` root d
   $ fstar.exe --include out/lib/pulse/
     --include share/pulse/examples/by-example/ --include share/pulse/examples/_cache/
     PulseTutorial.Algorithms.fst
-    --codegen C --custard_monomorphize_types true
+    --codegen C
     --custard_entry PulseTutorial.Algorithms.majority_mono
     -o PulseTutorial_Algorithms.c
 

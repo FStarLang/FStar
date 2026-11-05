@@ -210,12 +210,6 @@ let pat_as_exp (introduce_bv_uvars:bool)
            | Pat_dot_term eopt ->
              (match eopt with
               | None ->
-                if !dbg_Patterns
-                then begin
-                  if not env.phase1
-                  then Format.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"
-                         (show p)
-                end;
                 let k, _ = U.type_u () in
                 let t, _, g = new_implicit_var_aux "pat_dot_term type" p.p env k (Allow_ghost "pat dot term type") None false in
                 let e, _,  g' = new_implicit_var_aux "pat_dot_term" p.p env t (Allow_ghost "pat dot term") None false in

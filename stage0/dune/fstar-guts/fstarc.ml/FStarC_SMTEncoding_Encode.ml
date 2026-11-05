@@ -29,140 +29,14 @@ let init (tcenv : FStarC_TypeChecker_Env.env) : unit =
   (init_env tcenv);
   (FStarC_SMTEncoding_Z3.giveZ3 (FStarC_SMTEncoding_Term.DefPrelude :: [])))
 
-let rec flush_deferred_encodings__run (l : ((unit -> unit)) list) : unit =
-  (match l with
-    | [] -> ()
-    | (f :: tl) -> ((f ());
-      (flush_deferred_encodings__run tl))
-  )
-
-let flush_deferred_encodings (tmp : unit) : unit =
-  (let tmp1 = (!(deferred_encodings)) in
-  (match tmp1 with
-    | [] -> ()
-    | fs -> (((deferred_encodings) := []);
-      (flush_deferred_encodings__run (BatList.rev fs)))
-  ))
-
-let copy_env (en : FStarC_SMTEncoding_Env.env_t) : FStarC_SMTEncoding_Env.env_t =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (en).FStarC_SMTEncoding_Env.global_cache) in
-  { FStarC_SMTEncoding_Env.bvar_bindings = (en).FStarC_SMTEncoding_Env.bvar_bindings;
-    fvar_bindings = (en).FStarC_SMTEncoding_Env.fvar_bindings;
-    fvar_bindings1 = (en).FStarC_SMTEncoding_Env.fvar_bindings1;
-    depth = (en).FStarC_SMTEncoding_Env.depth;
-    tcenv = (en).FStarC_SMTEncoding_Env.tcenv;
-    warn = (en).FStarC_SMTEncoding_Env.warn;
-    nolabels = (en).FStarC_SMTEncoding_Env.nolabels;
-    use_zfuel_name = (en).FStarC_SMTEncoding_Env.use_zfuel_name;
-    encode_non_total_function_typ = (en).FStarC_SMTEncoding_Env.encode_non_total_function_typ;
-    current_module_name = (en).FStarC_SMTEncoding_Env.current_module_name;
-    encoding_quantifier = (en).FStarC_SMTEncoding_Env.encoding_quantifier;
-    global_cache = tmp })
-
-let push_env (tmp : unit) : unit =
-  (let tmp1 = (!(last_env)) in
-  (match tmp1 with
-    | [] -> (FStarC_Effect.failwith "Empty env stack")
-    | (hd :: tl) -> (let top = (copy_env hd) in
-      ((last_env) := (top :: (hd :: tl))))
-  ))
-
-let snapshot_env (tmp : unit) : (Prims.int * unit) =
-  (FStarC_Common.snapshot "SMTEncoding.Encode.env" push_env last_env ())
-
-let snapshot_encoding (msg : string) : (Prims.int * Prims.int) =
-  (FStarC_Util.atomically (fun tmp -> ((flush_deferred_encodings ());
-  let tmp1 = (FStarC_Debug.medium ()) in
-  (if tmp1 then (FStarC_Format.print1 "Encode.snapshot_encoding: %s\n" msg) else ());
-  let tmp2 = (snapshot_env ()) in
-  (match tmp2 with
-    | (env_depth, ()) -> (let tmp3 = ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.snapshot ()) in
-      (match tmp3 with
-        | (varops_depth, ()) -> (env_depth, varops_depth)
-      ))
-  ))))
-
-let pop_env (tmp : unit) : unit =
-  (let tmp1 = (!(last_env)) in
-  (match tmp1 with
-    | [] -> (FStarC_Effect.failwith "Popping an empty stack")
-    | (tmp2 :: tl) -> ((last_env) := tl)
-  ))
-
-let rollback_env (depth : (Prims.int) option) : unit =
-  (FStarC_Common.rollback "SMTEncoding.Encode.env" pop_env last_env depth)
-
-let rollback_encoding (msg : string) (depth : ((Prims.int * Prims.int)) option) : unit =
-  (FStarC_Util.atomically (fun tmp -> (let tmp1 = (FStarC_Debug.medium ()) in
-  (if tmp1 then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__option_tuple2_int_int depth) in
-  (FStarC_Format.print2 "Encode.rollback_encoding: %s to %s\n" msg tmp2)) else ());
-  let tmp2 = (match depth with
-      | (Some ((s1, s2))) -> ((Some (s1)), (Some (s2)))
-      | None -> (None, None)
-    ) in
-  (match tmp2 with
-    | (env_depth, varops_depth) -> ((rollback_env env_depth);
-      ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.rollback varops_depth))
-  ))))
-
-let get_env (cmn : FStarC_Ident.lident) (tcenv : FStarC_TypeChecker_Env.env) : FStarC_SMTEncoding_Env.env_t =
-  (let tmp = (!(last_env)) in
-  (match tmp with
-    | [] -> (FStarC_Effect.failwith "No env; call init first!")
-    | (e :: tmp1) -> { FStarC_SMTEncoding_Env.bvar_bindings = (e).FStarC_SMTEncoding_Env.bvar_bindings;
-        fvar_bindings = (e).FStarC_SMTEncoding_Env.fvar_bindings;
-        fvar_bindings1 = (e).FStarC_SMTEncoding_Env.fvar_bindings1;
-        depth = (e).FStarC_SMTEncoding_Env.depth;
-        tcenv = tcenv;
-        warn = (e).FStarC_SMTEncoding_Env.warn;
-        nolabels = (e).FStarC_SMTEncoding_Env.nolabels;
-        use_zfuel_name = (e).FStarC_SMTEncoding_Env.use_zfuel_name;
-        encode_non_total_function_typ = (e).FStarC_SMTEncoding_Env.encode_non_total_function_typ;
-        current_module_name = (FStarC_Ident.string_of_lid cmn);
-        encoding_quantifier = (e).FStarC_SMTEncoding_Env.encoding_quantifier;
-        global_cache = (e).FStarC_SMTEncoding_Env.global_cache }
-  ))
-
-let open_fact_db_tags (env : FStarC_SMTEncoding_Env.env_t) : (FStarC_SMTEncoding_Term.fact_db_id) list =
-  []
-
-let fact_dbs_for_lid (env : FStarC_SMTEncoding_Env.env_t) (lid : FStarC_Ident.lident) : (FStarC_SMTEncoding_Term.fact_db_id) list =
-  (let tmp = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid lid)) in
-  let tmp1 = (FStarC_SMTEncoding_Term.Namespace (tmp)) in
-  let tmp2 = (tmp1 :: (open_fact_db_tags env)) in
-  ((FStarC_SMTEncoding_Term.Name (lid)) :: tmp2))
-
 let dbg_SMTEncoding : (bool ref) =
   (FStarC_Debug.get_toggle "SMTEncoding")
 
-let norm_with_steps (steps : (FStarC_TypeChecker_Env.step) list) (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Normalize.normalize steps env t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.SMTEncoding.Encode.norm")
+let dbg_SMTQuery : (bool ref) =
+  (FStarC_Debug.get_toggle "SMTQuery")
 
-let norm_before_encoding (env : FStarC_SMTEncoding_Env.env_t) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (let steps = (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Simplify :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: [])))) in
-  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Normalize.normalize steps (env).FStarC_SMTEncoding_Env.tcenv t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module (env).FStarC_SMTEncoding_Env.tcenv)))) "FStarC.SMTEncoding.Encode.norm_before_encoding"))
-
-let smt_arity_attribute (env : FStarC_SMTEncoding_Env.env_t) (lid : FStarC_Ident.lident) : (Prims.int) option =
-  (let tmp = (FStarC_TypeChecker_Env.lookup_attrs_of_lid (env).FStarC_SMTEncoding_Env.tcenv lid) in
-  (match tmp with
-    | None -> None
-    | (Some (attrs)) -> (let tmp1 = (FStarC_Syntax_Util.get_attribute FStarC_Parser_Const.smt_arity_attr attrs) in
-      (match tmp1 with
-        | (Some (((a, tmp2) :: tmp3))) -> (let tmp4 = (FStarC_Syntax_Subst.compress a) in
-          let tmp5 = (tmp4).FStarC_Syntax_Syntax.n in
-          (match tmp5 with
-            | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_int (i, tmp6)))) -> (Some (i))
-            | tmp6 -> (let tmp7 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
-              let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' a) in
-              let tmp9 = (FStarC_Format.fmt2 "Expected an integer literal in [@@smt_arity] on %s, got %s" tmp7 tmp8) in
-              (FStarC_Effect.failwith tmp9))
-          ))
-        | tmp2 -> None
-      ))
-  ))
-
-let close_universes (rng : FStarC_Range_Type.range) (univ_fvs : (FStarC_SMTEncoding_Term.fv) list) (pat : FStarC_SMTEncoding_Term.term) (body : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
-  (FStarC_SMTEncoding_Term.mkForall rng (((pat :: []) :: []), univ_fvs, body))
+let dbg_Time : (bool ref) =
+  (FStarC_Debug.get_toggle "Time")
 
 type prims_t = {
   mk : (FStarC_Ident.lident -> (string -> (FStarC_SMTEncoding_Term.term * Prims.int * (FStarC_SMTEncoding_Term.decl) list)));
@@ -211,7 +85,7 @@ let prims : prims_t =
                 let tmp8 = (BatList.fold_left (fun tmp8 var -> (match tmp8 with
                     | (axioms, app, vars1) -> (let app1 = (FStarC_SMTEncoding_EncodeTerm.mk_Apply app (var :: [])) in
                       let vars2 = (BatList.append vars1 (var :: [])) in
-                      let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) vars2)) in
+                      let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) vars2)) in
                       let tmp10 = (Prims.strcat "." tmp9) in
                       let axiom_name1 = (Prims.strcat axiom_name tmp10) in
                       let tmp11 = (FStarC_SMTEncoding_Term.mk_IsTotFun app1) in
@@ -458,6 +332,459 @@ let prims : prims_t =
           ))
       ))
   ))
+
+let primitive_type_axioms : (FStarC_TypeChecker_Env.env -> (FStarC_Ident.lident -> (string -> (FStarC_SMTEncoding_Term.term -> (FStarC_SMTEncoding_Term.decl) list)))) =
+  (let xx = (FStarC_SMTEncoding_Term.mk_fv ("x", FStarC_SMTEncoding_Term.Term_sort)) in
+  let x = (FStarC_SMTEncoding_Util.mkFreeV xx) in
+  let yy = (FStarC_SMTEncoding_Term.mk_fv ("y", FStarC_SMTEncoding_Term.Term_sort)) in
+  let y = (FStarC_SMTEncoding_Util.mkFreeV yy) in
+  let mkForall_fuel = (fun env -> (FStarC_SMTEncoding_EncodeTerm.mkForall_fuel (FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) in
+  let mk_unit = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
+    let tmp = (FStarC_SMTEncoding_Term.mk_HasType FStarC_SMTEncoding_Term.mk_Term_unit tt) in
+    let tmp1 = (tmp, (Some ("unit typing")), "unit_typing") in
+    let tmp2 = (FStarC_SMTEncoding_Util.mkAssume tmp1) in
+    let tmp3 = (FStarC_SMTEncoding_Util.mkEq (x, FStarC_SMTEncoding_Term.mk_Term_unit)) in
+    let tmp4 = (typing_pred, tmp3) in
+    let tmp5 = (FStarC_SMTEncoding_Util.mkImp tmp4) in
+    let tmp6 = (((typing_pred :: []) :: []), (xx :: []), tmp5) in
+    let tmp7 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp6) in
+    let tmp8 = (tmp7, (Some ("unit inversion")), "unit_inversion") in
+    let tmp9 = (FStarC_SMTEncoding_Util.mkAssume tmp8) in
+    let tmp10 = (tmp9 :: []) in
+    (tmp2 :: tmp10))) in
+  let mk_bool = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Bool_sort)) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let tmp = (FStarC_SMTEncoding_Term.boxBool b) in
+    let tmp1 = (tmp :: []) in
+    let tmp2 = (tmp1 :: []) in
+    let tmp3 = (FStarC_SMTEncoding_Term.boxBool b) in
+    let tmp4 = (FStarC_SMTEncoding_Term.mk_HasType tmp3 tt) in
+    let tmp5 = (tmp2, (bb :: []), tmp4) in
+    let tmp6 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp5) in
+    let tmp7 = (tmp6, (Some ("bool typing")), "bool_typing") in
+    let tmp8 = (FStarC_SMTEncoding_Util.mkAssume tmp7) in
+    let tmp9 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxBoolFun with
+        | (u__1, u__2) -> u__1
+      ) x) in
+    let tmp10 = (typing_pred, tmp9) in
+    let tmp11 = (FStarC_SMTEncoding_Util.mkImp tmp10) in
+    let tmp12 = (((typing_pred :: []) :: []), (xx :: []), tmp11) in
+    let tmp13 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp12) in
+    let tmp14 = (tmp13, (Some ("bool inversion")), "bool_inversion") in
+    let tmp15 = (FStarC_SMTEncoding_Util.mkAssume tmp14) in
+    let tmp16 = (tmp15 :: []) in
+    (tmp8 :: tmp16))) in
+  let mk_prop = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Bool_sort)) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let tmp = (FStarC_SMTEncoding_Term.boxProp b) in
+    let tmp1 = (tmp :: []) in
+    let tmp2 = (tmp1 :: []) in
+    let tmp3 = (FStarC_SMTEncoding_Term.boxProp b) in
+    let tmp4 = (FStarC_SMTEncoding_Term.mk_HasType tmp3 tt) in
+    let tmp5 = (tmp2, (bb :: []), tmp4) in
+    let tmp6 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp5) in
+    let tmp7 = (tmp6, (Some ("prop typing")), "prop_typing") in
+    let tmp8 = (FStarC_SMTEncoding_Util.mkAssume tmp7) in
+    let tmp9 = (FStarC_SMTEncoding_Term.boxProp b) in
+    let tmp10 = (tmp9 :: []) in
+    let tmp11 = ("Valid", tmp10) in
+    let tmp12 = (FStarC_SMTEncoding_Util.mkApp tmp11) in
+    let tmp13 = (tmp12 :: []) in
+    let tmp14 = (tmp13 :: []) in
+    let tmp15 = (FStarC_SMTEncoding_Term.boxProp b) in
+    let tmp16 = (tmp15 :: []) in
+    let tmp17 = ("Valid", tmp16) in
+    let tmp18 = (FStarC_SMTEncoding_Util.mkApp tmp17) in
+    let tmp19 = (tmp18, b) in
+    let tmp20 = (FStarC_SMTEncoding_Util.mkIff tmp19) in
+    let tmp21 = (tmp14, (bb :: []), tmp20) in
+    let tmp22 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp21) in
+    let tmp23 = (tmp22, (Some ("prop validity")), "prop_validity") in
+    let tmp24 = (FStarC_SMTEncoding_Util.mkAssume tmp23) in
+    let tmp25 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxPropFun with
+        | (u__1, u__2) -> u__1
+      ) x) in
+    let tmp26 = (typing_pred, tmp25) in
+    let tmp27 = (FStarC_SMTEncoding_Util.mkImp tmp26) in
+    let tmp28 = (((typing_pred :: []) :: []), (xx :: []), tmp27) in
+    let tmp29 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp28) in
+    let tmp30 = (tmp29, (Some ("prop inversion")), "prop_inversion") in
+    let tmp31 = (FStarC_SMTEncoding_Util.mkAssume tmp30) in
+    let tmp32 = (tmp31 :: []) in
+    let tmp33 = (tmp24 :: tmp32) in
+    (tmp8 :: tmp33))) in
+  let mk_int = (fun env nm tt -> (let lex_t = (FStarC_SMTEncoding_Util.mkFreeV (FStarC_SMTEncoding_Term.mk_fv ((FStarC_Ident.string_of_lid FStarC_Parser_Const.lex_t_lid), FStarC_SMTEncoding_Term.Term_sort))) in
+    let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
+    let typing_pred_y = (FStarC_SMTEncoding_Term.mk_HasType y tt) in
+    let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Int_sort)) in
+    (ignore (FStarC_SMTEncoding_Util.mkFreeV aa));
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Int_sort)) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let tmp = (FStarC_SMTEncoding_Util.mkApp ("Prims.precedes", (FStarC_SMTEncoding_Term.mk_U_zero :: (FStarC_SMTEncoding_Term.mk_U_zero :: (lex_t :: (lex_t :: (y :: (x :: [])))))))) in
+    let precedes_y_x = (FStarC_SMTEncoding_Term.mk_Valid tmp) in
+    let tmp1 = (FStarC_SMTEncoding_Term.boxInt b) in
+    let tmp2 = (tmp1 :: []) in
+    let tmp3 = (tmp2 :: []) in
+    let tmp4 = (FStarC_SMTEncoding_Term.boxInt b) in
+    let tmp5 = (FStarC_SMTEncoding_Term.mk_HasType tmp4 tt) in
+    let tmp6 = (tmp3, (bb :: []), tmp5) in
+    let tmp7 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp6) in
+    let tmp8 = (tmp7, (Some ("int typing")), "int_typing") in
+    let tmp9 = (FStarC_SMTEncoding_Util.mkAssume tmp8) in
+    let tmp10 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxIntFun with
+        | (u__1, u__2) -> u__1
+      ) x) in
+    let tmp11 = (typing_pred, tmp10) in
+    let tmp12 = (FStarC_SMTEncoding_Util.mkImp tmp11) in
+    let tmp13 = (((typing_pred :: []) :: []), (xx :: []), tmp12) in
+    let tmp14 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp13) in
+    let tmp15 = (tmp14, (Some ("int inversion")), "int_inversion") in
+    let tmp16 = (FStarC_SMTEncoding_Util.mkAssume tmp15) in
+    let tmp17 = (FStarC_SMTEncoding_Term.unboxInt x) in
+    let tmp18 = (FStarC_SMTEncoding_Util.mkInteger' Prims.int_zero) in
+    let tmp19 = (tmp17, tmp18) in
+    let tmp20 = (FStarC_SMTEncoding_Util.mkGT tmp19) in
+    let tmp21 = (FStarC_SMTEncoding_Term.unboxInt y) in
+    let tmp22 = (FStarC_SMTEncoding_Util.mkInteger' Prims.int_zero) in
+    let tmp23 = (tmp21, tmp22) in
+    let tmp24 = (FStarC_SMTEncoding_Util.mkGTE tmp23) in
+    let tmp25 = (FStarC_SMTEncoding_Term.unboxInt y) in
+    let tmp26 = (FStarC_SMTEncoding_Term.unboxInt x) in
+    let tmp27 = (tmp25, tmp26) in
+    let tmp28 = (FStarC_SMTEncoding_Util.mkLT tmp27) in
+    let tmp29 = (tmp28 :: []) in
+    let tmp30 = (tmp24 :: tmp29) in
+    let tmp31 = (tmp20 :: tmp30) in
+    let tmp32 = (typing_pred_y :: tmp31) in
+    let tmp33 = (typing_pred :: tmp32) in
+    let tmp34 = (FStarC_SMTEncoding_Util.mk_and_l tmp33) in
+    let tmp35 = (tmp34, precedes_y_x) in
+    let tmp36 = (FStarC_SMTEncoding_Util.mkImp tmp35) in
+    let tmp37 = (((typing_pred :: (typing_pred_y :: (precedes_y_x :: []))) :: []), (xx :: (yy :: [])), tmp36) in
+    let tmp38 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp37) in
+    let tmp39 = (tmp38, (Some ("well-founded ordering on nat (alt)")), "well-founded-ordering-on-nat") in
+    let tmp40 = (FStarC_SMTEncoding_Util.mkAssume tmp39) in
+    let tmp41 = (tmp40 :: []) in
+    let tmp42 = (tmp16 :: tmp41) in
+    (tmp9 :: tmp42))) in
+  let mk_real = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
+    let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", (FStarC_SMTEncoding_Term.Sort ("Real")))) in
+    (ignore (FStarC_SMTEncoding_Util.mkFreeV aa));
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", (FStarC_SMTEncoding_Term.Sort ("Real")))) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let tmp = (FStarC_SMTEncoding_Term.boxReal b) in
+    let tmp1 = (tmp :: []) in
+    let tmp2 = (tmp1 :: []) in
+    let tmp3 = (FStarC_SMTEncoding_Term.boxReal b) in
+    let tmp4 = (FStarC_SMTEncoding_Term.mk_HasType tmp3 tt) in
+    let tmp5 = (tmp2, (bb :: []), tmp4) in
+    let tmp6 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp5) in
+    let tmp7 = (tmp6, (Some ("real typing")), "real_typing") in
+    let tmp8 = (FStarC_SMTEncoding_Util.mkAssume tmp7) in
+    let tmp9 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxRealFun with
+        | (u__1, u__2) -> u__1
+      ) x) in
+    let tmp10 = (typing_pred, tmp9) in
+    let tmp11 = (FStarC_SMTEncoding_Util.mkImp tmp10) in
+    let tmp12 = (((typing_pred :: []) :: []), (xx :: []), tmp11) in
+    let tmp13 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp12) in
+    let tmp14 = (tmp13, (Some ("real inversion")), "real_inversion") in
+    let tmp15 = (FStarC_SMTEncoding_Util.mkAssume tmp14) in
+    let tmp16 = (tmp15 :: []) in
+    (tmp8 :: tmp16))) in
+  let mk_str = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.String_sort)) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let tmp = (FStarC_SMTEncoding_Term.boxString b) in
+    let tmp1 = (tmp :: []) in
+    let tmp2 = (tmp1 :: []) in
+    let tmp3 = (FStarC_SMTEncoding_Term.boxString b) in
+    let tmp4 = (FStarC_SMTEncoding_Term.mk_HasType tmp3 tt) in
+    let tmp5 = (tmp2, (bb :: []), tmp4) in
+    let tmp6 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp5) in
+    let tmp7 = (tmp6, (Some ("string typing")), "string_typing") in
+    let tmp8 = (FStarC_SMTEncoding_Util.mkAssume tmp7) in
+    let tmp9 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxStringFun with
+        | (u__1, u__2) -> u__1
+      ) x) in
+    let tmp10 = (typing_pred, tmp9) in
+    let tmp11 = (FStarC_SMTEncoding_Util.mkImp tmp10) in
+    let tmp12 = (((typing_pred :: []) :: []), (xx :: []), tmp11) in
+    let tmp13 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp12) in
+    let tmp14 = (tmp13, (Some ("string inversion")), "string_inversion") in
+    let tmp15 = (FStarC_SMTEncoding_Util.mkAssume tmp14) in
+    let tmp16 = (tmp15 :: []) in
+    (tmp8 :: tmp16))) in
+  let mk_true_interp = (fun env nm true_tm -> (let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (true_tm :: []))) in
+    let tmp = (FStarC_SMTEncoding_Util.mkAssume (valid, (Some ("True interpretation")), "true_interp")) in
+    (tmp :: []))) in
+  let mk_false_interp = (fun env nm false_tm -> (let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (false_tm :: []))) in
+    let tmp = (FStarC_SMTEncoding_Util.mkIff (FStarC_SMTEncoding_Util.mkFalse, valid)) in
+    let tmp1 = (tmp, (Some ("False interpretation")), "false_interp") in
+    let tmp2 = (FStarC_SMTEncoding_Util.mkAssume tmp1) in
+    (tmp2 :: []))) in
+  let mk_and_interp = (fun env conj tmp -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Term_sort)) in
+    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let l_and_a_b = (FStarC_SMTEncoding_Util.mkApp (conj, (a :: (b :: [])))) in
+    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_and_a_b :: []))) in
+    let valid_a = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
+    let valid_b = (FStarC_SMTEncoding_Util.mkApp ("Valid", (b :: []))) in
+    let tmp1 = (FStarC_SMTEncoding_Util.mkAnd (valid_a, valid_b)) in
+    let tmp2 = (tmp1, valid) in
+    let tmp3 = (FStarC_SMTEncoding_Util.mkIff tmp2) in
+    let tmp4 = (((l_and_a_b :: []) :: []), (aa :: (bb :: [])), tmp3) in
+    let tmp5 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp4) in
+    let tmp6 = (tmp5, (Some ("/\\ interpretation")), "l_and-interp") in
+    let tmp7 = (FStarC_SMTEncoding_Util.mkAssume tmp6) in
+    (tmp7 :: []))) in
+  let mk_or_interp = (fun env disj tmp -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Term_sort)) in
+    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let l_or_a_b = (FStarC_SMTEncoding_Util.mkApp (disj, (a :: (b :: [])))) in
+    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_or_a_b :: []))) in
+    let valid_a = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
+    let valid_b = (FStarC_SMTEncoding_Util.mkApp ("Valid", (b :: []))) in
+    let tmp1 = (FStarC_SMTEncoding_Util.mkOr (valid_a, valid_b)) in
+    let tmp2 = (tmp1, valid) in
+    let tmp3 = (FStarC_SMTEncoding_Util.mkIff tmp2) in
+    let tmp4 = (((l_or_a_b :: []) :: []), (aa :: (bb :: [])), tmp3) in
+    let tmp5 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp4) in
+    let tmp6 = (tmp5, (Some ("\\/ interpretation")), "l_or-interp") in
+    let tmp7 = (FStarC_SMTEncoding_Util.mkAssume tmp6) in
+    (tmp7 :: []))) in
+  let mk_eq2_interp = (fun env eq2 tt -> (let uu = (FStarC_SMTEncoding_Term.mk_fv ("u", FStarC_SMTEncoding_Term.univ_sort)) in
+    let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
+    let xx1 = (FStarC_SMTEncoding_Term.mk_fv ("x", FStarC_SMTEncoding_Term.Term_sort)) in
+    let yy1 = (FStarC_SMTEncoding_Term.mk_fv ("y", FStarC_SMTEncoding_Term.Term_sort)) in
+    let u = (FStarC_SMTEncoding_Util.mkFreeV uu) in
+    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
+    let x1 = (FStarC_SMTEncoding_Util.mkFreeV xx1) in
+    let y1 = (FStarC_SMTEncoding_Util.mkFreeV yy1) in
+    let eq2_x_y = (FStarC_SMTEncoding_Util.mkApp (eq2, (u :: (a :: (x1 :: (y1 :: [])))))) in
+    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (eq2_x_y :: []))) in
+    let tmp = (FStarC_SMTEncoding_Util.mkEq (x1, y1)) in
+    let tmp1 = (tmp, valid) in
+    let tmp2 = (FStarC_SMTEncoding_Util.mkIff tmp1) in
+    let tmp3 = (((eq2_x_y :: []) :: []), (uu :: (aa :: (xx1 :: (yy1 :: [])))), tmp2) in
+    let tmp4 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp3) in
+    let tmp5 = (tmp4, (Some ("Eq2 interpretation")), "eq2-interp") in
+    let tmp6 = (FStarC_SMTEncoding_Util.mkAssume tmp5) in
+    (tmp6 :: []))) in
+  let mk_imp_interp = (fun env imp tt -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Term_sort)) in
+    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let l_imp_a_b = (FStarC_SMTEncoding_Util.mkApp (imp, (a :: (b :: [])))) in
+    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_imp_a_b :: []))) in
+    let valid_a = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
+    let valid_b = (FStarC_SMTEncoding_Util.mkApp ("Valid", (b :: []))) in
+    let tmp = (FStarC_SMTEncoding_Util.mkImp (valid_a, valid_b)) in
+    let tmp1 = (tmp, valid) in
+    let tmp2 = (FStarC_SMTEncoding_Util.mkIff tmp1) in
+    let tmp3 = (((l_imp_a_b :: []) :: []), (aa :: (bb :: [])), tmp2) in
+    let tmp4 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp3) in
+    let tmp5 = (tmp4, (Some ("==> interpretation")), "l_imp-interp") in
+    let tmp6 = (FStarC_SMTEncoding_Util.mkAssume tmp5) in
+    (tmp6 :: []))) in
+  let mk_iff_interp = (fun env iff tt -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
+    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Term_sort)) in
+    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
+    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
+    let l_iff_a_b = (FStarC_SMTEncoding_Util.mkApp (iff, (a :: (b :: [])))) in
+    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_iff_a_b :: []))) in
+    let valid_a = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
+    let valid_b = (FStarC_SMTEncoding_Util.mkApp ("Valid", (b :: []))) in
+    let tmp = (FStarC_SMTEncoding_Util.mkIff (valid_a, valid_b)) in
+    let tmp1 = (tmp, valid) in
+    let tmp2 = (FStarC_SMTEncoding_Util.mkIff tmp1) in
+    let tmp3 = (((l_iff_a_b :: []) :: []), (aa :: (bb :: [])), tmp2) in
+    let tmp4 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp3) in
+    let tmp5 = (tmp4, (Some ("<==> interpretation")), "l_iff-interp") in
+    let tmp6 = (FStarC_SMTEncoding_Util.mkAssume tmp5) in
+    (tmp6 :: []))) in
+  let mk_not_interp = (fun env l_not tt -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
+    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
+    let l_not_a = (FStarC_SMTEncoding_Util.mkApp (l_not, (a :: []))) in
+    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_not_a :: []))) in
+    let tmp = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
+    let not_valid_a = (FStarC_SMTEncoding_Util.mkNot tmp) in
+    let tmp1 = (FStarC_SMTEncoding_Util.mkIff (not_valid_a, valid)) in
+    let tmp2 = (((l_not_a :: []) :: []), (aa :: []), tmp1) in
+    let tmp3 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp2) in
+    let tmp4 = (tmp3, (Some ("not interpretation")), "l_not-interp") in
+    let tmp5 = (FStarC_SMTEncoding_Util.mkAssume tmp4) in
+    (tmp5 :: []))) in
+  let mk_range_interp = (fun env range tt -> (let tmp = (FStarC_SMTEncoding_Term.mk_Range_const ()) in
+    let tmp1 = (FStarC_SMTEncoding_Term.mk_HasTypeZ tmp tt) in
+    let tmp2 = ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.mk_unique "typing_range_const") in
+    let tmp3 = (tmp1, (Some ("Range_const typing")), tmp2) in
+    let tmp4 = (FStarC_SMTEncoding_Util.mkAssume tmp3) in
+    (tmp4 :: []))) in
+  let mk_inversion_axiom = (fun env inversion tt -> (let uu = (FStarC_SMTEncoding_Term.mk_fv ("u", FStarC_SMTEncoding_Term.univ_sort)) in
+    let u = (FStarC_SMTEncoding_Util.mkFreeV uu) in
+    let tt1 = (FStarC_SMTEncoding_Term.mk_fv ("t", FStarC_SMTEncoding_Term.Term_sort)) in
+    let t = (FStarC_SMTEncoding_Util.mkFreeV tt1) in
+    let xx1 = (FStarC_SMTEncoding_Term.mk_fv ("x", FStarC_SMTEncoding_Term.Term_sort)) in
+    let x1 = (FStarC_SMTEncoding_Util.mkFreeV xx1) in
+    let inversion_t = (FStarC_SMTEncoding_Util.mkApp (inversion, (u :: (t :: [])))) in
+    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (inversion_t :: []))) in
+    let hastypeZ = (FStarC_SMTEncoding_Term.mk_HasTypeZ x1 t) in
+    let tmp = (FStarC_SMTEncoding_Term.n_fuel Prims.int_one) in
+    let hastypeS = (FStarC_SMTEncoding_Term.mk_HasTypeFuel tmp x1 t) in
+    let tmp1 = (FStarC_SMTEncoding_Util.mkImp (hastypeZ, hastypeS)) in
+    let tmp2 = (((hastypeZ :: []) :: []), (xx1 :: []), tmp1) in
+    let body = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp2) in
+    let tmp3 = (FStarC_SMTEncoding_Util.mkImp (valid, body)) in
+    let tmp4 = (((inversion_t :: []) :: []), (uu :: (tt1 :: [])), tmp3) in
+    let tmp5 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp4) in
+    let tmp6 = (tmp5, (Some ("inversion interpretation")), "inversion-interp") in
+    let tmp7 = (FStarC_SMTEncoding_Util.mkAssume tmp6) in
+    (tmp7 :: []))) in
+  let prims_ = ((FStarC_Parser_Const.unit_lid, mk_unit) :: ((FStarC_Parser_Const.bool_lid, mk_bool) :: ((FStarC_Parser_Const.prop_lid, mk_prop) :: ((FStarC_Parser_Const.int_lid, mk_int) :: ((FStarC_Parser_Const.real_lid, mk_real) :: ((FStarC_Parser_Const.string_lid, mk_str) :: ((FStarC_Parser_Const.true_lid, mk_true_interp) :: ((FStarC_Parser_Const.false_lid, mk_false_interp) :: ((FStarC_Parser_Const.and_lid, mk_and_interp) :: ((FStarC_Parser_Const.or_lid, mk_or_interp) :: ((FStarC_Parser_Const.eq2_lid, mk_eq2_interp) :: ((FStarC_Parser_Const.imp_lid, mk_imp_interp) :: ((FStarC_Parser_Const.iff_lid, mk_iff_interp) :: ((FStarC_Parser_Const.not_lid, mk_not_interp) :: ((FStarC_Parser_Const.range_lid, mk_range_interp) :: ((FStarC_Parser_Const.inversion_lid, mk_inversion_axiom) :: [])))))))))))))))) in
+  (fun env t s tt -> (let tmp = (FStarC_Option.find (fun tmp -> (match tmp with
+      | (l, tmp1) -> (FStarC_Ident.lid_equals l t)
+    )) prims_) in
+  (match tmp with
+    | None -> []
+    | (Some ((tmp1, f))) -> (f env s tt)
+  ))))
+
+let rec flush_deferred_encodings__run (l : ((unit -> unit)) list) : unit =
+  (match l with
+    | [] -> ()
+    | (f :: tl) -> ((f ());
+      (flush_deferred_encodings__run tl))
+  )
+
+let flush_deferred_encodings (tmp : unit) : unit =
+  (let tmp1 = (!(deferred_encodings)) in
+  (match tmp1 with
+    | [] -> ()
+    | fs -> (((deferred_encodings) := []);
+      (flush_deferred_encodings__run (BatList.rev fs)))
+  ))
+
+let copy_env (en : FStarC_SMTEncoding_Env.env_t) : FStarC_SMTEncoding_Env.env_t =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.copy (en).FStarC_SMTEncoding_Env.global_cache) in
+  { FStarC_SMTEncoding_Env.bvar_bindings = (en).FStarC_SMTEncoding_Env.bvar_bindings;
+    fvar_bindings = (en).FStarC_SMTEncoding_Env.fvar_bindings;
+    fvar_bindings1 = (en).FStarC_SMTEncoding_Env.fvar_bindings1;
+    depth = (en).FStarC_SMTEncoding_Env.depth;
+    tcenv = (en).FStarC_SMTEncoding_Env.tcenv;
+    warn = (en).FStarC_SMTEncoding_Env.warn;
+    nolabels = (en).FStarC_SMTEncoding_Env.nolabels;
+    use_zfuel_name = (en).FStarC_SMTEncoding_Env.use_zfuel_name;
+    encode_non_total_function_typ = (en).FStarC_SMTEncoding_Env.encode_non_total_function_typ;
+    current_module_name = (en).FStarC_SMTEncoding_Env.current_module_name;
+    encoding_quantifier = (en).FStarC_SMTEncoding_Env.encoding_quantifier;
+    global_cache = tmp })
+
+let push_env (tmp : unit) : unit =
+  (let tmp1 = (!(last_env)) in
+  (match tmp1 with
+    | [] -> (FStarC_Effect.failwith "Empty env stack")
+    | (hd :: tl) -> (let top = (copy_env hd) in
+      ((last_env) := (top :: (hd :: tl))))
+  ))
+
+let snapshot_env (tmp : unit) : (Prims.int * unit) =
+  (FStarC_Common.snapshot "SMTEncoding.Encode.env" push_env last_env ())
+
+let snapshot_encoding (msg : string) : (Prims.int * Prims.int) =
+  (FStarC_Util.atomically (fun tmp -> ((flush_deferred_encodings ());
+  let tmp1 = (FStarC_Debug.medium ()) in
+  (if tmp1 then (FStarC_Format.print1 "Encode.snapshot_encoding: %s\n" msg) else ());
+  let tmp2 = (snapshot_env ()) in
+  (match tmp2 with
+    | (env_depth, ()) -> (let tmp3 = ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.snapshot ()) in
+      (match tmp3 with
+        | (varops_depth, ()) -> (env_depth, varops_depth)
+      ))
+  ))))
+
+let pop_env (tmp : unit) : unit =
+  (let tmp1 = (!(last_env)) in
+  (match tmp1 with
+    | [] -> (FStarC_Effect.failwith "Popping an empty stack")
+    | (tmp2 :: tl) -> ((last_env) := tl)
+  ))
+
+let rollback_env (depth : (Prims.int) option) : unit =
+  (FStarC_Common.rollback "SMTEncoding.Encode.env" pop_env last_env depth)
+
+let rollback_encoding (msg : string) (depth : ((Prims.int * Prims.int)) option) : unit =
+  (FStarC_Util.atomically (fun tmp -> (let tmp1 = (FStarC_Debug.medium ()) in
+  (if tmp1 then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__option_tuple2_int_int depth) in
+  (FStarC_Format.print2 "Encode.rollback_encoding: %s to %s\n" msg tmp2)) else ());
+  let tmp2 = (match depth with
+      | (Some ((s1, s2))) -> ((Some (s1)), (Some (s2)))
+      | None -> (None, None)
+    ) in
+  (match tmp2 with
+    | (env_depth, varops_depth) -> ((rollback_env env_depth);
+      ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.rollback varops_depth))
+  ))))
+
+let get_env (cmn : FStarC_Ident.lident) (tcenv : FStarC_TypeChecker_Env.env) : FStarC_SMTEncoding_Env.env_t =
+  (let tmp = (!(last_env)) in
+  (match tmp with
+    | [] -> (FStarC_Effect.failwith "No env; call init first!")
+    | (e :: tmp1) -> { FStarC_SMTEncoding_Env.bvar_bindings = (e).FStarC_SMTEncoding_Env.bvar_bindings;
+        fvar_bindings = (e).FStarC_SMTEncoding_Env.fvar_bindings;
+        fvar_bindings1 = (e).FStarC_SMTEncoding_Env.fvar_bindings1;
+        depth = (e).FStarC_SMTEncoding_Env.depth;
+        tcenv = tcenv;
+        warn = (e).FStarC_SMTEncoding_Env.warn;
+        nolabels = (e).FStarC_SMTEncoding_Env.nolabels;
+        use_zfuel_name = (e).FStarC_SMTEncoding_Env.use_zfuel_name;
+        encode_non_total_function_typ = (e).FStarC_SMTEncoding_Env.encode_non_total_function_typ;
+        current_module_name = (FStarC_Ident.string_of_lid cmn);
+        encoding_quantifier = (e).FStarC_SMTEncoding_Env.encoding_quantifier;
+        global_cache = (e).FStarC_SMTEncoding_Env.global_cache }
+  ))
+
+let open_fact_db_tags (env : FStarC_SMTEncoding_Env.env_t) : (FStarC_SMTEncoding_Term.fact_db_id) list =
+  []
+
+let fact_dbs_for_lid (env : FStarC_SMTEncoding_Env.env_t) (lid : FStarC_Ident.lident) : (FStarC_SMTEncoding_Term.fact_db_id) list =
+  (let tmp = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid lid)) in
+  let tmp1 = (FStarC_SMTEncoding_Term.Namespace (tmp)) in
+  let tmp2 = (tmp1 :: (open_fact_db_tags env)) in
+  ((FStarC_SMTEncoding_Term.Name (lid)) :: tmp2))
+
+let norm_with_steps (steps : (FStarC_TypeChecker_Env.step) list) (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize steps env t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) "FStarC.SMTEncoding.Encode.norm")
+
+let norm_before_encoding (env : FStarC_SMTEncoding_Env.env_t) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
+  (let steps = (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.Simplify :: (FStarC_TypeChecker_Env.Primops :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: [])))) in
+  (FStarC_Profiling.profile (fun tmp -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_normalize steps (env).FStarC_SMTEncoding_Env.tcenv t)) (Some ((FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module (env).FStarC_SMTEncoding_Env.tcenv)))) "FStarC.SMTEncoding.Encode.norm_before_encoding"))
+
+let smt_arity_attribute (env : FStarC_SMTEncoding_Env.env_t) (lid : FStarC_Ident.lident) : (Prims.int) option =
+  (let tmp = (FStarC_TypeChecker_Env.lookup_attrs_of_lid (env).FStarC_SMTEncoding_Env.tcenv lid) in
+  (match tmp with
+    | None -> None
+    | (Some (attrs)) -> (let tmp1 = (FStarC_Syntax_Util.get_attribute FStarC_Parser_Const.smt_arity_attr attrs) in
+      (match tmp1 with
+        | (Some (((a, tmp2) :: tmp3))) -> (let tmp4 = (FStarC_Syntax_Subst.compress a) in
+          let tmp5 = (tmp4).FStarC_Syntax_Syntax.n in
+          (match tmp5 with
+            | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_int (i, tmp6)))) -> (Some (i))
+            | tmp6 -> (let tmp7 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
+              let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' a) in
+              let tmp9 = (FStarC_Format.fmt2 "Expected an integer literal in [@@smt_arity] on %s, got %s" tmp7 tmp8) in
+              (FStarC_Effect.failwith tmp9))
+          ))
+        | tmp2 -> None
+      ))
+  ))
+
+let close_universes (rng : FStarC_Range_Type.range) (univ_fvs : (FStarC_SMTEncoding_Term.fv) list) (pat : FStarC_SMTEncoding_Term.term) (body : FStarC_SMTEncoding_Term.term) : FStarC_SMTEncoding_Term.term =
+  (FStarC_SMTEncoding_Term.mkForall rng (((pat :: []) :: []), univ_fvs, body))
 
 let encode_free_var (uninterpreted : bool) (env : FStarC_SMTEncoding_Env.env_t) (fv : FStarC_Syntax_Syntax.fv) (us : (FStarC_Ident.ident) list) (tt : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t_norm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (quals : (FStarC_Syntax_Syntax.qualifier) list) (is_type_ctor : bool) : ((FStarC_SMTEncoding_Term.decls_elt) list * FStarC_SMTEncoding_Env.env_t) =
   (let lid = (fv).FStarC_Syntax_Syntax.fv_name in
@@ -853,7 +1180,7 @@ let encode_top_level_val (uninterpreted : bool) (env : FStarC_SMTEncoding_Env.en
   (let tt = (if ((=) (FStarC_Ident.nsstr (FStarC_Syntax_Syntax.lid_of_fv fv)) "FStar.Ghost") then (norm_with_steps (FStarC_TypeChecker_Env.Eager_unfolding :: (FStarC_TypeChecker_Env.AllowUnboundUniverses :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env).FStarC_SMTEncoding_Env.tcenv t) else (norm_before_encoding env t)) in
   let tmp = (!(dbg_SMTEncoding)) in
   (if tmp then (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fv) in
-  let tmp2 = (FStarC_Ident.fStarC_Class_Show_show__list_ident us) in
+  let tmp2 = (FStarC_Ident.fStarC_Class_Show_show__list_ident_67 us) in
   let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' t) in
   let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tt) in
   (FStarC_Format.print4 "Encoding top-level val %s %s : %s\nNormalized to is %s\n" tmp1 tmp2 tmp3 tmp4)) else ());
@@ -864,327 +1191,6 @@ let encode_top_level_val (uninterpreted : bool) (env : FStarC_SMTEncoding_Env.en
       let tmp4 = (BatList.append decls tmp3) in
       (tmp4, env1)) else (decls, env1)))
   ))
-
-let primitive_type_axioms : (FStarC_TypeChecker_Env.env -> (FStarC_Ident.lident -> (string -> (FStarC_SMTEncoding_Term.term -> (FStarC_SMTEncoding_Term.decl) list)))) =
-  (let xx = (FStarC_SMTEncoding_Term.mk_fv ("x", FStarC_SMTEncoding_Term.Term_sort)) in
-  let x = (FStarC_SMTEncoding_Util.mkFreeV xx) in
-  let yy = (FStarC_SMTEncoding_Term.mk_fv ("y", FStarC_SMTEncoding_Term.Term_sort)) in
-  let y = (FStarC_SMTEncoding_Util.mkFreeV yy) in
-  let mkForall_fuel = (fun env -> (FStarC_SMTEncoding_EncodeTerm.mkForall_fuel (FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module env)))) in
-  let mk_unit = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
-    let tmp = (FStarC_SMTEncoding_Term.mk_HasType FStarC_SMTEncoding_Term.mk_Term_unit tt) in
-    let tmp1 = (tmp, (Some ("unit typing")), "unit_typing") in
-    let tmp2 = (FStarC_SMTEncoding_Util.mkAssume tmp1) in
-    let tmp3 = (FStarC_SMTEncoding_Util.mkEq (x, FStarC_SMTEncoding_Term.mk_Term_unit)) in
-    let tmp4 = (typing_pred, tmp3) in
-    let tmp5 = (FStarC_SMTEncoding_Util.mkImp tmp4) in
-    let tmp6 = (((typing_pred :: []) :: []), (xx :: []), tmp5) in
-    let tmp7 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp6) in
-    let tmp8 = (tmp7, (Some ("unit inversion")), "unit_inversion") in
-    let tmp9 = (FStarC_SMTEncoding_Util.mkAssume tmp8) in
-    let tmp10 = (tmp9 :: []) in
-    (tmp2 :: tmp10))) in
-  let mk_bool = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Bool_sort)) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let tmp = (FStarC_SMTEncoding_Term.boxBool b) in
-    let tmp1 = (tmp :: []) in
-    let tmp2 = (tmp1 :: []) in
-    let tmp3 = (FStarC_SMTEncoding_Term.boxBool b) in
-    let tmp4 = (FStarC_SMTEncoding_Term.mk_HasType tmp3 tt) in
-    let tmp5 = (tmp2, (bb :: []), tmp4) in
-    let tmp6 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp5) in
-    let tmp7 = (tmp6, (Some ("bool typing")), "bool_typing") in
-    let tmp8 = (FStarC_SMTEncoding_Util.mkAssume tmp7) in
-    let tmp9 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxBoolFun with
-        | (u__1, u__2) -> u__1
-      ) x) in
-    let tmp10 = (typing_pred, tmp9) in
-    let tmp11 = (FStarC_SMTEncoding_Util.mkImp tmp10) in
-    let tmp12 = (((typing_pred :: []) :: []), (xx :: []), tmp11) in
-    let tmp13 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp12) in
-    let tmp14 = (tmp13, (Some ("bool inversion")), "bool_inversion") in
-    let tmp15 = (FStarC_SMTEncoding_Util.mkAssume tmp14) in
-    let tmp16 = (tmp15 :: []) in
-    (tmp8 :: tmp16))) in
-  let mk_prop = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Bool_sort)) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let tmp = (FStarC_SMTEncoding_Term.boxProp b) in
-    let tmp1 = (tmp :: []) in
-    let tmp2 = (tmp1 :: []) in
-    let tmp3 = (FStarC_SMTEncoding_Term.boxProp b) in
-    let tmp4 = (FStarC_SMTEncoding_Term.mk_HasType tmp3 tt) in
-    let tmp5 = (tmp2, (bb :: []), tmp4) in
-    let tmp6 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp5) in
-    let tmp7 = (tmp6, (Some ("prop typing")), "prop_typing") in
-    let tmp8 = (FStarC_SMTEncoding_Util.mkAssume tmp7) in
-    let tmp9 = (FStarC_SMTEncoding_Term.boxProp b) in
-    let tmp10 = (tmp9 :: []) in
-    let tmp11 = ("Valid", tmp10) in
-    let tmp12 = (FStarC_SMTEncoding_Util.mkApp tmp11) in
-    let tmp13 = (tmp12 :: []) in
-    let tmp14 = (tmp13 :: []) in
-    let tmp15 = (FStarC_SMTEncoding_Term.boxProp b) in
-    let tmp16 = (tmp15 :: []) in
-    let tmp17 = ("Valid", tmp16) in
-    let tmp18 = (FStarC_SMTEncoding_Util.mkApp tmp17) in
-    let tmp19 = (tmp18, b) in
-    let tmp20 = (FStarC_SMTEncoding_Util.mkIff tmp19) in
-    let tmp21 = (tmp14, (bb :: []), tmp20) in
-    let tmp22 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp21) in
-    let tmp23 = (tmp22, (Some ("prop validity")), "prop_validity") in
-    let tmp24 = (FStarC_SMTEncoding_Util.mkAssume tmp23) in
-    let tmp25 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxPropFun with
-        | (u__1, u__2) -> u__1
-      ) x) in
-    let tmp26 = (typing_pred, tmp25) in
-    let tmp27 = (FStarC_SMTEncoding_Util.mkImp tmp26) in
-    let tmp28 = (((typing_pred :: []) :: []), (xx :: []), tmp27) in
-    let tmp29 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp28) in
-    let tmp30 = (tmp29, (Some ("prop inversion")), "prop_inversion") in
-    let tmp31 = (FStarC_SMTEncoding_Util.mkAssume tmp30) in
-    let tmp32 = (tmp31 :: []) in
-    let tmp33 = (tmp24 :: tmp32) in
-    (tmp8 :: tmp33))) in
-  let mk_int = (fun env nm tt -> (let lex_t = (FStarC_SMTEncoding_Util.mkFreeV (FStarC_SMTEncoding_Term.mk_fv ((FStarC_Ident.string_of_lid FStarC_Parser_Const.lex_t_lid), FStarC_SMTEncoding_Term.Term_sort))) in
-    let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
-    let typing_pred_y = (FStarC_SMTEncoding_Term.mk_HasType y tt) in
-    let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Int_sort)) in
-    (ignore (FStarC_SMTEncoding_Util.mkFreeV aa));
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Int_sort)) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let tmp = (FStarC_SMTEncoding_Util.mkApp ("Prims.precedes", (FStarC_SMTEncoding_Term.mk_U_zero :: (FStarC_SMTEncoding_Term.mk_U_zero :: (lex_t :: (lex_t :: (y :: (x :: [])))))))) in
-    let precedes_y_x = (FStarC_SMTEncoding_Term.mk_Valid tmp) in
-    let tmp1 = (FStarC_SMTEncoding_Term.boxInt b) in
-    let tmp2 = (tmp1 :: []) in
-    let tmp3 = (tmp2 :: []) in
-    let tmp4 = (FStarC_SMTEncoding_Term.boxInt b) in
-    let tmp5 = (FStarC_SMTEncoding_Term.mk_HasType tmp4 tt) in
-    let tmp6 = (tmp3, (bb :: []), tmp5) in
-    let tmp7 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp6) in
-    let tmp8 = (tmp7, (Some ("int typing")), "int_typing") in
-    let tmp9 = (FStarC_SMTEncoding_Util.mkAssume tmp8) in
-    let tmp10 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxIntFun with
-        | (u__1, u__2) -> u__1
-      ) x) in
-    let tmp11 = (typing_pred, tmp10) in
-    let tmp12 = (FStarC_SMTEncoding_Util.mkImp tmp11) in
-    let tmp13 = (((typing_pred :: []) :: []), (xx :: []), tmp12) in
-    let tmp14 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp13) in
-    let tmp15 = (tmp14, (Some ("int inversion")), "int_inversion") in
-    let tmp16 = (FStarC_SMTEncoding_Util.mkAssume tmp15) in
-    let tmp17 = (FStarC_SMTEncoding_Term.unboxInt x) in
-    let tmp18 = (FStarC_SMTEncoding_Util.mkInteger' Prims.int_zero) in
-    let tmp19 = (tmp17, tmp18) in
-    let tmp20 = (FStarC_SMTEncoding_Util.mkGT tmp19) in
-    let tmp21 = (FStarC_SMTEncoding_Term.unboxInt y) in
-    let tmp22 = (FStarC_SMTEncoding_Util.mkInteger' Prims.int_zero) in
-    let tmp23 = (tmp21, tmp22) in
-    let tmp24 = (FStarC_SMTEncoding_Util.mkGTE tmp23) in
-    let tmp25 = (FStarC_SMTEncoding_Term.unboxInt y) in
-    let tmp26 = (FStarC_SMTEncoding_Term.unboxInt x) in
-    let tmp27 = (tmp25, tmp26) in
-    let tmp28 = (FStarC_SMTEncoding_Util.mkLT tmp27) in
-    let tmp29 = (tmp28 :: []) in
-    let tmp30 = (tmp24 :: tmp29) in
-    let tmp31 = (tmp20 :: tmp30) in
-    let tmp32 = (typing_pred_y :: tmp31) in
-    let tmp33 = (typing_pred :: tmp32) in
-    let tmp34 = (FStarC_SMTEncoding_Util.mk_and_l tmp33) in
-    let tmp35 = (tmp34, precedes_y_x) in
-    let tmp36 = (FStarC_SMTEncoding_Util.mkImp tmp35) in
-    let tmp37 = (((typing_pred :: (typing_pred_y :: (precedes_y_x :: []))) :: []), (xx :: (yy :: [])), tmp36) in
-    let tmp38 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp37) in
-    let tmp39 = (tmp38, (Some ("well-founded ordering on nat (alt)")), "well-founded-ordering-on-nat") in
-    let tmp40 = (FStarC_SMTEncoding_Util.mkAssume tmp39) in
-    let tmp41 = (tmp40 :: []) in
-    let tmp42 = (tmp16 :: tmp41) in
-    (tmp9 :: tmp42))) in
-  let mk_real = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
-    let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", (FStarC_SMTEncoding_Term.Sort ("Real")))) in
-    (ignore (FStarC_SMTEncoding_Util.mkFreeV aa));
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", (FStarC_SMTEncoding_Term.Sort ("Real")))) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let tmp = (FStarC_SMTEncoding_Term.boxReal b) in
-    let tmp1 = (tmp :: []) in
-    let tmp2 = (tmp1 :: []) in
-    let tmp3 = (FStarC_SMTEncoding_Term.boxReal b) in
-    let tmp4 = (FStarC_SMTEncoding_Term.mk_HasType tmp3 tt) in
-    let tmp5 = (tmp2, (bb :: []), tmp4) in
-    let tmp6 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp5) in
-    let tmp7 = (tmp6, (Some ("real typing")), "real_typing") in
-    let tmp8 = (FStarC_SMTEncoding_Util.mkAssume tmp7) in
-    let tmp9 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxRealFun with
-        | (u__1, u__2) -> u__1
-      ) x) in
-    let tmp10 = (typing_pred, tmp9) in
-    let tmp11 = (FStarC_SMTEncoding_Util.mkImp tmp10) in
-    let tmp12 = (((typing_pred :: []) :: []), (xx :: []), tmp11) in
-    let tmp13 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp12) in
-    let tmp14 = (tmp13, (Some ("real inversion")), "real_inversion") in
-    let tmp15 = (FStarC_SMTEncoding_Util.mkAssume tmp14) in
-    let tmp16 = (tmp15 :: []) in
-    (tmp8 :: tmp16))) in
-  let mk_str = (fun env nm tt -> (let typing_pred = (FStarC_SMTEncoding_Term.mk_HasType x tt) in
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.String_sort)) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let tmp = (FStarC_SMTEncoding_Term.boxString b) in
-    let tmp1 = (tmp :: []) in
-    let tmp2 = (tmp1 :: []) in
-    let tmp3 = (FStarC_SMTEncoding_Term.boxString b) in
-    let tmp4 = (FStarC_SMTEncoding_Term.mk_HasType tmp3 tt) in
-    let tmp5 = (tmp2, (bb :: []), tmp4) in
-    let tmp6 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp5) in
-    let tmp7 = (tmp6, (Some ("string typing")), "string_typing") in
-    let tmp8 = (FStarC_SMTEncoding_Util.mkAssume tmp7) in
-    let tmp9 = (FStarC_SMTEncoding_Term.mk_tester (match FStarC_SMTEncoding_Term.boxStringFun with
-        | (u__1, u__2) -> u__1
-      ) x) in
-    let tmp10 = (typing_pred, tmp9) in
-    let tmp11 = (FStarC_SMTEncoding_Util.mkImp tmp10) in
-    let tmp12 = (((typing_pred :: []) :: []), (xx :: []), tmp11) in
-    let tmp13 = (mkForall_fuel env (FStarC_TypeChecker_Env.get_range env) tmp12) in
-    let tmp14 = (tmp13, (Some ("string inversion")), "string_inversion") in
-    let tmp15 = (FStarC_SMTEncoding_Util.mkAssume tmp14) in
-    let tmp16 = (tmp15 :: []) in
-    (tmp8 :: tmp16))) in
-  let mk_true_interp = (fun env nm true_tm -> (let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (true_tm :: []))) in
-    let tmp = (FStarC_SMTEncoding_Util.mkAssume (valid, (Some ("True interpretation")), "true_interp")) in
-    (tmp :: []))) in
-  let mk_false_interp = (fun env nm false_tm -> (let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (false_tm :: []))) in
-    let tmp = (FStarC_SMTEncoding_Util.mkIff (FStarC_SMTEncoding_Util.mkFalse, valid)) in
-    let tmp1 = (tmp, (Some ("False interpretation")), "false_interp") in
-    let tmp2 = (FStarC_SMTEncoding_Util.mkAssume tmp1) in
-    (tmp2 :: []))) in
-  let mk_and_interp = (fun env conj tmp -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Term_sort)) in
-    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let l_and_a_b = (FStarC_SMTEncoding_Util.mkApp (conj, (a :: (b :: [])))) in
-    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_and_a_b :: []))) in
-    let valid_a = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
-    let valid_b = (FStarC_SMTEncoding_Util.mkApp ("Valid", (b :: []))) in
-    let tmp1 = (FStarC_SMTEncoding_Util.mkAnd (valid_a, valid_b)) in
-    let tmp2 = (tmp1, valid) in
-    let tmp3 = (FStarC_SMTEncoding_Util.mkIff tmp2) in
-    let tmp4 = (((l_and_a_b :: []) :: []), (aa :: (bb :: [])), tmp3) in
-    let tmp5 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp4) in
-    let tmp6 = (tmp5, (Some ("/\\ interpretation")), "l_and-interp") in
-    let tmp7 = (FStarC_SMTEncoding_Util.mkAssume tmp6) in
-    (tmp7 :: []))) in
-  let mk_or_interp = (fun env disj tmp -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Term_sort)) in
-    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let l_or_a_b = (FStarC_SMTEncoding_Util.mkApp (disj, (a :: (b :: [])))) in
-    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_or_a_b :: []))) in
-    let valid_a = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
-    let valid_b = (FStarC_SMTEncoding_Util.mkApp ("Valid", (b :: []))) in
-    let tmp1 = (FStarC_SMTEncoding_Util.mkOr (valid_a, valid_b)) in
-    let tmp2 = (tmp1, valid) in
-    let tmp3 = (FStarC_SMTEncoding_Util.mkIff tmp2) in
-    let tmp4 = (((l_or_a_b :: []) :: []), (aa :: (bb :: [])), tmp3) in
-    let tmp5 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp4) in
-    let tmp6 = (tmp5, (Some ("\\/ interpretation")), "l_or-interp") in
-    let tmp7 = (FStarC_SMTEncoding_Util.mkAssume tmp6) in
-    (tmp7 :: []))) in
-  let mk_eq2_interp = (fun env eq2 tt -> (let uu = (FStarC_SMTEncoding_Term.mk_fv ("u", FStarC_SMTEncoding_Term.univ_sort)) in
-    let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
-    let xx1 = (FStarC_SMTEncoding_Term.mk_fv ("x", FStarC_SMTEncoding_Term.Term_sort)) in
-    let yy1 = (FStarC_SMTEncoding_Term.mk_fv ("y", FStarC_SMTEncoding_Term.Term_sort)) in
-    let u = (FStarC_SMTEncoding_Util.mkFreeV uu) in
-    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
-    let x1 = (FStarC_SMTEncoding_Util.mkFreeV xx1) in
-    let y1 = (FStarC_SMTEncoding_Util.mkFreeV yy1) in
-    let eq2_x_y = (FStarC_SMTEncoding_Util.mkApp (eq2, (u :: (a :: (x1 :: (y1 :: [])))))) in
-    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (eq2_x_y :: []))) in
-    let tmp = (FStarC_SMTEncoding_Util.mkEq (x1, y1)) in
-    let tmp1 = (tmp, valid) in
-    let tmp2 = (FStarC_SMTEncoding_Util.mkIff tmp1) in
-    let tmp3 = (((eq2_x_y :: []) :: []), (uu :: (aa :: (xx1 :: (yy1 :: [])))), tmp2) in
-    let tmp4 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp3) in
-    let tmp5 = (tmp4, (Some ("Eq2 interpretation")), "eq2-interp") in
-    let tmp6 = (FStarC_SMTEncoding_Util.mkAssume tmp5) in
-    (tmp6 :: []))) in
-  let mk_imp_interp = (fun env imp tt -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Term_sort)) in
-    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let l_imp_a_b = (FStarC_SMTEncoding_Util.mkApp (imp, (a :: (b :: [])))) in
-    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_imp_a_b :: []))) in
-    let valid_a = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
-    let valid_b = (FStarC_SMTEncoding_Util.mkApp ("Valid", (b :: []))) in
-    let tmp = (FStarC_SMTEncoding_Util.mkImp (valid_a, valid_b)) in
-    let tmp1 = (tmp, valid) in
-    let tmp2 = (FStarC_SMTEncoding_Util.mkIff tmp1) in
-    let tmp3 = (((l_imp_a_b :: []) :: []), (aa :: (bb :: [])), tmp2) in
-    let tmp4 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp3) in
-    let tmp5 = (tmp4, (Some ("==> interpretation")), "l_imp-interp") in
-    let tmp6 = (FStarC_SMTEncoding_Util.mkAssume tmp5) in
-    (tmp6 :: []))) in
-  let mk_iff_interp = (fun env iff tt -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
-    let bb = (FStarC_SMTEncoding_Term.mk_fv ("b", FStarC_SMTEncoding_Term.Term_sort)) in
-    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
-    let b = (FStarC_SMTEncoding_Util.mkFreeV bb) in
-    let l_iff_a_b = (FStarC_SMTEncoding_Util.mkApp (iff, (a :: (b :: [])))) in
-    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_iff_a_b :: []))) in
-    let valid_a = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
-    let valid_b = (FStarC_SMTEncoding_Util.mkApp ("Valid", (b :: []))) in
-    let tmp = (FStarC_SMTEncoding_Util.mkIff (valid_a, valid_b)) in
-    let tmp1 = (tmp, valid) in
-    let tmp2 = (FStarC_SMTEncoding_Util.mkIff tmp1) in
-    let tmp3 = (((l_iff_a_b :: []) :: []), (aa :: (bb :: [])), tmp2) in
-    let tmp4 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp3) in
-    let tmp5 = (tmp4, (Some ("<==> interpretation")), "l_iff-interp") in
-    let tmp6 = (FStarC_SMTEncoding_Util.mkAssume tmp5) in
-    (tmp6 :: []))) in
-  let mk_not_interp = (fun env l_not tt -> (let aa = (FStarC_SMTEncoding_Term.mk_fv ("a", FStarC_SMTEncoding_Term.Term_sort)) in
-    let a = (FStarC_SMTEncoding_Util.mkFreeV aa) in
-    let l_not_a = (FStarC_SMTEncoding_Util.mkApp (l_not, (a :: []))) in
-    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (l_not_a :: []))) in
-    let tmp = (FStarC_SMTEncoding_Util.mkApp ("Valid", (a :: []))) in
-    let not_valid_a = (FStarC_SMTEncoding_Util.mkNot tmp) in
-    let tmp1 = (FStarC_SMTEncoding_Util.mkIff (not_valid_a, valid)) in
-    let tmp2 = (((l_not_a :: []) :: []), (aa :: []), tmp1) in
-    let tmp3 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp2) in
-    let tmp4 = (tmp3, (Some ("not interpretation")), "l_not-interp") in
-    let tmp5 = (FStarC_SMTEncoding_Util.mkAssume tmp4) in
-    (tmp5 :: []))) in
-  let mk_range_interp = (fun env range tt -> (let tmp = (FStarC_SMTEncoding_Term.mk_Range_const ()) in
-    let tmp1 = (FStarC_SMTEncoding_Term.mk_HasTypeZ tmp tt) in
-    let tmp2 = ((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.mk_unique "typing_range_const") in
-    let tmp3 = (tmp1, (Some ("Range_const typing")), tmp2) in
-    let tmp4 = (FStarC_SMTEncoding_Util.mkAssume tmp3) in
-    (tmp4 :: []))) in
-  let mk_inversion_axiom = (fun env inversion tt -> (let uu = (FStarC_SMTEncoding_Term.mk_fv ("u", FStarC_SMTEncoding_Term.univ_sort)) in
-    let u = (FStarC_SMTEncoding_Util.mkFreeV uu) in
-    let tt1 = (FStarC_SMTEncoding_Term.mk_fv ("t", FStarC_SMTEncoding_Term.Term_sort)) in
-    let t = (FStarC_SMTEncoding_Util.mkFreeV tt1) in
-    let xx1 = (FStarC_SMTEncoding_Term.mk_fv ("x", FStarC_SMTEncoding_Term.Term_sort)) in
-    let x1 = (FStarC_SMTEncoding_Util.mkFreeV xx1) in
-    let inversion_t = (FStarC_SMTEncoding_Util.mkApp (inversion, (u :: (t :: [])))) in
-    let valid = (FStarC_SMTEncoding_Util.mkApp ("Valid", (inversion_t :: []))) in
-    let hastypeZ = (FStarC_SMTEncoding_Term.mk_HasTypeZ x1 t) in
-    let tmp = (FStarC_SMTEncoding_Term.n_fuel Prims.int_one) in
-    let hastypeS = (FStarC_SMTEncoding_Term.mk_HasTypeFuel tmp x1 t) in
-    let tmp1 = (FStarC_SMTEncoding_Util.mkImp (hastypeZ, hastypeS)) in
-    let tmp2 = (((hastypeZ :: []) :: []), (xx1 :: []), tmp1) in
-    let body = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp2) in
-    let tmp3 = (FStarC_SMTEncoding_Util.mkImp (valid, body)) in
-    let tmp4 = (((inversion_t :: []) :: []), (uu :: (tt1 :: [])), tmp3) in
-    let tmp5 = (FStarC_SMTEncoding_Term.mkForall (FStarC_TypeChecker_Env.get_range env) tmp4) in
-    let tmp6 = (tmp5, (Some ("inversion interpretation")), "inversion-interp") in
-    let tmp7 = (FStarC_SMTEncoding_Util.mkAssume tmp6) in
-    (tmp7 :: []))) in
-  let prims_ = ((FStarC_Parser_Const.unit_lid, mk_unit) :: ((FStarC_Parser_Const.bool_lid, mk_bool) :: ((FStarC_Parser_Const.prop_lid, mk_prop) :: ((FStarC_Parser_Const.int_lid, mk_int) :: ((FStarC_Parser_Const.real_lid, mk_real) :: ((FStarC_Parser_Const.string_lid, mk_str) :: ((FStarC_Parser_Const.true_lid, mk_true_interp) :: ((FStarC_Parser_Const.false_lid, mk_false_interp) :: ((FStarC_Parser_Const.and_lid, mk_and_interp) :: ((FStarC_Parser_Const.or_lid, mk_or_interp) :: ((FStarC_Parser_Const.eq2_lid, mk_eq2_interp) :: ((FStarC_Parser_Const.imp_lid, mk_imp_interp) :: ((FStarC_Parser_Const.iff_lid, mk_iff_interp) :: ((FStarC_Parser_Const.not_lid, mk_not_interp) :: ((FStarC_Parser_Const.range_lid, mk_range_interp) :: ((FStarC_Parser_Const.inversion_lid, mk_inversion_axiom) :: [])))))))))))))))) in
-  (fun env t s tt -> (let tmp = (FStarC_Option.find (fun tmp -> (match tmp with
-      | (l, tmp1) -> (FStarC_Ident.lid_equals l t)
-    )) prims_) in
-  (match tmp with
-    | None -> []
-    | (Some ((tmp1, f))) -> (f env s tt)
-  ))))
 
 let norm_before_encoding_us (env : FStarC_SMTEncoding_Env.env_t) (us : (FStarC_Ident.ident) list) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
   (let tmp = (FStarC_TypeChecker_Env.push_univ_vars (env).FStarC_SMTEncoding_Env.tcenv us) in
@@ -1212,9 +1218,9 @@ let rec encode_top_level_let__arrow_formals_comp_norm (tcenv : FStarC_TypeChecke
   (match (t1).FStarC_Syntax_Syntax.n with
     | (FStarC_Syntax_Syntax.Tm_arrow (tmp1)) -> (FStarC_Syntax_Util.arrow_node_formals_comp t1)
     | (FStarC_Syntax_Syntax.Tm_refine (tmp1)) -> (let tmp2 = (FStarC_Syntax_Util.unrefine t1) in
-      ((encode_top_level_let__arrow_formals_comp_norm tcenv) norm tmp2))
+      (encode_top_level_let__arrow_formals_comp_norm tcenv norm tmp2))
     | tmp1 when (not norm) -> (let t_norm = (norm_with_steps (FStarC_TypeChecker_Env.Beta :: (FStarC_TypeChecker_Env.Weak :: (FStarC_TypeChecker_Env.HNF :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: ((FStarC_TypeChecker_Env.UnfoldUntil (FStarC_Syntax_Syntax.delta_constant)) :: []))))) tcenv t1) in
-      ((encode_top_level_let__arrow_formals_comp_norm tcenv) true t_norm))
+      (encode_top_level_let__arrow_formals_comp_norm tcenv true t_norm))
     | tmp1 -> (let tmp2 = (FStarC_Syntax_Syntax.mk_Total t1) in
       ([], tmp2))
   ))
@@ -1354,8 +1360,8 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t) (tmp : (bool * (FS
         let aux = (fun t1 e1 -> (let tmp2 = (FStarC_Syntax_Util.abs_formals e1) in
           (match tmp2 with
             | (binders, body, lopt) -> (let tmp3 = (match binders with
-                  | [] -> ((encode_top_level_let__arrow_formals_comp_norm tcenv) true t1)
-                  | tmp3 -> ((encode_top_level_let__arrow_formals_comp_norm tcenv) false t1)
+                  | [] -> (encode_top_level_let__arrow_formals_comp_norm tcenv true t1)
+                  | tmp3 -> (encode_top_level_let__arrow_formals_comp_norm tcenv false t1)
                 ) in
               (match tmp3 with
                 | (formals, comp) -> (let tmp4 = (match target_arity with
@@ -1391,7 +1397,7 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t) (tmp : (bool * (FS
             let tmp4 = (if tmp3 then (let eff_name = (FStarC_Syntax_Util.comp_effect_name comp) in
               let comp1 = (FStarC_TypeChecker_Env.reify_comp tcenv1 comp FStarC_Syntax_Syntax.U_unknown) in
               let tmp4 = (FStarC_Syntax_Util.mk_reify body (Some (eff_name))) in
-              let body1 = (FStarC_TypeChecker_Util.norm_reify tcenv1 [] tmp4) in
+              let body1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Util_norm_reify tcenv1 [] tmp4) in
               let tmp5 = (aux comp1 body1) in
               (match tmp5 with
                 | (more_binders, body2, comp2) -> ((BatList.append binders more_binders), body2, comp2)
@@ -1420,7 +1426,7 @@ let encode_top_level_let (env : FStarC_SMTEncoding_Env.env_t) (tmp : (bool * (FS
                     current_module_name = (env1).FStarC_SMTEncoding_Env.current_module_name;
                     encoding_quantifier = (env1).FStarC_SMTEncoding_Env.encoding_quantifier;
                     global_cache = (env1).FStarC_SMTEncoding_Env.global_cache } in
-                let t_norm = (if is_rec then (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: []) (env2).FStarC_SMTEncoding_Env.tcenv t) else (norm_before_encoding env2 t)) in
+                let t_norm = (if is_rec then (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: []) (env2).FStarC_SMTEncoding_Env.tcenv t) else (norm_before_encoding env2 t)) in
                 let tmp6 = (declare_top_level_let env2 (match (lb).FStarC_Syntax_Syntax.lbname with
                     | (FStar_Pervasives.Inr (v)) -> v
                   ) us t t_norm) in
@@ -1998,13 +2004,13 @@ let rec encode_datacon__binder_and_codomain_type (mutuals : (FStarC_Ident.lident
             | (head', tmp6) -> (let tmp7 = (FStarC_TypeChecker_TermEqAndSimplify.eq_tm (env).FStarC_SMTEncoding_Env.tcenv head head') in
               (match tmp7 with
                 | FStarC_TypeChecker_TermEqAndSimplify.Equal -> None
-                | FStarC_TypeChecker_TermEqAndSimplify.NotEqual -> ((encode_datacon__binder_and_codomain_type mutuals env norm warn_compat) t')
+                | FStarC_TypeChecker_TermEqAndSimplify.NotEqual -> (encode_datacon__binder_and_codomain_type mutuals env norm warn_compat t')
                 | tmp8 -> (let tmp9 = (FStarC_Syntax_Subst.compress head) in
                   let tmp10 = (tmp9).FStarC_Syntax_Syntax.n in
                   (match tmp10 with
-                    | (FStarC_Syntax_Syntax.Tm_fvar (tmp11)) -> ((encode_datacon__binder_and_codomain_type mutuals env norm warn_compat) t')
-                    | (FStarC_Syntax_Syntax.Tm_name (tmp11)) -> ((encode_datacon__binder_and_codomain_type mutuals env norm warn_compat) t')
-                    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> ((encode_datacon__binder_and_codomain_type mutuals env norm warn_compat) t')
+                    | (FStarC_Syntax_Syntax.Tm_fvar (tmp11)) -> (encode_datacon__binder_and_codomain_type mutuals env norm warn_compat t')
+                    | (FStarC_Syntax_Syntax.Tm_name (tmp11)) -> (encode_datacon__binder_and_codomain_type mutuals env norm warn_compat t')
+                    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> (encode_datacon__binder_and_codomain_type mutuals env norm warn_compat t')
                     | tmp11 -> None
                   ))
               ))
@@ -2051,13 +2057,13 @@ let rec fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 (m
             | (head', tmp6) -> (let tmp7 = (FStarC_TypeChecker_TermEqAndSimplify.eq_tm (env).FStarC_SMTEncoding_Env.tcenv head head') in
               (match tmp7 with
                 | FStarC_TypeChecker_TermEqAndSimplify.Equal -> None
-                | FStarC_TypeChecker_TermEqAndSimplify.NotEqual -> ((fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env norm warn_compat) t')
+                | FStarC_TypeChecker_TermEqAndSimplify.NotEqual -> (fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env norm warn_compat t')
                 | tmp8 -> (let tmp9 = (FStarC_Syntax_Subst.compress head) in
                   let tmp10 = (tmp9).FStarC_Syntax_Syntax.n in
                   (match tmp10 with
-                    | (FStarC_Syntax_Syntax.Tm_fvar (tmp11)) -> ((fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env norm warn_compat) t')
-                    | (FStarC_Syntax_Syntax.Tm_name (tmp11)) -> ((fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env norm warn_compat) t')
-                    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> ((fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env norm warn_compat) t')
+                    | (FStarC_Syntax_Syntax.Tm_fvar (tmp11)) -> (fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env norm warn_compat t')
+                    | (FStarC_Syntax_Syntax.Tm_name (tmp11)) -> (fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env norm warn_compat t')
+                    | (FStarC_Syntax_Syntax.Tm_uinst (u__1, u__2)) -> (fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env norm warn_compat t')
                     | tmp11 -> None
                   ))
               ))
@@ -2208,10 +2214,10 @@ let encode_datacon (env : FStarC_SMTEncoding_Env.env_t) (se : FStarC_Syntax_Synt
                                                                 let tmp48 = (match tmp47 with
                                                                     | (tmp48, formals') -> (let tmp49 = (FStarC_Util.first_N n_tps vars) in
                                                                       (match tmp49 with
-                                                                        | (tmp50, vars') -> (let norm = (fun t3 -> (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.Unascribe :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env').FStarC_SMTEncoding_Env.tcenv t3)) in
+                                                                        | (tmp50, vars') -> (let norm = (fun t3 -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.Unascribe :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env').FStarC_SMTEncoding_Env.tcenv t3)) in
                                                                           let warn_compat = (fun tmp51 -> (FStarC_Errors.fStarC_Errors_log_issue__fv_list_ocaml_document fv FStarC_Errors_Codes.Warning_DeprecatedGeneric ((FStarC_Errors_Msg.text "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.") :: ((FStarC_Errors_Msg.text "This is deprecated and will be removed in a future version of F*.") :: [])))) in
                                                                           let tmp51 = (BatList.fold_left2 (fun tmp51 formal var -> (match tmp51 with
-                                                                              | (codomain_prec_l, cod_decls) -> (let tmp52 = ((encode_datacon__binder_and_codomain_type mutuals env2 norm warn_compat) ((formal).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                                                                              | (codomain_prec_l, cod_decls) -> (let tmp52 = (encode_datacon__binder_and_codomain_type mutuals env2 norm warn_compat ((formal).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
                                                                                 (match tmp52 with
                                                                                   | None -> (codomain_prec_l, cod_decls)
                                                                                   | (Some ((bs, c))) -> (let tmp53 = (FStarC_SMTEncoding_EncodeTerm.encode_binders None bs env') in
@@ -2310,10 +2316,10 @@ let encode_datacon (env : FStarC_SMTEncoding_Env.env_t) (se : FStarC_Syntax_Synt
                                                                 let tmp45 = (match tmp44 with
                                                                     | (tmp45, formals') -> (let tmp46 = (FStarC_Util.first_N n_tps vars) in
                                                                       (match tmp46 with
-                                                                        | (tmp47, vars') -> (let norm = (fun t3 -> (FStarC_TypeChecker_Normalize.unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.Unascribe :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env').FStarC_SMTEncoding_Env.tcenv t3)) in
+                                                                        | (tmp47, vars') -> (let norm = (fun t3 -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_unfold_whnf' (FStarC_TypeChecker_Env.AllowUnboundUniverses :: (FStarC_TypeChecker_Env.Unascribe :: ((FStarC_TypeChecker_Env.Exclude (FStarC_TypeChecker_Env.Zeta)) :: []))) (env').FStarC_SMTEncoding_Env.tcenv t3)) in
                                                                           let warn_compat = (fun tmp48 -> (FStarC_Errors.fStarC_Errors_log_issue__fv_list_ocaml_document fv FStarC_Errors_Codes.Warning_DeprecatedGeneric ((FStarC_Errors_Msg.text "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.") :: ((FStarC_Errors_Msg.text "This is deprecated and will be removed in a future version of F*.") :: [])))) in
                                                                           let tmp48 = (BatList.fold_left2 (fun tmp48 formal var -> (match tmp48 with
-                                                                              | (codomain_prec_l, cod_decls) -> (let tmp49 = ((fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env2 norm warn_compat) ((formal).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
+                                                                              | (codomain_prec_l, cod_decls) -> (let tmp49 = (fStarC_SMTEncoding_Encode_encode_datacon__binder_and_codomain_type__1 mutuals env2 norm warn_compat ((formal).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
                                                                                 (match tmp49 with
                                                                                   | None -> (codomain_prec_l, cod_decls)
                                                                                   | (Some ((bs, c))) -> (let tmp50 = (FStarC_SMTEncoding_EncodeTerm.encode_binders None bs env') in
@@ -2777,7 +2783,7 @@ let push_encoding_state (msg : string) : unit =
 
 let rec encode_query__aux (env : FStarC_SMTEncoding_Env.env_t) (bindings : (FStarC_Syntax_Syntax.binding) list) : ((FStarC_Syntax_Syntax.binder) list * (FStarC_Syntax_Syntax.binding) list) =
   (match bindings with
-    | ((FStarC_Syntax_Syntax.Binding_var (x)) :: rest) -> (let tmp = ((encode_query__aux env) rest) in
+    | ((FStarC_Syntax_Syntax.Binding_var (x)) :: rest) -> (let tmp = (encode_query__aux env rest) in
       (match tmp with
         | (out, rest1) -> (let tmp1 = (FStarC_Syntax_Formula.destruct_typ_as_formula (x).FStarC_Syntax_Syntax.sort) in
           let t = (match tmp1 with
@@ -2849,13 +2855,10 @@ let encode_env_bindings (env : FStarC_SMTEncoding_Env.env_t) (bindings : (FStarC
     | (tmp1, decls, env1) -> (decls, env1)
   ))
 
-let dbg_Time : (bool ref) =
-  (FStarC_Debug.get_toggle "Time")
-
 let encode_query (use_env_msg : ((unit -> string)) option) (tcenv : FStarC_TypeChecker_Env.env) (q : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_SMTEncoding_Term.decl) list * FStarC_SMTEncoding_ErrorReporting.goal_tree) =
   (FStarC_Errors.with_ctx "While encoding a query" (fun tmp -> (((FStarC_SMTEncoding_Z3.query_logging).FStarC_SMTEncoding_Z3.set_module_name (FStarC_Ident.string_of_lid (FStarC_TypeChecker_Env.current_module tcenv)));
   let env = (get_env (FStarC_TypeChecker_Env.current_module tcenv) tcenv) in
-  let tmp1 = ((encode_query__aux env) (tcenv).FStarC_TypeChecker_Env.gamma) in
+  let tmp1 = (encode_query__aux env (tcenv).FStarC_TypeChecker_Env.gamma) in
   let tmp2 = (match tmp1 with
       | (closing, bindings) -> ((BatList.rev closing), bindings)
     ) in
@@ -2979,7 +2982,7 @@ let encode_modul_aux (give_to_z3 : bool) (tcenv : FStarC_TypeChecker_Env.env) (m
   (FStarC_Syntax_Unionfind.with_uf_enabled (fun tmp -> (((FStarC_SMTEncoding_Env.varops).FStarC_SMTEncoding_Env.reset_fresh ());
   let name = (FStarC_Format.fmt2 "%s %s" (if (modul).FStarC_Syntax_Syntax.is_interface then "interface" else "module") (FStarC_Ident.string_of_lid (modul).FStarC_Syntax_Syntax.name)) in
   let tmp1 = (FStarC_Debug.medium ()) in
-  (if tmp1 then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (modul).FStarC_Syntax_Syntax.declarations)) in
+  (if tmp1 then (let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) (modul).FStarC_Syntax_Syntax.declarations)) in
   (FStarC_Format.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name tmp2)) else ());
   let tmp2 = (get_env (modul).FStarC_Syntax_Syntax.name tcenv1) in
   let env = (FStarC_SMTEncoding_Env.reset_current_module_fvbs tmp2) in
@@ -3064,7 +3067,7 @@ let encode_modul_from_cache (tcenv : FStarC_TypeChecker_Env.env) (tcmod : FStarC
   (let tcenv1 = (FStarC_TypeChecker_Env.set_current_module tcenv (tcmod).FStarC_Syntax_Syntax.name) in
   let name = (FStarC_Format.fmt2 "%s %s" (if (tcmod).FStarC_Syntax_Syntax.is_interface then "interface" else "module") (FStarC_Ident.string_of_lid (tcmod).FStarC_Syntax_Syntax.name)) in
   let tmp = (FStarC_Debug.medium ()) in
-  (if tmp then (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (me).FStarC_SMTEncoding_Env.me_index)) in
+  (if tmp then (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) (me).FStarC_SMTEncoding_Env.me_index)) in
   (FStarC_Format.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name tmp1)) else ());
   let tmp1 = (get_env (tcmod).FStarC_Syntax_Syntax.name tcenv1) in
   let env = (FStarC_SMTEncoding_Env.reset_current_module_fvbs tmp1) in
@@ -3072,7 +3075,4 @@ let encode_modul_from_cache (tcenv : FStarC_TypeChecker_Env.env) (tcmod : FStarC
   (give_index_to_z3_and_set_env env1 name (me).FStarC_SMTEncoding_Env.me_index (me).FStarC_SMTEncoding_Env.me_decls);
   let tmp2 = (FStarC_Debug.medium ()) in
   (if tmp2 then (FStarC_Format.print1 "Done encoding externals from cache for %s\n" name) else ()))
-
-let dbg_SMTQuery : (bool ref) =
-  (FStarC_Debug.get_toggle "SMTQuery")
 

@@ -72,7 +72,10 @@ let rec names_find_exact (names : (('u___a) name_collection) list) (ns : string)
 let rec trie_descend_exact (tr : ('u___a) trie) (query : (string) list) : (('u___a) trie) option =
   (match query with
     | [] -> (Some (tr))
-    | (ns :: query1) -> (FStarC_Option.bind (names_find_exact (tr).namespaces ns) (fun scope -> (trie_descend_exact scope query1)))
+    | (ns :: query1) -> (match (names_find_exact (tr).namespaces ns) with
+        | (Some (x)) -> (trie_descend_exact x query1)
+        | None -> None
+      )
   )
 
 let rec btree_insert_replace (bt : ('u___a) btree) (k : string) (v : 'u___a) : ('u___a) btree =
@@ -181,14 +184,14 @@ type name_search_term =
   | NSTPrefix of string
 
 
-let rec names_revmap__aux (fn : (('u___a) btree -> 'u___b)) (acc : (((string) list * 'u___b)) list) (imports : (string) list) : ((('u___a) name_collection) list -> (((string) list * 'u___b)) list) =
+let rec names_revmap__aux (fn : (('u___a) btree -> 'u___b)) (acc : (((string) list * 'u___b)) list) (imports : (string) list) (eta : (('u___a) name_collection) list) : (((string) list * 'u___b)) list =
   (BatList.fold_left (fun acc1 tmp -> (match tmp with
     | (Names (bt)) -> ((imports, (fn bt)) :: acc1)
-    | (ImportedNames (nm, name_collections)) -> ((names_revmap__aux fn) acc1 (nm :: imports) name_collections)
-  )) acc)
+    | (ImportedNames (nm, name_collections)) -> (names_revmap__aux fn acc1 (nm :: imports) name_collections)
+  )) acc eta)
 
 let names_revmap (fn : (('u___a) btree -> 'u___b)) (eta : (('u___a) name_collection) list) : (((string) list * 'u___b)) list =
-  ((names_revmap__aux fn) [] [] eta)
+  (names_revmap__aux fn [] [] eta)
 
 let rec btree_fold (bt : ('u___a) btree) (f : (string -> ('u___a -> ('u___b -> 'u___b)))) (acc : 'u___b) : 'u___b =
   (match bt with
@@ -262,9 +265,9 @@ let rec merge_increasing_lists_rev__aux (key_fn : ('u___a -> string)) (cmp : ((P
   (match tmp with
     | None -> acc
     | (Some (((pr, []), tmp1))) -> (FStarC_Effect.failwith "impossible")
-    | (Some (((pr, (v :: [])), lists1))) -> ((merge_increasing_lists_rev__aux key_fn cmp) lists1 (push_nodup key_fn v acc))
+    | (Some (((pr, (v :: [])), lists1))) -> (merge_increasing_lists_rev__aux key_fn cmp lists1 (push_nodup key_fn v acc))
     | (Some (((pr, (v :: tl)), lists1))) -> (let tmp1 = (heap_insert cmp lists1 (pr, tl)) in
-      ((merge_increasing_lists_rev__aux key_fn cmp) tmp1 (push_nodup key_fn v acc)))
+      (merge_increasing_lists_rev__aux key_fn cmp tmp1 (push_nodup key_fn v acc)))
   ))
 
 let rec add_priorities (n : Prims.int) (acc : ((Prims.int * 'tmp)) list) (tmp : ('tmp) list) : ((Prims.int * 'tmp)) list =
@@ -289,7 +292,7 @@ let merge_increasing_lists_rev (key_fn : ('u___a -> string)) (lists : (('u___a) 
     | (l :: []) -> (BatList.rev l)
     | tmp -> (let lists2 = (add_priorities Prims.int_zero [] lists1) in
       let tmp1 = (heap_from_list cmp lists2) in
-      ((merge_increasing_lists_rev__aux key_fn cmp) tmp1 []))
+      (merge_increasing_lists_rev__aux key_fn cmp tmp1 []))
   ))
 
 let names_find_rev (names : (('u___a) name_collection) list) (id : name_search_term) : ((path_elem * 'u___a)) list =
@@ -393,7 +396,10 @@ let rec trie_find_exact (tr : ('u___a) trie) (query : (string) list) : ('u___a) 
   (match query with
     | [] -> (FStarC_Effect.failwith "Empty query in trie_find_exact")
     | (name :: []) -> (names_find_exact (tr).bindings name)
-    | (ns :: query1) -> (FStarC_Option.bind (names_find_exact (tr).namespaces ns) (fun scope -> (trie_find_exact scope query1)))
+    | (ns :: query1) -> (match (names_find_exact (tr).namespaces ns) with
+        | (Some (x)) -> (trie_find_exact x query1)
+        | None -> None
+      )
   )
 
 let find_module_or_ns (tbl : table) (query : (string) list) : (mod_symbol) option =

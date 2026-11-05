@@ -83,6 +83,6 @@ let rec maybe_reify (env : FStarC_TypeChecker_Env.env) (t : (FStarC_Syntax_Synta
           ))
       ))
     | tmp4 -> (let tmp5 = (FStarC_Syntax_Util.mk_reify t (Some (l))) in
-      (FStarC_TypeChecker_Util.norm_reify env reify_steps tmp5))
+      (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Util_norm_reify env reify_steps tmp5))
   ))))
 

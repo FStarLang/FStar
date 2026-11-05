@@ -169,7 +169,7 @@ val candidates_doc : env -> list fv -> ML (list Pprint.document)
 
 (** Forget which ambiguities have been reported.
 
-    Resolution itself runs in phase 1 only; what repeats is the term.
+    Resolution itself runs once, during elaboration; what repeats is the term.
     Elaboration makes several copies of one piece of source, each keeping the
     range it came from, and checks each: the computation type of a [let rec] is
     lifted into the type of the binding while the ascription stays on the body,

@@ -5,7 +5,7 @@ let z3url : string =
   "https://github.com/Z3Prover/z3/releases"
 
 let packaged_z3_versions : (string) list =
-  ("4.8.5" :: ("4.13.3" :: ("4.15.3" :: [])))
+  ("4.8.5" :: ("4.13.3" :: ("4.15.3" :: ("5.3.0" :: []))))
 
 let z3_install_suggestion (v : string) : (PPrint.document) list =
   ((PPrint.(^/^) (FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Please download version %s of Z3 from" v)) (PPrint.url z3url)) (PPrint.group (PPrint.(^/^) (FStarC_Errors_Msg.text "and install it into your $PATH as") (PPrint.(^^) (FStarC_Errors_Msg.fquotes (PPrint.string (FStarC_Platform.exe (Prims.strcat "z3-" v)))) PPrint.dot)))) :: ((if (BatList.mem v packaged_z3_versions) then (FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Version %s of Z3 should be included in binary packages of F*. If you are using a binary package and are seeing\n              this error, please file a bug report." v)) else PPrint.empty) :: []))
@@ -19,13 +19,13 @@ let z3_inpath (path : string) : bool =
 let do_locate_z3 (v : string) : (string) option =
   (let guard = (fun b -> (if b then (Some (())) else None)) in
   let in_lib = (fun tmp -> (let tmp1 = (FStarC_Find.lib_root ()) in
-    (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp1 (fun root -> (let path = (FStarC_Platform.exe (Prims.strcat root (Prims.strcat "/z3-" (Prims.strcat v "/bin/z3")))) in
+    ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp1) (fun root -> (let path = (FStarC_Platform.exe (Prims.strcat root (Prims.strcat "/z3-" (Prims.strcat v "/bin/z3")))) in
     let path1 = (FStarC_Filepath.normalize_file_path path) in
-    (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option (guard (Sys.file_exists path1)) (fun tmp2 -> (Some (path1))))))))) in
+    ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option (guard (Sys.file_exists path1))) (fun tmp2 -> (Some (path1))))))))) in
   let from_path = (fun cmd tmp -> (let cmd1 = (FStarC_Platform.exe cmd) in
     let tmp1 = (z3_inpath cmd1) in
     let tmp2 = (guard tmp1) in
-    (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp2 (fun tmp3 -> (Some (cmd1)))))) in
+    ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp2) (fun tmp3 -> (Some (cmd1)))))) in
   let tmp = (FStarC_Options.smt ()) in
   let tmp1 = (match tmp with
       | (Some (v1)) -> (Some (v1))

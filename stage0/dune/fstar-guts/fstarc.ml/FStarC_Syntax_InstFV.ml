@@ -22,7 +22,11 @@ and inst_binders (s : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax 
 and inst_rc_opt (s : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (FStarC_Syntax_Syntax.fv -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax))) (l : (FStarC_Syntax_Syntax.residual_comp) option) : (FStarC_Syntax_Syntax.residual_comp) option =
   (match l with
     | None -> None
-    | (Some (rc)) -> (let tmp = (FStarC_Option.map (inst s) (rc).FStarC_Syntax_Syntax.residual_typ) in
+    | (Some (rc)) -> (let tmp = (match (rc).FStarC_Syntax_Syntax.residual_typ with
+          | (Some (x)) -> (let tmp = ((inst s) x) in
+            (Some (tmp)))
+          | None -> None
+        ) in
       let tmp1 = { FStarC_Syntax_Syntax.residual_effect = (rc).FStarC_Syntax_Syntax.residual_effect;
           residual_typ = tmp;
           residual_flags = (rc).FStarC_Syntax_Syntax.residual_flags } in
@@ -69,7 +73,11 @@ and inst_ascription (s : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synt
           | (FStar_Pervasives.Inr (c)) -> (let tmp = (inst_comp s c) in
             (FStar_Pervasives.Inr (tmp)))
         ) in
-      let topt1 = (FStarC_Option.map (inst s) topt) in
+      let topt1 = (match topt with
+          | (Some (x)) -> (let tmp = ((inst s) x) in
+            (Some (tmp)))
+          | None -> None
+        ) in
       (annot1, topt1, use_eq))
   )
 

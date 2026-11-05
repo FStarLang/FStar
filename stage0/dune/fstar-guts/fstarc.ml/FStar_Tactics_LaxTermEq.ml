@@ -4,8 +4,8 @@
 let rec list_eq (cmp : ('a -> ('a -> ((FStarC_Tactics_Types.proofstate ref) -> bool)))) (l1 : ('a) list) (l2 : ('a) list) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (match (l1, l2) with
     | ([], []) -> (fun tmp -> true)
-    | ((x :: xs), (y :: ys)) -> (Obj.magic ((fun ps -> (let x1 = (cmp x y ps) in
-      (if x1 then ((list_eq cmp xs ys) ps) else false)))))
+    | ((x :: xs), (y :: ys)) -> (fun ps -> (let x1 = (cmp x y ps) in
+      (if x1 then ((list_eq cmp xs ys) ps) else false)))
     | tmp -> (fun tmp1 -> false)
   )
 
@@ -50,8 +50,8 @@ let rec aqual_eq (a1 : FStarC_Reflection_V2_Data.aqualv) (a2 : FStarC_Reflection
 
 and arg_eq (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) (tmp1 : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (match (tmp, tmp1) with
-    | ((a1, q1), (a2, q2)) -> (Obj.magic ((fun ps -> (let x = (term_eq a1 a2 ps) in
-      (if x then ((aqual_eq q1 q2) ps) else false)))))
+    | ((a1, q1), (a2, q2)) -> (fun ps -> (let x = (term_eq a1 a2 ps) in
+      (if x then ((aqual_eq q1 q2) ps) else false)))
   )
 
 and binder_eq (b1 : FStarC_Reflection_Types.binder) (b2 : FStarC_Reflection_Types.binder) (ps : (FStarC_Tactics_Types.proofstate ref)) : bool =
@@ -71,17 +71,17 @@ and binder_eq (b1 : FStarC_Reflection_Types.binder) (b2 : FStarC_Reflection_Type
   (tmp4 ps))))
 
 and comp_eq (c1 : FStarC_Reflection_Types.comp) (c2 : FStarC_Reflection_Types.comp) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Reflection_V2_Builtins.inspect_comp c1) in
+  (fun ps -> (let x = (FStarC_Reflection_V2_Builtins.inspect_comp c1) in
   let x1 = (FStarC_Reflection_V2_Builtins.inspect_comp c2) in
   let tmp = (if (not (let tmp = (x).FStarC_Reflection_V2_Data.effect_name in
     let tmp1 = (x1).FStarC_Reflection_V2_Data.effect_name in
     ((=) tmp tmp1))) then (fun tmp -> false) else (let tmp = (x).FStarC_Reflection_V2_Data.result_typ in
     let tmp1 = (x1).FStarC_Reflection_V2_Data.result_typ in
     (term_eq tmp tmp1))) in
-  (tmp ps)))))
+  (tmp ps)))
 
 and match_returns_ascription_eq (asc1 : (FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) (asc2 : (FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (match asc1 with
+  (fun ps -> (match asc1 with
     | (b1, (tc1, tacopt1, eq1)) -> (match asc2 with
         | (b2, (tc2, tacopt2, eq2)) -> (let x = (binder_eq b1 b2 ps) in
           let x1 = (not x) in
@@ -91,7 +91,7 @@ and match_returns_ascription_eq (asc1 : (FStarC_Syntax_Syntax.binder * (((FStarC
           let x5 = (not x4) in
           (if x5 then false else ((=) eq1 eq2)))))))
       )
-  ))))
+  ))
 
 and pat_arg_eq (tmp : (FStarC_Reflection_V2_Data.pattern * bool)) (tmp1 : (FStarC_Reflection_V2_Data.pattern * bool)) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (match (tmp, tmp1) with
@@ -112,7 +112,7 @@ and pat_eq (p1 : FStarC_Reflection_V2_Data.pattern) (p2 : FStarC_Reflection_V2_D
   )
 
 and br_eq (br1 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (br2 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let x = (pat_eq (match br1 with
+  (fun ps -> (let x = (pat_eq (match br1 with
       | (u__1, u__2) -> u__1
     ) (match br2 with
       | (u__1, u__2) -> u__1
@@ -122,10 +122,10 @@ and br_eq (br1 : (FStarC_Reflection_V2_Data.pattern * (FStarC_Syntax_Syntax.term
     | (u__1, u__2) -> u__2
   ) (match br2 with
     | (u__1, u__2) -> u__2
-  )) ps))))))
+  )) ps))))
 
 and term_eq (t1 : FStarC_Reflection_Types.term) (t2 : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress t1 ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress t1 ps) in
   let x1 = (FStarC_Tactics_V2_Builtins.compress t2 ps) in
   let x2 = (FStarC_Reflection_V2_Builtins.inspect_ln x) in
   let x3 = (FStarC_Reflection_V2_Builtins.inspect_ln x1) in
@@ -181,7 +181,7 @@ and term_eq (t1 : FStarC_Reflection_Types.term) (t2 : FStarC_Reflection_Types.te
     | (tmp, (FStarC_Reflection_V2_Data.Tv_AscribedC (t21, tmp1, tmp2, tmp3))) -> ((term_eq x t21) ps)
     | (FStarC_Reflection_V2_Data.Tv_Unknown, FStarC_Reflection_V2_Data.Tv_Unknown) -> true
     | tmp -> false
-  )))))
+  )))
 
 let lax_term_eq (t1 : FStarC_Reflection_Types.term) (t2 : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (fun ps -> (term_eq t1 t2 ps))
@@ -190,7 +190,7 @@ let u___plugin_lax_term_eq : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.LaxTermEq.lax_term_eq" (Prims.of_int (3)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.LaxTermEq.lax_term_eq (plugin)" lax_term_eq FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_bool tmp tmp1 tmp2 tmp3)))
 
 let rec univ_eq (u1 : FStarC_Reflection_Types.universe) (u2 : FStarC_Reflection_Types.universe) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress_univ u1 ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.compress_univ u1 ps) in
   let x1 = (FStarC_Tactics_V2_Builtins.compress_univ u2 ps) in
   let x2 = (FStarC_Reflection_V2_Builtins.inspect_universe x) in
   let x3 = (FStarC_Reflection_V2_Builtins.inspect_universe x1) in
@@ -211,7 +211,7 @@ let rec univ_eq (u1 : FStarC_Reflection_Types.universe) (u2 : FStarC_Reflection_
     | ((FStarC_Reflection_V2_Data.Uv_Unif (u11)), (FStarC_Reflection_V2_Data.Uv_Unif (u21))) -> false
     | (FStarC_Reflection_V2_Data.Uv_Unk, FStarC_Reflection_V2_Data.Uv_Unk) -> false
     | tmp -> false
-  )))))
+  )))
 
 let lax_univ_eq (t1 : FStarC_Reflection_Types.universe) : (FStarC_Reflection_Types.universe -> ((FStarC_Tactics_Types.proofstate ref) -> bool)) =
   (univ_eq t1)

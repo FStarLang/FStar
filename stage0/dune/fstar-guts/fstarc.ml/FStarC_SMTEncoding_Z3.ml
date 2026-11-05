@@ -288,7 +288,10 @@ let z3_options (ver : string) : string =
   let tmp = (FStarC_Misc.version_ge ver "4.12.3") in
   let tmp1 = (if tmp then ("(set-option :rewriter.enable_der false)" :: ("(set-option :rewriter.sort_disjunctions false)" :: ("(set-option :pi.decompose_patterns false)" :: ("(set-option :smt.arith.solver 6)" :: [])))) else ("(set-option :smt.arith.solver 2)" :: [])) in
   let opts1 = (BatList.append opts tmp1) in
-  (Prims.strcat (BatString.concat "\n" opts1) "\n"))
+  let tmp2 = (FStarC_Misc.version_ge ver "4.15.4") in
+  let tmp3 = (if tmp2 then ("(set-option :smt.arith.nl.grobner_expand_terms false)" :: []) else []) in
+  let opts2 = (BatList.append opts1 tmp3) in
+  (Prims.strcat (BatString.concat "\n" opts2) "\n"))
 
 let context_profile (theory : (FStarC_SMTEncoding_Term.decl) list) : unit =
   (let tmp = (BatList.fold_left (fun tmp d -> (match tmp with
@@ -377,9 +380,13 @@ let rec smt_output_sections__until (tag : string) (lines : (string) list) : (((s
   (match lines with
     | [] -> None
     | (l :: lines1) -> (if ((=) tag l) then (Some (([], lines1))) else (let tmp = (smt_output_sections__until tag lines1) in
-      (FStarC_Option.map (fun tmp1 -> (match tmp1 with
-        | (until_tag, rest) -> ((l :: until_tag), rest)
-      )) tmp)))
+      (match tmp with
+        | (Some (x)) -> (let tmp1 = (match x with
+              | (until_tag, rest) -> ((l :: until_tag), rest)
+            ) in
+          (Some (tmp1)))
+        | None -> None
+      )))
   )
 
 let smt_output_sections (log_file : (string) option) (r : FStarC_Range_Type.range) (lines : (string) list) : smt_output =
@@ -476,9 +483,13 @@ let doZ3Exe (log_file : (string) option) (r : FStarC_Range_Type.range) (fresh : 
         (BatList.map (fun chunk -> (let smt_output = (smt_output_sections log_file r chunk) in
         let initial_statistics = (parse_stats (smt_output).smt_initial_statistics) in
         let statistics = (parse_stats (smt_output).smt_statistics) in
-        let reason_unknown = (FStarC_Option.map (fun x -> (let ru = (BatString.concat " " x) in
-          (if (FStarC_Util.starts_with ru "(:reason-unknown \"") then (let reason = ((fun s i -> BatString.tail s (Z.to_int i)) ru ((fun s -> Z.of_int (BatUTF8.length s)) "(:reason-unknown \"")) in
-          ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) reason Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) reason) (Prims.of_int (2))))) else ru))) (smt_output).smt_reason_unknown) in
+        let reason_unknown = (match (smt_output).smt_reason_unknown with
+            | (Some (x)) -> (let ru = (BatString.concat " " x) in
+              let tmp1 = (if (FStarC_Util.starts_with ru "(:reason-unknown \"") then (let reason = ((fun s i -> BatString.tail s (Z.to_int i)) ru ((fun s -> Z.of_int (BatUTF8.length s)) "(:reason-unknown \"")) in
+                ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) reason Prims.int_zero (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) reason) (Prims.of_int (2))))) else ru) in
+              (Some (tmp1)))
+            | None -> None
+          ) in
         let tmp1 = (FStarC_Debug.any ()) in
         (if tmp1 then (FStarC_Format.print1 "Z3 says: %s\n" (BatString.concat "\n" (smt_output).smt_result)) else ());
         let status = (match (smt_output).smt_result with

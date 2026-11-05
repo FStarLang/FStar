@@ -31,8 +31,8 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : ((FStarC_TypeC
   let tmp25 = (tmp4 :: tmp24) in
   let tmp26 = (tmp1 :: tmp25) in
   let tmp27 = (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp26) in
-  (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp27 (fun tmp28 -> (let sz = (FStarC_MachineInts.width k) in
-  let modulus = (Custard_Prims.prims_pow2 sz) in
+  ((FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_bind__list_primitive_step tmp27) (fun tmp28 -> (let sz = (FStarC_MachineInts.width k) in
+  let modulus = (Fstarc_Prims.prims_pow2 sz) in
   let mod_ = (fun x -> (Prims.op_Percent x modulus)) in
   let tmp29 = (if (FStarC_MachineInts.is_unsigned k) then (let tmp29 = (nm "add_mod") in
     let tmp30 = (FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero tmp29 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Plus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
@@ -66,8 +66,8 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : ((FStarC_TypeC
     let tmp58 = (tmp34 :: tmp57) in
     let tmp59 = (tmp32 :: tmp58) in
     let tmp60 = (tmp30 :: tmp59) in
-    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp60)) else (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_return__writer_list_primitive_step ())) in
-  (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp29 (fun tmp30 -> (let tmp31 = (if ((FStarC_MachineInts.is_unsigned k) && ((<>) k FStarC_MachineInts.SizeT)) then (let tmp31 = (nm "add_underspec") in
+    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp60)) else (FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_return__list_primitive_step ())) in
+  ((FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_bind__list_primitive_step tmp29) (fun tmp30 -> (let tmp31 = (if ((FStarC_MachineInts.is_unsigned k) && ((<>) k FStarC_MachineInts.SizeT)) then (let tmp31 = (nm "add_underspec") in
     let tmp32 = (FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero tmp31 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Plus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
     let tmp33 = (nm "sub_underspec") in
     let tmp34 = (FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero tmp33 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Minus (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
@@ -76,18 +76,48 @@ let bounded_arith_ops_for (k : FStarC_MachineInts.machint_kind) : ((FStarC_TypeC
     let tmp37 = (tmp36 :: []) in
     let tmp38 = (tmp34 :: tmp37) in
     let tmp39 = (tmp32 :: tmp38) in
-    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp39)) else (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_return__writer_list_primitive_step ())) in
-  (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp31 (fun tmp32 -> (let tmp33 = (if ((FStarC_MachineInts.is_unsigned k) && (((<>) k FStarC_MachineInts.SizeT) && ((<>) k FStarC_MachineInts.UInt128))) then (let tmp33 = (nm "mul_mod") in
+    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp39)) else (FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_return__list_primitive_step ())) in
+  ((FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_bind__list_primitive_step tmp31) (fun tmp32 -> (let tmp33 = (if ((FStarC_MachineInts.is_unsigned k) && (((<>) k FStarC_MachineInts.SizeT) && ((<>) k FStarC_MachineInts.UInt128))) then (let tmp33 = (nm "mul_mod") in
     let tmp34 = (FStarC_TypeChecker_Primops_Base.mk2 Prims.int_zero tmp33 (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (FStarC_MachineInts.e_machint k) (FStarC_MachineInts.nbe_machint k) (fun x y -> (FStarC_MachineInts.make_as k x (mod_ (Prims.op_Star (FStarC_MachineInts.v k x) (FStarC_MachineInts.v k y)))))) in
     let tmp35 = (tmp34 :: []) in
-    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp35)) else (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_return__writer_list_primitive_step ())) in
-  (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp33 (fun tmp34 -> (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_return__writer_list_primitive_step ())))))))))))))
+    (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step tmp35)) else (FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_return__list_primitive_step ())) in
+  ((FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_bind__list_primitive_step tmp33) (fun tmp34 -> (FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_return__list_primitive_step ())))))))))))))
 
 let ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
   (let tmp = (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_iterM__writer_list_primitive_step bounded_arith_ops_for FStarC_MachineInts.all_machint_kinds) in
-  let tmp1 = (FStarC_TypeChecker_Primops_Base.fStarC_Class_Monad_op_let_Bang__writer_list_primitive_step tmp (fun tmp1 -> (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step ((FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero FStarC_Parser_Const.char_u32_of_char FStarC_Syntax_Embeddings.e_char FStarC_TypeChecker_NBETerm.e_char (FStarC_MachineInts.e_machint FStarC_MachineInts.UInt32) (FStarC_MachineInts.nbe_machint FStarC_MachineInts.UInt32) (fun c -> (let n = (Z.of_int c) in
+  let tmp1 = ((FStarC_TypeChecker_Primops_Base.fStarC_Writer_writer_bind__list_primitive_step tmp) (fun tmp1 -> (FStarC_TypeChecker_Primops_Base.fStarC_Writer_emit__list_primitive_step ((FStarC_TypeChecker_Primops_Base.mk1 Prims.int_zero FStarC_Parser_Const.char_u32_of_char FStarC_Syntax_Embeddings.e_char FStarC_TypeChecker_NBETerm.e_char (FStarC_MachineInts.e_machint FStarC_MachineInts.UInt32) (FStarC_MachineInts.nbe_machint FStarC_MachineInts.UInt32) (fun c -> (let n = (Z.of_int c) in
     (FStarC_MachineInts.mk FStarC_MachineInts.UInt32 n None)))) :: [])))) in
   (match tmp1 with
     | (u__1, u__2) -> u__1
   ))
+
+let size_step (lid : FStarC_Ident.lident) (fits : (Prims.int -> (Prims.int -> (bool) option))) : FStarC_TypeChecker_Primops_Base.primitive_step =
+  (let as_prop = (fun b -> (if b then FStarC_Syntax_Util.t_true else FStarC_Syntax_Util.t_false)) in
+  let as_nbe_prop = (fun b -> (FStarC_TypeChecker_NBETerm.mkFV (FStarC_Syntax_Syntax.lid_as_fv (if b then FStarC_Parser_Const.true_lid else FStarC_Parser_Const.false_lid) None) [] [])) in
+  (FStarC_TypeChecker_Primops_Base.mk2' Prims.int_zero lid FStarC_Syntax_Embeddings.e_int FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_int FStarC_TypeChecker_NBETerm.e_int FStarC_Syntax_Embeddings.e_abstract_term FStarC_TypeChecker_NBETerm.e_abstract_nbe_term (fun x n -> (match (fits x n) with
+    | (Some (x1)) -> (let tmp = (as_prop x1) in
+      (Some (tmp)))
+    | None -> None
+  )) (fun x n -> (match (fits x n) with
+    | (Some (x1)) -> (let tmp = (as_nbe_prop x1) in
+      (Some (tmp)))
+    | None -> None
+  ))))
+
+let rec bit_length (x : Prims.int) : Prims.int =
+  (if (Prims.op_Less_Equals x Prims.int_zero) then Prims.int_zero else (Prims.op_Plus Prims.int_one (bit_length (Prims.op_Slash x (Prims.of_int (2))))))
+
+let uint_fits (x : Prims.int) (n : Prims.int) : (bool) option =
+  (if (Prims.op_Less n Prims.int_zero) then None else (Some (((Prims.op_Greater_Equals x Prims.int_zero) && (Prims.op_Less_Equals (bit_length x) n)))))
+
+let int_fits (x : Prims.int) (n : Prims.int) : (bool) option =
+  (if (Prims.op_Less_Equals n Prims.int_zero) then None else (if (Prims.op_Greater_Equals x Prims.int_zero) then (Some ((Prims.op_Less_Equals (bit_length x) (Prims.op_Minus n Prims.int_one)))) else (Some ((Prims.op_Less_Equals (bit_length (Prims.op_Minus (Prims.op_Tilde_Minus x) Prims.int_one)) (Prims.op_Minus n Prims.int_one))))))
+
+let simplify_ops : (FStarC_TypeChecker_Primops_Base.primitive_step) list =
+  (let tmp = (FStarC_Parser_Const.p2l ("FStar" :: ("UInt" :: ("size" :: [])))) in
+  let tmp1 = (size_step tmp uint_fits) in
+  let tmp2 = (FStarC_Parser_Const.p2l ("FStar" :: ("Int" :: ("size" :: [])))) in
+  let tmp3 = (size_step tmp2 int_fits) in
+  let tmp4 = (tmp3 :: []) in
+  (tmp1 :: tmp4))
 

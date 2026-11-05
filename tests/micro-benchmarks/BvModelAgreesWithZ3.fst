@@ -18,15 +18,21 @@ let signed3 = [-3; -2; -1; 0; 1; 2]
 let nonzero3 = [1; 2; 3; 5]
 
 // Keep SMT operands symbolic while exposing their concrete values by refinement.
+// The wrappers return the machine-integer types the BV operations expect, so
+// the lemma types are well-formed by subtyping, without an SMT query per operand.
 irreducible
-let opaque_param (i:int) : Tot (r:int{r == i}) = i
+let opaque_s (#n:pos) (i:I.int_t n) : Tot (r:I.int_t n{r == i}) = i
+irreducible
+let opaque_u (#n:pos) (i:FStar.UInt.uint_t n) : Tot (r:FStar.UInt.uint_t n{r == i}) = i
 
 let int_term (n:int) : Tac term =
   pack (Tv_Const (C_Int n (FStar.Sealed.seal Dec)))
 
-let opaque_int_term (n:int) : Tac term =
-  let n = int_term n in
-  `(opaque_param (`#n))
+// An opaque [n] at the signed or unsigned machine-integer type of [width] bits.
+let opaque_int_term (width:pos) (n:int) : Tac term =
+  let w = int_term width in
+  let t = int_term n in
+  if n < 0 then `(opaque_s #(`#w) (`#t)) else `(opaque_u #(`#w) (`#t))
 
 let bv_term (n:int) : Tac term =
   if n < 0
@@ -40,10 +46,10 @@ let bv_term (n:int) : Tac term =
 let opaque_bv_term (n:int) : Tac term =
   if n < 0
   then
-    let n = opaque_int_term n in
+    let n = opaque_int_term 3 n in
     `(BV.int2bv #3 (I.to_uint #3 (`#n)))
   else
-    let n = opaque_int_term n in
+    let n = opaque_int_term 3 n in
     `(BV.int2bv #3 (`#n))
 
 let argument_name (n:int) : string =
@@ -148,9 +154,9 @@ let test_bvpred2 left right op =
   test_op2 left right bv_term bv_term opaque_bv_term opaque_bv_term
     direct_result op
 let test_intop1 values op =
-  test_op1 values int_term opaque_int_term direct_result op
+  test_op1 values int_term (opaque_int_term 3) direct_result op
 let test_bvnatop2 vectors naturals op =
-  test_op2 vectors naturals bv_term int_term opaque_bv_term opaque_int_term
+  test_op2 vectors naturals bv_term int_term opaque_bv_term (opaque_int_term 3)
     vector_result op
 
 let run_test (prefix:string) (test:string -> Tac decls) : Tac decls =

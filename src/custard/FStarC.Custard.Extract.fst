@@ -2384,6 +2384,14 @@ and binder_classes (st:state) (l:Ident.lident) : ML (list bclass) =
               (* Section 3.2d: which [Mono] binders have a function type.
                  Recorded beside the classification, for [split_mono_args]. *)
               let soft = Mono.soft_binders (tcenv st) lb.lbtyp (Some lb.lbdef) in
+              (* An external has no body to specialize, so its function
+                 arguments are passed at run time: the attribute is dropped
+                 before classifying, so that rule 5 does not make the types
+                 they mention [Mono] either.  [FStar.List.Tot.Base] is
+                 compiled under Cherry and realized for OCaml. *)
+              let ext = List.existsb (fun b -> b) soft && is_external_value st l se in
+              let lb = if ext then strip_soft_mono soft lb else lb in
+              let soft = if ext then [] else soft in
               if List.existsb (fun b -> b) soft
               then HashTable.add st.bflags ("soft:" ^ key) soft;
               (* Section 19.4: [lbdef] is what makes the classification as
@@ -5081,6 +5089,11 @@ and mono_holes (st:state) (l:Ident.lident)
                       if List.existsb (S.bv_eq v) acc then acc else acc @ [v])
                    acc (elems (Free.names (snd it))) in
   let vs = List.fold_left names_of [] (margs @ msubst) in
+  (* Under --custard_monomorphize_types a type name was rejected by
+     [check_mono_arg] before getting here.  Otherwise types are compiled
+     uniformly and erased, so a type name is not a parameter but stays a free
+     type variable of the specialization. *)
+  let vs = vs |> List.filter (fun v -> not (is_type_bv st v)) in
   (* Sorted so that the order cannot depend on the order the arguments happen
      to be visited in, which would make the key unstable. *)
   List.sortWith (fun a b -> a.index - b.index) vs
@@ -5189,6 +5202,18 @@ and unfold_lets (st:state) (fuel:int) (t:term) : ML term =
    there would be nothing to pass at runtime -- the specialization would have
    to be chosen by a value that does not exist in the emitted program. *)
 and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
+  let is_type_name (v:S.bv) : ML bool =
+    match (SS.compress v.sort).n with
+    | Tm_type _ -> true
+    | _ -> false in
+  (* Without --custard_monomorphize_types every type is compiled uniformly
+     (section 5.0), so a runtime type parameter is simply left free in the
+     specialization (see [mono_holes]): it is a type variable of the emitted
+     code, and that code is the same whatever it is instantiated at. *)
+  let uniform = not (Options.custard_monomorphize_types ()) in
+  match (SS.compress t).n with
+  | Tm_name v when uniform && is_type_name v -> ()
+  | _ ->
   (* An argument that is *nothing but* a runtime value has no shape to
      specialize on, and abstracting it would silently turn monomorphization
      into ordinary runtime passing -- which is the performance cliff the
@@ -5305,10 +5330,7 @@ and check_mono_arg (st:state) (l:Ident.lident) (i:int) (t:term) : ML unit =
      in
      custard_error st E.Error_CustardCannotMonomorphize msg
    | _ -> ());
-  let is_type_name (v:S.bv) : ML bool =
-    match (SS.compress v.sort).n with
-    | Tm_type _ -> true
-    | _ -> false in
+  if uniform then () else
   match elems (Free.names t) |> List.filter is_type_name with
   | [] -> ()
   | v :: _ ->
@@ -5453,6 +5475,40 @@ and reference_flags (l:Ident.lident) (attrs:list S.term) (is_extern:bool)
 (* Declarations                                                         *)
 (* -------------------------------------------------------------------- *)
 
+(* A [Sig_let] of a realized module that {!extract_lid} turns into an
+   external rather than compiling; its comment there says which ones stay. *)
+and is_realized_value (st:state) (l:Ident.lident) (se:sigelt) : ML bool =
+  Sig_let? se.sigel && not (is_inlinable se)
+  && not (is_inline_for_extraction st se)
+  && not (Builtins.is_type_only_realized_module
+            (Builtins.no_fstar_stubs
+               (Ident.ns_of_lid l |> List.map Ident.string_of_id)))
+
+(* Whether the definition [se] of [l] is extracted as an external value. *)
+and is_external_value (st:state) (l:Ident.lident) (se:sigelt) : ML bool =
+  let rule = match Builtins.rule_of_attributes se.sigattrs with
+             | Some r -> Some r
+             | None -> Builtins.lookup_rule l in
+  match rule with
+  | Some (Builtins.Rule_extern _) -> true
+  | Some Builtins.Rule_realized -> is_realized_value st l se
+  | _ -> false
+
+(* [lb] without [@@@monomorphize] on the binders [soft] marks, in both its
+   type and its definition. *)
+and strip_soft_mono (soft:list bool) (lb:letbinding) : ML letbinding =
+  let strip (bs:binders) : ML binders =
+    bs |> List.mapi (fun i (b:S.binder) ->
+      if i < List.length soft && List.nth soft i
+      then { b with binder_attrs =
+               b.binder_attrs |> List.filter (fun a ->
+                 not (U.is_fvar PC.monomorphize_attr a)) }
+      else b) in
+  let bs, body, rc = U.abs_formals lb.lbdef in
+  let tbs, c = U.arrow_formals_comp lb.lbtyp in
+  { lb with lbdef = U.abs (strip bs) body rc;
+            lbtyp = (if Nil? tbs then lb.lbtyp else U.arrow (strip tbs) c) }
+
 and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
                 (n_holes:int) : ML decl =
   let se = Prof.timed "sigelt"
@@ -5521,11 +5577,7 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
     custard_error st E.Error_CustardEntryNotFound [
       text ("Custard cannot find a definition for " ^ Ident.string_of_lid l ^ ".")
     ]
-  | Some se when is_realized && Sig_let? se.sigel && not (is_inlinable se)
-              && not (is_inline_for_extraction st se)
-              && not (Builtins.is_type_only_realized_module
-                        (Builtins.no_fstar_stubs
-                           (Ident.ns_of_lid l |> List.map Ident.string_of_id))) ->
+  | Some se when is_realized && is_realized_value st l se ->
     (* Section 8.2: a realization replaces the F* module, values included.
        The F* definition is a model -- often written for proof rather than for
        execution, and free to describe a representation the realization does
@@ -6426,9 +6478,14 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
                 |> List.map (fun (b:S.binder) ->
                      S.mk_binder (S.new_bv None b.binder_bv.sort)) in
       let hargs = hbs |> List.map (fun (b:S.binder) -> S.as_arg (S.bv_to_name b.binder_bv)) in
+      (* Only the holes are substituted: [Exclude Zeta], because the
+         argument may hold a local [let rec], and unfolding one need not
+         terminate (a closure [let go = go' bf in ... List.iter (go false)]
+         inside [go'] did not). *)
       let inst (t:term) : ML term =
         norm_bounded st "a monomorphized argument"
-                     [TcEnv.AllowUnboundUniverses; TcEnv.Beta]
+                     [TcEnv.AllowUnboundUniverses; TcEnv.Beta;
+                      TcEnv.Exclude TcEnv.Zeta]
                      (U.mk_app t hargs) in
       hbs, List.map (fun (i, t) -> (i, inst t)) margs
     | _ -> [], margs
@@ -6443,6 +6500,21 @@ and specialize (st:state) (ty:typ) (def:term) (cs:list bclass) (margs:list (int 
      more parameter than every call supplied, and the argument the
      specialization was keyed on was still a variable in its body. *)
   let bs, c, n_folded, folded_c = Mono.arrow_formals_unfold_folded (tcenv st) ty in
+  (* The binders above are the *type*'s, and the definition's own lambda is
+     beta-reduced away under the spine below.  When an interface supplies the
+     type, binder attributes written on the implementation (such as
+     [[@@@cherry_borrowed]]) live only on that lambda, so they are merged in
+     by position, as in {!attributed_binders}. *)
+  let bs =
+    let dbs, _, _ = U.abs_formals def in
+    let rec merge (bs:binders) (dbs:binders) : ML binders =
+      match bs, dbs with
+      | b :: bs, d :: dbs ->
+        let extra = d.binder_attrs |> List.filter (fun a ->
+                      not (b.binder_attrs |> List.existsb (U.term_eq a))) in
+        { b with binder_attrs = b.binder_attrs @ extra } :: merge bs dbs
+      | _ -> bs in
+    merge bs dbs in
   (* How far the spine may run.  A value may be duplicated freely, so it takes
      the whole arrow; anything else only takes the binders its own lambdas
      absorb.  A [Mono] argument past that point has to be substituted all the

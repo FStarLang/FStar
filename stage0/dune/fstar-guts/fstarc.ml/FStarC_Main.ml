@@ -137,8 +137,8 @@ let go_normal (tmp : unit) : unit =
           | None -> f
         )))) filenames0) in
       let tmp6 = (FStarC_Debug.high ()) in
-      (if tmp6 then (let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string filenames0) in
-      let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string filenames) in
+      (if tmp6 then (let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 filenames0) in
+      let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 filenames) in
       (FStarC_Format.print2 "Rewrote\n%s\ninto\n%s\n\n" tmp7 tmp8)) else ());
       let tmp7 = (FStarC_Find.get_odir ()) in
       (FStarC_Option.iter (FStarC_Util.mkdir false true) tmp7);
@@ -209,14 +209,14 @@ let go_normal (tmp : unit) : unit =
           let path = (match tmp10 with
               | (Some (v)) -> v
             ) in
-          let tmp11 = (FStarC_Util.load_value_from_file path) in
+          let tmp11 = (FStarC_Custard_KrmlJson.read_file path) in
           (match tmp11 with
             | None -> (FStarC_Errors.fStarC_Errors_raise_error0__list_ocaml_document FStarC_Errors_Codes.Fatal_ModuleOrFileNotFound ((PPrint.(^/^) (FStarC_Errors_Msg.text "Could not read krml file:") (PPrint.string path)) :: []))
             | (Some ((version, files))) -> (let tmp12 = (FStarC_Class_Show.fStarC_Class_Show_show__int version) in
               (FStarC_Format.print1 "Karamel format version: %s\n" tmp12);
               (BatList.iter (fun tmp13 -> (match tmp13 with
                 | (name, decls) -> ((FStarC_Format.print1 "%s:\n" name);
-                  (BatList.iter (fun d -> (let tmp14 = (FStarC_Custard_KrmlAst.fStarC_Class_Show_show__decl_157 d) in
+                  (BatList.iter (fun d -> (let tmp14 = (FStarC_Custard_KrmlAst.fStarC_Class_Show_show__decl_163 d) in
                   (FStarC_Format.print1 "%s\n\n" tmp14))) decls))
               )) files))
           ))
@@ -310,7 +310,7 @@ let go_normal (tmp : unit) : unit =
           let tmp15 = (FStarC_Option.dflt "<none>" tmp14) in
           (FStarC_Format.print1 "- Library root: %s\n" tmp15);
           let tmp16 = (FStarC_Find.full_include_path ()) in
-          let tmp17 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string tmp16) in
+          let tmp17 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 tmp16) in
           (FStarC_Format.print1 "- Full include path: %s\n" tmp17);
           (FStarC_Format.print_string "\n");
           ()) else ());

@@ -71,11 +71,11 @@ let explicit_args (args : (('a * (FStarC_Syntax_Syntax.arg_qualifier) option)) l
   )) args)
 
 let e_machint (k : machint_kind) : (machint) FStarC_Syntax_Embeddings_Base.embedding =
-  (let with_meta_ds = (Obj.magic ((fun r t m -> (match m with
+  (let with_meta_ds = (fun r t m -> (match m with
       | None -> t
       | (Some (m1)) -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_meta (({ FStarC_Syntax_Syntax.tm = t;
           meta = (FStarC_Syntax_Syntax.Meta_desugared (m1)) } : FStarC_Syntax_Syntax.term'__Tm_meta__payload))) r)
-    )))) in
+    )) in
   let em = (fun x rng shadow cb -> (let it = (FStarC_Syntax_Embeddings_Base.embed FStarC_Syntax_Embeddings.e_int (x).u__0 rng None cb) in
     let int_to_t = (int_to_t_for k) in
     let proofs = (int_to_t_proof_args k) in
@@ -97,8 +97,11 @@ let e_machint (k : machint_kind) : (machint) FStarC_Syntax_Embeddings_Base.embed
           (FStarC_Syntax_Util.is_fvar tmp6 hd)))) -> (let tmp4 = (explicit_args args) in
             (match tmp4 with
               | ((a, tmp5) :: []) -> (let a1 = (FStarC_Syntax_Util.unlazy_emb a) in
-                let tmp6 = (FStarC_Syntax_Embeddings_Base.try_unembed FStarC_Syntax_Embeddings.e_int a1 cb) in
-                (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp6 (fun a2 -> (Some ({ u__0 = a2; u__1 = m })))))
+                let t3 = (FStarC_Syntax_Embeddings_Base.unmeta_div_results a1) in
+                let tmp6 = (FStarC_Syntax_Subst.compress t3) in
+                let tmp7 = ((FStarC_Syntax_Embeddings.e_int).FStarC_Syntax_Embeddings_Base.un tmp6) in
+                let tmp8 = (tmp7 cb) in
+                ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp8) (fun a2 -> (Some ({ u__0 = a2; u__1 = m })))))
               | tmp5 -> None
             ))
           | tmp4 -> None
@@ -139,7 +142,7 @@ let nbe_machint (k : machint_kind) : (machint) FStarC_TypeChecker_NBETerm.embedd
           (FStarC_Ident.lid_equals (fv1).FStarC_Syntax_Syntax.fv_name tmp3)))) -> (let tmp1 = (explicit_args args) in
             (match tmp1 with
               | ((a2, tmp2) :: []) -> (let tmp3 = (FStarC_TypeChecker_NBETerm.unembed FStarC_TypeChecker_NBETerm.e_int cbs a2) in
-                (FStarC_Class_Monad.fStarC_Class_Monad_op_let_Bang__option tmp3 (fun a3 -> (Some ({ u__0 = a3; u__1 = m })))))
+                ((FStarC_Class_Monad.fStarC_Class_Monad_bind__option tmp3) (fun a3 -> (Some ({ u__0 = a3; u__1 = m })))))
               | tmp2 -> None
             ))
           | tmp1 -> None

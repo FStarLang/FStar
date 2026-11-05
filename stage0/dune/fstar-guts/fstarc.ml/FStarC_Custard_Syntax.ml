@@ -129,6 +129,7 @@ type op =
   | Reset of name * (bool) list
   | Reuse of name * name
   | ResetFree
+  | Update of name * (Prims.int) list
   | IArr of string
   | Dyn of string
   | PBuf of string
@@ -136,6 +137,8 @@ type op =
   | ExnPending
   | ExnTake
   | ExnExit
+  | ClosureNew
+  | ClosureCall
 
 
 type prim_ty =
@@ -205,7 +208,7 @@ let width_bits (w : iwidth) : Prims.int =
 
 let rec float_lit_of_string__digits (is_digit : (int -> bool)) (cs : (int) list) : ((int) list * (int) list) =
   (match cs with
-    | (c :: cs') when (is_digit c) -> (let tmp = ((float_lit_of_string__digits is_digit) cs') in
+    | (c :: cs') when (is_digit c) -> (let tmp = (float_lit_of_string__digits is_digit cs') in
       (match tmp with
         | (ds, rest) -> ((c :: ds), rest)
       ))
@@ -237,10 +240,10 @@ let float_lit_of_string (s : string) : (float_lit) option =
           | tmp1 -> (false, cs)
         ) in
       (match tmp1 with
-        | (neg, cs1) -> (let tmp2 = ((float_lit_of_string__digits is_digit) cs1) in
+        | (neg, cs1) -> (let tmp2 = (float_lit_of_string__digits is_digit cs1) in
           (match tmp2 with
             | (ipart, cs2) -> (let tmp3 = (match cs2 with
-                  | (46 :: cs3) -> ((float_lit_of_string__digits is_digit) cs3)
+                  | (46 :: cs3) -> (float_lit_of_string__digits is_digit cs3)
                   | tmp3 -> ([], cs2)
                 ) in
               (match tmp3 with
@@ -257,7 +260,7 @@ let float_lit_of_string (s : string) : (float_lit) option =
                             | tmp4 -> (false, cs4)
                           ) in
                         (match tmp4 with
-                          | (eneg, cs5) -> (let tmp5 = ((float_lit_of_string__digits is_digit) cs5) in
+                          | (eneg, cs5) -> (let tmp5 = (float_lit_of_string__digits is_digit cs5) in
                             (match tmp5 with
                               | (ds, cs6) -> (if (match ds with
                                   | [] -> true
@@ -307,7 +310,10 @@ type flag =
   | Comment of string
   | Prologue of string
   | Epilogue of string
-  | ClosurePrologue of string * string
+  | ClosurePrologue of string
+  | ClosureGuard of string
+  | Guard of string
+  | IfDef of string
   | CMacro
   | CIfDef
   | CReference
@@ -318,12 +324,15 @@ type flag =
   | NoUnfold
   | Extern of (string) option * (string) option
   | SourceRecord
+  | CherryBoxed
   | Existential of string * string
   | Imported of string * (string) option
   | CallArity of (bool) list
   | Member of name * string
   | CherryConv of (bool) list
   | CherryMode of ((bool) option) list
+  | CName of string
+  | DeclareInCHeader
 
 
 type dtype = {
@@ -418,88 +427,6 @@ type type_info = {
   ti_plans : ((name * ((string * string * (expansion) option)) list)) list;
 }
 
-let escape_char (c : int) : string =
-  (match c with
-    | 10 -> "\\n"
-    | 9 -> "\\t"
-    | 13 -> "\\r"
-    | 34 -> "\\\""
-    | 92 -> "\\\\"
-    | c1 -> ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c1)
-  )
-
-let escape_string (s : string) : string =
-  (let tmp = (BatList.map escape_char ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) in
-  (BatString.concat "" tmp))
-
-let name_of_decl (d : decl) : name =
-  (match d with
-    | (DType (t)) -> (t).dt_name
-    | (DLet (l)) -> (l).dl_name
-    | (DExternal (e)) -> (e).dx_name
-    | (DExn (e)) -> (e).de_name
-    | (DModule (m)) -> (m).dm_name
-  )
-
-let uniq (base : string) (i : Prims.int) : string =
-  (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-  let tmp1 = (Prims.strcat "#" tmp) in
-  (Prims.strcat base tmp1))
-
-let iwidth_of_width (w : FStarC_Const.width) : iwidth =
-  (match w with
-    | FStarC_Const.Int8 -> W8
-    | FStarC_Const.Int16 -> W16
-    | FStarC_Const.Int32 -> W32
-    | FStarC_Const.Int64 -> W64
-    | FStarC_Const.Sizet -> WSizet
-  )
-
-type tmpl_piece =
-  | TP_lit of string
-  | TP_arg of Prims.int
-
-
-let rec template_of_string__go__digits (cs : (int) list) (ds : (int) list) : ((Prims.int * (int) list)) option =
-  (match cs with
-    | (125 :: rest) -> (match ds with
-        | [] -> None
-        | tmp -> (let n = (BatList.fold_left (fun acc d -> (Prims.op_Plus (Prims.op_Star acc (Prims.of_int (10))) (Prims.op_Minus (Z.of_int d) (Prims.of_int (48))))) Prims.int_zero (BatList.rev ds)) in
-          (Some ((n, rest))))
-      )
-    | (c :: rest) when ((Prims.op_Greater_Equals (Z.of_int c) (Prims.of_int (48))) && (Prims.op_Less_Equals (Z.of_int c) (Prims.of_int (57)))) -> (template_of_string__go__digits rest (c :: ds))
-    | tmp -> None
-  )
-
-let rec template_of_string__go (flush : ((int) list -> ((tmpl_piece) list -> (tmpl_piece) list))) (cs : (int) list) (acc : (int) list) (out : (tmpl_piece) list) : (tmpl_piece) list =
-  (match cs with
-    | [] -> (BatList.rev (flush acc out))
-    | (123 :: (123 :: rest)) -> ((template_of_string__go flush) rest (123 :: acc) out)
-    | (123 :: rest) -> (let tmp = (template_of_string__go__digits rest []) in
-      (match tmp with
-        | (Some ((n, rest'))) -> ((template_of_string__go flush) rest' [] ((TP_arg (n)) :: (flush acc out)))
-        | None -> ((template_of_string__go flush) rest (123 :: acc) out)
-      ))
-    | (c :: rest) -> ((template_of_string__go flush) rest (c :: acc) out)
-  )
-
-let template_of_string (s : string) : (tmpl_piece) list =
-  (let cs = ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s) in
-  let flush = (fun acc out -> (match acc with
-      | [] -> out
-      | tmp -> ((TP_lit (((fun l -> let b = BatUTF8.Buf.create 16 in List.iter (fun c -> BatUTF8.Buf.add_char b (BatUChar.chr c)) l; BatUTF8.Buf.contents b) (BatList.rev acc)))) :: out)
-    )) in
-  ((template_of_string__go flush) cs [] []))
-
-let uu___is_TP_arg (projectee : tmpl_piece) : bool =
-  (match projectee with
-    | (TP_arg (u__0)) -> true
-    | tmp -> false
-  )
-
-let is_template (ps : (tmpl_piece) list) : bool =
-  (BatList.exists uu___is_TP_arg ps)
-
 let rec subst_cty (s : ((string * cty)) list) (c : cty) : cty =
   (match c with
     | (TVar (v)) -> (let tmp = (List.find_opt (fun tmp -> (match tmp with
@@ -527,6 +454,94 @@ let rec subst_cty (s : ((string * cty)) list) (c : cty) : cty =
       (TApp ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
     | c1 -> c1
   )
+
+let uu___is_CallArity (projectee : flag) : bool =
+  (match projectee with
+    | (CallArity (u__0)) -> true
+    | tmp -> false
+  )
+
+let name_of_decl (d : decl) : name =
+  (match d with
+    | (DType (t)) -> (t).dt_name
+    | (DLet (l)) -> (l).dl_name
+    | (DExternal (e)) -> (e).dx_name
+    | (DExn (e)) -> (e).de_name
+    | (DModule (m)) -> (m).dm_name
+  )
+
+let iwidth_of_width (w : FStarC_Const.width) : iwidth =
+  (match w with
+    | FStarC_Const.Int8 -> W8
+    | FStarC_Const.Int16 -> W16
+    | FStarC_Const.Int32 -> W32
+    | FStarC_Const.Int64 -> W64
+    | FStarC_Const.Sizet -> WSizet
+  )
+
+let escape_char (c : int) : string =
+  (match c with
+    | 10 -> "\\n"
+    | 9 -> "\\t"
+    | 13 -> "\\r"
+    | 34 -> "\\\""
+    | 92 -> "\\\\"
+    | c1 -> ((fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) c1)
+  )
+
+let escape_string (s : string) : string =
+  (let tmp = (BatList.map escape_char ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) in
+  (BatString.concat "" tmp))
+
+let uniq (base : string) (i : Prims.int) : string =
+  (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+  let tmp1 = (Prims.strcat "#" tmp) in
+  (Prims.strcat base tmp1))
+
+type tmpl_piece =
+  | TP_lit of string
+  | TP_arg of Prims.int
+
+
+let rec template_of_string__go__digits (cs : (int) list) (ds : (int) list) : ((Prims.int * (int) list)) option =
+  (match cs with
+    | (125 :: rest) -> (match ds with
+        | [] -> None
+        | tmp -> (let n = (BatList.fold_left (fun acc d -> (Prims.op_Plus (Prims.op_Star acc (Prims.of_int (10))) (Prims.op_Minus (Z.of_int d) (Prims.of_int (48))))) Prims.int_zero (BatList.rev ds)) in
+          (Some ((n, rest))))
+      )
+    | (c :: rest) when ((Prims.op_Greater_Equals (Z.of_int c) (Prims.of_int (48))) && (Prims.op_Less_Equals (Z.of_int c) (Prims.of_int (57)))) -> (template_of_string__go__digits rest (c :: ds))
+    | tmp -> None
+  )
+
+let rec template_of_string__go (flush : ((int) list -> ((tmpl_piece) list -> (tmpl_piece) list))) (cs : (int) list) (acc : (int) list) (out : (tmpl_piece) list) : (tmpl_piece) list =
+  (match cs with
+    | [] -> (BatList.rev (flush acc out))
+    | (123 :: (123 :: rest)) -> (template_of_string__go flush rest (123 :: acc) out)
+    | (123 :: rest) -> (let tmp = (template_of_string__go__digits rest []) in
+      (match tmp with
+        | (Some ((n, rest'))) -> (template_of_string__go flush rest' [] ((TP_arg (n)) :: (flush acc out)))
+        | None -> (template_of_string__go flush rest (123 :: acc) out)
+      ))
+    | (c :: rest) -> (template_of_string__go flush rest (c :: acc) out)
+  )
+
+let template_of_string (s : string) : (tmpl_piece) list =
+  (let cs = ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s) in
+  let flush = (fun acc out -> (match acc with
+      | [] -> out
+      | tmp -> ((TP_lit (((fun l -> let b = BatUTF8.Buf.create 16 in List.iter (fun c -> BatUTF8.Buf.add_char b (BatUChar.chr c)) l; BatUTF8.Buf.contents b) (BatList.rev acc)))) :: out)
+    )) in
+  (template_of_string__go flush cs [] []))
+
+let uu___is_TP_arg (projectee : tmpl_piece) : bool =
+  (match projectee with
+    | (TP_arg (u__0)) -> true
+    | tmp -> false
+  )
+
+let is_template (ps : (tmpl_piece) list) : bool =
+  (BatList.exists uu___is_TP_arg ps)
 
 let branch_children (br : (pat * (expr) option * expr)) : (expr) list =
   (match br with
@@ -727,12 +742,6 @@ let cty_to_string (t : cty) : string =
 let fStarC_Class_Show_show__cty (tmp : cty) : string =
   (cty_to_string tmp)
 
-let uu___is_CallArity (projectee : flag) : bool =
-  (match projectee with
-    | (CallArity (u__0)) -> true
-    | tmp -> false
-  )
-
 let is_pure (e : eff) : bool =
   (match e with
     | E_Ghost -> true
@@ -876,6 +885,30 @@ type verdicts = {
   vd_plans : (((string * string * (expansion) option)) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t;
 }
 
+let uu___is_Root (projectee : flag) : bool =
+  (match projectee with
+    | Root -> true
+    | tmp -> false
+  )
+
+let uu___is_Entrypoint (projectee : flag) : bool =
+  (match projectee with
+    | Entrypoint -> true
+    | tmp -> false
+  )
+
+let uu___is_Private (projectee : flag) : bool =
+  (match projectee with
+    | Private -> true
+    | tmp -> false
+  )
+
+let uu___is_Member (projectee : flag) : bool =
+  (match projectee with
+    | (Member (u__1, u__2)) -> true
+    | tmp -> false
+  )
+
 let base_name (s : string) : string =
   (match (FStarC_String.split (35 :: []) s) with
     | (b :: (tmp :: tmp1)) -> b
@@ -897,12 +930,6 @@ let member_of (fs : (flag) list) : ((name * string)) option =
 let fold_children (f : ('a -> (expr -> 'a))) (init : 'a) (x : expr) : 'a =
   (let tmp = (children x) in
   (BatList.fold_left f init tmp))
-
-let uu___is_Root (projectee : flag) : bool =
-  (match projectee with
-    | Root -> true
-    | tmp -> false
-  )
 
 let const_eq (c1 : constant) (c2 : constant) : bool =
   (match (c1, c2) with
@@ -944,6 +971,7 @@ let rec is_droppable (e : expr) : bool =
     | (EOp ({ po_op = (Reset (u__1, u__2)); po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = (Reuse (u__1, u__2)); po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = ResetFree; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = (Update (u__1, u__2)); po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = (IArr (tmp)); po_ty = tmp1; _ }, tmp2)) -> false
     | (EOp ({ po_op = (Dyn (tmp)); po_ty = tmp1; _ }, tmp2)) -> false
     | (EOp ({ po_op = (PBuf (tmp)); po_ty = tmp1; _ }, tmp2)) -> false
@@ -951,6 +979,7 @@ let rec is_droppable (e : expr) : bool =
     | (EOp ({ po_op = ExnPending; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = ExnTake; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = ExnExit; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = ClosureNew; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp (tmp, es)) -> (all es)
     | (ECtor (u__1, u__2)) -> (for_all_children is_droppable e)
     | (ETuple (tmp)) -> (for_all_children is_droppable e)
@@ -993,18 +1022,6 @@ let uu___is_CMacro (projectee : flag) : bool =
     | tmp -> false
   )
 
-let uu___is_ClosurePrologue (projectee : flag) : bool =
-  (match projectee with
-    | (ClosurePrologue (u__1, u__2)) -> true
-    | tmp -> false
-  )
-
-let uu___is_Prologue (projectee : flag) : bool =
-  (match projectee with
-    | (Prologue (u__0)) -> true
-    | tmp -> false
-  )
-
 let uu___is_CherryMode (projectee : flag) : bool =
   (match projectee with
     | (CherryMode (u__0)) -> true
@@ -1033,6 +1050,16 @@ let c_int_lit_to_string (v : Prims.int) (b : FStar_IntegerLiteral.int_base) : st
     | tmp -> (FStarC_Const.string_of_int_literal v b)
   )
 
+let rec stable_hash__hex (n : Prims.int) (k : Prims.int) : string =
+  (if ((=) k Prims.int_zero) then "" else (let d = (Prims.op_Percent n (Prims.of_int (16))) in
+  let tmp = (stable_hash__hex (Prims.op_Slash n (Prims.of_int (16))) (Prims.op_Minus k Prims.int_one)) in
+  let tmp1 = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) "0123456789abcdef" d Prims.int_one) in
+  (Prims.strcat tmp tmp1)))
+
+let stable_hash (s : string) : string =
+  (let h = (BatList.fold_left (fun h c -> (Prims.op_Percent (Prims.op_Plus (Prims.op_Plus (Prims.op_Star h (Prims.parse_int "1099511628211")) (Z.of_int c)) Prims.int_one) (Prims.parse_int "2305843009213693951"))) (Prims.of_int (5381)) ((fun s -> List.rev (BatUTF8.fold (fun acc c -> BatUChar.code c :: acc) [] s)) s)) in
+  (stable_hash__hex (Prims.op_Percent h (Prims.parse_int "1099511627776")) (Prims.of_int (10))))
+
 let uu___is_CReference (projectee : flag) : bool =
   (match projectee with
     | CReference -> true
@@ -1042,18 +1069,6 @@ let uu___is_CReference (projectee : flag) : bool =
 let at_int_width (o : prim_op) : bool =
   (match (o).po_ty with
     | (Some ((PInt (u__1, u__2)))) -> true
-    | tmp -> false
-  )
-
-let uu___is_Entrypoint (projectee : flag) : bool =
-  (match projectee with
-    | Entrypoint -> true
-    | tmp -> false
-  )
-
-let uu___is_Private (projectee : flag) : bool =
-  (match projectee with
-    | Private -> true
     | tmp -> false
   )
 
@@ -1076,11 +1091,15 @@ let flag_to_doc (f : flag) : PPrint.document =
     | (Comment (s)) -> (text (Prims.strcat "(* " (Prims.strcat s " *)")))
     | (Prologue (s)) -> (text (Prims.strcat "prologue " s))
     | (Epilogue (s)) -> (text (Prims.strcat "epilogue " s))
-    | (ClosurePrologue (a, b)) -> (text (Prims.strcat "closure_prologue " (Prims.strcat a (Prims.strcat " / " b))))
+    | (ClosurePrologue (s)) -> (text (Prims.strcat "closure_prologue " s))
+    | (ClosureGuard (s)) -> (text (Prims.strcat "closure_guard " s))
+    | (Guard (s)) -> (text (Prims.strcat "guard " s))
+    | (IfDef (s)) -> (text (Prims.strcat "ifdef " s))
     | CMacro -> (text "c_macro")
     | CIfDef -> (text "c_ifdef")
     | CReference -> (text "c_reference")
     | CInline -> (text "c_inline")
+    | (CName (s)) -> (text (Prims.strcat "c_name " s))
     | (Deriving (s)) -> (text (Prims.strcat "deriving " s))
     | Realized -> (text "realized")
     | NoUnfold -> (text "no_unfold")
@@ -1092,6 +1111,7 @@ let flag_to_doc (f : flag) : PPrint.document =
         | None -> ""
       ))))
     | SourceRecord -> (text "source-record")
+    | CherryBoxed -> (text "cherry-boxed")
     | (Existential (c, f1)) -> (text (Prims.strcat "existential[" (Prims.strcat c (Prims.strcat "." (Prims.strcat f1 "]")))))
     | Modelled -> (text "modelled")
     | (Imported (u, h)) -> (text (Prims.strcat "imported[" (Prims.strcat u (Prims.strcat (match h with
@@ -1121,6 +1141,7 @@ let flag_to_doc (f : flag) : PPrint.document =
       let tmp2 = (Prims.strcat tmp1 "]") in
       let tmp3 = (Prims.strcat "cherry_conv[" tmp2) in
       (text tmp3))
+    | DeclareInCHeader -> (text "declare_in_c_header")
   )
 
 let flags_to_doc (fs : (flag) list) : PPrint.document =
@@ -1274,6 +1295,7 @@ let op_to_string (o : prim_op) : string =
     | (Reset (u__1, u__2)) -> "reset"
     | (Reuse (u__1, u__2)) -> "reuse"
     | ResetFree -> "reset_free"
+    | (Update (u__1, u__2)) -> "update"
     | (IArr (f)) -> (Prims.strcat "iarray_" f)
     | (Dyn (f)) -> (Prims.strcat "dyn_" f)
     | (PBuf (f)) -> (Prims.strcat "pbuf_" f)
@@ -1281,6 +1303,8 @@ let op_to_string (o : prim_op) : string =
     | ExnPending -> "exn_pending"
     | ExnTake -> "exn_take"
     | ExnExit -> "exn_exit"
+    | ClosureNew -> "closure_new"
+    | ClosureCall -> "closure_call"
   ) (match (o).po_ty with
     | None -> ""
     | (Some ((PInt (u__1, u__2)))) -> (width_to_string (u__1, u__2))
@@ -1583,6 +1607,24 @@ let imported_home (d : decl) : (string) option =
     | (Imported (tmp1, h)) -> h
     | tmp1 -> None
   )) (decl_flags d))
+
+let uu___is_IfDef (projectee : flag) : bool =
+  (match projectee with
+    | (IfDef (u__0)) -> true
+    | tmp -> false
+  )
+
+let uu___is_DeclareInCHeader (projectee : flag) : bool =
+  (match projectee with
+    | DeclareInCHeader -> true
+    | tmp -> false
+  )
+
+let uu___is_Guard (projectee : flag) : bool =
+  (match projectee with
+    | (Guard (u__0)) -> true
+    | tmp -> false
+  )
 
 let uu___is_CInline (projectee : flag) : bool =
   (match projectee with
