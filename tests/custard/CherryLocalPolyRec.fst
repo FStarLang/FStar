@@ -24,7 +24,22 @@ let alternate (l : list goal) : ML (list goal) =
   in
   evens l
 
+(* An equality test at the local's own type parameter (#4739): lifted once,
+   it compared two [dyn]s, which Cherry refuses. *)
+let count_runs (l : list int) : ML (list (int & int)) =
+  let rec collect (#a:eqtype) (l : list a) : list (a & int) =
+    match l with
+    | [] -> []
+    | hd :: tl ->
+      begin match collect tl with
+      | [] -> [(hd, 1)]
+      | (h, n) :: t -> if h = hd then (h, n+1) :: t else (hd, 1) :: (h, n) :: t
+      end
+  in
+  collect l
+
 let main () : ML U32.t =
+  if count_runs [1; 1; 2] <> [(1, 2); (2, 1)] then 1ul else
   match keep [{n=1;s="a"}; {n=2;s="b"}] [1; 2; 3], alternate [{n=1;s="a"}; {n=2;s="b"}; {n=3;s="c"}] with
   | ([g], [2; 3]), [g1; g3] ->
     if g.n = 2 && g.s = "b" && g1.n = 1 && g3.s = "c" then 0ul else 1ul

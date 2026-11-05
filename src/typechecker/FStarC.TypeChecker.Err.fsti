@@ -79,7 +79,6 @@ val computed_computation_type_does_not_match_annotation #a (env:env) (r:Range.t)
 
 val computed_computation_type_does_not_match_annotation_eq #a (env:env) (r:Range.t) (e:term) (c c':comp) : ML a
 
-val unexpected_non_trivial_precondition_on_term #a (env:env) (f:term) : ML a
 
 
 val expected_pure_expression  #a (rng:Range.t) (e:term) (c:comp) (reason:option string) : ML a

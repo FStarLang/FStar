@@ -4,6 +4,9 @@
 let fStarC_Class_Deq_op_Equals_Question__string (tmp : string) (tmp1 : string) : bool =
   ((=) tmp tmp1)
 
+let fStarC_Class_Deq_op_Equals_Question__int (tmp : Prims.int) (tmp1 : Prims.int) : bool =
+  ((=) tmp tmp1)
+
 let rec fStarC_Class_Deq_eqList__string (xs : (string) list) (ys : (string) list) : bool =
   (match (xs, ys) with
     | ([], []) -> true
@@ -14,9 +17,6 @@ let rec fStarC_Class_Deq_eqList__string (xs : (string) list) (ys : (string) list
 
 let fStarC_Class_Deq_op_Equals_Question__list_string (tmp : (string) list) (ys : (string) list) : bool =
   (fStarC_Class_Deq_eqList__string tmp ys)
-
-let fStarC_Class_Deq_op_Equals_Question__int (tmp : Prims.int) (tmp1 : Prims.int) : bool =
-  ((=) tmp tmp1)
 
 let fStarC_Class_Deq_op_Equals_Question__bool (tmp : bool) (tmp1 : bool) : bool =
   ((=) tmp tmp1)

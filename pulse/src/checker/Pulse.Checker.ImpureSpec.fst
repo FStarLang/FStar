@@ -200,9 +200,9 @@ let rec pat_bindings_ty (g: env) (p: R.pattern) (ty: typ) (bs: list (nvar & typ)
 let pat_bindings (g: env) (sc: term) (p: R.pattern)
   : T.Tac (option (env & list (nvar & typ) & bool))
 = let go () : T.Tac (env & list (nvar & typ) & bool) =
-    (* `tc_term_phase1`, not `T.tc`: purification runs before the spec is
+    (* `tc_term_elab`, not `T.tc`: purification runs before the spec is
        elaborated, so the scrutinee may still carry unresolved implicits. *)
-    let _, sc_ty, _ = tc_term_phase1 g sc in
+    let _, sc_ty, _ = tc_term_elab g sc in
     let g, bs, _, irref = pat_bindings_ty g p sc_ty [] in
     g, bs, irref
   in
@@ -254,7 +254,7 @@ let is_no_proof_app (g: env) (t: term) : T.Tac bool =
   Pulse.Reflection.Util.head_has_attr_string "Pulse.Lib.Core.pulse_impure_spec_no_proof_required" t
 
 let symb_eval_stateful_app (g: env) (ctxt: slprop) (t: term) : T.Tac R.term =
-  let t, ty, _ = tc_term_phase1 g t in
+  let t, ty, _ = tc_term_elab g t in
   debug g (fun _ -> [ text "impure spec inferred type"; pp t; pp ty ]);
   match readback_comp ty with
   | None | Some (C_Tot ..) ->
@@ -296,7 +296,7 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_type_phase1 g b_ty in
+    let b_ty, b_u = tc_type_elab g b_ty in
     debug g (fun _ -> [text "symb eval subterms abs 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
@@ -314,7 +314,7 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_type_phase1 g b_ty in
+    let b_ty, b_u = tc_type_elab g b_ty in
     debug g (fun _ -> [text "symb eval subterms refine 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
@@ -338,7 +338,7 @@ let rec symb_eval_subterms (g:env) (ctxt: ctxt') (t:R.term) : T.Tac (bool & R.te
     let x = fresh g in
     let ppname = mk_ppname_no_range (T.unseal b.ppname) in
     let changed1, b_ty = symb_eval_subterms g ctxt b.sort in
-    let b_ty, b_u = tc_type_phase1 g b_ty in
+    let b_ty, b_u = tc_type_elab g b_ty in
     debug g (fun _ -> [text "symb eval subterms let 1"; pp changed1; pp b_ty]);
     let b = { b with sort = b_ty } in
     let g' = push_binding g x ppname b.sort in
@@ -512,11 +512,11 @@ let is_literally (t: term) : option term =
       None
   | _ -> None
 
-let tc_term_phase1_with_type_twice g t ty =
-  // If we call phase1 TC only once, then the universe instantiation in
+let tc_term_elab_with_type_twice g t ty =
+  // If we call the elaborating TC only once, then the universe instantiation in
   // coercion-inserted reveal calls remains a uvar.
-  let t, eff = tc_term_phase1_with_type g t ty in
-  let t, eff = tc_term_phase1_with_type g t ty in
+  let t, eff = tc_term_elab_with_type g t ty in
+  let t, eff = tc_term_elab_with_type g t ty in
   t, eff
 
 let or_emp (t: option slprop) : slprop =
@@ -676,7 +676,7 @@ and purify_spec_default (g: env) (ctxt: ctxt') (t: slprop) (ts: list slprop) : T
       let x = fresh g in
       let px = b.binder_ppname, x in
       let _, x_ty = symb_eval_subterms g ctxt b.binder_ty in
-      let x_ty, x_u = tc_type_phase1 g x_ty in
+      let x_ty, x_u = tc_type_elab g x_ty in
       let b = { b with binder_ty = x_ty } in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in
@@ -691,7 +691,7 @@ and purify_spec_default (g: env) (ctxt: ctxt') (t: slprop) (ts: list slprop) : T
       let x = fresh g in
       let px = n, x in
       let _, p = symb_eval_subterms g ctxt p in
-      let p, _ = tc_term_phase1_with_type g p tm_prop in
+      let p, _ = tc_term_elab_with_type g p tm_prop in
       let x_ty = mk_squash p in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in
@@ -704,7 +704,7 @@ and purify_spec_default (g: env) (ctxt: ctxt') (t: slprop) (ts: list slprop) : T
     | Some _ -> // literally t
       // NOTE: we cannot unfold the literally here, or the abs checker might
       // turn the nested exists* into a function argument.
-      let t, _ = tc_term_phase1_with_type_twice g t tm_slprop in
+      let t, _ = tc_term_elab_with_type_twice g t tm_slprop in
       (match purify_spec_core g ctxt ts with
       | None -> Some t
       | Some todo -> Some (tm_star t todo))
@@ -712,7 +712,7 @@ and purify_spec_default (g: env) (ctxt: ctxt') (t: slprop) (ts: list slprop) : T
     | None ->
       let t = purify_combinator g ctxt t in
       debug g (fun _ -> [text "purify spec atom 1"; pp t]);
-      let t, _ = tc_term_phase1_with_type_twice g t tm_slprop in
+      let t, _ = tc_term_elab_with_type_twice g t tm_slprop in
 
       let steps = [unascribe; primops; iota; delta_attr ["Pulse.Lib.Core.pulse_eager_unfold"]] in
       let t = T.norm_term_env (elab_env g) steps t in
@@ -777,7 +777,7 @@ and extrude (g: env) (ctxt: ctxt') (todo: list slprop) (ts: list slprop) : T.Tac
     | Tm_WithPure p n body ->
       let x = fresh g in
       let px = n, x in
-      let p, _ = tc_term_phase1_with_type g p tm_prop in
+      let p, _ = tc_term_elab_with_type g p tm_prop in
       let x_ty = mk_squash p in
       let g' = push_binding g x (fst px) x_ty in
       let body = open_term_nv body px in
@@ -816,14 +816,14 @@ let purify_spec (g: env) (ctxt: ctxt) (t0: slprop) : T.Tac slprop =
   let ctxt = { ctxt; in_old = false } in
   let t = purify_spec_core g' ctxt [t] |> or_emp in
   // TODO: check that xs is not free in t
-  // If we call phase1 TC only once, then the universe instantiation in
+  // If we call the elaborating TC only once, then the universe instantiation in
   // op_Exists_Star can remain unresolved.
-  let t, _ = tc_term_phase1_with_type g t tm_slprop in
+  let t, _ = tc_term_elab_with_type g t tm_slprop in
   debug g (fun _ -> [ text "purified" ^/^ pp t0; text "to" ^/^ pp t ]);
   t
 
 let purify_and_check_spec (g: env) (ctxt: ctxt) (t: slprop) =
-  // purify_spec already elaborates the term via tc_term_phase1_with_type,
+  // purify_spec already elaborates the term via tc_term_elab_with_type,
   // so we only need the core checker for validation (skip instantiate_term_implicits)
   let t = purify_spec g ctxt t in
   check_slprop_with_core g t;

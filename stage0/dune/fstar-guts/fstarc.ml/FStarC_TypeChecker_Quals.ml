@@ -4,17 +4,17 @@
 let rec pairwise_compat__go__go2 (compat : ('a -> ('a -> bool))) (x : 'a) (ys : ('a) list) (k : (unit -> (('a * 'a)) option)) : (('a * 'a)) option =
   (match ys with
     | [] -> (k ())
-    | (y :: ys1) -> (if (not (compat x y)) then (Some ((x, y))) else ((pairwise_compat__go__go2 compat x) ys1 k))
+    | (y :: ys1) -> (if (not (compat x y)) then (Some ((x, y))) else (pairwise_compat__go__go2 compat x ys1 k))
   )
 
 let rec pairwise_compat__go (compat : ('a -> ('a -> bool))) (prev : ('a) list) (next : ('a) list) : (('a * 'a)) option =
   (match next with
     | [] -> None
-    | (x :: xs) -> ((pairwise_compat__go__go2 compat x) prev (fun tmp -> ((pairwise_compat__go__go2 compat x) xs (fun tmp1 -> ((pairwise_compat__go compat) (x :: prev) xs)))))
+    | (x :: xs) -> (pairwise_compat__go__go2 compat x prev (fun tmp -> (pairwise_compat__go__go2 compat x xs (fun tmp1 -> (pairwise_compat__go compat (x :: prev) xs)))))
   )
 
-let pairwise_compat (compat : ('a -> ('a -> bool))) (eta : ('a) list) : (('a * 'a)) option =
-  ((pairwise_compat__go compat) [] eta)
+let pairwise_compat (compat : ('a -> ('a -> bool))) (next : ('a) list) : (('a * 'a)) option =
+  (pairwise_compat__go compat [] next)
 
 let check_sigelt_quals_pre (env : FStarC_TypeChecker_Env.env) (se : FStarC_Syntax_Syntax.sigelt) : unit =
   (if (match (se).FStarC_Syntax_Syntax.sigel with

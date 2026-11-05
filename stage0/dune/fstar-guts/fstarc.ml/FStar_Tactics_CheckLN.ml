@@ -4,12 +4,12 @@
 let rec for_all (p : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> bool))) (l : ('u___a) list) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (match l with
     | [] -> (fun tmp -> true)
-    | (x :: xs) -> (Obj.magic ((fun ps -> (let x1 = (p x ps) in
-      (if x1 then ((for_all p xs) ps) else false)))))
+    | (x :: xs) -> (fun ps -> (let x1 = (p x ps) in
+      (if x1 then ((for_all p xs) ps) else false)))
   )
 
 let rec check_u (u : FStarC_Reflection_Types.universe) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect_universe u ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect_universe u ps) in
   (match x with
     | (FStar_Tactics_NamedView.Uv_BVar (tmp)) -> false
     | (FStar_Tactics_NamedView.Uv_Name (tmp)) -> true
@@ -18,24 +18,24 @@ let rec check_u (u : FStarC_Reflection_Types.universe) : ((FStarC_Tactics_Types.
     | (FStar_Tactics_NamedView.Uv_Succ (u1)) -> ((check_u u1) ps)
     | (FStar_Tactics_NamedView.Uv_Max (us)) -> ((for_all check_u us) ps)
     | FStar_Tactics_NamedView.Uv_Unk -> true
-  )))))
+  )))
 
 let rec check_flag (f : FStarC_Reflection_V2_Data.cflag) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (match f with
     | (FStarC_Reflection_V2_Data.SMTPAT (t)) -> (check t)
     | (FStarC_Reflection_V2_Data.DECREASES ((FStarC_Reflection_V2_Data.Decreases_lex (ts)))) -> (for_all check ts)
-    | (FStarC_Reflection_V2_Data.DECREASES ((FStarC_Reflection_V2_Data.Decreases_wf (rel, e)))) -> (Obj.magic ((fun ps -> (let x = (check rel ps) in
+    | (FStarC_Reflection_V2_Data.DECREASES ((FStarC_Reflection_V2_Data.Decreases_wf (rel, e)))) -> (fun ps -> (let x = (check rel ps) in
       let x1 = (not x) in
-      (if x1 then false else ((check e) ps))))))
+      (if x1 then false else ((check e) ps))))
   )
 
 and check_comp (c : FStarC_Reflection_V2_Data.comp_view) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let tmp = (c).FStarC_Reflection_V2_Data.result_typ in
+  (fun ps -> (let tmp = (c).FStarC_Reflection_V2_Data.result_typ in
   let x = (check tmp ps) in
   let x1 = (not x) in
   let tmp1 = (if x1 then (fun tmp1 -> false) else (let tmp1 = (c).FStarC_Reflection_V2_Data.flags in
     (for_all check_flag tmp1))) in
-  (tmp1 ps)))))
+  (tmp1 ps)))
 
 and check_br (b : (FStar_Tactics_NamedView.pattern * FStarC_Reflection_Types.term)) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (fun ps -> ((match b with
@@ -43,7 +43,7 @@ and check_br (b : (FStar_Tactics_NamedView.pattern * FStarC_Reflection_Types.ter
   ) ps))
 
 and check (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
+  (fun ps -> (let x = (FStar_Tactics_NamedView.inspect t ps) in
   (match x with
     | (FStar_Tactics_NamedView.Tv_BVar (bv)) -> false
     | (FStar_Tactics_NamedView.Tv_Const (tmp)) -> true
@@ -73,7 +73,7 @@ and check (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate
       (if x1 then ((check_comp c) ps) else false))
     | FStar_Tactics_NamedView.Tv_Unknown -> true
     | FStar_Tactics_NamedView.Tv_Unsupp -> true
-  )))))
+  )))
 
 let check_ln (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
   (check t)

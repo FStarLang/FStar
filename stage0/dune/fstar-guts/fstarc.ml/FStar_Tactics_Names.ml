@@ -4,14 +4,14 @@
 exception Appears
 
 let name_appears_in (nm : FStarC_Reflection_Types.name) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> bool) =
-  (Obj.magic ((fun ps -> (let x = (Obj.magic ((fun t1 -> (Obj.magic ((fun ps1 -> (let x = (FStar_Tactics_NamedView.inspect t1 ps1) in
+  (fun ps -> (let x = (fun t1 -> (fun ps1 -> (let x = (FStar_Tactics_NamedView.inspect t1 ps1) in
     (match x with
       | (FStar_Tactics_NamedView.Tv_FVar (fv)) -> ((ignore (if (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv fv) in
         ((=) tmp nm)) then ((ignore (FStarC_Tactics_V2_Builtins.raise_core Appears ps1));
         ()) else ()));
         t1)
       | tmp -> t1
-    )))))))) in
+    )))) in
   let x1 = (FStarC_Tactics_V2_Builtins.catch (fun tmp -> (fun ps1 -> ((ignore (FStar_Tactics_Visit.visit_tm x t ps1));
     false))) ps) in
   (match x1 with
@@ -19,7 +19,7 @@ let name_appears_in (nm : FStarC_Reflection_Types.name) (t : FStarC_Reflection_T
     | (FStar_Pervasives.Inl (Appears)) -> true
     | (FStar_Pervasives.Inl (e)) -> ((ignore (FStarC_Tactics_V2_Builtins.raise_core e ps));
       (failwith "Prims.magic"))
-  )))))
+  )))
 
 let u___plugin_name_appears_in : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.Names.name_appears_in" (Prims.of_int (3)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.Names.name_appears_in (plugin)" name_appears_in (FStarC_Syntax_Embeddings.e_list FStarC_Syntax_Embeddings.e_string) FStarC_Reflection_V2_Embeddings.e_term FStarC_Syntax_Embeddings.e_bool tmp tmp1 tmp2 tmp3)))

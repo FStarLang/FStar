@@ -129,7 +129,7 @@ let rec by_value_param_table__fixpoint (params : ((string) list) FStarC_HashTabl
     (if ((=) next cur) then false else ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tbl n next);
     true)))) tmp1) in
   let tmp2 = (BatList.exists (fun b -> b) changed) in
-  (if tmp2 then ((by_value_param_table__fixpoint params bodies tbl) ()) else ()))
+  (if tmp2 then (by_value_param_table__fixpoint params bodies tbl ()) else ()))
 
 let by_value_param_table (p : (FStarC_Custard_Syntax.decl) list) : ((bool) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (let params = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100)))) in
@@ -144,7 +144,7 @@ let by_value_param_table (p : (FStarC_Custard_Syntax.decl) list) : ((bool) list)
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace tbl n tmp1))
     | tmp -> ()
   )) p);
-  ((by_value_param_table__fixpoint params bodies tbl) ());
+  (by_value_param_table__fixpoint params bodies tbl ());
   tbl)
 
 let rec by_value_names (tbl : ((bool) list) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t) (c : FStarC_Custard_Syntax.cty) : (string) list =
@@ -176,7 +176,7 @@ let rec rec_type_table__go (refs : ((string) list) FStarC_HashTable.FStarC_HashT
   let tmp3 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt refs n) in
   (match tmp3 with
     | None -> false
-    | (Some (ns)) -> (BatList.exists (fun m -> (if ((=) m start) then true else ((rec_type_table__go refs start seen) m))) ns)
+    | (Some (ns)) -> (BatList.exists (fun m -> (if ((=) m start) then true else (rec_type_table__go refs start seen m))) ns)
   ))))))
 
 let rec_type_table (p : (FStarC_Custard_Syntax.decl) list) : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
@@ -194,7 +194,7 @@ let rec_type_table (p : (FStarC_Custard_Syntax.decl) list) : (bool) FStarC_HashT
   (BatList.iter (fun start -> (let seen = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
   let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt refs start) in
   (match tmp1 with
-    | (Some (ns)) when (BatList.exists (fun m -> (if ((=) m start) then true else ((rec_type_table__go refs start seen) m))) ns) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace out start true)
+    | (Some (ns)) when (BatList.exists (fun m -> (if ((=) m start) then true else (rec_type_table__go refs start seen m))) ns) -> (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace out start true)
     | tmp2 -> ()
   ))) tmp);
   out)
@@ -212,7 +212,7 @@ let rec dead_abbrev_table__go (p : (FStarC_Custard_Syntax.decl) list) (out : (bo
   (if tmp3 then ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.remove out n);
   ((changed) := true)) else ()))) tmp1))))) p);
   let tmp = (!(changed)) in
-  (if tmp then ((dead_abbrev_table__go p out is_cand) (Prims.op_Minus fuel Prims.int_one)) else ())))
+  (if tmp then (dead_abbrev_table__go p out is_cand (Prims.op_Minus fuel Prims.int_one)) else ())))
 
 let dead_abbrev_table (p : (FStarC_Custard_Syntax.decl) list) : (bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (let out = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (20)))) in
@@ -233,7 +233,7 @@ let dead_abbrev_table (p : (FStarC_Custard_Syntax.decl) list) : (bool) FStarC_Ha
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace out tmp2 true))
     | tmp2 -> ()
   )) p);
-  ((dead_abbrev_table__go p out is_cand) (Prims.op_Plus ((fun l -> Z.of_int (BatList.length l)) p) Prims.int_one));
+  (dead_abbrev_table__go p out is_cand (Prims.op_Plus ((fun l -> Z.of_int (BatList.length l)) p) Prims.int_one));
   out)))
 
 let dead_abbrevs : ((bool) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t ref) =
@@ -508,7 +508,7 @@ let krml_const (c : FStarC_Custard_Syntax.constant) : FStarC_Custard_KrmlAst.exp
       let tmp1 = (krml_float_lit fw v) in
       let tmp2 = (tmp, tmp1) in
       (FStarC_Custard_KrmlAst.EConstant ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
-    | (FStarC_Custard_Syntax.CChar (c1)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStar_Char.int_of_char c1)) in
+    | (FStarC_Custard_Syntax.CChar (c1)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 (FStar_Char.int_of_char c1)) in
       let tmp1 = (FStarC_Custard_KrmlAst.UInt32, tmp) in
       (FStarC_Custard_KrmlAst.EConstant ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))))
   )
@@ -572,10 +572,10 @@ let rec fresh_local__go (env : kenv) (base : string) (n : Prims.int) : string =
   (let x = (if ((=) n Prims.int_zero) then base else (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
     (Prims.strcat base tmp))) in
   let tmp = (BatList.exists (fun y -> ((=) y x)) (env).names) in
-  (if tmp then ((fresh_local__go env base) (Prims.op_Plus n Prims.int_one)) else x))
+  (if tmp then (fresh_local__go env base (Prims.op_Plus n Prims.int_one)) else x))
 
 let fresh_local (env : kenv) (base : string) : string =
-  ((fresh_local__go env base) Prims.int_zero)
+  (fresh_local__go env base Prims.int_zero)
 
 let krml_reject (what : string) : 'a =
   (krml_reject_with what "The direct C backend (--codegen C) has no representation for it either.")
@@ -626,7 +626,7 @@ and krml_pat (env : kenv) (p : FStarC_Custard_Syntax.pat) : (kenv * FStarC_Custa
       let tmp2 = (tmp, tmp1) in
       let tmp3 = (FStarC_Custard_KrmlAst.PConstant ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))) in
       (env, tmp3))
-    | (FStarC_Custard_Syntax.PConst ((FStarC_Custard_Syntax.CChar (c)))) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 (FStar_Char.int_of_char c)) in
+    | (FStarC_Custard_Syntax.PConst ((FStarC_Custard_Syntax.CChar (c)))) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 (FStar_Char.int_of_char c)) in
       let tmp1 = (FStarC_Custard_KrmlAst.UInt32, tmp) in
       let tmp2 = (FStarC_Custard_KrmlAst.PConstant ((match tmp1 with (custard_tup, _) -> custard_tup), (match tmp1 with (_, custard_tup) -> custard_tup))) in
       (env, tmp2))
@@ -742,7 +742,7 @@ let rec string_match__chain (x : string) (st : FStarC_Custard_KrmlAst.typ) (env'
       let tmp4 = ((FStarC_Custard_KrmlAst.ETypApp ((FStarC_Custard_KrmlAst.EOp (FStarC_Custard_KrmlAst.Eq, FStarC_Custard_KrmlAst.Bool)), (st :: []))), tmp3) in
       let tmp5 = (FStarC_Custard_KrmlAst.EApp ((match tmp4 with (custard_tup, _) -> custard_tup), (match tmp4 with (_, custard_tup) -> custard_tup))) in
       let tmp6 = (krml_expr env' body) in
-      let tmp7 = ((string_match__chain x st env') rest) in
+      let tmp7 = (string_match__chain x st env' rest) in
       let tmp8 = (tmp5, tmp6, tmp7) in
       (FStarC_Custard_KrmlAst.EIfThenElse ((match tmp8 with (custard_tup, _, _) -> custard_tup), (match tmp8 with (_, custard_tup, _) -> custard_tup), (match tmp8 with (_, _, custard_tup) -> custard_tup))))
     | tmp -> (krml_reject "a string pattern")
@@ -754,7 +754,7 @@ and string_match (env : kenv) (scrut : FStarC_Custard_Syntax.expr) (brs : ((FSta
   let b = { FStarC_Custard_KrmlAst.name = x; typ = st; mut = false; meta = [] } in
   let env' = (extend env x) in
   let tmp = (krml_expr env scrut) in
-  let tmp1 = ((string_match__chain x st env') brs) in
+  let tmp1 = (string_match__chain x st env' brs) in
   let tmp2 = (b, tmp, tmp1) in
   (FStarC_Custard_KrmlAst.ELet ((match tmp2 with (custard_tup, _, _) -> custard_tup), (match tmp2 with (_, custard_tup, _) -> custard_tup), (match tmp2 with (_, _, custard_tup) -> custard_tup))))
 

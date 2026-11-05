@@ -66,7 +66,6 @@ $(OUTPUT_DIR)/cherry/Quicksort_Task.c: $(ALL_CHECKED_FILES)
 	$(call msg, "CHERRY", Quicksort.Task)
 	$(Q)mkdir -p $(dir $@)
 	$(Q)$(FSTAR) --already_cached '*,' --codegen Cherry \
-	  --custard_monomorphize_types true \
 	  --custard_entry Quicksort.Task.quicksort \
 	  $(CACHE_DIR)/Quicksort.Task.fst.checked -o $@
 

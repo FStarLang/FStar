@@ -18,11 +18,6 @@ let eq_inj (r : eq_result) (s : eq_result) : eq_result =
 let equal_if (tmp : bool) : eq_result =
   (if tmp then Equal else Unknown)
 
-let eq_and (r : eq_result) (s : (unit -> eq_result)) : eq_result =
-  (let tmp = (if ((=) r Equal) then (let tmp = (s ()) in
-    ((=) tmp Equal)) else false) in
-  (if tmp then Equal else Unknown))
-
 let equal_iff (tmp : bool) : eq_result =
   (if tmp then Equal else NotEqual)
 
@@ -60,8 +55,12 @@ and branch_matches (env : FStarC_TypeChecker_Env.env) (b1 : ((FStarC_Syntax_Synt
 and eq_comp (env : FStarC_TypeChecker_Env.env) (t1 : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : eq_result =
   (let ct1 = (t1).FStarC_Syntax_Syntax.n in
   let ct2 = (t2).FStarC_Syntax_Syntax.n in
-  (eq_and (equal_if (FStarC_Ident.lid_equals (ct1).FStarC_Syntax_Syntax.effect_name (ct2).FStarC_Syntax_Syntax.effect_name)) (fun tmp -> (let tmp1 = (eq_tm env (ct1).FStarC_Syntax_Syntax.result_typ (ct2).FStarC_Syntax_Syntax.result_typ) in
-  (eq_and tmp1 (fun tmp2 -> Equal))))))
+  let tmp = (if ((=) (equal_if (FStarC_Ident.lid_equals (ct1).FStarC_Syntax_Syntax.effect_name (ct2).FStarC_Syntax_Syntax.effect_name)) Equal) then (let tmp = (eq_tm env (ct1).FStarC_Syntax_Syntax.result_typ (ct2).FStarC_Syntax_Syntax.result_typ) in
+    let tmp1 = (if ((=) tmp Equal) then (let tmp1 = Equal in
+      ((=) tmp1 Equal)) else false) in
+    let tmp2 = (if tmp1 then Equal else Unknown) in
+    ((=) tmp2 Equal)) else false) in
+  (if tmp then Equal else Unknown))
 
 and eq_tm (env : FStarC_TypeChecker_Env.env) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t2 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : eq_result =
   (let t11 = (FStarC_Syntax_Util.canon_app t1) in
@@ -123,8 +122,10 @@ and eq_tm (env : FStarC_TypeChecker_Env.env) (t1 : (FStarC_Syntax_Syntax.term') 
       ))
     | ((FStarC_Syntax_Syntax.Tm_fvar (f)), (FStarC_Syntax_Syntax.Tm_fvar (g))) -> (equal_if (FStarC_Syntax_Syntax.fv_eq f g))
     | ((FStarC_Syntax_Syntax.Tm_uinst (f, us)), (FStarC_Syntax_Syntax.Tm_uinst (g, vs))) -> (let tmp2 = (eq_tm env f g) in
-      (eq_and tmp2 (fun tmp3 -> (let tmp4 = (FStarC_Syntax_Util.eq_univs_list us vs) in
-      (equal_if tmp4)))))
+      let tmp3 = (if ((=) tmp2 Equal) then (let tmp3 = (FStarC_Syntax_Util.eq_univs_list us vs) in
+        let tmp4 = (equal_if tmp3) in
+        ((=) tmp4 Equal)) else false) in
+      (if tmp3 then Equal else Unknown))
     | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_range (tmp2)))), (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_range (tmp3))))) -> Unknown
     | ((FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_real (r1)))), (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_real (r2))))) -> (match (FStarC_Real.cmp r1 r2) with
         | FStarC_Order.Eq -> Equal
@@ -142,21 +143,31 @@ and eq_tm (env : FStarC_TypeChecker_Env.env) (t1 : (FStarC_Syntax_Syntax.term') 
       (match tmp6 with
         | ((FStarC_Syntax_Syntax.Tm_fvar (f1)), (FStarC_Syntax_Syntax.Tm_fvar (f2))) when ((FStarC_Syntax_Syntax.fv_eq f1 f2) && (BatList.mem (FStarC_Ident.string_of_lid (FStarC_Syntax_Syntax.lid_of_fv f1)) injectives)) -> (equal_data f1 ((u__1, u__2) :: []) f2 ((u__11, u__21) :: []) Prims.int_zero)
         | tmp7 -> (let tmp8 = (eq_tm env h1 h2) in
-          (eq_and tmp8 (fun tmp9 -> (eq_args env ((u__1, u__2) :: []) ((u__11, u__21) :: [])))))
+          let tmp9 = (if ((=) tmp8 Equal) then (let tmp9 = (eq_args env ((u__1, u__2) :: []) ((u__11, u__21) :: [])) in
+            ((=) tmp9 Equal)) else false) in
+          (if tmp9 then Equal else Unknown))
       ))
     | ((FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = t13; ret_opt = tmp2; brs = bs1; rc_opt = tmp3; _ })), (FStarC_Syntax_Syntax.Tm_match ({ FStarC_Syntax_Syntax.scrutinee = t23; ret_opt = tmp4; brs = bs2; rc_opt = tmp5; _ }))) -> (if ((=) ((fun l -> Z.of_int (BatList.length l)) bs1) ((fun l -> Z.of_int (BatList.length l)) bs2)) then (let tmp6 = (eq_tm env t13 t23) in
       (BatList.fold_right (fun tmp7 a -> (match tmp7 with
-        | (b1, b2) -> (eq_and a (fun tmp8 -> (branch_matches env b1 b2)))
+        | (b1, b2) -> (let tmp8 = (if ((=) a Equal) then (let tmp8 = (branch_matches env b1 b2) in
+            ((=) tmp8 Equal)) else false) in
+          (if tmp8 then Equal else Unknown))
       )) (BatList.combine bs1 bs2) tmp6)) else Unknown)
     | ((FStarC_Syntax_Syntax.Tm_type (u)), (FStarC_Syntax_Syntax.Tm_type (v))) -> (let tmp2 = (FStarC_Syntax_Util.eq_univs u v) in
       (equal_if tmp2))
     | ((FStarC_Syntax_Syntax.Tm_quoted (t13, q1)), (FStarC_Syntax_Syntax.Tm_quoted (t23, q2))) -> Unknown
     | ((FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = t13; phi = phi1; _ })), (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = t23; phi = phi2; _ }))) -> (let tmp2 = (eq_tm env (t13).FStarC_Syntax_Syntax.sort (t23).FStarC_Syntax_Syntax.sort) in
-      (eq_and tmp2 (fun tmp3 -> (eq_tm env phi1 phi2))))
+      let tmp3 = (if ((=) tmp2 Equal) then (let tmp3 = (eq_tm env phi1 phi2) in
+        ((=) tmp3 Equal)) else false) in
+      (if tmp3 then Equal else Unknown))
     | ((FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b1; body = body1; rc_opt = tmp2; _ })), (FStarC_Syntax_Syntax.Tm_abs ({ FStarC_Syntax_Syntax.b = b2; body = body2; rc_opt = tmp3; _ }))) -> (let tmp4 = (eq_tm env ((b1).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort ((b2).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
-      (eq_and tmp4 (fun tmp5 -> (eq_tm env body1 body2))))
+      let tmp5 = (if ((=) tmp4 Equal) then (let tmp5 = (eq_tm env body1 body2) in
+        ((=) tmp5 Equal)) else false) in
+      (if tmp5 then Equal else Unknown))
     | ((FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = b1; comp = c1; _ })), (FStarC_Syntax_Syntax.Tm_arrow ({ FStarC_Syntax_Syntax.b = b2; comp = c2; _ }))) -> (if (not (FStarC_Syntax_Util.bqual_compat (b1).FStarC_Syntax_Syntax.binder_qual (b2).FStarC_Syntax_Syntax.binder_qual)) then Unknown else (let tmp2 = (eq_tm env ((b1).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort ((b2).FStarC_Syntax_Syntax.binder_bv).FStarC_Syntax_Syntax.sort) in
-      (eq_and tmp2 (fun tmp3 -> (eq_comp env c1 c2)))))
+      let tmp3 = (if ((=) tmp2 Equal) then (let tmp3 = (eq_comp env c1 c2) in
+        ((=) tmp3 Equal)) else false) in
+      (if tmp3 then Equal else Unknown)))
     | tmp2 -> Unknown
   ))
 

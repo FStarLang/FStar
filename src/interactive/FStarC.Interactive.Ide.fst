@@ -122,6 +122,17 @@ let run_repl_transaction st push_kind must_rollback task =
 
   (success, st)
 
+(* Whether a dependency on the stack is the one now requested, timestamps
+   included.  Only the load tasks are compared: the tasks here are all
+   dependencies, and a [PushFragment] holds a [dyn] (in its AST), which a
+   structural [=] cannot compare under a native backend. *)
+let same_dep_task (a b:repl_task) : bool =
+  match a, b with
+  | LDSingle x, LDSingle y
+  | LDInterfaceOfCurrentFile x, LDInterfaceOfCurrentFile y -> x = y
+  | Noop, Noop -> true
+  | _ -> false
+
 (** Load dependencies described by `tasks`.
 
 Returns a new REPL state, wrapped in ``Inl`` to indicate complete success or
@@ -180,7 +191,7 @@ let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
 
     // We've already run ``task`` previously, and no update is needed: skip.
     | task :: tasks, prev :: previous ->
-      if fst (snd prev) = update_task_timestamps task
+      if same_dep_task (fst (snd prev)) (update_task_timestamps task)
       then begin
         debug "Skipping" task;
         aux st tasks previous

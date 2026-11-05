@@ -875,7 +875,7 @@ let int_type (sw : signedness & iwidth) : ML string =
 let mono_advice_for (n:option name) : ML (list string) =
   if not (Options.custard_monomorphize_types ())
   then ["The direct-to-C backend requires --custard_monomorphize_types true \
-         (section 5.0.1)."]
+         (section 5.0.1), its default; do not pass false."]
   else
     (* Section 100.  Rule 4 freezes only on the OCaml path now, so this
        explanation is true only there.  On a C backend a type that is still
@@ -1702,15 +1702,6 @@ let narrow_support : string =
     "";
   ]
 
-(* Whether a rendered file mentions the narrow-float vocabulary.  A textual
-   test rather than a flag set while rendering, because the question is about
-   one of the two files and a flag cannot say which -- and because every way
-   of reaching those formats spells one of these four prefixes, so the test
-   is exact rather than approximate. *)
-let mentions_narrow (s:string) : bool =
-  BU.contains s "custard_f16" || BU.contains s "custard_bf16" ||
-  BU.contains s "CUSTARD_F16_" || BU.contains s "CUSTARD_BF16_"
-
 (* Section 5.1.  The sole inhabited erased value: a distinct typedef rather
    than void, so that it can be stored in a variable and returned like any
    other value.  Guarded because two generated headers may meet in one
@@ -2049,6 +2040,245 @@ let widen_operands (o:prim_op) : ML (option string) =
 (* -------------------------------------------------------------------- *)
 (* Expressions                                                          *)
 (* -------------------------------------------------------------------- *)
+
+type c_body =
+  | CText of string
+  | CComment of string
+  | CAppend of c_body & c_body
+  | CBlock of string & c_body & string
+  | CFor of c_local & string & c_body & string
+  | CIfdef of string & c_body & c_body & string
+  | CLocal of c_local
+(* What a local declares, so that --custard_init_locals can spell a zero of
+   it once the declaration has reached its final place. *)
+and local_kind =
+  | LKValue of cty
+  | LKArray of cty & bool  (* the element type; whether the length is variable *)
+  | LKPointer               (* a pointer whose type the printer spelled itself *)
+and c_local = {
+  cl_name: string;
+  cl_origin: string;
+  cl_decl: string;
+  cl_kind: local_kind;
+  cl_init: option string;
+  cl_reinit: c_body;
+  cl_ind: string;
+  cl_barrier: option string
+}
+
+let empty_body = CText ""
+let ( ++ ) (a b:c_body) : c_body = CAppend (a, b)
+
+let rec body_empty (b:c_body) : ML bool =
+  match b with
+  | CText s | CComment s -> s = ""
+  | CAppend (a, b) -> body_empty a && body_empty b
+  | _ -> false
+
+let rec body_text (b:c_body) : ML (option string) =
+  match b with
+  | CText s -> Some s
+  | CAppend (a, b) ->
+    (match body_text a, body_text b with
+     | Some a, Some b -> Some (a ^ b)
+     | _ -> None)
+  | _ -> None
+
+let rec render_body (b:c_body) : ML string =
+  match b with
+  | CText s | CComment s -> s
+  | CAppend (a, b) -> render_body a ^ render_body b
+  | CBlock (pre, b, post) -> pre ^ render_body b ^ post
+  | CFor (l, rest, b, post) ->
+    l.cl_ind ^ "for (" ^ l.cl_decl ^ " = " ^ Some?.v l.cl_init ^ "; " ^
+    rest ^ render_body b ^ post
+  | CIfdef (cond, t, f, ind) ->
+    ind ^ "#if " ^ cond ^ "\n" ^ render_body t ^
+    (if body_empty f then "" else ind ^ "#else\n" ^ render_body f) ^
+    ind ^ "#endif\n"
+  | CLocal l ->
+    l.cl_ind ^ l.cl_decl ^
+    (match l.cl_init with None -> "" | Some v -> " = " ^ v) ^ ";\n"
+
+let local_decl (ind:string) (decl nm:string) (kind:local_kind) (init:option string)
+               (barrier:option string) : ML c_body =
+  CLocal {
+    cl_name = nm; cl_origin = !current; cl_decl = decl; cl_kind = kind;
+    cl_init = init; cl_ind = ind;
+    cl_reinit = (match init with
+                 | None -> empty_body
+                 | Some v -> CText (ind ^ nm ^ " = " ^ v ^ ";\n"));
+    cl_barrier = barrier
+  }
+
+let typed_local (ind:string) (t:cty) (nm:string) (init:option string) : ML c_body =
+  local_decl ind (decl_of t nm) nm (LKValue t) init
+    (if binds_by_ref t then Some "a C++ handle with initialization-only semantics" else None)
+
+(* A comment standing as a statement: one block comment per text, or, with
+   --custard_line_comments, one block of line comments for all of them,
+   framed by an empty [//] line above and below as krml's -fline-comments
+   writes it.  Lines are trimmed and empty texts dropped, as there.  A line
+   ending in a backslash (or its trigraph) would splice the next source line
+   into the comment, so such a comment keeps the block form. *)
+let stmt_comment (ind:string) (texts:list string) : ML c_body =
+  let block () = CComment (String.concat "" (texts |> List.map (fun t -> ind ^ "/* " ^ t ^ " */\n"))) in
+  if not (Options.custard_line_comments ()) then block () else
+  let lines =
+    texts |> List.filter (fun t -> t <> "")
+          |> List.collect (fun t -> String.split ['\n'] t |> List.map BU.trim_string) in
+  if Nil? lines then CComment "" else
+  if lines |> List.existsb (fun l -> BU.ends_with l "\\" || BU.ends_with l "??/") then block () else
+  let line (l:string) : string = ind ^ (if l = "" then "//" else "// " ^ l) ^ "\n" in
+  CComment (ind ^ "//\n" ^ String.concat "" (List.map line lines) ^ ind ^ "//\n")
+
+(* Function bodies retain declaration provenance until the last printing step.
+   In particular, trial emission of a discarded match arm has no side effects
+   on the declarations of the function that survives. *)
+let hoist_body (b:c_body) : ML c_body =
+  let rec collect (leading:bool) (b:c_body) : ML (c_body & c_body & bool) =
+    match b with
+    | CText s -> (empty_body, b, leading && s = "")
+    | CComment _ -> if leading then (b, empty_body, true) else (empty_body, b, false)
+    | CAppend (a, b) ->
+      let ah, ar, leading = collect leading a in
+      let bh, br, leading = collect leading b in
+      (ah ++ bh, ar ++ br, leading)
+    | CLocal l ->
+      if leading then
+        (CLocal { l with cl_ind = "  " }, empty_body, true)
+      else begin
+        (match l.cl_barrier with
+         | None -> ()
+         | Some why ->
+           E.raise_error0 E.Error_CustardNoCRepresentation [
+             text ("Custard: --custard_hoist_locals cannot move " ^ l.cl_name ^
+                   " in " ^ l.cl_origin ^ ": " ^ why ^ ".");
+             text "Its declaration must retain its initialization point and scope. \
+                   Disable --custard_hoist_locals or use fixed-size, assignable C storage." ]);
+        let rh, rr, _ = collect false l.cl_reinit in
+        (CLocal { l with cl_ind = "  "; cl_init = None; cl_reinit = empty_body } ++ rh,
+         rr, false)
+      end
+    | CBlock (pre, b, post) ->
+      let h, r, _ = collect false b in
+      (h, CBlock (pre, r, post), false)
+    | CFor (l, rest, b, post) ->
+      let h, r, _ = collect false b in
+      let decl = CLocal { l with cl_ind = "  "; cl_init = None; cl_reinit = empty_body } in
+      (decl ++ h,
+       CBlock (l.cl_ind ^ "for (" ^ l.cl_name ^ " = " ^ Some?.v l.cl_init ^
+               "; " ^ rest, r, post), false)
+    | CIfdef (cond, t, f, ind) ->
+      let th, tr, _ = collect false t in
+      let fh, fr, _ = collect false f in
+      let prefix =
+        if body_empty th && body_empty fh then empty_body
+        else CIfdef (cond, th, fh, "  ") in
+      (prefix, CIfdef (cond, tr, fr, ind), false)
+  in
+  let h, r, _ = collect true b in
+  let rec prefix_ok (b:c_body) : ML bool =
+    match b with
+    | CLocal _ | CComment _ -> true
+    | CText s -> s = ""
+    | CAppend (a, b) -> prefix_ok a && prefix_ok b
+    | CIfdef (_, a, b, _) -> prefix_ok a && prefix_ok b
+    | _ -> false in
+  let rec residual_ok (b:c_body) : ML bool =
+    match b with
+    | CLocal _ | CFor _ -> false
+    | CAppend (a, b) | CIfdef (_, a, b, _) -> residual_ok a && residual_ok b
+    | CBlock (_, b, _) -> residual_ok b
+    | _ -> true in
+  if not (prefix_ok h && residual_ok r) then
+    reject_ir "a declaration left outside the function prefix"
+      ["The --custard_hoist_locals invariant failed."];
+  h ++ r
+
+(* --custard_init_locals, for the c99 and c89 modes: a zero of [t] spelled
+   after the layout {!type_decl} gives it, with designators when
+   [designated].  Records list every field, so that -Wmissing-field-initializers
+   has nothing to report; a tagged union takes its first tag and zeroes the
+   first member of its union, the only one C lets an initializer reach
+   without a designator.  An enum takes its first tag rather than [0], which
+   C++ would not convert.  A foreign type's layout is the header's, and
+   [{ 0 }] is a valid initializer of every complete object type in C. *)
+let rec zero_init (designated:bool) (fuel:int) (t:cty) : ML string =
+  let fields (fs:list (string & cty)) : ML string =
+    match fs with
+    | [] -> "{}"
+    | _ ->
+      "{ " ^ String.concat ", " (fs |> List.map (fun (f, c) ->
+        (if designated then "." ^ c_var f ^ " = " else "") ^
+        zero_init designated (fuel - 1) c)) ^ " }" in
+  if fuel <= 0 then "{ 0 }" else
+  match t with
+  | TUnit | TInt _ | TFloat Float32 | TFloat Float64 -> "0"
+  | TFloat fw -> "CUSTARD_" ^ (if Float16? fw then "F16" else "BF16") ^ "_INIT(0U)"
+  | TBuf _ | TRef (_, _) | TArrow _ -> "NULL"
+  | TApp (n, []) when Some? (builtin_type n) ->
+    (match builtin_type n with
+     | Some "bool" -> "false"
+     | Some s when BU.ends_with s "*" -> "NULL"
+     | _ -> "0")
+  | TApp (n, []) ->
+    (match find_type n with
+     | Some { dt_body = TAbbrev c } -> zero_init designated (fuel - 1) c
+     | Some d when is_enum d ->
+       (match d.dt_body with
+        | TVariant ((c0, _) :: _) -> c_tag c0
+        | _ -> "0")
+     | Some { dt_body = TRecord fs } -> fields fs
+     | Some { dt_body = TVariant [(_, fs)] } -> fields fs
+     | Some { dt_body = TVariant cs } when Cons? cs ->
+       let tag = (if designated then ".tag = " else "") ^ c_tag (fst (List.hd cs)) in
+       (match List.filter (fun (_, fs) -> Cons? fs) cs with
+        | [] -> "{ " ^ tag ^ " }"
+        | (c, fs) :: _ ->
+          let arm = if arm_flat fs then zero_init designated (fuel - 1) (snd (List.hd fs))
+                    else fields fs in
+          "{ " ^ tag ^ ", " ^ (if designated then ".val = " else "") ^
+          "{ " ^ (if designated then "." ^ arm_name c ^ " = " else "") ^ arm ^ " } }")
+     | _ -> "{ 0 }")
+  | _ -> "{ 0 }"
+
+let local_zero (mode:string) (l:c_local) : ML string =
+  match l.cl_kind with
+  | LKArray (_, true) when mode <> "c23" ->
+    E.raise_error0 E.Error_CustardNoCRepresentation [
+      text ("Custard: --custard_init_locals " ^ mode ^ " cannot initialize " ^
+            l.cl_name ^ " in " ^ l.cl_origin ^ ": it is a variable-length \
+            stack array.");
+      text "C99 and C89 forbid an initializer on a variable-length array. \
+            Use --custard_init_locals c23, or fixed-size storage." ]
+  | _ when mode = "c23" -> "{}"
+  | LKPointer -> "NULL"
+  | LKValue t -> zero_init (mode = "c99") 16 t
+  | LKArray (e, _) -> "{ " ^ zero_init (mode = "c99") 16 e ^ " }"
+
+(* Run on the final placement of every declaration, which is why it follows
+   {!hoist_body}: a declaration hoisting moved has lost its initializer, and
+   is zeroed here while the original initialization stays an assignment at
+   its execution point, as krml's -fhoist-locals and -finitialize-locals
+   compose. *)
+let init_locals_body (mode:string) (b:c_body) : ML c_body =
+  let rec go (b:c_body) : ML c_body =
+    match b with
+    | CText _ | CComment _ -> b
+    | CAppend (x, y) -> CAppend (go x, go y)
+    | CBlock (pre, x, post) -> CBlock (pre, go x, post)
+    | CFor (l, rest, x, post) -> CFor (l, rest, go x, post)
+    | CIfdef (c, t, f, ind) -> CIfdef (c, go t, go f, ind)
+    | CLocal l ->
+      if Some? l.cl_init then b
+      else CLocal { l with cl_init = Some (local_zero mode l) } in
+  go b
+
+let function_body (b:c_body) : ML string =
+  let b = if Options.custard_hoist_locals () then hoist_body b else b in
+  let mode = Options.custard_init_locals () in
+  render_body (if mode = "no" then b else init_locals_body mode b)
 
 (* Where the value of an expression goes once it has been computed. *)
 type dest =
@@ -2660,10 +2890,10 @@ let closure_helpers (nm:name) (code_ty:cty) (caps:list cty) : ML unit =
   cclo_defs := !cclo_defs @ [def]
   end
 
-let rec c_expr (out:ref string) (ind:string) (e:expr) : ML string =
+let rec c_expr (out:ref c_body) (ind:string) (e:expr) : ML string =
   (c_expr_doc out ind e).c_text
 
-and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
+and c_expr_doc (out:ref c_body) (ind:string) (e:expr) : ML c_expression =
   if is_stmt e then hoist out ind e
   else match e.e with
   | EConst c ->
@@ -2711,7 +2941,7 @@ and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
     let cv = c_expr out ind (strip_coerce c) in
     let cv = if cv <> "" && List.for_all (fun ch -> BU.is_letter_or_digit ch || ch = '_') (String.list_of_string cv) then cv else begin
       let tmp = fresh "clo" in
-      out := !out ^ ind ^ "custard_closure *" ^ tmp ^ " = " ^ cv ^ ";\n";
+      out := !out ++ local_decl ind ("custard_closure *" ^ tmp) tmp LKPointer (Some cv) None;
       tmp
     end in
     let fty = closure_fn_decl doms ret "(*)" in
@@ -2719,7 +2949,7 @@ and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
     let call = "((" ^ fty ^ ")" ^ cv ^ "->code)(" ^
                String.concat ", " (cv :: vs) ^ ")" in
     if TUnit? ret
-    then (out := !out ^ ind ^ call ^ ";\n"; c_postfix unit_value)
+    then (out := !out ++ CText (ind ^ call ^ ";\n"); c_postfix unit_value)
     else c_postfix call
   | EOp ({ po_op = ClosureCall }, _) ->
     reject "a use of Pulse.Lib.Closure.call's result other than a call"
@@ -2854,7 +3084,7 @@ and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
        for the unit value, which is what the caller was going to do with it. *)
     (match hd.e with
      | EQual (n, _) when Some? (HashTable.try_find !void_fns (string_of_name n)) ->
-       out := !out ^ ind ^ call.c_text ^ ";\n"; c_postfix unit_value
+       out := !out ++ CText (ind ^ call.c_text ^ ";\n"); c_postfix unit_value
      | _ -> call)
   (* Both nodes are a C cast, but for opposite reasons: a conversion is what
      the cast *does*, and a coercion is a reinterpretation the C type system
@@ -2967,7 +3197,7 @@ and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
      its effect into [out] and the value is the unit constant, exactly as an
      impure unit-typed node in an expression position is anywhere else. *)
   | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
-    out := !out ^ ind ^ "/* " ^ before ^ " */\n";
+    out := !out ++ stmt_comment ind [before];
     c_postfix unit_value
   | EOp ({ po_op = Commented (before, after) }, [b]) ->
     let body = c_rvalue_doc out ind e.ty b in
@@ -3044,17 +3274,16 @@ and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
      operator, evaluate both operands, and fall through to the case below. *)
   | EOp (o, [a; b]) when (And? o.po_op || Or? o.po_op) && not (at_int_width o) ->
     let av = c_expr out ind a in
-    let bout = mk_ref "" in
+    let bout = mk_ref empty_body in
     let bv = c_expr bout (ind ^ "  ") b in
-    if !bout = "" then
+    if body_empty !bout then
       c_postfix ("(" ^ av ^ " " ^ Some?.v (infix_op o) ^ " " ^ bv ^ ")")
     else begin
       let x = fresh "sc" in
-      out := !out ^ ind ^ decl_of e.ty x ^ " = " ^ av ^ ";\n" ^
-             ind ^ "if (" ^ (if Or? o.po_op then "!" else "") ^ x ^ ") {\n" ^
-             !bout ^
-             ind ^ "  " ^ x ^ " = " ^ bv ^ ";\n" ^
-             ind ^ "}\n";
+      out := !out ++ typed_local ind e.ty x (Some av) ++
+             CBlock (ind ^ "if (" ^ (if Or? o.po_op then "!" else "") ^ x ^ ") {\n",
+                     !bout ++ CText (ind ^ "  " ^ x ^ " = " ^ bv ^ ";\n"),
+                     ind ^ "}\n");
       c_postfix x
     end
   | EOp (o, [a; b]) when Some? (infix_op o) ->
@@ -3119,8 +3348,8 @@ and c_expr_doc (out:ref string) (ind:string) (e:expr) : ML c_expression =
 (* Statement-shaped, and needed as a value: give it a name.  This is what makes
    [let x = if ... ] and an allocation work in an operand position; ANF has
    already removed most of the reasons for it to trigger. *)
-and hoist (out:ref string) (ind:string) (e:expr) : ML c_expression =
-  if TUnit? e.ty then (out := !out ^ emit ind D_Ignore e; c_postfix unit_value) else
+and hoist (out:ref c_body) (ind:string) (e:expr) : ML c_expression =
+  if TUnit? e.ty then (out := !out ++ emit ind D_Ignore e; c_postfix unit_value) else
   let x = fresh "t" in
   let body = emit ind (D_Assign x) e in
   (* If the whole thing came out as a single assignment to the temporary, and
@@ -3128,11 +3357,11 @@ and hoist (out:ref string) (ind:string) (e:expr) : ML c_expression =
      the right-hand side: use that instead.  This is what turns a record
      projection -- which reaches the backend as a one-branch match -- back into
      the projection it was. *)
-  match String.split ['\n'] body with
-  | [l; ""] when is_pure e && starts_with l (ind ^ x ^ " = ") ->
+  match Option.map (String.split ['\n']) (body_text body) with
+  | Some [l; ""] when is_pure e && starts_with l (ind ^ x ^ " = ") ->
     c_opaque (String.substring l (String.length ind + String.length x + 3)
                      (String.length l - String.length ind - String.length x - 4))
-  | _ -> out := !out ^ ind ^ decl_of e.ty x ^ ";\n" ^ body; c_postfix x
+  | _ -> out := !out ++ typed_local ind e.ty x None ++ body; c_postfix x
 
 (* The C spelling of field [f] of a value of type [t].  A single-constructor
    variant is a plain struct, so its fields are reached directly; a record's
@@ -3188,10 +3417,10 @@ and tag_of (v:string) (d:dtype) : ML string =
    integer literal is printed differently there, and only by losing a cast
    {!converted_int} explains is redundant.  Everything else goes through
    {!c_expr} unchanged. *)
-and c_rvalue (out:ref string) (ind:string) (target:cty) (e:expr) : ML string =
+and c_rvalue (out:ref c_body) (ind:string) (target:cty) (e:expr) : ML string =
   (c_rvalue_doc out ind target e).c_text
 
-and c_rvalue_doc (out:ref string) (ind:string) (target:cty) (e:expr) : ML c_expression =
+and c_rvalue_doc (out:ref c_body) (ind:string) (target:cty) (e:expr) : ML c_expression =
   match e.e with
   | EConst c ->
     (match converted_int target e.ty c with
@@ -3199,7 +3428,7 @@ and c_rvalue_doc (out:ref string) (ind:string) (target:cty) (e:expr) : ML c_expr
      | None -> c_expr_doc out ind e)
   | _ -> c_expr_doc out ind e
 
-and c_subscript (out:ref string) (ind:string) (b:expr) (i:expr) : ML c_expression =
+and c_subscript (out:ref c_body) (ind:string) (b:expr) (i:expr) : ML c_expression =
   match b.e with
   | EVar y when is_cell y -> lookup_var_doc y
   | _ ->
@@ -3208,7 +3437,7 @@ and c_subscript (out:ref string) (ind:string) (b:expr) (i:expr) : ML c_expressio
 
 (* Cherry: a call of a Pulse container helper ([PBuf]).  The first operand
    is the container, except in an allocation. *)
-and pbuf_call (out:ref string) (ind:string) (f:string) (args:list expr) : ML string =
+and pbuf_call (out:ref c_body) (ind:string) (f:string) (args:list expr) : ML string =
   let a = (match args with a :: _ -> a | [] -> failwith "Cherry: a Pulse container operation without operands") in
   let t = if f = "alloc" then a.ty else
           (match a.ty with
@@ -3217,7 +3446,7 @@ and pbuf_call (out:ref string) (ind:string) (f:string) (args:list expr) : ML str
   let vals = args |> List.map (fun a -> c_rvalue out ind a.ty a) in
   pbuf_prefix t ^ "_" ^ f ^ "(" ^ String.concat ", " vals ^ ")"
 
-and ctor_lit (out:ref string) (ind:string) (t:cty) (cn:name) (args:list expr) : ML string =
+and ctor_lit (out:ref c_body) (ind:string) (t:cty) (cn:name) (args:list expr) : ML string =
   match find_exn cn with
   | Some _ ->
     exn_new cn ^ "(" ^ String.concat ", " (args |> List.map (fun a -> c_rvalue out ind a.ty a)) ^ ")"
@@ -3250,22 +3479,22 @@ and ctor_lit (out:ref string) (ind:string) (t:cty) (cn:name) (args:list expr) : 
 (* Statements                                                           *)
 (* -------------------------------------------------------------------- *)
 
-and finish (ind:string) (d:dest) (s:string) : ML string =
+and finish (ind:string) (d:dest) (s:string) : ML c_body =
   match d with
   (* Nothing follows a [finish]: every construct hands its destination to its
      tail positions and emits no statement after them.  So in a [void]
      function the value can simply be dropped and control fall off the end --
      which is where it was going anyway. *)
   | D_Return when !void_ret ->
-    if s = unit_value then "" else ind ^ "(void)" ^ group s ^ ";\n"
+    if s = unit_value then empty_body else CText (ind ^ "(void)" ^ group s ^ ";\n")
   | D_Return when !trmc_on ->
-    ind ^ "*" ^ trmc_dst ^ " = " ^ s ^ ";\n" ^ ind ^ "return " ^ trmc_result ^ ";\n"
-  | D_Return -> ind ^ "return " ^ s ^ ";\n"
-  | D_Assign x -> ind ^ x ^ " = " ^ s ^ ";\n"
+    CText (ind ^ "*" ^ trmc_dst ^ " = " ^ s ^ ";\n" ^ ind ^ "return " ^ trmc_result ^ ";\n")
+  | D_Return -> CText (ind ^ "return " ^ s ^ ";\n")
+  | D_Assign x -> CText (ind ^ x ^ " = " ^ s ^ ";\n")
   (* The value is computed for its effect; the cast silences the warning that
      it is unused.  A unit constant computes nothing, so it needs neither. *)
   | D_Ignore ->
-    if s = unit_value then "" else ind ^ "(void)" ^ group s ^ ";\n"
+    if s = unit_value then empty_body else CText (ind ^ "(void)" ^ group s ^ ";\n")
 
 (* Cherry: leaving a definition printed with [trmc_on] with an exception
    pending.  The hole gets a value that needs no release, and the cells
@@ -3277,7 +3506,7 @@ and trmc_unwind (ind:string) : ML string =
     ind ^ rc_call "dec" t trmc_result ^ ";\n"
   | None -> ""
 
-and emit (ind:string) (d:dest) (e:expr) : ML string =
+and emit (ind:string) (d:dest) (e:expr) : ML c_body =
   let ind' = ind ^ "  " in
   match e.e with
   (* Cherry: tail recursion modulo constructors ({!trmc_site}). *)
@@ -3311,7 +3540,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     bind_alias x (c_postfix unit_value);
     let s2 = emit ind d e2 in
     scope := saved;
-    s1 ^ s2
+    s1 ++ s2
 
   (* Pulse's [let mut] is a stack allocation of one cell (section 7.4), and a
      one-cell array is just a variable: reads and writes of the cell become
@@ -3341,13 +3570,13 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      that ends up emitting no read of its scrutinee left the declaration
      behind with no users at all, which C refuses. *)
   | ELet (x, _, e1, e2) when is_stable e1 ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let path = c_expr_doc out ind e1 in
     let saved = !scope in
     bind_alias x path;
     let s2 = emit ind d e2 in
     scope := saved;
-    !out ^ s2
+    !out ++ s2
 
   (* Section 19.8: written, never read.  The writes go with the cell. *)
   | ELet (x, TRef (RManual, t), { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
@@ -3358,7 +3587,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
   | ELet (x, TRef (RManual, t), { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
   | ELet (x, TBuf t, { e = EOp ({ po_op = BufCreate LStack }, [init; len]) }, e2)
       when is_one len ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let iv = c_rvalue out ind t init in
     let saved = !scope in
     let nm = bind_cell x in
@@ -3368,8 +3597,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        else: the arbitrary value the fill asks for is the one the slot has
        before anything is written to it.  Pulse only hands out [pts_to_uninit]
        for these, so a read is not reachable until a write has happened. *)
-    !out ^ ind ^ decl_of t nm ^
-    (if EAny? init.e then "" else " = " ^ iv) ^ ";\n" ^ s2
+    !out ++ typed_local ind t nm (if EAny? init.e then None else Some iv) ++ s2
 
   (* Section 97.  [let mut a = alloc v n] used to declare a pointer, allocate
      into a second name, and assign one to the other.  The second name is not
@@ -3398,7 +3626,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
       scope := saved'; s in
     let s2 = emit ind d e2 in
     scope := saved;
-    s1 ^ s2
+    s1 ++ s2
 
   (* A binding nothing reads.  A pattern match that names no field it uses
      leaves one behind -- [let _letpattern = x in ...] -- and C, told
@@ -3431,14 +3659,13 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
             (* A declaration and its only assignment, next to each other, are
                one definition.  Nothing moves, so this needs no purity side
                condition. *)
-            match String.split ['\n'] body with
-            | [l; ""] when starts_with l (ind ^ x ^ " = ") ->
-              ind ^ decl_of t x ^
-              String.substring l (String.length ind + String.length x)
-                               (String.length l - String.length ind - String.length x) ^
-              "\n"
-            | _ -> ind ^ decl_of t x ^ ";\n" ^ body)
-      else (let out = mk_ref "" in
+            match Option.map (String.split ['\n']) (body_text body) with
+            | Some [l; ""] when starts_with l (ind ^ x ^ " = ") ->
+              let v = String.substring l (String.length ind + String.length x + 3)
+                        (String.length l - String.length ind - String.length x - 4) in
+              typed_local ind t x (Some v)
+            | _ -> typed_local ind t x None ++ body)
+      else (let out = mk_ref empty_body in
             let v = c_rvalue out ind t e1 in
             let x = bind_var x in
             (* Section 70.2.  A handle type binds by reference, so that the
@@ -3446,12 +3673,12 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
                from an lvalue: there is nothing to alias otherwise, and the
                value case is a fresh object, which is a copy of nothing. *)
             let x = if binds_by_ref t && is_lvalue e1 then "&" ^ x else x in
-            !out ^ ind ^ decl_of t x ^ " = " ^ v ^ ";\n") in
+            !out ++ typed_local ind t x (Some v)) in
     let s2 = emit ind d e2 in
     scope := saved;
-    s1 ^ s2
+    s1 ++ s2
 
-  | ESeq (e1, e2) -> emit ind D_Ignore e1 ^ emit ind d e2
+  | ESeq (e1, e2) -> emit ind D_Ignore e1 ++ emit ind d e2
 
   | EApp ({ e = EQual (n, _) }, args)
       when D_Return? d && Some? (tail_target n args) ->
@@ -3459,7 +3686,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let args = match HashTable.try_find !keeps f with
                | Some flags -> filter_by flags args
                | None -> args in
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let vals = List.map2 (fun ((b:binder), (x:string)) (a:expr) ->
                  (b, x, c_rvalue out ind b.b_ty a)) bs args in
     (* Every argument is read before any parameter is written. *)
@@ -3468,7 +3695,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
       if v = x then tail_kept := v :: !tail_kept);
     let tmps = moves |> List.map (fun ((b:binder), x, v) ->
       let t = fresh "tail" in
-      (x, t, ind ^ "  " ^ decl_of b.b_ty t ^ " = " ^ v ^ ";\n")) in
+      (x, t, typed_local (ind ^ "  ") b.b_ty t (Some v))) in
     if not (List.existsb (fun l -> l = label) !tail_used) then
       tail_used := label :: !tail_used;
     (* The cell of a site of tail recursion modulo constructors goes where
@@ -3479,11 +3706,13 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
         ind ^ "*" ^ trmc_dst ^ " = " ^ lookup_var v ^ ";\n" ^
         ind ^ trmc_dst ^ " = &" ^ cell_field (lookup_var c) dt cn fld ^ ";\n"
       | None -> "" in
-    !out ^ fill ^ ind ^ "{\n" ^
-    String.concat "" (tmps |> List.map (fun (_, _, s) -> s)) ^
-    String.concat "" (tmps |> List.map (fun (x, t, _) ->
-      ind ^ "  " ^ x ^ " = " ^ t ^ ";\n")) ^
-    ind ^ "  goto " ^ label ^ ";\n" ^ ind ^ "}\n"
+    !out ++ CText fill ++
+    CBlock (ind ^ "{\n",
+      List.fold_left ( ++ ) empty_body (tmps |> List.map (fun (_, _, s) -> s)) ++
+      CText (String.concat "" (tmps |> List.map (fun (x, t, _) ->
+        ind ^ "  " ^ x ^ " = " ^ t ^ ";\n")) ^
+        ind ^ "  goto " ^ label ^ ";\n"),
+      ind ^ "}\n")
 
   (* Section 51.6.  A test of a [@@custard_c_ifdef] flag is a test the
      preprocessor makes.  Each arm keeps a block of its own, as it would
@@ -3512,16 +3741,14 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
         else [ind' ^ "(void)" ^ (if ident then s else group s) ^ ";\n"])) in
     let tv = voids vt vf in
     let fv = voids vf vt in
-    let arm (body:string) : string =
-      if body = "" then "" else ind ^ "{\n" ^ body ^ ind ^ "}\n" in
-    let tt = arm (tv ^ emit ind' d t) in
-    let ft = arm (fv ^ emit ind' d f) in
-    ind ^ "#if " ^ cond ^ "\n" ^ tt ^
-    (if ft = "" then "" else ind ^ "#else\n" ^ ft) ^
-    ind ^ "#endif\n"
+    let arm (body:c_body) : ML c_body =
+      if body_empty body then empty_body else CBlock (ind ^ "{\n", body, ind ^ "}\n") in
+    let tt = arm (CText tv ++ emit ind' d t) in
+    let ft = arm (CText fv ++ emit ind' d f) in
+    CIfdef (cond, tt, ft, ind)
 
   | EIf (c, t, f) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let cs = c_expr out ind c in
     let tt = emit ind' d t in
     let ft = emit ind' d f in
@@ -3534,11 +3761,11 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        nothing.  Pulse's [return] compiles to a flag and a test of that flag
        around the rest of the block, so a [return] in the last position leaves
        exactly this behind. *)
-    !out ^
-    (if tt = "" && ft = "" then ""
-     else if tt = "" then ind ^ "if (" ^ negate cs ^ ")" ^ brace ind ft
-     else ind ^ "if (" ^ unparen cs ^ ")" ^ brace ind tt ^
-          (if ft = "" then "" else ind ^ "else" ^ brace ind ft))
+    !out ++
+    (if body_empty tt && body_empty ft then empty_body
+     else if body_empty tt then CText (ind ^ "if (" ^ negate cs ^ ")") ++ brace ind ft
+     else CText (ind ^ "if (" ^ unparen cs ^ ")") ++ brace ind tt ++
+          (if body_empty ft then empty_body else CText (ind ^ "else") ++ brace ind ft))
 
   | EMatch (scrut, brs) -> emit_match ind d scrut brs
 
@@ -3555,24 +3782,24 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      one inside the body was.  This is a printing choice and nothing
      downstream depends on it. *)
   | EWhile (c, body) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let cs = c_expr out ind' c in
-    (if !out = ""
-     then ind ^ "while (" ^ unparen cs ^ ") {\n"
-     else ind ^ "while (true) {\n" ^ !out ^
-          ind' ^ "if (" ^ negate cs ^ ") { break; }\n") ^
-    emit ind' D_Ignore body ^
-    ind ^ "}\n" ^
-    (match d with D_Ignore -> "" | _ -> finish ind d unit_value)
+    CBlock ((if body_empty !out then ind ^ "while (" ^ unparen cs ^ ") {\n"
+             else ind ^ "while (true) {\n"),
+            (if body_empty !out then empty_body else
+             !out ++ CText (ind' ^ "if (" ^ negate cs ^ ") { break; }\n")) ++
+            emit ind' D_Ignore body,
+            ind ^ "}\n") ++
+    (match d with D_Ignore -> empty_body | _ -> finish ind d unit_value)
 
   (* Control does not reach here.  [abort] is [_Noreturn], so no [return]
      has to follow it even in a value position. *)
   (* Cherry: an [EUnreachable] is a fact F* proved, which debug mode checks
      and a release build lets the C compiler rely on (cherry.h). *)
   | EUnreachable s when Options.custard_cherry () ->
-    ind ^ "CHERRY_UNREACHABLE(" ^ debug_what ("unreachable code (" ^ s ^ ")") ^ ");\n"
+    CText (ind ^ "CHERRY_UNREACHABLE(" ^ debug_what ("unreachable code (" ^ s ^ ")") ^ ");\n")
   | EAbort s | EUnreachable s ->
-    ind ^ "/* " ^ escape s ^ " */\n" ^ ind ^ "abort();\n"
+    stmt_comment ind [escape s] ++ CText (ind ^ "abort();\n")
 
   (* Section 120.  A comment in statement position.  The standalone form --
      an empty [after] on a unit operand, which is what
@@ -3583,34 +3810,34 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      (What that costs is that a large operand is hoisted; what it buys is
      that the comment stays attached to the value it is about.) *)
   | EOp ({ po_op = Commented (before, "") }, [{ e = EConst CUnit }]) ->
-    ind ^ "/* " ^ before ^ " */\n" ^ unit_result ind d
+    stmt_comment ind [before] ++ unit_result ind d
   (* And a comment on a value nothing reads.  The value goes -- that is what
      [D_Ignore] means -- but the comment does not, and [(void)(/* a */ 0 /* b
      */);] is a statement written to hold two comments.  Section 99's point
      exactly: a cast to void that computes nothing says nothing either. *)
   | EOp ({ po_op = Commented (before, after) }, [b])
       when D_Ignore? d && is_droppable b ->
-    ind ^ "/* " ^ before ^ " */\n" ^ ind ^ "/* " ^ after ^ " */\n"
+    stmt_comment ind [before; after]
   | EOp ({ po_op = BufCreate lt }, [init; len]) ->
     emit_alloc ind d None lt e.ty init len
 
   | EOp ({ po_op = PBuf f }, args) when f <> "read" && f <> "alloc" ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let c = pbuf_call out ind f args in
-    !out ^ ind ^ c ^ ";\n" ^ unit_result ind d
+    !out ++ CText (ind ^ c ^ ";\n") ++ unit_result ind d
 
   | EOp ({ po_op = RefSet }, [r; v]) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let r' = c_expr out ind r in
     let v' = c_rvalue out ind v.ty v in
-    !out ^ ind ^ rc_fn "set" r.ty ^ "(" ^ r' ^ ", " ^ v' ^ ");\n" ^ unit_result ind d
+    !out ++ CText (ind ^ rc_fn "set" r.ty ^ "(" ^ r' ^ ", " ^ v' ^ ");\n") ++ unit_result ind d
 
   (* Cherry: the reset of a cell a constructor reuses (cherry.md, "Heap cell
      reuse"). *)
   | EOp ({ po_op = Reset (cn, kept) }, [a]) ->
     (match find_ctor cn with
      | Some (dt, fs) ->
-       let out = mk_ref "" in
+       let out = mk_ref empty_body in
        let x = c_expr out ind a in
        let fl = List.zip fs (if List.length kept = List.length fs then kept
                              else List.map (fun _ -> false) fs) in
@@ -3618,22 +3845,22 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
          String.concat "" (fl |> List.collect (fun ((f, t), k) ->
            if is_nonplain_ty t && k = want
            then [ind' ^ rc_call op t (cell_field x dt cn f) ^ ";\n"] else [])) in
-       !out ^
-       ind ^ "if (cherry_is_unique(" ^ x ^ ")) {\n" ^ on "dec" false ^ finish ind' d x ^
-       ind ^ "} else {\n" ^ on "inc" true ^
-       ind' ^ rc_call "dec" a.ty x ^ ";\n" ^ finish ind' d "NULL" ^
-       ind ^ "}\n"
+       !out ++ CText (ind ^ "if (cherry_claim(" ^ x ^ ")) {\n" ^ on "dec" false) ++
+       finish ind' d x ++
+       CText (ind ^ "} else {\n" ^ on "inc" true ^
+              ind' ^ rc_call "dec" a.ty x ^ ";\n") ++
+       finish ind' d "NULL" ++ CText (ind ^ "}\n")
      | None -> failwith "Cherry: reset of an unknown constructor")
   | EOp ({ po_op = ResetFree }, [w]) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let v = c_expr out ind w in
-    !out ^ ind ^ "free(" ^ v ^ ");\n" ^ unit_result ind d
+    !out ++ CText (ind ^ "free(" ^ v ^ ");\n") ++ unit_result ind d
 
   (* Cherry: a record update (cherry.md, "Record updates"). *)
   | EOp ({ po_op = Update (cn, is) }, a :: vs) ->
     (match find_ctor cn with
      | Some (dt, fs) ->
-       let out = mk_ref "" in
+       let out = mk_ref empty_body in
        let x = c_expr out ind a in
        let vals = vs |> List.map (fun (v:expr) -> c_rvalue out ind v.ty v) in
        let u = fresh "u" in
@@ -3642,22 +3869,21 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
          let fld = cell_field u dt cn f in
          (if is_nonplain_ty t then ind ^ rc_call "dec" t fld ^ ";\n" else "") ^
          ind ^ fld ^ " = " ^ v ^ ";\n") in
-       !out ^
-       ind ^ decl_of e.ty u ^ " = " ^ cell_unshare dt cn ^ "(" ^ x ^ ");\n" ^
-       String.concat "" sets ^ finish ind d u
+       !out ++ typed_local ind e.ty u (Some (cell_unshare dt cn ^ "(" ^ x ^ ")")) ++
+       CText (String.concat "" sets) ++ finish ind d u
      | None -> failwith "Cherry: update of an unknown constructor")
 
   (* Exceptions (cherry.md, "Exceptions"). *)
   | EOp ({ po_op = ExnRaise }, [a]) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let v = c_expr out ind a in
-    !out ^ ind ^ "cherry_raise(" ^ v ^ ");\n" ^ unit_result ind d
+    !out ++ CText (ind ^ "cherry_raise(" ^ v ^ ");\n") ++ unit_result ind d
   | EOp ({ po_op = ExnPending }, []) -> finish ind d "CHERRY_EXN_PENDING()"
   | EOp ({ po_op = ExnTake }, []) -> finish ind d "cherry_exn_take()"
   (* Leaving with an exception pending: the result is no value, and the
      caller, which tests, never reads it. *)
   | EOp ({ po_op = ExnExit }, []) ->
-    (match !cur_ret with
+    CText (match !cur_ret with
      | None -> ind ^ "cherry_exn_uncaught();\n"
      | Some _ when !void_ret -> ind ^ "return;\n"
      | Some t when !trmc_on ->
@@ -3666,17 +3892,17 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      | Some t -> ind ^ "{ " ^ decl_of t "cherry_dummy" ^ "; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }\n")
 
   | EOp ({ po_op = RcInc }, [a]) | EOp ({ po_op = RcDec }, [a]) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let v = c_expr out ind a in
     let op = (match e.e with EOp ({ po_op = RcInc }, _) -> "inc" | _ -> "dec") in
-    !out ^ ind ^ rc_fn op a.ty ^ "(" ^ v ^ ");\n" ^ unit_result ind d
+    !out ++ CText (ind ^ rc_fn op a.ty ^ "(" ^ v ^ ");\n") ++ unit_result ind d
 
   | EOp ({ po_op = BufWrite }, [b; i; v]) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let lhs = (c_subscript out ind b i).c_text in
     (* Section 59.  An assignment to a cell of the element type. *)
     let v = c_rvalue out ind v.ty v in
-    !out ^ ind ^ lhs ^ " = " ^ v ^ ";\n" ^ unit_result ind d
+    !out ++ CText (ind ^ lhs ^ " = " ^ v ^ ";\n") ++ unit_result ind d
 
   (* Pulse emits a matching "free" for a stack allocation too.  A collapsed
      cell is freed by leaving the scope, so there is nothing to say. *)
@@ -3687,7 +3913,7 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      pointer to it is a pointer to the header; the entry point converts it
      back. *)
   | EOp ({ po_op = ClosureNew }, code :: caps) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let code = strip_coerce code in
     let nm = match code.e with
              | EQual (nm, _) -> nm
@@ -3703,27 +3929,28 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
     let s =
       match vs with
       | [] ->
-        ind ^ "custard_closure *" ^ tmp ^
-        " = (custard_closure *)malloc(sizeof(custard_closure));\n" ^
-        ind ^ "if (" ^ tmp ^ " == NULL) { abort(); }\n" ^
-        ind ^ tmp ^ "->code = " ^ entry ^ ";\n"
+        local_decl ind ("custard_closure *" ^ tmp) tmp LKPointer
+          (Some "(custard_closure *)malloc(sizeof(custard_closure))") None ++
+        CText (ind ^ "if (" ^ tmp ^ " == NULL) { abort(); }\n" ^
+               ind ^ tmp ^ "->code = " ^ entry ^ ";\n")
       | _ ->
         let env = closure_env_name nm in
-        ind ^ env ^ " *" ^ tmp ^ " = (" ^ env ^ " *)malloc(sizeof(" ^ env ^ "));\n" ^
-        ind ^ "if (" ^ tmp ^ " == NULL) { abort(); }\n" ^
-        ind ^ tmp ^ "->hdr.code = " ^ entry ^ ";\n" ^
-        String.concat "" (vs |> List.map (fun (i, v) ->
-          ind ^ tmp ^ "->x" ^ show i ^ " = " ^ v ^ ";\n")) in
+        local_decl ind (env ^ " *" ^ tmp) tmp LKPointer
+          (Some ("(" ^ env ^ " *)malloc(sizeof(" ^ env ^ "))")) None ++
+        CText (ind ^ "if (" ^ tmp ^ " == NULL) { abort(); }\n" ^
+               ind ^ tmp ^ "->hdr.code = " ^ entry ^ ";\n" ^
+               String.concat "" (vs |> List.map (fun (i, v) ->
+                 ind ^ tmp ^ "->x" ^ show i ^ " = " ^ v ^ ";\n"))) in
     let res = match vs with [] -> tmp | _ -> "&" ^ tmp ^ "->hdr" in
-    !out ^ s ^ finish ind d res
+    !out ++ s ++ finish ind d res
 
   | EOp ({ po_op = BufFree }, [b]) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let b = c_expr out ind b in
-    !out ^ ind ^ "free(" ^ b ^ ");\n" ^ unit_result ind d
+    !out ++ CText (ind ^ "free(" ^ b ^ ");\n") ++ unit_result ind d
 
   | EOp ({ po_op = BufBlit }, [src; dst; len]) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let elt = match dst.ty with
               | TBuf e | TRef (_, e) -> ty e
               | _ -> reject "a blit whose destination is not a pointer" [] in
@@ -3736,8 +3963,8 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
        almost always already parenthesized -- a literal, a cast, a field of a
        struct -- and a second pair around it is what section 32.10's gate
        rejects. *)
-    !out ^ ind ^ "memmove(" ^ dstv ^ ", " ^ srcv ^
-    ", " ^ group lenv ^ " * sizeof(" ^ elt ^ "));\n" ^ unit_result ind d
+    !out ++ CText (ind ^ "memmove(" ^ dstv ^ ", " ^ srcv ^
+    ", " ^ group lenv ^ " * sizeof(" ^ elt ^ "));\n") ++ unit_result ind d
 
   (* Cherry: any other call in tail position is a guaranteed tail call when
      the target can make it one (cherry.md, "Tail calls"), so that mutual
@@ -3747,44 +3974,44 @@ and emit (ind:string) (d:dest) (e:expr) : ML string =
      [trmc_on].  Its caller tests for the exception, but the cells built so
      far are released here, since the caller only sees the first. *)
   | EApp _ when D_Return? d && !trmc_on && Cherry.may_raise e ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let s = c_rvalue out ind e.ty e in
-    !out ^ ind ^ "*" ^ trmc_dst ^ " = " ^ s ^ ";\n" ^
+    !out ++ CText (ind ^ "*" ^ trmc_dst ^ " = " ^ s ^ ";\n" ^
     ind ^ "if (CHERRY_EXN_PENDING()) {\n" ^ trmc_unwind (ind ^ "  ") ^
     ind ^ "  return " ^ trmc_result ^ ";\n" ^ ind ^ "}\n" ^
-    ind ^ "return " ^ trmc_result ^ ";\n"
+    ind ^ "return " ^ trmc_result ^ ";\n")
 
   | EApp (hd, args) when D_Return? d && Some? (musttail_head hd args e.ty) ->
     let head = Some?.v (musttail_head hd args e.ty) in
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let s = c_rvalue out ind e.ty e in
     if !void_ret then begin
       (* The [void] call has gone into [out] as the last statement. *)
-      let o = !out in
+      let o = render_body !out in
       let call_start = ind ^ head in
       let lines = String.split ['\n'] o in
       match List.rev lines with
       | "" :: last :: rest when starts_with last call_start ->
         let call = String.substring last (String.length ind)
                      (String.length last - String.length ind - 1) in
-        String.concat "\n" (List.rev rest) ^ (if Nil? rest then "" else "\n") ^
-        ind ^ "CHERRY_TAILCALL_VOID(" ^ call ^ ");\n"
-      | _ -> o ^ finish ind d s
+        CText (String.concat "\n" (List.rev rest) ^ (if Nil? rest then "" else "\n") ^
+        ind ^ "CHERRY_TAILCALL_VOID(" ^ call ^ ");\n")
+      | _ -> !out ++ finish ind d s
     end
-    else if starts_with s head then !out ^ ind ^ "CHERRY_MUSTTAIL return " ^ s ^ ";\n"
-    else !out ^ finish ind d s
+    else if starts_with s head then !out ++ CText (ind ^ "CHERRY_MUSTTAIL return " ^ s ^ ";\n")
+    else !out ++ finish ind d s
 
   | _ ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     (* Section 59.  [D_Return] and [D_Assign] are assignment contexts whose
        target type is [e.ty] -- the IR is typed, so a returned value has the
        function's result type and an assigned one the variable's -- and
        [D_Ignore] discards the value, where the spelling cannot matter. *)
     let s = c_rvalue out ind e.ty e in
-    !out ^ finish ind d s
+    !out ++ finish ind d s
 
-and unit_result (ind:string) (d:dest) : ML string =
-  match d with D_Ignore -> "" | _ -> finish ind d unit_value
+and unit_result (ind:string) (d:dest) : ML c_body =
+  match d with D_Ignore -> empty_body | _ -> finish ind d unit_value
 
 (* [BufCreate] is [init; len]: a run of [len] copies of [init].  A stack
    allocation is a local array -- a variable-length one when the length is not
@@ -3821,8 +4048,8 @@ and unit_result (ind:string) (d:dest) : ML string =
    -- past the cap the loop is both shorter and clearer, and a thousand copies
    of a literal is not an improvement on three lines. *)
 and emit_alloc (ind:string) (d:dest) (nm:option string)
-               (lt:lifetime) (t:cty) (init:expr) (len:expr) : ML string =
-  let out = mk_ref "" in
+               (lt:lifetime) (t:cty) (init:expr) (len:expr) : ML c_body =
+  let out = mk_ref empty_body in
   let iv = c_rvalue out ind init.ty init in
   (* Section 59.  The bound is compared against a [size_t] counter this
      printer declares itself, so it is the same situation as an infix
@@ -3836,8 +4063,8 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
      pointer that would otherwise be declared to hold it: an array *is* an
      address, so the variable and the storage can be one declaration. *)
   let arr = match nm with Some x -> x | None -> fresh "buf" in
-  let done_ (s:string) : ML string =
-    match nm with Some _ -> "" | None -> finish ind d s in
+  let done_ (s:string) : ML c_body =
+    match nm with Some _ -> empty_body | None -> finish ind d s in
   let i = fresh "i" in
   let elt_of = match t with
                | TRef (RGc, _) -> ignore (decl_of t ""); t
@@ -3856,8 +4083,7 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
      that is not bound to a name: the pointer the caller wanted is the address
      of the variable. *)
   if LStack? lt && is_one len then
-    !out ^ ind ^ decl_of elt_of arr ^
-    (if any_init then "" else " = " ^ iv) ^ ";\n" ^
+    !out ++ typed_local ind elt_of arr (if any_init then None else Some iv) ++
     done_ ("&" ^ arr)
   else
   (* Section 94.  A scalar is what [{ 0 }] initializes without
@@ -3887,6 +4113,19 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
   let const_init = EConst? init.e in
   let rec repeat (n:int) (acc:list string) : list string =
     if n <= 0 then acc else repeat (n - 1) (iv :: acc) in
+  let fill =
+    if const_len = Some 0 || any_init then empty_body else
+    let counter = {
+      cl_name = i; cl_origin = !current; cl_decl = "size_t " ^ i;
+      cl_kind = LKValue (TInt (Unsigned, WSizet)); cl_init = Some "0";
+      cl_reinit = empty_body; cl_ind = ind; cl_barrier = None
+    } in
+    CFor (counter,
+      i ^ " < " ^
+      (if len.ty = TInt (Unsigned, WSizet) && not (sizet_narrow ())
+       then group lv else "(size_t)" ^ group lv) ^ "; " ^ i ^ "++) {\n",
+      CText (ind ^ "  " ^ arr ^ "[" ^ i ^ "] = " ^ iv ^ ";\n"),
+      ind ^ "}\n") in
   match lt, const_len with
   (* [!out] has to be empty: a hoisted statement means the fill or the length
      was not the constant it has to be for any of this to apply, and prefixing
@@ -3894,17 +4133,24 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
   (* A length of zero needs no fill written out and admits none: [{ }] is not
      an initializer C99 accepts either, and the cell it initializes cannot be
      read.  So it takes [{ 0 }] whatever the fill was. *)
-  | LStack, Some n when scalar_elt && !out = "" &&
+  | LStack, Some n when scalar_elt && body_empty !out &&
                         (n = 0 || zero_init ||
                          (const_init && n <= init_list_max)) ->
-    ind ^ decl_of elt_of (arr ^ "[" ^ dlv ^ "]") ^ " = { " ^
-    (if n = 0 || zero_init then "0"
-     else String.concat ", " (repeat n [])) ^ " };\n" ^
+    CLocal {
+      cl_name = arr; cl_origin = !current; cl_decl = decl_of elt_of (arr ^ "[" ^ dlv ^ "]");
+      cl_kind = LKArray (elt_of, false);
+      cl_init = Some ("{ " ^ (if n = 0 || zero_init then "0"
+                             else String.concat ", " (repeat n [])) ^ " }");
+      cl_reinit = fill; cl_ind = ind; cl_barrier = None
+    } ++
     done_ arr
   | _ ->
   let alloc =
     match lt with
-    | LStack -> ind ^ decl_of elt_of (arr ^ "[" ^ dlv ^ "]") ^ ";\n"
+    | LStack ->
+      local_decl ind (decl_of elt_of (arr ^ "[" ^ dlv ^ "]")) arr
+        (LKArray (elt_of, None? const_len)) None
+        (if None? const_len then Some "a variable-length stack array" else None)
     | LHeap ->
       (* Section 116.  [len * sizeof(elt)] is computed in [size_t] and wraps
          silently, and when it wraps [malloc] succeeds with a small block that
@@ -3930,35 +4176,16 @@ and emit_alloc (ind:string) (d:dest) (nm:option string)
          32-bit target and the product does overflow there; it is the *type*
          of the operand that the warning reads, and a [size_t] variable has
          the full range whatever the value assigned to it. *)
-      (if Some? const_len then ""
+      (if Some? const_len then empty_body
        else let n = fresh "sz" in
-            ind ^ "{ size_t " ^ n ^ " = (size_t)" ^ group dlv ^ ";\n" ^
-            ind ^ "  if (" ^ n ^ " > SIZE_MAX / sizeof(" ^ elt ^
-            ")) { abort(); } }\n") ^
-      ind ^ elt ^ " *" ^ arr ^ " = (" ^ elt ^ " *)malloc(" ^ group dlv ^
-      " * sizeof(" ^ elt ^ "));\n" ^
-      ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n" in
-  (* Section 101.  A length of zero admits no fill: the loop's condition is
-     [_ci < 0], which is false on entry, and the cell the declaration had to
-     round up to (section 94.4) cannot be indexed because no index is in
-     bounds of a length of zero.  The scalar path above already dropped the
-     fill for this case by writing [{ 0 }]; this is the same fact stated for
-     an element type that has no initializer list. *)
-  let fill =
-    if const_len = Some 0 || any_init then "" else
-  (* Section 59.  The counter is a [size_t] and the length is compared
-     against it, so the cast is there for a length of some other integer
-     type; when the length already *is* a [size_t] it says nothing. *)
-  ind ^ "for (size_t " ^ i ^ " = 0; " ^ i ^ " < " ^
-  (* Section 95.  Under [--custard_sizet_width 32] a [FStar.SizeT.t] length is
-     a [uint32_t] and the counter is still a [size_t], so it needs the cast
-     that a native-width length does not. *)
-  (if len.ty = TInt (Unsigned, WSizet) && not (sizet_narrow ())
-   then group lv else "(size_t)" ^ group lv) ^
-  "; " ^ i ^ "++) {\n" ^
-  ind ^ "  " ^ arr ^ "[" ^ i ^ "] = " ^ iv ^ ";\n" ^
-  ind ^ "}\n" in
-  !out ^ alloc ^ fill ^
+            CBlock (ind ^ "{ ",
+              local_decl "" ("size_t " ^ n) n (LKValue (TInt (Unsigned, WSizet))) (Some ("(size_t)" ^ group dlv)) None ++
+              CText (ind ^ "  if (" ^ n ^ " > SIZE_MAX / sizeof(" ^ elt ^
+                     ")) { abort(); }"), " }\n")) ++
+      local_decl ind (elt ^ " *" ^ arr) arr LKPointer
+        (Some ("(" ^ elt ^ " *)malloc(" ^ group dlv ^ " * sizeof(" ^ elt ^ "))")) None ++
+      CText (ind ^ "if (" ^ arr ^ " == NULL) { abort(); }\n") in
+  !out ++ alloc ++ fill ++
   done_ arr
 
 (* -------------------------------------------------------------------- *)
@@ -4051,8 +4278,8 @@ and pat_tests (path:c_expression) (t:cty) (p:pat)
 
 (* A foreign statement macro can hide an unmatched [if] or several statements
    on one printed line.  Always brace conditional arms, including match arms. *)
-and brace (ind:string) (body:string) : ML string =
-  if body = "" then " { }\n" else " {\n" ^ body ^ ind ^ "}\n"
+and brace (ind:string) (body:c_body) : ML c_body =
+  if body_empty body then CText " { }\n" else CBlock (" {\n", body, ind ^ "}\n")
 
 and starts_with (s:string) (pre:string) : ML bool =
   String.length s >= String.length pre &&
@@ -4062,15 +4289,15 @@ and guard_rejected (#a:Type) () : ML a =
   reject "a pattern guard"
     ["Rewrite the guard as an 'if' in the branch body."]
 
-and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string =
-  let out = mk_ref "" in
+and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML c_body =
+  let out = mk_ref empty_body in
   let sd = c_expr_doc out ind scrut in
   let sv = sd.c_text in
   (* Branches whose body only aborts are gone by now (section 5.6); what is
      left is an empty match, which cannot be entered. *)
   if Nil? brs then
-    !out ^ finish ind D_Ignore sv ^
-    (if Options.custard_cherry ()
+    !out ++ finish ind D_Ignore sv ++
+    CText (if Options.custard_cherry ()
      then ind ^ "CHERRY_UNREACHABLE(" ^ debug_what "empty match" ^ ");\n"
      else ind ^ "abort();\n") else
   (* The scrutinee is tested once per branch, so it has to be a name -- unless
@@ -4088,7 +4315,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
   (* The bindings of a branch are aliases, not declarations (see
      [bind_alias]), so a branch body is emitted with them in scope and the
      scope is restored afterwards. *)
-  let branch_body (bi:string) (p:pat) (b:expr) : ML string =
+  let branch_body (bi:string) (p:pat) (b:expr) : ML c_body =
     let saved = !scope in
     let _, binds = pat_tests xd scrut.ty p in
     (* Cherry: the fields a branch uses are read out of the scrutinee before
@@ -4102,12 +4329,12 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
           match List.tryFind (fun (w, _) -> w = v) tys with
           | Some (_, t) ->
             let nm = bind_var v in
-            [bi ^ decl_of t nm ^ " = " ^ path.c_text ^ ";\n"]
+            [typed_local bi t nm (Some path.c_text)]
           | None -> bind_alias v path; [])
       else (binds |> List.iter (fun (v, path) -> bind_alias v path); []) in
     let body = emit bi d b in
     scope := saved;
-    String.concat "" pre ^ body in
+    List.fold_left ( ++ ) empty_body pre ++ body in
   (* A branch whose body emits nothing is an empty block, which is worth
      removing for the same reason [EIf] already removes an empty arm.  Two
      things make it less free than it looks.  It is sound only at the *end* of
@@ -4143,7 +4370,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
     let s = branch_body ind' p b in
     ctr := saved_ctr;
     declared := saved_declared;
-    s = ""
+    body_empty s
     end in
   let rec trim (rbs:list branch) : ML (list branch) =
     match rbs with
@@ -4152,7 +4379,7 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
   let kept = List.rev (trim (List.rev brs)) in
   let all_tested = List.length kept < List.length brs in
   (* Nothing left to run at all: the match is just its scrutinee. *)
-  if Nil? kept then !out ^ finish ind D_Ignore sv else
+  if Nil? kept then !out ++ finish ind D_Ignore sv else
   (* The scrutinee is read once per test and once per binding, so it normally
      has to be named.  When it is already a name -- or a projection out of one,
      which the backend never assigns to -- naming it again would only add an
@@ -4165,27 +4392,27 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
       Cons? ts || Cons? bs) in
   if not looked_at then
     (match kept with
-     | (_, None, b) :: _ -> !out ^ finish ind D_Ignore sv ^ emit ind d b
-     | _ -> !out ^ finish ind D_Ignore sv ^ ind ^ "abort();\n")
+     | (_, None, b) :: _ -> !out ++ finish ind D_Ignore sv ++ emit ind d b
+     | _ -> !out ++ finish ind D_Ignore sv ++ CText (ind ^ "abort();\n"))
   else
   let head = if direct then !out
-             else !out ^ ind ^ decl_of scrut.ty x ^ " = " ^ sv ^ ";\n" in
-  let rec go (first:bool) (brs:list branch) : ML string =
+             else !out ++ typed_local ind scrut.ty x (Some sv) in
+  let rec go (first:bool) (brs:list branch) : ML c_body =
     (* The arm that runs when no earlier one did.  With no [if] before it there
        is nothing to attach a block to, so it is emitted flat -- otherwise the
        rest of the function would sit inside a pair of braces that says
        nothing. *)
-    let last (chk:list string) (p:pat) (b:expr) : ML string =
+    let last (chk:list string) (p:pat) (b:expr) : ML c_body =
       (* Cherry's debug mode checks that it does match, before its bindings
          read the scrutinee (cherry.h, CHERRY_DEBUG). *)
       let check (bi:string) : ML string =
         if Nil? chk || not (Options.custard_cherry ()) then "" else
         bi ^ "CHERRY_ASSUME(" ^ String.concat " && " chk ^ ", " ^
         debug_what "incomplete match" ^ ");\n" in
-      if first then check ind ^ branch_body ind p b
-      else ind ^ "else" ^ brace ind (check ind' ^ branch_body ind' p b) in
+      if first then CText (check ind) ++ branch_body ind p b
+      else CText (ind ^ "else") ++ brace ind (CText (check ind') ++ branch_body ind' p b) in
     match brs with
-    | [] -> ""
+    | [] -> empty_body
     (* F* has already checked that the match is exhaustive, so the last branch
        is the one that runs when no earlier one did: its tests would always
        succeed, and testing them anyway would only add a branch C cannot see
@@ -4204,11 +4431,11 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML string 
       if Nil? tests then last [] p b
       else
         let after = go false rest in
-        (if first then ind else ind ^ "else ") ^
-        "if (" ^ String.concat " && " tests ^ ")" ^
-        brace ind (branch_body ind' p b) ^
+        CText ((if first then ind else ind ^ "else ") ^
+        "if (" ^ String.concat " && " tests ^ ")") ++
+        brace ind (branch_body ind' p b) ++
         after in
-  head ^ go true kept
+  head ++ go true kept
 
 (* -------------------------------------------------------------------- *)
 (* Declarations                                                         *)
@@ -4556,9 +4783,9 @@ let rec static_init (x:expr) : ML (option string) =
   | EOp (o, es) when const_op o &&
                      es |> List.for_all (fun (a:expr) ->
                        Some? (static_init a) && not (is_string_ty a.ty)) ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let v = c_expr out "" x in
-    if !out = "" then Some v else None
+    if body_empty !out then Some v else None
   | _ -> None
 
 let has_static_init (l:dlet) : ML bool =
@@ -4582,7 +4809,7 @@ let has_static_init (l:dlet) : ML bool =
 let array_decl (l:dlet) : ML (option string) =
   match l.dl_body.e, l.dl_ret with
   | EOp ({ po_op = BufLit }, elems), TBuf t ->
-    let out = mk_ref "" in
+    let out = mk_ref empty_body in
     let vs = elems |> List.map (fun (x:expr) -> c_rvalue out "" t x) in
     (* A run of length zero has no C spelling: [t x[0]] is a constraint
        violation and [{ }] is not an initializer.  Nor is there anything to
@@ -4675,15 +4902,15 @@ let macro_decl (l:dlet) : ML string =
 (* Every global's initializer goes into the one C function [init_name], so
    only the [first] starts a new C scope: the others keep the names already
    declared, and their locals take subscripts instead of clashing. *)
-let global_init (first:bool) (l:dlet) : ML string =
+let global_init (first:bool) (l:dlet) : ML c_body =
   current := string_of_name l.dl_name;
   void_ret := false;
   cur_ret := None;
   if first then (ctr := 0; reset_scope ()) else scope := [];
-  emit "  " (D_Assign (c_name l.dl_name)) l.dl_body ^
+  emit "  " (D_Assign (c_name l.dl_name)) l.dl_body ++
   (* Under Cherry a global's value is made persistent once it is computed:
      nothing counts references to it again, so reading it is free. *)
-  (if is_nonplain_ty l.dl_ret
+  CText (if is_nonplain_ty l.dl_ret
    then "  " ^ rc_fn "mark" l.dl_ret ^ "(" ^ c_name l.dl_name ^ ", CHERRY_PERSIST);\n"
    else "")
 
@@ -4735,12 +4962,12 @@ let let_decl (l:dlet) : ML string =
     if List.existsb (fun y -> y = b.b_name) used &&
        not (List.mem v !tail_kept) then []
     else ["  (void)" ^ v ^ ";\n"])) in
-  signature l ^ " {\n" ^ voids ^
-  (if trmc
+  signature l ^ " {\n" ^
+  function_body (CText (voids ^ (if trmc
    then "  " ^ decl_of l.dl_ret trmc_result ^ " = NULL;\n" ^
         "  " ^ decl_of l.dl_ret ("*" ^ trmc_dst) ^ " = &" ^ trmc_result ^ ";\n"
    else "") ^
-  (if Cons? !tail_used then "custard_tail:;\n" else "") ^ body ^ "}\n"
+  (if Cons? !tail_used then "custard_tail:;\n" else "")) ++ body) ^ "}\n"
 
 (* Cherry: the C function a tail group is printed as (cherry.md, "Tail
    calls").  Every member's parameters are its locals, named apart; it starts
@@ -4788,7 +5015,7 @@ let tail_group_decl (g:tail_group) : ML string =
       if List.existsb (fun y -> y = b.b_name) used &&
          not (List.mem x !tail_kept) then []
       else ["    (void)" ^ x ^ ";\n"])) in
-    label i ^ ": {\n" ^ voids ^ body ^
+    label i ^ ": {\n" ^ voids ^ render_body body ^
     (if !void_ret then "    return;\n" else "") ^ "  }\n") in
   tail_targets := [];
   musttail_ok := false;
@@ -5655,7 +5882,7 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
                    "  " ^ rc_call "dec" (TApp (dt.dt_name, [])) "x" ^ ";\n" ^
                    "  return (" ^ n ^ ")c;\n");
                fn ("static inline " ^ n ^ " " ^ cell_unshare dt c ^ "(" ^ n ^ " x)")
-                  ("  return cherry_is_unique(x) ? x : " ^ copy ^ "(x);\n")
+                  ("  return cherry_claim(x) ? x : " ^ copy ^ "(x);\n")
              end
            end);
          (* The visit of a cell's fields (cherry.h, [cherry_defer]): [op] on
@@ -5983,25 +6210,34 @@ let cherry_iarr_helpers () : ML (list string & list string) =
        (bounds "index" ^
         "  " ^ decl_of t "x" ^ " = ((" ^ s ^ " *)a)->data[cherry_iarray_pos(i)];\n" ^
         (if counted then "  " ^ op "inc" "x" ^ "\n" else "") ^ "  return x;\n");
-    (* A shared or persistent array is copied, as is one with another
-       reference: the copy takes a reference to every element, and the
-       original is released after, so that no element dies in between. *)
+    (* A persistent array is copied, as is one with another reference: the
+       copy takes a reference to every element, and the original is
+       released after, so that no element dies in between.  A shared array
+       of which this is the only reference -- one just taken out of a
+       global [ref], say -- is updated in place, and then the element
+       stored into it has to be made shared ([share_v]). *)
     let unique_or_copy (cap:string) : string =
       "  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
       "  size_t n = c->h.size;\n" ^
+      (if counted then "  bool sh = false;\n" else "") ^
       "  if (!cherry_is_unique(a)) {\n" ^
-      "    " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, " ^ cap ^ ");\n" ^
-      "  " ^ copy ^
-      "    " ^ p ^ "_dec(a);\n    c = d;\n  }\n" in
+      "    if (cherry_is_sole_shared(a)) {\n" ^
+      (if counted then "      sh = true;\n" else "") ^
+      "    } else {\n" ^
+      "      " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, " ^ cap ^ ");\n" ^
+      "    " ^ copy ^
+      "      " ^ p ^ "_dec(a);\n      c = d;\n    }\n  }\n" in
+    let share_v : string =
+      if counted then "  if (sh) " ^ rc_fn "mark" t ^ "(v, CHERRY_SHARE);\n" else "" in
     fn ("static inline cherry_iarray " ^ p ^ "_upd(cherry_iarray a, cherry_int i, " ^ decl_of t "v" ^ ")")
-       (bounds "upd" ^ unique_or_copy "n" ^
+       (bounds "upd" ^ unique_or_copy "n" ^ share_v ^
         "  size_t k = cherry_iarray_pos(i);\n" ^
         (if counted then "  " ^ decl_of t "old" ^ " = c->data[k];\n" else "") ^
         "  c->data[k] = v;\n" ^
         (if counted then "  " ^ op "dec" "old" ^ "\n" else "") ^
         "  return (cherry_iarray)c;\n");
     fn ("static inline cherry_iarray " ^ p ^ "_push(cherry_iarray a, " ^ decl_of t "v" ^ ")")
-       (unique_or_copy "2 * n + 1" ^
+       (unique_or_copy "2 * n + 1" ^ share_v ^
         "  if (n == c->h.cap) {\n" ^
         "    size_t cap = 2 * n + 1;\n" ^
         "    c = (" ^ s ^ " *)realloc(c, sizeof(" ^ s ^ ") + cap * sizeof(c->data[0]));\n" ^
@@ -6024,7 +6260,8 @@ let cherry_iarr_helpers () : ML (list string & list string) =
              let l = ty lt in
              let cs = cell_struct d cc in
              fn ("static inline cherry_iarray " ^ p ^ "_of_list(" ^ l ^ " l)")
-                ("  size_t n = 0;\n" ^
+                ("  if (cherry_is_scalar(l)) return cherry_iarray_empty;\n" ^
+                 "  size_t n = 0;\n" ^
                  "  for (" ^ l ^ " q = l; !cherry_is_scalar(q); q = ((" ^ cs ^ " *)q)->" ^ c_var tl ^ ") n++;\n" ^
                  "  " ^ cell "d" ^ " = (" ^ s ^ " *)" ^ p ^ "_alloc(n, n);\n" ^
                  "  size_t j = 0;\n" ^
@@ -6369,6 +6606,53 @@ let idents_between (s:string) (i:SI.t) (j:SI.t) : ML (list (SI.t & string)) =
 
 let idents_of (s:string) : ML (list string) =
   List.map snd (idents_between s SI.zero (String.byte_length s))
+
+(* The offset just past the literal closed by [q] whose body starts at [i]. *)
+let rec skip_literal (s:string) (q:SI.t) (i:SI.t) (n:SI.t) : ML SI.t =
+  if not SI.(i < n) then n else
+  let c = String.byte_at s i in
+  if c = SI.of_char '\\' then skip_literal s q SI.(i + one + one) n
+  else if c = q then SI.(i + one)
+  else skip_literal s q SI.(i + one) n
+
+(* The offset just past the block comment whose body starts at [i]. *)
+let rec skip_block_comment (s:string) (i:SI.t) (n:SI.t) : ML SI.t =
+  if not SI.(i + one < n) then n
+  else if String.byte_at s i = SI.of_char '*'
+       && String.byte_at s SI.(i + one) = SI.of_char '/' then SI.(i + one + one)
+  else skip_block_comment s SI.(i + one) n
+
+let is_narrow_ident (x:string) : bool =
+  BU.starts_with x "custard_f16" || BU.starts_with x "custard_bf16" ||
+  BU.starts_with x "CUSTARD_F16_" || BU.starts_with x "CUSTARD_BF16_"
+
+(* Whether a rendered file mentions the narrow-float vocabulary.  A textual
+   test rather than a flag set while rendering, because the question is about
+   one of the two files and a flag cannot say which -- and because every way
+   of reaching those formats spells an identifier with one of these four
+   prefixes, so the test is exact rather than approximate.  Only identifiers
+   count: string literals and comments are skipped, because the generated
+   code may be a program that prints these names -- Custard's own PrintC,
+   extracted with Cherry, does. *)
+let mentions_narrow (s:string) : ML bool =
+  let n = String.byte_length s in
+  let at (i:SI.t) : ML SI.t = if SI.(i < n) then String.byte_at s i else SI.minus_one in
+  let rec go (i:SI.t) : ML bool =
+    if not SI.(i < n) then false else
+    let c = String.byte_at s i in
+    if c = SI.of_char '"' || c = SI.of_char '\'' then go (skip_literal s c SI.(i + one) n)
+    else if c = SI.of_char '/' && at SI.(i + one) = SI.of_char '/' then
+      go (skip_while s (fun c -> c <> SI.of_char '\n') i n)
+    else if c = SI.of_char '/' && at SI.(i + one) = SI.of_char '*' then
+      go (skip_block_comment s SI.(i + one + one) n)
+    else if is_ident_start c then
+      let k = skip_while s is_ident_char i n in
+      if (c = SI.of_char 'c' || c = SI.of_char 'C') &&
+         is_narrow_ident (String.byte_substring s i k)
+      then true else go k
+    else if is_digit c then go (skip_while s is_ident_char i n)
+    else go SI.(i + one) in
+  go SI.zero
 
 (* The names an item declares. *)
 let declared_names (s:string) : ML (list string) =
@@ -6778,8 +7062,9 @@ let print_program (base:string) (cu:unit_info) (p:program)
                 "  custard_initialized = true;\n" in
   let init_fn = match inits with
                 | [] -> ""
-                | _ -> "void " ^ init_name ^ "(void) {\n" ^ init_guard ^
-                       String.concat "" inits ^ "}\n" in
+                | _ -> "void " ^ init_name ^ "(void) {\n" ^
+                       function_body (CText init_guard ++
+                         List.fold_left ( ++ ) empty_body inits) ^ "}\n" in
   let init_proto = match inits with
                    | [] -> ""
                    | _ -> "void " ^ init_name ^ "(void);\n" in
@@ -6957,7 +7242,7 @@ let print_program (base:string) (cu:unit_info) (p:program)
     (* The initializer calls one function per run of consecutive globals of
        a module, defined in that module's file: as a single function it was
        slower to compile than everything else together. *)
-    let runs = List.fold_left2 (fun (acc:list (string & list string)) l i ->
+    let runs = List.fold_left2 (fun (acc:list (string & list c_body)) l i ->
         let m = module_of l.dl_name in
         match acc with
         | (m', is) :: acc' when m' = m -> (m, i :: is) :: acc'
@@ -6967,7 +7252,8 @@ let print_program (base:string) (cu:unit_info) (p:program)
       let k = match HashTable.try_find seen m with Some k -> k + 1 | None -> 1 in
       HashTable.add seen m k;
       let nm = init_name ^ "__" ^ sanitize m ^ (if k = 1 then "" else "_" ^ show k) in
-      put m ("void " ^ nm ^ "(void) {\n" ^ String.concat "" (List.rev is) ^ "}\n");
+      put m ("void " ^ nm ^ "(void) {\n" ^
+             function_body (List.fold_left ( ++ ) empty_body (List.rev is)) ^ "}\n");
       nm) in
     let piece_protos = pieces |> List.map (fun nm -> "void " ^ nm ^ "(void);\n") in
     let init_fn = match inits with

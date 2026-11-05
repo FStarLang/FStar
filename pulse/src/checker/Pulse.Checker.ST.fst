@@ -50,7 +50,7 @@ let check
       text "Internal error: trailing combinator arguments not lifted in Tm_ST";
       fquotes (pp t)
     ];
-  let e, ty, eff = tc_term_phase1 g e in
+  let e, ty, eff = tc_term_elab g e in
   match Pulse.Readback.readback_comp ty with
   | None -> fail g (Some range) (Printf.sprintf "readback of %s failed" (show ty))
   | Some (C_Tot _) ->

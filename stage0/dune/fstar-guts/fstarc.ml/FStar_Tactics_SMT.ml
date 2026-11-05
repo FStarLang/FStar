@@ -2,14 +2,14 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let smt_sync (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
-  (FStarC_Tactics_V2_Builtins.t_smt_sync x ps)))))
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (FStarC_Tactics_V2_Builtins.t_smt_sync x ps)))
 
 let u___plugin_smt_sync : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.smt_sync" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.smt_sync (plugin)" smt_sync FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
 
 let smt_sync' (fuel : Prims.int) (ifuel : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
   let x1 = { FStar_VConfig.initial_fuel = fuel;
       max_fuel = fuel;
       initial_ifuel = ifuel;
@@ -33,7 +33,7 @@ let smt_sync' (fuel : Prims.int) (ifuel : Prims.int) : ((FStarC_Tactics_Types.pr
       z3seed = (x).FStar_VConfig.z3seed;
       z3version = (x).FStar_VConfig.z3version;
       trivial_pre_for_unannotated_effectful_fns = (x).FStar_VConfig.trivial_pre_for_unannotated_effectful_fns } in
-  (FStarC_Tactics_V2_Builtins.t_smt_sync x1 ps)))))
+  (FStarC_Tactics_V2_Builtins.t_smt_sync x1 ps)))
 
 let u___plugin_smt_sync' : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.smt_sync'" (Prims.of_int (3)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_2 "FStar.Tactics.SMT.smt_sync' (plugin)" smt_sync' FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
@@ -46,7 +46,7 @@ let u___plugin_get_rlimit : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_rlimit" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.get_rlimit (plugin)" get_rlimit FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_int tmp tmp1 tmp2 tmp3)))
 
 let set_rlimit (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
   let x1 = { FStar_VConfig.initial_fuel = (x).FStar_VConfig.initial_fuel;
       max_fuel = (x).FStar_VConfig.max_fuel;
       initial_ifuel = (x).FStar_VConfig.initial_ifuel;
@@ -70,7 +70,7 @@ let set_rlimit (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit)
       z3seed = (x).FStar_VConfig.z3seed;
       z3version = (x).FStar_VConfig.z3version;
       trivial_pre_for_unannotated_effectful_fns = (x).FStar_VConfig.trivial_pre_for_unannotated_effectful_fns } in
-  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))))
+  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))
 
 let u___plugin_set_rlimit : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_rlimit" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.set_rlimit (plugin)" set_rlimit FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
@@ -104,7 +104,7 @@ let u___plugin_get_max_ifuel : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_max_ifuel" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.get_max_ifuel (plugin)" get_max_ifuel FStarC_Syntax_Embeddings.e_unit FStarC_Syntax_Embeddings.e_int tmp tmp1 tmp2 tmp3)))
 
 let set_initial_fuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
   let x1 = { FStar_VConfig.initial_fuel = v;
       max_fuel = (x).FStar_VConfig.max_fuel;
       initial_ifuel = (x).FStar_VConfig.initial_ifuel;
@@ -128,13 +128,13 @@ let set_initial_fuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) ->
       z3seed = (x).FStar_VConfig.z3seed;
       z3version = (x).FStar_VConfig.z3version;
       trivial_pre_for_unannotated_effectful_fns = (x).FStar_VConfig.trivial_pre_for_unannotated_effectful_fns } in
-  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))))
+  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))
 
 let u___plugin_set_initial_fuel : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_initial_fuel" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.set_initial_fuel (plugin)" set_initial_fuel FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
 
 let set_initial_ifuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
   let x1 = { FStar_VConfig.initial_fuel = (x).FStar_VConfig.initial_fuel;
       max_fuel = (x).FStar_VConfig.max_fuel;
       initial_ifuel = v;
@@ -158,13 +158,13 @@ let set_initial_ifuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -
       z3seed = (x).FStar_VConfig.z3seed;
       z3version = (x).FStar_VConfig.z3version;
       trivial_pre_for_unannotated_effectful_fns = (x).FStar_VConfig.trivial_pre_for_unannotated_effectful_fns } in
-  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))))
+  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))
 
 let u___plugin_set_initial_ifuel : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_initial_ifuel" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.set_initial_ifuel (plugin)" set_initial_ifuel FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
 
 let set_max_fuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
   let x1 = { FStar_VConfig.initial_fuel = (x).FStar_VConfig.initial_fuel;
       max_fuel = v;
       initial_ifuel = (x).FStar_VConfig.initial_ifuel;
@@ -188,13 +188,13 @@ let set_max_fuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> uni
       z3seed = (x).FStar_VConfig.z3seed;
       z3version = (x).FStar_VConfig.z3version;
       trivial_pre_for_unannotated_effectful_fns = (x).FStar_VConfig.trivial_pre_for_unannotated_effectful_fns } in
-  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))))
+  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))
 
 let u___plugin_set_max_fuel : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_max_fuel" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.set_max_fuel (plugin)" set_max_fuel FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
 
 let set_max_ifuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
   let x1 = { FStar_VConfig.initial_fuel = (x).FStar_VConfig.initial_fuel;
       max_fuel = (x).FStar_VConfig.max_fuel;
       initial_ifuel = (x).FStar_VConfig.initial_ifuel;
@@ -218,13 +218,13 @@ let set_max_ifuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> un
       z3seed = (x).FStar_VConfig.z3seed;
       z3version = (x).FStar_VConfig.z3version;
       trivial_pre_for_unannotated_effectful_fns = (x).FStar_VConfig.trivial_pre_for_unannotated_effectful_fns } in
-  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))))
+  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))
 
 let u___plugin_set_max_ifuel : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_max_ifuel" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.set_max_ifuel (plugin)" set_max_ifuel FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
 
 let set_fuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
   let x1 = { FStar_VConfig.initial_fuel = v;
       max_fuel = v;
       initial_ifuel = (x).FStar_VConfig.initial_ifuel;
@@ -248,13 +248,13 @@ let set_fuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
       z3seed = (x).FStar_VConfig.z3seed;
       z3version = (x).FStar_VConfig.z3version;
       trivial_pre_for_unannotated_effectful_fns = (x).FStar_VConfig.trivial_pre_for_unannotated_effectful_fns } in
-  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))))
+  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))
 
 let u___plugin_set_fuel : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_fuel" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.set_fuel (plugin)" set_fuel FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))
 
 let set_ifuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (Obj.magic ((fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
+  (fun ps -> (let x = (FStarC_Tactics_V2_Builtins.get_vconfig () ps) in
   let x1 = { FStar_VConfig.initial_fuel = (x).FStar_VConfig.initial_fuel;
       max_fuel = (x).FStar_VConfig.max_fuel;
       initial_ifuel = v;
@@ -278,7 +278,7 @@ let set_ifuel (v : Prims.int) : ((FStarC_Tactics_Types.proofstate ref) -> unit) 
       z3seed = (x).FStar_VConfig.z3seed;
       z3version = (x).FStar_VConfig.z3version;
       trivial_pre_for_unannotated_effectful_fns = (x).FStar_VConfig.trivial_pre_for_unannotated_effectful_fns } in
-  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))))
+  (FStarC_Tactics_V2_Builtins.set_vconfig x1 ps)))
 
 let u___plugin_set_ifuel : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_ifuel" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.SMT.set_ifuel (plugin)" set_ifuel FStarC_Syntax_Embeddings.e_int FStarC_Syntax_Embeddings.e_unit tmp tmp1 tmp2 tmp3)))

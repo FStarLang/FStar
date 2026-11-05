@@ -79,7 +79,6 @@ $(OUTPUT_DIR)/CustardRuleTest.c: $(OUTPUT_DIR)/CustardPlugin.cmxs \
 	$(call msg, "EXTRACT C", CustardRuleTest)
 	$(FSTAR) --load_cmxs $(PLUGIN) \
 	  --codegen C \
-	  --custard_monomorphize_types true \
 	  --custard_main CustardRuleTest.main \
 	  CustardRuleTest.fst -o $@
 
@@ -151,7 +150,6 @@ $(OUTPUT_DIR)/CustardRuleArity.diag: $(OUTPUT_DIR)/CustardPlugin.cmxs \
 	$(call msg, "RULE DIAG", CustardRuleArity)
 	$(Q)$(FSTAR) --load_cmxs $(PLUGIN) \
 	  --codegen C \
-	  --custard_monomorphize_types true \
 	  --custard_main CustardRuleArity.main \
 	  CustardRuleArity.fst -o $(OUTPUT_DIR)/CustardRuleArity.c \
 	  > $(OUTPUT_DIR)/arity.log 2>&1 || true
@@ -172,7 +170,6 @@ $(OUTPUT_DIR)/CustardRuleBare.diag: $(OUTPUT_DIR)/CustardPlugin.cmxs \
 	$(call msg, "RULE DIAG", CustardRuleBare)
 	$(Q)$(FSTAR) --load_cmxs $(PLUGIN) \
 	  --codegen C \
-	  --custard_monomorphize_types true \
 	  --custard_main CustardRuleBare.main \
 	  CustardRuleBare.fst -o $(OUTPUT_DIR)/CustardRuleBare.c \
 	  > $(OUTPUT_DIR)/bare.log 2>&1 || true
@@ -190,7 +187,6 @@ $(OUTPUT_DIR)/CustardRuleOverArity.diag: $(OUTPUT_DIR)/CustardPlugin.cmxs \
 	$(call msg, "RULE DIAG", CustardRuleOverArity)
 	$(Q)$(FSTAR) --load_cmxs $(PLUGIN) \
 	  --codegen C \
-	  --custard_monomorphize_types true \
 	  --custard_main CustardRuleOverArity.main \
 	  CustardRuleOverArity.fst -o $(OUTPUT_DIR)/CustardRuleOverArity.c \
 	  > $(OUTPUT_DIR)/overarity.log 2>&1 \

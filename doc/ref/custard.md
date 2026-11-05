@@ -684,9 +684,15 @@ explicit closure-conversion pass to get here.
 
 **Two things are still rejected**, and deliberately.
 
-- *A hole whose sort is a type.*  Types are erased under uniform compilation
-  (§5.0), so there would be nothing to pass at runtime.  This stays the case
-  (b) rejection it has always been, and option 2's promotion is the fix.
+- *A hole whose sort is a type*, under `--custard_monomorphize_types`.  There
+  every type is specialized, so a runtime type parameter has no
+  representation to pass.  This stays the case (b) rejection it has always
+  been, and option 2's promotion is the fix.  Without the option, types are
+  compiled uniformly (§5.0): the specialization does not depend on the type,
+  so a runtime type parameter — bare, or inside a larger argument — is not a
+  hole at all but stays a free type variable of the specialization.  The
+  renaming pass binds such variables after the definition's own, so that a
+  caller's `'k` and the callee's `'k` cannot be confused.
 - *An argument that is nothing but a hole* — a bare variable.  Here the
   skeleton is the identity function, so nothing is specialized: the value is
   simply passed at runtime.  That is not unsound, it is **dictionary
@@ -988,7 +994,9 @@ monomorphization diverges for non-uniform recursion
 - normalizes `Mono` arguments to a canonical form before interning, so that
   syntactically different but convertible arguments share a specialization;
 - keeps a per-`lid` specialization counter, bounded by
-  `--custard_max_specializations` (default 1000);
+  `--custard_max_specializations` (default 10000; the whole compiler needs
+  about 1100 for `FStarC.List.map_acc`, and a runaway such as
+  `tests/custard/MonoFuel.fst` still stops in about a second);
 - keeps a global bound `--custard_fuel`;
 - on exhaustion, reports the *chain* of specialization requests that led there
   (a `spec_key` provenance list), which is the only debuggable way to present
@@ -1035,6 +1043,29 @@ magnitude below the default, so hitting the budget means something is wrong
 rather than merely large.  `tests/custard/NormBudget.fst` pins the behaviour
 with a definition that is `Tot` for the typechecker and divergent for the
 normalizer; without the budget it hangs, with it it fails in three seconds.
+
+The budget is a backstop, not a licence: a normalization that only has to
+substitute or beta-reduce passes `Exclude Zeta`.  Besides `custard_norm_steps`
+(M9k), that is `specialize` instantiating a definition's monomorphized
+arguments.  An argument such as `go' k false`, a partial application of a
+local `let rec` inside a closure, unfolds forever under zeta;
+`tests/custard/CherryMonoLocalRec.fst` hit error 365 there before.
+
+#### Arguments that are erased are not normalized
+
+Issue #4828.  A specification argument (an implicit `prop` or `slprop`, an
+`erased` value, a `squash`) is deleted from the extracted code, but it used to
+be normalized with the full step list first, and one built from many `unfold`
+definitions could take minutes or exhaust the budget on its own.  Under
+`ForExtraction`, `Normalize.rebuild` now consults the type of a stuck
+application's head and does not normalize an argument in such a position: a
+`prop` (or a total function into `prop`) becomes `l_True`, and a value of any
+other non-informative type except `unit` becomes `()`.  Arities are kept,
+since a type argument may be needed; `unit` is kept, since it is how a thunk is
+written; and so are the arguments of a primitive step, which may compute with
+them.  `tests/custard/SpecArgNorm.fst` and
+`tests/custard/pulse/PulseSpecArgNorm.fst` pass such arguments under a budget
+that normalizing them would exhaust.
 
 ### 3.7 Canonicalizing `Mono` arguments for interning
 
@@ -2899,7 +2930,8 @@ Emission:
 
   This is the backend that has the least to work with, so it is the one that
   most depends on the earlier phases.  It **requires
-  `--custard_monomorphize_types true`** (§5.0.1) — C has no type variables,
+  `--custard_monomorphize_types true`** (§5.0.1), which is the default under
+  `--codegen C` and `--codegen Cherry` — C has no type variables,
   and there is no `Obj.t` to hide behind — and it leans on ANF for evaluation
   order and on the `Layout` fixpoint for the shape of every value.
 
@@ -3044,7 +3076,7 @@ Emission:
 
   | Rejected | Why |
   |---|---|
-  | `TVar`, polymorphic `TApp` | no type variables in C; run with `--custard_monomorphize_types true` |
+  | `TVar`, polymorphic `TApp` | no type variables in C; do not pass `--custard_monomorphize_types false` |
   | `EFun` in a value position | no closures; mark the parameter `[@@@monomorphize]` (§3.1) |
   | abstract types, `Prims.int` in particular | no size, and no width to guess |
   | unbounded integer literals | same |
@@ -3070,6 +3102,133 @@ Emission:
   `tests/custard/CNoInt.fst` and `CNoClosure.fst` are the negative tests.
 
 ---
+
+### 6.1 Function-level C local declarations
+
+`--custard_hoist_locals` is an opt-in, no-argument option of `--codegen C`.
+It places every automatic local declaration in the outermost function block,
+before executable statements, including temporaries, allocation storage and
+fill-loop counters introduced by the printer. Without the option, emission is
+unchanged. Cherry and the other backends reject the option.
+
+Initialized declarations already in the leading declaration zone retain their
+initializers. Later declarations move without an initializer; assignments stay
+at the original execution points. In particular, branch initializers remain
+conditional, loop initializers run on the original iterations, and short-circuit
+operands remain short-circuited. Heap allocation, size-overflow and failure
+checks do not move. An uninitialized Pulse slot remains uninitialized.
+
+Fixed-size stack arrays move as storage declarations, with typed fill loops at
+their original initialization points when an initializer list can no longer be
+used. Arrays are never assigned as values, and zero filling does not assume
+that a null pointer has an all-bits-zero representation. A variable-length
+array may remain in the leading declaration zone, but moving one out of a
+branch or loop, or across preceding statements, is an error (368). Its bound
+evaluation and allocation scope must not change.
+
+Likewise, a `custard_c_reference` handle whose initialization would have to be
+split is rejected: C++ references cannot be declared and later rebound. Foreign
+types used with this C option must have ordinary, assignable C object semantics;
+it does not support arbitrary C++ constructors and destructors.
+
+Preprocessor guards travel with declarations, and initializers keep their
+original guards. This avoids introducing unused locals, or mentioning a type
+outside the configuration that declares it. The option also applies to
+generated initialization functions and definitions emitted into static
+headers. Linked units are not rewritten and no `.cui` format or ABI changes.
+External headers and opaque statement macros are outside the printer's control.
+
+Implementation: the C printer retains a small structured function-body
+document until rendering, distinguishing local declarations, blocks, `for`
+initializers, comments and preprocessor alternatives. A late traversal collects
+declarations after all C temporaries exist and checks that none remain in the
+residual body. This is separate from the printer's expression `hoist`, which
+turns a statement-shaped expression into a temporary.
+
+This option is not C89 mode, does not zero-initialize locals (see section 6.2,
+`--custard_init_locals`), and does not promise lower stack usage: widening
+storage scopes can increase a function's stack requirements. Use fixed-size
+assignable storage, or omit the option, when a declaration cannot be moved
+safely.
+
+### 6.2 Zero-initialized C locals
+
+`--custard_init_locals {no,c23,c99,c89}` (default `no`) is the Custard
+counterpart of krml's `-finitialize-locals`. With `--codegen C`, every
+automatic local declaration that the printer emits without an initializer gets
+a zero initializer of its type. Declarations that already have an initializer
+are unchanged. Cherry and the other backends reject any mode other than `no`.
+
+The pass runs on the structured function body after `--custard_hoist_locals`
+(section 6.1), just before rendering. So every declaration hoisting moves out of
+place, which loses its initializer, is zeroed, and its original initialization
+stays an assignment at its original execution point. As in krml, this can
+write such a local twice. Uninitialized Pulse slots, branch and match
+temporaries, storage arrays, closure and heap pointers are all covered.
+
+The mode selects the spelling of the zero:
+
+- `c23`: `= {}` for every type, including variable-length arrays. This needs
+  a C23 compiler (`-std=c2x` with GCC 13) or C++.
+- `c99`: a scalar gets `0`, `false`, `NULL` or the narrow-float
+  `CUSTARD_F16_INIT(0U)` / `CUSTARD_BF16_INIT(0U)`. An enum gets its first tag
+  rather than `0`, so that C++ accepts it. A record gets designated
+  initializers for all fields, in declaration order (`{ .f = 0, .g = false }`).
+  A tagged union gets its first tag and zeroes the first constructor that has
+  fields (`{ .tag = K, .val = { .C = 0 } }`). A fixed-size array gets
+  `{ <zero of element> }`.
+- `c89`: the same values, with positional instead of designated initializers.
+
+Foreign and otherwise unknown types get `{ 0 }`, which is valid C for every
+complete object type. C99 and C89 forbid an initializer on a variable-length
+array, so such a declaration is an error (368) in those modes: use `c23`, or
+fixed-size storage. The pass only decides initializers; it does not change
+declaration placement, so it is not a C89 mode by itself either.
+
+Implementation: each `c_local` records a `local_kind` (value of a `cty`,
+fixed or variable-length array of a `cty`, or pointer). `init_locals_body`
+fills in `cl_init` for locals with none, using `local_zero`. Raw-text
+declarations bypassing `c_local` exist only in the Cherry printer.
+
+Tests: `tests/custard/initlocals.py`, run from `tests/custard` (the
+`InitLocals` and `HoistLocals` fixtures) and `tests/custard/pulse` (Pulse
+fixtures, including variable-length arrays). Each mode is tested with and
+without hoisting. The tests check that no function-body declaration lacks an
+initializer and compile and run the result as C and C++.
+
+### 6.3 Line comments
+
+`--custard_line_comments` is an opt-in, no-argument option of `--codegen C`,
+the counterpart of krml's `-fline-comments`. Comments that stand as
+statements in a function body (section 120: a standalone `comment`, the two
+comments on a value nothing reads, and the comment before an `abort()`) are
+written as C line comments, framed by an empty `//` line above and below:
+
+```c
+  //
+  // the running total
+  //
+```
+
+The two comments on an unread value share one block. Each line of a
+multi-line text becomes a `// ` line of its own, trimmed. An empty comment
+disappears. Comments inside an expression (`/* before */ e /* after */`) stay
+block comments, since a line comment would swallow the rest of the line.
+Comments on top-level declarations and the file banner also stay block
+comments. Without the option, the output is unchanged.
+
+A comment with a line that ends in a backslash, or its `??/` trigraph, keeps
+the block form. In a line comment, that backslash would join the next source
+line to the comment and remove the code on it; GCC's `-Wcomment` reports this.
+Line comments need C99 or later, or C++. Cherry and the other backends reject
+the option. It composes with `--custard_hoist_locals`, which treats a comment
+the same way in either form.
+
+Tests: `tests/custard/pulse/linecomments.py`, on `PulseComment` and
+`PulseLineComment`, with and without hoisting. It checks where the comments go
+and that no comment-only block comment remains in a function body. It compiles
+the result as C11 and C++17 with `-Wall -Wextra -Werror`, runs it, and checks
+that the other backends reject the option.
 
 ## 7. Effects and purity
 
@@ -19779,6 +19938,12 @@ its correctly-rounded bit pattern precisely so that it does not need
 arithmetic to build one, which is what keeps a static initializer a constant
 expression (§66) and what makes the macros take a `uint16_t`.
 
+The block is emitted into a file when that file *uses* the vocabulary: when
+an identifier in it starts with `custard_f16`, `custard_bf16`, `CUSTARD_F16_`
+or `CUSTARD_BF16_`.  String literals and comments are skipped.  A plain
+substring search fired on Custard's own PrintC extracted with Cherry, which
+prints these names and so has them in literals (`tests/custard/NarrowStrLit.fst`).
+
 What replaces a link-time failure is a *compile*-time one, in the header, at
 the point of use, quoting what to do.  That is a better diagnostic than the
 implementation was a fallback.
@@ -21837,6 +22002,9 @@ value goes, but the text does not, and what is left is two comments and no
 statement to hang them on. Writing that as `(void)(/* a */ 0 /* b */);` is
 §99's complaint restated --- a cast to void that computes nothing says
 nothing either --- so the comments are emitted as lines of their own.
+
+With `--custard_line_comments` (section 6.3) the statement-position forms
+are written as line comments instead; the inline form is not.
 
 The OCaml backend spells the same node with `(* *)`, which costs nothing and
 is better than dropping the text; the krml backend hands both forms to

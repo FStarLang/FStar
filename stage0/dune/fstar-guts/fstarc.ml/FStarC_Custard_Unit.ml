@@ -27,6 +27,11 @@ type links = {
   lk_units : (unit_ref) list;
 }
 
+let empty_links : links =
+  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_one)) in
+  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_one)) in
+  { lk_tbl = tmp; lk_foreign = tmp1; lk_units = [] })
+
 type header = {
   uh_version : Prims.int;
   uh_name : string;
@@ -160,7 +165,7 @@ let load_links (fns : (string) list) : links =
   let tmp1 = (if tmp then ((<>) fns []) else false) in
   (if tmp1 then (let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.fold (fun key tmp2 acc -> (key :: acc)) tbl []) in
   let tmp3 = ((fun l -> Z.of_int (BatList.length l)) tmp2) in
-  let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 tmp3) in
+  let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 tmp3) in
   (FStarC_Format.print1 "Custard: linked %s specializations.\n" tmp4)) else ());
   { lk_tbl = tbl; lk_foreign = foreign; lk_units = units })
 
@@ -249,7 +254,7 @@ let type_info_to_string (ti : FStarC_Custard_Syntax.type_info) : string =
   (let l = (match (ti).FStarC_Custard_Syntax.ti_layout with
       | FStarC_Custard_Syntax.L_erased -> "erased"
       | (FStarC_Custard_Syntax.L_newtype (nt)) -> (FStarC_Format.fmt1 "newtype(%s)" (nt).FStarC_Custard_Syntax.nt_field)
-      | (FStarC_Custard_Syntax.L_struct (cls)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) cls)) in
+      | (FStarC_Custard_Syntax.L_struct (cls)) -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) cls)) in
         (FStarC_Format.fmt1 "struct(%s ctors)" tmp))
       | (FStarC_Custard_Syntax.L_abbrev (tmp)) -> "abbrev"
       | FStarC_Custard_Syntax.L_opaque -> "opaque"
@@ -293,7 +298,7 @@ let iface_to_string (i : iface) : string =
       | (k, v) -> (Prims.strcat k (Prims.strcat "=" v))
     )) (h).uh_options) in
   let tmp4 = (BatString.concat ", " tmp3) in
-  let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int_4 ((fun l -> Z.of_int (BatList.length l)) (h).uh_digests)) in
+  let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) (h).uh_digests)) in
   let tmp6 = (BatList.map entry_to_string (i).ui_entries) in
   let tmp7 = (BatString.concat "" tmp6) in
   let tmp8 = (BatList.map (fun b -> (Prims.strcat "  foreign binding " (Prims.strcat (b).uf_key (Prims.strcat "\n" (Prims.strcat "    target: " (Prims.strcat (match ((b).uf_decl).FStarC_Custard_Syntax.dx_target with
@@ -315,9 +320,4 @@ let iface_to_string (i : iface) : string =
 
 let write_iface (fn : string) (value : iface) : unit =
   (FStarC_Util.save_value_to_file fn value)
-
-let empty_links : links =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_one)) in
-  let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int Prims.int_one)) in
-  { lk_tbl = tmp; lk_foreign = tmp1; lk_units = [] })
 

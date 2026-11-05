@@ -24,12 +24,12 @@ let rec print_discrepancy__go (print : (unit -> ('b * 'b * bool))) (full : ((boo
   )) else (let tmp1 = (print_discrepancy__blist_leq bas cur) in
   let tmp2 = (not tmp1) in
   (if tmp2 then (let tmp3 = (print_discrepancy__succ cur) in
-  ((print_discrepancy__go print full set bas) tmp3)) else ((set cur);
+  (print_discrepancy__go print full set bas tmp3)) else ((set cur);
   let tmp3 = (print ()) in
   (match tmp3 with
     | (xs, ys, true) -> (xs, ys)
     | tmp4 -> (let tmp5 = (print_discrepancy__succ cur) in
-      ((print_discrepancy__go print full set bas) tmp5))
+      (print_discrepancy__go print full set bas tmp5))
   ))))))
 
 let print_discrepancy (f : ('a -> 'b)) (x : 'a) (y : 'a) : ('b * 'b) =
@@ -56,7 +56,7 @@ let print_discrepancy (f : ('a -> 'b)) (x : 'a) (y : 'a) : ('b * 'b) =
       | tmp -> (FStarC_Effect.failwith "impossible: print_discrepancy")
     )) in
   let bas = (get ()) in
-  (FStarC_Options.with_saved_options (fun tmp -> ((print_discrepancy__go print full set bas) bas))))
+  (FStarC_Options.with_saved_options (fun tmp -> (print_discrepancy__go print full set bas bas))))
 
 let name_and_result (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : (string * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (match (c).FStarC_Syntax_Syntax.n with

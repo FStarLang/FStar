@@ -23,9 +23,6 @@ let rec split__go (acc : (string) list) (seps : (int) list) : (string) list =
 let split (chars : (int) list) (s : string) : (string) list =
   (split__go (s :: []) chars)
 
-let index (s : string) (eta : Prims.int) : int =
-  ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s eta)
-
 let code_point_at (s : string) (i : int) : int =
   (let b = ((fun s i -> if i >= 0 && i < String.length s then Char.code (String.unsafe_get s i) else -1) s i) in
   (if ((<) b (FStarC_SmallInt.of_int (Prims.of_int (0x80)))) then b else ((fun s i -> try BatUChar.code (BatUTF8.look s i) with _ -> 0xFFFD) s i)))
@@ -36,4 +33,7 @@ let next_code_point (s : string) (i : int) : int =
   let j = ((+) i w) in
   let n = (String.length s) in
   (if ((<) j n) then j else n))
+
+let index (s : string) (eta : Prims.int) : int =
+  ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) s eta)
 

@@ -80,7 +80,7 @@ let bvdiv (n : Prims.int) (a : (bool) list) (b : Prims.int) : (bool) list =
   (int2bv n (FStar_UInt.udiv n (bv2int n a) b))
 
 let bvdiv_unsafe (n : Prims.int) (a : (bool) list) (b : (bool) list) : (bool) list =
-  (if ((<>) (bv2int n b) Prims.int_zero) then (bvdiv n a (bv2int n b)) else (int2bv n (Prims.op_Minus (Custard_Prims.prims_pow2 n) Prims.int_one)))
+  (if ((<>) (bv2int n b) Prims.int_zero) then (bvdiv n a (bv2int n b)) else (int2bv n (Prims.op_Minus (Fstarc_Prims.prims_pow2 n) Prims.int_one)))
 
 let bvmod (n : Prims.int) (a : (bool) list) (b : Prims.int) : (bool) list =
   (int2bv n (FStar_UInt.mod_ n (bv2int n a) b))
@@ -105,7 +105,7 @@ let bvsmod (n : Prims.int) (a : (bool) list) (b : (bool) list) : (bool) list =
   (int2bv n (FStar_Int.to_uint n (FStar_Int.to_int_t n (if (((=) r Prims.int_zero) || ((=) (Prims.op_Less r Prims.int_zero) (Prims.op_Less y Prims.int_zero))) then r else (Prims.op_Plus r y))))))))
 
 let int2bv_nat (n : Prims.int) (num : Prims.int) : (bool) list =
-  (FStar_UInt.to_vec n (Prims.op_Percent num (Custard_Prims.prims_pow2 n)))
+  (FStar_UInt.to_vec n (Prims.op_Percent num (Fstarc_Prims.prims_pow2 n)))
 
 let bvshl (n : Prims.int) (a : (bool) list) (s : Prims.int) : (bool) list =
   (bvshl' n a (int2bv_nat n s))
@@ -147,13 +147,13 @@ let bvsge (n : Prims.int) (a : (bool) list) (b : (bool) list) : bool =
   (Prims.op_Greater_Equals (sbv_to_int n a) (sbv_to_int n b))
 
 let bvuaddo (n : Prims.int) (a : (bool) list) (b : (bool) list) : bool =
-  (Prims.op_Greater_Equals (Prims.op_Plus (bv2int n a) (bv2int n b)) (Custard_Prims.prims_pow2 n))
+  (Prims.op_Greater_Equals (Prims.op_Plus (bv2int n a) (bv2int n b)) (Fstarc_Prims.prims_pow2 n))
 
 let bvsaddo (n : Prims.int) (a : (bool) list) (b : (bool) list) : bool =
   (not (FStar_Int.fits (Prims.op_Plus (sbv_to_int n a) (sbv_to_int n b)) n))
 
 let bvumulo (n : Prims.int) (a : (bool) list) (b : (bool) list) : bool =
-  (Prims.op_Greater_Equals (Prims.op_Star (bv2int n a) (bv2int n b)) (Custard_Prims.prims_pow2 n))
+  (Prims.op_Greater_Equals (Prims.op_Star (bv2int n a) (bv2int n b)) (Fstarc_Prims.prims_pow2 n))
 
 let bvsmulo (n : Prims.int) (a : (bool) list) (b : (bool) list) : bool =
   (not (FStar_Int.fits (Prims.op_Star (sbv_to_int n a) (sbv_to_int n b)) n))
