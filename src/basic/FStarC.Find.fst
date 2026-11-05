@@ -34,7 +34,7 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
 type source_root_trie = {
   flat_root: option string;
   recursive_root: option string;
-  children: list (string & source_root_trie);
+  children: HashTable.t string source_root_trie;
 }
 
 type normalized_include_path_cache = {
@@ -228,55 +228,36 @@ let full_include_path () : ML _ =
     _full_include := Some res;
     res
 
-let empty_source_root_trie = {
+let empty_source_root_trie () : ML source_root_trie = {
   flat_root = None;
   recursive_root = None;
-  children = [];
+  children = HashTable.create 8;
 }
 
-let rec insert_source_root_child
-  (component:string)
-  (components:list string)
-  (root:module_include_path)
-  (children:list (string & source_root_trie))
-: list (string & source_root_trie) =
-  match children with
-  | [] ->
-    [component, insert_source_root components root empty_source_root_trie]
-  | (key, child) :: rest ->
-    if key = component
-    then (key, insert_source_root components root child) :: rest
-    else (key, child) :: insert_source_root_child component components root rest
-
-and insert_source_root
+let rec insert_source_root
   (components:list string)
   (root:module_include_path)
   (trie:source_root_trie)
-: source_root_trie =
+: ML source_root_trie =
   match components with
   | [] ->
     (match root.kind with
      | Flat -> { trie with flat_root = Some root.dir }
      | Recursive -> { trie with recursive_root = Some root.dir })
   | component :: rest ->
-    { trie with children =
-        insert_source_root_child component rest root trie.children }
-
-let rec find_source_root_child
-  (component:string)
-  (children:list (string & source_root_trie))
-: option source_root_trie =
-  match children with
-  | [] -> None
-  | (key, child) :: rest ->
-    if key = component then Some child
-    else find_source_root_child component rest
+    let child =
+      match HashTable.try_find trie.children component with
+      | Some child -> child
+      | None -> empty_source_root_trie ()
+    in
+    HashTable.add trie.children component (insert_source_root rest root child);
+    trie
 
 let rec find_source_root
   (components:list string)
   (trie:source_root_trie)
   (best:option string)
-: option string =
+: ML (option string) =
   let best =
     match components, trie.flat_root, trie.recursive_root with
     | [], _, _ -> best
@@ -287,7 +268,7 @@ let rec find_source_root
   match components with
   | [] -> best
   | component :: rest ->
-    (match find_source_root_child component trie.children with
+    (match HashTable.try_find trie.children component with
      | None -> best
      | Some child -> find_source_root rest child best)
 
@@ -304,7 +285,7 @@ let normalized_module_include_paths () : ML normalized_include_path_cache =
       source_roots =
         List.fold_left (fun trie path ->
           insert_source_root (String.split ['/'] path.dir) path trie)
-          empty_source_root_trie paths;
+          (empty_source_root_trie ()) paths;
     } in
     _module_include_paths_normalized := Some normalized;
     normalized
