@@ -228,14 +228,16 @@ let module_include_paths () : ML (list module_include_path) =
 
 let epoch () : ML int = !_epoch
 
-let full_include_path () : ML _ =
-  // Stats.record "Find.full_include_path" fun () ->
-  match !(cache_state.full_include) with
-  | Some paths -> paths
-  | None ->
-    let res = module_include_paths () |> include_dirs in
-    cache_state.full_include := Some res;
-    res
+let full_include_path =
+  let cached = cache_state.full_include in
+  fun () ->
+    // Stats.record "Find.full_include_path" fun () ->
+    match !cached with
+    | Some paths -> paths
+    | None ->
+      let res = module_include_paths () |> include_dirs in
+      cached := Some res;
+      res
 
 let empty_source_root_trie () : ML source_root_trie = {
   flat_root = None;
@@ -281,23 +283,25 @@ let rec find_source_root
      | None -> best
      | Some child -> find_source_root rest child best)
 
-let normalized_module_include_paths () : ML normalized_include_path_cache =
-  match !(cache_state.normalized_include_paths) with
-  | Some paths -> paths
-  | None ->
-    let paths = module_include_paths ()
-      |> List.map (fun path ->
-        { path with dir = Filepath.normalize_file_path path.dir })
-    in
-    let normalized = {
-      paths;
-      source_roots =
-        List.fold_left (fun trie path ->
-          insert_source_root (String.split ['/'] path.dir) path trie)
-          (empty_source_root_trie ()) paths;
-    } in
-    cache_state.normalized_include_paths := Some normalized;
-    normalized
+let normalized_module_include_paths =
+  let cached = cache_state.normalized_include_paths in
+  fun () ->
+    match !cached with
+    | Some paths -> paths
+    | None ->
+      let paths = module_include_paths ()
+        |> List.map (fun path ->
+          { path with dir = Filepath.normalize_file_path path.dir })
+      in
+      let normalized = {
+        paths;
+        source_roots =
+          List.fold_left (fun trie path ->
+            insert_source_root (String.split ['/'] path.dir) path trie)
+            (empty_source_root_trie ()) paths;
+      } in
+      cached := Some normalized;
+      normalized
 
 let module_include_paths_normalized () : ML (list module_include_path) =
   (normalized_module_include_paths ()).paths
@@ -336,7 +340,8 @@ let do_find (paths : list string) (filename : string) : ML (option string) =
 
 (* Note: eta important below. *)
 let find_file =
-  cached_fun cache_state.resolved_files fun s ->
+  let cached = cache_state.resolved_files in
+  cached_fun cached fun s ->
     do_find (full_include_path ()) s
 
 let source_file_name_of_normalized
@@ -348,7 +353,8 @@ let source_file_name_of_normalized
   | None -> fallback ()
 
 let source_file_name =
-  cached_fun cache_state.source_file_names fun filename ->
+  let cached = cache_state.source_file_names in
+  cached_fun cached fun filename ->
     // Resolve relative names first: an incremental parser may already have an
     // include-relative range filename, rather than a path relative to cwd.
     match find_file filename with
