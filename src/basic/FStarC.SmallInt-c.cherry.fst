@@ -34,11 +34,13 @@ private let int_cmp (a b:int) : U64.t =
 (* Wraps modulo 2^64 if the argument does not fit.  A negative argument is
    negated rather than reduced modulo 2^64, which would make it a big
    integer in Cherry. *)
+[@@custard_extern "cherry_smallint_of_int"]
 let of_int x =
   if x >= 0 then U64.uint_to_t (x % 0x10000000000000000)
   else U64.sub_mod 0UL (U64.uint_to_t ((- x) % 0x10000000000000000))
 
 (* Likewise, no arithmetic on integers beyond 2^62 unless the result is. *)
+[@@custard_extern "cherry_smallint_to_int"]
 let to_int x =
   if U64.gte x 0x8000000000000000UL then - (U64.v (U64.sub_mod 0UL x))
   else U64.v x
@@ -75,8 +77,9 @@ let array_length arr = of_int (IA.length arr)
 
 (* The interface leaves the bounds to the caller. *)
 let array_index arr i =
-  assume (U64.v i < IA.length arr);
-  IA.index arr (U64.v i)
+  let j = to_int i in
+  assume (0 <= j /\ j < IA.length arr);
+  IA.index arr j
 
 let int_compare a b = int_cmp a b
 
