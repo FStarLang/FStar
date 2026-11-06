@@ -2921,6 +2921,44 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
       app, comp, g
     in
 
+    (* When a data constructor is applied at a known expected type with the
+       same head, e.g. [Frac f v] at [frac (seq t)], and the constructor's
+       result type does not depend on its remaining arguments, unify the two
+       before checking the arguments. Its type parameters are then known, so
+       the arguments are checked against concrete types and coercions apply:
+       [v : erased (seq t)] gets a [reveal]. Done once, at the first concrete
+       argument. *)
+    let ctor_presolved = mk_ref false in
+    let presolve_ctor_result (subst:subst_t) (bs:binders) (cres:comp) (g:guard_t) : ML guard_t =
+      if !ctor_presolved then g else (
+      ctor_presolved := true;
+      let is_ctor =
+        match (SS.compress (U.un_uinst head)).n with
+        | Tm_fvar { fv_qual = Some Data_ctor }
+        | Tm_fvar { fv_qual = Some (Record_ctor _) } -> true
+        | _ -> false
+      in
+      match expected_topt with
+      | Some (t_exp, false) when is_ctor && not (Options.Ext.enabled "compat:no_eager_tcresolve") ->
+        let res = SS.subst subst (U.comp_result cres) in
+        let fns = Free.names res in
+        if bs |> List.existsb (fun b -> mem b.binder_bv fns) then g else
+        let head_fv (t:term) : ML (option fv) =
+          match (SS.compress (U.un_uinst (U.head_of (U.unrefine t)))).n with
+          | Tm_fvar fv -> Some fv
+          | _ -> None
+        in
+        let t_exp = U.unrefine (N.unfold_whnf env t_exp) in
+        (match head_fv res, head_fv t_exp with
+         | Some f1, Some f2 when S.fv_eq f1 f2 ->
+           let tx = UF.new_transaction () in
+           (match Rel.teq_nosmt env res t_exp with
+            | Some g' -> UF.commit tx; g ++ g'
+            | None -> UF.rollback tx; g)
+         | _ -> g)
+      | _ -> g)
+    in
+
     let rec tc_args (head_info:(term & comp & guard_t & comp)) //the head of the application, its comp and guard, returning a bs -> cres
                     tc_args_state
                      bs       (* formal parameters *)
@@ -2977,7 +3015,20 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
 
         | ({binder_bv=x;binder_qual=bqual;binder_attrs=b_attrs})::rest, (e, aq)::rest' -> (* a concrete argument *)
             let aq = check_expected_aqual_for_binder aq (List.hd bs) e.pos in
+            let g = let _, _, _, cres = head_info in presolve_ctor_result subst bs cres g in
             let targ = SS.subst subst x.sort in
+            (* If the formal mentions uvars that a typeclass constraint
+               instantiated for an earlier binder determines (through a
+               functional dependency), resolve that constraint now, so that the
+               argument is checked against a known type and coercions apply.
+               E.g. in [x |-> y], [has_pts_to (ref bool) ?r] fixes [?r := bool]
+               before [y : erased bool] is checked, and [reveal] gets inserted. *)
+            let g =
+              if not (FStarC.Class.Listlike.is_empty g.implicits)
+                 && not (is_empty (Free.uvars targ))
+              then Rel.resolve_closed_typeclass_implicits env (bound_of_flex true g.deferred) g
+              else g
+            in
             let bqual = SS.subst_bqual subst bqual in
             let x = {x with sort=targ} in
             if Debug.extreme ()
