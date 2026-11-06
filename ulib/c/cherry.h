@@ -313,6 +313,15 @@ cherry_int cherry_int_of_i64(int64_t v);
 cherry_int cherry_int_of_u64(uint64_t v);
 int64_t cherry_int_to_i64(cherry_int x);
 uint64_t cherry_int_to_u64(cherry_int x);
+/* FStarC.SmallInt's conversions, a SmallInt being a uint64_t in two's
+   complement: inline, since the small case is a shift. */
+static inline uint64_t cherry_smallint_of_int(cherry_int x) {
+  return cherry_is_scalar(x) ? (uint64_t)(int64_t)cherry_int_val(x) : cherry_int_to_u64(x);
+}
+static inline cherry_int cherry_smallint_to_int(uint64_t x) {
+  intptr_t v = (intptr_t)(int64_t)x;
+  return cherry_int_fits(v) ? CHERRY_INT_SMALL(v) : cherry_int_of_i64((int64_t)x);
+}
 #ifdef __SIZEOF_INT128__
 /* The same at 128 bits, for --custard_int128; [to] wraps modulo 2^128. */
 __extension__ typedef unsigned __int128 cherry_u128;

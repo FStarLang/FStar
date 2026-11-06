@@ -33,18 +33,25 @@ let make #a n x =
   if n < 0 then failwith "FStarC.Array.make: negative length"
   else mk_ref (push_n (IA.of_list []) n x)
 
-let length #a arr = S.of_int (IA.length !arr)
+(* [length], [get] and [set] borrow the array: a caller looking up an
+   element should not have to count a reference to it. *)
+let length #a ([@@@FStar.Attributes.cherry_borrowed] arr) = S.of_int (IA.length !arr)
 
+(* The bounds are checked on [S.t], with no [int] arithmetic.  Inlined, so
+   that the C compiler sees the index is small and drops its counting. *)
+[@@custard_inline]
 let pos (len:nat) (i:S.t) : ML (j:nat{j < len}) =
-  let j = S.to_int i in
-  if 0 <= j && j < len then j
-  else failwith "FStarC.Array: index out of bounds"
+  if S.(i >= zero && i < of_int len) then begin
+    let j = S.to_int i in
+    assume (0 <= j /\ j < len);
+    j
+  end else failwith "FStarC.Array: index out of bounds"
 
-let get #a arr i =
+let get #a ([@@@FStar.Attributes.cherry_borrowed] arr) i =
   let cur = !arr in
   IA.index cur (pos (IA.length cur) i)
 
-let set #a arr i x =
+let set #a ([@@@FStar.Attributes.cherry_borrowed] arr) i x =
   let cur = !arr in
   let j = pos (IA.length cur) i in
   arr := IA.of_list [];
