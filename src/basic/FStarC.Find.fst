@@ -32,8 +32,7 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
       v
 
 type source_root_trie = {
-  flat_root: option string;
-  recursive_root: option string;
+  root: option module_include_path;
   children: HashTable.t string source_root_trie;
 }
 
@@ -240,10 +239,13 @@ let full_include_path =
       res
 
 let empty_source_root_trie () : ML source_root_trie = {
-  flat_root = None;
-  recursive_root = None;
+  root = None;
   children = HashTable.create 8;
 }
+
+let path_components (path:string) : ML (list string) =
+  String.split (if FStarC.Platform.windows then ['\\'] else ['/']) path
+  |> List.filter (fun component -> component <> "")
 
 let rec insert_source_root
   (components:list string)
@@ -252,9 +254,12 @@ let rec insert_source_root
 : ML source_root_trie =
   match components with
   | [] ->
-    (match root.kind with
-     | Flat -> { trie with flat_root = Some root.dir }
-     | Recursive -> { trie with recursive_root = Some root.dir })
+    let root =
+      match trie.root, root.kind with
+      | Some existing, Flat -> existing
+      | _, Recursive | None, Flat -> root
+    in
+    { trie with root = Some root }
   | component :: rest ->
     let child =
       match HashTable.try_find trie.children component with
@@ -270,10 +275,13 @@ let rec find_source_root
   (best:option string)
 : ML (option string) =
   let best =
-    match components, trie.flat_root, trie.recursive_root with
-    | [], _, _ -> best
-    | [_], Some root, _ -> Some root
-    | _, _, Some root -> Some root
+    match components, trie.root with
+    | [], _ -> best
+    | [_], Some root -> Some root.dir
+    | _, Some root ->
+      (match root.kind with
+       | Recursive -> Some root.dir
+       | Flat -> best)
     | _ -> best
   in
   match components with
@@ -297,7 +305,7 @@ let normalized_module_include_paths =
         paths;
         source_roots =
           List.fold_left (fun trie path ->
-            insert_source_root (String.split ['/'] path.dir) path trie)
+            insert_source_root (path_components path.dir) path trie)
             (empty_source_root_trie ()) paths;
       } in
       cached := Some normalized;
@@ -308,9 +316,15 @@ let module_include_paths_normalized () : ML (list module_include_path) =
 
 let relative_source_path_normalized (filename:string) : ML (option string) =
   let roots = (normalized_module_include_paths ()).source_roots in
-  find_source_root (String.split ['/'] filename) roots None
+  find_source_root (path_components filename) roots None
   |> Option.map (fun dir ->
-    BU.substring_from filename (String.length dir + 1))
+    let prefix_length =
+      String.length dir
+      + (if BU.ends_with dir
+              (if FStarC.Platform.windows then "\\" else "/")
+         then 0 else 1)
+    in
+    BU.substring_from filename prefix_length)
 
 let relative_source_path (filename:string) : ML (option string) =
   relative_source_path_normalized (Filepath.normalize_file_path filename)
