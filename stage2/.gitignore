@@ -3,6 +3,7 @@
 /*.ml/**
 /*.fs/**
 /*.pluginml/**
+/*.cherry/**
 .*_depend
 .depend
 *.install
