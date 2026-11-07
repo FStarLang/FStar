@@ -64,15 +64,15 @@ let op_Less #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
 let op_GreaterEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
 let op_LessEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
 private
-let _ = 1 + 1
+let _ = Bug3292.op_Plus #Prims.int 1 1
 private
 let _ = 1 - 1
 private
-let _ = 1 / 1
+let _ = Bug3292.op_Slash #Prims.int 1 1
 private
-let _ = 1 > 1
+let _ = Bug3292.op_Greater #Prims.int 1 1
 private
-let _ = 1 < 1
+let _ = Bug3292.op_Less #Prims.int 1 1
 private
 let _ = 1 >= 1
 private
