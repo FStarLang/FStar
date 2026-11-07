@@ -21,6 +21,7 @@ open FStarC.Class.Hashable
 module BB = FStarC.ByteBuffer
 module I = FStarC.SmallInt
 module A = FStarC.Array
+module V = FStarC.Vec
 module HT = FStarC.HashTable
 module D = FStar.Dyn
 
@@ -45,14 +46,12 @@ noeq type writer = {
   wtables : A.array (option D.dyn);
 }
 
-(* Slot [s] of [rtables] holds the values read so far as an [A.array a]
-   (once there is one), and [rcounts] how many there are.  Boxed, since a
-   reader is passed to every deserializer. *)
+(* Slot [s] of [rtables] holds the values read so far as a [V.vec a] (once
+   there is one).  Boxed, since a reader is passed to every deserializer. *)
 [@@cherry_boxed]
 noeq type reader = {
   rbuf    : BB.reader;
   rtables : A.array (option D.dyn);
-  rcounts : A.array I.t;
 }
 
 let writer_create () = { wbuf = BB.writer_create (); wtables = A.make max_slots None }
@@ -60,7 +59,7 @@ let writer_contents w = BB.writer_contents w.wbuf
 let raw_writer w = w.wbuf
 
 let reader_create s off =
-  { rbuf = BB.reader_create s off; rtables = A.make max_slots None; rcounts = A.make max_slots I.zero }
+  { rbuf = BB.reader_create s off; rtables = A.make max_slots None }
 let raw_reader r = r.rbuf
 
 let malformed #a what = raise (BB.Malformed what)
@@ -166,25 +165,17 @@ let wtable_add (#a:Type0) (h:FStarC.Hash.hash_code) (t:wtable_t a) (x:a) : ML I.
 (* The tables are looked up in place: the reader is borrowed, so its fields
    are not counted. *)
 let rtable_push (#a:Type) ([@@@FStar.Attributes.cherry_borrowed] r:reader) (s:slot) (x:a) : ML unit =
-  let k = A.get r.rcounts s in
-  (if k = I.zero then A.set r.rtables s (Some (D.mkdyn (A.make (I.of_int 16) x)))
-   else match A.get r.rtables s with
-   | Some d ->
-     let v : A.array a = D.undyn d in
-     if I.(k >= A.length v) then begin
-       let v = A.append v v in
-       A.set v k x;
-       A.set r.rtables s (Some (D.mkdyn v))
-     end else A.set v k x
-   | None -> malformed "reader table");
-  A.set r.rcounts s I.(k + one)
+  match A.get r.rtables s with
+  | Some d -> V.push (D.undyn d <: V.vec a) x
+  | None -> A.set r.rtables s (Some (D.mkdyn (V.singleton x)))
 
 let rtable_get (#a:Type) ([@@@FStar.Attributes.cherry_borrowed] r:reader) (s:slot) (k:I.t) : ML a =
-  if I.(k >= zero && k < A.get r.rcounts s) then
-    match A.get r.rtables s with
-    | Some d -> A.get (D.undyn d <: A.array a) k
-    | None -> malformed "bad back-reference"
-  else malformed "bad back-reference"
+  match A.get r.rtables s with
+  | Some d ->
+    let v : V.vec a = D.undyn d in
+    if I.(k >= zero && k < V.length v) then V.get v k
+    else malformed "bad back-reference"
+  | None -> malformed "bad back-reference"
 
 let write_shared #a {| deq a |} {| hashable a |} s w x f =
   let t = wtable #a w s in
