@@ -5733,18 +5733,20 @@ let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML 
       (* The input may be a uvar, or a rigid type whose arguments are uvars,
          e.g. [cell ?a ?i] for the type of a data constructor application
          [Cell x i]: pin each such uvar to its bound.  Only a uvar that is
-         the whole input is pinned to the base type of its bound: an
-         argument [x : vec t{p}] has an instance at [vec t].  A nested one
+         the whole input is pinned to the base type of its bound (ground or
+         not): an argument [x : vec t{p}] has an instance at [vec t].  A
+         nested one
          keeps the refinement: [Cell x (i:nat)] has an instance at
          [cell _ nat].  A uvar without a ground bound may still have a
          rigid one with uvars, e.g. [?p] bounded by [cell ?a ?i]: pin it to
          that, and the nested uvars in turn. *)
       let rec pin (top:bool) (a:term) : ML unit =
         if has_free_uvars a then
+          let base (b:term) : ML term =
+            if top then fst (base_and_refinement_maybe_delta false env b) else b
+          in
           match bound_of true a with
-          | Some b ->
-            let b = if top then fst (base_and_refinement_maybe_delta false env b) else b in
-            ignore (teq_nosmt env a b)
+          | Some b -> ignore (teq_nosmt env a (base b))
           | None ->
             let pin_args (t:term) : ML unit =
               let hd, args = U.head_and_args_full (SS.compress t) in
@@ -5754,6 +5756,7 @@ let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML 
             in
             match bound_of false a with
             | Some b ->
+              let b = base b in
               (match (U.un_uinst (SS.compress (fst (U.head_and_args_full (SS.compress b))))).n with
                | Tm_fvar _ ->
                  (match teq_nosmt env a b with
