@@ -346,7 +346,7 @@ let start_of_next_decl_kinds : list token_kind =
   FStar.List.Tot.append pragma_start_kinds (FStar.List.Tot.append qualifier_kinds [
     EOF; LBRACK_AT; LBRACK_AT_AT; CLASS; INSTANCE; OPEN; FRIEND;
     INCLUDE; MODULE; TYPE; EFFECT; LET; VAL; SPLICE; SPLICET;
-    EXCEPTION; NEW_EFFECT; SUB_EFFECT; BLOB; USE_LANG_BLOB;
+    EXCEPTION; NEW_EFFECT; SUB_EFFECT; BLOB; USE_LANG_BLOB; DOC;
   ])
 
 (* ---------------------------------------------------------------------- *)
@@ -2063,10 +2063,29 @@ let p_qualifier (ps:pstate) : ML qualifier =
     Logic
   | _ -> q
 
+(* A documentation comment is sugar for the `doc` attribute, and nothing
+   more: its lines become a list literal and the whole thing an ordinary
+   attribute term downstream, indistinguishable from a hand-written
+   `[@@doc [...]]`. It remains a distinct decoration just long enough to
+   preserve the rule that a declaration has at most one hand-written
+   attribute set. See FStarC.Docs. *)
+let doc_attribute (ps:pstate) (t:L.token) : ML decoration =
+  match t.extra with
+  | L.DocLines lines ->
+    let r = tok_rng ps t in
+    let str (s:string) : term = mk_term (Const (Const_string (s, r))) r Expr in
+    let payload = mkListLit r (List.map str lines) in
+    DocAttribute (mkApp (mk_term (Var C.doc_attr) r Un) [(payload, Nothing)] r)
+  | _ -> failwith "impossible: DOC without payload"
+
 let rec decorations (ps:pstate) : ML (list decoration) =
   if is_attribute_start ps then
     let a = attribute ps in
     DeclAttributes a :: decorations ps
+  else if is ps DOC then
+    let t = advance ps in
+    let d = doc_attribute ps t in
+    d :: decorations ps
   else if FStar.List.Tot.mem (peek_kind ps) qualifier_kinds then
     let q = p_qualifier ps in
     Qualifier q :: decorations ps

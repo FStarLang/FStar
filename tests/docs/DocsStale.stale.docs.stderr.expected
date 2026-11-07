@@ -1,0 +1,5 @@
+* Error 129:
+  - Refusing to export documentation from a stale checked file:
+  - _cache/DocsStale.fst.checked
+  - The source digest does not match:
+  - DocsStale.fst
