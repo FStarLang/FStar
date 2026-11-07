@@ -376,6 +376,46 @@ let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
 
 let empty_parsing_data = { elts = []; no_prelude = false }
 
+instance serializable_parsing_data : FStarC.Serialize.serializable parsing_data =
+  let open FStarC.Serialize in
+  let open FStarC.Syntax.Serialize in
+  let ser_open_kind w k = write_tag w (match k with Open_module -> 0uy | Open_namespace -> 1uy) in
+  let ser_elt w (e:parsing_data_elt) : ML unit =
+    match e with
+    | P_begin_module l -> write_tag w 0uy; ser w l
+    | P_open (b, l) -> write_tag w 1uy; ser w b; ser w l
+    | P_implicit_open_module_or_namespace (k, l) -> write_tag w 2uy; ser_open_kind w k; ser w l
+    | P_dep (b, l) -> write_tag w 3uy; ser w b; ser w l
+    | P_alias (i, l) -> write_tag w 4uy; ser w i; ser w l
+    | P_lid l -> write_tag w 5uy; ser w l
+    | P_inline_for_extraction -> write_tag w 6uy
+  in
+  let deser_elt r : ML parsing_data_elt =
+    match read_tag r with
+    | 0uy -> P_begin_module (deser r)
+    | 1uy -> let b : bool = deser r in let l : lident = deser r in P_open (b, l)
+    | 2uy ->
+      let k =
+        match read_tag r with
+        | 0uy -> Open_module
+        | 1uy -> Open_namespace
+        | t -> bad_tag "open_kind" t in
+      let l : lident = deser r in
+      P_implicit_open_module_or_namespace (k, l)
+    | 3uy -> let b : bool = deser r in let l : lident = deser r in P_dep (b, l)
+    | 4uy -> let i : ident = deser r in let l : lident = deser r in P_alias (i, l)
+    | 5uy -> P_lid (deser r)
+    | 6uy -> P_inline_for_extraction
+    | t -> bad_tag "parsing_data_elt" t
+  in
+  {
+    ser = (fun w pd -> ser_list ser_elt w pd.elts; ser w pd.no_prelude);
+    deser = (fun r ->
+      let elts = deser_list deser_elt r in
+      let no_prelude : bool = deser r in
+      { elts; no_prelude });
+  }
+
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
     file_system_map:files_for_module_name;      //an abstraction of the file system, keys are lowercase module names

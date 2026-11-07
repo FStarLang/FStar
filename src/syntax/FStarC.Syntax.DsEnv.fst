@@ -1909,6 +1909,32 @@ let default_mii : module_inclusion_info = {
     mii_no_prelude=false;
 }
 
+instance serializable_mii : FStarC.Serialize.serializable module_inclusion_info =
+  let open FStarC.Serialize in
+  let open FStarC.Syntax.Serialize in
+  let ser_ids w (e:exported_ids) : ML unit =
+    ser w (elems e.exported_id_terms);
+    ser w (elems e.exported_id_fields)
+  in
+  let deser_ids r : ML exported_ids =
+    let terms : list string = deser r in
+    let fields : list string = deser r in
+    { exported_id_terms = from_list terms; exported_id_fields = from_list fields }
+  in
+  {
+    ser = (fun w mii ->
+      ser_option ser_ids w mii.mii_exported_ids;
+      ser_option ser_ids w mii.mii_trans_exported_ids;
+      ser w mii.mii_includes;
+      ser w mii.mii_no_prelude);
+    deser = (fun r ->
+      let mii_exported_ids = deser_option deser_ids r in
+      let mii_trans_exported_ids = deser_option deser_ids r in
+      let mii_includes : option (list (lident & restriction)) = deser r in
+      let mii_no_prelude : bool = deser r in
+      { mii_exported_ids; mii_trans_exported_ids; mii_includes; mii_no_prelude });
+  }
+
 let as_includes : option (list (lident & restriction)) -> ML (ref (list (lident & restriction))) = function
     | None -> mk_ref []
     | Some l -> mk_ref l

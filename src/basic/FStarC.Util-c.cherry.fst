@@ -921,13 +921,21 @@ let save_2values_to_file _ _ _ = unsupported "save_2values_to_file"
 
 let load_2values_from_file _ = None
 
-let save_3values_to_file _ _ _ _ = unsupported "save_3values_to_file"
+[@@custard_extern "cherry_file_get_range"]
+private assume val c_file_get_range : string -> U64.t -> U64.t -> ML string
+[@@custard_extern "cherry_write_file_atomic"]
+private assume val c_write_file_atomic : string -> string -> ML unit
 
-let load_1value_from_file3 _ = None
+let file_get_range fn off len =
+  if off < 0 || len < 0 then failwith "file_get_range: negative offset or length";
+  let s = c_file_get_range fn (U64.uint_to_t off) (U64.uint_to_t len) in
+  check ();
+  s
 
-let load_2values_from_file3 _ = None
-
-let load_3rd_value_from_file3 _ = None
+let write_file_atomic fn contents =
+  create_parent fn;
+  c_write_file_atomic fn contents;
+  check ()
 
 let print_exn e = exn_message e
 

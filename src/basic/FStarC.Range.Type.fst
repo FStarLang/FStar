@@ -98,6 +98,13 @@ let mk_rng file_name start_pos end_pos = {
 
 let mk_range f b e = let r = mk_rng f b e in range_of_rng r r
 
+let file_of_rng r = r.file_name
+let start_of_rng r = r.start_pos
+let end_of_rng r = r.end_pos
+let rng_of_parts file_name start_pos end_pos = { file_name; start_pos; end_pos }
+let int_of_pos p = p
+let pos_of_int i = i
+
 open FStarC.Json
 let json_of_pos (r: pos): json
   = JsonAssoc [

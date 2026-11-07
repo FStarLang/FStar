@@ -601,7 +601,7 @@ type sig_metadata = {
     // are matched against the implementation out of order.
     // ^ This sigelt was created from a splice_t with a proof of well-typing,
     // and does not need to be checked again.
-    sigmeta_extension_data: list (string & dyn); //each extension can register some data with a sig
+    sigmeta_extension_data: list (string & term); //each extension can register some data with a sig
     sigmeta_type_constructor:bool
     // ^ This assumed declaration declares a type constructor, i.e. the result of
     // its type is a sort. Inferred by the typechecker, which has to normalize to

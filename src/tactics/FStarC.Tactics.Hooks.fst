@@ -582,7 +582,7 @@ let splice
                 sigmeta = { se.sigmeta with
                   sigmeta_extension_data =
                         (match blob_opt with
-                         | Some (s, blob) -> [s, Dyn.mkdyn blob]
+                         | Some (s, blob) -> [s, blob]
                          | None -> []);
                   sigmeta_already_checked = checked; }
             }

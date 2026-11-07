@@ -48,6 +48,15 @@ val mk_pos: int -> int -> pos
 val mk_rng : string -> pos -> pos -> rng
 val mk_range: string -> pos -> pos -> range
 
+(* The representation of [rng] and [pos], for FStarC.Syntax.Serialize.  [rng_of_parts]
+   is [mk_rng] for a file name that already is a basename. *)
+val file_of_rng : rng -> string
+val start_of_rng : rng -> pos
+val end_of_rng : rng -> pos
+val rng_of_parts : string -> pos -> pos -> rng
+val int_of_pos : pos -> int
+val pos_of_int : int -> pos
+
 val json_of_pos: pos -> FStarC.Json.json
 val json_of_rng: rng -> FStarC.Json.json
 val json_of_range: range -> FStarC.Json.json
