@@ -177,22 +177,43 @@ static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
   return o;
 }
 
-static inline void cherry_inc(cherry_obj *o) {
+/* Counting is on every path of the generated code, which is large enough
+   that GCC stops inlining it: the common case, a cell of this thread's, is
+   forced inline, and the others (shared or persistent) are not. */
+#if defined(__GNUC__)
+#define CHERRY_ALWAYS_INLINE inline __attribute__((always_inline))
+#define CHERRY_NOINLINE __attribute__((noinline, unused))
+#define CHERRY_LIKELY(c) __builtin_expect(!!(c), 1)
+#else
+#define CHERRY_ALWAYS_INLINE inline
+#define CHERRY_NOINLINE
+#define CHERRY_LIKELY(c) (c)
+#endif
+
+static CHERRY_NOINLINE void cherry_inc_slow(cherry_obj *o, int32_t rc) {
+  if (rc < 0) __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);
+}
+
+static CHERRY_ALWAYS_INLINE void cherry_inc(cherry_obj *o) {
   if (cherry_is_scalar(o)) return;
   int32_t rc = cherry_rc_load(o);
-  if (rc > 0) cherry_rc_store(o, rc + 1);
-  else if (rc < 0) __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);
+  if (CHERRY_LIKELY(rc > 0)) cherry_rc_store(o, rc + 1);
+  else cherry_inc_slow(o, rc);
+}
+
+static CHERRY_NOINLINE bool cherry_dec_ref_slow(cherry_obj *o, int32_t rc) {
+  if (rc == 0) return false;
+  return __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) == 0;
 }
 
 /* Drop a reference; true when it was the last one and the cell has to be
    freed. */
-static inline bool cherry_dec_ref(cherry_obj *o) {
+static CHERRY_ALWAYS_INLINE bool cherry_dec_ref(cherry_obj *o) {
   if (cherry_is_scalar(o)) return false;
   int32_t rc = cherry_rc_load(o);
+  if (CHERRY_LIKELY(rc > 1)) { cherry_rc_store(o, rc - 1); return false; }
   if (rc == 1) return true;
-  if (rc > 1) { cherry_rc_store(o, rc - 1); return false; }
-  if (rc == 0) return false;
-  return __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) == 0;
+  return cherry_dec_ref_slow(o, rc);
 }
 
 /* Marking walks everything a value reaches, in one of two modes: making it
@@ -239,7 +260,7 @@ void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfree-nonheap-object"
 #endif
-static inline void cherry_dec(cherry_obj *o) {
+static CHERRY_ALWAYS_INLINE void cherry_dec(cherry_obj *o) {
   if (cherry_dec_ref(o)) free(o);
 }
 #if defined(__GNUC__) && !defined(__clang__)
@@ -480,8 +501,13 @@ cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int le
 /* FStarC.String's byte-level access, with FStarC.SmallInt offsets (signed,
    in a uint64_t): the size, the byte at an offset (-1 out of bounds), and the
    bytes [i, j) clamped to the string. */
-uint64_t cherry_str_size64(cherry_string s);
-uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i);
+static inline uint64_t cherry_str_size64(cherry_string s) {
+  return (uint64_t)cherry_str_size(s);
+}
+static inline uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i) {
+  return (int64_t)i >= 0 && i < cherry_str_size(s)
+    ? (unsigned char)cherry_str_data(s)[i] : UINT64_MAX;
+}
 cherry_string cherry_str_slice64(cherry_string s, uint64_t i, uint64_t j);
 /* The one-byte string of [b] < 256, which need not be UTF-8. */
 cherry_string cherry_str_of_byte(uint32_t b);
