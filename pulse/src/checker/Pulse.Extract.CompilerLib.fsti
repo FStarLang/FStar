@@ -27,3 +27,4 @@ val mk_let (b:R.binder) (head body:R.term) : Dv R.term
 val mk_if (b then_ else_:R.term) : Dv R.term
 
 val mk_extracted_as_attr (impl: R.term) : Dv R.term
+val mk_extraction_error_attr (message: string) : Dv R.term

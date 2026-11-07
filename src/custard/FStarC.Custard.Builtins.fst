@@ -753,6 +753,21 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     | _ -> TAny in
   let c_only = Options.codegen () = Some Options.C in
   match ns, id with
+  // Only the reserved native ABI erases its outcome wrapper. The ordinary
+  // effects-library outcome datatype must keep both constructors as data.
+  | ["Pulse"; "Lib"; "Effects"; "Rules"], "native_outcome" ->
+    Some (Rule_type (fun tys ->
+      if not (Options.codegen () = Some Options.OCaml ||
+              Options.codegen () = Some Options.FSharp ||
+              Options.custard_cherry ()) then
+        FStarC.Errors.raise_error0 FStarC.Errors.Fatal_ExtractionUnsupported
+          [FStarC.Errors.Msg.text "Native Pulse exceptions require OCaml, FSharp, or Cherry; standalone C is not supported."];
+      match tys with
+      | [_; a] -> a
+      | _ -> failwith "Custard: malformed native_outcome type"))
+  | ["Pulse"; "Lib"; "Dv"], "goto_label" ->
+    Some (Rule_type (fun tys -> TArrow (elt_of tys, E_Impure, TUnit)))
+
   (* Types.  Every one of them is a pointer. *)
   | ["Pulse"; "Lib"; "Vec"], "vec"
   | ["Pulse"; "Lib"; "Array"; "Core"], "array"

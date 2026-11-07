@@ -1323,9 +1323,14 @@ let rec reuse_at_death (x:string) (wt:cty) (old:name) (ps:list pat) (e:expr) : M
    a call there needs no test: the caller tests. *)
 let held : ref owned = mk_ref []
 let tail : ref bool = mk_ref true
+(* Pulse stack buffers are borrowed pointers, not counted owners. Their cells
+   nevertheless own values and must be emptied on every exit from the scope,
+   including a native Pulse raise or a lexical return carried by an exception. *)
+let stack_cleanups : ref (list expr) = mk_ref []
 
 let exn_exit (o:owned) (t:cty) : ML expr =
-  decs (o @ !held) (mk (EOp ({ po_op = ExnExit; po_ty = None }, [])) t E_Impure)
+  let exit = decs (o @ !held) (mk (EOp ({ po_op = ExnExit; po_ty = None }, [])) t E_Impure) in
+  List.fold_right seq !stack_cleanups exit
 
 let exn_pending : expr =
   mk (EOp ({ po_op = ExnPending; po_ty = None }, []))
@@ -1369,24 +1374,34 @@ and rc_live (o:owned) (e:expr) : ML expr =
   (* A Pulse stack reference or array of counted values (cherry.md,
      "References").  The cells are declared empty and filled by [PBuf "init"],
      which takes the value; their references are released when the scope
-     ends.  Pulse code does not raise, so nothing leaves the scope early. *)
+     ends, normally or by exceptional unwinding. *)
   | ELet (x, t, { e = EOp ({ po_op = BufCreate LStack }, [v; n]) }, e2) when is_pbuf t ->
     let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
     let op = (match e1.e with EOp (op, _) -> op | _ -> { po_op = BufCreate LStack; po_ty = None }) in
     if EAny? v.e then unsupported "an uninitialized Pulse reference or array of reference-counted values" else
-    if not (is_atom n) then
+    if not (is_atom v) then
+      let vx = fresh () in
+      rc_live o (let_ vx v.ty v { e with e = ELet (x, t, { e1 with e = EOp (op, [var vx v.ty; n]) }, e2) })
+    else if not (is_atom n) then
       let nx = fresh () in
       rc_live o (let_ nx n.ty n { e with e = ELet (x, t, { e1 with e = EOp (op, [v; var nx n.ty]) }, e2) })
     else
     let unit_ty = TUnit in
     let pop (f:string) (args:list expr) : expr =
       mk (EOp ({ po_op = PBuf f; po_ty = None }, args)) unit_ty E_Impure in
+    let drop = pop "drop" [var x t; n] in
     let r = fresh () in
     let body =
       seq (pop "init" [var x t; v; n])
-        (let_ r e2.ty e2 (seq (pop "drop" [var x t; n]) (var r e2.ty))) in
+        (let_ r e2.ty e2 (seq drop (var r e2.ty))) in
     let create = { e1 with e = EOp (op, [{ v with e = EAny }; n]) } in
-    { e with e = ELet (x, t, create, rc o body) }
+    (* The initializer and length have already been evaluated. PBuf.init itself
+       does not throw, so the cells are initialized before any throwing body. *)
+    let saved = !stack_cleanups in
+    stack_cleanups := drop :: saved;
+    let body = rc o body in
+    stack_cleanups := saved;
+    { e with e = ELet (x, t, create, body) }
 
   (* A field of a borrowed value is borrowed for as long as the value, which
      outlives this scope, as the fields a match binds are. *)
@@ -1407,6 +1422,11 @@ and rc_live (o:owned) (e:expr) : ML expr =
     let o2 = if is_np t then (x, t) :: o2 else o2 in
     let_ x t e1' (rc o2 e2)
 
+  (* Dead-binder elimination may leave a discarded allocation. Keep its scope
+     explicit so its initialized cells are released even if b throws. *)
+  | ESeq (a, b) when is_pbuf a.ty &&
+      (match a.e with EOp ({ po_op = BufCreate LStack }, _) -> true | _ -> false) ->
+    rc_live o (let_ (fresh ()) a.ty a b)
   | ESeq (a, b) when is_np a.ty -> rc_live o (let_ (fresh ()) a.ty a b)
   | ESeq (a, b) ->
     let fvb = fv b in
@@ -1762,6 +1782,7 @@ let run_let (l:dlet) : ML dlet =
           |> List.filter (fun (b, ow) -> ow && is_np b.b_ty)
           |> List.map (fun (b, _) -> (b.b_name, b.b_ty)) in
   held := [];
+  stack_cleanups := [];
   (* A global's initializer has no caller to test for it. *)
   tail := Cons? l.dl_binders;
   if Nil? o && not (touches l.dl_body) && not (HashTable.mem !raise_tbl (string_of_name l.dl_name)) then l else

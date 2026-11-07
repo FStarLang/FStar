@@ -22,10 +22,14 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Checker.Base
 
+// Besides checking an ordinary stateful call, split a native_outcome result
+// into normal continuation and lexical propagation. The callback checks that
+// generated control flow; post_hint applies to the unwrapped normal result.
 val check
   (g:env)
   (pre:term)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_ST? t.term})
+  (check:check_t)
   : T.Tac (checker_result_t g pre post_hint)

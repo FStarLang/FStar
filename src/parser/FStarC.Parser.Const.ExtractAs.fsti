@@ -21,5 +21,8 @@ open FStarC.Ident
 open FStarC.Syntax.Syntax
 
 val extract_as_lid : lid
+val extraction_error_lid : lid
+
+val check_extraction_error (se: sigelt) : ML unit
 
 val is_extract_as_attr (attr: attribute) : ML (option term)

@@ -307,6 +307,8 @@ fn insert
           with vcontents. assert (pts_to contents vcontents);
           with s. assert (pts_to vcontents s);
           assert (pure (Seq.equal s pht.repr.seq));
+          assert (pure (SZ.v (SZ.add voff 1sz) == SZ.v voff + 1));
+          PHT.saunb_extend pht.repr (SZ.v cidx) (SZ.v voff) k;
           off := voff + 1sz;
         };
       }
