@@ -17,7 +17,9 @@ module FStarC.SmallInt
 
 (* The Cherry implementation: a 64-bit two's complement integer, stored in a
    [U64.t].  Addition and subtraction wrap; the signed comparisons flip the
-   sign bit and compare unsigned.  (The OCaml build has 63 bits.) *)
+   sign bit and compare unsigned, and are C's signed comparisons in Cherry,
+   which the C compiler can bound an array index with.  (The OCaml build has
+   63 bits.) *)
 
 module U64 = FStar.UInt64
 module U32 = FStar.UInt32
@@ -59,12 +61,16 @@ let ( - ) a b = U64.sub_mod a b
 
 let flip (a:t) : t = U64.logxor a 0x8000000000000000UL
 
+[@@custard_extern "cherry_smallint_lt"]
 let ( < ) a b = U64.lt (flip a) (flip b)
 
+[@@custard_extern "cherry_smallint_le"]
 let ( <= ) a b = U64.lte (flip a) (flip b)
 
+[@@custard_extern "cherry_smallint_gt"]
 let ( > ) a b = U64.gt (flip a) (flip b)
 
+[@@custard_extern "cherry_smallint_ge"]
 let ( >= ) a b = U64.gte (flip a) (flip b)
 
 let max a b = if a >= b then a else b

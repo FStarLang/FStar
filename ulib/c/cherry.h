@@ -322,6 +322,10 @@ static inline cherry_int cherry_smallint_to_int(uint64_t x) {
   intptr_t v = (intptr_t)(int64_t)x;
   return cherry_int_fits(v) ? CHERRY_INT_SMALL(v) : cherry_int_of_i64((int64_t)x);
 }
+static inline bool cherry_smallint_lt(uint64_t a, uint64_t b) { return (int64_t)a < (int64_t)b; }
+static inline bool cherry_smallint_le(uint64_t a, uint64_t b) { return (int64_t)a <= (int64_t)b; }
+static inline bool cherry_smallint_gt(uint64_t a, uint64_t b) { return (int64_t)a > (int64_t)b; }
+static inline bool cherry_smallint_ge(uint64_t a, uint64_t b) { return (int64_t)a >= (int64_t)b; }
 #ifdef __SIZEOF_INT128__
 /* The same at 128 bits, for --custard_int128; [to] wraps modulo 2^128. */
 __extension__ typedef unsigned __int128 cherry_u128;
