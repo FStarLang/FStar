@@ -105,8 +105,9 @@ let boxed_types (p:program) : ML (list string) =
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
 let runtime_types : list string = ["Prims.int"; "Prims.string"; iarray_key]
 
-(* The operands a [Dyn] operation takes owned: the value [mk] wraps. *)
-let dyn_owns (f:string) : list bool = if f = "mk" then [true] else []
+(* The operands a [Dyn] operation takes owned: the value [mk] wraps, and
+   the [dyn] [get] unwraps, whose payload it moves out. *)
+let dyn_owns (f:string) : list bool = [true]
 
 (* The operands an immutable array operation (Syntax.IArr) takes owned: the
    array an update or a push changes in place when it can, and the value it
