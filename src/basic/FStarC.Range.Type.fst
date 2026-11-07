@@ -52,8 +52,8 @@ let max i j = if i < j then j else i
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type rng = {
   file_name:file_name;
-  (* ^ Note: this must be a basename, without any directory components. The
-  interface should protect this fact. *)
+  (* The parser stores include-relative source paths, such as A/B/C.fst,
+     rather than machine-specific absolute paths. *)
   start_pos:pos;
   end_pos:pos;
 }
@@ -91,7 +91,7 @@ let mk_pos l c : pos =
     let c = max 0 c in
     l * col_limit + (if c >= col_limit then col_limit - 1 else c)
 let mk_rng file_name start_pos end_pos = {
-    file_name = Filepath.basename file_name;
+    file_name = file_name;
     start_pos = start_pos;
     end_pos   = end_pos
 }

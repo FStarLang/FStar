@@ -31,10 +31,33 @@ let cached_fun #a (cache : HashTable.t string a) (f : string -> ML a) : string -
       HashTable.add cache s v;
       v
 
-(* caches *)
-let _full_include : ref (option (list string)) = mk_ref None
-let _module_include_paths_normalized : ref (option (list module_include_path)) = mk_ref None
-let find_file_cache : HashTable.t string (option string) = HashTable.create 100
+type source_root_trie = {
+  flat_root: option string;
+  recursive_root: option string;
+  children: HashTable.t string source_root_trie;
+}
+
+type normalized_include_path_cache = {
+  paths: list module_include_path;
+  source_roots: source_root_trie;
+}
+
+type cache_state_t = {
+  full_include: ref (option (list string));
+  normalized_include_paths: ref (option normalized_include_path_cache);
+  resolved_files: HashTable.t string (option string);
+  source_file_names: HashTable.t string string;
+}
+
+(* "A/B.fst" resolves to "/work/lib/A/B.fst", whose owning root yields
+   "A/B.fst". Module lookup and ranges share the root index; clear invalidates
+   it together with resolution and final-name caches. *)
+let cache_state = {
+  full_include = mk_ref None;
+  normalized_include_paths = mk_ref None;
+  resolved_files = HashTable.create 100;
+  source_file_names = HashTable.create 100;
+}
 
 (* Bumped every time the include path (or anything else affecting file
 resolution) changes. Clients that cache results derived from the include path
@@ -42,9 +65,10 @@ can use this to invalidate their own caches. *)
 let _epoch : ref int = mk_ref 0
 
 let clear () : ML unit =
-  HashTable.clear find_file_cache;
-  _full_include := None;
-  _module_include_paths_normalized := None;
+  HashTable.clear cache_state.resolved_files;
+  HashTable.clear cache_state.source_file_names;
+  cache_state.full_include := None;
+  cache_state.normalized_include_paths := None;
   _epoch := !_epoch + 1;
   ()
 
@@ -204,25 +228,92 @@ let module_include_paths () : ML (list module_include_path) =
 
 let epoch () : ML int = !_epoch
 
-let full_include_path () : ML _ =
-  // Stats.record "Find.full_include_path" fun () ->
-  match !_full_include with
-  | Some paths -> paths
-  | None ->
-    let res = module_include_paths () |> include_dirs in
-    _full_include := Some res;
-    res
+let full_include_path =
+  let cached = cache_state.full_include in
+  fun () ->
+    // Stats.record "Find.full_include_path" fun () ->
+    match !cached with
+    | Some paths -> paths
+    | None ->
+      let res = module_include_paths () |> include_dirs in
+      cached := Some res;
+      res
+
+let empty_source_root_trie () : ML source_root_trie = {
+  flat_root = None;
+  recursive_root = None;
+  children = HashTable.create 8;
+}
+
+let rec insert_source_root
+  (components:list string)
+  (root:module_include_path)
+  (trie:source_root_trie)
+: ML source_root_trie =
+  match components with
+  | [] ->
+    (match root.kind with
+     | Flat -> { trie with flat_root = Some root.dir }
+     | Recursive -> { trie with recursive_root = Some root.dir })
+  | component :: rest ->
+    let child =
+      match HashTable.try_find trie.children component with
+      | Some child -> child
+      | None -> empty_source_root_trie ()
+    in
+    HashTable.add trie.children component (insert_source_root rest root child);
+    trie
+
+let rec find_source_root
+  (components:list string)
+  (trie:source_root_trie)
+  (best:option string)
+: ML (option string) =
+  let best =
+    match components, trie.flat_root, trie.recursive_root with
+    | [], _, _ -> best
+    | [_], Some root, _ -> Some root
+    | _, _, Some root -> Some root
+    | _ -> best
+  in
+  match components with
+  | [] -> best
+  | component :: rest ->
+    (match HashTable.try_find trie.children component with
+     | None -> best
+     | Some child -> find_source_root rest child best)
+
+let normalized_module_include_paths =
+  let cached = cache_state.normalized_include_paths in
+  fun () ->
+    match !cached with
+    | Some paths -> paths
+    | None ->
+      let paths = module_include_paths ()
+        |> List.map (fun path ->
+          { path with dir = Filepath.normalize_file_path path.dir })
+      in
+      let normalized = {
+        paths;
+        source_roots =
+          List.fold_left (fun trie path ->
+            insert_source_root (String.split ['/'] path.dir) path trie)
+            (empty_source_root_trie ()) paths;
+      } in
+      cached := Some normalized;
+      normalized
 
 let module_include_paths_normalized () : ML (list module_include_path) =
-  match !_module_include_paths_normalized with
-  | Some paths -> paths
-  | None ->
-    let paths = module_include_paths ()
-      |> List.map (fun path ->
-        { path with dir = Filepath.normalize_file_path path.dir })
-    in
-    _module_include_paths_normalized := Some paths;
-    paths
+  (normalized_module_include_paths ()).paths
+
+let relative_source_path_normalized (filename:string) : ML (option string) =
+  let roots = (normalized_module_include_paths ()).source_roots in
+  find_source_root (String.split ['/'] filename) roots None
+  |> Option.map (fun dir ->
+    BU.substring_from filename (String.length dir + 1))
+
+let relative_source_path (filename:string) : ML (option string) =
+  relative_source_path_normalized (Filepath.normalize_file_path filename)
 
 let do_find (paths : list string) (filename : string) : ML (option string) =
   // Stats.record "Find.do_find" fun () ->
@@ -249,8 +340,34 @@ let do_find (paths : list string) (filename : string) : ML (option string) =
 
 (* Note: eta important below. *)
 let find_file =
-  cached_fun find_file_cache fun s ->
+  let cached = cache_state.resolved_files in
+  cached_fun cached fun s ->
     do_find (full_include_path ()) s
+
+let source_file_name_of_normalized
+  (filename:string)
+  (fallback:unit -> ML string)
+: ML string =
+  match relative_source_path_normalized filename with
+  | Some relative -> relative
+  | None -> fallback ()
+
+let source_file_name =
+  let cached = cache_state.source_file_names in
+  cached_fun cached fun filename ->
+    // Resolve relative names first: an incremental parser may already have an
+    // include-relative range filename, rather than a path relative to cwd.
+    match find_file filename with
+    | Some path ->
+      let path = Filepath.normalize_file_path path in
+      source_file_name_of_normalized path (fun _ -> Filepath.basename path)
+    | None ->
+      if Filepath.is_path_absolute filename
+      then
+        source_file_name_of_normalized
+          (Filepath.normalize_file_path filename)
+          (fun _ -> Filepath.basename filename)
+      else BU.replace_char filename '\\' '/'
 
 let find_file_odir =
   (* NOTE: this function is not cached, since the plugin-building code
@@ -293,18 +410,12 @@ let locate_fstarc_cui () : ML (option string) =
   if Filepath.file_exists f then Some f else None
 
 
-(* When reading checked files, we could obtain ranges where the
-filepath does not make sense any more. For instance if we check
-`a/A.fst`, and then go into `a/` and check `B.fst`, the ranges
-in `A.fst.checked` will still refer to `a/A.fst`, which is not
-a valid path. To palliate this, we
-  1) just take the basename (ignore the path completely); and
-  2) try to find this file in our include path.
-
-This function is called by error reporting (both batch and IDE). *)
-let refind_file (f:string) : ML string =
+(* Resolve include-relative filenames from ranges under the current include
+paths. Error reporting must retain the original name if lookup or normalization
+fails, including when reading checked files from another location. *)
+let refind_file f =
   try
-    match find_file (Filepath.basename f) with
-    | None -> f // Couldn't find file; just return the original path
-    | Some abs -> abs
+    match find_file f with
+    | None -> f
+    | Some path -> Filepath.normalize_file_path path
   with _ -> f
