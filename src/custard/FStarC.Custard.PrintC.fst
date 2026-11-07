@@ -2459,7 +2459,7 @@ let is_stmt (e:expr) : bool =
   | EOp ({ po_op = BufCreate _ }, _) | EOp ({ po_op = BufWrite }, _)
   | EOp ({ po_op = BufBlit }, _) | EOp ({ po_op = BufFree }, _)
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
-  | EOp ({ po_op = RefSet }, _)
+  | EOp ({ po_op = RefSet }, _) | EOp ({ po_op = RefUnpeek }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = ResetFree }, _)
   | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = ExnRaise }, _) | EOp ({ po_op = ExnExit }, _) -> true
@@ -2556,6 +2556,7 @@ let rec is_pure (e:expr) : ML bool =
   | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _)
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
+  | EOp ({ po_op = RefPeek }, _) | EOp ({ po_op = RefUnpeek }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
   | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
@@ -3146,6 +3147,8 @@ and c_expr_doc (out:ref c_body) (ind:string) (e:expr) : ML c_expression =
     c_postfix (rc_fn "new" e.ty ^ "(" ^ v' ^ ")")
   | EOp ({ po_op = RefGet }, [r]) ->
     c_postfix (rc_fn "get" r.ty ^ "(" ^ c_expr out ind r ^ ")")
+  | EOp ({ po_op = RefPeek }, [r]) ->
+    c_postfix (rc_fn "peek" r.ty ^ "(" ^ c_expr out ind r ^ ")")
   | EOp ({ po_op = ExnPending }, []) -> c_opaque "CHERRY_EXN_PENDING()"
   | EOp ({ po_op = ExnTake }, []) -> c_postfix "cherry_exn_take()"
   | EOp ({ po_op = Dyn f }, [a]) ->
@@ -3831,6 +3834,11 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
     let r' = c_expr out ind r in
     let v' = c_rvalue out ind v.ty v in
     !out ++ CText (ind ^ rc_fn "set" r.ty ^ "(" ^ r' ^ ", " ^ v' ^ ");\n") ++ unit_result ind d
+  | EOp ({ po_op = RefUnpeek }, [r; v]) ->
+    let out = mk_ref empty_body in
+    let r' = c_expr out ind r in
+    let v' = c_expr out ind v in
+    !out ++ CText (ind ^ rc_fn "unpeek" r.ty ^ "(" ^ r' ^ ", " ^ v' ^ ");\n") ++ unit_result ind d
 
   (* Cherry: the reset of a cell a constructor reuses (cherry.md, "Heap cell
      reuse"). *)
@@ -5971,7 +5979,9 @@ let cherry_ref_helpers () : ML (list string & list string) =
         "static inline void " ^ p ^ "_dec(cherry_ref r)";
         "static inline void " ^ p ^ "_mark(cherry_ref r, int m)";
         "static inline void " ^ p ^ "_free(cherry_obj *r, int m)";
-        "static inline void " ^ p ^ "_markf(cherry_obj *r, int m)" ] in
+        "static inline void " ^ p ^ "_markf(cherry_obj *r, int m)";
+        "static inline " ^ decl_of t (p ^ "_peek(cherry_ref r)");
+        "static inline void " ^ p ^ "_unpeek(cherry_ref r, " ^ decl_of t "x" ^ ")" ] in
       let op (o:string) (x:string) : ML string =
         if counted then "  " ^ rc_fn o t ^ "(" ^ x ^ ");\n" else "" in
       let cell = "  " ^ s ^ " *c = (" ^ s ^ " *)r;\n" in
@@ -5998,7 +6008,15 @@ let cherry_ref_helpers () : ML (list string & list string) =
          else "  (void)cherry_mark_ref(r, m);\n");
         "  (void)m;\n" ^ (if counted then cell ^ op "dec" "c->v" else "") ^ "  free(r);\n";
         "  (void)r; (void)m;\n" ^
-        (if counted then cell ^ "  " ^ rc_fn "mark" t ^ "(c->v, m);\n" else "") ] in
+        (if counted then cell ^ "  " ^ rc_fn "mark" t ^ "(c->v, m);\n" else "");
+        (* A local cell stays local, and keeps its value, for as long as the
+           code between [peek] and [unpeek] runs (Cherry.peek_ok). *)
+        cell ^
+        "  if (cherry_ref_is_local(r)) return c->v;\n" ^
+        "  cherry_ref_lock(r);\n  " ^ decl_of t "x" ^ " = c->v;\n" ^ op "inc" "x" ^
+        "  cherry_ref_unlock(r);\n  return x;\n";
+        "  (void)x;\n" ^
+        (if counted then "  if (!cherry_ref_is_local(r)) " ^ rc_fn "dec" t ^ "(x);\n" else "  (void)r;\n") ] in
       protos := !protos @
         [s ^ " { cherry_ref_hdr h; " ^ decl_of t "v" ^ "; };\n" ^
          String.concat "" (sigs |> List.map (fun g -> g ^ ";\n"))];

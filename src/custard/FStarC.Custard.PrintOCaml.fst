@@ -631,7 +631,7 @@ let op_name (o:prim_op) : ML string =
         operand. *)
      | Commented _ ->
        failwith "Custard: a comment is not an OCaml operator"
-     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
+     | RcInc | RcDec | RefNew | RefGet | RefSet | RefPeek | RefUnpeek | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
      | ExnRaise | ExnPending | ExnTake | ExnExit ->
        failwith "Custard: reference counting is not an OCaml operator"
      | ClosureNew | ClosureCall ->
@@ -656,7 +656,7 @@ let op_name (o:prim_op) : ML string =
         operand. *)
      | Commented _ ->
        failwith "Custard: a comment is not an OCaml operator"
-     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
+     | RcInc | RcDec | RefNew | RefGet | RefSet | RefPeek | RefUnpeek | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
      | ExnRaise | ExnPending | ExnTake | ExnExit ->
        failwith "Custard: reference counting is not an OCaml operator"
      | ClosureNew | ClosureCall ->
