@@ -411,10 +411,15 @@ type op =
   (** Cherry.  The operations on an ML reference ([TRef (RGc, t)]), which the
       Cherry pass rewrites the buffer operations on one into: [RefNew v]
       allocates a cell holding [v], [RefGet r] returns a counted copy of its
-      value, and [RefSet r v] replaces it. *)
+      value, and [RefSet r v] replaces it.  [RefPeek r] reads the value
+      without counting it when the cell is this thread's, and a counted copy
+      otherwise, which [RefUnpeek r x] then releases: the Cherry pass uses
+      them for a read the code around it only borrows. *)
   | RefNew
   | RefGet
   | RefSet
+  | RefPeek
+  | RefUnpeek
   (** Cherry: heap cell reuse (cherry.md).  [Reset (c, kept) x] takes the
       owned cell [x], built with constructor [c], whose fields the branch
       has read; [kept] says which of them the branch goes on to use.  If
