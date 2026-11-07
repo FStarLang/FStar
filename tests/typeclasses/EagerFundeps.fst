@@ -31,3 +31,14 @@ let test3 (x : ref int) (y : nat) = pts_to x y
 (* With nothing known about [y], the fundep determines its type. *)
 let test4 (x : ref int) = exists y. pts_to x y
 let test5 (x : ref int) = exists y. pts_to x y /\ y == 3
+
+(* The pointer may be a data constructor application whose type arguments
+   are still uvars when the value is checked: [Cell r i : cell ?a ?i]. They
+   are pinned to the types of [r] and [i], keeping the refinement of [nat]. *)
+noeq type cell a i = | Cell : a -> i -> cell a i
+
+instance has_pts_to_cell (x : Type) : has_pts_to (cell (ref x) nat) x = {
+  pts_to = (fun c x -> True);
+}
+
+let test6 (r : ref int) (i : nat) (y : erased int) : GTot prop = pts_to (Cell r i) y

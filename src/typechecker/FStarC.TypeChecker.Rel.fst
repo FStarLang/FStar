@@ -5700,7 +5700,7 @@ let is_tcresolve_tac (tac:term) : ML bool =
     | _ -> false
   )
 
-let resolve_closed_typeclass_implicits (env:env) (bound_of : term -> ML (option term)) (g:guard_t) : ML guard_t =
+let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML (option term)) (g:guard_t) : ML guard_t =
   let is_candidate (imp:implicit) : ML bool =
     match imp.imp_uvar.ctx_uvar_meta with
     | Some (Ctx_uvar_meta_tac tac) ->
@@ -5730,16 +5730,43 @@ let resolve_closed_typeclass_implicits (env:env) (bound_of : term -> ML (option 
       in
       if Nil? fds || not (output_open ()) || inputs_have_univ_uvars () then false else
       if not (typeclass_goal_is_open env typ) then true else
+      (* The input may be a uvar, or a rigid type whose arguments are uvars,
+         e.g. [cell ?a ?i] for the type of a data constructor application
+         [Cell x i]: pin each such uvar to its bound.  Only a uvar that is
+         the whole input is pinned to the base type of its bound: an
+         argument [x : vec t{p}] has an instance at [vec t].  A nested one
+         keeps the refinement: [Cell x (i:nat)] has an instance at
+         [cell _ nat].  A uvar without a ground bound may still have a
+         rigid one with uvars, e.g. [?p] bounded by [cell ?a ?i]: pin it to
+         that, and the nested uvars in turn. *)
+      let rec pin (top:bool) (a:term) : ML unit =
+        if has_free_uvars a then
+          match bound_of true a with
+          | Some b ->
+            let b = if top then fst (base_and_refinement_maybe_delta false env b) else b in
+            ignore (teq_nosmt env a b)
+          | None ->
+            let pin_args (t:term) : ML unit =
+              let hd, args = U.head_and_args_full (SS.compress t) in
+              match (U.un_uinst (SS.compress hd)).n with
+              | Tm_fvar _ -> List.iter (fun (x, _) -> pin false x) args
+              | _ -> ()
+            in
+            match bound_of false a with
+            | Some b ->
+              (match (U.un_uinst (SS.compress (fst (U.head_and_args_full (SS.compress b))))).n with
+               | Tm_fvar _ ->
+                 (match teq_nosmt env a b with
+                  | Some _ -> pin_args a
+                  | None -> ())
+               | _ -> ())
+            | None -> pin_args a
+      in
       let rec go (i:int) (cargs:list arg) : ML unit =
         match cargs with
         | [] -> ()
         | (a, _) :: rest ->
-          if not (List.mem i fds) && has_free_uvars a then (
-            match bound_of a with
-            (* Pin to the base type: x : vec t{p} has an instance at vec t. *)
-            | Some b -> ignore (teq_nosmt env a (fst (base_and_refinement_maybe_delta false env b)))
-            | None -> ()
-          );
+          if not (List.mem i fds) then pin true a;
           go (i + 1) rest
       in
       go 0 cargs;

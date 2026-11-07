@@ -97,9 +97,11 @@ val try_solve_single_valued_implicits : env -> is_tac:bool -> Env.implicits -> M
    class, so that the fundeps are known when checking subsequent arguments.
    An input of the class that is an unsolved uvar is first solved to the bound
    given by [bound_of], if any (e.g. from a deferred subtyping constraint).
+   [bound_of true] only returns ground bounds; [bound_of false] may return a
+   bound with uvars, whose own uvars are then pinned in turn.
    Goals that fail are kept for [resolve_implicits], which reports the error.
    Disabled by [--ext compat:no_eager_tcresolve]. *)
-val resolve_closed_typeclass_implicits : env -> bound_of:(term -> ML (option term)) -> guard_t -> ML guard_t
+val resolve_closed_typeclass_implicits : env -> bound_of:(bool -> term -> ML (option term)) -> guard_t -> ML guard_t
 val resolve_implicits         : env -> guard_t -> ML guard_t
 val resolve_generalization_implicits : env -> guard_t -> ML guard_t
 val resolve_implicits_tac     : env -> guard_t -> ML tagged_implicits

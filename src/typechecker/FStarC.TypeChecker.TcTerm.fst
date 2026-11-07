@@ -3026,7 +3026,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
             let g =
               if not (FStarC.Class.Listlike.is_empty g.implicits)
                  && not (is_empty (Free.uvars targ))
-              then Rel.resolve_closed_typeclass_implicits env (bound_of_flex true g.deferred) g
+              then Rel.resolve_closed_typeclass_implicits env (fun rg -> bound_of_flex rg g.deferred) g
               else g
             in
             let bqual = SS.subst_bqual subst bqual in
