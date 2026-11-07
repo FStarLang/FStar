@@ -6054,7 +6054,8 @@ let cherry_exn_helpers (p:program) : ML (list string & list string) =
   List.collect fst rs, List.collect snd rs
 
 (* For each type a [dyn] is made of or read at: its type information, and
-   [mk] and [get].  Whether the value fits in the word is the C compiler's
+   [mk] and [get].  Both take the [dyn] owned: [get] moves the payload out,
+   and frees a unique box.  Whether the value fits in the word is the C compiler's
    to decide, as a constant condition. *)
 let cherry_any_helpers () : ML (list string & list string) =
   let one (i:int) (t:cty) : ML (list string & list string) =
@@ -6115,8 +6116,14 @@ let cherry_any_helpers () : ML (list string & list string) =
        "  if (__builtin_expect(a.rtti != &" ^ p ^ "_rtti, 0)) cherry_any_mismatch(a.rtti, \"" ^ ct ^ "\");\n" ^
        "  " ^ decl_of t "x" ^ ";\n" ^
        "  if " ^ small ^ " memcpy(&x, &a.v, sizeof x);\n" ^
-       "  else x = ((" ^ cell ^ " *)a.v)->v;\n" ^
-       (if np then "  " ^ op "inc" "x" ^ ";\n" else "") ^
+       "  else {\n" ^
+       "    cherry_obj *o = (cherry_obj *)a.v;\n" ^
+       "    x = ((" ^ cell ^ " *)o)->v;\n" ^
+       "    if (cherry_is_unique(o)) free(o);\n" ^
+       "    else {\n" ^
+       (if np then "      " ^ op "inc" "x" ^ ";\n" else "") ^
+       "      if (cherry_dec_ref(o)) cherry_defer(o, " ^ p ^ "_free, 0);\n" ^
+       "    }\n  }\n" ^
        "  return x;\n}\n"] in
     protos, defs in
   let rs = !any_tys |> List.mapi one in
