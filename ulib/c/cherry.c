@@ -543,15 +543,6 @@ cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int le
   return cherry_str_of_bytes(cherry_str_data(s) + i, n);
 }
 
-int64_t cherry_str_size64(cherry_string s) {
-  return (int64_t)cherry_str_size(s);
-}
-
-int64_t cherry_str_byte_at64(cherry_string s, int64_t i) {
-  return i >= 0 && (uint64_t)i < cherry_str_size(s)
-    ? (unsigned char)cherry_str_data(s)[i] : -1;
-}
-
 cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j) {
   int64_t n = (int64_t)cherry_str_size(s), a = i, b = j;
   if (a < 0) a = 0;
