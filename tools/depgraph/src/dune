@@ -1,0 +1,22 @@
+(executable
+ (name fstar_depgraph)
+ (libraries fstar.compiler unix)
+ (flags (:standard -w +a-4-9-26-27-32..42-44-45-48-70 -warn-error -a))
+ (modes native))
+
+(rule
+ (targets assets.ml)
+ (deps
+  %{exe:../gen/gen_assets.exe}
+  ../assets/index.html
+  ../assets/viewer.css
+  ../assets/layout.js
+  ../assets/viewer.js)
+ (action
+  (with-stdout-to
+   assets.ml
+   (run %{exe:../gen/gen_assets.exe}
+        ../assets/index.html
+        ../assets/viewer.css
+        ../assets/layout.js
+        ../assets/viewer.js))))
