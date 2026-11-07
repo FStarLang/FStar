@@ -31,3 +31,35 @@ let test3 (x : ref int) (y : nat) = pts_to x y
 (* With nothing known about [y], the fundep determines its type. *)
 let test4 (x : ref int) = exists y. pts_to x y
 let test5 (x : ref int) = exists y. pts_to x y /\ y == 3
+
+(* The pointer may be a data constructor application whose type arguments
+   are still uvars when the value is checked: [Cell r i : cell ?a ?i]. They
+   are pinned to the types of [r] and [i], keeping the refinement of [nat]. *)
+noeq type cell a i = | Cell : a -> i -> cell a i
+
+instance has_pts_to_cell (x : Type) : has_pts_to (cell (ref x) nat) x = {
+  pts_to = (fun c x -> True);
+}
+
+let test6 (r : ref int) (i : nat) (y : erased int) : GTot prop = pts_to (Cell r i) y
+
+(* The pointer's type may also be refined, with uvars under the refinement:
+   [mk_cell r i : c:cell ?a ?i{True}]. As for a uvar bounded by a ground
+   type, the refinement is dropped at the top. *)
+assume val mk_cell (#a #i : Type) (x : a) (y : i) : c:cell a i{True}
+
+let test7 (r : ref int) (i : nat) (y : erased int) : GTot prop = pts_to (mk_cell r i) y
+
+(* A nested uvar is pinned to its bound, refinement included, so an instance
+   at a supertype of the index is not found: [i : nat] fixes [cell _ nat]. *)
+noeq type cell2 a i = | Cell2 : a -> i -> cell2 a i
+
+instance has_pts_to_cell2 (x : Type) : has_pts_to (cell2 (ref x) int) x = {
+  pts_to = (fun c x -> True);
+}
+
+[@@expect_failure [228]]
+let test8 (r : ref int) (i : nat) (y : erased int) : GTot prop = pts_to (Cell2 r i) y
+
+(* Ascribing the index works. *)
+let test9 (r : ref int) (i : nat) (y : erased int) : GTot prop = pts_to (Cell2 r (i <: int)) y
