@@ -421,6 +421,24 @@ val slprop_ref_share (x:slprop_ref) (y:slprop)
 val slprop_ref_gather (x:slprop_ref) (y1 y2: slprop)
 : act unit Ghost emp_inames (slprop_ref_pts_to x y1 ** slprop_ref_pts_to x y2) fun _ -> slprop_ref_pts_to x y1 ** later (I.equiv y1 y2)
 
+val impersonate_lem1 l m0 pre ictx frame :
+  Lemma
+    (requires Sep.interp (Sep.on l pre ** frame ** Sep.mem_invariant ictx m0) m0)
+    (ensures
+      (let m1 = Sep.set_loc m0 l in
+       (Sep.inames_ok ictx m0 <==> Sep.inames_ok ictx m1) /\
+       Sep.interp (pre ** Sep.loc l ** Sep.on (Sep.current_loc m0) frame **
+         Sep.mem_invariant ictx m1) m1))
+
+val impersonate_lem2 l l0 m0 post ictx frame :
+  Lemma
+    (requires Sep.interp (post ** Sep.loc l ** Sep.on l0 frame **
+      Sep.mem_invariant ictx m0) m0)
+    (ensures
+      (let m1 = Sep.set_loc m0 l0 in
+       (Sep.inames_ok ictx m0 <==> Sep.inames_ok ictx m1) /\
+       Sep.interp (Sep.on l post ** frame ** Sep.mem_invariant ictx m1) m1))
+
 val impersonate #a #r #is #pre #post l (k: act a r is pre post) :
     act a r is (Sep.on l pre) (fun r -> Sep.on l (post r))
 

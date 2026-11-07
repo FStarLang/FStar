@@ -21,6 +21,7 @@ open FStar.Ghost
 open FStar.PCM
 open FStar.ExtractAs
 module A = PulseCore.Atomic
+module M = PulseCore.Masks
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability
@@ -38,5 +39,13 @@ let on_inv_eq = Sep.on_inv_eq
 ////////////////////////////////////////////////////////////////////
 let dup_inv = A.dup_inv
 let fresh_invariant i p = A.fresh_invariant i p
+let open_invariant mask i p =
+  assert (somewhere (later p) == Sep.somewhere (Sep.later p))
+    by (FStar.Tactics.V2.trefl ());
+  M.open_invariant mask i p
+let close_invariant mask i p =
+  assert (somewhere (later p) == Sep.somewhere (Sep.later p))
+    by (FStar.Tactics.V2.trefl ());
+  M.close_invariant mask i p
 let with_invariant i f = A.with_invariant i f
 let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j
