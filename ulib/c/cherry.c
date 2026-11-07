@@ -543,17 +543,17 @@ cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int le
   return cherry_str_of_bytes(cherry_str_data(s) + i, n);
 }
 
-uint64_t cherry_str_size64(cherry_string s) {
-  return (uint64_t)cherry_str_size(s);
+int64_t cherry_str_size64(cherry_string s) {
+  return (int64_t)cherry_str_size(s);
 }
 
-uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i) {
-  return (int64_t)i >= 0 && i < cherry_str_size(s)
-    ? (unsigned char)cherry_str_data(s)[i] : UINT64_MAX;
+int64_t cherry_str_byte_at64(cherry_string s, int64_t i) {
+  return i >= 0 && (uint64_t)i < cherry_str_size(s)
+    ? (unsigned char)cherry_str_data(s)[i] : -1;
 }
 
-cherry_string cherry_str_slice64(cherry_string s, uint64_t i, uint64_t j) {
-  int64_t n = (int64_t)cherry_str_size(s), a = (int64_t)i, b = (int64_t)j;
+cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j) {
+  int64_t n = (int64_t)cherry_str_size(s), a = i, b = j;
   if (a < 0) a = 0;
   if (b > n) b = n;
   if (b <= a) return cherry_str_of_bytes("", 0);
@@ -625,8 +625,8 @@ cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
 
 /* The same comparison as a two's complement 64-bit -1/0/1
    (FStarC.SmallInt.string_compare). */
-uint64_t cherry_str_compare_u64(cherry_string a, cherry_string b) {
-  return (uint64_t)(int64_t)str_compare(a, b);
+int64_t cherry_str_compare_i64(cherry_string a, cherry_string b) {
+  return (int64_t)str_compare(a, b);
 }
 
 /* 64-bit FNV-1a over the UTF-8 bytes (FStarC.Hash.of_string). */

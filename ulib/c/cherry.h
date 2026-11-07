@@ -313,14 +313,14 @@ cherry_int cherry_int_of_i64(int64_t v);
 cherry_int cherry_int_of_u64(uint64_t v);
 int64_t cherry_int_to_i64(cherry_int x);
 uint64_t cherry_int_to_u64(cherry_int x);
-/* FStarC.SmallInt's conversions, a SmallInt being a uint64_t in two's
-   complement: inline, since the small case is a shift. */
-static inline uint64_t cherry_smallint_of_int(cherry_int x) {
-  return cherry_is_scalar(x) ? (uint64_t)(int64_t)cherry_int_val(x) : cherry_int_to_u64(x);
+/* FStarC.SmallInt's conversions, a SmallInt being an int64_t:
+   inline, since the small case is a shift. */
+static inline int64_t cherry_smallint_of_int(cherry_int x) {
+  return cherry_is_scalar(x) ? (int64_t)cherry_int_val(x) : cherry_int_to_i64(x);
 }
-static inline cherry_int cherry_smallint_to_int(uint64_t x) {
-  intptr_t v = (intptr_t)(int64_t)x;
-  return cherry_int_fits(v) ? CHERRY_INT_SMALL(v) : cherry_int_of_i64((int64_t)x);
+static inline cherry_int cherry_smallint_to_int(int64_t x) {
+  intptr_t v = (intptr_t)x;
+  return cherry_int_fits(v) ? CHERRY_INT_SMALL(v) : cherry_int_of_i64(x);
 }
 #ifdef __SIZEOF_INT128__
 /* The same at 128 bits, for --custard_int128; [to] wraps modulo 2^128. */
@@ -460,7 +460,7 @@ cherry_int cherry_str_length(cherry_string s);
 uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
-uint64_t cherry_str_compare_u64(cherry_string a, cherry_string b);
+int64_t cherry_str_compare_i64(cherry_string a, cherry_string b);
 uint64_t cherry_str_fnv1a(cherry_string s);
 /* Nanoseconds of the monotonic clock (FStarC.Timing). */
 uint64_t cherry_now_ns(void);
@@ -477,12 +477,12 @@ cherry_string cherry_str_make(cherry_int l, uint32_t c);
 cherry_int cherry_str_byte_size(cherry_string s);
 uint32_t cherry_str_byte_at(cherry_string s, cherry_int off);
 cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int len);
-/* FStarC.String's byte-level access, with FStarC.SmallInt offsets (signed,
-   in a uint64_t): the size, the byte at an offset (-1 out of bounds), and the
+/* FStarC.String's byte-level access, with FStarC.SmallInt offsets (an
+   int64_t): the size, the byte at an offset (-1 out of bounds), and the
    bytes [i, j) clamped to the string. */
-uint64_t cherry_str_size64(cherry_string s);
-uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i);
-cherry_string cherry_str_slice64(cherry_string s, uint64_t i, uint64_t j);
+int64_t cherry_str_size64(cherry_string s);
+int64_t cherry_str_byte_at64(cherry_string s, int64_t i);
+cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j);
 /* The one-byte string of [b] < 256, which need not be UTF-8. */
 cherry_string cherry_str_of_byte(uint32_t b);
 /* ASCII case mapping; other bytes are unchanged. */
