@@ -954,11 +954,11 @@ let is_valid_namespace deps ns =
   res
 
 let interface_of deps key = 
-  if Nil? (HashTable.keys deps.file_system_map)
+  if HashTable.size deps.file_system_map = 0
   then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files;
   interface_of_internal deps.file_system_map key
 let implementation_of deps key =
-  if Nil? (HashTable.keys deps.file_system_map)
+  if HashTable.size deps.file_system_map = 0
   then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files;
   implementation_of_internal deps.file_system_map key
 
@@ -2135,7 +2135,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
       Inl <| Parser.AST.Module { mname = l; decls = ds; no_prelude }
    | _ -> Inr ds
   in
-  if Nil? (HashTable.keys deps.file_system_map)
+  if HashTable.size deps.file_system_map = 0
   then build_map deps.file_system_map deps.valid_namespaces [filename];
   let pd = collect_module_or_decls filename roots in
   debug_print (fun _ -> 
@@ -2908,7 +2908,7 @@ let print deps =
   | None -> do_print_stdout deps
 
 let ensure_map deps : ML unit =
-  if Nil? (HashTable.keys deps.file_system_map)
+  if HashTable.size deps.file_system_map = 0
   then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files
 
 let selects deps tgt module_name k : ML bool =

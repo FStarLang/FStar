@@ -105,8 +105,9 @@ let boxed_types (p:program) : ML (list string) =
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
 let runtime_types : list string = ["Prims.int"; "Prims.string"; iarray_key]
 
-(* The operands a [Dyn] operation takes owned: the value [mk] wraps. *)
-let dyn_owns (f:string) : list bool = if f = "mk" then [true] else []
+(* The operands a [Dyn] operation takes owned: the value [mk] wraps, and
+   the [dyn] [get] unwraps, whose payload it moves out. *)
+let dyn_owns (f:string) : list bool = [true]
 
 (* The operands an immutable array operation (Syntax.IArr) takes owned: the
    array an update or a push changes in place when it can, and the value it
@@ -816,8 +817,15 @@ let names (o:owned) : ML (list string) = List.map fst o
 
 let var (x:string) (t:cty) : expr = mk (EVar x) t E_Pure
 
-let rc_op (op:op) (x:string) (t:cty) : expr =
-  mk (EOp ({ po_op = op; po_ty = None }, [var x t])) TUnit E_Impure
+(* The variables bound by [RefPeek r], with [r]: what releases them is
+   [RefUnpeek r]. *)
+let peeked : ref (list (string & expr)) = mk_ref []
+
+let rc_op (op:op) (x:string) (t:cty) : ML expr =
+  match op, List.tryFind (fun (y, _) -> y = x) !peeked with
+  | RcDec, Some (_, r) ->
+    mk (EOp ({ po_op = RefUnpeek; po_ty = None }, [r; var x t])) TUnit E_Impure
+  | _ -> mk (EOp ({ po_op = op; po_ty = None }, [var x t])) TUnit E_Impure
 
 let seq (a b:expr) : expr = mk (ESeq (a, b)) b.ty (join_eff a.eff b.eff)
 
@@ -1312,6 +1320,34 @@ let rec reuse_at_death (x:string) (wt:cty) (old:name) (ps:list pat) (e:expr) : M
                   eff = E_Impure }
   | _ -> None
 
+(* Can [x], read out of an ML reference that outlives [e], be peeked at
+   rather than counted for [e]?  [e] has to use it only as the array that an
+   immutable array's [index] or [length] borrows, and nothing in [e] may
+   write the reference, or make it shared: [e] calls no function but an
+   external whose arguments hold no reference, writes no reference and
+   builds no closure.  Nor does [e] bind [x] again. *)
+let rec peek_ok (x:string) (e:expr) : ML bool =
+  let ok_arg (a:expr) : ML bool =
+    (not (is_np a.ty) ||
+     (match a.ty with
+      | TApp ({ ns = ["Prims"]; id = id }, []) -> id = "int" || id = "string"
+      | _ -> false)) && peek_ok x a in
+  match e.e with
+  | EVar y -> y <> x
+  | EOp ({ po_op = IArr f }, a :: rest) when f = "index" || f = "length" ->
+    (match a.e with EVar y when y = x -> true | _ -> peek_ok x a) &&
+    List.for_all (peek_ok x) rest
+  | EApp ({ e = EQual (f, _) }, args) ->
+    let k = string_of_name f in
+    not (HashTable.mem !fn_tbl k) && HashTable.mem !extern_tbl k &&
+    List.for_all ok_arg args
+  | EApp _ | EFun _ -> false
+  | EOp ({ po_op = BufWrite }, _) | EOp ({ po_op = RefSet }, _) -> false
+  | ELet (y, _, _, _) when y = x -> false
+  | EMatch (_, brs) | ETry (_, brs)
+    when brs |> List.existsb (fun (p, _, _) -> List.mem x (pat_vars p)) -> false
+  | _ -> not (exists_child (fun c -> not (peek_ok x c)) e)
+
 (* -------------------------------------------------------------------- *)
 (* The pass                                                             *)
 (* -------------------------------------------------------------------- *)
@@ -1397,6 +1433,18 @@ and rc_live (o:owned) (e:expr) : ML expr =
     let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
     let z = fresh () in
     rc_live o (let_ z a.ty a { e with e = ELet (x, t, { e1 with e = EProj (var z a.ty, tn, f) }, e2) })
+
+  (* A read of a borrowed reference that the scope only borrows in turn
+     (peek_ok) is not counted: the reference keeps the value alive. *)
+  | ELet (x, t, { e = EOp ({ po_op = BufRead }, [rv; _]) }, e2)
+    when is_np t && is_ml_ref rv.ty && EVar? rv.e && not (is_owned (EVar?._0 rv.e)) &&
+         EVar?._0 rv.e <> x && peek_ok x e2 ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let saved = !peeked in
+    peeked := (x, rv) :: saved;
+    let e2' = rc ((x, t) :: o) e2 in
+    peeked := saved;
+    let_ x t { e1 with e = EOp ({ po_op = RefPeek; po_ty = None }, [rv]); eff = E_Impure } e2'
 
   | ELet (x, t, e1, e2) ->
     let fv2 = without [x] (fv e2) in
