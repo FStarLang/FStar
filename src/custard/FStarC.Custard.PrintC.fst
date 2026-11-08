@@ -5980,8 +5980,8 @@ let cherry_ref_helpers () : ML (list string & list string) =
         "static inline void " ^ p ^ "_mark(cherry_ref r, int m)";
         "static inline void " ^ p ^ "_free(cherry_obj *r, int m)";
         "static inline void " ^ p ^ "_markf(cherry_obj *r, int m)";
-        "static inline " ^ decl_of t (p ^ "_peek(cherry_ref r)");
-        "static inline void " ^ p ^ "_unpeek(cherry_ref r, " ^ decl_of t "x" ^ ")" ] in
+        "static CHERRY_ALWAYS_INLINE " ^ decl_of t (p ^ "_peek(cherry_ref r)");
+        "static CHERRY_ALWAYS_INLINE void " ^ p ^ "_unpeek(cherry_ref r, " ^ decl_of t "x" ^ ")" ] in
       let op (o:string) (x:string) : ML string =
         if counted then "  " ^ rc_fn o t ^ "(" ^ x ^ ");\n" else "" in
       let cell = "  " ^ s ^ " *c = (" ^ s ^ " *)r;\n" in
@@ -6218,13 +6218,13 @@ let cherry_iarr_helpers () : ML (list string & list string) =
            "  " ^ cell "c" ^ " = (" ^ s ^ " *)a;\n" ^
            "  for (size_t j = 0; j < c->h.size; j++) " ^ op "mark" "c->data[j]" ^ "\n"
          else ""));
-    fn ("static inline void " ^ p ^ "_dec(cherry_iarray a)")
+    fn ("static CHERRY_ALWAYS_INLINE void " ^ p ^ "_dec(cherry_iarray a)")
        ("  if (cherry_dec_ref(a)) " ^
         (if counted then "cherry_defer(a, " ^ p ^ "_free, 0);\n" else "free(a);\n"));
     fn ("static inline void " ^ p ^ "_mark(cherry_iarray a, int m)")
        (if counted then "  if (cherry_mark_ref(a, m)) cherry_defer(a, " ^ p ^ "_markf, m);\n"
         else "  (void)cherry_mark_ref(a, m);\n");
-    fn ("static inline " ^ decl_of t (p ^ "_index(cherry_iarray a, cherry_int i)"))
+    fn ("static CHERRY_ALWAYS_INLINE " ^ decl_of t (p ^ "_index(cherry_iarray a, cherry_int i)"))
        (bounds "index" ^
         "  " ^ decl_of t "x" ^ " = ((" ^ s ^ " *)a)->data[cherry_iarray_pos(i)];\n" ^
         (if counted then "  " ^ op "inc" "x" ^ "\n" else "") ^ "  return x;\n");
