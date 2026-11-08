@@ -63,3 +63,11 @@ let test8 (r : ref int) (i : nat) (y : erased int) : GTot prop = pts_to (Cell2 r
 
 (* Ascribing the index works. *)
 let test9 (r : ref int) (i : nat) (y : erased int) : GTot prop = pts_to (Cell2 r (i <: int)) y
+
+(* The pointer may be an application of a polymorphic function: the type
+   [?c] of [myid x] is bounded by the type argument [?a] of [myid], which in
+   turn is bounded by [ref int]. The chain of bounds is followed. *)
+let myid (#a : Type) (x : a) : a = x
+type pos = x:int{x > 0}
+let test10 (x : ref int) (y : pos) = pts_to (myid x) y
+let test11 (x : ref int) (y : erased int) : GTot prop = pts_to (myid x) y

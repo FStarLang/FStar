@@ -5739,9 +5739,13 @@ let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML 
          keeps the refinement: [Cell x (i:nat)] has an instance at
          [cell _ nat].  A uvar without a ground bound may still have a
          rigid one with uvars, e.g. [?p] bounded by [cell ?a ?i]: pin it to
-         that, and the nested uvars in turn. *)
-      let rec pin (top:bool) (a:term) : ML unit =
-        if has_free_uvars a then
+         that, and the nested uvars in turn.  A uvar may also be bounded by
+         another uvar, e.g. in [id x], the type [?c] of the application is
+         bounded by the type argument [?a] of [id], which is in turn
+         bounded by the type of [x]: pin the bounding uvar first, then
+         retry.  The fuel guards against cycles of bounds. *)
+      let rec pin (fuel:int) (top:bool) (a:term) : ML unit =
+        if fuel > 0 && has_free_uvars a then
           let base (b:term) : ML term =
             if top then fst (base_and_refinement_maybe_delta false env b) else b
           in
@@ -5751,7 +5755,7 @@ let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML 
             let pin_args (t:term) : ML unit =
               let hd, args = U.head_and_args_full (SS.compress t) in
               match (U.un_uinst (SS.compress hd)).n with
-              | Tm_fvar _ -> List.iter (fun (x, _) -> pin false x) args
+              | Tm_fvar _ -> List.iter (fun (x, _) -> pin fuel false x) args
               | _ -> ()
             in
             match bound_of false a with
@@ -5762,6 +5766,9 @@ let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML 
                  (match teq_nosmt env a b with
                   | Some _ -> pin_args a
                   | None -> ())
+               | Tm_uvar _ ->
+                 pin (fuel - 1) top b;
+                 if not (has_free_uvars b) then pin (fuel - 1) top a
                | _ -> ())
             | None -> pin_args a
       in
@@ -5769,7 +5776,7 @@ let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML 
         match cargs with
         | [] -> ()
         | (a, _) :: rest ->
-          if not (List.mem i fds) then pin true a;
+          if not (List.mem i fds) then pin 8 true a;
           go (i + 1) rest
       in
       go 0 cargs;
