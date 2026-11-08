@@ -1321,11 +1321,12 @@ let rec reuse_at_death (x:string) (wt:cty) (old:name) (ps:list pat) (e:expr) : M
   | _ -> None
 
 (* Can [x], read out of an ML reference that outlives [e], be peeked at
-   rather than counted for [e]?  [e] has to use it only as the array that an
-   immutable array's [index] or [length] borrows, and nothing in [e] may
-   write the reference, or make it shared: [e] calls no function but an
-   external whose arguments hold no reference, writes no reference and
-   builds no closure.  Nor does [e] bind [x] again. *)
+   rather than counted for [e]?  Up to its last use, [e] has to use it only
+   as the array that an immutable array's [index] or [length] borrows, and
+   nothing in [e] before then may write the reference, or make it shared:
+   it calls no function but an external whose arguments hold no reference,
+   writes no reference and builds no closure.  Nor does [e] bind [x]
+   again. *)
 let rec peek_ok (x:string) (e:expr) : ML bool =
   let ok_arg (a:expr) : ML bool =
     (not (is_np a.ty) ||
@@ -1344,6 +1345,9 @@ let rec peek_ok (x:string) (e:expr) : ML bool =
   | EApp _ | EFun _ -> false
   | EOp ({ po_op = BufWrite }, _) | EOp ({ po_op = RefSet }, _) -> false
   | ELet (y, _, _, _) when y = x -> false
+  (* Past [x]'s last use, [x] is unpeeked: what follows may do anything. *)
+  | ELet (_, _, e1, e2) when not (List.mem x (fv e2)) -> peek_ok x e1
+  | ESeq (e1, e2) when not (List.mem x (fv e2)) -> peek_ok x e1
   | EMatch (_, brs) | ETry (_, brs)
     when brs |> List.existsb (fun (p, _, _) -> List.mem x (pat_vars p)) -> false
   | _ -> not (exists_child (fun c -> not (peek_ok x c)) e)
@@ -1445,6 +1449,17 @@ and rc_live (o:owned) (e:expr) : ML expr =
     let e2' = rc ((x, t) :: o) e2 in
     peeked := saved;
     let_ x t { e1 with e = EOp ({ po_op = RefPeek; po_ty = None }, [rv]); eff = E_Impure } e2'
+  (* So is a reference in a field of a borrowed value: named first, it is a
+     borrowed variable. *)
+  | ELet (x, t, { e = EOp ({ po_op = BufRead }, [rv; i]) }, e2)
+    when is_np t && is_ml_ref rv.ty && EProj? rv.e &&
+         (match rv.e with EProj ({ e = EVar y }, _, _) -> not (is_owned y) && y <> x | _ -> false) &&
+         peek_ok x e2 ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let op = (match e1.e with EOp (op, _) -> op | _ -> { po_op = BufRead; po_ty = None }) in
+    let z = fresh () in
+    rc_live o (let_ z rv.ty rv
+      { e with e = ELet (x, t, { e1 with e = EOp (op, [var z rv.ty; i]) }, e2) })
 
   | ELet (x, t, e1, e2) ->
     let fv2 = without [x] (fv e2) in
