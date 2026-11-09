@@ -6067,7 +6067,10 @@ let cherry_ref_helpers () : ML (list string & list string) =
         "  c->v = v;\n  cherry_ref_unlock(r);\n" ^ op "dec" "old";
         (if counted then "  if (cherry_dec_ref(r)) cherry_defer(r, " ^ p ^ "_free, 0);\n"
          else "  if (cherry_dec_ref(r)) free(r);\n");
-        (if counted then "  if (cherry_mark_ref(r, m)) cherry_defer(r, " ^ p ^ "_markf, m);\n"
+        (if counted then
+           "  if (cherry_mark_ref(r, m)) {\n" ^
+           "    if (m == CHERRY_PERSIST) cherry_note_global_ref(r, " ^ p ^ "_markf);\n" ^
+           "    cherry_defer(r, " ^ p ^ "_markf, m);\n  }\n"
          else "  (void)cherry_mark_ref(r, m);\n");
         "  (void)m;\n" ^ (if counted then cell ^ op "dec" "c->v" else "") ^ "  free(r);\n";
         "  (void)r; (void)m;\n" ^

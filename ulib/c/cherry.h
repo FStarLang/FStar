@@ -768,17 +768,31 @@ static inline void cherry_call_thunk(cherry_fn f) {
    a spinlock and the value; the generated code defines the cell for each
    value type and the operations on it (cherry_ref<N>_new/get/set/dec/mark).
    While the cell is reachable from one thread only, reads and writes leave
-   the lock alone.  Otherwise -- shared, or persistent, since a global is
-   reachable from every thread -- they hold the lock while they copy the
-   value and count the copy, so that a writer cannot free the old value
-   before a reader has taken its reference to it, and the value written is
-   marked shared first. */
+   the lock alone.  Otherwise -- shared, or persistent once the program has
+   started a thread, since a global is reachable from every thread -- they
+   hold the lock while they copy the value and count the copy, so that a
+   writer cannot free the old value before a reader has taken its reference
+   to it, and the value written is marked shared first.
+
+   Until the program starts its first thread, a persistent reference (one
+   reachable from a global) is local too, so that what is stored into it is
+   not marked shared and counted atomically ever after.  Making a reference
+   persistent records it ([cherry_note_global_ref], with the function that
+   marks its value), and [cherry_start_threads], which whatever starts a
+   thread calls first, shares the values all of them hold then.  The test of
+   [cherry_threads] comes after the one of the count, so that it costs a
+   local reference nothing. */
 typedef cherry_obj *cherry_ref;
 
 typedef struct cherry_ref_hdr { cherry_obj hdr; int32_t lock; } cherry_ref_hdr;
 
+extern bool cherry_threads;
+void cherry_note_global_ref(cherry_ref r, cherry_work_fn f);
+void cherry_start_threads(void);
+
 static inline bool cherry_ref_is_local(cherry_ref r) {
-  return __atomic_load_n(&r->rc, __ATOMIC_RELAXED) > 0;
+  int32_t rc = __atomic_load_n(&r->rc, __ATOMIC_RELAXED);
+  return rc > 0 || (rc == 0 && !cherry_threads);
 }
 
 static inline void cherry_ref_lock(cherry_ref r) {
