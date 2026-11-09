@@ -3775,6 +3775,17 @@ $(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryMoveFields.chgrep
 
+# Cherry: a field of an owned boxed value is borrowed from it, and a call
+# that takes such a field owned stays a tail call.
+CHERRY_TESTS += CherryAliasBorrow
+$(CHERRY_DIR)/CherryAliasBorrow.chgrep: $(CHERRY_DIR)/CherryAliasBorrow.chc
+	$(Q)! sed -n '/^static .* CherryAliasBorrow_first_len(.*{$$/,/^}/p' $< | grep -q 'cherry_inc' \
+	  || { echo "ERROR: CherryAliasBorrow_first_len counts a borrowed field"; exit 1; }
+	$(Q)sed -n '/^static .* CherryAliasBorrow_kids_count(.*{$$/,/^}/p' $< | grep -q 'CHERRY_MUSTTAIL return' \
+	  || { echo "ERROR: CherryAliasBorrow_kids_count lost its tail call"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryAliasBorrow.chgrep
+
 # Cherry: a function used as a value keeps the arity eta-reduction took from
 # it, so a direct call is not a partial application.
 CHERRY_TESTS += CherryEtaValue
