@@ -287,18 +287,18 @@ The programs:
 - Strings: number formatting, and joining by `acc ^ x`.
 - Closures: map, filter and fold over closures.
 
-Results on a 72-core x86-64 machine: median of 5 runs, with the ratio to OCaml (lower is faster), and peak RSS in MB. `make bench` also runs Cherry's system-malloc executables with mimalloc and jemalloc through `LD_PRELOAD` when they are installed. The table predates linking mimalloc (see "Allocation"): its "Cherry" column is glibc's malloc and its "Cherry (mimalloc)" column preloads mimalloc 3.2.
+Results on a 24-core x86-64 machine: median of 5 runs, with the ratio to OCaml (lower is faster), and peak RSS in MB. "Cherry" links mimalloc 3.6 (see "Allocation"); "Cherry (system)" uses glibc's malloc, and `make bench` also runs that executable with the mimalloc (3.2) and jemalloc (5.3) shared libraries through `LD_PRELOAD` when they are installed.
 
-| Benchmark | Cherry (s) | Cherry (mimalloc) (s) | Cherry (jemalloc) (s) | OCaml (s) | F# (s) | Cherry RSS | Cherry (mimalloc) RSS | Cherry (jemalloc) RSS | OCaml RSS | F# RSS |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| RBMap | 0.567 (1.69x) | 0.475 (1.41x) | 0.472 (1.41x) | 0.336 | 3.249 (9.68x) | 62 | 48 | 51 | 53 | 108 |
-| BinaryTrees | 14.279 (2.48x) | 6.364 (1.10x) | 8.991 (1.56x) | 5.762 | 45.059 (7.82x) | 129 | 161 | 151 | 143 | 290 |
-| CFold | 0.241 (1.11x) | 0.149 (0.69x) | 0.206 (0.95x) | 0.218 | 1.314 (6.04x) | 14 | 14 | 16 | 20 | 87 |
-| NQueens | 2.165 (0.30x) | 1.949 (0.27x) | 1.968 (0.28x) | 7.109 | 12.430 (1.75x) | 127 | 130 | 134 | 183 | 370 |
-| Strings | 0.105 (0.11x) | 0.079 (0.08x) | 0.101 (0.11x) | 0.942 | 0.889 (0.94x) | 2 | 7 | 7 | 11 | 42 |
-| Closures | 0.592 (1.13x) | 0.470 (0.90x) | 0.520 (1.00x) | 0.522 | 0.699 (1.34x) | 1 | 7 | 7 | 7 | 40 |
+| Benchmark | Cherry (s) | Cherry (system) (s) | Cherry (mimalloc) (s) | Cherry (jemalloc) (s) | OCaml (s) | F# (s) | Cherry RSS | Cherry (system) RSS | Cherry (mimalloc) RSS | Cherry (jemalloc) RSS | OCaml RSS | F# RSS |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| RBMap | 0.382 (1.02x) | 0.501 (1.34x) | 0.444 (1.19x) | 0.437 (1.17x) | 0.375 | 2.527 (6.75x) | 52 | 63 | 50 | 56 | 53 | 110 |
+| BinaryTrees | 4.742 (0.72x) | 11.296 (1.70x) | 5.717 (0.86x) | 7.572 (1.14x) | 6.628 | 30.653 (4.62x) | 162 | 129 | 164 | 231 | 144 | 296 |
+| CFold | 0.101 (0.45x) | 0.184 (0.82x) | 0.112 (0.50x) | 0.140 (0.62x) | 0.224 | 0.995 (4.45x) | 20 | 14 | 20 | 20 | 20 | 95 |
+| NQueens | 1.476 (0.18x) | 1.666 (0.20x) | 1.492 (0.18x) | 1.458 (0.17x) | 8.372 | 9.979 (1.19x) | 140 | 127 | 148 | 138 | 183 | 374 |
+| Strings | 0.064 (0.10x) | 0.078 (0.12x) | 0.064 (0.10x) | 0.083 (0.13x) | 0.651 | 0.446 (0.68x) | 6 | 2 | 8 | 13 | 10 | 46 |
+| Closures | 0.221 (0.44x) | 0.340 (0.68x) | 0.263 (0.53x) | 0.291 (0.58x) | 0.500 | 0.725 (1.45x) | 4 | 1 | 8 | 11 | 8 | 46 |
 
-Cherry wins where values are reused in place (Strings, where `acc ^ x` appends to a unique string) or where many cells are shared and long-lived (NQueens, where OCaml's major GC keeps rescanning them). Where cells are allocated and freed at a high rate (BinaryTrees, RBMap), the cost is mostly the allocator. With glibc's `malloc`, about 60% of BinaryTrees' time is in libc and it takes 2.5x OCaml's time; with mimalloc it takes 1.1x. mimalloc is the best of the three everywhere, which is why it is linked (see "Allocation"). RBMap stays 1.4x slower than OCaml with every allocator. Its inserts rebuild a path whose old cells are freed one by one, and they do not reuse them in place yet, because the balance functions match nested cells. The UTF-8 `String.strlen`/`String.sub` of the OCaml library are linear, so the Strings benchmark avoids them.
+Cherry wins where values are reused in place (Strings, where `acc ^ x` appends to a unique string) or where many cells are shared and long-lived (NQueens, where OCaml's major GC keeps rescanning them). Where cells are allocated and freed at a high rate (BinaryTrees, RBMap), the cost is mostly the allocator: with glibc's `malloc`, BinaryTrees takes 1.7x OCaml's time, and with mimalloc linked 0.7x. RBMap, about as fast as OCaml with mimalloc, would gain from reuse: its inserts rebuild a path whose old cells are freed one by one, and they do not reuse them in place yet, because the balance functions match nested cells. The Strings benchmark measures lengths with `String.length`: `String.strlen` builds the list of characters, and the OCaml library's UTF-8 indexing makes that quadratic.
 
 ## Backend
 
@@ -306,7 +306,7 @@ Cherry is a separate backend, `--codegen Cherry`, which shares most of its code 
 
 ## Allocation
 
-The runtime and the generated code allocate with `malloc`, `realloc` and `free`, so the allocator is a large part of the time of a program that allocates many cells. F\* ships [mimalloc](https://github.com/microsoft/mimalloc) (MIT license, the `ulib/c/mimalloc` submodule), and `ulib/c/cherry_mimalloc.c` links it statically: it compiles all of mimalloc (its `src/static.c`) with `MI_MALLOC_OVERRIDE`, so mimalloc's `malloc`, `realloc` and `free` replace the system's everywhere in the process, in libc as well as in the runtime. A program opts in by compiling and linking that file, with `-I$(fstar.exe --locate_lib)/ulib/c/mimalloc/include` (and `-pthread`); without it, the system allocator stays. mimalloc is built in release mode, whatever `NDEBUG` is, unless the build defines `MI_DEBUG`. Under AddressSanitizer, which brings its own allocator, the file compiles to nothing. F\*'s own Cherry builds link it: `tests/simple_hello` (except on Windows) and `tests/custard/bench`. The tests in `tests/custard` run under AddressSanitizer and so use its allocator.
+The runtime and the generated code allocate with `malloc`, `realloc` and `free`, so the allocator is a large part of the time of a program that allocates many cells. F\* ships [mimalloc](https://github.com/microsoft/mimalloc) (MIT license, the `ulib/c/mimalloc` submodule), and `ulib/c/cherry_mimalloc.c` links it statically: it compiles all of mimalloc (its `src/static.c`) with `MI_MALLOC_OVERRIDE`, so mimalloc's `malloc`, `realloc` and `free` replace the system's everywhere in the process, in libc as well as in the runtime. A program opts in by compiling and linking that file, with `-I$(fstar.exe --locate_lib)/ulib/c/mimalloc/include` (and `-pthread`); without it, the system allocator stays. mimalloc is built in release mode, whatever `NDEBUG` is, unless the build defines `MI_DEBUG`. Under AddressSanitizer, which brings its own allocator, the file compiles to nothing. F\*'s own Cherry builds link it: `tests/simple_hello` and `tests/custard/bench`. The tests in `tests/custard` run under AddressSanitizer and so use its allocator.
 
 Loading ulib's checked files in a Cherry build of the compiler's serializer takes 27% less time with mimalloc than with glibc's malloc, and peaks at 47% more memory. Calling mimalloc's small-object functions directly for cells of a known size, rather than through `malloc`/`free`, saves another 4% of the instructions there but no measurable time, so the runtime does not.
 The Cherry pass maps the F\* primitives on `Prims.int` and `Prims.string` (arithmetic, comparisons, `strcat`, `string_of_int`, `FStar.String.{strlen,index,sub,compare,make}`, `FStar.IO.print_string`) to runtime functions, with per-argument ownership: they borrow their arguments, except `strcat`, which takes its first argument owned so that it can append in place.
@@ -321,6 +321,6 @@ The prototype runs every test in `tests/custard` and `tests/custard/pulse` throu
 - **Unsupported constructs.** The Cherry pass rejects disjunctive patterns, tuple patterns, anonymous tuples of counted values, lambdas in polymorphic definitions, primitive operations that return counted values, and polymorphic externals used as values. Some of these may never reach the backend; this has to be checked against real code.
 - **Matching out of `any`.** Constructor patterns on an `any` scrutinee need the monomorphic instance the value was built at, which only the pattern variables' uses determine (`tests/custard/AnyPat`). An impure effect whose box type is a function (`tests/custard/Effects`) is typed as a non-function in the IR.
 - **Globals** are computed at startup and then made persistent, rather than emitted as static cells (see "Globals").
-- **Allocation.** mimalloc is linked only where the build adds `cherry_mimalloc.c` (see "Allocation"); a program built without it uses the system malloc, which is up to 2.5x slower on allocation-heavy programs (BinaryTrees).
+- **Allocation.** mimalloc is linked only where the build adds `cherry_mimalloc.c` (see "Allocation"); a program built without it uses the system malloc, with which allocation-heavy programs take up to 2.4x as long (BinaryTrees).
 - **Reuse** does not yet cover boxed records, reusing a cell for a constructor of another type of the same size, or reusing a dead variable that was not matched on (see "Heap cell reuse").
 - **Scale.** The largest programs compiled so far are the tests and benchmarks. Nothing the size of a compiler component has been compiled yet.
