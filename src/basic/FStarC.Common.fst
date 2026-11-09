@@ -133,3 +133,8 @@ let psmap_values m =
 let option_to_list = function
   | None -> []
   | Some x -> [x]
+
+let rec nth_opt l i =
+  match l with
+  | [] -> None
+  | x :: t -> if i = 0 then Some x else if i < 0 then None else nth_opt t (i - 1)

@@ -613,8 +613,9 @@ let is_empty = function
     | _ -> false
 
 let lookup_bvar (env : env) x =
-    try (List.nth env x.index)._2
-    with _ -> failwith (Format.fmt2 "Failed to find %s\nEnv is %s\n" (show x) (show env))
+    match FStarC.Common.nth_opt env x.index with
+    | Some (_, c, _) -> c
+    | None -> failwith (Format.fmt2 "Failed to find %s\nEnv is %s\n" (show x) (show env))
 
 (* The pure counterpart of one of the built-in spellings of the ghost effect.
    [None] for anything else -- in particular for a user-defined abbreviation of
@@ -657,10 +658,9 @@ let norm_universe cfg (env:env) u : ML universe =
         match u with
           | U_bvar x ->
             begin
-              let vo =
-                try Some ((List.nth env x)._2)
-                with _ -> None
-              in
+              let vo = match FStarC.Common.nth_opt env x with
+                       | Some (_, c, _) -> Some c
+                       | None -> None in
               match vo with
               | Some (Univ u) ->
                 if !dbg_univ_norm then
