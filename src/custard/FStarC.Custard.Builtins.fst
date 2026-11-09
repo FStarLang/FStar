@@ -399,7 +399,13 @@ let float_probed  : HashTable.t string bool   = HashTable.create 10
 let float_probe : ref (list string -> ML (option fwidth)) =
   mk_ref (fun _ -> None)
 
+(* {!builtin_rule}'s answers for names not in {!table}, which follow from the
+   name's shape, the command line, and the two settings below.  Asked for
+   every name extraction meets, often many times over. *)
+let shape_rules : HashTable.t string (option rule) = HashTable.create 1000
+
 let set_float_probe (f : list string -> ML (option fwidth)) : ML unit =
+  HashTable.clear shape_rules;
   float_probe := f
 
 let float_of_module (ns : list string) : ML (option fwidth) =
@@ -1466,7 +1472,9 @@ let is_known_krml_model_op (ns : list string) (id : string) : ML bool =
    {!is_interface_only_module}.  Set by [Extract.init]. *)
 let realized_deps : ref (option FStarC.Parser.Dep.deps) = mk_ref None
 
-let set_deps (d : FStarC.Parser.Dep.deps) : ML unit = realized_deps := Some d
+let set_deps (d : FStarC.Parser.Dep.deps) : ML unit =
+  HashTable.clear shape_rules;
+  realized_deps := Some d
 
 (* Section 8.2.  A module with an interface and no implementation is realized
    by hand, as it was for ML extraction: there is no F* code to compile, so
@@ -1722,61 +1730,67 @@ let dyn_rule (id:string) : ML (option rule) =
   | "undyn" -> prim "get" (fun t -> t)
   | _ -> None
 
+let shape_rule (l:Ident.lident) : ML (option rule) =
+  let path = Ident.path_of_lid l in
+  match List.rev path with
+  | id :: rev_ns ->
+    let ns = no_fstar_stubs (List.rev rev_ns) in
+    (match machine_int_of_module ns with
+     | Some sw -> machine_int_rule sw id
+     | None ->
+       match float_of_module ns with
+       | Some fw -> float_rule fw id
+       | None ->
+       if ns = ["Prims"] then prims_rule id
+       (* [FStar.Pervasives] is also a *realized* module, so this has to
+          fall through rather than shadow: [pervasives_rule] claims one
+          name, and everything else in the module -- [Mkdtuple3] and
+          friends -- still has to reach [is_realized_module] below. *)
+       else if ns = ["FStar"; "Pervasives"] && Some? (pervasives_rule id)
+       then pervasives_rule id
+       (* Section 119.  [FStar.Int.Cast.Full] is [FStar.Int.Cast] with
+          the conversions that mention 128 bits; the names are spelled
+          the same way and [int_cast_rule] reads them the same way. *)
+       else if ns = ["FStar"; "Int"; "Cast"] ||
+               ns = ["FStar"; "Int"; "Cast"; "Full"]
+       then int_cast_rule id
+       else if ns = ["FStar"; "All"] || ns = ["FStarC"; "Effect"]
+       then (match ref_rule id with
+             | Some r -> Some r
+             | None ->
+               (match exn_rule id with
+                | Some r -> Some r
+                | None -> pulse_rule ns id))
+       else if ns = ["FStar"; "Custard"] then custard_rule id
+       else if ns = ["FStar"; "Exn"] then exn_rule id
+       else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
+               Some? (list_coercion_rule id)
+       then list_coercion_rule id
+       else if Options.custard_cherry () &&
+               (ns = ["FStar"; "ImmutableArray"; "Base"] ||
+                ns = ["FStar"; "ImmutableArray"]) &&
+               Some? (iarray_rule id)
+       then iarray_rule id
+       else if ns = ["FStar"; "Dyn"] && Some? (dyn_rule id)
+       then dyn_rule id
+       (* A rule for one name beats the module-wide [Rule_realized], as
+          for every family above. *)
+       else if Some? (pulse_rule ns id) then pulse_rule ns id
+       else if is_realized_module ns &&
+               not (Options.custard_cherry () && is_cherry_source_module ns)
+       then Some Rule_realized
+       else None)
+  | [] -> None
+
 let builtin_rule (l:Ident.lident) : ML rule =
+  let key = Ident.string_of_lid l in
   let r =
-    match HashTable.try_find table (Ident.string_of_lid l) with
+    match HashTable.try_find table key with
     | Some r -> Some r
     | None ->
-      let path = Ident.path_of_lid l in
-      match List.rev path with
-      | id :: rev_ns ->
-        let ns = no_fstar_stubs (List.rev rev_ns) in
-        (match machine_int_of_module ns with
-         | Some sw -> machine_int_rule sw id
-         | None ->
-           match float_of_module ns with
-           | Some fw -> float_rule fw id
-           | None ->
-           if ns = ["Prims"] then prims_rule id
-           (* [FStar.Pervasives] is also a *realized* module, so this has to
-              fall through rather than shadow: [pervasives_rule] claims one
-              name, and everything else in the module -- [Mkdtuple3] and
-              friends -- still has to reach [is_realized_module] below. *)
-           else if ns = ["FStar"; "Pervasives"] && Some? (pervasives_rule id)
-           then pervasives_rule id
-           (* Section 119.  [FStar.Int.Cast.Full] is [FStar.Int.Cast] with
-              the conversions that mention 128 bits; the names are spelled
-              the same way and [int_cast_rule] reads them the same way. *)
-           else if ns = ["FStar"; "Int"; "Cast"] ||
-                   ns = ["FStar"; "Int"; "Cast"; "Full"]
-           then int_cast_rule id
-           else if ns = ["FStar"; "All"] || ns = ["FStarC"; "Effect"]
-           then (match ref_rule id with
-                 | Some r -> Some r
-                 | None ->
-                   (match exn_rule id with
-                    | Some r -> Some r
-                    | None -> pulse_rule ns id))
-           else if ns = ["FStar"; "Custard"] then custard_rule id
-           else if ns = ["FStar"; "Exn"] then exn_rule id
-           else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
-                   Some? (list_coercion_rule id)
-           then list_coercion_rule id
-           else if Options.custard_cherry () &&
-                   (ns = ["FStar"; "ImmutableArray"; "Base"] ||
-                    ns = ["FStar"; "ImmutableArray"]) &&
-                   Some? (iarray_rule id)
-           then iarray_rule id
-           else if ns = ["FStar"; "Dyn"] && Some? (dyn_rule id)
-           then dyn_rule id
-           (* A rule for one name beats the module-wide [Rule_realized], as
-              for every family above. *)
-           else if Some? (pulse_rule ns id) then pulse_rule ns id
-           else if is_realized_module ns &&
-                   not (Options.custard_cherry () && is_cherry_source_module ns)
-           then Some Rule_realized
-           else None)
-      | [] -> None
+      match HashTable.try_find shape_rules key with
+      | Some r -> r
+      | None -> let r = shape_rule l in HashTable.add shape_rules key r; r
   in
   match r with
   | Some r -> r
