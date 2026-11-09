@@ -204,8 +204,12 @@ let command_line_include_roots () : ML (list string) =
     let is_dir = Filepath.is_directory file in
     if is_dir then [] else [root]
   ) files in
-  file_roots |> List.filter (fun root ->
-      not (List.existsb (fun inc -> (module_include_covers_path inc root)) explicit_includes))
+  file_roots
+  |> List.filter (fun root ->
+      not (List.existsb
+        (fun inc -> module_include_covers_path inc root)
+        explicit_includes))
+  |> List.unique
 
 let command_line_include_paths () : ML (list module_include_path) =
   command_line_include_roots () |> expand_module_include_paths Flat
