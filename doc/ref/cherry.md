@@ -78,6 +78,13 @@ Reference counting operations are inserted in a separate pass on the ANF'd, mono
 2. Insert inc/dec following the "Counting immutable beans" algorithm: inc when an owned variable is consumed but still live afterwards, dec after its last use if it was not consumed, and in match/if branches dec the variables that are dead at the start of the branch.
 3. Clean up: cancel inc/dec pairs, push decs into branches, and specialize dec for constructors known from an enclosing match.
 
+### Borrowing from an owned value
+
+A field of an owned variable of a boxed type is borrowed too, from that variable, its root: `let x = y.f`, then the fields of `x` (projected, or bound by a match on it), and a value peeked at out of a reference that is such an alias (see References). A match on the owned variable itself still gives the fields their own references, so that its cell can be reused (see Heap cell reuse). Such an alias gets no inc. Instead, liveness treats every use of an alias as a use of its root, so the root is dec'd only after the last use of any of its aliases. An alias is inc'd only where it is stored, returned or passed to an owned parameter, like a borrowed variable. Aliases of an alias share its root.
+The root has to be a boxed value that is not itself peeked: an unboxed value's fields are moved out instead (see Calling convention), and a peeked value is only checked for its own uses.
+At a call, a root that is live only through aliases passed as arguments is dec'd after the arguments are inc'd and before the call, so that a tail call stays a tail call.
+Test: `tests/custard/CherryAliasBorrow.fst`.
+
 ## The any type
 
 The any type is represented as a fat pointer: a pair of a uintptr_t and an RTTI pointer. The RTTI contains the inc, dec, and mark functions (and maybe some inspection functions for debugging). Types that are small enough to fit into a uintptr_t are stored directly, for larger types we allocate a heap cell with a reference count and store the pointer in the uintptr_t.
