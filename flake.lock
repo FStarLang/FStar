@@ -34,6 +34,23 @@
         "type": "github"
       }
     },
+    "mimalloc-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793385165,
+        "narHash": "sha256-9ojjdV48VSWQ6Wiycmr7Dw44cNAV5doie6oWlMe7i00=",
+        "owner": "microsoft",
+        "repo": "mimalloc",
+        "rev": "56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "microsoft",
+        "ref": "v3.6.1",
+        "repo": "mimalloc",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1759381078,
@@ -53,6 +70,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "karamel-src": "karamel-src",
+        "mimalloc-src": "mimalloc-src",
         "nixpkgs": "nixpkgs"
       }
     },

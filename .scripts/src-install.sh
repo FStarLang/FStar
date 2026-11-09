@@ -36,6 +36,7 @@ rsync -r --copy-links                   \
   --filter="- /out"                     \
   --filter="- /.gitignore"              \
   --filter="- /.fstarlock"              \
+  --filter="- /ulib/c/mimalloc/.git"    \
   "${BROOT}/" "${PREFIX}/"
 
 cp LICENSE* "${PREFIX}"

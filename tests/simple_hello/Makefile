@@ -37,11 +37,15 @@ Hello.%.test: Hello.%
 
 CHERRY_INC = $(shell $(FSTAR_EXE) --locate_lib)/ulib/c
 CHERRY_CC ?= $(CC)
+# mimalloc, linked statically in place of the system malloc (optional).
+ifneq ($(OS),Windows_NT)
+CHERRY_MALLOC ?= -I$(CHERRY_INC)/mimalloc/include $(CHERRY_INC)/cherry_mimalloc.c -pthread
+endif
 %.c: %.fst.checked
 	$(FSTAR_EXE) --codegen Cherry --custard_main $* $< -o $@
 
 %.cherry: %.c
-	$(CHERRY_CC) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c -o $@
+	$(CHERRY_CC) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c $(CHERRY_MALLOC) -o $@
 
 clean:
 	rm -f *.ml *.c *.h *.exe *.byte *.cherry *.cm* *.o *.checked

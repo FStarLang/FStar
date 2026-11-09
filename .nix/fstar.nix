@@ -8,6 +8,7 @@
   lib,
   makeWrapper,
   memtrace,
+  mimalloc-src,
   menhir,
   menhirLib,
   mtime,
@@ -76,6 +77,9 @@ buildDunePackage {
     patchShebangs ulib/ml/app/ints/mk_int_file.sh
     cp -r ${karamel-src} karamel
     chmod -R u+w karamel
+    rm -rf ulib/c/mimalloc
+    cp -r ${mimalloc-src} ulib/c/mimalloc
+    chmod -R u+w ulib/c/mimalloc
   '';
 
   src = lib.sourceByRegex ./.. [
