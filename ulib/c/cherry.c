@@ -551,6 +551,26 @@ cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j) {
   return cherry_str_of_bytes(cherry_str_data(s) + a, (size_t)(b - a));
 }
 
+bool cherry_str_contains(cherry_string s, cherry_string sub) {
+  const char *p = cherry_str_data(s), *q = cherry_str_data(sub);
+  size_t n = cherry_str_size(s), m = cherry_str_size(sub);
+  if (m == 0) return true;
+  if (m > n) return false;
+  const char *last = p + (n - m);
+  for (const char *c = p; c <= last; c++) {
+    c = (const char *)memchr(c, q[0], (size_t)(last - c) + 1);
+    if (c == NULL) return false;
+    if (memcmp(c + 1, q + 1, m - 1) == 0) return true;
+  }
+  return false;
+}
+
+bool cherry_str_matches_at64(cherry_string s, cherry_string sub, int64_t i) {
+  size_t n = cherry_str_size(s), m = cherry_str_size(sub);
+  return i >= 0 && (uint64_t)i <= n && m <= n - (size_t)i &&
+    memcmp(cherry_str_data(s) + i, cherry_str_data(sub), m) == 0;
+}
+
 cherry_string cherry_str_of_byte(uint32_t b) {
   char c = (char)(unsigned char)b;
   return cherry_str_of_bytes(&c, 1);
