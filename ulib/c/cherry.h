@@ -509,6 +509,10 @@ static inline int64_t cherry_str_byte_at64(cherry_string s, int64_t i) {
     ? (unsigned char)cherry_str_data(s)[i] : -1;
 }
 cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j);
+/* FStarC.Util's substring tests, on bytes: whether [sub] occurs in [s], and
+   whether it occurs at the offset [i] (false out of bounds). */
+bool cherry_str_contains(cherry_string s, cherry_string sub);
+bool cherry_str_matches_at64(cherry_string s, cherry_string sub, int64_t i);
 /* The one-byte string of [b] < 256, which need not be UTF-8. */
 cherry_string cherry_str_of_byte(uint32_t b);
 /* ASCII case mapping; other bytes are unchanged. */
