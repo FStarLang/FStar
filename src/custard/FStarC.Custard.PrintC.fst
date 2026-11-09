@@ -1567,6 +1567,9 @@ let escape (s:string) : ML string =
     | '\r' -> "\\r"
     | '"' -> "\\\""
     | '\\' -> "\\\\"
+    (* Under -std=c11 a trigraph such as [??/] is replaced before the string
+       is read, and that one is a backslash. *)
+    | '?' -> "\\?"
     | c ->
       let i = BU.int_of_char c in
       (* C string escapes are octal; three digits always, so that a digit
