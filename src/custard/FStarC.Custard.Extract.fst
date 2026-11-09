@@ -730,6 +730,13 @@ let env_for_term (env:TcEnv.env) (t:term) : ML TcEnv.env =
 let env_for_comp (env:TcEnv.env) (c:comp) : ML TcEnv.env =
   with_free_names env (elems (Free.names_comp c))
 
+(* [Effects.maybe_reify] in [env_for_term env t], which is only computed when
+   [l] is reifiable: most code is in a non-reifiable effect, and [t] is often
+   a whole definition, whose free names are not free to find. *)
+let reify_in (env:TcEnv.env) (t:term) (l:Ident.lident) : ML term =
+  if Effects.is_reifiable env l then Effects.maybe_reify (env_for_term env t) t l
+  else t
+
 let norm_bounded_in (st:state) (env:TcEnv.env) (what:string)
                     (steps:list TcEnv.step) (t:term) : ML term =
   try let env = env_for_term env t in
@@ -3559,8 +3566,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let body =
       match rc with
       | Some rc ->
-        Effects.maybe_reify (env_for_term (tcenv st) body) body
-                            rc.residual_effect
+        reify_in (tcenv st) body rc.residual_effect
       | None -> body in
     let body = expr_of_term st body in
     let flags =
@@ -3654,7 +3660,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
         applied to. *)
      | Tm_constant (Const_reify (Some l)) when Cons? args ->
        let e0 = args |> List.hd |> fst in
-       let e = Effects.maybe_reify (env_for_term (tcenv st) e0) e0 l in
+       let e = reify_in (tcenv st) e0 l in
        expr_of_term st (S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos)
 
      | _ ->
@@ -4170,7 +4176,7 @@ and lift_locals (st:state) (lbs:list letbinding) (body:term) : ML expr =
         let eff_name = match rc with
                        | Some rc -> rc.residual_effect
                        | None -> ambient () in
-        Effects.maybe_reify (env_for_term (tcenv st) def_body) def_body eff_name in
+        reify_in (tcenv st) def_body eff_name in
       let ret, eff = local_result st lb.lbtyp xs in
       (* F* generalizes a local [let rec] just as it does a top-level one, so
          the definiens may bind type variables of its own.  They hold no
@@ -6954,10 +6960,8 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let body =
     Prof.timed "reify" (fun () ->
     match rc with
-    | Some rc -> Effects.maybe_reify (env_for_term benv body) body
-                                     rc.residual_effect
-    | None -> Effects.maybe_reify (env_for_term benv body) body
-                                  (U.comp_effect_name c)) in
+    | Some rc -> reify_in benv body rc.residual_effect
+    | None -> reify_in benv body (U.comp_effect_name c)) in
   (* Register the signature before extracting the body, so that a
      self-recursive call inside it finds an exact effect and an exact type
      instead of {!callee_eff}'s and {!callee_sig}'s conservative fallbacks.
