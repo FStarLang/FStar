@@ -59,3 +59,8 @@ val psmap_keys (m : PSMap.t 'a) : ML (list string)
 val psmap_values (m : PSMap.t 'a) : ML (list 'a)
 
 val option_to_list (o : option 'a) : list 'a
+
+(* The [i]-th element, or [None] when [i] is out of range.  [List.nth] is
+   total only on its domain: outside it OCaml raises and Cherry has no
+   defined behavior, so a caller that may be out of range must use this. *)
+val nth_opt (l : list 'a) (i : int) : option 'a

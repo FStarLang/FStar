@@ -161,10 +161,9 @@ let on_antiquoted (f : (term -> ML term)) (qi : quoteinfo) : ML quoteinfo =
 
 (* Requires that bv.index is in scope. *)
 let lookup_aq (bv : bv) (aq : antiquotations) : ML term =
-    try List.nth (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) // subtract shift
-    with
-    | _ ->
-      failwith "antiquotation out of bounds"
+    match FStarC.Common.nth_opt (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) with // subtract shift
+    | Some t -> t
+    | None -> failwith "antiquotation out of bounds"
 
 // This is set in FStarC.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> ML term)) = mk_ref None
