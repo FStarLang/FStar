@@ -215,6 +215,15 @@ val reset_ambiguity_reports : unit -> ML unit
       - if several candidates survive, we return the first of *them*, in scope
         order.
 
+    One filter is a preference rather than an elimination: when an argument's
+    type has a known head (modulo [erased]), candidates whose formal at that
+    position also has one are preferred over candidates whose formal is
+    [Base_unknown] (typically a type variable): the former are more specific.
+    An argument of unknown type expresses no preference. So with
+    [( |-> ) : p -> r -> slprop] innermost and [( |-> ) : p -> frac r -> slprop],
+    an argument [Frac f v] selects the latter, [v : bool] eliminates it, and an
+    argument of unknown type gets the scope-order answer, the former.
+
     Note that the last point returns the first *surviving* candidate, which is
     [primary] only when [primary] survived every filter. If [primary] was
     eliminated and more than one alternative remains, the answer is an

@@ -40,14 +40,12 @@ irreducible let tcinstance : unit = ()
 irreducible let tcclass : unit = ()
 irreducible let tcmethod : unit = ()
 irreducible let fundeps (_ : list int) : unit = ()
-irreducible let noinst : unit = ()
 irreducible let no_method : unit = ()
 
 (* An entry in the global instance map. *)
 noeq
 type glb_inst = {
   inst_name : fv;
-  noinst : bool;
 }
 
 noeq
@@ -171,9 +169,7 @@ let type_matches_class (cfv:fv) (t:term) : Tac bool =
 let build_glb_map (all_glb : list sigelt) : Tac (list glb_entry) =
   let sigelt_to_inst (se : sigelt) : Tac glb_inst =
     let inst_name = sigelt_name se in
-    let attrs = sigelt_attrs se in
-    let noinst = L.existsb (Reflection.TermEq.Simple.term_eq (`noinst)) attrs in
-    { inst_name; noinst; }
+    { inst_name; }
   in
   all_glb |> Tactics.Util.concatMap (fun se ->
     let entry = sigelt_to_inst se in
@@ -265,7 +261,7 @@ let rec maybe_intros () : Tac unit =
     maybe_intros ()
   | _ -> ()
 
-let trywith (st:st_t) (g:tc_goal) (t : term) (noinst : bool) (k : st_t -> Tac unit) : Tac unit =
+let trywith (st:st_t) (g:tc_goal) (t : term) (k : st_t -> Tac unit) : Tac unit =
   (* debug st (fun () -> "trying " ^ term_to_string t); *)
   (* debug st (fun () -> "of type: " ^ term_to_string typ); *)
   (* print ("head_fv = " ^ fv_to_string g.head_fv); *)
@@ -275,12 +271,7 @@ let trywith (st:st_t) (g:tc_goal) (t : term) (noinst : bool) (k : st_t -> Tac un
   let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
   debug st (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
   (fun () ->
-    if noinst then (
-      (* If this instance has the noinst attribute, force using apply_noinst.
-        This means we will not let this instance instantiate the goal, regardless
-        of any fundeps on the class. *)
-      orskip st "apply_noinst" (fun () -> apply_noinst t)
-    ) else if Cons? unresolved_args then (
+    if Cons? unresolved_args then (
       (* If some args have uvars, we check to see if they are
         functional dependencies of the class. If so, we apply
         the instance and instantiate the uvars. Otherwise skip. *)
@@ -307,7 +298,7 @@ let local (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
     let bs = vars_of_env (cur_env ()) in
     bs |> first fun (b:binding) ->
        if type_matches_class g.head_fv b.sort then
-         trywith st g (pack (Tv_Var b)) false k
+         trywith st g (pack (Tv_Var b)) k
        else
          skip st "head mismatch"
 
@@ -320,7 +311,7 @@ let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
       | [] -> skip st "no more global instances"
       | { class_name ; instances } :: rest ->
         if type_matches_class g.head_fv (pack (Tv_FVar class_name)) then
-          instances |> first fun i -> trywith st g (pack (Tv_FVar i.inst_name)) i.noinst k
+          instances |> first fun i -> trywith st g (pack (Tv_FVar i.inst_name)) k
         else
           go rest
     in

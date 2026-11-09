@@ -347,10 +347,18 @@ let resolve env speculate primary alts args expected =
     else
       let b_arg = speculate (List.nth args i) in
       let cands =
-        match b_arg with
+        match strip_erased b_arg with
         | Base_unknown -> cands
         | _ ->
-          narrow_at (Format.fmt1 "arg%s" (show i)) (keep_if (fun t -> coercible env b_arg (nth_explicit_formal_base env t i))) cands
+          let cands =
+            narrow_at (Format.fmt1 "arg%s" (show i)) (keep_if (fun t -> coercible env b_arg (nth_explicit_formal_base env t i))) cands
+          in
+          (* The argument's head is known: prefer a candidate whose formal has
+             a known head over one whose formal is, e.g., a type variable, as
+             the former is more specific. An argument of unknown type (or an
+             [erased a] with [a] unknown) expresses no preference. *)
+          narrow_at (Format.fmt1 "arg%s-specific" (show i))
+            (keep_if (fun t -> not (Base_unknown? (strip_erased (nth_explicit_formal_base env t i))))) cands
       in
       by_args (i + 1) cands
   in
