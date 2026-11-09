@@ -89,6 +89,35 @@ void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode) {
   busy = false;
 }
 
+/* The persistent ML references, and the visit function that marks each
+   one's value, so that [cherry_start_threads] can share what they hold. */
+bool cherry_threads;
+
+typedef struct { cherry_ref r; cherry_work_fn f; } global_ref;
+
+static global_ref *global_refs;
+static size_t nglobal_refs, global_refs_cap;
+
+void cherry_note_global_ref(cherry_ref r, cherry_work_fn f) {
+  if (cherry_threads) abort();
+  if (nglobal_refs == global_refs_cap) {
+    global_refs_cap = global_refs_cap == 0 ? 64 : 2 * global_refs_cap;
+    global_refs = (global_ref *)realloc(global_refs, global_refs_cap * sizeof(global_ref));
+    if (global_refs == NULL) abort();
+  }
+  global_refs[nglobal_refs++] = (global_ref){ r, f };
+}
+
+void cherry_start_threads(void) {
+  if (cherry_threads) return;
+  for (size_t i = 0; i < nglobal_refs; i++)
+    cherry_defer(global_refs[i].r, global_refs[i].f, CHERRY_SHARE);
+  cherry_threads = true;
+  free(global_refs);
+  global_refs = NULL;
+  nglobal_refs = global_refs_cap = 0;
+}
+
 void cherry_free_closure(cherry_obj *f, int mode) {
   (void)mode;
   CHERRY_CLOSURE(f)->drop(f);
