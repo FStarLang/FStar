@@ -36,6 +36,7 @@ module U = FStarC.Syntax.Util
 module UF = FStarC.Syntax.Unionfind
 module Free = FStarC.Syntax.Free
 module Compress = FStarC.Syntax.Compress
+module Visit = FStarC.Syntax.Visit
 module N = FStarC.TypeChecker.Normalize
 module Rel = FStarC.TypeChecker.Rel
 module CoreRel = FStarC.TypeChecker.CoreRel
@@ -115,8 +116,33 @@ let global_instances (env:env) : ML (list (Ident.lident & Ident.lident)) =
     global_instances_cache := Some (env.tc_global.tc_cache, l);
     l
 
-let has_free_uvars (t:term) : ML bool =
-  not (is_empty (Free.uvars_uncached t)) || not (is_empty (Free.univs t))
+(* The cache works modulo universe unification variables, which are
+   created afresh for every instance that is tried: they are erased from
+   the keys, and cached results are instantiated with fresh ones on every
+   hit, before [try_teq] unifies them with the goal. Unsolved universe
+   variables are unconstrained, so a failure for one of them is a failure
+   for all. *)
+let erase_univ_uvars (t:term) : ML term =
+  Visit.visit_term_univs false (fun t -> t)
+    (fun u -> match u with U_unif _ -> U_unknown | _ -> u) t
+
+let refresh_univ_uvars (e ty:term) : ML (term & term) =
+  let m : ref (list (int & universe)) = mk_ref [] in
+  let fu (u:universe) : ML universe =
+    match u with
+    | U_unif uv ->
+      let id = UF.univ_uvar_id uv in
+      (match List.assoc id !m with
+       | Some u' -> u'
+       | None ->
+         let u' = Env.new_u_univ () in
+         m := (id, u') :: !m;
+         u')
+    | _ -> u
+  in
+  let e = Visit.visit_term_univs false (fun t -> t) fu e in
+  let ty = Visit.visit_term_univs false (fun t -> t) fu ty in
+  e, ty
 
 (* Global state of a search. *)
 noeq
@@ -228,16 +254,16 @@ and solve_class (gs:gst) (st:st) (goal:typ) : ML result =
       debug (fun () -> "open goal " ^ show goal);
       None
     ) else
-    let key = Compress.deep_compress true true key in
+    let key = erase_univ_uvars (Compress.deep_compress true true key) in
     if List.existsb (U.term_eq key) st.seen then (cut gs "loop"; None) else
-    let cacheable = is_empty (Free.univs key) in
     let cache = st.scope.tc_cache in
-    match (if cacheable then HM.lookup key !cache else None) with
+    match HM.lookup key !cache with
     | Some None ->
       debug (fun () -> "cached failure " ^ show key);
       None
     | Some (Some (e, ty)) ->
       debug (fun () -> "cached " ^ show key ^ " := " ^ show e);
+      let e, ty = refresh_univ_uvars e ty in
       (match try_teq st.env goal ty with
        | None -> None
        | Some g ->
@@ -253,12 +279,14 @@ and solve_class (gs:gst) (st:st) (goal:typ) : ML result =
       match res with
       | None ->
         UF.rollback tx;
-        if clean && cacheable then cache := HM.add key None !cache;
+        if clean then cache := HM.add key None !cache;
         None
       | Some (e, imps) ->
-        if clean && cacheable && not (has_free_uvars e) && not (has_free_uvars sgoal) then
-          cache := HM.add key (Some (Compress.deep_compress false true e,
-                                     Compress.deep_compress false true sgoal)) !cache;
+        (if clean then
+          let e = Compress.deep_compress true true e in
+          let sgoal' = Compress.deep_compress true true sgoal in
+          if is_empty (Free.uvars_uncached e) && is_empty (Free.uvars_uncached sgoal') then
+            cache := HM.add key (Some (e, sgoal')) !cache);
         match try_teq st.env goal sgoal with
         | None ->
           UF.rollback tx;
