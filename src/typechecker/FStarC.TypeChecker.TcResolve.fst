@@ -95,7 +95,7 @@ let class_of_typ (env:env) (t:typ) : ML (option Ident.lident) =
    once for each [tc_global] scope, which is replaced whenever an instance is
    added. *)
 let global_instances_cache
-  : ref (option (ref (HM.t term (option (term & typ))) & list (Ident.lident & Ident.lident)))
+  : ref (option (ref (HM.t term (option (list univ_name & term & typ))) & list (Ident.lident & Ident.lident)))
   = mk_ref None
 
 let global_instances (env:env) : ML (list (Ident.lident & Ident.lident)) =
@@ -126,23 +126,41 @@ let erase_univ_uvars (t:term) : ML term =
   Visit.visit_term_univs false (fun t -> t)
     (fun u -> match u with U_unif _ -> U_unknown | _ -> u) t
 
-let refresh_univ_uvars (e ty:term) : ML (term & term) =
-  let m : ref (list (int & universe)) = mk_ref [] in
+(* Cached results cannot keep universe uvars: the transaction that created
+   them may be rolled back, after which the union-find rejects them. They
+   are replaced by private universe names when storing ... *)
+let abstract_univ_uvars (e ty:term) : ML (list univ_name & term & term) =
+  let m : ref (list (int & univ_name)) = mk_ref [] in
   let fu (u:universe) : ML universe =
     match u with
     | U_unif uv ->
       let id = UF.univ_uvar_id uv in
       (match List.assoc id !m with
-       | Some u' -> u'
+       | Some x -> U_name x
        | None ->
-         let u' = Env.new_u_univ () in
-         m := (id, u') :: !m;
-         u')
+         let x = Ident.mk_ident ("'tcu" ^ show (List.length !m), Range.dummyRange) in
+         m := (id, x) :: !m;
+         U_name x)
     | _ -> u
   in
   let e = Visit.visit_term_univs false (fun t -> t) fu e in
   let ty = Visit.visit_term_univs false (fun t -> t) fu ty in
-  e, ty
+  List.map snd !m, e, ty
+
+(* ... and instantiated with fresh uvars on every hit. *)
+let instantiate_univ_names (xs:list univ_name) (e ty:term) : ML (term & term) =
+  if Nil? xs then e, ty else
+  let m = List.map (fun x -> x, Env.new_u_univ ()) xs in
+  let fu (u:universe) : ML universe =
+    match u with
+    | U_name x ->
+      (match List.tryFind (fun (y, _) -> Ident.ident_equals x y) m with
+       | Some (_, u') -> u'
+       | None -> u)
+    | _ -> u
+  in
+  Visit.visit_term_univs false (fun t -> t) fu e,
+  Visit.visit_term_univs false (fun t -> t) fu ty
 
 (* Global state of a search. *)
 noeq
@@ -261,9 +279,9 @@ and solve_class (gs:gst) (st:st) (goal:typ) : ML result =
     | Some None ->
       debug (fun () -> "cached failure " ^ show key);
       None
-    | Some (Some (e, ty)) ->
+    | Some (Some (xs, e, ty)) ->
       debug (fun () -> "cached " ^ show key ^ " := " ^ show e);
-      let e, ty = refresh_univ_uvars e ty in
+      let e, ty = instantiate_univ_names xs e ty in
       (match try_teq st.env goal ty with
        | None -> None
        | Some g ->
@@ -286,7 +304,7 @@ and solve_class (gs:gst) (st:st) (goal:typ) : ML result =
           let e = Compress.deep_compress true true e in
           let sgoal' = Compress.deep_compress true true sgoal in
           if is_empty (Free.uvars_uncached e) && is_empty (Free.uvars_uncached sgoal') then
-            cache := HM.add key (Some (e, sgoal')) !cache);
+            cache := HM.add key (Some (abstract_univ_uvars e sgoal')) !cache);
         match try_teq st.env goal sgoal with
         | None ->
           UF.rollback tx;

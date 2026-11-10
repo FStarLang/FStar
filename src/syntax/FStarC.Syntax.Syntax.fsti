@@ -188,11 +188,13 @@ and ctx_uvar_meta_t =
    resolved goals.  Local instances are the variables whose type was a class
    when they were pushed (most recent first).  Pushing one allocates a new
    cache.  The cache maps a goal, deeply compressed and with its functional
-   dependencies replaced by [Tm_unknown], to its solution (if any) together
-   with the solved goal type. *)
+   dependencies replaced by [Tm_unknown] and its universe unification
+   variables by [U_unknown], to its solution (if any) together with the
+   solved goal type, where universe unification variables are abstracted
+   by the listed universe names. *)
 and tc_scope = {
   tc_locals : list bv;
-  tc_cache  : ref (FStarC.HashMap.t term (option (term & typ)));
+  tc_cache  : ref (FStarC.HashMap.t term (option (list univ_name & term & typ)));
 }
 and ctx_uvar_and_subst = ctx_uvar & subst_ts
 
