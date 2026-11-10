@@ -12,5 +12,12 @@ precomputed into a hash table. *)
 val built_in_primitive_steps_list : list primitive_step
 val env_dependent_ops (env:Env.env_t) : ML (list primitive_step)
 
+(* The names of the steps in [env_dependent_ops]. *)
+val env_dependent_op_lids : list FStarC.Ident.lident
+
+(* The step in [env_dependent_ops env] named [l], if any. Cheap when [l]
+is not in [env_dependent_op_lids]. *)
+val env_dependent_op (env:Env.env_t) (l:FStarC.Ident.lident) : ML (option primitive_step)
+
 (* Simplification rules. *)
 val simplification_ops_list (env:Env.env_t) : ML (list primitive_step)
