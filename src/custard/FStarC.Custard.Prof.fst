@@ -54,9 +54,7 @@ let is_enabled () : ML bool =
     let b = Options.profile_enabled None "FStarC.Custard" in
     enabled := Some b; b
 
-let timed (name:string) (f : unit -> ML 'a) : ML 'a =
-  if not (is_enabled ()) then f ()
-  else
+let timed_on (name:string) (f : unit -> ML 'a) : ML 'a =
     let c = get name in
     let saved = !children in
     children := 0;
@@ -66,6 +64,12 @@ let timed (name:string) (f : unit -> ML 'a) : ML 'a =
     c.c_time := !c.c_time + elapsed - mine;
     c.c_calls := !c.c_calls + 1;
     res
+
+(* Inlined under Cherry, so that with profiling off a call runs [f]'s body
+   in place, without building a closure for it. *)
+[@@custard_inline]
+let timed (name:string) (f : unit -> ML 'a) : ML 'a =
+  if is_enabled () then timed_on name f else f ()
 
 let count (name:string) : ML unit =
   let c = get name in

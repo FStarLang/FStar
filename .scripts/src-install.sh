@@ -38,6 +38,10 @@ rsync -r --copy-links                   \
   --filter="- /.fstarlock"              \
   "${BROOT}/" "${PREFIX}/"
 
+# Of the mimalloc submodule, only its sources and license (and no .git file).
+find "${PREFIX}/ulib/c/mimalloc" -mindepth 1 -maxdepth 1 \
+  ! -name include ! -name src ! -name LICENSE -exec rm -rf {} +
+
 cp LICENSE* "${PREFIX}"
 cp README.md "${PREFIX}"
 cp INSTALL.md "${PREFIX}"

@@ -205,24 +205,9 @@ let list_of_pair (intf, impl) =
   include root. Recursive roots map [d/X/Y/Z.fst] to [X.Y.Z]; flat roots only
   apply to immediate files. *)
 let module_name_from_include_path (f:string) : ML (option string) =
-  let f = Filepath.normalize_file_path f in
-  let include_paths = Find.module_include_paths_normalized () in
-  let chk acc (path: Find.module_include_path) =
-    if Util.starts_with f (path.dir ^ "/")
-    && (match path.kind with
-      | Find.Flat -> Filepath.dirname f = path.dir
-      | Find.Recursive -> true)
-    && (match acc with Some prev -> String.length path.dir > String.length prev | None -> true)
-    then Some path.dir
-    else acc
-  in
-  let best =
-    List.fold_left chk None include_paths
-  in
-  match best with
+  match Find.relative_source_path f with
   | None -> None
-  | Some path ->
-    let rel = Util.substring_from f (String.length path + 1) in
+  | Some rel ->
     match check_and_strip_suffix rel with
     | None -> None
     | Some stem ->
@@ -954,11 +939,11 @@ let is_valid_namespace deps ns =
   res
 
 let interface_of deps key = 
-  if Nil? (HashTable.keys deps.file_system_map)
+  if HashTable.size deps.file_system_map = 0
   then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files;
   interface_of_internal deps.file_system_map key
 let implementation_of deps key =
-  if Nil? (HashTable.keys deps.file_system_map)
+  if HashTable.size deps.file_system_map = 0
   then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files;
   implementation_of_internal deps.file_system_map key
 
@@ -1543,7 +1528,7 @@ let deps_from_parsing_data (pd:parsing_data) (original_map:files_for_module_name
   let tgt = target_of_file filename in
   let own_module = lowercase_module_name filename in
   let file_range =
-    let r = Range.set_file_of_range Range.dummyRange filename in
+    let r = Range.set_file_of_range Range.dummyRange (Find.source_file_name filename) in
     Range.set_use_range r (Range.def_range r)
   in
   (* An implementation is checked against the interface selected for its own
@@ -2135,7 +2120,7 @@ let collect_deps_of_decl (deps:deps) (filename:string) (ds:list decl)
       Inl <| Parser.AST.Module { mname = l; decls = ds; no_prelude }
    | _ -> Inr ds
   in
-  if Nil? (HashTable.keys deps.file_system_map)
+  if HashTable.size deps.file_system_map = 0
   then build_map deps.file_system_map deps.valid_namespaces [filename];
   let pd = collect_module_or_decls filename roots in
   debug_print (fun _ -> 
@@ -2653,7 +2638,7 @@ let print_full (outc : out_channel) (deps:deps) : ML unit =
       (fun fsti ->
          let mn = module_key_of_file fsti in
          let range_of_file fsti =
-           let r = Range.set_file_of_range Range.dummyRange fsti in
+           let r = Range.set_file_of_range Range.dummyRange (Find.source_file_name fsti) in
            Range.set_use_range r (Range.def_range r)
          in
          (* An interface may be implemented only by files of other tags. *)
@@ -2908,7 +2893,7 @@ let print deps =
   | None -> do_print_stdout deps
 
 let ensure_map deps : ML unit =
-  if Nil? (HashTable.keys deps.file_system_map)
+  if HashTable.size deps.file_system_map = 0
   then build_map deps.file_system_map deps.valid_namespaces deps.cmd_line_files
 
 let selects deps tgt module_name k : ML bool =

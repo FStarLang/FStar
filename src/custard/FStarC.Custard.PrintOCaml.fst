@@ -261,8 +261,12 @@ let ocaml_module_path (n:name) : ML string =
    instance (section 133).  Filled in by {!build_tables}. *)
 let extern_types : ref (HashTable.t string string) = mk_ref (HashTable.create 0)
 
+(* The path of a functor instance's type member is qualified by the file the
+   instance is in, which must not be spelled inside that very file. *)
 let extern_type (n:name) : ML (option string) =
-  HashTable.try_find !extern_types (string_of_name n)
+  match HashTable.try_find !extern_types (string_of_name n) with
+  | Some t -> Some (unqualify_self t)
+  | None -> None
 
 let ocaml_type_name (n:name) : ML string =
   if is_realized n then sanitize n.id else
@@ -552,8 +556,18 @@ let prims_int_lit (v:int) (b:int_base) : string =
   then "(Prims.of_int (" ^ int_lit_to_string v b ^ "))"
   else "(Prims.parse_int \"" ^ int_lit_to_string v b ^ "\")"
 
+(* [FStar_UInt8.t] is realized as a plain OCaml [int] (the other machine
+   integers are Stdint values), so its literals need no injection and are
+   valid patterns. *)
+let is_uint8_lit (c:constant) : bool =
+  match c with
+  | CInt (v, _, Some (Unsigned, W8)) -> 0 <= v && v < 256
+  | _ -> false
+
 let constant (c:constant) : ML string =
   match c with
+  | CInt (v, _, Some (Unsigned, W8)) when is_uint8_lit c ->
+    "(" ^ string_of_int v ^ " : FStar_UInt8.t)"
   | CUnit -> "()"
   | CBool b -> if b then "true" else "false"
   (* Section 39.  OCaml's lexer accepts the same grammar section 39.2 does,
@@ -617,7 +631,7 @@ let op_name (o:prim_op) : ML string =
         operand. *)
      | Commented _ ->
        failwith "Custard: a comment is not an OCaml operator"
-     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
+     | RcInc | RcDec | RefNew | RefGet | RefSet | RefPeek | RefUnpeek | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
      | ExnRaise | ExnPending | ExnTake | ExnExit ->
        failwith "Custard: reference counting is not an OCaml operator"
      | ClosureNew | ClosureCall ->
@@ -642,7 +656,7 @@ let op_name (o:prim_op) : ML string =
         operand. *)
      | Commented _ ->
        failwith "Custard: a comment is not an OCaml operator"
-     | RcInc | RcDec | RefNew | RefGet | RefSet | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
+     | RcInc | RcDec | RefNew | RefGet | RefSet | RefPeek | RefUnpeek | Reset _ | Reuse _ | ResetFree | Update _ | IArr _ | Dyn _ | PBuf _
      | ExnRaise | ExnPending | ExnTake | ExnExit ->
        failwith "Custard: reference counting is not an OCaml operator"
      | ClosureNew | ClosureCall ->
@@ -655,10 +669,11 @@ let op_name (o:prim_op) : ML string =
    replaced by a fresh variable and an equality in the [when] clause, which
    is what the ML extraction does too (`Term.fst`, [Pat_constant] of a
    machine integer).  The C backend has real integer patterns and keeps the
-   [PConst]. *)
+   [PConst].  So does a [UInt8] literal (see [is_uint8_lit]): a chain of
+   [when] clauses would make a match on a byte tag linear. *)
 let rec defer_ints (n:int) (p:pat) : (int & pat & list (string & FStarC.Custard.Syntax.constant)) =
   match p with
-  | PConst c when (match c with CInt _ -> true | _ -> false) ->
+  | PConst c when (match c with CInt _ -> not (is_uint8_lit c) | _ -> false) ->
     let x = "_iconst" ^ string_of_int n in
     (n + 1, PVar x, [(x, c)])
   | PCtor (nm, ps) -> let n, ps, eqs = defer_ints_list n ps in (n, PCtor (nm, ps), eqs)
@@ -1010,7 +1025,12 @@ and stmts (ind:string) (e:expr) : ML string =
 and case (ind:string) (br:branch) : ML string =
   let p, g, b = br in
   let _, p, eqs = defer_ints 0 p in
-  let conds = eqs |> List.map (fun (x, c) -> ocaml_local x ^ " = " ^ constant c) in
+  (* A [Prims.int] is a [Z.t]: polymorphic equality would go through the
+     runtime's generic comparison. *)
+  let conds = eqs |> List.map (fun (x, c) ->
+    match c with
+    | CInt (_, _, None) -> "Z.equal " ^ ocaml_local x ^ " " ^ constant c
+    | _ -> ocaml_local x ^ " = " ^ constant c) in
   let conds = match g with None -> conds | Some g -> conds @ [term ind g] in
   let guard = if conds = [] then "" else " when " ^ String.concat " && " conds in
   ind ^ "| " ^ pattern p ^ guard ^ " -> " ^ term (ind ^ "  ") b ^ "\n"

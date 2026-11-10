@@ -105,8 +105,9 @@ let boxed_types (p:program) : ML (list string) =
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
 let runtime_types : list string = ["Prims.int"; "Prims.string"; iarray_key]
 
-(* The operands a [Dyn] operation takes owned: the value [mk] wraps. *)
-let dyn_owns (f:string) : list bool = if f = "mk" then [true] else []
+(* The operands a [Dyn] operation takes owned: the value [mk] wraps, and
+   the [dyn] [get] unwraps, whose payload it moves out. *)
+let dyn_owns (f:string) : list bool = [true]
 
 (* The operands an immutable array operation (Syntax.IArr) takes owned: the
    array an update or a push changes in place when it can, and the value it
@@ -816,8 +817,15 @@ let names (o:owned) : ML (list string) = List.map fst o
 
 let var (x:string) (t:cty) : expr = mk (EVar x) t E_Pure
 
-let rc_op (op:op) (x:string) (t:cty) : expr =
-  mk (EOp ({ po_op = op; po_ty = None }, [var x t])) TUnit E_Impure
+(* The variables bound by [RefPeek r], with [r]: what releases them is
+   [RefUnpeek r]. *)
+let peeked : ref (list (string & expr)) = mk_ref []
+
+let rc_op (op:op) (x:string) (t:cty) : ML expr =
+  match op, List.tryFind (fun (y, _) -> y = x) !peeked with
+  | RcDec, Some (_, r) ->
+    mk (EOp ({ po_op = RefUnpeek; po_ty = None }, [r; var x t])) TUnit E_Impure
+  | _ -> mk (EOp ({ po_op = op; po_ty = None }, [var x t])) TUnit E_Impure
 
 let seq (a b:expr) : expr = mk (ESeq (a, b)) b.ty (join_eff a.eff b.eff)
 
@@ -1312,6 +1320,38 @@ let rec reuse_at_death (x:string) (wt:cty) (old:name) (ps:list pat) (e:expr) : M
                   eff = E_Impure }
   | _ -> None
 
+(* Can [x], read out of an ML reference that outlives [e], be peeked at
+   rather than counted for [e]?  Up to its last use, [e] has to use it only
+   as the array that an immutable array's [index] or [length] borrows, and
+   nothing in [e] before then may write the reference, or make it shared:
+   it calls no function but an external whose arguments hold no reference,
+   writes no reference and builds no closure.  Nor does [e] bind [x]
+   again. *)
+let rec peek_ok (x:string) (e:expr) : ML bool =
+  let ok_arg (a:expr) : ML bool =
+    (not (is_np a.ty) ||
+     (match a.ty with
+      | TApp ({ ns = ["Prims"]; id = id }, []) -> id = "int" || id = "string"
+      | _ -> false)) && peek_ok x a in
+  match e.e with
+  | EVar y -> y <> x
+  | EOp ({ po_op = IArr f }, a :: rest) when f = "index" || f = "length" ->
+    (match a.e with EVar y when y = x -> true | _ -> peek_ok x a) &&
+    List.for_all (peek_ok x) rest
+  | EApp ({ e = EQual (f, _) }, args) ->
+    let k = string_of_name f in
+    not (HashTable.mem !fn_tbl k) && HashTable.mem !extern_tbl k &&
+    List.for_all ok_arg args
+  | EApp _ | EFun _ -> false
+  | EOp ({ po_op = BufWrite }, _) | EOp ({ po_op = RefSet }, _) -> false
+  | ELet (y, _, _, _) when y = x -> false
+  (* Past [x]'s last use, [x] is unpeeked: what follows may do anything. *)
+  | ELet (_, _, e1, e2) when not (List.mem x (fv e2)) -> peek_ok x e1
+  | ESeq (e1, e2) when not (List.mem x (fv e2)) -> peek_ok x e1
+  | EMatch (_, brs) | ETry (_, brs)
+    when brs |> List.existsb (fun (p, _, _) -> List.mem x (pat_vars p)) -> false
+  | _ -> not (exists_child (fun c -> not (peek_ok x c)) e)
+
 (* -------------------------------------------------------------------- *)
 (* The pass                                                             *)
 (* -------------------------------------------------------------------- *)
@@ -1331,6 +1371,34 @@ let exn_pending : expr =
   mk (EOp ({ po_op = ExnPending; po_ty = None }, []))
      (TApp ({ ns = ["Prims"]; id = "bool"; spec = None }, [])) E_Pure
 
+(* The variables borrowed from an owned one, each with that owned one, its
+   root (cherry.md, "Borrowing from an owned value"): a field of an owned
+   boxed value, and what is read out of such a field, is not counted, and
+   the root stays alive for as long as any of them is used. *)
+let aliases : ref (list (string & string)) = mk_ref []
+
+let root_of (x:string) : ML (option string) =
+  match List.tryFind (fun (y, _) -> y = x) !aliases with
+  | Some (_, r) -> Some r
+  | None -> None
+
+(* [xs] and the roots of the aliases among them: what [xs] keeps alive. *)
+let with_roots (xs:list string) : ML (list string) =
+  if Nil? !aliases then xs else
+  xs @ List.collect (fun x -> match root_of x with Some r -> [r] | None -> []) xs
+
+(* Run [f] with [xs] borrowed from the root [r]; [r = None] runs it
+   unchanged. *)
+let with_aliases (#a:Type) (r:option string) (xs:list string) (f:unit -> ML a) : ML a =
+  match r with
+  | None -> f ()
+  | Some r ->
+    let saved = !aliases in
+    aliases := List.map (fun x -> (x, r)) xs @ saved;
+    let res = f () in
+    aliases := saved;
+    res
+
 (* Run [f] in a non-tail position, with [o] held by its continuation. *)
 let inner (#a:Type) (o:owned) (f:unit -> ML a) : ML a =
   let h = !held in
@@ -1347,7 +1415,7 @@ let inner (#a:Type) (o:owned) (f:unit -> ML a) : ML a =
    value it returns is owned by its consumer.  Every other variable of
    non-plain type is borrowed. *)
 let rec rc (o:owned) (e:expr) : ML expr =
-  let live = fv e in
+  let live = with_roots (fv e) in
   let dead, o = List.partition (fun (x, _) -> not (List.mem x live)) o in
   decs dead (rc_live o e)
 
@@ -1358,7 +1426,10 @@ and rc_live (o:owned) (e:expr) : ML expr =
   let is_owned (x:string) : bool = List.mem x owned_names in
   match e.e with
   | EVar x ->
-    if is_np e.ty && not (is_owned x) then seq (rc_op RcInc x e.ty) e else e
+    (* An alias releases the root it kept alive once it has its own
+       reference. *)
+    let roots = o |> List.filter (fun (y, _) -> y <> x) in
+    if is_np e.ty && not (is_owned x) then seq (rc_op RcInc x e.ty) (decs roots e) else e
   (* A function's name, as a value, is a closure that is never freed, and a
      global's value is persistent once it is computed: neither is counted. *)
   | EQual (f, _) when TArrow? e.ty && HashTable.mem !fn_tbl (string_of_name f) -> e
@@ -1392,15 +1463,48 @@ and rc_live (o:owned) (e:expr) : ML expr =
      outlives this scope, as the fields a match binds are. *)
   | ELet (x, t, { e = EProj ({ e = EVar y }, _, _) }, e2) when is_np t && not (is_owned y) ->
     let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
-    let_ x t e1 (rc o e2)
+    let_ x t e1 (with_aliases (root_of y) [x] (fun () -> rc o e2))
+  (* So is a field of an owned boxed value, which then stays alive for as
+     long as the field is used (cherry.md, "Borrowing from an owned
+     value").  Not a peeked one: [peek_ok] checked its uses, not the
+     field's. *)
+  | ELet (x, t, { e = EProj ({ e = EVar y; ty = TApp (n, []) }, _, _) }, e2)
+    when is_np t && is_owned y && x <> y && HashTable.mem !boxed_tbl (string_of_name n) &&
+         not (List.mem y (List.map fst !peeked)) ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let_ x t e1 (with_aliases (Some y) [x] (fun () -> rc o e2))
   | ELet (x, t, { e = EProj (a, tn, f) }, e2) when is_np t && EProj? a.e ->
     let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
     let z = fresh () in
     rc_live o (let_ z a.ty a { e with e = ELet (x, t, { e1 with e = EProj (var z a.ty, tn, f) }, e2) })
 
+  (* A read of a borrowed reference that the scope only borrows in turn
+     (peek_ok) is not counted: the reference keeps the value alive. *)
+  | ELet (x, t, { e = EOp ({ po_op = BufRead }, [rv; _]) }, e2)
+    when is_np t && is_ml_ref rv.ty && EVar? rv.e && not (is_owned (EVar?._0 rv.e)) &&
+         EVar?._0 rv.e <> x && peek_ok x e2 ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let saved = !peeked in
+    peeked := (x, rv) :: saved;
+    (* Unpeeking [x] reads [rv], so an alias [rv] keeps its root alive. *)
+    let e2' = with_aliases (root_of (EVar?._0 rv.e)) [x] (fun () -> rc ((x, t) :: o) e2) in
+    peeked := saved;
+    let_ x t { e1 with e = EOp ({ po_op = RefPeek; po_ty = None }, [rv]); eff = E_Impure } e2'
+  (* So is a reference in a field of a borrowed value: named first, it is a
+     borrowed variable. *)
+  | ELet (x, t, { e = EOp ({ po_op = BufRead }, [rv; i]) }, e2)
+    when is_np t && is_ml_ref rv.ty && EProj? rv.e &&
+         (match rv.e with EProj ({ e = EVar y }, _, _) -> not (is_owned y) && y <> x | _ -> false) &&
+         peek_ok x e2 ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let op = (match e1.e with EOp (op, _) -> op | _ -> { po_op = BufRead; po_ty = None }) in
+    let z = fresh () in
+    rc_live o (let_ z rv.ty rv
+      { e with e = ELet (x, t, { e1 with e = EOp (op, [var z rv.ty; i]) }, e2) })
+
   | ELet (x, t, e1, e2) ->
-    let fv2 = without [x] (fv e2) in
-    let fv1 = fv e1 in
+    let fv2 = with_roots (without [x] (fv e2)) in
+    let fv1 = with_roots (fv e1) in
     let o1, o2 = List.partition (fun (y, _) ->
                    List.mem y fv1 && not (List.mem y fv2)) o in
     let e1' = inner o2 (fun () -> rc o1 e1) in
@@ -1409,7 +1513,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
 
   | ESeq (a, b) when is_np a.ty -> rc_live o (let_ (fresh ()) a.ty a b)
   | ESeq (a, b) ->
-    let fvb = fv b in
+    let fvb = with_roots (fv b) in
     let o1, o2 = List.partition (fun (y, _) -> not (List.mem y fvb)) o in
     let a' = inner o2 (fun () -> rc o1 a) in
     seq a' (rc o2 b)
@@ -1609,7 +1713,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
     (* The call itself is not tested like other calls: the test follows.
        On an exception its result is no value, so only the other branch
        owns it. *)
-    let fvk = fv caught in
+    let fvk = with_roots (fv caught) in
     let o1, o2 = List.partition (fun (y, _) -> not (List.mem y fvk)) o in
     let s' = inner o2 (fun () -> tail := true; rc o1 s) in
     let ro = if is_np e.ty then (r, e.ty) :: o2 else o2 in
@@ -1628,10 +1732,10 @@ and call (o:owned) (owns:option (list bool)) (args:list expr) (node:expr)
     match owns with
     | None -> true
     | Some fl -> i < List.length fl && List.nth fl i in
-  let borrowed_vars = args |> List.mapi (fun i (a:expr) ->
+  let borrowed_vars = with_roots (args |> List.mapi (fun i (a:expr) ->
     match a.e with
     | EVar y when not (owned_at i) -> [y]
-    | _ -> []) |> List.flatten in
+    | _ -> []) |> List.flatten) in
   let remaining = mk_ref (names o) in
   let extra = args |> List.mapi (fun i (a:expr) ->
     match a.e with
@@ -1641,9 +1745,13 @@ and call (o:owned) (owns:option (list bool)) (args:list expr) (node:expr)
       else [(y, a.ty)]
     | _ -> []) |> List.flatten in
   let left = o |> List.filter (fun (y, _) -> List.mem y !remaining) in
+  (* A root that only its aliases among the owned operands keep alive is
+     released once they have their references, before the node, which can
+     then still be a tail call. *)
+  let early, left = List.partition (fun (y, _) -> not (List.mem y borrowed_vars)) left in
   let raises = may_raise node in
   let node = if owns = Some [] then node else { node with eff = E_Impure } in
-  let call = incs extra node in
+  let call = incs extra (decs early node) in
   (* A call that may raise is tested, unless it is the function's result,
      which its caller tests: on an exception what the call did not take is
      released, the result (which is no value) is not, and the function
@@ -1695,7 +1803,10 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
   let p, g, b = br in
   if Some? g then unsupported "a pattern guard" else
   let binds = pat_binds p st in
-  let live = without (pat_vars p) (fv b) in
+  (* What a match on an alias binds is borrowed from its root as well. *)
+  let r = (match sc with Some (x, false) -> root_of x | _ -> None) in
+  with_aliases r (pat_vars p) (fun () ->
+  let live = without (pat_vars p) (with_roots (fv b)) in
   let fvb = fv b in
   let dead = o |> List.filter (fun (y, _) -> not (List.mem y live)) in
   let keep = o |> List.filter (fun (y, _) -> List.mem y live) in
@@ -1750,7 +1861,7 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
           let reset = mk (EOp ({ po_op = Reset (c, kept); po_ty = None }, [var x st])) st E_Impure in
           (p, g, decs dead_other (let_ w st reset body'))
         | None -> plain ())
-     | _ -> plain ())
+     | _ -> plain ()))
 
 let run_let (l:dlet) : ML dlet =
   current := string_of_name l.dl_name;

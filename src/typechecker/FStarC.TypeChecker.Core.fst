@@ -909,7 +909,7 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                     | Tm_fvar fv -> Env.fv_has_attr g.tcenv fv PC.unifier_hint_injective_lid
                     | _ -> false
                   in
-                  if (abs_args && rel = EQUALITY) || injective
+                  if (abs_args && EQUALITY? rel) || injective
                   then handle_with (argwise ()) (fun _ -> unfolded ())
                   else either_guard unfolded argwise
                 | None -> compare_head_and_args ())

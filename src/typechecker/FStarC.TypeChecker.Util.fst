@@ -1773,6 +1773,28 @@ let (let?) = Option.bind
 let bool_guard (b:bool) : ML (option unit) =
   if b then Some () else None
 
+(* See find_coercion. [f_typ] is the type of a coercion; if the type of its
+   coerced argument is closed, check that it matches [computed_t]. *)
+let source_type_matches (env:Env.env) (f_typ:typ) (computed_t:typ) : ML bool =
+  let f_bs, _ = U.arrow_formals_comp f_typ in
+  let rec drop_trailing_implicits (bs:list binder) : list binder =
+    if Nil? bs then bs
+    else if S.is_bqual_implicit_or_meta (List.last bs).binder_qual
+    then drop_trailing_implicits (List.init bs)
+    else bs
+  in
+  match drop_trailing_implicits f_bs with
+  | [] -> true
+  | bs ->
+    let src = (List.last bs).binder_bv.sort in
+    if not (is_empty (FStarC.Syntax.Free.names src)) then true
+    else
+      let unfold_ t = N.unfold_whnf' [Unascribe; Unmeta; Unrefine] env t in
+      let tx = UF.new_transaction () in
+      let ok = Rel.teq_nosmt_force env (unfold_ computed_t) (unfold_ src) in
+      UF.rollback tx;
+      ok
+
 let find_coercion (env:Env.env) (checked: comp) (exp_t: typ) (e:term)
 : ML (option (term & comp & guard_t))
 // returns coerced term, new comp type, and guard
@@ -1892,6 +1914,13 @@ let find_coercion (env:Env.env) (checked: comp) (exp_t: typ) (e:term)
       let? src_fv, tgt_fv = Overload.coercion_source_and_target env f_typ in
       bool_guard (lid_equals computed_head_lid (S.lid_of_fv src_fv));?
       bool_guard (lid_equals exp_head_lid (S.lid_of_fv tgt_fv));?
+
+      (* Matching heads are not enough when the source type is closed: a
+         coercion from [erased nat] must not shadow the builtin [reveal] for
+         an [erased real]. So for a closed source type, also require it to be
+         equal to the computed type, up to refinements. This is only a test, so
+         roll back any uvar solutions. *)
+      bool_guard (source_type_matches env f_typ computed_t);?
 
       (* We will now typecheck the coercion applied to `e` at expected type
          `exp_t` likely causing implicits to be instantiated for the coercion

@@ -48,8 +48,13 @@ clean: _force
 # support the same options.
 ifeq ($(FSTAR_LINK_LIBDIRS),1)
 INSTALL_DIR := ln -Tsrf
+TRIM_MIMALLOC := true
 else
 INSTALL_DIR := cp -H -p -r
+# Of the mimalloc submodule, a Cherry program needs only the sources it
+# compiles (ulib/c/cherry_mimalloc.c) and the license.
+TRIM_MIMALLOC = find $(PREFIX)/lib/fstar/ulib/c/mimalloc -mindepth 1 -maxdepth 1 \
+  ! -name include ! -name src ! -name LICENSE -exec rm -rf {} +
 endif
 
 # NOTE: We install ulib/ and src/ as symlinks, which is useful for
@@ -68,6 +73,7 @@ install: # NOTE: no deps, dune figures it out and rebuilds if needed
 	@# Install library and its checked files
 	rm -rf $(PREFIX)/lib/fstar/ulib
 	$(INSTALL_DIR) ulib $(PREFIX)/lib/fstar/ulib
+	$(TRIM_MIMALLOC)
 	rm -rf $(PREFIX)/lib/fstar/ulib.checked
 	$(INSTALL_DIR) ulib.checked $(PREFIX)/lib/fstar/ulib.checked
 	echo 'ulib'          > $(PREFIX)/lib/fstar/fstar.include

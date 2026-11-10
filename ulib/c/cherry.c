@@ -89,6 +89,35 @@ void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode) {
   busy = false;
 }
 
+/* The persistent ML references, and the visit function that marks each
+   one's value, so that [cherry_start_threads] can share what they hold. */
+bool cherry_threads;
+
+typedef struct { cherry_ref r; cherry_work_fn f; } global_ref;
+
+static global_ref *global_refs;
+static size_t nglobal_refs, global_refs_cap;
+
+void cherry_note_global_ref(cherry_ref r, cherry_work_fn f) {
+  if (cherry_threads) abort();
+  if (nglobal_refs == global_refs_cap) {
+    global_refs_cap = global_refs_cap == 0 ? 64 : 2 * global_refs_cap;
+    global_refs = (global_ref *)realloc(global_refs, global_refs_cap * sizeof(global_ref));
+    if (global_refs == NULL) abort();
+  }
+  global_refs[nglobal_refs++] = (global_ref){ r, f };
+}
+
+void cherry_start_threads(void) {
+  if (cherry_threads) return;
+  for (size_t i = 0; i < nglobal_refs; i++)
+    cherry_defer(global_refs[i].r, global_refs[i].f, CHERRY_SHARE);
+  cherry_threads = true;
+  free(global_refs);
+  global_refs = NULL;
+  nglobal_refs = global_refs_cap = 0;
+}
+
 void cherry_free_closure(cherry_obj *f, int mode) {
   (void)mode;
   CHERRY_CLOSURE(f)->drop(f);
@@ -543,21 +572,32 @@ cherry_string cherry_str_byte_sub(cherry_string s, cherry_int off, cherry_int le
   return cherry_str_of_bytes(cherry_str_data(s) + i, n);
 }
 
-uint64_t cherry_str_size64(cherry_string s) {
-  return (uint64_t)cherry_str_size(s);
-}
-
-uint64_t cherry_str_byte_at64(cherry_string s, uint64_t i) {
-  return (int64_t)i >= 0 && i < cherry_str_size(s)
-    ? (unsigned char)cherry_str_data(s)[i] : UINT64_MAX;
-}
-
-cherry_string cherry_str_slice64(cherry_string s, uint64_t i, uint64_t j) {
-  int64_t n = (int64_t)cherry_str_size(s), a = (int64_t)i, b = (int64_t)j;
+cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j) {
+  int64_t n = (int64_t)cherry_str_size(s), a = i, b = j;
   if (a < 0) a = 0;
   if (b > n) b = n;
   if (b <= a) return cherry_str_of_bytes("", 0);
   return cherry_str_of_bytes(cherry_str_data(s) + a, (size_t)(b - a));
+}
+
+bool cherry_str_contains(cherry_string s, cherry_string sub) {
+  const char *p = cherry_str_data(s), *q = cherry_str_data(sub);
+  size_t n = cherry_str_size(s), m = cherry_str_size(sub);
+  if (m == 0) return true;
+  if (m > n) return false;
+  const char *last = p + (n - m);
+  for (const char *c = p; c <= last; c++) {
+    c = (const char *)memchr(c, q[0], (size_t)(last - c) + 1);
+    if (c == NULL) return false;
+    if (memcmp(c + 1, q + 1, m - 1) == 0) return true;
+  }
+  return false;
+}
+
+bool cherry_str_matches_at64(cherry_string s, cherry_string sub, int64_t i) {
+  size_t n = cherry_str_size(s), m = cherry_str_size(sub);
+  return i >= 0 && (uint64_t)i <= n && m <= n - (size_t)i &&
+    memcmp(cherry_str_data(s) + i, cherry_str_data(sub), m) == 0;
 }
 
 cherry_string cherry_str_of_byte(uint32_t b) {
@@ -625,8 +665,8 @@ cherry_int cherry_str_compare(cherry_string a, cherry_string b) {
 
 /* The same comparison as a two's complement 64-bit -1/0/1
    (FStarC.SmallInt.string_compare). */
-uint64_t cherry_str_compare_u64(cherry_string a, cherry_string b) {
-  return (uint64_t)(int64_t)str_compare(a, b);
+int64_t cherry_str_compare_i64(cherry_string a, cherry_string b) {
+  return (int64_t)str_compare(a, b);
 }
 
 /* 64-bit FNV-1a over the UTF-8 bytes (FStarC.Hash.of_string). */

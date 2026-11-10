@@ -1,6 +1,7 @@
 module CherryRef
 module U32 = FStar.UInt32
 open FStar.All
+module IA = FStar.ImmutableArray
 
 let rec len (#a: Type) (l: list a) : nat = match l with [] -> 0 | _ :: t -> 1 + len t
 
@@ -25,6 +26,23 @@ let twice (r: ref (ref string)) : ML unit =
   inner := !inner ^ !inner;
   r := alloc (!inner ^ "!")
 
+(* Reads that only index the array peek at the reference (no count): a
+   local cell directly, the persistent [tbl] under its lock. *)
+let at ([@@@FStar.Attributes.cherry_borrowed] r: ref (IA.t string)) (i: nat) : ML string =
+  let a = !r in
+  if i < IA.length a then IA.index a i else "?"
+
+let tbl : ref (IA.t string) = alloc (IA.of_list ["p"; "q"])
+
+(* A reference in a field of a borrowed record peeks too, and what follows
+   the array's last use may write the reference. *)
+noeq type holder = { tag: string; tab: ref (IA.t string) }
+let at_then_clear ([@@@FStar.Attributes.cherry_borrowed] h: holder) (i: nat) : ML string =
+  let a = !h.tab in
+  let s = if i < IA.length a then IA.index a i else "?" in
+  h.tab := IA.of_list [];
+  s ^ at h.tab 0 ^ (if h.tag = "h" then "" else "!")
+
 let main () : ML U32.t =
   say "a"; say ("b" ^ "c");
   let n3 = { name = "c"; next = alloc None } in
@@ -45,6 +63,13 @@ let main () : ML U32.t =
   let v = !f 10 in
   let big = alloc 100000000000 in
   big := !big * !big;
+  let la = alloc (IA.of_list ["u" ^ "v"; "w"]) in
+  let p = at la 0 ^ at la 1 ^ at la 2 ^ at tbl 1 in
+  la := IA.of_list [];
+  let p = p ^ at la 0 ^ at tbl 0 in
+  let h = { tag = "h"; tab = alloc (IA.of_list ["x" ^ "y"]) } in
+  let p = p ^ at_then_clear h 0 ^ at_then_clear h 0 in
   if len !log = 2 && l1 = 3 && l2 = 2 && k = 3 && s = "xx!" && v = 12 &&
-     !big = 10000000000000000000000 && n1.name = "a"
+     !big = 10000000000000000000000 && n1.name = "a" &&
+     p = "uvw?q?pxy???"
   then 0ul else 1ul

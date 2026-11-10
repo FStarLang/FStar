@@ -161,10 +161,9 @@ let on_antiquoted (f : (term -> ML term)) (qi : quoteinfo) : ML quoteinfo =
 
 (* Requires that bv.index is in scope. *)
 let lookup_aq (bv : bv) (aq : antiquotations) : ML term =
-    try List.nth (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) // subtract shift
-    with
-    | _ ->
-      failwith "antiquotation out of bounds"
+    match FStarC.Common.nth_opt (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) with // subtract shift
+    | Some t -> t
+    | None -> failwith "antiquotation out of bounds"
 
 // This is set in FStarC.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> ML term)) = mk_ref None
@@ -267,9 +266,12 @@ let hash_constant (c:sconst) : ML H.hash_code =
 let hash_arg_qualifier (aq:arg_qualifier) : ML H.hash_code =
   H.mix (hash_bool aq.aqual_implicit) (hash_list hash_of aq.aqual_attributes)
 
+let hash_arg_parts (t:term) (aq:option arg_qualifier) : ML H.hash_code =
+  H.mix t.hash_code (hash_option hash_arg_qualifier aq)
+
 let hash_arg (a:arg) : ML H.hash_code =
   let t, aq = a in
-  H.mix t.hash_code (hash_option hash_arg_qualifier aq)
+  hash_arg_parts t aq
 
 let hash_bqual (bq:binder_qualifier) : H.hash_code =
   match bq with
@@ -370,7 +372,9 @@ let hash_term' (t:term') : ML H.hash_code =
     mix4 (hc 19) (hash_binder b) body.hash_code (hash_option hash_rc rc_opt)
   | Tm_arrow {b; comp} -> mix3 (hc 23) (hash_binder b) comp.hash_code
   | Tm_refine {b; phi} -> mix3 (hc 29) (hash_bv b) phi.hash_code
-  | Tm_app {hd; arg} -> mix3 (hc 31) hd.hash_code (hash_arg arg)
+  (* The pair is taken apart here, where it is stored flat in the node, so
+     that hashing it does not build a tuple. *)
+  | Tm_app {hd; arg=(t, aq)} -> mix3 (hc 31) hd.hash_code (hash_arg_parts t aq)
   | Tm_match {scrutinee; ret_opt; brs; rc_opt} ->
     mix5 (hc 37) (hash_option hash_match_returns ret_opt) scrutinee.hash_code
          (hash_list hash_branch brs) (hash_option hash_rc rc_opt)

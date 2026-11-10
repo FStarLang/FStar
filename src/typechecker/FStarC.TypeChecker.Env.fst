@@ -237,6 +237,25 @@ let consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : 
     HashTable.remove e.strict_args_tab s;
     HashTable.remove e.disc_proj_tab s);
   if Cons? lids then HashTable.clear e.spec_arg_tab;
+  (* The attribute table lists the most recent entries first, and e.g.
+     typeclass resolution tries instances in that order. An interface
+     declaration was entered there when the interface was loaded, i.e. before
+     the dependencies of the implementation; now that it comes into scope,
+     move it to the front, as if it was defined at this point. *)
+  consumed |> List.iter (fun se ->
+    let se_lids = lids_of_sigelt se in
+    let same (se' : sigelt) = BU.for_some (fun l -> BU.for_some (lid_equals l) se_lids) (lids_of_sigelt se') in
+    se.sigattrs |> List.iter (fun attr ->
+      let hd, _ = U.head_and_args_full attr in
+      match (Subst.compress hd).n with
+      | Tm_fvar fv ->
+        let key = string_of_lid (lid_of_fv fv) in
+        (match HashTable.try_find e.attrtab key with
+         | Some ses when BU.for_some same ses ->
+           let mine, others = List.partition same ses in
+           HashTable.add e.attrtab key (mine @ others)
+         | _ -> ())
+      | _ -> ()));
   let hidden = lids |> List.fold_left (fun s l -> remove l s) e.iface_hidden in
   { e with iface_todo = remaining; iface_hidden = hidden }
 
@@ -543,18 +562,24 @@ type tri =
     | No
     | Maybe
 
-let in_cur_mod env (l:lident) : ML tri = (* TODO: need a more efficient namespace check! *)
+let in_cur_mod env (l:lident) : ML tri =
     let cur = current_module env in
     if nsstr l = (string_of_lid cur) then Yes (* fast case; works for everything except records *)
     else if BU.starts_with (nsstr l) (string_of_lid cur)
-    then let lns = ns_of_lid l   @ [ident_of_lid l] in
-         let cur = ns_of_lid cur @ [ident_of_lid cur] in
-         let rec aux c l = match c, l with
-            | [], _ -> Maybe
-            | _, [] -> No
-            | hd::tl, hd'::tl' when ((string_of_id hd = string_of_id hd')) -> aux tl tl'
-            | _ -> No in
-         aux cur lns
+    then
+      (* Maybe iff the components of [cur] (its namespace followed by its
+         ident [cid]) are a prefix of those of [l] (namespace, then [lid]).
+         Walks both lists in place instead of appending the idents. *)
+      let cid = ident_of_lid cur in
+      let lid = ident_of_lid l in
+      let rec aux (c l : list ident) : tri =
+        match c, l with
+        | [], [] -> if string_of_id cid = string_of_id lid then Maybe else No
+        | [], hd::_ -> if string_of_id cid = string_of_id hd then Maybe else No
+        | _::_, [] -> No
+        | hd::tl, hd'::tl' -> if string_of_id hd = string_of_id hd' then aux tl tl' else No
+      in
+      aux (ns_of_lid cur) (ns_of_lid l)
     else No
 
 let lookup_qname env (lid:lident) : ML (qninfo) =

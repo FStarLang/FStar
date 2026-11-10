@@ -172,14 +172,13 @@ private let byte (s:string) (i:int) : int = I.to_int (S.byte_at s (I.of_int i))
 private let bsub (s:string) (i j:int) : string = S.byte_substring s (I.of_int i) (I.of_int j)
 
 (* Whether [sub] occurs in [s] at [i]. *)
-private let rec matches_from (s sub:string) (i j n:int) : Tot bool (decreases (n - j)) =
-  if j >= n then true
-  else if byte s (i + j) <> byte sub j then false
-  else matches_from s sub i (j + 1) n
-
+[@@custard_extern "cherry_str_matches_at64"]
+private assume val c_matches_at : string -> string -> I.t -> bool
 private let matches_at (s sub:string) (i:int) : bool =
-  let n = blen sub in
-  0 <= i && i + n <= blen s && matches_from s sub i 0 n
+  0 <= i && i <= blen s && c_matches_at s sub (I.of_int i)
+
+[@@custard_extern "cherry_str_contains"]
+private assume val c_contains : string -> string -> bool
 
 let max_int = 4611686018427387903
 
@@ -663,12 +662,7 @@ let char_at s i = S.get s i
 
 let is_upper c = I.(of_char c >= of_char 'A' && of_char c <= of_char 'Z')
 
-private let rec contains_from (s sub:string) (i last:int) : Tot bool (decreases (last + 1 - i)) =
-  if i > last then false
-  else if matches_at s sub i then true
-  else contains_from s sub (i + 1) last
-
-let contains s sub = contains_from s sub 0 (blen s - blen sub)
+let contains s sub = c_contains s sub
 
 (* Bytes, as BatString.tail and String.sub. *)
 let substring_from s i =

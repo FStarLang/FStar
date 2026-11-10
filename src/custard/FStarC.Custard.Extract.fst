@@ -373,6 +373,12 @@ type state = {
      and answered by normalizing every binder's sort.  Keyed by a tag and the
      lid; see {!binder_flags} and section 12.14. *)
   bflags:  HashTable.t string (list bool);
+  (* lid -> whether it is marked [@@custard_compile_time]; see
+     {!compile_time_demanded}, which asks at every application node. *)
+  ct_marked: HashTable.t string bool;
+  (* Modules {!ensure_lid_available} has seen loaded.  A module is never
+     unloaded, and asking the dependency graph is not cheap. *)
+  loaded_mods: HashTable.t string unit;
   (* lid -> how many specializations of it we have created so far. *)
   counts:  HashTable.t string int;
   (* The mangled names handed out already, so that two specializations whose
@@ -494,6 +500,8 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   order   = mk_ref [];
   classes = HashTable.create 100;
   bflags = HashTable.create 100;
+  ct_marked = HashTable.create 100;
+  loaded_mods = HashTable.create 100;
   counts  = HashTable.create 100;
   suffixes = HashTable.create 100;
   fuel    = mk_ref (Options.custard_fuel ());
@@ -722,6 +730,13 @@ let env_for_term (env:TcEnv.env) (t:term) : ML TcEnv.env =
 let env_for_comp (env:TcEnv.env) (c:comp) : ML TcEnv.env =
   with_free_names env (elems (Free.names_comp c))
 
+(* [Effects.maybe_reify] in [env_for_term env t], which is only computed when
+   [l] is reifiable: most code is in a non-reifiable effect, and [t] is often
+   a whole definition, whose free names are not free to find. *)
+let reify_in (env:TcEnv.env) (t:term) (l:Ident.lident) : ML term =
+  if Effects.is_reifiable env l then Effects.maybe_reify (env_for_term env t) t l
+  else t
+
 let norm_bounded_in (st:state) (env:TcEnv.env) (what:string)
                     (steps:list TcEnv.step) (t:term) : ML term =
   try let env = env_for_term env t in
@@ -889,8 +904,11 @@ let type_matched_heads (env:TcEnv.env) (t:term) : ML (list Ident.lident) =
    is the on-demand part of section 4.1. *)
 let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
   let m = Ident.nsstr l in
-  if m <> "" && not (Loader.module_is_loaded st.deps (tcenv st) m) then
-    st.env := Prof.timed "load" (fun () -> Loader.ensure_loaded st.deps (tcenv st) m)
+  if m <> "" && None? (HashTable.try_find st.loaded_mods m) then begin
+    if not (Loader.module_is_loaded st.deps (tcenv st) m) then
+      st.env := Prof.timed "load" (fun () -> Loader.ensure_loaded st.deps (tcenv st) m);
+    HashTable.add st.loaded_mods m ()
+  end
 
 (* Section 30.11.  Which of a definition's names have to be known at extraction
    time because something marked [@@custard_compile_time] is applied to them.
@@ -924,8 +942,14 @@ let compile_time_demanded (st:state) (t:term) : ML (list int) =
     match (U.un_uinst (SS.compress hd)).n with
     | Tm_fvar fv ->
       let l = S.lid_of_fv fv in
-      ensure_lid_available st l;
-      TcEnv.fv_has_attr (tcenv st) fv PC.custard_compile_time_attr
+      let key = Ident.string_of_lid l in
+      (match HashTable.try_find st.ct_marked key with
+       | Some b -> b
+       | None ->
+         ensure_lid_available st l;
+         let b = TcEnv.fv_has_attr (tcenv st) fv PC.custard_compile_time_attr in
+         HashTable.add st.ct_marked key b;
+         b)
     | _ -> false in
   let contains_marked (t:term) : ML bool =
     let found = mk_ref false in
@@ -937,6 +961,9 @@ let compile_time_demanded (st:state) (t:term) : ML (list int) =
      separately from the lambda's and so are different [bv]s for the same
      parameter.  Opening the lambda here is also what turns its binders into
      [Tm_name]s that [Free.names] can see at all. *)
+  (* Nearly no definition applies a marked function, and the scan below
+     re-walks every branch of every match, so check for one first. *)
+  if not (contains_marked t) then [] else
   let bs, body, _ = U.abs_formals t in
   let acc : ref (list bv) = mk_ref [] in
   let add (t:term) : ML unit = acc := FlatSet.elems (Free.names t) @ !acc in
@@ -3539,8 +3566,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let body =
       match rc with
       | Some rc ->
-        Effects.maybe_reify (env_for_term (tcenv st) body) body
-                            rc.residual_effect
+        reify_in (tcenv st) body rc.residual_effect
       | None -> body in
     let body = expr_of_term st body in
     let flags =
@@ -3634,7 +3660,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
         applied to. *)
      | Tm_constant (Const_reify (Some l)) when Cons? args ->
        let e0 = args |> List.hd |> fst in
-       let e = Effects.maybe_reify (env_for_term (tcenv st) e0) e0 l in
+       let e = reify_in (tcenv st) e0 l in
        expr_of_term st (S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos)
 
      | _ ->
@@ -4150,7 +4176,7 @@ and lift_locals (st:state) (lbs:list letbinding) (body:term) : ML expr =
         let eff_name = match rc with
                        | Some rc -> rc.residual_effect
                        | None -> ambient () in
-        Effects.maybe_reify (env_for_term (tcenv st) def_body) def_body eff_name in
+        reify_in (tcenv st) def_body eff_name in
       let ret, eff = local_result st lb.lbtyp xs in
       (* F* generalizes a local [let rec] just as it does a top-level one, so
          the definiens may bind type variables of its own.  They hold no
@@ -6934,10 +6960,8 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let body =
     Prof.timed "reify" (fun () ->
     match rc with
-    | Some rc -> Effects.maybe_reify (env_for_term benv body) body
-                                     rc.residual_effect
-    | None -> Effects.maybe_reify (env_for_term benv body) body
-                                  (U.comp_effect_name c)) in
+    | Some rc -> reify_in benv body rc.residual_effect
+    | None -> reify_in benv body (U.comp_effect_name c)) in
   (* Register the signature before extracting the body, so that a
      self-recursive call inside it finds an exact effect and an exact type
      instead of {!callee_eff}'s and {!callee_sig}'s conservative fallbacks.

@@ -3775,6 +3775,17 @@ $(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryMoveFields.chgrep
 
+# Cherry: a field of an owned boxed value is borrowed from it, and a call
+# that takes such a field owned stays a tail call.
+CHERRY_TESTS += CherryAliasBorrow
+$(CHERRY_DIR)/CherryAliasBorrow.chgrep: $(CHERRY_DIR)/CherryAliasBorrow.chc
+	$(Q)! sed -n '/^static .* CherryAliasBorrow_first_len(.*{$$/,/^}/p' $< | grep -q 'cherry_inc' \
+	  || { echo "ERROR: CherryAliasBorrow_first_len counts a borrowed field"; exit 1; }
+	$(Q)sed -n '/^static .* CherryAliasBorrow_kids_count(.*{$$/,/^}/p' $< | grep -q 'CHERRY_MUSTTAIL return' \
+	  || { echo "ERROR: CherryAliasBorrow_kids_count lost its tail call"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryAliasBorrow.chgrep
+
 # Cherry: a function used as a value keeps the arity eta-reduction took from
 # it, so a direct call is not a partial application.
 CHERRY_TESTS += CherryEtaValue
@@ -3846,7 +3857,7 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec CherryGlobalRefShare
 # A low budget so that a regression fails in seconds rather than a minute.
 FLAGS_CherryMonoLocalRec = --custard_norm_budget 1000000
 

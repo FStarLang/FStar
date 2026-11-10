@@ -69,7 +69,7 @@ type pstate = {
 let mk_pstate (fname:string) (start_pos:R.pos) (toks:list L.token) : ML pstate =
   let arr = A.of_list toks in
   { toks = arr; ntoks = SI.array_length arr; idx = mk_ref SI.zero; furthest = mk_ref SI.zero;
-    fname = fname; start_pos = start_pos }
+    fname = Find.source_file_name fname; start_pos = start_pos }
 
 (* The token list is never empty: it ends with EOF (or ERROR). Tokens
    past the end are that final token. *)
