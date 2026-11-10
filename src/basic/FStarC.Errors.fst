@@ -156,7 +156,8 @@ let optional_def (f : 'a -> ML PP.document) (def : PP.document) (o : option 'a) 
 
 let issue_to_doc' (print_hdr:bool) (issue:issue) : ML PP.document =
   let open FStarC.Pprint in
-  let r = Option.map Range.refind_range issue.issue_range in
+  // Text uses stored source paths; only structured locations need resolution.
+  let r = issue.issue_range in
   let hdr : document =
     if print_hdr then (
       let level_header = doc_of_string (string_of_issue_level issue.issue_level) in

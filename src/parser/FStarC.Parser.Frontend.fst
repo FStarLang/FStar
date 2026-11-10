@@ -183,7 +183,7 @@ let parse_lang (lang:string) (fn:parse_frag) : ML parse_result =
   let frag = frag_of fn in
   try
     let frag_pos = R.mk_pos frag.frag_line frag.frag_col in
-    let rng = R.mk_range frag.frag_fname frag_pos frag_pos in
+    let rng = R.mk_range (Find.source_file_name frag.frag_fname) frag_pos frag_pos in
     let contents_at = contents_at frag.frag_text in
     let decls = AU.parse_extension_lang lang frag.frag_text rng in
     let comments = AU.flush_comments () in
