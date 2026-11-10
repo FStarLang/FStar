@@ -99,6 +99,7 @@ type aqualv =
   | Q_Explicit
   | Q_Equality
   | Q_Meta of term
+  | Q_TcArg (* a typeclass argument, resolved by typeclass resolution *)
 
 type argv = term & aqualv
 

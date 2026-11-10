@@ -27,6 +27,8 @@ noeq type holder (m: Type0 -> Type0) = { hm : monad m; step : int -> ML (m int) 
 instance holder_monad (#m: Type0 -> Type0) (h: holder m) : Tot (monad m) = h.hm
 
 let rec steps (#m: Type0 -> Type0) (h: holder m) (n: nat) (x: int) : ML (m int) =
+  (* Only locals whose type is a class are instances: bind the dictionary. *)
+  let _ : monad m = holder_monad h in
   if n = 0 then h.step x
   else
     let! y = h.step x in

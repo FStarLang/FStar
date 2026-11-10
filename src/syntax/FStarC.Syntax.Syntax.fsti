@@ -183,6 +183,17 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of term
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@@ defer_to ...] notation *)
+  | Ctx_uvar_meta_tc of tc_scope (* A typeclass argument, resolved in the given scope *)
+(* The typeclass scope of a context: the local instances, and the cache of
+   resolved goals.  Local instances are the variables whose type was a class
+   when they were pushed (most recent first).  Pushing one allocates a new
+   cache.  The cache maps a goal, deeply compressed and with its functional
+   dependencies replaced by [Tm_unknown], to its solution (if any) together
+   with the solved goal type. *)
+and tc_scope = {
+  tc_locals : list bv;
+  tc_cache  : ref (FStarC.HashMap.t term (option (term & typ)));
+}
 and ctx_uvar_and_subst = ctx_uvar & subst_ts
 
 and uvar_decoration = {
@@ -453,6 +464,7 @@ and binder_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Meta of term     //meta-argument that specifies a tactic term
   | Equality
+  | TcArg            //typeclass argument, solved by instance resolution
 and bqual = option binder_qualifier
 and arg_qualifier = {
   aqual_implicit : bool;

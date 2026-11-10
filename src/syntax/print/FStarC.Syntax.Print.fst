@@ -52,6 +52,7 @@ let db_to_string bv : ML string = (string_of_id bv.ppname) ^ "@" ^ show bv.index
 let filter_imp aq : ML bool =
    (* keep typeclass args *)
    match aq with
+   | Some TcArg -> true
    | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> true
    | Some (Implicit _)
    | Some (Meta _) -> false
@@ -253,6 +254,7 @@ let bqual_to_string' (s:string) (b:bqual) : ML string =
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "$" ^ s
+  | Some TcArg -> "{|" ^ s ^ "|}"
   | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> "{|" ^ s ^ "|}"
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
@@ -335,7 +337,8 @@ instance showable_metadata    = { show = metadata_to_string; }
 instance showable_ctx_uvar_meta = {
   show = (function
           | Ctx_uvar_meta_attr attr -> "Ctx_uvar_meta_attr " ^ show attr
-          | Ctx_uvar_meta_tac r -> "Ctx_uvar_meta_tac " ^ show r);
+          | Ctx_uvar_meta_tac r -> "Ctx_uvar_meta_tac " ^ show r
+          | Ctx_uvar_meta_tc _ -> "Ctx_uvar_meta_tc");
 }
 instance showable_bqual   = { show = (fun b -> bqual_to_string (Some b)); } // really silly but OK
 instance showable_aqual   = { show = aqual_to_string; }

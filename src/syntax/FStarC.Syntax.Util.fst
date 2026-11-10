@@ -65,6 +65,7 @@ let aqual_of_binder (b:binder)
   : aqual
   = match b.binder_qual, b.binder_attrs with
     | Some (Implicit _), _
+    | Some TcArg, _
     | Some (Meta _), _ ->
       Some ({ aqual_implicit = true;
               aqual_attributes = b.binder_attrs })
@@ -1523,6 +1524,7 @@ and bqual_eq_dbg (dbg : bool) (a1 a2 : bqual) : ML bool =
     | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> true
     | Some (Meta t1), Some (Meta t2) -> term_eq_dbg dbg t1 t2
     | Some Equality, Some Equality -> true
+    | Some TcArg, Some TcArg -> true
     | _ -> false
 
 and aqual_eq_dbg (dbg : bool) (a1 a2 : aqual) : ML bool =
@@ -1626,7 +1628,12 @@ let bqual_compat (b1 b2 : bqual) : bool =
     | Some (Implicit _), Some (Implicit _)
     | Some (Implicit _), Some (Meta _)
     | Some (Meta _), Some (Implicit _)
-    | Some (Meta _), Some (Meta _) -> true
+    | Some (Meta _), Some (Meta _)
+    | Some TcArg, Some (Implicit _)
+    | Some TcArg, Some (Meta _)
+    | Some (Implicit _), Some TcArg
+    | Some (Meta _), Some TcArg
+    | Some TcArg, Some TcArg -> true
     | Some Equality, Some Equality
     | Some Equality, None
     | None, Some Equality -> true
@@ -2198,3 +2205,18 @@ let hua (t:term) : ML (option (fv & list universe & args)) =
   | Tm_fvar fv -> Some (fv, [], args)
   | Tm_uinst ({ n = Tm_fvar fv }, us) -> Some (fv, us, args)
   | _ -> None
+
+let is_tcresolve_tac (tac:term) : ML bool =
+  is_fvar PC.tcresolve_lid tac || (
+    match (Subst.compress tac).n with
+    | Tm_abs {body} ->
+      let hd, args = head_and_args_full body in
+      is_fvar PC.tcresolve_lid hd && List.length args = 1
+    | _ -> false
+  )
+
+let is_tc_bqual (q:bqual) : ML bool =
+  match q with
+  | Some TcArg -> true
+  | Some (Meta t) -> is_tcresolve_tac t
+  | _ -> false

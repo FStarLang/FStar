@@ -180,8 +180,17 @@ let dep_graph e = DsEnv.dep_graph e.dsenv
 
 //Used in fly_deps mode for loading a module on the fly and then
 //restoring the local environment to what it was
+let new_tc_scope (locals:list bv) : ML tc_scope =
+  { tc_locals = locals; tc_cache = mk_ref FStarC.HashMap.empty }
+
+(* Adding an instance invalidates the typeclass caches. *)
+let reset_tc_global (e:env) : ML env =
+  let tc_global = new_tc_scope [] in
+  {e with tc_global; tc_scope = tc_global; tc_scope_gamma = []}
+
 let with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env) =
   let env = { e with gamma=[]; gamma_sig=[]; proof_ns=[]; iface_todo=[]; iface_hidden=empty (); iface_lids=None; iface_val_lids=empty() } in
+  let env = reset_tc_global env in
   env.solver.refresh None;
   let res, env =
     FStarC.Options.with_restored_cmd_line_options (fun _ -> 
@@ -201,7 +210,7 @@ let with_restored_scope (e:env) (f: env -> ML ('a & env)) : ML ('a & env) =
                 iface_todo=e.iface_todo;
                 iface_hidden=e.iface_hidden;
                 iface_lids=e.iface_lids;
-                iface_val_lids=e.iface_val_lids}
+                iface_val_lids=e.iface_val_lids} |> reset_tc_global
     )
   in
   env.solver.refresh (Some env.proof_ns);
@@ -219,7 +228,13 @@ let record_definition_for (e:env) (l:lident) : ML env =
 let missing_definition_list (e:env) : ML (list lident) =
   elems e.missing_decl
 
+let rec is_instance_sigelt (se:sigelt) : ML bool =
+  match se.sigel with
+  | Sig_bundle {ses} -> List.existsb is_instance_sigelt ses
+  | _ -> List.existsb (U.is_fvar Const.tcinstance_lid) se.sigattrs
+
 let set_iface_todo (e:env) (ses:list sigelt) : ML env =
+  let e = reset_tc_global e in
   { e with iface_todo = ses;
            iface_hidden = ses |> List.collect lids_of_sigelt |> from_list }
 
@@ -257,6 +272,7 @@ let consume_iface_todo (e:env) (consumed:list sigelt) (remaining:list sigelt) : 
          | _ -> ())
       | _ -> ()));
   let hidden = lids |> List.fold_left (fun s l -> remove l s) e.iface_hidden in
+  let e = if List.existsb is_instance_sigelt consumed then reset_tc_global e else e in
   { e with iface_todo = remaining; iface_hidden = hidden }
 
 let is_iface_hidden (e:env) (l:lident) : ML bool =
@@ -302,7 +318,10 @@ let initial_env deps
   teq_nosmt_force
   subtype_nosmt_force
   solver module_lid nbe
-  core_check : ML env =
+  core_check
+  tc_class_of_typ
+  tc_resolve : ML env =
+  let tc_global = { tc_locals = []; tc_cache = mk_ref FStarC.HashMap.empty } in
   { solver=solver;
     range=dummyRange;
     curmodule=module_lid;
@@ -368,6 +387,12 @@ let initial_env deps
     iface_hidden = empty();
     iface_lids = None;
     iface_val_lids = empty();
+
+    tc_global;
+    tc_scope = tc_global;
+    tc_scope_gamma = [];
+    tc_class_of_typ;
+    tc_resolve;
   }
 
 let dsenv env = env.dsenv
@@ -1652,6 +1677,18 @@ let rec record_vals_and_defns (g:env) (se:sigelt) : ML (env) =
 let push_sigelt' (force:bool) env s : ML _ =
   let sb = (lids_of_sigelt s, s) in
   let env = {env with gamma_sig = sb::env.gamma_sig} in
+  (* An instance declared by an interface [val] is defined by a sigelt
+     without the attribute; the instance only becomes usable now. *)
+  let defines_instance () : ML bool =
+    let lids = lids_of_sigelt s in
+    Cons? lids &&
+    (match HashTable.try_find env.attrtab (string_of_lid Const.tcinstance_lid) with
+     | None -> false
+     | Some ses ->
+       BU.for_some (fun se ->
+         BU.for_some (fun l -> BU.for_some (lid_equals l) lids) (lids_of_sigelt se)) ses)
+  in
+  let env = if is_instance_sigelt s || defines_instance () then reset_tc_global env else env in
   add_sigelt force env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   let env = record_vals_and_defns env s in
@@ -1797,8 +1834,35 @@ let lookup_lift env src tgt : ML (option tscheme) =
   |> Option.find (fun (s, t, _) -> lid_equals s src && lid_equals t tgt)
   |> Option.map (fun (_, _, ts) -> ts)
 
-let push_local_binding env b =
-  {env with gamma=b::env.gamma}
+let tc_scope_of (env:env) : ML tc_scope =
+  if BU.physical_equality env.gamma env.tc_scope_gamma
+  then env.tc_scope
+  else
+    let locals =
+      env.gamma |> List.collect (function
+        | Binding_var x when Some? (env.tc_class_of_typ env x.sort) -> [x]
+        | _ -> [])
+    in
+    match locals with
+    | [] -> env.tc_global
+    | _ -> new_tc_scope locals
+
+(* A variable whose type is a class when it is pushed becomes a local
+   instance, which invalidates the cache.  The scope is only computed if it
+   is known for the current [gamma]: otherwise it stays unknown, and
+   [tc_scope_of] computes it from [gamma] when (and if) it is needed. *)
+let push_local_binding env b : ML _ =
+  let gamma = b::env.gamma in
+  if BU.physical_equality env.gamma env.tc_scope_gamma then
+    let tc_scope =
+      match b with
+      | Binding_var x when Some? (env.tc_class_of_typ env x.sort) ->
+        new_tc_scope (x :: env.tc_scope.tc_locals)
+      | _ -> env.tc_scope
+    in
+    {env with gamma; tc_scope; tc_scope_gamma = gamma}
+  else
+    {env with gamma}
 
 let push_bv env x = push_local_binding env (Binding_var x)
 
@@ -2098,10 +2162,12 @@ let new_implicit_var_aux reason r env k should_check meta unrefine : ML _ =
 
 (***************************************************)
 
-let uvar_meta_for_binder (b:binder) : ML (option ctx_uvar_meta_t & bool) =
+let uvar_meta_for_binder (env:env) (b:binder) : ML (option ctx_uvar_meta_t & bool) =
   let should_unrefine = U.has_attribute b.binder_attrs Const.unrefine_binder_attr in
   let meta =
     match b.binder_qual with
+    | _ when U.is_tc_bqual b.binder_qual ->
+      Some (Ctx_uvar_meta_tc (tc_scope_of env))
     | Some (Meta tau) ->
       (* Meta qualifier (e.g typeclass constraints) *)
       Some (Ctx_uvar_meta_tac tau)
@@ -2134,7 +2200,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r : ML _ =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
-    let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder b in
+    let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder env b in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
       (reason b) r env sort
