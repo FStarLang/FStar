@@ -391,5 +391,5 @@ let resolve (env:Env.env) (scope:tc_scope) (goal:typ) (rng:Range.t) : ML (term &
   | None ->
     Errors.raise_error rng Errors.Fatal_UserTacticFailure [
       prefix 2 1 (text "Could not solve typeclass constraint")
-        (fquotes (pp (N.normalize norm_steps env goal)));
+        (fquotes (N.term_to_doc env goal));
     ]

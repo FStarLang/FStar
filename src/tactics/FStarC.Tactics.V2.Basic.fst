@@ -1915,7 +1915,7 @@ let unshelve (t : term) : ML (tac unit) = wrap_err "unshelve" <| (
     )
 
 (* Solve the goal by typeclass resolution, in the scope of its context. *)
-let tcresolve_native () : ML (tac unit) = wrap_err "tcresolve" <| (
+let tcresolve_native () : ML (tac unit) = (
   let! g = cur_goal in
   let env = goal_env g in
   let t, imps = env.tc_resolve env (Env.tc_scope_of env) (goal_type g) (goal_range g) in
