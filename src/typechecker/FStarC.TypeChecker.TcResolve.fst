@@ -228,10 +228,13 @@ let mark_checked (u:term) : ML unit =
     UF.change_decoration ctx_u.ctx_uvar_head { dec with uvar_decoration_should_check = Already_checked }
   | _ -> ()
 
+let is_unit_or_squash (t:typ) : ML bool =
+  let ut = U.unrefine t in
+  U.is_unit ut || Some? (U.is_squash ut)
+
 (* Whether an explicit instance argument of this type is solved as a goal. *)
 let is_subgoal_typ (env:Env.env) (t:typ) : ML bool =
-  let ut = U.unrefine t in
-  U.is_unit ut || Some? (U.is_squash ut) || Some? (class_of_typ env t)
+  is_unit_or_squash t || Some? (class_of_typ env t)
 
 let rec solve (gs:gst) (st:st) (goal:typ) : ML result =
   gs.steps := !gs.steps + 1;
@@ -375,7 +378,8 @@ and search (gs:gst) (st:st) (cls:Ident.lident) (goal:typ) : ML result =
 
 (* Apply the instance [inst : t] to fresh uvars, unify its result type with
    the goal, and solve the typeclass arguments (and the explicit ones whose
-   type is a class, unit or squash) as goals of their own.  The other
+   type is a class, unit or squash, and the implicit ones of type unit or
+   squash) as goals of their own.  The other
    arguments must be determined by unification. *)
 and try_instance (gs:gst) (st:st) (goal:typ) (inst:term) (t:typ) : ML result =
   debug (fun () -> "trying " ^ show inst ^ " for " ^ show goal);
@@ -393,7 +397,8 @@ and try_instance (gs:gst) (st:st) (goal:typ) (inst:term) (t:typ) : ML result =
     let subgoals =
       List.zip bs uvs |> List.filter (fun (b, _) ->
         U.is_tc_bqual b.binder_qual ||
-        (None? b.binder_qual && is_subgoal_typ env b.binder_bv.sort))
+        (None? b.binder_qual && is_subgoal_typ env b.binder_bv.sort) ||
+        ((match b.binder_qual with Some (Implicit _) -> true | _ -> false) && is_unit_or_squash b.binder_bv.sort))
       |> List.map snd
     in
     (* Solve the subgoals whose type is closed first: solving one may close
