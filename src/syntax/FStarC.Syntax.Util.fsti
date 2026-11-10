@@ -696,10 +696,5 @@ val eq_binding (b1 b2 : binding) : ML bool
 (* Destruct application: head, universes, and args. *)
 val hua (t:term) : ML (option (fv & list universe & args))
 
-(* Is [tac] the typeclass resolution tactic? Detects either an unapplied
-   [tcresolve] or an eta expanded variant, as in [solve]. *)
-val is_tcresolve_tac (tac:term) : ML bool
-
-(* Is this the qualifier of a typeclass argument: [TcArg], or a [Meta]
-   running [tcresolve]? *)
+(* Is this the qualifier of a typeclass argument ([TcArg])? *)
 val is_tc_bqual (q:bqual) : ML bool

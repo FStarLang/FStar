@@ -120,17 +120,10 @@ let bclass_to_string (c:bclass) : string =
 
 instance showable_bclass : showable bclass = { show = bclass_to_string }
 
-(* Rule 2, first half: [{| c |}] desugars to an implicit binder whose qualifier
-   is [TcArg] (or, when written by hand, [Meta tcresolve]). *)
+(* Rule 2, first half: [{| c |}] desugars to a binder whose qualifier is
+   [TcArg]. *)
 let is_tcresolve_binder (b:binder) : ML bool =
-  match b.binder_qual with
-  | Some TcArg -> true
-  | Some (Meta t) ->
-    (* The tactic term may have been eta-expanded or applied, so look at the
-       head. *)
-    let hd, _ = U.head_and_args_full t in
-    U.is_fvar PC.tcresolve_lid hd
-  | _ -> false
+  U.is_tc_bqual b.binder_qual
 
 (* Rule 2, second half: a dictionary passed explicitly rather than through
    [{| |}] still has a class type. *)

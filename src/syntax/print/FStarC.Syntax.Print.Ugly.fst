@@ -59,7 +59,6 @@ let filter_imp aq : ML bool =
    (* keep typeclass args *)
    match aq with
    | Some TcArg -> true
-   | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> true
    | Some (Implicit _)
    | Some (Meta _) -> false
    | _ -> true
@@ -372,7 +371,6 @@ and bqual_to_string' s (q:bqual) : ML string = match q with
   | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "$" ^ s
   | Some TcArg -> "{|" ^ s ^ "|}"
-  | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> "{|" ^ s ^ "|}"
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 

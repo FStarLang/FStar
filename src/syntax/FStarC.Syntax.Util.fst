@@ -2206,17 +2206,7 @@ let hua (t:term) : ML (option (fv & list universe & args)) =
   | Tm_uinst ({ n = Tm_fvar fv }, us) -> Some (fv, us, args)
   | _ -> None
 
-let is_tcresolve_tac (tac:term) : ML bool =
-  is_fvar PC.tcresolve_lid tac || (
-    match (Subst.compress tac).n with
-    | Tm_abs {body} ->
-      let hd, args = head_and_args_full body in
-      is_fvar PC.tcresolve_lid hd && List.length args = 1
-    | _ -> false
-  )
-
 let is_tc_bqual (q:bqual) : ML bool =
   match q with
   | Some TcArg -> true
-  | Some (Meta t) -> is_tcresolve_tac t
   | _ -> false
