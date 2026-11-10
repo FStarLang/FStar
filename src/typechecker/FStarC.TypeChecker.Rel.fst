@@ -5782,7 +5782,15 @@ let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML 
       let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
       match teq_nosmt env t imp.imp_tm with
       | None -> None
-      | Some g -> Some (imps @ Listlike.to_list g.implicits))
+      | Some g ->
+        (* The output may still mention arguments of the instance that only
+           occur there, e.g. [#p] in an instance at [x:d{p x} -> c]: they are
+           determined by the actual output type, which a later argument may
+           provide.  Fixing the output now would only leave a subtyping
+           constraint, which does not solve them, so wait. *)
+        if Setlike.is_empty (Free.uvars (U.ctx_uvar_typ ctx_u))
+        then Some (imps @ Listlike.to_list g.implicits)
+        else None)
     in
     match errs, r with
     | [], Some (Some extra) ->
