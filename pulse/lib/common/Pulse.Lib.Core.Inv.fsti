@@ -36,6 +36,21 @@ val fresh_invariant
 
 let somewhere (p: slprop) = exists* l. on l p
 
+(** Open a core invariant without closing it lexically. Its name is added to
+the open mask, preventing double opening. The exposed body remains localized
+and later-guarded; neither locality nor later credits can be bypassed. *)
+val open_invariant (mask:inames) (i:iname { not (mem_inv mask i) }) (p:slprop)
+  : gaction unit mask (add_inv mask i)
+      (inv i p)
+      (fun _ -> inv i p ** somewhere (later p))
+
+(** Restore the localized, later-guarded body and remove just this name.
+Other invariants may stay open: closing need not be in stack order. *)
+val close_invariant (mask:inames) (i:iname { not (mem_inv mask i) }) (p:slprop)
+  : gaction unit (add_inv mask i) mask
+      (inv i p ** somewhere (later p))
+      (fun _ -> inv i p)
+
 inline_for_extraction [@@extract_as
     (`(fun (#a:Type0) (#obs #fp #fp' #f_opens #p i:unit) (f:unit -> Dv a) ->
         f ()))]
