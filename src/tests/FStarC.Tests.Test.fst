@@ -63,6 +63,7 @@ let main () : ML unit =
           Norm.run_all ();
           if Unif.run_all () then () else exit 1;
           Data.run_all ();
+          FStarC.Tests.Serialize.run_all ();
 
           FStarC.Errors.report_all () |> ignore;
           let nerrs = FStarC.Errors.get_err_count() in

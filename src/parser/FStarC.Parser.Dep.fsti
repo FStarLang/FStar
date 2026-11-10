@@ -69,6 +69,7 @@ val module_key_of_file : string -> ML module_name
 val str_of_parsing_data (p:parsing_data) : ML string
 val friends (p:parsing_data) : ML (list lident)
 val empty_parsing_data: parsing_data  //for legacy ide
+instance val serializable_parsing_data : FStarC.Serialize.serializable parsing_data
 
 val deps : Type0
 val copy_deps (d:deps) : ML deps

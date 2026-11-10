@@ -197,23 +197,11 @@ val load_value_from_file: string -> ML (option 'a)
 val save_2values_to_file: string -> 'a -> 'b -> ML unit
 val load_2values_from_file: string -> ML (option ('a & 'b))
 
-(* Container format used for .checked files.
-
-   The file holds three marshalled values, preceded by a digest of their
-   marshalled representation.  Storing the digest in the file means readers do
-   not have to hash the (large) contents to obtain the file's content identity,
-   which is what dependents record in their [deps_dig].
-
-   The third value can be read on its own without deserializing the first two:
-   the header records the byte length of the first two values so that the
-   reader can seek past them.  This is what makes the SMT encoding of a module
-   loadable on demand.
-
-   [save_3values_to_file] returns the digest it stored. *)
-val save_3values_to_file: string -> 'a -> 'b -> 'c -> ML string
-val load_1value_from_file3: string -> ML (option (string & 'a))
-val load_2values_from_file3: string -> ML (option (string & 'a & 'b))
-val load_3rd_value_from_file3: string -> ML (option 'c)
+(* Up to [len] bytes of the file [fn] from byte [off] on: fewer at its end. *)
+val file_get_range: fn:string -> off:int -> len:int -> ML string
+(* Writes [fn] atomically, through a temporary file renamed over it, so that
+   concurrent readers see either its old or its new contents in full. *)
+val write_file_atomic: fn:string -> contents:string -> ML unit
 val print_exn: exn -> ML string
 val digest_of_file: string -> ML string
 val digest_of_string: string -> ML string

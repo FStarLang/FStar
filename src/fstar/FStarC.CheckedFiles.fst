@@ -39,15 +39,10 @@ let debug (f:unit -> ML unit) : ML unit = if !dbg then f () else ()
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
  *
- * A checked file is a Marshal dump of the compiler's own data types, so it
- * can only be read back by a binary that lays those types out exactly as the
- * writer did.  That is not only a matter of the types' F* definitions: the
- * two extractions lay the same definition out differently (doc/ref/custard.md,
- * section 5), so a compiler built by Custard cannot read a checked file an
- * ML-extracted compiler wrote, and nothing in the file says so.  Bumped when
- * the compiler's own build switched to Custard.
+ * Bumped whenever the format of checked files changes, see the container
+ * format below and FStarC.Serialize.
  *)
-let cache_version_number = 102
+let cache_version_number = 103
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
@@ -87,6 +82,46 @@ type checked_file_entry_stage2 =
 
   //typechecking result, excluding the smt encoding
   tc_res: tc_result_stored
+}
+
+open FStarC.Serialize
+open FStarC.Syntax.Serialize
+open FStarC.SMTEncoding.Serialize
+
+instance _ : serializable checked_file_entry_stage1 = {
+  ser = (fun w e ->
+    ser w e.version;
+    ser w e.digest;
+    ser w e.parsing_data);
+  deser = (fun r ->
+    let version : int = deser r in
+    let digest : string = deser r in
+    let parsing_data : Parser.Dep.parsing_data = deser r in
+    { version; digest; parsing_data });
+}
+
+instance _ : serializable tc_result_stored = {
+  ser = (fun w e ->
+    ser w e.stored_checked_module;
+    ser w e.stored_mii;
+    ser w e.stored_smt_index;
+    ser w e.stored_smt_fvbs);
+  deser = (fun r ->
+    let stored_checked_module : Syntax.modul = deser r in
+    let stored_mii : DsEnv.module_inclusion_info = deser r in
+    let stored_smt_index : list FStarC.SMTEncoding.Pruning.elt_summary = deser r in
+    let stored_smt_fvbs : list fvar_binding = deser r in
+    { stored_checked_module; stored_mii; stored_smt_index; stored_smt_fvbs });
+}
+
+instance _ : serializable checked_file_entry_stage2 = {
+  ser = (fun w e ->
+    ser w e.deps_dig;
+    ser w e.tc_res);
+  deser = (fun r ->
+    let deps_dig : list (string & string) = deser r in
+    let tc_res : tc_result_stored = deser r in
+    { deps_dig; tc_res });
 }
 
 (*
@@ -131,6 +166,94 @@ type cache_t =
   either string Dep.parsing_data
 
 //Internal cache
+(*
+ * The container format of checked files.
+ *
+ * A checked file holds three values, each written with FStarC.Serialize
+ * (without sharing between them): the stage1 entry, the stage2 entry, and
+ * the declarations of the module's SMT encoding.  They are preceded by a
+ * fixed-size header of [header_size] ASCII bytes: the digest of the values
+ * (32 hex digits), then their byte lengths (16 decimal digits each).
+ *
+ * Storing the digest in the file means readers do not have to hash the
+ * (large) contents to obtain the file's content identity, which is what
+ * dependents record in their [deps_dig].  The lengths allow reading the
+ * first value alone (for dependency analysis), or the third one alone (the
+ * SMT encoding, which is read on demand).
+ *)
+let header_size = 80
+
+let pad16 (n:int) : ML string =
+  let s = string_of_int n in
+  String.make (16 - String.length s) '0' ^ s
+
+let blen (s:string) : int = FStarC.SmallInt.to_int (String.byte_length s)
+
+(* Reads a value spanning [len] bytes of [s] from [off]. *)
+let deser_at (#a:Type) {| FStarC.Serialize.serializable a |} (s:string) (off len:int) : ML a =
+  let r = FStarC.Serialize.reader_create s (FStarC.SmallInt.of_int off) in
+  let x : a = FStarC.Serialize.deser r in
+  if FStarC.SmallInt.to_int (FStarC.ByteBuffer.reader_pos (FStarC.Serialize.raw_reader r)) <> off + len
+  then FStarC.Serialize.malformed "length mismatch";
+  x
+
+(* The digest and the lengths of the three values. *)
+let read_header (fn:string) : ML (option (string & int & int & int)) =
+  let h = BU.file_get_range fn 0 header_size in
+  if blen h <> header_size then None else
+  let num (i:int) = BU.safe_int_of_string (String.substring h (32 + 16 * i) 16) in
+  match num 0, num 1, num 2 with
+  | Some l1, Some l2, Some l3 -> Some (String.substring h 0 32, l1, l2, l3)
+  | _ -> None
+
+(* [None] if the file does not exist or is malformed. *)
+let try_load (#a:Type) (fn:string) (f:string & int & int & int -> ML a) : ML (option a) =
+  try
+    match read_header fn with
+    | Some h -> Some (f h)
+    | None -> None
+  with
+  | _ -> None
+
+let load_stage1 (fn:string) : ML (option (string & checked_file_entry_stage1)) =
+  try_load fn (fun (dig, l1, _, _) ->
+    let s = BU.file_get_range fn header_size l1 in
+    let s1 : checked_file_entry_stage1 = deser_at s 0 l1 in
+    (dig, s1))
+
+let load_stages (fn:string)
+  : ML (option (string & checked_file_entry_stage1 & checked_file_entry_stage2)) =
+  try_load fn (fun (dig, l1, l2, _) ->
+    let s = BU.file_get_range fn header_size (l1 + l2) in
+    let s1 : checked_file_entry_stage1 = deser_at s 0 l1 in
+    let s2 : checked_file_entry_stage2 = deser_at s l1 l2 in
+    (dig, s1, s2))
+
+let load_smt_decls (fn:string) : ML (option decls_t) =
+  try_load fn (fun (_, l1, l2, l3) ->
+    let s = BU.file_get_range fn (header_size + l1 + l2) l3 in
+    (deser_at s 0 l3 <: decls_t))
+
+(* Returns the digest. *)
+let save_checked_file (fn:string)
+  (stage1:checked_file_entry_stage1)
+  (stage2:checked_file_entry_stage2)
+  (smt_decls:decls_t)
+  : ML string =
+  let b1 = FStarC.Serialize.serialize stage1 in
+  let b2 = FStarC.Serialize.serialize stage2 in
+  let b3 = FStarC.Serialize.serialize smt_decls in
+  (* A Merkle-style digest of the two halves. *)
+  let dig = BU.digest_of_string (BU.digest_of_string (b1 ^ b2) ^ BU.digest_of_string b3) in
+  let contents = dig ^ pad16 (blen b1) ^ pad16 (blen b2) ^ pad16 (blen b3) ^ b1 ^ b2 ^ b3 in
+  if blen dig <> 32 then failwith "save_checked_file: unexpected digest length";
+  (try BU.write_file_atomic fn contents
+   with
+   (* The atomic write leaves [fn] untouched on failure, but an older, now
+      stale, file may still be there: get rid of it. *)
+   | e -> (try BU.delete_file fn with _ -> ()); raise e);
+  dig
+
 let mcache : HashTable.t string cache_t = HashTable.create 50
 let add_and_return checked_fn elt = 
   HashTable.add mcache checked_fn elt; elt
@@ -161,7 +284,7 @@ let load_checked_file (fn:string) (checked_fn:string) : ML cache_t =
     if not (Filepath.file_exists checked_fn)
     then let msg = Format.fmt1 "checked file %s does not exist" checked_fn in
          add_and_return (Invalid msg, Inl msg)
-    else let entry :option (string & checked_file_entry_stage1) = BU.load_1value_from_file3 checked_fn in
+    else let entry :option (string & checked_file_entry_stage1) = load_stage1 checked_fn in
          match entry with
          | None ->
            let msg = Format.fmt1 "checked file %s is corrupt" checked_fn in
@@ -269,7 +392,7 @@ let smt_decls_thunk (checked_fn:string) : ML (unit -> ML decls_t) =
     | Some d -> d
     | None ->
       let d =
-        match BU.load_3rd_value_from_file3 #decls_t checked_fn with
+        match load_smt_decls checked_fn with
         | Some d -> d
         | None ->
           failwith (Format.fmt1 "Could not read the SMT encoding from checked file %s" checked_fn)
@@ -288,7 +411,7 @@ let tc_result_of_stored (checked_fn:string) (s:tc_result_stored) : ML tc_result 
 
 let load_tc_result (checked_fn:string) : ML (option (list (string & string) & tc_result)) =
   let entry : option (string & checked_file_entry_stage1 & checked_file_entry_stage2) =
-    BU.load_2values_from_file3 checked_fn
+    load_stages checked_fn
   in
   match entry with
   | Some ((_,_,s2)) -> Some (s2.deps_dig, tc_result_of_stored checked_fn s2.tc_res)
@@ -575,7 +698,7 @@ let store_values_to_cache
     (smt_decls:decls_t)
     :ML string =
   Errors.with_ctx ("While writing checked file " ^ cache_file) (fun () ->
-    BU.save_3values_to_file cache_file stage1 stage2 smt_decls)
+    save_checked_file cache_file stage1 stage2 smt_decls)
 
 instance _ : showable Dep.parsing_data = {
   show = Dep.str_of_parsing_data
@@ -664,7 +787,7 @@ let store_module_to_cache env fn parsing_data_and_direct_deps tc_result : ML uni
 
 let unsafe_raw_load_checked_file (checked_fn:string) : ML (option (FStarC.Parser.Dep.parsing_data & list string & tc_result))
   = let entry : option (string & checked_file_entry_stage1 & checked_file_entry_stage2) =
-      BU.load_2values_from_file3 checked_fn
+      load_stages checked_fn
     in
     match entry with
      | Some ((_,s1,s2)) ->
