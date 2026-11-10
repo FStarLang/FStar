@@ -1678,15 +1678,14 @@ let push_sigelt' (force:bool) env s : ML _ =
   let sb = (lids_of_sigelt s, s) in
   let env = {env with gamma_sig = sb::env.gamma_sig} in
   (* An instance declared by an interface [val] is defined by a sigelt
-     without the attribute; the instance only becomes usable now. *)
+     without the attribute; the instance only becomes usable now.  The [val]
+     is still in [sigtab] at this point. *)
   let defines_instance () : ML bool =
-    let lids = lids_of_sigelt s in
-    Cons? lids &&
-    (match HashTable.try_find env.attrtab (string_of_lid Const.tcinstance_lid) with
-     | None -> false
-     | Some ses ->
-       BU.for_some (fun se ->
-         BU.for_some (fun l -> BU.for_some (lid_equals l) lids) (lids_of_sigelt se)) ses)
+    Sig_let? s.sigel &&
+    BU.for_some (fun l ->
+      match HashTable.try_find env.sigtab (string_of_lid l) with
+      | Some se -> is_instance_sigelt se
+      | None -> false) (fst sb)
   in
   let env = if is_instance_sigelt s || defines_instance () then reset_tc_global env else env in
   add_sigelt force env s;
