@@ -950,7 +950,8 @@ let reduce_primops norm_cb cfg (env:env) tm : ML (term & bool) =
 
 let reduce_equality norm_cb cfg tm =
     reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
-                              primitive_steps=simplification_steps cfg.tcenv}) tm
+                              primitive_steps=simplification_steps cfg.tcenv;
+                              env_dependent_steps=false}) tm
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
