@@ -20,8 +20,9 @@ module Pulse.Extrinsic.AtomicLogic
     resources. This supports consequence and existential proofs even when
     there is no single chosen native execution witnessing the whole proof.
 
-    The result contract reserves at most one unit of budget. If level is
-    unchanged, budget must also be preserved so [to_wp] can age once.
+    Atomic proofs preserve budget: the source-step charge is reserved for
+    embedding into WP. [to_wp_later] uses that charge to eliminate one later
+    from the postcondition, including arbitrary higher-order ownership.
     [invariant] brackets one such source step; it cannot bracket an ordinary
     multi-step Hoare triple. See HeapLang.AtomicUpdate for the distinct
     retry/abort/commit protocol used to specify multi-step implementations. *)
@@ -38,8 +39,7 @@ let result (l:L.language) (physical:W.projection l) (mask:S.inames)
   (e':l.L.expr) (s':l.L.state) (spawned:list l.L.expr) : prop =
   exists v (next:S.full_mem).
     l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-    S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-    (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+    S.level next <= S.level m /\ S.budget next >= S.budget m /\
     S.inames_ok mask next /\
     S.interp (S.star (S.star (q v) f) (S.mem_invariant mask next)) next
 
@@ -52,6 +52,10 @@ let step_post (l:L.language) (physical:W.projection l) (mask:S.inames)
 // A source judgment: every reduction returns a value and restores this mask.
 val hoare (l:L.language) (physical:W.projection l) (mask:S.inames)
   (p:S.slprop) (e:l.L.expr) (q:W.post l) : prop
+
+val nonvalue (l:L.language) (physical:W.projection l) (mask:S.inames)
+  (p:S.slprop) (e:l.L.expr) (q:W.post l)
+  : Lemma (requires hoare l physical mask p e q) (ensures l.L.to_val e == None)
 
 val consequence (l:L.language) (physical:W.projection l) (mask:S.inames)
   (p p':S.slprop) (e:l.L.expr) (q q':W.post l)
@@ -80,6 +84,15 @@ val invariant (l:L.language) (physical:W.projection l)
         (S.star (A.exposed p) pre) e (A.exposed_post p post))
       (ensures hoare l physical mask (S.star (S.inv i p) pre) e
         (A.protected_post i p post))
+
+let later_post (l:L.language) (q:W.post l) (v:l.L.value) = S.later (q v)
+
+val to_wp_later (l:L.language) (physical:W.projection l)
+  (p:S.slprop) (e:l.L.expr) (q:W.post l)
+  : Lemma
+      (requires R.age_stable l physical /\
+        hoare l physical Pulse.Lib.GhostSet.empty p e (later_post l q))
+      (ensures R.hoare l physical p e q)
 
 val to_wp (l:L.language) (physical:W.projection l)
   (p:S.slprop) (e:l.L.expr) (q:W.post l)

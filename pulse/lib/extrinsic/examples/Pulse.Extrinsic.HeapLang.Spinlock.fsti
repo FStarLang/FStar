@@ -5,8 +5,8 @@ module Pulse.Extrinsic.HeapLang.Spinlock
     transfers held(resource) to the caller, and release requires it back.
     allocate installs the protocol from flag |-> 1 and resource.
 
-    The payload exposure premise is intentional: this is a lock for supported
-    timeless/locality-independent resources, not arbitrary higher-order ones.
+    Resources are arbitrary assertions, including invariant handles and WPs;
+    acquisition's successful source CAS pays for the invariant body's guard.
     with_lock brackets an ordinary multi-step body and returns its result;
     its proof frames the held token throughout that body's execution. *)
 
@@ -42,12 +42,10 @@ val held_frame (g:G.name) (resource:S.slprop)
 
 val acquire_correct (i:S.iref) (g:G.name) (flag:H.core_ref) (resource:S.slprop)
   : Lemma
-      (requires S.implies (P.exposed resource) resource)
       (ensures P.hoare (handle i g flag resource) (acquire flag)
         (P.constant_post (S.star (handle i g flag resource) (held g resource))))
 val release_correct (i:S.iref) (g:G.name) (flag:H.core_ref) (resource:S.slprop)
   : Lemma
-      (requires S.implies (P.exposed resource) resource)
       (ensures P.hoare (S.star (handle i g flag resource) (held g resource)) (release flag)
         (P.constant_post (handle i g flag resource)))
 
@@ -60,7 +58,6 @@ val allocate (#t:ty) (flag:H.core_ref) (resource:S.slprop) (e:expr [] t) (q:P.po
 val with_lock_correct (#t:ty) (i:S.iref) (g:G.name) (flag:H.core_ref) (resource:S.slprop)
   (body:expr [] t) (q:P.post t)
   : Lemma
-      (requires S.implies (P.exposed resource) resource /\
-        P.hoare resource body (P.prepend_post resource q))
+      (requires P.hoare resource body (P.prepend_post resource q))
       (ensures P.hoare (handle i g flag resource) (with_lock flag body)
         (P.prepend_post (handle i g flag resource) q))

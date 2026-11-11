@@ -247,3 +247,43 @@ let exposed_inv i p =
       introduce S.later (S.inv i p) h ==> S.somewhere (S.later (S.inv i p)) h with (
         introduce exists loc. S.on loc (S.later (S.inv i p)) h
         with Pulse.Lib.Loc.dummy_loc and ()))
+
+(** Pin an arbitrary assertion to its actual locality, retaining a duplicable
+    witness that lets an invariant's body return to the same caller locality. *)
+let localize p =
+  S.sep_laws ();
+  S.implies_intro p (S.op_exists_Star (fun l -> S.star (S.on l p) (S.loc l))) (fun h ->
+    let owned, rest = S.star_elim p S.emp h in
+    let l = PulseCore.KnotInstantiation.current_loc_ h in
+    S.set_loc_current_loc owned;
+    S.star_intro (S.on l p) (S.loc l) h owned rest;
+    introduce exists l'. S.star (S.on l' p) (S.loc l') h with l and ())
+
+let exposed_on l p =
+  PulseCore.KnotInstantiation.mem_pred_ext
+    (S.somewhere (S.later (S.on l p))) (S.later (S.on l p)) (fun h ->
+      S.on_later_eq l p;
+      assert_norm (S.somewhere (S.later (S.on l p)) h ==
+        (exists loc. S.on loc (S.later (S.on l p)) h));
+      introduce forall loc. S.on loc (S.later (S.on l p)) == S.later (S.on l p)
+      with (S.on_later_eq loc (S.on l p); S.on_on_eq loc l p);
+      introduce S.later (S.on l p) h ==> S.somewhere (S.later (S.on l p)) h with (
+        introduce exists loc. S.on loc (S.later (S.on l p)) h
+        with l and ()))
+
+let duplicate_exists #a p =
+  let all = S.op_exists_Star p in
+  PulseCore.KnotInstantiation.mem_pred_ext all (S.star all all) (fun h ->
+    introduce all h ==> S.star all all h with (
+      eliminate exists x. p x h with (
+        let left, right = S.star_elim (p x) (p x) h in
+        introduce exists y. p y left with x and ();
+        introduce exists y. p y right with x and ();
+        S.star_intro all all h left right
+      )
+    );
+    introduce S.star all all h ==> all h with (
+      let left, right = S.star_elim all all h in
+      S.reveal_slprop_ok ();
+      S.mem_le_iff left h
+    ))

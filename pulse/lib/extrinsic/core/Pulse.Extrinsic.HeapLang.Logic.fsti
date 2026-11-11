@@ -109,11 +109,13 @@ val exposed_lift (p:PulseCore.MemoryAlt.slprop u#0)
 
 val points_to_exposed_of (#a:Type0) (r:H.core_ref) (v:a)
   : Lemma (
+      S.timeless (points_to_of r v) /\
       S.implies (Pulse.Extrinsic.Atomic.exposed (points_to_of r v)) (points_to_of r v) /\
       S.implies (points_to_of r v) (Pulse.Extrinsic.Atomic.exposed (points_to_of r v)))
 
 val points_to_exposed (r:H.core_ref) (v:int)
   : Lemma (
+      S.timeless (points_to r v) /\
       S.implies (Pulse.Extrinsic.Atomic.exposed (points_to r v)) (points_to r v) /\
       S.implies (points_to r v) (Pulse.Extrinsic.Atomic.exposed (points_to r v)))
 

@@ -34,9 +34,15 @@ The five larger source-level milestones are:
 | [LinkedConcurrent](examples/Pulse.Extrinsic.LinkedConcurrent.fst) | A locked push allocates and links a node while another thread peeks; the parent returns exactly **1**. |
 
 These are safety/partial-correctness results, not termination results.
-The spinlock has an explicit exposure premise on its payload, and the atomic
-update is a resource-parametric protocol judgment, not a first-class Iris AU
-assertion. See [remaining work](#12-remaining-work) for the precise limits.
+Join and spinlock now transfer **arbitrary assertion payloads**, including
+invariant handles, without an exposure premise or caller-supplied credit.
+The [higher-order lock example](examples/Pulse.Extrinsic.HigherOrderExamples.fst)
+allocates a lock protecting another invariant's handle and returns exactly 37.
+An [assertion-valued fancy update](core/Pulse.Extrinsic.FancyUpdates.fsti) and
+[update-closed source WP](core/Pulse.Extrinsic.HeapLang.FancyProof.fsti) also
+support ghost updates at values. The separate atomic-update protocol is still
+a resource-parametric judgment, not a first-class Iris AU assertion.
+See [remaining work](#12-remaining-work) for the precise limits.
 
 The directory boundary matches the proof boundary:
 
@@ -670,17 +676,22 @@ and resources.
 For every frame and enabled full memory, it requires progress and covers
 every source successor. `result` records the returned value, physical
 correspondence, restored resources and mask, and level/budget bounds.
-Unlike ordinary WP, the successor level may be unchanged; in that case the
-budget must not decrease.
+Unlike ordinary WP, the successor level may be unchanged. The atomic source
+judgment **always preserves budget** (or increases it); the actual source-step
+charge is reserved for its embedding into WP. This is stronger than merely
+bounding the budget loss when the level decreases.
 
 There need not be one chosen executable native action witnessing the whole
 judgment. This lets `consequence`, `frame`, and `exists_pre` operate on source
 proofs, including proofs that depend on logical existential witnesses.
 
 `E` names currently open invariants. `to_wp` embeds an empty-mask atomic
-proof into ordinary WP, aging once if the atomic successor has not already
-decreased the level. It requires the physical projection to be stable under
-aging. Its typed wrapper will be `HeapLang.Proof.atomic_to_hoare`.
+proof into ordinary WP. `to_wp_later` ages once and eliminates one later from
+the returned postcondition; `to_wp` first introduces that later and uses the
+same rule. Previously spent ghost credits do not consume this source-step
+charge, since their updates preserve budget. The physical projection is stable
+under aging. The typed wrappers are `atomic_to_hoare_later` and
+`atomic_to_hoare` in `HeapLang.Proof`.
 
 An ordinary Hoare triple cannot be used in place of an atomic one. In
 particular, knowing that a multi-step program restores a resource at the end
@@ -792,10 +803,76 @@ the outer mask must be restored. `Updates.bind_wp`, exposed as
 `P.update_hoare`, also permits a closed-to-closed update before an arbitrary
 **non-value** source program.
 
-These are composable update **judgments**, not an assertion-valued fancy-update
-modality. Ordinary WP remains closed-mask and still has the unmodified value
-equation. In particular, `update_hoare` cannot justify ghost allocation at a
-value; that larger change to WP remains separate work.
+These semantic update judgments are now internalized by `FancyUpdates`.
+The original strict WP retains its value equation and its non-value restriction;
+`HeapLang.FancyProof` adds an update-closed interface rather than unsoundly
+removing that restriction from the existing rule.
+
+### 7.5 Arbitrary bodies: locality and the source-step guard
+
+Read [HeapLang.Invariants](core/Pulse.Extrinsic.HeapLang.Invariants.fsti).
+The native model was already impredicative: `S.inv i P` accepts arbitrary
+assertions, not only physical or timeless predicates. The earlier limitation
+was in our derived resource-transfer rules.
+
+There are **two** distinct obstacles: native opening returns
+`somewhere (later P)`, so both locality and the later guard matter.
+The new interface defines:
+
+```text
+I.inv i P = exists l. S.inv i (on l P) ** loc l
+```
+
+It reuses the native invariant, retaining a duplicable witness of the caller's
+locality. `loc l ** P = loc l ** on l P` transports the body back without
+assuming that arbitrary assertions are locality-independent. HeapLang has no
+locality-changing instruction. The wrapper does not implement native Pulse's
+more general cross-locality transport protocol.
+
+`I.atomic` opens to `later P` and requires its restoration. It does **not**
+eliminate later. Join's claim keeps the transferred payload guarded during
+CAS and returns `later payload` on success. `atomic_to_hoare_later` consumes
+that guard using exactly the actual source step. No client credit or
+timelessness premise is needed, and no open invariant survives the step.
+
+This does not make invariant handles timeless: opening an outer invariant
+and immediately opening a guarded inner handle *before the same source step*
+still requires the relevant credits, as the nested examples show.
+
+### 7.6 Assertion-valued updates and update-closed WP
+
+Read [FancyUpdates](core/Pulse.Extrinsic.FancyUpdates.fsti) and then
+[HeapLang.FancyProof](core/Pulse.Extrinsic.HeapLang.FancyProof.fsti).
+The modal construction uses the existing impredicative separating existential:
+
+```text
+fupd E1 E2 Q = exists P:slprop. P ** pure (update E1 E2 P Q)
+```
+
+The witness includes **owned resources**, not just evidence that an update
+could happen somewhere. `intro` packages a proved update; `elim` executes its
+semantic obligation in the actual framed world. `from_entails` connects an
+entailment into the modality back to an update judgment. `refl`, `trans`,
+`frame`, and `mono` derive the corresponding assertion laws.
+
+`FancyProof` defines, schematically:
+
+```text
+FP.wp e Q = Proof.wp e (fun v -> fupd empty empty (Q v))
+```
+
+Consequently a value has a final fancy update, not bare `Q v`. Pre-updates
+compose before any expression: a non-value absorbs them at its next step,
+while a value uses modal transitivity. Frame, consequence, let/context bind,
+and post-updates preserve this discipline. `embed` imports existing strict
+triples, so the verified primitive and program libraries remain usable.
+
+`HeapLang.Adequacy.adequate_fancy` proves soundness once for this interface.
+It reuses the same pool-preservation theorem, retains the world invariant at
+the final observation, and discharges the final closed-mask update without
+changing the observed physical heap. No per-program trace proof is needed.
+This is a proved assertion modality and WP integration, not yet a claim of
+the entire Iris fancy-update algebra or its nonexpansiveness theory.
 
 ## 8. The typed source-logic interface
 
@@ -1551,9 +1628,10 @@ concurrently. Without exclusive ownership across the critical section,
 the other client's restoration could invalidate that readback argument.
 `program_correct` allocates the data and flag and proves the result from `emp`.
 
-The exposure premise is explicit. This library accepts the supported
-timeless/locality-independent payloads, including the node/list assertions;
-it does not claim an arbitrary higher-order-resource lock rule.
+There is no longer an exposure premise: the library accepts arbitrary
+higher-order assertions. Its handle uses the locality-preserving invariant
+wrapper, and successful acquisition discharges the payload's later at the
+source CAS step. See the higher-order client below.
 
 ### 10.16 Multi-step logical atomicity via an abortable update protocol
 
@@ -1618,6 +1696,33 @@ per-program adequacy proof occurs here. This example is **lock-based**, not
 a lock-free Treiber stack. The parent need not join: either the old or the
 new head contains 1, and the invariant continues to protect the child.
 
+### 10.18 A lock protecting an invariant handle
+
+Read [HigherOrderExamples](examples/Pulse.Extrinsic.HigherOrderExamples.fst).
+The protected resource is `S.inv j (points_to cell old)`, not cell ownership.
+`client_correct` acquires that handle, uses `MaskExamples.read_with_updates`
+inside the critical section, and returns it on release. The inner read is
+proved to return `old`. There is no exposure lemma for the protected handle
+and no credit in the precondition.
+
+`from_owned` installs the inner invariant and the lock. `program_correct`
+allocates both physical cells and proves the exact result **37** from `emp`.
+It composes the same public source rules as the physical-resource client.
+
+### 10.19 Ghost updates at values and through bind
+
+Read [FancyExamples](examples/Pulse.Extrinsic.FancyExamples.fst).
+`allocate_at_value` allocates an invariant logically at a returned unit, which
+the strict WP correctly rejects. `deferred_allocation` packages that update as
+an owned `slprop`. `composed_value` uses the update-closed let rule with a value
+continuation; `framed_value` retains an unrelated spatial resource, and
+`post_allocation` adds allocation through the post-update rule.
+
+The new negative tests separately reject extracting an invariant's body
+without a guarded source step and letting a value escape with an open mask.
+The earlier strict-WP rejection at values remains valid: the two WP value
+equations are deliberately distinct.
+
 ## 11. Module map and abstraction boundaries
 
 All names in the table have prefix `Pulse.Extrinsic`.
@@ -1637,8 +1742,11 @@ All names in the table have prefix `Pulse.Extrinsic`.
 | [Atomic](core/Pulse.Extrinsic.Atomic.fsti) | Lower-level native action and invariant adapters. |
 | [HeapLang.Logic](core/Pulse.Extrinsic.HeapLang.Logic.fsti) | General heap/assertion bridges and exposure lemmas. |
 | [Updates](core/Pulse.Extrinsic.Updates.fsti) | Frame-preserving ghost mask updates, composition, allocation, and later elimination. |
+| [FancyUpdates](core/Pulse.Extrinsic.FancyUpdates.fsti) | Assertion-valued mask updates and their introduction, elimination, frame, and composition laws. |
 | [AtomicLogic](core/Pulse.Extrinsic.AtomicLogic.fsti) | Generic masked atomic source judgments and their rules. |
 | [HeapLang.Proof](core/Pulse.Extrinsic.HeapLang.Proof.fsti) | Typed client-facing Hoare and atomic source rules. |
+| [HeapLang.Invariants](core/Pulse.Extrinsic.HeapLang.Invariants.fsti) | Locality-preserving arbitrary invariant bodies, with guarded opening. |
+| [HeapLang.FancyProof](core/Pulse.Extrinsic.HeapLang.FancyProof.fsti) | Update-closed source WP, including value, bind, frame, and pre/post-update rules. |
 | [HeapLang.Loops](core/Pulse.Extrinsic.HeapLang.Loops.fsti) | General partial-correctness while rule with private guarded induction. |
 | [Ghost](core/Pulse.Extrinsic.Ghost.fsti), [Ghost.Fractional](core/Pulse.Extrinsic.Ghost.Fractional.fsti) | Native PCM ghost ownership and fractional agreement/update rules. |
 | [HeapLang.Join](examples/Pulse.Extrinsic.HeapLang.Join.fsti) | Source-level completion and payload transfer. |
@@ -1655,6 +1763,8 @@ All names in the table have prefix `Pulse.Extrinsic`.
 | [InvariantExamples](examples/Pulse.Extrinsic.InvariantExamples.fst) | General invariant-rule clients, concurrent composition, and logical allocation. |
 | [MaskExamples](examples/Pulse.Extrinsic.MaskExamples.fst) | Composable ghost allocation and explicit source-level opening/closing updates. |
 | [NestedExamples](examples/Pulse.Extrinsic.NestedExamples.fst) | Nested masks and invariant-containing-invariant proofs, including concurrent writers. |
+| [HigherOrderExamples](examples/Pulse.Extrinsic.HigherOrderExamples.fst) | Fully allocating lock protecting an invariant handle, with exact readback. |
+| [FancyExamples](examples/Pulse.Extrinsic.FancyExamples.fst) | Owned deferred updates, ghost allocation at values, framing, and update-closed bind. |
 | [Examples](examples/Pulse.Extrinsic.Examples.fst) | Operational regression examples, not client program proofs. |
 | [Safety](core/Pulse.Extrinsic.Safety.fst) | A separate purely operational bounded-safety formulation. |
 
@@ -1679,17 +1789,17 @@ existing F*/PulseCore foundations.
 
 The current interface is a usable slice, not the final framework.
 
-- Develop an assertion-valued fancy-update modality and its interaction with
-  WP values if needed. The current mask updates are composable judgments;
-  ordinary WP remains closed-mask, and its update-introduction rule requires
-  a non-value expression.
+- Extend the assertion-valued fancy-update algebra, including mask-framing
+  and nonexpansiveness laws needed for recursive higher-order specifications.
+  The present modality has proved introduction/elimination, composition,
+  framing, and monotonicity, with an adequate update-closed source WP.
 - Package the resource-parametric atomic-update protocol as a first-class
   owned assertion and extend its laws. The verified multi-step CAS loop is
   not a replacement for a general AU/fancy-update library.
-- Extend the step/later-credit interface for arbitrary higher-order protected
-  resources. Join and spinlock currently require `exposed R |-- R`; nested
-  invariant-handle examples still use explicit credits. There is no free
-  credit-generation rule.
+- Develop further explicit step/later-credit rules for deeply nested opening
+  before a single source step. Join and spinlock now support arbitrary
+  payloads without exposure premises; this does not justify removing multiple
+  guards for free or moving arbitrary resources across localities.
 - Extend source values beyond scalars/references and the dedicated node
   operations: general products/sums, functions, and richer recursive programs.
   Add reclamation/deallocation before claiming realistic lock-free linked

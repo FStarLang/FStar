@@ -74,6 +74,9 @@ let pure_pre #t p fact e q proof =
 
 let value_rule #t p v q = H.wp_value p v (packed_post q)
 
+let wp_value #t e v q =
+  W.wp_value E.language C.physical (E.Pack t e) (E.PackValue t v) (packed_post q)
+
 let let_rule #a #b p bound body mid q =
   let k = K.let_context body in
   let next = W.bind_post E.language C.physical k (packed_post q) in
@@ -152,6 +155,9 @@ let if_value #t p b yes no q =
 
 let atomic #t mask p e q = A.hoare E.language C.physical mask p (E.Pack t e) (packed_post q)
 
+let atomic_nonvalue #t mask p e q =
+  A.nonvalue E.language C.physical mask p (E.Pack t e) (packed_post q)
+
 let atomic_consequence #t mask p p' e q q' =
   packed_mono q q';
   A.consequence E.language C.physical mask p p' (E.Pack t e) (packed_post q) (packed_post q')
@@ -190,6 +196,18 @@ let atomic_invariant #t mask i p pre e q =
 let atomic_to_hoare #t p e q =
   A.to_wp E.language C.physical p (E.Pack t e) (packed_post q)
 
+let atomic_to_hoare_later #t p e q =
+  let source = packed_post (later_post q) in
+  let target = A.later_post E.language (packed_post q) in
+  R.entails_refl p;
+  introduce forall v. S.implies (source v) (target v) with (
+    let E.PackValue u value = v in
+    if u = t then R.entails_refl (target v)
+    else R.entails_false (target v)
+  );
+  A.consequence E.language C.physical Pulse.Lib.GhostSet.empty p p (E.Pack t e) source target;
+  A.to_wp_later E.language C.physical p (E.Pack t e) (packed_post q)
+
 (** Package a typed value and its matching logical memory into the generic
     atomic-result contract. Primitive implementations must first establish the
     source successor and the framed ownership premises. *)
@@ -204,8 +222,7 @@ let primitive_result (#t:ty) (mask:S.inames) (q:post t) (v:value t)
       (ensures A.result E.language C.physical mask (packed_post q) f m e' s' spawned)
   = introduce exists result (next:S.full_mem).
       E.packed_to_val e' == Some result /\ spawned == [] /\ C.physical next == s' /\
-      S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-      (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+      S.level next <= S.level m /\ S.budget next >= S.budget m /\
       S.inames_ok mask next /\
       S.interp (S.star (S.star (packed_post q result) f) (S.mem_invariant mask next)) next
     with (E.PackValue t v) next and ()

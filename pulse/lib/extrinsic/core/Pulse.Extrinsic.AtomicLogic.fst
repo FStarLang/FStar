@@ -33,6 +33,8 @@ let hoare l physical mask p e q =
   (forall f (m:S.full_mem). A.enabled mask p f m ==>
     step_post l physical mask e q f m)
 
+let nonvalue l physical mask p e q = ()
+
 let apply (p q f:S.slprop) (m:S.mem)
   : Lemma
       (requires S.level m > 0 /\ S.implies p q /\ S.interp (S.star p f) m)
@@ -58,16 +60,14 @@ let consequence l physical mask p p' e q q' =
         with (
           eliminate exists v (next:S.full_mem).
             l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-            S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-            (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+            S.level next <= S.level m /\ S.budget next >= S.budget m /\
             S.inames_ok mask next /\
             S.interp (S.star (S.star (q v) f) (S.mem_invariant mask next)) next
           with (
             apply (q v) (q' v) (S.star f (S.mem_invariant mask next)) next;
             introduce exists v (next:S.full_mem).
               l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-              S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-              (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+              S.level next <= S.level m /\ S.budget next >= S.budget m /\
               S.inames_ok mask next /\
               S.interp (S.star (S.star (q' v) f) (S.mem_invariant mask next)) next
             with v next and ()
@@ -86,15 +86,13 @@ let frame_result (l:L.language) (physical:W.projection l) (mask:S.inames)
   = S.sep_laws ();
     eliminate exists v (next:S.full_mem).
       l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-      S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-      (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+      S.level next <= S.level m /\ S.budget next >= S.budget m /\
       S.inames_ok mask next /\
       S.interp (S.star (S.star (q v) (S.star added f)) (S.mem_invariant mask next)) next
     with (
       introduce exists v (next:S.full_mem).
         l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-        S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-        (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+        S.level next <= S.level m /\ S.budget next >= S.budget m /\
         S.inames_ok mask next /\
         S.interp (S.star (S.star (W.framed_post l q added v) f)
           (S.mem_invariant mask next)) next
@@ -166,8 +164,7 @@ let invariant l physical mask i p pre e post =
         with (
           eliminate exists v (next:S.full_mem).
             l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-            S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-            (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+            S.level next <= S.level m /\ S.budget next >= S.budget m /\
             S.inames_ok inner next /\
             S.interp (S.star (S.star (body_post v) body_frame) (S.mem_invariant inner next)) next
           with (
@@ -175,8 +172,7 @@ let invariant l physical mask i p pre e post =
             let _, closed = A.run (A.close_invariant mask i p) (S.star (post v) f) next in
             introduce exists v (next:S.full_mem).
               l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-              S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-              (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+              S.level next <= S.level m /\ S.budget next >= S.budget m /\
               S.inames_ok mask next /\
               S.interp (S.star (S.star (A.protected_post i p post v) f)
                 (S.mem_invariant mask next)) next
@@ -187,15 +183,17 @@ let invariant l physical mask i p pre e post =
     )
   )
 
-(** Atomic successors may keep their level. WP must decrease it strictly.
-    Age only that case, using result's conditional budget bound to avoid
-    charging two units for the same source step. *)
-let to_wp l physical p e q =
+(** The atomic proof preserves budget, even if ghost updates have lowered its
+    level while spending existing credits. The source step now pays for exactly
+    one additional aging, eliminating the postcondition's guard. Arbitrary
+    higher-order resources can thus be transferred out of an invariant without
+    a timelessness premise or a caller-supplied credit. *)
+let to_wp_later l physical p e q =
   S.sep_laws ();
   W.children_nil l (W.wp_family l physical);
   W.wp_lift l physical p e q (fun f m ->
     S.inames_ok_empty m;
-    assert (step_post l physical Pulse.Lib.GhostSet.empty e q f m);
+    assert (step_post l physical Pulse.Lib.GhostSet.empty e (later_post l q) f m);
     introduce forall e' s' spawned. l.L.prim_step e (physical m) e' s' spawned ==>
       (exists (m':S.full_mem).
         physical m' == s' /\ S.level m' < S.level m /\
@@ -214,16 +212,13 @@ let to_wp l physical p e q =
       with (
         eliminate exists v (next:S.full_mem).
           l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-          S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-          (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+          S.level next <= S.level m /\ S.budget next >= S.budget m /\
           S.inames_ok Pulse.Lib.GhostSet.empty next /\
-          S.interp (S.star (S.star (q v) f)
+          S.interp (S.star (S.star (S.later (q v)) f)
             (S.mem_invariant Pulse.Lib.GhostSet.empty next)) next
         with (
-          let final =
-            if S.level next < S.level m then next
-            else (R.age_resources (S.star (q v) f) next; S.age_mem next)
-          in
+          R.age_later_resources (q v) f next;
+          let final = S.age_mem next in
           W.wp_value l physical e' v q;
           introduce exists (m':S.full_mem).
             physical m' == s' /\ S.level m' < S.level m /\
@@ -235,6 +230,13 @@ let to_wp l physical p e q =
         )
       )
     ))
+
+let to_wp l physical p e q =
+  R.entails_refl p;
+  introduce forall v. S.implies (q v) (later_post l q v)
+  with R.entails_later (q v);
+  consequence l physical Pulse.Lib.GhostSet.empty p p e q (later_post l q);
+  to_wp_later l physical p e q
 
 let lift l physical mask p e q proof =
   introduce forall f (m:S.full_mem). A.enabled mask p f m ==>
@@ -263,8 +265,7 @@ let updates l physical outer inner p mid e q post =
           with (
             eliminate exists v (next:S.full_mem).
               l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-              S.level next <= S.level opened /\ S.budget next >= S.budget opened - 1 /\
-              (S.level next == S.level opened ==> S.budget next >= S.budget opened) /\
+              S.level next <= S.level opened /\ S.budget next >= S.budget opened /\
               S.inames_ok inner next /\
               S.interp (S.star (S.star (q v) f) (S.mem_invariant inner next)) next
             with (
@@ -273,8 +274,7 @@ let updates l physical outer inner p mid e q post =
               with (
                 introduce exists v (next:S.full_mem).
                   l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
-                  S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
-                  (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+                  S.level next <= S.level m /\ S.budget next >= S.budget m /\
                   S.inames_ok outer next /\
                   S.interp (S.star (S.star (post v) f) (S.mem_invariant outer next)) next
                 with v closed and ()

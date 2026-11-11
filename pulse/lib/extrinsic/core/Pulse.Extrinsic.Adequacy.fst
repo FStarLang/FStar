@@ -135,6 +135,20 @@ let pool_result (l:L.language) (physical:W.projection l)
         W.wp_value l physical e v q;
         S.destruct_star_l (q v) (S.star (children l physical rest) (W.invariant m)) m
 
+(** Retain the ambient invariant resource when observing a returned value.
+    Modal postconditions need it to execute their final closed-mask update. *)
+let pool_result_with_invariant (l:L.language) (physical:W.projection l)
+  (q:W.post l) (c:L.config l) (m:S.full_mem) (v:l.L.value)
+  : Lemma
+      (requires represents l physical q c m /\ L.main_returns l c v)
+      (ensures S.interp (S.star (q v) (W.invariant m)) m)
+  = S.sep_laws ();
+    match c.L.threads with
+    | [] -> ()
+    | e :: rest ->
+        W.wp_value l physical e v q;
+        S.destruct_star_l (S.star (q v) (W.invariant m)) (children l physical rest) m
+
 let represents_framed (l:L.language) (physical:W.projection l)
   (q:W.post l) (frame:S.slprop) (c:L.config l) (m:S.full_mem) : prop =
   physical m == c.L.state /\

@@ -20,12 +20,13 @@ module F = Pulse.Extrinsic.Ghost.Fractional
 module J = Pulse.Extrinsic.HeapLang.Join
 module R = Pulse.Extrinsic.Rules
 module GS = Pulse.Lib.GhostSet
+module I = Pulse.Extrinsic.HeapLang.Invariants
 
 let token (g:G.name) = F.own #unit g 1.0R ()
 let held g resource = S.star (token g) resource
 let handle i g flag resource = J.handle i flag (held g resource)
 
-let duplicate i g flag resource = S.dup_inv_equiv i (J.body flag (held g resource))
+let duplicate i g flag resource = I.duplicate i (J.body flag (held g resource))
 
 (** Fractional compatibility would require 1+1 <= 1. This impossibility
     prevents duplicate holders independently of the protected assertion. *)
@@ -42,13 +43,9 @@ let exclusive g resource =
 let held_frame g resource = S.sep_laws ()
 
 let acquire_correct i g flag resource =
-  F.exposed #unit g 1.0R ();
-  R.exposed_star (token g) resource;
   J.wait_correct i flag (held g resource)
 
 let release_correct i g flag resource =
-  F.exposed #unit g 1.0R ();
-  R.exposed_star (token g) resource;
   J.signal_correct i flag (held g resource)
 
 let allocate #t flag resource e q proof =
@@ -60,7 +57,7 @@ let allocate #t flag resource e q proof =
   introduce forall (g:G.name). P.hoare (S.star (token g) pre) e q
   with (
     let payload = held g resource in
-    P.allocate_invariant (J.body flag payload) S.emp e q (fun i -> proof i g);
+    I.allocate (J.body flag payload) S.emp e q (fun i -> proof i g);
     J.initialize_ready flag payload;
     introduce forall v. S.implies (q v) (q v) with R.entails_refl (q v);
     P.consequence (J.body flag payload) (S.star (token g) pre) e q q

@@ -53,6 +53,8 @@ val pure_pre (#t:ty) (p:S.slprop) (fact:prop) (e:expr [] t) (q:post t)
   : Lemma (hoare (S.star p (S.pure fact)) e q)
 val value_rule (#t:ty) (p:S.slprop) (v:value t) (q:post t)
   : Lemma (requires S.implies p (q v)) (ensures hoare p (Val v) q)
+val wp_value (#t:ty) (e:expr [] t) (v:value t) (q:post t)
+  : Lemma (requires to_val e == Some v) (ensures wp e q == q v)
 val let_rule (#a #b:ty) (p:S.slprop) (bound:expr [] a) (body:expr [a] b)
   (mid:post a) (q:post b)
   : Lemma
@@ -81,6 +83,8 @@ val if_value (#t:ty) (p:S.slprop) (b:bool) (yes no:expr [] t) (q:post t)
 
 let exposed (p:S.slprop) = S.somewhere (S.later p)
 val atomic (#t:ty) (mask:S.inames) (p:S.slprop) (e:expr [] t) (q:post t) : prop
+val atomic_nonvalue (#t:ty) (mask:S.inames) (p:S.slprop) (e:expr [] t) (q:post t)
+  : Lemma (requires atomic mask p e q) (ensures to_val e == None)
 val atomic_consequence (#t:ty) (mask:S.inames) (p p':S.slprop)
   (e:expr [] t) (q q':post t)
   : Lemma
@@ -103,6 +107,15 @@ val atomic_invariant (#t:ty) (mask:S.inames) (i:S.iref{not (S.mem_inv mask i)})
         (prepend_post (S.inv i p) q))
 val atomic_to_hoare (#t:ty) (p:S.slprop) (e:expr [] t) (q:post t)
   : Lemma (requires atomic Pulse.Lib.GhostSet.empty p e q) (ensures hoare p e q)
+
+let later_post (#t:ty) (q:post t) (v:value t) = S.later (q v)
+
+(** The actual source step eliminates the returned guard. This rule cannot
+    eliminate a later before a value, nor can it be iterated inside an atomic
+    proof to charge the same source step more than once. *)
+val atomic_to_hoare_later (#t:ty) (p:S.slprop) (e:expr [] t) (q:post t)
+  : Lemma (requires atomic Pulse.Lib.GhostSet.empty p e (later_post q))
+      (ensures hoare p e q)
 
 val atomic_load (mask:S.inames) (r:PulseCore.Heap.core_ref) (old:int)
   : Lemma (atomic mask (C.points_to r old) (Load (Val r))

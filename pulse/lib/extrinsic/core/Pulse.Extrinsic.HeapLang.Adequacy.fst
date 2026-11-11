@@ -126,3 +126,56 @@ let adequate_points_to (#t:ty) (r:H.core_ref) (initial:int)
           exists (v:value t). result == E.PackValue t v /\ phi v))
   = points_to_realizable r initial h;
     adequate (C.points_to r initial) e q phi h run
+
+module FP = Pulse.Extrinsic.HeapLang.FancyProof
+module F = Pulse.Extrinsic.FancyUpdates
+module U = Pulse.Extrinsic.Updates
+module R = Pulse.Extrinsic.Rules
+module GS = Pulse.Lib.GhostSet
+
+let adequate_fancy #t p e q phi h #n #last run =
+  R.entails_refl p;
+  FP.consequence p p e q (pure_post phi);
+  let observed = P.packed_post (FP.modal_post (pure_post phi)) in
+  S.sep_laws ();
+  W.children_nil E.language (W.wp_family E.language C.physical);
+  eliminate exists (m:S.full_mem).
+    C.physical m == h /\ S.budget m >= n + 1 /\
+    S.interp (S.star p (W.invariant m)) m
+  with (
+    Pulse.Extrinsic.HeapLang.Rules.apply_frame p (FP.wp e (pure_post phi)) (W.invariant m) m;
+    A.preserve_execution E.language C.physical observed run m;
+    eliminate exists (next:S.full_mem).
+      A.represents E.language C.physical observed last next /\ S.budget next > 0
+    with (
+      A.pool_safe E.language C.physical observed last next;
+      introduce forall result. L.main_returns E.language last result ==>
+        (exists (v:value t). result == E.PackValue t v /\ phi v)
+      with (
+        introduce L.main_returns E.language last result ==>
+          (exists (v:value t). result == E.PackValue t v /\ phi v)
+        with (
+          A.pool_result_with_invariant E.language C.physical observed last next result;
+          let E.PackValue u v = result in
+          if u = t then (
+            let fact = S.pure (phi v) in
+            F.elim E.language C.physical GS.empty GS.empty fact;
+            S.inames_ok_empty next;
+            U.apply E.language C.physical GS.empty GS.empty
+              (FP.fupd GS.empty GS.empty fact) fact S.emp next;
+            eliminate exists (final:S.full_mem).
+              U.result E.language C.physical GS.empty fact S.emp next final
+            with (
+              S.destruct_star_l fact (W.invariant final) final;
+              S.interp_pure (phi v) final;
+              introduce exists (v':value t). result == E.PackValue t v' /\ phi v'
+              with v and ()
+            )
+          ) else (
+            S.destruct_star_l (S.pure False) (W.invariant next) next;
+            S.interp_pure False next
+          )
+        )
+      )
+    )
+  )

@@ -52,7 +52,6 @@ let finish_correct (i:S.iref) (g:G.name) (r flag:H.core_ref) (v:int)
     let post = P.prepend_post shared (P.returns_value 1) in
     K.held_frame g (C.points_to r 0);
     K.held_frame g (C.points_to r 1);
-    C.points_to_exposed r 0;
     P.store r 1 0;
     P.frame_constant (C.points_to r 1) (Store (Val r) (Val 0)) (C.points_to r 0) tail;
     K.release_correct i g flag (C.points_to r 0);
@@ -78,7 +77,6 @@ let client_correct (i:S.iref) (g:G.name) (r flag:H.core_ref)
     let mid = P.framed_post (P.read_post r 1) tail in
     K.held_frame g (C.points_to r 0);
     K.held_frame g (C.points_to r 1);
-    C.points_to_exposed r 0;
     K.acquire_correct i g flag (C.points_to r 0);
     P.store r 0 1;
     P.frame_constant (C.points_to r 0) (Store (Val r) (Val 1)) (C.points_to r 1) tail;

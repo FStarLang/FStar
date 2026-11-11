@@ -18,12 +18,14 @@ module Pulse.Extrinsic.Updates
 (** Framed ghost mask-update judgments over the same logical memories as WP.
     A result preserves physical state and budget, may lower logical level,
     and establishes ownership and invariant consistency at the output mask.
-    These are judgments, not an assertion-valued fancy-update modality.
+    These are the semantic judgments underlying FancyUpdates.fupd, which
+    internalizes them as owned assertions.
 
     Entailment, transitivity, frame, and existential rules compose updates.
     Open/close, allocation, and paid later elimination reuse native machinery.
     [bind_wp] only admits a closed-to-closed update before a NON-VALUE: the
-    unchanged WP value equation has nowhere to execute a ghost update. *)
+    unchanged strict WP value equation has nowhere to execute a ghost update.
+    HeapLang.FancyProof provides the update-closed value/continuation rules. *)
 
 module L = Pulse.Extrinsic.Language
 module W = Pulse.Extrinsic.WP
@@ -61,10 +63,14 @@ val frame (l:L.language) (physical:W.projection l)
   (before after:S.inames) (p q f:S.slprop)
   : Lemma (requires hoare l physical before after p q)
       (ensures hoare l physical before after (S.star p f) (S.star q f))
-val exists_pre (#a:Type0) (l:L.language) (physical:W.projection l)
+val exists_pre (#a:Type) (l:L.language) (physical:W.projection l)
   (before after:S.inames) (p:a -> S.slprop) (q:S.slprop)
   : Lemma (requires forall x. hoare l physical before after (p x) q)
       (ensures hoare l physical before after (S.op_exists_Star p) q)
+val pure_pre (l:L.language) (physical:W.projection l)
+  (before after:S.inames) (p q:S.slprop) (fact:prop)
+  (proof:(unit -> Lemma (requires fact) (ensures hoare l physical before after p q)))
+  : Lemma (hoare l physical before after (S.star p (S.pure fact)) q)
 val open_invariant (l:L.language) (physical:W.projection l)
   (mask:S.inames) (i:S.iref{not (S.mem_inv mask i)}) (p:S.slprop)
   : Lemma (hoare l physical mask (S.add_inv mask i)

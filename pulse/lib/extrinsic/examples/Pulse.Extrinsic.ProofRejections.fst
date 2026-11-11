@@ -20,6 +20,8 @@ module Pulse.Extrinsic.ProofRejections
     parsing or missing identifiers. The first seven guard masks, restoration,
     later credits, and updates at values; the remaining cases guard ghost
     write permissions, CAS results, held-token ownership, and cell kinds.
+    The final cases reject unguarded extraction from a localized invariant and
+    returning from an update-closed value with an outstanding open mask.
     Run with --print_expected_failures and inspect diagnostics when changing
     these rules. This file is not evidence that arbitrary unprovable triples
     are semantically false; it checks these specific invalid rule applications. *)
@@ -107,3 +109,18 @@ let integer_is_not_a_node (r:PulseCore.Heap.core_ref)
   : Lemma (P.hoare (Pulse.Extrinsic.HeapLang.Logic.points_to r 0)
       (ReadNext (Val r)) (Pulse.Extrinsic.HeapLang.Nodes.next_post r 0 PulseCore.Heap.core_ref_null))
   = Pulse.Extrinsic.HeapLang.Nodes.read_next r 0 PulseCore.Heap.core_ref_null
+
+// Neither the locality wrapper nor the step rule permits unguarded extraction.
+[@@expect_failure [19]]
+let extract_without_step (i:S.iref) (p:S.slprop)
+  : Lemma (S.implies (Pulse.Extrinsic.HeapLang.Invariants.inv i p) p)
+  = R.entails_refl (Pulse.Extrinsic.HeapLang.Invariants.inv i p)
+
+// An update-closed value may allocate, but it may not return with a mask open.
+[@@expect_failure [19]]
+let fancy_value_escapes_mask (i:S.iref) (p:S.slprop)
+  : Lemma (Pulse.Extrinsic.HeapLang.FancyProof.hoare (S.inv i p) (Val ())
+      (P.constant_post (S.star (S.inv i p) (P.exposed p))))
+  = P.open_invariant GS.empty i p;
+    Pulse.Extrinsic.HeapLang.FancyProof.value_rule (S.inv i p) ()
+      (P.constant_post (S.star (S.inv i p) (P.exposed p)))

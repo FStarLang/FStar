@@ -69,12 +69,6 @@ let peek_shared (root:H.core_ref)
     );
     R.exists_elim (family root) (P.wp (ST.peek root) post)
 
-let resource_exposed (root:H.core_ref)
-  : Lemma (S.implies (P.exposed (resource root)) (resource root))
-  = introduce forall (n:pos). S.implies (P.exposed (family root n)) (family root n)
-    with ST.exposed root (ones n);
-    R.exposed_exists (family root)
-
 let concurrent_at (#ctx:list ty) (root flag:expr ctx TRef) : expr ctx TInt =
   fork (K.with_lock_at flag (ST.push_at root 1)) >>
   K.with_lock_at flag (ST.peek_at root)
@@ -92,7 +86,6 @@ let concurrent_correct (i:S.iref) (g:G.name) (root flag:H.core_ref)
     let parent = K.with_lock flag (ST.peek root) in
     let child_post = P.prepend_post shared (P.constant_post #TUnit S.emp) in
     let parent_post = P.prepend_post shared (P.returns_value 1) in
-    resource_exposed root;
     push_shared root;
     R.entails_refl payload;
     introduce forall (_:unit). S.implies payload

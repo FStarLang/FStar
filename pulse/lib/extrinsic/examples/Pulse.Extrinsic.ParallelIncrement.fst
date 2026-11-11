@@ -384,7 +384,6 @@ let run_correct (i j:S.iref) (r flag:H.core_ref) (g h:G.name)
     let parent_done = S.star (held i r g h 1) joined in
     let both_done = S.star (S.star shared (S.star (half g 1) (half h 1))) joined in
     body_symmetric r g h;
-    F.exposed #int h 0.5R 1;
     increment_correct i r h g;
     P.frame_constant (held i r h g 0) (increment r) (held i r h g 1) joined;
     J.signal_correct j flag (half h 1);
@@ -410,7 +409,7 @@ let run_correct (i j:S.iref) (r flag:H.core_ref) (g h:G.name)
     P.sequence parent parent_done (increment r) (Seq (J.wait flag) (Load (Val r))) (P.returns_value 2);
 
     S.dup_inv_equiv i (body r g h);
-    S.dup_inv_equiv j (J.body flag (half h 1));
+    Pulse.Extrinsic.HeapLang.Invariants.duplicate j (J.body flag (half h 1));
     R.entails_refl parent;
     P.fork parent child child_code (P.constant_post parent);
     P.sequence (run_pre i j r flag g h) parent (Fork child_code)
@@ -431,7 +430,7 @@ let from_ghost_owned (r flag:H.core_ref) (g h:G.name)
     let tickets = S.star (half g 0) (half h 0) in
     let prepared = S.star contents (S.star completion tickets) in
     P.allocate_invariant contents (S.star completion tickets) e q (fun i ->
-      P.allocate_invariant completion (S.star (S.inv i contents) tickets) e q
+      Pulse.Extrinsic.HeapLang.Invariants.allocate completion (S.star (S.inv i contents) tickets) e q
         (fun j -> run_correct i j r flag g h)
     );
     F.split #int g 0.5R 0.5R 0;

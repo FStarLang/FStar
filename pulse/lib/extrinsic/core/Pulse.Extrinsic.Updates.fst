@@ -131,6 +131,17 @@ let exists_pre #a l physical before after p q =
     )
   )
 
+let pure_pre l physical before after p q fact proof =
+  S.sep_laws ();
+  lift l physical before after (S.star p (S.pure fact)) q (fun f m ->
+    let tail = S.star f (S.mem_invariant before m) in
+    S.destruct_star_l (S.pure fact) (S.star p tail) m;
+    S.interp_pure fact m;
+    proof ();
+    S.destruct_star_l (S.star p tail) (S.pure fact) m;
+    assert (enabled before p f m)
+  )
+
 let open_invariant l physical mask i p =
   S.sep_laws ();
   introduce forall f (m:S.full_mem). enabled mask (S.inv i p) f m ==>

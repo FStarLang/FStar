@@ -68,3 +68,17 @@ val adequate_points_to (#t:ty) (r:H.core_ref) (initial:int)
       (ensures L.safe E.language last /\
         (forall result. L.main_returns E.language last result ==>
           exists (v:value t). result == E.PackValue t v /\ phi v))
+
+(** Uniform adequacy for the update-closed WP, including programs which are
+    already values. Final ghost updates preserve the observed source heap. *)
+val adequate_fancy (#t:ty) (p:S.slprop) (e:expr [] t) (q:P.post t)
+  (phi:value t -> prop) (h:M.heap)
+  (#n:nat) (#last:L.config E.language)
+  (run:L.execution E.language n
+    ({ L.threads = [E.Pack t e]; L.state = h }) last)
+  : Lemma
+      (requires realizable h p /\ Pulse.Extrinsic.HeapLang.FancyProof.hoare p e q /\
+        (forall v. S.implies (q v) (S.pure (phi v))))
+      (ensures L.safe E.language last /\
+        (forall result. L.main_returns E.language last result ==>
+          exists (v:value t). result == E.PackValue t v /\ phi v))

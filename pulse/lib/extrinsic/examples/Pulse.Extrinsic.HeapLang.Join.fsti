@@ -14,9 +14,9 @@ module Pulse.Extrinsic.HeapLang.Join
 
 (** A verified SOURCE library for resource-transferring completion.
     Signal stores the ready state; wait retries CAS(ready, claimed) and returns
-    the deposited payload exactly when it claims it. The specification needs
-    exposed(payload) |-- payload, so it does not support arbitrary higher-order
-    payloads without further later-credit machinery.
+    the deposited payload exactly when it claims it. Payloads are arbitrary
+    assertions, including invariant handles and WPs. A successful source CAS
+    pays for eliminating the transferred payload's later guard.
 
     This is a flag protocol, not primitive scheduler join: it establishes that
     publication occurred, not that the child has taken its final return step.
@@ -28,11 +28,12 @@ open Pulse.Extrinsic.HeapLang.Notation
 module H = PulseCore.Heap
 module S = PulseCore.IndirectionTheorySep
 module P = Pulse.Extrinsic.HeapLang.Proof
+module I = Pulse.Extrinsic.HeapLang.Invariants
 
 // 0: pending; 1: resource available; 2: resource claimed.
 let phase = n:int{n == 0 \/ n == 1 \/ n == 2}
 val body (flag:H.core_ref) (payload:S.slprop) : S.slprop
-let handle (i:S.iref) (flag:H.core_ref) (payload:S.slprop) = S.inv i (body flag payload)
+let handle (i:S.iref) (flag:H.core_ref) (payload:S.slprop) = I.inv i (body flag payload)
 
 let signal_at (#g:list ty) (flag:expr g TRef) : expr g TUnit = store flag (int_ 1)
 let wait_at (#g:list ty) (flag:expr g TRef) : expr g TUnit =
@@ -47,13 +48,11 @@ val initialize_ready (flag:H.core_ref) (payload:S.slprop)
       (body flag payload))
 val signal_correct (i:S.iref) (flag:H.core_ref) (payload:S.slprop)
   : Lemma
-      (requires S.implies (P.exposed payload) payload)
       (ensures P.hoare (S.star (handle i flag payload) payload) (signal flag)
         (P.constant_post (handle i flag payload)))
 (** A successful claim removes the payload from the invariant; failure leaves
     it untouched and retries. Only partial correctness is promised. *)
 val wait_correct (i:S.iref) (flag:H.core_ref) (payload:S.slprop)
   : Lemma
-      (requires S.implies (P.exposed payload) payload)
       (ensures P.hoare (handle i flag payload) (wait flag)
         (P.constant_post (S.star (handle i flag payload) payload)))
