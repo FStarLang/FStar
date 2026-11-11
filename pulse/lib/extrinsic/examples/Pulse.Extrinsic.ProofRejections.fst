@@ -64,3 +64,37 @@ let update_at_value (p q:S.slprop)
     R.entails_refl q;
     P.value_rule q () (P.constant_post q);
     P.update_hoare p q (Val ()) (P.constant_post q)
+
+[@@expect_failure [19]]
+let write_with_half (mask:S.inames) (g:Pulse.Extrinsic.Ghost.name)
+  : Lemma (P.update mask mask
+      (Pulse.Extrinsic.Ghost.Fractional.own g 0.5R 0)
+      (Pulse.Extrinsic.Ghost.Fractional.own g 0.5R 1))
+  = Pulse.Extrinsic.Ghost.Fractional.write mask g 0 1
+
+[@@expect_failure [19]]
+let cas_cannot_lie (r:PulseCore.Heap.core_ref)
+  : Lemma (P.hoare (Pulse.Extrinsic.HeapLang.Logic.points_to r 0)
+      (Cas (Val r) (Val 0) (Val 1)) (P.returns_value false))
+  = P.cas r 0 0 1
+
+[@@expect_failure [19]]
+let release_without_token (i:S.iref) (g:Pulse.Extrinsic.Ghost.name) (flag:PulseCore.Heap.core_ref)
+  : Lemma (P.hoare (Pulse.Extrinsic.HeapLang.Spinlock.handle i g flag S.emp)
+      (Pulse.Extrinsic.HeapLang.Spinlock.release flag)
+      (P.constant_post (Pulse.Extrinsic.HeapLang.Spinlock.handle i g flag S.emp)))
+  = R.entails_emp (P.exposed S.emp);
+    Pulse.Extrinsic.HeapLang.Spinlock.release_correct i g flag S.emp
+
+[@@expect_failure [19]]
+let duplicate_lock_token (g:Pulse.Extrinsic.Ghost.name)
+  : Lemma (S.implies (Pulse.Extrinsic.HeapLang.Spinlock.held g S.emp)
+      (S.star (Pulse.Extrinsic.HeapLang.Spinlock.held g S.emp)
+        (Pulse.Extrinsic.HeapLang.Spinlock.held g S.emp)))
+  = R.entails_refl (Pulse.Extrinsic.HeapLang.Spinlock.held g S.emp)
+
+[@@expect_failure [19]]
+let integer_is_not_a_node (r:PulseCore.Heap.core_ref)
+  : Lemma (P.hoare (Pulse.Extrinsic.HeapLang.Logic.points_to r 0)
+      (ReadNext (Val r)) (Pulse.Extrinsic.HeapLang.Nodes.next_post r 0 PulseCore.Heap.core_ref_null))
+  = Pulse.Extrinsic.HeapLang.Nodes.read_next r 0 PulseCore.Heap.core_ref_null

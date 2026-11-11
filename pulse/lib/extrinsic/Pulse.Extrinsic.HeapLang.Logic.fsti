@@ -23,14 +23,25 @@ module M = Pulse.Extrinsic.HeapLang.Memory
 let physical (m:S.full_mem) : GTot M.heap =
   H2.concrete (S.timeless_mem_of m)
 
+val physical_full (m:S.full_mem) : Lemma (H.full_heap_pred (physical m))
+
 val ghost_physical (m m':S.full_mem)
   : Lemma (requires S.is_ghost_action m m') (ensures physical m' == physical m)
 
+val points_to_of (#a:Type0) (r:H.core_ref) (v:a) : S.slprop
 val points_to (r:H.core_ref) (v:int) : S.slprop
+
+val points_to_contents_of (#a:Type0) (r:H.core_ref) (v:a) (m:S.full_mem)
+  : Lemma (requires S.interp (points_to_of r v) m)
+      (ensures M.contents_of (physical m) r v)
 
 val points_to_contents (r:H.core_ref) (v:int) (m:S.full_mem)
   : Lemma (requires S.interp (points_to r v) m)
           (ensures M.contents (physical m) r v)
+
+val points_to_intro_of (#a:Type0) (r:H.core_ref) (v:a) (m:S.full_mem)
+  : Lemma (requires H.interp (M.points_to_of r v) (physical m))
+      (ensures S.interp (points_to_of r v) m)
 
 val points_to_intro (r:H.core_ref) (v:int) (m:S.full_mem)
   : Lemma (requires H.interp (M.points_to r v) (physical m))
@@ -62,6 +73,16 @@ val install_invariant (r:H.core_ref) (v:int)
 val initial_heap (v:int)
   : r:H.core_ref & h:H.full_heap u#3 { H.interp (M.points_to r v) h }
 
+val write_memory_of (#a:Type0) (mask:S.inames) (r:H.core_ref)
+  (old:FStar.Ghost.erased a) (desired:a) (frame:S.slprop)
+  (m:S.full_mem { Pulse.Extrinsic.Atomic.enabled mask (points_to_of r (FStar.Ghost.reveal old)) frame m })
+  : m':S.full_mem {
+      S.level m' == S.level m /\ S.budget m' == S.budget m /\
+      S.inames_ok mask m' /\
+      M.store_of (physical m) r desired (physical m') /\
+      S.interp (S.star (S.star (points_to_of r desired) frame)
+        (S.mem_invariant mask m')) m' }
+
 val write_memory (mask:S.inames) (r:H.core_ref) (old:FStar.Ghost.erased int) (desired:int) (frame:S.slprop)
   (m:S.full_mem {
     Pulse.Extrinsic.Atomic.enabled mask (points_to r old) frame m })
@@ -75,7 +96,30 @@ val write_memory (mask:S.inames) (r:H.core_ref) (old:FStar.Ghost.erased int) (de
 val exposed_lift (p:PulseCore.MemoryAlt.slprop u#0)
   : Lemma (Pulse.Extrinsic.Atomic.exposed (S.lift p) == S.later (S.lift p))
 
+val points_to_exposed_of (#a:Type0) (r:H.core_ref) (v:a)
+  : Lemma (
+      S.implies (Pulse.Extrinsic.Atomic.exposed (points_to_of r v)) (points_to_of r v) /\
+      S.implies (points_to_of r v) (Pulse.Extrinsic.Atomic.exposed (points_to_of r v)))
+
 val points_to_exposed (r:H.core_ref) (v:int)
   : Lemma (
       S.implies (Pulse.Extrinsic.Atomic.exposed (points_to r v)) (points_to r v) /\
       S.implies (points_to r v) (Pulse.Extrinsic.Atomic.exposed (points_to r v)))
+
+val allocate_memory_of (#a:Type0) (mask:S.inames) (v:a) (r:H.core_ref) (heap:M.heap) (frame:S.slprop)
+  (m:S.full_mem {
+    Pulse.Extrinsic.Atomic.enabled mask S.emp frame m /\
+    M.allocation_of (physical m) v r heap })
+  : GTot (next:S.full_mem {
+      physical next == heap /\ S.level next == S.level m /\ S.budget next == S.budget m /\
+      S.inames_ok mask next /\
+      S.interp (S.star (S.star (points_to_of r v) frame) (S.mem_invariant mask next)) next })
+
+val allocate_memory (mask:S.inames) (v:int) (r:H.core_ref) (heap:M.heap) (frame:S.slprop)
+  (m:S.full_mem {
+    Pulse.Extrinsic.Atomic.enabled mask S.emp frame m /\
+    M.allocation (physical m) v r heap })
+  : GTot (next:S.full_mem {
+      physical next == heap /\ S.level next == S.level m /\ S.budget next == S.budget m /\
+      S.inames_ok mask next /\
+      S.interp (S.star (S.star (points_to r v) frame) (S.mem_invariant mask next)) next })

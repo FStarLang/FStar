@@ -32,6 +32,20 @@ let realizable (h:M.heap) (p:S.slprop) : prop =
     C.physical m == h /\ S.budget m >= budget /\
     S.interp (S.star p (W.invariant m)) m
 
+let emp_realizable h =
+  introduce forall (budget:nat). exists (m:S.full_mem).
+    C.physical m == h /\ S.budget m >= budget /\
+    S.interp (S.star S.emp (W.invariant m)) m
+  with (
+    let m = C.world h budget in
+    S.sep_laws ();
+    S.emp_equiv m;
+    introduce exists (m:S.full_mem).
+      C.physical m == h /\ S.budget m >= budget /\
+      S.interp (S.star S.emp (W.invariant m)) m
+    with m and ()
+  )
+
 let points_to_realizable (r:H.core_ref) (v:int) (h:H.full_heap u#3)
   : Lemma (requires H.interp (M.points_to r v) h)
       (ensures realizable h (C.points_to r v))

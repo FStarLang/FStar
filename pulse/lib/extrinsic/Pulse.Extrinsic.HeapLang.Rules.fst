@@ -62,6 +62,45 @@ let wp_value (#t:ty) (p:S.slprop) (v:value t) (q:W.post E.language)
       (ensures hoare p (Val v) q)
   = W.wp_value E.language M.physical (E.Pack t (Val v)) (E.PackValue t v) q
 
+let wp_pure_later (#t:ty) (p:S.slprop) (e next:expr [] t) (q:W.post E.language)
+  (step:(h:Pulse.Extrinsic.HeapLang.Memory.heap ->
+    Lemma (E.transition e next [] h)))
+  : Lemma
+      (requires to_val e == None /\ S.implies p (S.later (wp next q)))
+      (ensures hoare p e q)
+  = S.sep_laws ();
+    W.children_nil E.language (W.wp_family E.language M.physical);
+    W.wp_lift E.language M.physical p (E.Pack t e) q (fun f m ->
+      apply_frame p (S.later (wp next q)) (S.star f (W.invariant m)) m;
+      R.age_later_resources (wp next q) f m;
+      M.ghost_physical m (S.age_mem m);
+      step (M.physical m);
+      E.pack_transition e next [] (M.physical m);
+      introduce forall e' s' spawned.
+        E.packed_step (E.Pack t e) (M.physical m) e' s' spawned ==>
+        (exists (m':S.full_mem).
+          M.physical m' == s' /\ S.level m' < S.level m /\
+          S.budget m' >= S.budget m - 1 /\
+          S.interp (S.star (W.wp E.language M.physical e' q)
+            (S.star (W.children E.language (W.wp_family E.language M.physical) spawned)
+              (S.star f (W.invariant m')))) m')
+      with (
+        introduce E.packed_step (E.Pack t e) (M.physical m) e' s' spawned ==>
+          (exists (m':S.full_mem).
+            M.physical m' == s' /\ S.level m' < S.level m /\
+            S.budget m' >= S.budget m - 1 /\
+            S.interp (S.star (W.wp E.language M.physical e' q)
+              (S.star (W.children E.language (W.wp_family E.language M.physical) spawned)
+                (S.star f (W.invariant m')))) m')
+        with (
+          introduce exists (m':S.full_mem).
+            M.physical m' == s' /\ S.level m' < S.level m /\
+            S.budget m' >= S.budget m - 1 /\
+            S.interp (S.star (W.wp E.language M.physical e' q)
+              (S.star (W.children E.language (W.wp_family E.language M.physical) spawned)
+                (S.star f (W.invariant m')))) m'
+          with (S.age_mem m) and ())))
+
 let wp_load_inv (r:PulseCore.Heap.core_ref) (v:int) (i:S.iref) (q:W.post E.language)
   : Lemma
       (requires S.implies (S.inv i (M.points_to r v)) (q (E.PackValue TInt v)))

@@ -26,6 +26,14 @@ let hoare l physical before after p q =
   forall f (m:S.full_mem). enabled before p f m ==>
     exists (next:S.full_mem). result l physical after q f m next
 
+let lift l physical before after p q step =
+  introduce forall f (m:S.full_mem). enabled before p f m ==>
+    (exists (next:S.full_mem). result l physical after q f m next)
+  with (
+    introduce enabled before p f m ==>
+      (exists (next:S.full_mem). result l physical after q f m next)
+    with step f m)
+
 let entails l physical mask p q =
   S.sep_laws ();
   introduce forall f (m:S.full_mem). enabled mask p f m ==>

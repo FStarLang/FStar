@@ -113,6 +113,12 @@ val wp_mono (l:L.language) (physical:projection l)
       (requires forall v. S.implies (q v) (q' v))
       (ensures S.implies (wp l physical e q) (wp l physical e q'))
 
+val later_intro (l:L.language) (physical:projection l)
+  (p:S.slprop) (e:l.L.expr) (q:post l)
+  : Lemma
+      (requires l.L.to_val e == None /\ S.implies p (wp l physical e q))
+      (ensures S.implies (S.later p) (S.later (wp l physical e q)))
+
 noeq
 type context (l:L.language) = {
   plug: l.L.expr -> l.L.expr;

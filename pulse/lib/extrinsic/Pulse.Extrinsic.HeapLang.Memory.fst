@@ -19,18 +19,18 @@ module H = PulseCore.Heap
 open FStar.PCM
 
 noeq
-type cell_value : Type u#3 =
+type cell_value_of (a:Type0) : Type u#3 =
   | Empty
-  | Full: int -> cell_value
+  | Full: a -> cell_value_of a
 
-let cell_pcm_base : pcm' cell_value = {
+let cell_pcm_base_of (#a:Type0) : pcm' (cell_value_of a) = {
   composable = (fun x y -> Empty? x \/ Empty? y);
   op = (fun x y -> match x with | Empty -> y | Full _ -> x);
   one = Empty;
 }
 
-let cell_pcm : pcm cell_value = {
-  p = cell_pcm_base;
+let cell_pcm_of (#a:Type0) : pcm (cell_value_of a) = {
+  p = cell_pcm_base_of #a;
   comm = (fun x y -> ());
   assoc = (fun x y z -> ());
   assoc_r = (fun x y z -> ());
@@ -38,25 +38,33 @@ let cell_pcm : pcm cell_value = {
   refine = (fun _ -> True);
 }
 
+let cell_value = cell_value_of int
+let cell_pcm = cell_pcm_of #int
 let heap = H.heap u#3
 
-let contents (h:heap) (r:H.core_ref) (v:int) : prop =
+let contents_of (#a:Type0) (h:heap) (r:H.core_ref) (v:a) : prop =
   not (H.core_ref_is_null r) /\
   H.select (H.core_ref_as_addr r) h ==
-    Some (H.Ref cell_value cell_pcm (Full v))
+    Some (H.Ref (cell_value_of a) (cell_pcm_of #a) (Full v))
+
+let contents (h:heap) (r:H.core_ref) (v:int) = contents_of h r v
 
 let unchanged_except (h h':heap) (r:H.core_ref) : prop =
   forall a. a <> H.core_ref_as_addr r ==> H.select a h == H.select a h'
 
-let allocation (h:heap) (v:int) (r:H.core_ref) (h':heap) : prop =
+let allocation_of (#a:Type0) (h:heap) (v:a) (r:H.core_ref) (h':heap) : prop =
   H.select (H.core_ref_as_addr r) h == None /\
   H.extent h <= H.extent h' /\
-  contents h' r v /\ unchanged_except h h' r
+  contents_of h' r v /\ unchanged_except h h' r
 
-let store (h:heap) (r:H.core_ref) (v:int) (h':heap) : prop =
-  (exists old. contents h r old) /\
+let allocation (h:heap) (v:int) (r:H.core_ref) (h':heap) = allocation_of h v r h'
+
+let store_of (#a:Type0) (h:heap) (r:H.core_ref) (v:a) (h':heap) : prop =
+  (exists old. contents_of #a h r old) /\
   H.extent h' == H.extent h /\
-  contents h' r v /\ unchanged_except h h' r
+  contents_of h' r v /\ unchanged_except h h' r
+
+let store (h:heap) (r:H.core_ref) (v:int) (h':heap) = store_of h r v h'
 
 let cas (h:heap) (r:H.core_ref) (expected desired:int) (success:bool) (h':heap) : prop =
   exists old.
@@ -66,53 +74,87 @@ let cas (h:heap) (r:H.core_ref) (expected desired:int) (success:bool) (h':heap) 
           contents h' r desired /\ unchanged_except h h' r
      else not success /\ h' == h)
 
-let contents_unique (h:heap) (r:H.core_ref) (v w:int)
-  : Lemma (requires contents h r v /\ contents h r w)
+let contents_unique_of (#a:Type0) (h:heap) (r:H.core_ref) (v w:a)
+  : Lemma (requires contents_of h r v /\ contents_of h r w)
           (ensures v == w)
   = ()
 
-let store_unique (h:heap) (r:H.core_ref) (v:int) (h1 h2:heap)
-  : Lemma (requires store h r v h1 /\ store h r v h2)
+let contents_unique (h:heap) (r:H.core_ref) (v w:int)
+  : Lemma (requires contents h r v /\ contents h r w) (ensures v == w)
+  = contents_unique_of h r v w
+
+let store_unique_of (#a:Type0) (h:heap) (r:H.core_ref) (v:a) (h1 h2:heap)
+  : Lemma (requires store_of h r v h1 /\ store_of h r v h2)
           (ensures h1 == h2)
   = introduce forall a. H.select a h1 == H.select a h2
     with (if a = H.core_ref_as_addr r then () else ());
     H.heap_ext h1 h2
 
+let store_unique (h:heap) (r:H.core_ref) (v:int) (h1 h2:heap)
+  : Lemma (requires store h r v h1 /\ store h r v h2) (ensures h1 == h2)
+  = store_unique_of h r v h1 h2
 let null_unallocated (h:heap) (v:int)
   : Lemma (not (contents h H.core_ref_null v))
   = ()
 
-let points_to (r:H.core_ref) (v:int) : H.slprop u#3 =
-  H.pts_to #cell_value #cell_pcm r (Full v)
+let cas_unique (h:heap) (r:H.core_ref) (old expected desired:int)
+  (success:bool) (h':heap)
+  : Lemma
+      (requires contents h r old /\ cas h r expected desired success h')
+      (ensures success == (old = expected) /\
+        (if old = expected then store h r desired h' else h' == h))
+  = eliminate exists actual.
+      contents h r actual /\
+      (if actual = expected
+       then success /\ H.extent h' == H.extent h /\
+            contents h' r desired /\ unchanged_except h h' r
+       else not success /\ h' == h)
+    with contents_unique h r old actual
 
-let points_to_contents (r:H.core_ref) (v:int) (h:heap)
-  : Lemma (requires H.interp (points_to r v) h)
-          (ensures contents h r v)
-  = H.interp_pts_to r #cell_value #cell_pcm (Full v) h;
+let points_to_of (#a:Type0) (r:H.core_ref) (v:a) : H.slprop u#3 =
+  H.pts_to #(cell_value_of a) #(cell_pcm_of #a) r (Full v)
+
+let points_to (r:H.core_ref) (v:int) = points_to_of r v
+
+let points_to_contents_of (#a:Type0) (r:H.core_ref) (v:a) (h:heap)
+  : Lemma (requires H.interp (points_to_of r v) h)
+          (ensures contents_of h r v)
+  = H.interp_pts_to r #(cell_value_of a) #(cell_pcm_of #a) (Full v) h;
     match H.select (H.core_ref_as_addr r) h with
     | None -> ()
     | Some (H.Ref _ _ _) -> ()
 
-let allocate (v:int) (h:H.full_heap u#3)
+let points_to_contents (r:H.core_ref) (v:int) (h:heap)
+  : Lemma (requires H.interp (points_to r v) h) (ensures contents h r v)
+  = points_to_contents_of r v h
+
+let allocate_of (#a:Type0) (v:a) (h:H.full_heap u#3)
   : r:H.core_ref & h':H.full_heap u#3 {
-      allocation h v r h' /\ H.interp (points_to r v) h'
+      allocation_of h v r h' /\ H.interp (points_to_of r v) h'
     }
   = H.intro_emp h;
-    H.extend_modifies #cell_value #cell_pcm (Full v) h;
-    let (| r, h' |) = H.extend #cell_value #cell_pcm (Full v) h in
+    H.extend_modifies #(cell_value_of a) #(cell_pcm_of #a) (Full v) h;
+    let (| r, h' |) = H.extend #(cell_value_of a) #(cell_pcm_of #a) (Full v) h in
     (| r, h' |)
 
-let replace (old:FStar.Ghost.erased int) (desired:int) : frame_preserving_upd cell_pcm (Full old) (Full desired) =
-  fun _ -> compatible_refl cell_pcm (Full desired); Full desired
+let allocate (v:int) (h:H.full_heap u#3) = allocate_of v h
 
-let write (r:H.core_ref) (old desired:int)
-  (h:H.full_hheap (points_to r old))
+let replace_of (#a:Type0) (old:FStar.Ghost.erased a) (desired:a)
+  : frame_preserving_upd (cell_pcm_of #a) (Full (FStar.Ghost.reveal old)) (Full desired) =
+  fun _ -> compatible_refl (cell_pcm_of #a) (Full desired); Full desired
+
+let replace (old:FStar.Ghost.erased int) (desired:int) = replace_of old desired
+
+let write_of (#a:Type0) (r:H.core_ref) (old desired:a)
+  (h:H.full_hheap (points_to_of r old))
   : h':H.full_heap u#3 {
-      store h r desired h' /\ H.interp (points_to r desired) h'
+      store_of h r desired h' /\ H.interp (points_to_of r desired) h'
     }
-  = points_to_contents r old h;
-    let update = replace old desired in
+  = points_to_contents_of r old h;
+    let update = replace_of old desired in
     H.upd_gen_modifies r (Full old) (Full desired) update h;
     let (| (), h' |) = H.upd_gen_action r (Full old) (Full desired) update h in
-    points_to_contents r desired h';
+    points_to_contents_of r desired h';
     h'
+
+let write (r:H.core_ref) (old desired:int) (h:H.full_hheap (points_to r old)) = write_of r old desired h

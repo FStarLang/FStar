@@ -507,6 +507,14 @@ let wp_mono l physical e q q' =
   S.implies_intro (wp l physical e q) (wp l physical e q')
     (fun h -> mono_at l physical e q q' h)
 
+let later_intro l physical p e q =
+  unfold_wp l physical e q;
+  S.implies_intro (S.later p) (S.later (wp l physical e q)) (fun h ->
+    if K.level_ h > 1 then
+      assert (wp l physical e q (S.age1_ h))
+    else
+      assert (body_pred l physical (wp_family l physical) (e, q) (S.age1_ h)))
+
 let context_progress (l:L.language) (k:context l) (e:l.L.expr) (s:l.L.state)
   : Lemma (requires L.reducible l e s) (ensures L.reducible l (k.plug e) s)
   = let _ = k.steps in

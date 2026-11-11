@@ -243,6 +243,58 @@ let store r old desired =
   atomic_store Pulse.Lib.GhostSet.empty r old desired;
   atomic_to_hoare (C.points_to r old) (Store (Val r) (Val desired)) (constant_post (C.points_to r desired))
 
+let atomic_cas mask r old expected desired =
+  let p = C.points_to r old in
+  let q = cas_post r old expected desired in
+  S.sep_laws ();
+  A.lift E.language C.physical mask p
+    (E.Pack TBool (Cas (Val r) (Val expected) (Val desired))) (packed_post q)
+    (fun f m ->
+      S.destruct_star_l p (S.star f (S.mem_invariant mask m)) m;
+      C.points_to_contents r old m;
+      let next = if old = expected then C.write_memory mask r old desired f m else m in
+      E.cas_atomic r old expected desired (C.physical m) (C.physical next);
+      R.fact_emp ((old = expected) == (old = expected));
+      introduce forall e' s' spawned.
+        E.packed_step (E.Pack TBool (Cas (Val r) (Val expected) (Val desired)))
+          (C.physical m) e' s' spawned ==>
+        A.result E.language C.physical mask (packed_post q) f m e' s' spawned
+      with (
+        if E.packed_step (E.Pack TBool (Cas (Val r) (Val expected) (Val desired)))
+          (C.physical m) e' s' spawned then
+          primitive_result mask q (old = expected) f m next e' s' spawned
+      ))
+
+let cas r old expected desired =
+  atomic_cas Pulse.Lib.GhostSet.empty r old expected desired;
+  atomic_to_hoare (C.points_to r old) (Cas (Val r) (Val expected) (Val desired))
+    (cas_post r old expected desired)
+
+let atomic_alloc mask v =
+  let q = allocation_post v in
+  S.sep_laws ();
+  A.lift E.language C.physical mask S.emp
+    (E.Pack TRef (Alloc (Val v))) (packed_post q) (fun f m ->
+      C.physical_full m;
+      E.allocation_steps v (C.physical m);
+      introduce forall e' s' spawned.
+        E.packed_step (E.Pack TRef (Alloc (Val v))) (C.physical m) e' s' spawned ==>
+        A.result E.language C.physical mask (packed_post q) f m e' s' spawned
+      with (
+        introduce E.packed_step (E.Pack TRef (Alloc (Val v))) (C.physical m) e' s' spawned ==>
+          A.result E.language C.physical mask (packed_post q) f m e' s' spawned
+        with (
+          eliminate exists r. E.packed_to_val e' == Some (E.PackValue TRef r) /\
+            spawned == [] /\ Pulse.Extrinsic.HeapLang.Memory.allocation (C.physical m) v r s'
+          with (
+            let next = C.allocate_memory mask v r s' f m in
+            primitive_result mask q r f m next e' s' spawned
+          ))))
+
+let alloc v =
+  atomic_alloc Pulse.Lib.GhostSet.empty v;
+  atomic_to_hoare S.emp (Alloc (Val v)) (allocation_post v)
+
 let allocate_invariant #t p pre e q proof =
   S.sep_laws ();
   W.wp_lift E.language C.physical (S.star p pre) (E.Pack t e) (packed_post q)
@@ -270,3 +322,28 @@ let atomic_updates #t outer inner p mid e q post =
     if u <> t then U.false_pre E.language C.physical inner outer (S.pure False)
   );
   A.updates E.language C.physical outer inner p mid (E.Pack t e) (packed_post q) (packed_post post)
+
+let atomic_pure_pre #t mask p fact e q proof =
+  let family (_:unit{fact}) = p in
+  introduce forall (u:unit{fact}). atomic mask (family u) e q with proof u;
+  atomic_exists mask family e q;
+  R.pure_elim p (S.op_exists_Star family) fact (fun _ -> R.exists_intro family ());
+  introduce forall v. S.implies (q v) (q v) with R.entails_refl (q v);
+  atomic_consequence mask (S.op_exists_Star family) (S.star p (S.pure fact)) e q q
+
+let update_pure_pre before after p q fact proof =
+  let family (_:unit{fact}) = p in
+  introduce forall (u:unit{fact}). update before after (family u) q with proof u;
+  update_exists before after family q;
+  R.pure_elim p (S.op_exists_Star family) fact (fun _ -> R.exists_intro family ());
+  update_entails before (S.star p (S.pure fact)) (S.op_exists_Star family);
+  update_trans before before after (S.star p (S.pure fact)) (S.op_exists_Star family) q
+
+let frame_constant #t p e q f =
+  frame p e (constant_post q) f;
+  R.entails_refl (S.star p f);
+  introduce forall v. S.implies (framed_post (constant_post #t q) f v)
+    (constant_post (S.star q f) v)
+  with R.entails_refl (S.star q f);
+  consequence (S.star p f) (S.star p f) e
+    (framed_post (constant_post q) f) (constant_post (S.star q f))

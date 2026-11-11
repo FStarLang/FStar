@@ -25,6 +25,8 @@ module L = Pulse.Extrinsic.Language
 module H = PulseCore.Heap
 
 val realizable (h:M.heap) (p:S.slprop) : prop
+val emp_realizable (h:H.full_heap u#3)
+  : Lemma (realizable h S.emp)
 
 val points_to_realizable (r:H.core_ref) (v:int) (h:H.full_heap u#3)
   : Lemma (requires H.interp (M.points_to r v) h)

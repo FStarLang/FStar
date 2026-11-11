@@ -49,6 +49,19 @@ type head_step : #t:ty -> expr [] t -> M.heap -> expr [] t -> M.heap -> list thr
       head_step (Cas (Val r) (Val expected) (Val desired)) h (Val success) h' []
   | Spawn: e:thread -> h:M.heap ->
       head_step (Fork e) h (Val ()) h [e]
+  | NodeNew: data:int -> next:H.core_ref -> r:H.core_ref -> h:M.heap -> h':M.heap ->
+      squash (M.allocation_of h (data, next) r h') ->
+      head_step (NewNode (Val data) (Val next)) h (Val r) h' []
+  | NodeReadData: r:H.core_ref -> data:int -> next:H.core_ref -> h:M.heap ->
+      squash (M.contents_of h r (data, next)) ->
+      head_step (ReadData (Val r)) h (Val data) h []
+  | NodeReadNext: r:H.core_ref -> data:int -> next:H.core_ref -> h:M.heap ->
+      squash (M.contents_of h r (data, next)) ->
+      head_step (ReadNext (Val r)) h (Val next) h []
+  | NodeWriteNext: r:H.core_ref -> data:int -> old:H.core_ref -> next:H.core_ref ->
+      h:M.heap -> h':M.heap ->
+      squash (M.contents_of h r (data, old) /\ M.store_of h r (data, next) h') ->
+      head_step (WriteNext (Val r) (Val next)) h (Val ()) h' []
   | Unroll: c:expr [] TBool -> body:thread -> h:M.heap ->
       head_step (While c body) h
         (If c (Seq body (While c body)) (Val ())) h []
@@ -68,7 +81,9 @@ let head_not_value (#t:ty) (#e #e':expr [] t) (#h #h':M.heap) (#spawned:list thr
   = match s with
     | Beta _ _ _ | Branch _ _ _ _ | Sequence _ _ | Plus _ _ _
     | Equal _ _ _ | New _ _ _ _ _ | Read _ _ _ _ | Write _ _ _ _ _
-    | CompareExchange _ _ _ _ _ _ _ | Spawn _ _ | Unroll _ _ _ -> ()
+    | CompareExchange _ _ _ _ _ _ _ | Spawn _ _ | Unroll _ _ _
+    | NodeNew _ _ _ _ _ _ | NodeReadData _ _ _ _ _ | NodeReadNext _ _ _ _ _
+    | NodeWriteNext _ _ _ _ _ _ _ -> ()
 
 let fill_not_value (#a #b:ty) (k:context a b) (e:expr [] a)
   : Lemma (requires to_val e == None)
@@ -87,7 +102,8 @@ let step_not_value (#t:ty) (#e #e':expr [] t) (#h #h':M.heap) (#spawned:list thr
 let head_redex (#t:ty) (e:expr [] t) : bool =
   match e with
   | Let e _ | If e _ _ | Seq e _ | Alloc e | Load e -> Some? (to_val e)
-  | Add e1 e2 | Eq e1 e2 | Store e1 e2 ->
+  | ReadData e | ReadNext e -> Some? (to_val e)
+  | Add e1 e2 | Eq e1 e2 | Store e1 e2 | NewNode e1 e2 | WriteNext e1 e2 ->
       Some? (to_val e1) && Some? (to_val e2)
   | Cas e1 e2 e3 -> Some? (to_val e1) && Some? (to_val e2) && Some? (to_val e3)
   | Fork _ | While _ _ -> true
@@ -112,6 +128,12 @@ let context_head (#a #b:ty) (k:context a b) (e:expr [] a)
     | CasRef k _ _ -> fill_not_value k e
     | CasExpected _ k _ -> fill_not_value k e
     | CasDesired _ _ k -> fill_not_value k e
+    | NodeData k _ -> fill_not_value k e
+    | NodeNext _ k -> fill_not_value k e
+    | ReadDataCtx k -> fill_not_value k e
+    | ReadNextCtx k -> fill_not_value k e
+    | WriteNextLeft k _ -> fill_not_value k e
+    | WriteNextRight _ k -> fill_not_value k e
 
 let invert_head (#t:ty) (#e #e':expr [] t) (#h #h':M.heap) (#spawned:list thread)
   (s:step e h e' h' spawned)
@@ -181,6 +203,12 @@ let rec compose (#a #b #c:ty) (outer:context b c) (inner:context a b)
     | CasRef k expected desired -> CasRef (compose k inner) expected desired
     | CasExpected r k desired -> CasExpected r (compose k inner) desired
     | CasDesired r expected k -> CasDesired r expected (compose k inner)
+    | NodeData k next -> NodeData (compose k inner) next
+    | NodeNext data k -> NodeNext data (compose k inner)
+    | ReadDataCtx k -> ReadDataCtx (compose k inner)
+    | ReadNextCtx k -> ReadNextCtx (compose k inner)
+    | WriteNextLeft k next -> WriteNextLeft (compose k inner) next
+    | WriteNextRight r k -> WriteNextRight r (compose k inner)
 
 let rec fill_compose (#a #b #c:ty) (outer:context b c) (inner:context a b) (e:expr [] a)
   : Lemma (fill (compose outer inner) e == fill outer (fill inner e)) (decreases outer)
@@ -200,6 +228,12 @@ let rec fill_compose (#a #b #c:ty) (outer:context b c) (inner:context a b) (e:ex
     | CasRef k _ _ -> fill_compose k inner e
     | CasExpected _ k _ -> fill_compose k inner e
     | CasDesired _ _ k -> fill_compose k inner e
+    | NodeData k _ -> fill_compose k inner e
+    | NodeNext _ k -> fill_compose k inner e
+    | ReadDataCtx k -> fill_compose k inner e
+    | ReadNextCtx k -> fill_compose k inner e
+    | WriteNextLeft k _ -> fill_compose k inner e
+    | WriteNextRight _ k -> fill_compose k inner e
 
 let head_is_redex (#t:ty) (#e #e':expr [] t) (#h #h':M.heap) (#spawned:list thread)
   (s:head_step e h e' h' spawned)
@@ -207,7 +241,9 @@ let head_is_redex (#t:ty) (#e #e':expr [] t) (#h #h':M.heap) (#spawned:list thre
   = match s with
     | Beta _ _ _ | Branch _ _ _ _ | Sequence _ _ | Plus _ _ _
     | Equal _ _ _ | New _ _ _ _ _ | Read _ _ _ _ | Write _ _ _ _ _
-    | CompareExchange _ _ _ _ _ _ _ | Spawn _ _ | Unroll _ _ _ -> ()
+    | CompareExchange _ _ _ _ _ _ _ | Spawn _ _ | Unroll _ _ _
+    | NodeNew _ _ _ _ _ _ | NodeReadData _ _ _ _ _ | NodeReadNext _ _ _ _ _
+    | NodeWriteNext _ _ _ _ _ _ _ -> ()
 
 let rec invert_fill (#a #b:ty) (k:context a b) (e:expr [] a)
   (#next:expr [] b) (#h #h':M.heap) (#spawned:list thread)
@@ -307,6 +343,44 @@ let rec invert_fill (#a #b:ty) (k:context a b) (e:expr [] a)
          | CasExpected _ actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
          | CasRef actual_inner _ _ -> fill_not_value actual_inner head
          | _ -> ())
+    | NodeData inner _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | NodeData actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | NodeNext _ inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | NodeNext _ actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | NodeData actual_inner _ -> fill_not_value actual_inner head
+         | _ -> ())
+    | ReadDataCtx inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | ReadDataCtx actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | ReadNextCtx inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | ReadNextCtx actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | WriteNextLeft inner _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | WriteNextLeft actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | WriteNextRight _ inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | WriteNextRight _ actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | WriteNextLeft actual_inner _ -> fill_not_value actual_inner head
+         | _ -> ())
     | CasDesired _ _ inner ->
         fill_not_value inner e;
         (match actual with
@@ -370,6 +444,10 @@ let fork_transition (child:thread) (h:M.heap)
 let eq_transition (x y:int) (h:M.heap)
   : Lemma (transition (Eq (Val x) (Val y)) (Val (x = y)) [] h)
   = head_transition (Equal x y h) (fun _ _ _ hs -> let Equal _ _ _ = hs in ())
+
+let while_transition (c:expr [] TBool) (body:thread) (h:M.heap)
+  : Lemma (transition (While c body) (If c (Seq body (While c body)) (Val ())) [] h)
+  = head_transition (Unroll c body h) (fun _ _ _ hs -> let Unroll _ _ _ = hs in ())
 
 let if_transition (#t:ty) (b:bool) (yes no:expr [] t) (h:M.heap)
   : Lemma (transition (If (Val b) yes no) (if b then yes else no) [] h)
@@ -547,6 +625,113 @@ let store_atomic (r:H.core_ref) (v:int) (h h':M.heap)
           (ensures atomic_result (Store (Val r) (Val v)) h () h')
   = head_atomic (Write r v h h' ()) (fun _ state _ hs ->
       let Write _ _ _ _ _ = hs in M.store_unique h r v h' state)
+
+let node_data_atomic (r:H.core_ref) (data:int) (next:H.core_ref) (h:M.heap)
+  : Lemma (requires M.contents_of h r (data, next))
+      (ensures atomic_result (ReadData (Val r)) h data h)
+  = head_atomic (NodeReadData r data next h ()) (fun _ _ _ hs ->
+      let NodeReadData _ d n _ _ = hs in
+      M.contents_unique_of h r (data, next) (d, n))
+
+let node_next_atomic (r:H.core_ref) (data:int) (next:H.core_ref) (h:M.heap)
+  : Lemma (requires M.contents_of h r (data, next))
+      (ensures atomic_result (ReadNext (Val r)) h next h)
+  = head_atomic (NodeReadNext r data next h ()) (fun _ _ _ hs ->
+      let NodeReadNext _ d n _ _ = hs in
+      M.contents_unique_of h r (data, next) (d, n))
+
+let node_write_atomic (r:H.core_ref) (data:int) (old next:H.core_ref) (h h':M.heap)
+  : Lemma (requires M.contents_of h r (data, old) /\ M.store_of h r (data, next) h')
+      (ensures atomic_result (WriteNext (Val r) (Val next)) h () h')
+  = head_atomic (NodeWriteNext r data old next h h' ()) (fun _ state _ hs ->
+      let NodeWriteNext _ d n _ _ _ _ = hs in
+      M.contents_unique_of h r (data, old) (d, n);
+      M.store_unique_of h r (data, next) h' state)
+
+let node_allocation_steps (data:int) (next:H.core_ref) (h:H.full_heap u#3)
+  : Lemma (
+      L.reducible language (Pack TRef (NewNode (Val data) (Val next))) h /\
+      (forall e' state spawned.
+        packed_step (Pack TRef (NewNode (Val data) (Val next))) h e' state spawned ==>
+        exists r. packed_to_val e' == Some (PackValue TRef r) /\
+          spawned == [] /\ M.allocation_of h (data, next) r state))
+  = let (| r, h' |) = M.allocate_of (data, next) h in
+    pack_step (ContextStep Hole (NodeNew data next r h h' ()));
+    introduce exists e' state spawned.
+      language.L.prim_step (Pack TRef (NewNode (Val data) (Val next))) h e' state spawned
+    with (Pack TRef (Val r)) h' [] and ();
+    introduce forall e' state spawned.
+      packed_step (Pack TRef (NewNode (Val data) (Val next))) h e' state spawned ==>
+      (exists r. packed_to_val e' == Some (PackValue TRef r) /\
+        spawned == [] /\ M.allocation_of h (data, next) r state)
+    with (
+      introduce packed_step (Pack TRef (NewNode (Val data) (Val next))) h e' state spawned ==>
+        (exists r. packed_to_val e' == Some (PackValue TRef r) /\
+          spawned == [] /\ M.allocation_of h (data, next) r state)
+      with (
+        eliminate exists (e:expr [] TRef) (children:list thread).
+          e' == Pack TRef e /\ spawned == pack_threads children /\
+          (exists (_:step (NewNode (Val data) (Val next)) h e state children). True)
+        with (
+          eliminate exists (s:step (NewNode (Val data) (Val next)) h e state children). True with (
+            invert_head s;
+            eliminate exists (hs:head_step (NewNode (Val data) (Val next)) h e state children). True with (
+              let NodeNew _ _ result _ _ _ = hs in
+              introduce exists r. packed_to_val e' == Some (PackValue TRef r) /\
+                spawned == [] /\ M.allocation_of h (data, next) r state
+              with result and ())))))
+
+let allocation_steps (v:int) (h:H.full_heap u#3)
+  : Lemma (
+      L.reducible language (Pack TRef (Alloc (Val v))) h /\
+      (forall next state spawned.
+        packed_step (Pack TRef (Alloc (Val v))) h next state spawned ==>
+        exists r. packed_to_val next == Some (PackValue TRef r) /\
+          spawned == [] /\ M.allocation h v r state))
+  = let (| r, h' |) = M.allocate v h in
+    pack_step (ContextStep Hole (New v r h h' ()));
+    introduce exists next state spawned.
+      language.L.prim_step (Pack TRef (Alloc (Val v))) h next state spawned
+    with (Pack TRef (Val r)) h' [] and ();
+    introduce forall next state spawned.
+      packed_step (Pack TRef (Alloc (Val v))) h next state spawned ==>
+      (exists r. packed_to_val next == Some (PackValue TRef r) /\
+        spawned == [] /\ M.allocation h v r state)
+    with (
+      introduce packed_step (Pack TRef (Alloc (Val v))) h next state spawned ==>
+        (exists r. packed_to_val next == Some (PackValue TRef r) /\
+          spawned == [] /\ M.allocation h v r state)
+      with (
+        eliminate exists (e':expr [] TRef) (children:list thread).
+          next == Pack TRef e' /\ spawned == pack_threads children /\
+          (exists (_:step (Alloc (Val v)) h e' state children). True)
+        with (
+          eliminate exists (s:step (Alloc (Val v)) h e' state children). True with (
+            invert_head s;
+            eliminate exists (hs:head_step (Alloc (Val v)) h e' state children). True with (
+              let New _ result _ _ _ = hs in
+              introduce exists r. packed_to_val next == Some (PackValue TRef r) /\
+                spawned == [] /\ M.allocation h v r state
+              with result and ())))))
+
+let cas_atomic (r:H.core_ref) (old expected desired:int) (h h':M.heap)
+  : Lemma
+      (requires M.contents h r old /\
+        (if old = expected then M.store h r desired h' else h' == h))
+      (ensures atomic_result (Cas (Val r) (Val expected) (Val desired))
+        h (old = expected) h')
+  = introduce exists actual.
+      M.contents h r actual /\
+      (if actual = expected
+       then (old = expected) /\ H.extent h' == H.extent h /\
+            M.contents h' r desired /\ M.unchanged_except h h' r
+       else not (old = expected) /\ h' == h)
+    with old and ();
+    head_atomic (CompareExchange r expected desired (old = expected) h h' ())
+      (fun _ state _ hs ->
+        let CompareExchange _ _ _ success _ _ _ = hs in
+        M.cas_unique h r old expected desired success state;
+        if old = expected then M.store_unique h r desired h' state)
 
 let schedule
   (#t:ty) (#e #e':expr [] t) (#h #h':M.heap) (#spawned:list thread)

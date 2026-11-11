@@ -49,6 +49,10 @@ type expr : list ty -> ty -> Type0 =
   | Load: #g:list ty -> expr g TRef -> expr g TInt
   | Store: #g:list ty -> expr g TRef -> expr g TInt -> expr g TUnit
   | Cas: #g:list ty -> expr g TRef -> expr g TInt -> expr g TInt -> expr g TBool
+  | NewNode: #g:list ty -> expr g TInt -> expr g TRef -> expr g TRef
+  | ReadData: #g:list ty -> expr g TRef -> expr g TInt
+  | ReadNext: #g:list ty -> expr g TRef -> expr g TRef
+  | WriteNext: #g:list ty -> expr g TRef -> expr g TRef -> expr g TUnit
   | Fork: #g:list ty -> expr g TUnit -> expr g TUnit
   | While: #g:list ty -> expr g TBool -> expr g TUnit -> expr g TUnit
 
@@ -74,6 +78,10 @@ let rec rename (#g #d:list ty) (#t:ty) (r:renaming g d) (e:expr g t)
     | Load e -> Load (rename r e)
     | Store e1 e2 -> Store (rename r e1) (rename r e2)
     | Cas e1 e2 e3 -> Cas (rename r e1) (rename r e2) (rename r e3)
+    | NewNode e1 e2 -> NewNode (rename r e1) (rename r e2)
+    | ReadData e -> ReadData (rename r e)
+    | ReadNext e -> ReadNext (rename r e)
+    | WriteNext e1 e2 -> WriteNext (rename r e1) (rename r e2)
     | Fork e -> Fork (rename r e)
     | While c body -> While (rename r c) (rename r body)
 
@@ -99,6 +107,10 @@ let rec subst (#g #d:list ty) (#t:ty) (s:substitution g d) (e:expr g t)
     | Load e -> Load (subst s e)
     | Store e1 e2 -> Store (subst s e1) (subst s e2)
     | Cas e1 e2 e3 -> Cas (subst s e1) (subst s e2) (subst s e3)
+    | NewNode e1 e2 -> NewNode (subst s e1) (subst s e2)
+    | ReadData e -> ReadData (subst s e)
+    | ReadNext e -> ReadNext (subst s e)
+    | WriteNext e1 e2 -> WriteNext (subst s e1) (subst s e2)
     | Fork e -> Fork (subst s e)
     | While c body -> While (subst s c) (subst s body)
 
@@ -134,6 +146,12 @@ type context : ty -> ty -> Type0 =
   | CasRef: #t:ty -> context t TRef -> expr [] TInt -> expr [] TInt -> context t TBool
   | CasExpected: #t:ty -> H.core_ref -> context t TInt -> expr [] TInt -> context t TBool
   | CasDesired: #t:ty -> H.core_ref -> int -> context t TInt -> context t TBool
+  | NodeData: #t:ty -> context t TInt -> expr [] TRef -> context t TRef
+  | NodeNext: #t:ty -> int -> context t TRef -> context t TRef
+  | ReadDataCtx: #t:ty -> context t TRef -> context t TInt
+  | ReadNextCtx: #t:ty -> context t TRef -> context t TRef
+  | WriteNextLeft: #t:ty -> context t TRef -> expr [] TRef -> context t TUnit
+  | WriteNextRight: #t:ty -> H.core_ref -> context t TRef -> context t TUnit
 
 let rec fill (#a #b:ty) (k:context a b) (e:expr [] a)
   : Tot (expr [] b) (decreases k)
@@ -153,3 +171,9 @@ let rec fill (#a #b:ty) (k:context a b) (e:expr [] a)
     | CasRef k e2 e3 -> Cas (fill k e) e2 e3
     | CasExpected r k e3 -> Cas (Val r) (fill k e) e3
     | CasDesired r v k -> Cas (Val r) (Val v) (fill k e)
+    | NodeData k next -> NewNode (fill k e) next
+    | NodeNext data k -> NewNode (Val data) (fill k e)
+    | ReadDataCtx k -> ReadData (fill k e)
+    | ReadNextCtx k -> ReadNext (fill k e)
+    | WriteNextLeft k next -> WriteNext (fill k e) next
+    | WriteNextRight r k -> WriteNext (Val r) (fill k e)

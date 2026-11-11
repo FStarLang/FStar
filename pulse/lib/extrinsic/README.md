@@ -16,10 +16,27 @@ logic is responsible for those concerns.
 
 The interface supports typed postconditions, structural rules, composition
 through every HeapLang evaluation context, fork, addition, equality,
-conditionals, load, store, mask-aware atomic triples, and composable ghost mask
-updates. Invariant examples include both nested opening and an invariant whose
-body is another invariant handle. Physical allocation, CAS, and loops still
-need client-facing primitive rules.
+conditionals, allocation, load, store, CAS, while loops, reference-containing
+nodes, mask-aware atomic triples, and composable ghost mask updates. It also
+provides PCM ghost ownership, fractional ghost permissions, resource-transferring
+completion, spinlocks, and a retry/abort/commit specification for a multi-step
+CAS increment. Invariant examples include nested opening and an invariant whose
+body is another invariant handle.
+
+The five larger source-level milestones are:
+
+| Example | Main guarantee |
+| --- | --- |
+| [ParallelIncrement](examples/Pulse.Extrinsic.ParallelIncrement.fst) | Allocates its counter and completion flag, forks two CAS increments, transfers the child's ghost receipt through join, and returns exactly **2**. |
+| [ListExamples](examples/Pulse.Extrinsic.ListExamples.fst) | Allocates a linked list for any finite input list and returns ownership of exactly that list. |
+| [SpinlockExamples](examples/Pulse.Extrinsic.SpinlockExamples.fst) | Concurrent clients mutate, read, and restore a protected cell; the parent reads exactly **1** inside its critical section. |
+| [AtomicIncrementExamples](examples/Pulse.Extrinsic.AtomicIncrementExamples.fst) | Independent owned-cell and shared-invariant clients use the CAS loop's abstract atomic-update protocol. |
+| [LinkedConcurrent](examples/Pulse.Extrinsic.LinkedConcurrent.fst) | A locked push allocates and links a node while another thread peeks; the parent returns exactly **1**. |
+
+These are safety/partial-correctness results, not termination results.
+The spinlock has an explicit exposure premise on its payload, and the atomic
+update is a resource-parametric protocol judgment, not a first-class Iris AU
+assertion. See [remaining work](#12-remaining-work) for the precise limits.
 
 Core logic lives directly in this directory. The [examples](examples) directory
 contains source-program proofs, example-specific assertion definitions,
@@ -87,8 +104,9 @@ introduced for HeapLang.
 ### 1.1 Physical heaps and logical memories
 
 Start with `PulseCore.Heap.heap`, `pts_to`, `select`, and `interp`. A physical
-heap contains cells governed by PCMs. HeapLang will choose one particular PCM
-for integer cells; it does not replace the underlying heap model.
+heap contains cells governed by PCMs. HeapLang instantiates an exclusive-cell
+PCM for integers and for `(int, reference)` nodes; it does not replace the
+underlying heap model.
 
 Then distinguish that heap from `IndirectionTheorySep.mem` and `full_mem`.
 Logical memories also carry the bookkeeping used for guarded reasoning and
@@ -188,8 +206,10 @@ Evaluation contexts are source syntax, so client composition rules can
 mention them without importing the operational semantics.
 
 `HeapLang.expr g t` is syntax indexed by a typing context `g` and result type
-`t`. The types are unit, booleans, mathematical integers, and references to
-integer cells. Variables are typed de Bruijn indices. A `Let` body is another
+`t`. The types are unit, booleans, mathematical integers, and references.
+References can designate integer cells or nodes containing an integer and a
+reference; ownership distinguishes these cell kinds. Variables are typed de
+Bruijn indices. A `Let` body is another
 syntax tree, not an F* continuation. `rename`, `subst`, and `substitute`
 implement capture-avoiding substitution.
 
@@ -197,12 +217,16 @@ The constructors are:
 
 ```text
 Val, Var, Let, If, Seq, Add, Eq,
-Alloc, Load, Store, Cas, Fork, While
+Alloc, Load, Store, Cas, Fork, While,
+NewNode, ReadData, ReadNext, WriteNext
 ```
 
 The language is first-order: there are no function values, higher-order store,
-general recursive functions, deallocation, or join handles. `While` can
+general recursive functions, deallocation, or primitive join handles. `While` can
 diverge. `Fork` starts a unit-returning child and returns unit without joining.
+`HeapLang.Join` implements resource-transferring completion using ordinary
+source stores, CAS, and a loop. Node fields contain actual `core_ref` values:
+there is no address-to-integer encoding.
 
 Intrinsic typing rules out ill-typed syntax, but does not prove memory safety:
 a reference value need not designate an allocated cell. The logic supplies
@@ -210,13 +234,15 @@ the ownership and invariant conditions needed for safe execution.
 
 ### 2.3 Physical state and primitive heap relations
 
-In `HeapLang.Memory`, follow `cell_value`, `cell_pcm`, `contents`,
+In `HeapLang.Memory`, follow `cell_value_of`, `cell_pcm_of`, `contents_of`,
 `unchanged_except`, `allocation`, `store`, and `cas`. Then read
 `contents_unique`, `store_unique`, `points_to`, `allocate`, and `write`.
 
 The source heap is `PulseCore.Heap.heap u#3`, not a separate finite-map model.
-`HeapLang.Memory` instantiates an exclusive integer-cell PCM with elements
-`Empty` and `Full n`. Two `Full` elements cannot compose.
+`HeapLang.Memory` defines an exclusive-cell PCM with elements `Empty` and
+`Full v`, parameterized by a small value type. Two `Full` elements cannot
+compose. The original integer operations remain specializations; the
+`*_of` operations also support reference-containing nodes.
 
 `contents h r v` observes a cell in that heap. `allocation`, `store`, and `cas`
 are relations on physical heaps. A store preserves the heap extent and every
@@ -226,8 +252,9 @@ heap.
 
 Allocation is relational. A native allocator constructs one valid witness,
 but the source reduction relation is not defined by running that allocator.
-Any logical allocation rule will have to account for every allowed source
-allocation, not just the chosen witness.
+Both allocation rules account for every allowed source allocation, not just
+the chosen witness. `Logic.allocation_fragment` builds the fresh singleton
+fragment for the address selected by that operational successor.
 
 ### 2.4 Reductions, contexts, and the generic-language instance
 
@@ -453,7 +480,8 @@ cannot instead occur there.
 
 This covers `LetCtx`, `IfCtx`, `SeqCtx`, both addition and equality positions,
 allocation and load operands, both store positions, and all three CAS
-positions. The `let_context` and `seq_context` functions are now small
+positions, plus all node-allocation, field-read, and link-update positions.
+The `let_context` and `seq_context` functions are now small
 specializations of `make_context`, not separate context proofs.
 
 There is still a source reduction after the hole becomes a value:
@@ -470,8 +498,8 @@ special class of read-only invariants.
 At [stop 8](#8-the-typed-source-logic-interface), the typed `let_rule` and
 `sequence` combine these value reductions with `wp_bind`. Clients will only
 supply the two component triples. `context_rule` exposes the general version.
-Having an evaluation-context rule for `Alloc` or `Cas` does not yet provide
-the missing primitive rule once all that operation's arguments are values.
+The context rule composes operand evaluation; separate primitive rules handle
+allocation, CAS, and node operations once their arguments are values.
 
 ## 6. Native heap and action bridges
 
@@ -522,6 +550,12 @@ independently defined `HeapLang.Memory.store` relation.
 `Memory.store_unique` and `Semantics.store_atomic` then identify all allowed
 source store results with that physical target. This is the key additional
 work beyond reusing a native store's Hoare specification.
+
+The implementation is shared across value types: `points_to_of`,
+`write_memory_of`, and `allocate_memory_of` support nodes as well as integers.
+`allocate_memory_of` restores the pinned arbitrary frame around a fresh
+singleton fragment. It proves equality with the operationally selected heap,
+not merely existence of some native allocation.
 
 The small additions in [PulseCore.Heap.fsti](../core/PulseCore.Heap.fsti)
 expose heap extent, extensional equality, and observations of native
@@ -822,6 +856,33 @@ and `store` rules instantiate them at the **empty** mask and then use
 No client has to supply `contents`, `store`, `packed_step`, a native action,
 or a correspondence certificate to use these primitives.
 
+The additional primitive specifications are:
+
+```text
+{ emp } Alloc v { r. r |-> v }
+
+{ r |-> old } Cas r expected desired
+{ b. r |-> (if b then desired else old) ** pure (b == (old = expected)) }
+```
+
+`atomic_alloc` handles every fresh-address successor. `atomic_cas` connects
+the success branch to a native write and the failure branch to unchanged
+memory. Both have ordinary empty-mask wrappers.
+
+For nodes, read [HeapLang.Nodes](Pulse.Extrinsic.HeapLang.Nodes.fsti).
+`node r data next` owns a single physical cell containing `(data, next)`.
+`new_node` returns that ownership, reads retain it and prove the exact field
+value, and `write_next` changes only the link while retaining the data.
+Their backend correspondence lives in `Nodes.fst` and `Semantics`, not in
+list or stack clients.
+
+Read [HeapLang.Loops](Pulse.Extrinsic.HeapLang.Loops.fsti) next. Its while
+rule takes a condition triple whose true branch yields the body precondition
+and whose false branch yields the exit assertion, plus a body triple
+restoring the loop invariant. The implementation uses a private logical clock
+and the later-guarded unroll step. Clients supply neither a clock nor a retry
+bound. The theorem is partial correctness: it permits divergence.
+
 ### 8.4 Ghost invariant allocation
 
 `P.allocate_invariant` is also a source-logic rule:
@@ -850,8 +911,9 @@ the supplied logical continuation for the fresh name, and applies
 a valid obligation for the original world.
 
 This is allocation of a **logical invariant**, not the source-language
-`Alloc` instruction. A client-facing rule for physical cell allocation is
-still missing.
+`Alloc` instruction. The physical `alloc` rule above returns ownership of a
+fresh source cell; `allocate_invariant` subsequently installs owned resources
+in a logical invariant.
 
 ### 8.5 Check the boundary with negative examples
 
@@ -865,6 +927,10 @@ source interface rejects:
 - Eliminating later without providing a later credit.
 - Treating an opening update as a closed-to-closed update.
 - Applying `update_hoare` at a value.
+- Writing a fractional ghost cell with only half ownership.
+- Claiming a failed CAS when its expected value matches.
+- Releasing a spinlock without its held token, or duplicating that token.
+- Using integer-cell ownership to read a node's reference field.
 
 The positive invariant examples use the neighboring legal rules. The
 rejections check the source interface, not just the types of native actions.
@@ -959,6 +1025,12 @@ Read `points_to_realizable` and `adequate_points_to`.
 `points_to_realizable` uses `HeapLang.Logic.world` and `points_to_intro` to
 establish realizability from physical ownership. `adequate_points_to`
 packages that initialization with the uniform theorem.
+
+`emp_realizable` supplies the corresponding reusable initialization for
+allocating programs. For any full physical starting heap, it establishes
+realizability of `emp` at every requested budget. Combining it with `adequate`
+and any example's `program_correct` is sufficient; no program-specific
+world construction or schedule proof is necessary.
 
 The final example at stop 10 supplies a triple for `concurrent_readback`
 starting from ordinary points-to ownership and returning a bit. To obtain
@@ -1317,8 +1389,165 @@ examples for the source semantics: allocation/store/load, a main result with
 a looping child, and a CAS interleaving.
 
 Those are tests of the language model, not the method used to verify client
-programs. In particular, the CAS traces are not a client-facing separation
-logic verification of CAS; that primitive's logical rule remains to be added.
+programs. The CAS loop and parallel-increment proofs below instead use the
+verified primitive rules and the general while rule.
+
+### 10.13 Fractional ghost state and Owicki-Gries parallel increment
+
+Read [Ghost](Pulse.Extrinsic.Ghost.fsti), then
+[Ghost.Fractional](Pulse.Extrinsic.Ghost.Fractional.fsti).
+The generic layer lifts a Type0 PCM into native ghost memory and provides
+allocation, frame-preserving writes, splitting, and compatibility. Its backend
+uses `MemoryAlt.ghost_alloc` and `ghost_write`; these are not fresh axioms or
+a separate ghost-state model. The fractional layer reuses
+`Pulse.Lib.PCM.Fraction`. A full share permits changing the value; two shares
+must agree on it. [GhostExamples](examples/Pulse.Extrinsic.GhostExamples.fst)
+shows combine/update/split and agreement in isolation.
+
+Now follow [ParallelIncrement](examples/Pulse.Extrinsic.ParallelIncrement.fst):
+
+1. `piece`, `row`, and `body` define an invariant owning the physical counter
+   at `x + y` and half of each thread's ghost contribution. Each contribution
+   is either 0 or 1. Each thread privately owns the matching other half.
+2. `mine_agrees` combines agreement with framing. `cas_piece` uses it to
+   establish that this thread's contribution is still 0. Successful source
+   CAS changes the physical sum and the full ghost contribution together,
+   then splits the ghost cell and restores the invariant. Failure preserves
+   both the contribution and the retry resource.
+3. `read_shared`, `retry_correct`, and `increment_correct` prove the actual
+   load/add/CAS retry loop. Its source syntax is shared with
+   `HeapLang.AtomicIncrement`; it is not a two-attempt special case.
+4. Read [HeapLang.Join](Pulse.Extrinsic.HeapLang.Join.fsti). A flag moves from
+   pending (0), to payload available (1), to claimed (2). `signal_correct`
+   deposits owned payload. `wait_correct` uses a successful CAS to obtain it.
+   The payload must satisfy `exposed payload |-- payload`; ghost fractions do.
+5. `run_correct` forks one increment, performs the other, waits for the child's
+   completed half-share, then calls `read_two`. The two private receipts force
+   both invariant contributions to be 1, so the final read is exactly 2.
+6. `from_ghost_owned` installs both invariants. `from_owned` allocates and
+   splits the ghost cells. `program_correct` adds physical allocation and
+   finishes with `{emp} program {v. pure (v == 2)}`.
+
+The source program, omitting de Bruijn notation, is:
+
+```text
+let r = Alloc 0 in
+let flag = Alloc 0 in
+  Fork (increment r; signal flag);
+  increment r;
+  wait flag;
+  Load r
+```
+
+The fractions are **ghost** permissions. Physical counter ownership remains
+exclusive inside the invariant; no rule permits writing through a fractional
+physical read share. The completion protocol, not the scheduler or adequacy
+theorem, supplies the child's receipt.
+
+### 10.14 An allocating sequential linked list
+
+Read [HeapLang.List](Pulse.Extrinsic.HeapLang.List.fsti) after the node rules.
+`is_list r xs` relates an actual linked chain to a mathematical list. Its
+empty case requires the null reference; its cons case owns the head node and
+the entire tail. `cons_correct` allocates a new head without losing tail
+ownership. `head_correct` retains the list, while `next_correct` exposes
+ownership of the head node and the tail at the returned reference.
+
+[ListExamples](examples/Pulse.Extrinsic.ListExamples.fst) compiles any finite
+input list into a closed, deeply embedded allocating program. `build_correct`
+is structural induction over that input, using only the source allocation,
+let, and list rules. Its postcondition is `is_list returned xs`, not merely
+“some allocated reference.” The concrete example constructs `[3; 5; 8]`.
+All allocated node ownership is returned in the postcondition.
+
+### 10.15 A spinlock with a real protected-resource client
+
+Read [HeapLang.Spinlock](Pulse.Extrinsic.HeapLang.Spinlock.fsti).
+It reuses the completion protocol's CAS claim/store release mechanism.
+The deposited payload contains both the protected assertion and an exclusive
+ghost token. `acquire_correct` transfers them to the caller;
+`release_correct` requires them back. `exclusive` rules out duplicate held
+tokens, and `duplicate` permits sharing only the lock handle.
+
+`allocate` installs the logical protocol from an owned flag initially set
+to 1 and the protected resource. `with_lock_correct` derives a reusable
+bracketing rule: acquire, run a source body restoring the protected resource,
+release, and return the body's result. It frames the exclusive token through
+the entire body, not just one atomic instruction.
+
+[SpinlockExamples](examples/Pulse.Extrinsic.SpinlockExamples.fst) protects
+`r |-> 0`. Each client acquires, stores 1, reads the cell, restores 0, and
+releases. The read is proved to return 1 even with another such client running
+concurrently. Without exclusive ownership across the critical section,
+the other client's restoration could invalidate that readback argument.
+`program_correct` allocates the data and flag and proves the result from `emp`.
+
+The exposure premise is explicit. This library accepts the supported
+timeless/locality-independent payloads, including the node/list assertions;
+it does not claim an arbitrary higher-order-resource lock rule.
+
+### 10.16 Multi-step logical atomicity via an abortable update protocol
+
+Read [HeapLang.AtomicUpdate](Pulse.Extrinsic.HeapLang.AtomicUpdate.fst),
+then [HeapLang.AtomicIncrement](Pulse.Extrinsic.HeapLang.AtomicIncrement.fsti).
+The protocol separates ownership from reusable logical evidence:
+
+```text
+retry  ==update outer->inner==>  exists x. alpha x ** closing x
+alpha x ** closing x  ==update inner->outer==>  retry
+beta x y ** closing x ==update inner->outer==>  phi x y
+```
+
+Abort and commit are alternatives consuming the **same** closing resource.
+An abort restores retry ownership; a commit need not. The state `x` is chosen
+at each opening, not frozen at operation entry. This follows the
+abort/commit organization of Pulse's native
+`Pulse.Lib.LogicalAtomicity.Atomic`, while using this logic's mask-update
+judgments and budget discipline.
+
+For the increment, `alpha old` is `r |-> old`, `beta old ()` is
+`r |-> old + 1`, and the committed result is a client-chosen assertion.
+Follow `read`, `compare_exchange`, `attempt`, and `correct` in the
+implementation. The speculative load aborts its opening. Each CAS opens
+afresh; failure aborts, and success establishes beta and commits. The while
+rule permits arbitrarily many retries without keeping an invariant open
+between source steps. This is a specification of the **whole multi-step
+loop**, distinct from `P.atomic`.
+
+[AtomicIncrementExamples](examples/Pulse.Extrinsic.AtomicIncrementExamples.fst)
+contains independent clients. `owned_protocol` yields exclusive ownership of
+`initial + 1`, and the allocating program returns the cell with that precise
+contents. `shared_protocol` constructs a nonempty-mask protocol from an
+invariant containing an existential counter value. Neither client reasons
+about the loop's instructions, schedules, or chosen linearization point.
+
+This is a resource-parametric protocol judgment, not an assertion-valued AU
+package or a proof of equivalence with Iris's greatest-fixed-point AU.
+It establishes the specified transition at a successful CAS, but does not
+itself provide a general history-based linearizability theorem.
+
+### 10.17 Concurrent insertion into a linked structure
+
+Read [HeapLang.Stack](Pulse.Extrinsic.HeapLang.Stack.fsti).
+`contents root xs` owns a header whose link points to a list representing
+`xs`. `push_correct` allocates a new node and updates the header, proving
+the precise transition `xs -> x :: xs`. `peek_correct` proves the head value
+while preserving the whole structure. These are sequential library rules
+over exclusive ownership.
+
+[LinkedConcurrent](examples/Pulse.Extrinsic.LinkedConcurrent.fst) protects
+`exists n:pos. contents root (ones n)` with the abstract spinlock.
+`push_shared` preserves this nonempty-list invariant by increasing `n`;
+`peek_shared` proves the result is 1. `concurrent_correct` composes their
+locked forms with fork. The child allocates and links a new node, while the
+parent follows the header's actual reference and reads the head.
+
+`program_correct` allocates the initial list, header, and lock flag, installs
+the invariant, forks the insertion, and proves the parent returns 1 from
+`emp`. No address encoding, native action, semantic lifting callback, or
+per-program adequacy proof occurs here. This example is **lock-based**, not
+a lock-free Treiber stack. The parent need not join: either the old or the
+new head contains 1, and the invariant continues to protect the child.
 
 ## 11. Module map and abstraction boundaries
 
@@ -1340,6 +1569,13 @@ All names in the table have prefix `Pulse.Extrinsic`.
 | [Updates](Pulse.Extrinsic.Updates.fsti) | Frame-preserving ghost mask updates, composition, allocation, and later elimination. |
 | [AtomicLogic](Pulse.Extrinsic.AtomicLogic.fsti) | Generic masked atomic source judgments and their rules. |
 | [HeapLang.Proof](Pulse.Extrinsic.HeapLang.Proof.fsti) | Typed client-facing Hoare and atomic source rules. |
+| [HeapLang.Loops](Pulse.Extrinsic.HeapLang.Loops.fsti) | General partial-correctness while rule with private guarded induction. |
+| [Ghost](Pulse.Extrinsic.Ghost.fsti), [Ghost.Fractional](Pulse.Extrinsic.Ghost.Fractional.fsti) | Native PCM ghost ownership and fractional agreement/update rules. |
+| [HeapLang.Join](Pulse.Extrinsic.HeapLang.Join.fsti) | Source-level completion and payload transfer. |
+| [HeapLang.Spinlock](Pulse.Extrinsic.HeapLang.Spinlock.fsti) | Abstract exclusive held token, resource transfer, and critical-section bracketing. |
+| [HeapLang.AtomicUpdate](Pulse.Extrinsic.HeapLang.AtomicUpdate.fst), [HeapLang.AtomicIncrement](Pulse.Extrinsic.HeapLang.AtomicIncrement.fsti) | Abort/commit protocol judgment and multi-step CAS implementation. |
+| [HeapLang.Nodes](Pulse.Extrinsic.HeapLang.Nodes.fsti) | Primitive rules for actual reference-containing nodes. |
+| [HeapLang.List](Pulse.Extrinsic.HeapLang.List.fsti), [HeapLang.Stack](Pulse.Extrinsic.HeapLang.Stack.fsti) | List ownership, allocation, field access, and header-based insertion. |
 | [ProofRejections](examples/Pulse.Extrinsic.ProofRejections.fst) | Negative checks at the source-logic interface. |
 | [Adequacy](Pulse.Extrinsic.Adequacy.fst) | Generic thread-pool preservation and soundness. |
 | [HeapLang.Adequacy](Pulse.Extrinsic.HeapLang.Adequacy.fsti) | Once-for-all adequacy for that interface and reusable initialization. |
@@ -1360,7 +1596,7 @@ last, not semantic lifting callbacks from the middle.
 The semantic implementations use `friend` access where representations are
 needed. `ExamplePredicates.fst` also accesses assertion representations to
 prove its unfolding and exposure lemmas; it does not prove program traces.
-The four program-proof modules use neither `friend` nor semantic lifting
+The source program-proof modules use neither `friend` nor semantic lifting
 helpers. Core logic modules never import example modules.
 `HeapLang.Adequacy` alone connects the abstract typed WP to the generic
 operational adequacy theorem.
@@ -1372,19 +1608,26 @@ existing F*/PulseCore foundations.
 
 The current interface is a usable slice, not the final framework.
 
-- Add source-level primitive rules for physical allocation, CAS, and loops.
-  Their operand contexts are supported, but a context rule does not supply
-  the primitive specification.
 - Develop an assertion-valued fancy-update modality and its interaction with
   WP values if needed. The current mask updates are composable judgments;
   ordinary WP remains closed-mask, and its update-introduction rule requires
   a non-value expression.
-- Extend the nested examples with additional ghost-state protocols and
-  initialization lemmas for their resource preconditions. The current
-  invariant-containing-invariant example explicitly uses later credits.
-- Derive logical atomicity or atomic-update specifications for multi-step
-  implementations. The current `atomic` judgment concerns a single
-  value-producing source step; it is not such a specification.
+- Package the resource-parametric atomic-update protocol as a first-class
+  owned assertion and extend its laws. The verified multi-step CAS loop is
+  not a replacement for a general AU/fancy-update library.
+- Extend the step/later-credit interface for arbitrary higher-order protected
+  resources. Join and spinlock currently require `exposed R |-- R`; nested
+  invariant-handle examples still use explicit credits. There is no free
+  credit-generation rule.
+- Extend source values beyond scalars/references and the dedicated node
+  operations: general products/sums, functions, and richer recursive programs.
+  Add reclamation/deallocation before claiming realistic lock-free linked
+  structures. The current linked example uses a lock and insertion only.
+- Add further PCM libraries and proof ergonomics. Generic PCM ownership and
+  fractional ghost cells are present, but not an Iris-scale ghost library
+  or proof mode.
+- Liveness, fairness, lock freedom, termination, and a general concurrent
+  refinement/linearizability theorem remain separate obligations.
 
 These extensions should preserve the boundary established here: semantic
 work belongs in rule implementations and generic soundness, while program
@@ -1401,7 +1644,8 @@ make -C pulse -j16 lib-extrinsic
 The opt-in target is defined in
 [pulse/Makefile](../../Makefile) and
 [mk/lib-extrinsic.mk](../../mk/lib-extrinsic.mk). It checks all `.fst` and
-`.fsti` roots and their core/common dependency closure. The default cache is
+`.fsti` roots and their dependency closure, including the existing Pulse
+fraction PCM library. The default cache is
 `pulse/build/lib.extrinsic.checked`. The target is not added to the default
 build, CI, or installation targets.
 The root discovery includes `examples/`, and the target adds that directory

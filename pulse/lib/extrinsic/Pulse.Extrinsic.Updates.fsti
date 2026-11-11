@@ -32,6 +32,13 @@ let result (l:L.language) (physical:W.projection l) (mask:S.inames)
 val hoare (l:L.language) (physical:W.projection l)
   (before after:S.inames) (p q:S.slprop) : prop
 
+val lift (l:L.language) (physical:W.projection l)
+  (before after:S.inames) (p q:S.slprop)
+  (step:(f:S.slprop -> m:S.full_mem ->
+    Lemma (requires enabled before p f m)
+      (ensures exists (next:S.full_mem). result l physical after q f m next)))
+  : Lemma (hoare l physical before after p q)
+
 val entails (l:L.language) (physical:W.projection l) (mask:S.inames) (p q:S.slprop)
   : Lemma (requires S.implies p q) (ensures hoare l physical mask mask p q)
 val false_pre (l:L.language) (physical:W.projection l) (before after:S.inames) (q:S.slprop)

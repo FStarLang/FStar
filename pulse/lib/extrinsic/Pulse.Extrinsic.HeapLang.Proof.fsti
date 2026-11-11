@@ -105,6 +105,22 @@ val store (r:PulseCore.Heap.core_ref) (old desired:int)
   : Lemma (hoare (C.points_to r old) (Store (Val r) (Val desired))
       (constant_post (C.points_to r desired)))
 
+let cas_post (r:PulseCore.Heap.core_ref) (old expected desired:int) (success:bool) =
+  S.star (C.points_to r (if success then desired else old))
+    (S.pure (success == (old = expected)))
+val atomic_cas (mask:S.inames) (r:PulseCore.Heap.core_ref) (old expected desired:int)
+  : Lemma (atomic mask (C.points_to r old)
+      (Cas (Val r) (Val expected) (Val desired)) (cas_post r old expected desired))
+val cas (r:PulseCore.Heap.core_ref) (old expected desired:int)
+  : Lemma (hoare (C.points_to r old)
+      (Cas (Val r) (Val expected) (Val desired)) (cas_post r old expected desired))
+
+let allocation_post (v:int) (r:PulseCore.Heap.core_ref) = C.points_to r v
+val atomic_alloc (mask:S.inames) (v:int)
+  : Lemma (atomic mask S.emp (Alloc (Val v)) (allocation_post v))
+val alloc (v:int)
+  : Lemma (hoare S.emp (Alloc (Val v)) (allocation_post v))
+
 // Ghost allocation is absorbed at the next source step, not at a value.
 val allocate_invariant (#t:ty) (p pre:S.slprop) (e:expr [] t) (q:post t)
   (proof:(i:S.iref -> Lemma (hoare (S.star (S.inv i p) pre) e q)))
@@ -142,3 +158,15 @@ val atomic_updates (#t:ty) (outer inner:S.inames) (p mid:S.slprop)
       (requires update outer inner p mid /\ atomic inner mid e q /\
         (forall v. update inner outer (q v) (post v)))
       (ensures atomic outer p e post)
+
+val atomic_pure_pre (#t:ty) (mask:S.inames) (p:S.slprop) (fact:prop)
+  (e:expr [] t) (q:post t)
+  (proof:(unit -> Lemma (requires fact) (ensures atomic mask p e q)))
+  : Lemma (requires to_val e == None)
+      (ensures atomic mask (S.star p (S.pure fact)) e q)
+val update_pure_pre (before after:S.inames) (p q:S.slprop) (fact:prop)
+  (proof:(unit -> Lemma (requires fact) (ensures update before after p q)))
+  : Lemma (update before after (S.star p (S.pure fact)) q)
+val frame_constant (#t:ty) (p:S.slprop) (e:expr [] t) (q f:S.slprop)
+  : Lemma (requires hoare p e (constant_post q))
+      (ensures hoare (S.star p f) e (constant_post (S.star q f)))

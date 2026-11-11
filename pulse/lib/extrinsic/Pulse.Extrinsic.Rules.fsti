@@ -61,6 +61,7 @@ val entails_refl (p:S.slprop) : Lemma (S.implies p p)
 val entails_trans (p q r:S.slprop)
   : Lemma (requires S.implies p q /\ S.implies q r) (ensures S.implies p r)
 val entails_emp (p:S.slprop) : Lemma (S.implies p S.emp)
+val entails_left (p q:S.slprop) : Lemma (S.implies (S.star p q) p)
 val entails_fact (p:S.slprop) (fact:prop)
   : Lemma (requires fact) (ensures S.implies p (S.pure fact))
 val fact_emp (fact:prop)
@@ -93,6 +94,45 @@ val hoare_pure (l:L.language) (physical:W.projection l)
 val entails_pure (p q:prop)
   : Lemma (requires p ==> q) (ensures S.implies (S.pure p) (S.pure q))
 
+val pure_elim (p q:S.slprop) (fact:prop)
+  (proof:(unit -> Lemma (requires fact) (ensures S.implies p q)))
+  : Lemma (S.implies (S.star p (S.pure fact)) q)
+val exists_intro (#a:Type0) (p:a -> S.slprop) (x:a)
+  : Lemma (S.implies (p x) (S.op_exists_Star p))
+val exists_elim (#a:Type0) (p:a -> S.slprop) (q:S.slprop)
+  : Lemma (requires forall x. S.implies (p x) q)
+      (ensures S.implies (S.op_exists_Star p) q)
+val exists_star (#a:Type0) (p:a -> S.slprop) (q:S.slprop)
+  : Lemma (S.star (S.op_exists_Star p) q == S.op_exists_Star (fun x -> S.star (p x) q))
+val exists_swap (#a #b:Type0) (p:a -> b -> S.slprop)
+  : Lemma (S.op_exists_Star (fun x -> S.op_exists_Star (p x)) ==
+      S.op_exists_Star (fun y -> S.op_exists_Star (fun x -> p x y)))
+val with_pure (p:S.slprop) (fact:prop)
+  : Lemma (requires S.implies p (S.pure fact))
+      (ensures S.implies p (S.star p (S.pure fact)))
+val entails_exposed (p:S.slprop)
+  : Lemma (S.implies p (S.somewhere (S.later p)))
+val exposed_star (p q:S.slprop)
+  : Lemma
+      (requires S.implies (S.somewhere (S.later p)) p /\
+        S.implies (S.somewhere (S.later q)) q)
+      (ensures S.implies (S.somewhere (S.later (S.star p q))) (S.star p q))
+val exposed_pure (fact:prop)
+  : Lemma (S.implies (S.somewhere (S.later (S.pure fact))) (S.pure fact))
+val exposed_exists (#a:Type0) (p:a -> S.slprop)
+  : Lemma
+      (requires forall x. S.implies (S.somewhere (S.later (p x))) (p x))
+      (ensures S.implies (S.somewhere (S.later (S.op_exists_Star p))) (S.op_exists_Star p))
+
 val entails_later (p:S.slprop) : Lemma (S.implies p (S.later p))
+
+val age_later_resources (p frame:S.slprop) (m:S.full_mem)
+  : Lemma
+      (requires S.budget m > 0 /\
+        S.interp (S.star (S.later p) (S.star frame (W.invariant m))) m)
+      (ensures
+        S.level (S.age_mem m) == S.level m - 1 /\
+        S.budget (S.age_mem m) == S.budget m - 1 /\
+        S.interp (S.star p (S.star frame (W.invariant (S.age_mem m)))) (S.age_mem m))
 val exposed_inv (i:S.iref) (p:S.slprop)
   : Lemma (S.somewhere (S.later (S.inv i p)) == S.later (S.inv i p))
