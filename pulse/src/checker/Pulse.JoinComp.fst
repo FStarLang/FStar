@@ -596,6 +596,10 @@ let hoisted_binder (bs:list (universe & binder & var)) (t:term)
    arguments, and every differing argument a hoisted variable on both sides
    with the same binder type -- in which case the pair stays inside the
    conditional. *)
+(* A binder introduced by generalization, with the term it stands for in
+   the then- and else-branch. *)
+type inst = var & R.term & R.term
+
 (* Is [t] a variable of [g], of the same type as [b], mentioning none of [xs]? *)
 let same_type_as_binder (g:env) (xs:list var) (b:binder) (t:term) : bool =
   match is_var t with
@@ -617,7 +621,7 @@ let same_type_as_binder (g:env) (xs:list var) (b:binder) (t:term) : bool =
    which instantiates the binder with them. Positions of type [slprop] are left
    alone: generalizing them would forget the resource. *)
 let generalize_arg_by_type (g:env) (xs1 xs2:list var) (pre:R.term) (t1 t2:R.term)
-: T.Tac (option (env & list (universe & binder & var) & R.term))
+: T.Tac (option (env & list (universe & binder & var) & list inst & R.term))
 = if not ((not (indep_of xs1 t1) && indep_of xs2 t2) ||
           (indep_of xs1 t1 && not (indep_of xs2 t2)))
   then None
@@ -642,7 +646,7 @@ let generalize_arg_by_type (g:env) (xs1 xs2:list var) (pre:R.term) (t1 t2:R.term
           let x = fresh g in
           let b = mk_binder_ppname ty ppname_default in
           let g = push_binding g x b.binder_ppname ty in
-          Some (g, [(u, b, x)], term_of_no_name_var x)
+          Some (g, [(u, b, x)], [(x, t1, t2)], term_of_no_name_var x)
 
 (* Anti-unify two terms that agree except where each side has one of its own
    hoisted variables, replacing every such position by a single fresh binder,
@@ -655,9 +659,9 @@ let rec generalize_term (g:env)
                         (bs1 bs2:list (universe & binder & var))
                         (xs1 xs2:list var)
                         (t1 t2:R.term)
-: T.Tac (option (env & list (universe & binder & var) & R.term))
+: T.Tac (option (env & list (universe & binder & var) & list inst & R.term))
 = if T.term_eq t1 t2 && indep_of xs1 t1 && indep_of xs2 t1
-  then Some (g, [], t1)
+  then Some (g, [], [], t1)
   else
     match hoisted_binder bs1 t1, hoisted_binder bs2 t2 with
     | Some (u1, b1), Some (u2, b2) ->
@@ -665,7 +669,7 @@ let rec generalize_term (g:env)
       then
         let x = fresh g in
         let g = push_binding g x b1.binder_ppname b1.binder_ty in
-        Some (g, [(u1, b1, x)], term_of_no_name_var x)
+        Some (g, [(u1, b1, x)], [(x, t1, t2)], term_of_no_name_var x)
       else None
     (* Only one branch bound this position; the other kept whatever was there
        on entry, or computed it from its own hoisted variables (a branch that
@@ -680,14 +684,14 @@ let rec generalize_term (g:env)
       then
         let x = fresh g in
         let g = push_binding g x b1.binder_ppname b1.binder_ty in
-        Some (g, [(u1, b1, x)], term_of_no_name_var x)
+        Some (g, [(u1, b1, x)], [(x, t1, t2)], term_of_no_name_var x)
       else None
     | None, Some (u2, b2) ->
       if same_type_as_binder g xs1 b2 t1 || not (indep_of xs1 t1)
       then
         let x = fresh g in
         let g = push_binding g x b2.binder_ppname b2.binder_ty in
-        Some (g, [(u2, b2, x)], term_of_no_name_var x)
+        Some (g, [(u2, b2, x)], [(x, t1, t2)], term_of_no_name_var x)
       else None
     | _ ->
       let hd1, args1 = T.collect_app_ln t1 in
@@ -699,7 +703,7 @@ let rec generalize_term (g:env)
       else (
         match generalize_args g bs1 bs2 xs1 xs2 hd1 [] args1 args2 with
         | None -> None
-        | Some (g, bs, args) -> Some (g, bs, T.mk_app hd1 args)
+        | Some (g, bs, is, args) -> Some (g, bs, is, T.mk_app hd1 args)
       )
 
 and generalize_args (g:env)
@@ -707,9 +711,9 @@ and generalize_args (g:env)
                     (xs1 xs2:list var)
                     (hd:R.term) (pre:list R.argv)
                     (args1 args2:list R.argv)
-: T.Tac (option (env & list (universe & binder & var) & list R.argv))
+: T.Tac (option (env & list (universe & binder & var) & list inst & list R.argv))
 = match args1, args2 with
-  | [], [] -> Some (g, [], [])
+  | [], [] -> Some (g, [], [], [])
   | (a1, qual)::args1', (a2, _)::args2' -> (
     let a =
       match generalize_term g bs1 bs2 xs1 xs2 a1 a2 with
@@ -718,10 +722,10 @@ and generalize_args (g:env)
     in
     match a with
     | None -> None
-    | Some (g, bnd, a) -> (
+    | Some (g, bnd, is1, a) -> (
       match generalize_args g bs1 bs2 xs1 xs2 hd (pre @ [(a, qual)]) args1' args2' with
       | None -> None
-      | Some (g, bs, args) -> Some (g, bnd@bs, (a, qual)::args)
+      | Some (g, bs, is, args) -> Some (g, bnd@bs, is1@is, (a, qual)::args)
     )
   )
   | _ -> None
@@ -730,16 +734,16 @@ let generalize_pair (g:env)
                     (bs1 bs2:list (universe & binder & var))
                     (xs1 xs2:list var)
                     (p q:slprop)
-: T.Tac (option (env & list (universe & binder & var) & slprop))
+: T.Tac (option (env & list (universe & binder & var) & list inst & slprop))
 = match inspect_term p, inspect_term q with
   | Tm_FStar f1, Tm_FStar f2 -> (
     match generalize_term g bs1 bs2 xs1 xs2 f1 f2 with
     | None -> None
-    | Some (g, bs, t) ->
+    | Some (g, bs, is, t) ->
       (* Belt and braces: never let a hoisted variable escape its binder, and
          do not accept a generalization that says nothing at all. *)
       if Cons? bs && indep_of xs1 t && indep_of xs2 t
-      then Some (g, bs, t)
+      then Some (g, bs, is, t)
       else None
   )
   | _ -> None
@@ -780,16 +784,16 @@ let rec salvage_matches (linked:bool) (all1 all2:list term)
                         (bs1 bs2:list (universe & binder & var))
                         (xs1 xs2:list var)
                         (matches:list (slprop & slprop))
-: T.Tac (env & list (universe & binder & var) & list slprop & list slprop & list slprop)
+: T.Tac (env & list (universe & binder & var) & list inst & list slprop & list slprop & list slprop)
 = match matches with
-  | [] -> g, [], [], [], []
+  | [] -> g, [], [], [], [], []
   | (c1, c2)::matches ->
     let salvage_rest g = salvage_matches linked all1 all2 g b bs1 bs2 xs1 xs2 matches in
     if indep_of xs1 c1 && indep_of xs2 c2
     then (
       let c = combine_terms true g b (c1, c2) in
-      let g, newbs, lifted, kept1, kept2 = salvage_rest g in
-      g, newbs, c::lifted, kept1, kept2
+      let g, newbs, is, lifted, kept1, kept2 = salvage_rest g in
+      g, newbs, is, c::lifted, kept1, kept2
     )
     else (
       let gen =
@@ -798,12 +802,12 @@ let rec salvage_matches (linked:bool) (all1 all2:list term)
         else generalize_pair g bs1 bs2 xs1 xs2 c1 c2
       in
       match gen with
-      | Some (g, bs, c) ->
-        let g, newbs, lifted, kept1, kept2 = salvage_rest g in
-        g, bs@newbs, c::lifted, kept1, kept2
+      | Some (g, bs, is1, c) ->
+        let g, newbs, is, lifted, kept1, kept2 = salvage_rest g in
+        g, bs@newbs, is1@is, c::lifted, kept1, kept2
       | None ->
-        let g, newbs, lifted, kept1, kept2 = salvage_rest g in
-        g, newbs, lifted, c1::kept1, c2::kept2
+        let g, newbs, is, lifted, kept1, kept2 = salvage_rest g in
+        g, newbs, is, lifted, c1::kept1, c2::kept2
     )
 
 (* What the branches do not agree on. With no [pick], it stays under the
@@ -826,6 +830,66 @@ let rec needs_hoist (p:slprop) : T.Tac bool =
   | Tm_Star l r -> if needs_hoist l then true else needs_hoist r
   | Tm_ExistsSL .. | Tm_WithPure .. -> true
   | _ -> false
+
+(* Generalizing a position over a fresh binder [w] forgets what the branch
+   stored there, and with it every pure fact the branch knew about the
+   hoisted variables in that term. For example, a branch that writes an
+   unspecified encoding [c] of [x],
+
+     p_then = exists* c. r |-> f c ** pure (repr x c)
+     p_else = r |-> v
+
+   joins to [exists* w. r |-> w], losing both [repr x c] and [w == v].
+   Record, for each branch, the instantiation of the new binders together
+   with the branch's pure facts over its hoisted variables, quantified in
+   the logic and guarded by the branch condition:
+
+     exists* w. r |-> w **
+       pure (b == true ==> (exists c. w == f c /\ repr x c)) **
+       pure (b == false ==> w == v)
+
+   Each branch proves its own conjunct with the witnesses it has; the other
+   holds trivially under the branch hypothesis. [gs] are the branch's
+   [with_pure] guards that mention a hoisted variable, [cs] its remaining
+   conjuncts, of which only the pure ones are kept. *)
+let instance_facts (then_:bool) (b:term)
+                   (bs:list (universe & binder & var))
+                   (newbs:list (universe & binder & var))
+                   (insts:list inst) (gs:list (term & ppname)) (cs:list slprop)
+: T.Tac (list slprop)
+= let eqs : list term =
+    T.filter_map
+      (fun (i:inst) ->
+        let x, t1, t2 = i in
+        let t = if then_ then t1 else t2 in
+        match List.Tot.find (fun (_, _, y) -> y = x) newbs with
+        | None -> None
+        | Some (u, bx, _) -> Some (RT.eq2 u bx.binder_ty (term_of_no_name_var x) t))
+      insts
+  in
+  if Nil? eqs then [] else
+  let facts =
+    List.Tot.map fst gs @
+    T.filter_map (fun c -> match inspect_term c with
+                           | Tm_Pure p -> Some p
+                           | _ -> None) cs
+  in
+  let rec close (bs:list (universe & binder & var)) (p:term) : T.Tac term =
+    match bs with
+    | [] -> p
+    | (u, bx, y)::bs ->
+      let p = close bs p in
+      if not (y `Set.mem` freevars p) then p
+      else
+        let abs = mk_abs_with_name_and_range bx.binder_ppname.name bx.binder_ppname.range
+                    bx.binder_ty R.Q_Explicit (close_term p y) in
+        mk_l_exists u bx.binder_ty abs
+  in
+  let all = eqs @ facts in
+  let conj = List.Tot.fold_left mk_and (List.Tot.hd all) (List.Tot.tl all) in
+  let body = close bs conj in
+  let pred = mk_imp (RT.eq2 u0 tm_bool b (if then_ then tm_true else tm_false)) body in
+  [pack_term_view (Tm_Pure pred) (T.range_of_term body)]
 
 let join_hoisted (pick:option bool) (linked:bool) g b (p1 p2:slprop)
 : T.Tac slprop
@@ -855,7 +919,7 @@ let join_hoisted (pick:option bool) (linked:bool) g b (p1 p2:slprop)
      generalized over a fresh binder -- or goes back into its own branch. *)
   let all1 = List.Tot.map fst gs1 @ cs1 @ List.Tot.map fst matches in
   let all2 = List.Tot.map fst gs2 @ cs2 @ List.Tot.map snd matches in
-  let g2, newbs, lifted, kept1, kept2 =
+  let g2, newbs, insts, lifted, kept1, kept2 =
     salvage_matches linked all1 all2 g2 b bs1 bs2 xs1 xs2 matches in
   if Nil? lifted
   then leftover pick b p1 p2 // nothing was salvaged; keep the term as it was
@@ -878,7 +942,9 @@ let join_hoisted (pick:option bool) (linked:bool) g b (p1 p2:slprop)
       then []
       else [leftover pick b rest1 rest2]
     in
-    close_hoisted_exists newbs (list_as_slprop (remaining@pures1@pures2@lifted))
+    let links1 = instance_facts true b bs1 newbs insts gs1 (indep1@dep1) in
+    let links2 = instance_facts false b bs2 newbs insts gs2 (indep2@dep2) in
+    close_hoisted_exists newbs (list_as_slprop (remaining@links1@links2@pures1@pures2@lifted))
 
 let rec join_slprop (pick:option bool) (linked:bool) g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
 : T.Tac slprop
