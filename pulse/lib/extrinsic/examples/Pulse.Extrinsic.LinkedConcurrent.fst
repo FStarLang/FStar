@@ -1,6 +1,19 @@
 module Pulse.Extrinsic.LinkedConcurrent
 
+(** Concurrent insertion and peek over a genuinely linked heap structure.
+    A lock protects exists n:pos. contents root (ones n), ensuring that every
+    reachable state has a nonempty all-ones list. Push allocates a node and
+    publishes its actual reference; peek follows the header and reads its head.
+
+    push_shared/peek_shared establish invariant-preserving exclusive triples;
+    concurrent_correct uses the abstract lock to compose them with fork.
+    from_owned and program_correct install all resources from physical
+    allocation. The parent returns 1 whether it reads the old or the new head,
+    so no join is needed. This is lock-based insertion, not lock-free CAS or
+    reclamation; the child may remain active when the parent returns. *)
+
 open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
 module H = PulseCore.Heap
 module S = PulseCore.IndirectionTheorySep
 module P = Pulse.Extrinsic.HeapLang.Proof
@@ -18,6 +31,8 @@ let rec ones (n:nat) : Tot (list int) (decreases n) =
 let family (root:H.core_ref) (n:pos) = ST.contents root (ones n)
 let resource (root:H.core_ref) = S.op_exists_Star (family root)
 
+(** Existential n is local to this critical section. Push establishes n+1;
+    no caller relies on retaining the old witness after releasing the lock. *)
 let push_shared (root:H.core_ref)
   : Lemma (P.hoare (resource root) (ST.push root 1) (P.constant_post (resource root)))
   = let post = P.constant_post #TUnit (resource root) in
@@ -61,10 +76,13 @@ let resource_exposed (root:H.core_ref)
     R.exposed_exists (family root)
 
 let concurrent_at (#ctx:list ty) (root flag:expr ctx TRef) : expr ctx TInt =
-  Seq (Fork (K.with_lock_at flag (ST.push_at root 1)))
-    (K.with_lock_at flag (ST.peek_at root))
+  fork (K.with_lock_at flag (ST.push_at root 1)) >>
+  K.with_lock_at flag (ST.peek_at root)
 let concurrent (root flag:H.core_ref) = concurrent_at (Val #[] root) (Val flag)
 
+(** Bracket ordinary multi-step structure operations with the derived lock
+    rule, then fork using duplicated handles. The protected list ownership
+    transfers on acquire/release and is never duplicated between threads. *)
 let concurrent_correct (i:S.iref) (g:G.name) (root flag:H.core_ref)
   : Lemma (P.hoare (K.handle i g flag (resource root)) (concurrent root flag) (P.returns_value 1))
   = S.sep_laws ();
@@ -111,7 +129,8 @@ let from_owned (root flag:H.core_ref)
       (concurrent root flag) (P.returns_value 1) (P.returns_value 1)
 
 let with_flag_at (#ctx:list ty) (root:expr ctx TRef) : expr ctx TInt =
-  Let (Alloc (Val 1)) (concurrent_at (rename (fun _ x -> There x) root) (Var Here))
+  let! flag = alloc (int_ 1) in
+  concurrent_at (weaken root) flag
 
 let with_flag_correct (root:H.core_ref)
   : Lemma (P.hoare (ST.contents root [1]) (with_flag_at (Val #[] root)) (P.returns_value 1))
@@ -128,9 +147,16 @@ let with_flag_correct (root:H.core_ref)
     );
     P.let_rule pre (Alloc (Val 1)) body mid (P.returns_value 1)
 
+(** Continuation after building the initial list, for the outer let rule. *)
 let head_body : expr [TRef] TInt =
-  Let (NewNode (Val 0) (Var Here)) (with_flag_at (Var Here))
-let program : expr [] TInt = Let (B.build [1]) head_body
+  let head = Var Here in
+  let! root = node (int_ 0) head in
+  with_flag_at root
+let program : expr [] TInt =
+  let! head = B.build [1] in
+  let! root = node (int_ 0) head in
+  let! flag = alloc (int_ 1) in
+  concurrent_at (weaken root) flag
 
 let program_correct ()
   : Lemma (P.hoare S.emp program (P.returns_value 1))
@@ -151,7 +177,7 @@ let program_correct ()
         with R.entails_refl (P.returns_value 1 v);
         P.consequence (ST.contents root [1]) (mid root) (with_flag_at (Val #[] root))
           (P.returns_value 1) (P.returns_value 1);
-        assert_norm (substitute root body == with_flag_at (Val #[] root))
+        assert_norm (substitute #[] root (with_flag_at (Var Here)) == with_flag_at (Val #[] root))
       );
       P.let_rule pre (NewNode (Val 0) (Val head)) body mid (P.returns_value 1);
       assert_norm (substitute head head_body == Let (NewNode (Val 0) (Val head)) body)

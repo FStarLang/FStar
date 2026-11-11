@@ -14,6 +14,11 @@
    limitations under the License.
 *)
 module Pulse.Extrinsic.ExamplePredicates
+
+(** Construct bit_cell by lifting a native existential physical assertion.
+    Representation access here proves assertion equations/exposure only;
+    no program is verified by inspecting heaps. The program-proof modules use
+    this module's abstract interface and the public source logic. *)
 friend Pulse.Extrinsic.HeapLang.Logic
 friend PulseCore.IndirectionTheorySep
 friend PulseCore.Heap2

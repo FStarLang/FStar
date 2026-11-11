@@ -15,6 +15,15 @@
 *)
 module Pulse.Extrinsic.ProofRejections
 
+(** Negative regression tests of the PUBLIC logical interface.
+    Each expect_failure must fail for its stated logical obligation, not for
+    parsing or missing identifiers. The first seven guard masks, restoration,
+    later credits, and updates at values; the remaining cases guard ghost
+    write permissions, CAS results, held-token ownership, and cell kinds.
+    Run with --print_expected_failures and inspect diagnostics when changing
+    these rules. This file is not evidence that arbitrary unprovable triples
+    are semantically false; it checks these specific invalid rule applications. *)
+
 open Pulse.Extrinsic.HeapLang
 module P = Pulse.Extrinsic.HeapLang.Proof
 module R = Pulse.Extrinsic.Rules

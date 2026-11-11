@@ -1,6 +1,18 @@
 module Pulse.Extrinsic.SpinlockExamples
 
+(** Two clients of an abstract lock protecting cell |-> 0.
+    Each client acquires, stores 1, reads it, restores 0, releases, and returns
+    the observed value. The exact result 1 needs exclusion across the WHOLE
+    critical section: a competing restoration must not intervene before read.
+
+    finish_correct returns the protected resource while retaining the read
+    fact; client_correct brackets the mutation; concurrent_correct duplicates
+    only the handle and forks a second client. program_correct allocates both
+    physical cells and installs the lock from emp. No lock representation or
+    source trace is inspected here. *)
+
 open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
 module H = PulseCore.Heap
 module S = PulseCore.IndirectionTheorySep
 module P = Pulse.Extrinsic.HeapLang.Proof
@@ -9,15 +21,21 @@ module R = Pulse.Extrinsic.Rules
 module G = Pulse.Extrinsic.Ghost
 module K = Pulse.Extrinsic.HeapLang.Spinlock
 
+(** Continuation after the read, kept separately for the let-rule proof. *)
 let finish_at (#ctx:list ty) (r flag:expr ctx TRef) : expr (TInt :: ctx) TInt =
-  Seq (Store (rename (fun _ x -> There x) r) (Val 0))
-    (Seq (K.release_at (rename (fun _ x -> There x) flag)) (Var Here))
+  let observed = Var Here in
+  store (weaken r) (int_ 0) >> (K.release_at (weaken flag) >> observed)
 let critical_at (#ctx:list ty) (r flag:expr ctx TRef) : expr ctx TInt =
-  Seq (Store r (Val 1)) (Let (Load r) (finish_at r flag))
+  store r (int_ 1) >>
+  (let! observed = load r in
+   store (weaken r) (int_ 0) >>
+   (K.release_at (weaken flag) >> observed))
 let client_at (#ctx:list ty) (r flag:expr ctx TRef) : expr ctx TInt =
-  Seq (K.acquire_at flag) (critical_at r flag)
+  K.acquire_at flag >> critical_at r flag
 let client (r flag:H.core_ref) = client_at (Val #[] r) (Val flag)
 
+(** Release needs the original cell |-> 0 and held token back. The observation
+    v=1 is framed through restoration/release and becomes the returned fact. *)
 let finish_correct (i:S.iref) (g:G.name) (r flag:H.core_ref) (v:int)
   : Lemma (
       let shared = K.handle i g flag (C.points_to r 0) in
@@ -75,7 +93,7 @@ let client_correct (i:S.iref) (g:G.name) (r flag:H.core_ref)
     P.sequence shared acquired (K.acquire flag) (critical_at (Val #[] r) (Val flag)) post
 
 let concurrent_at (#ctx:list ty) (r flag:expr ctx TRef) : expr ctx TInt =
-  Seq (Fork (Let (client_at r flag) (Val ()))) (client_at r flag)
+  fork (let! observed = client_at r flag in unit_) >> client_at r flag
 let concurrent (r flag:H.core_ref) = concurrent_at (Val #[] r) (Val flag)
 
 let concurrent_correct (i:S.iref) (g:G.name) (r flag:H.core_ref)
@@ -113,11 +131,17 @@ let from_owned (r flag:H.core_ref)
         P.consequence shared shared (concurrent r flag)
           (P.prepend_post shared (P.returns_value 1)) (P.returns_value 1))
 
+(** Open continuations used to apply let_rule to the allocating program. *)
 let flag_body (r:H.core_ref) : expr [TRef] TInt =
   concurrent_at (Val r) (Var Here)
 let data_body : expr [TRef] TInt =
-  Let (Alloc (Val 1)) (concurrent_at (Var (There Here)) (Var Here))
-let program : expr [] TInt = Let (Alloc (Val 0)) data_body
+  let cell = Var Here in
+  let! lock = alloc (int_ 1) in
+  concurrent_at (weaken cell) lock
+let program : expr [] TInt =
+  let! cell = alloc (int_ 0) in
+  let! lock = alloc (int_ 1) in
+  concurrent_at (weaken cell) lock
 
 let program_correct ()
   : Lemma (P.hoare S.emp program (P.returns_value 1))

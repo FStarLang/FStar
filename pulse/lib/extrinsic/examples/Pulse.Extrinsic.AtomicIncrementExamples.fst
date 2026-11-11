@@ -1,6 +1,17 @@
 module Pulse.Extrinsic.AtomicIncrementExamples
 
+(** Independent clients of the multi-step AtomicIncrement contract.
+    owned_protocol uses a pure equality closing witness to preserve the known
+    initial value; program allocates and returns a cell containing initial+1.
+    shared_protocol instead opens an invariant with an existential value and
+    restores it on either abort or commit. Neither client unfolds the CAS
+    loop or reasons about its schedules.
+
+    The second client demonstrates nonempty-mask composition, not an exact
+    final shared count: arbitrary interference is allowed between attempts. *)
+
 open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
 module H = PulseCore.Heap
 module S = PulseCore.IndirectionTheorySep
 module P = Pulse.Extrinsic.HeapLang.Proof
@@ -12,6 +23,9 @@ module GS = Pulse.Lib.GhostSet
 
 let owned_closing (initial:int) (observed:int) = S.pure (observed == initial)
 
+(** Exclusive call-entry ownership keeps the observed value equal to initial.
+    The closing witness is pure, but using either branch still requires the
+    exclusive physical alpha/beta resource. *)
 let owned_protocol (r:H.core_ref) (initial:int)
   : Lemma (U.protocol GS.empty GS.empty (C.points_to r initial)
       (I.alpha r) (I.beta r) (I.finished (C.points_to r (initial + 1))) (owned_closing initial))
@@ -40,9 +54,11 @@ let owned_protocol (r:H.core_ref) (initial:int)
     )
 
 let body (initial:int) : expr [TRef] TRef =
-  Seq (I.increment_at (Var Here)) (Var Here)
+  let cell = Var Here in
+  I.increment_at cell >> cell
 let program (initial:int) : expr [] TRef =
-  Let (Alloc (Val initial)) (body initial)
+  let! cell = alloc (int_ initial) in
+  I.increment_at cell >> cell
 
 let program_correct (initial:int)
   : Lemma (P.hoare S.emp (program initial) (P.allocation_post (initial + 1)))
@@ -81,6 +97,9 @@ let shared_close (i:S.iref) (r:H.core_ref) (old:int)
     P.update_trans mask mask GS.empty (S.star (C.points_to r old) shared)
       (S.star shared (P.exposed contents)) shared
 
+(** Open to an existential value, frame the handle as closing ownership, and
+    close at old for abort or old+1 for commit. Exposure is justified for
+    points-to; this does not remove later from arbitrary invariant bodies. *)
 let shared_protocol (i:S.iref) (r:H.core_ref)
   : Lemma (
       let shared = S.inv i (shared_body r) in

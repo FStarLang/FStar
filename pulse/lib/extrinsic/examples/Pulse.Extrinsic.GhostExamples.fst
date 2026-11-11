@@ -12,6 +12,12 @@
 *)
 module Pulse.Extrinsic.GhostExamples
 
+(** Minimal clients of fractional ghost ownership. advance combines equal
+    halves into full ownership, writes, then splits again; agree extracts the
+    common value without mutating state. Both proofs are logical updates or
+    entailments, not source programs. ParallelIncrement uses these patterns
+    to relate each thread's private contribution to a shared invariant. *)
+
 open FStar.Real
 module P = Pulse.Extrinsic.HeapLang.Proof
 module S = PulseCore.IndirectionTheorySep

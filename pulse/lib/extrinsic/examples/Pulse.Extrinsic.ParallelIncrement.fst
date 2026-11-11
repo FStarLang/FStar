@@ -12,7 +12,21 @@
 *)
 module Pulse.Extrinsic.ParallelIncrement
 
+(** Owicki-Gries parallel increment with fractional ghost contributions.
+    The physical invariant owns counter |-> x+y and half of each contribution
+    x,y in {0,1}; each thread owns the other half of its own contribution.
+    A successful CAS changes the physical sum and that ghost contribution
+    together. A failed CAS leaves both unchanged and retries.
+
+    run forks one increment, performs the other, obtains the child's completed
+    half-share through Join, and reads exactly 2. from_owned allocates ghost
+    resources and installs both invariants; program also allocates the physical
+    counter and flag, giving the final triple from emp.
+    All program reasoning uses logical rules, not traces or native actions.
+    The fractions are ghost shares, never fractional physical write access. *)
+
 open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
 open FStar.Real
 module H = PulseCore.Heap
 module S = PulseCore.IndirectionTheorySep
@@ -69,6 +83,10 @@ let mine_agrees (r:H.core_ref) (g h:G.name) (x y:B.bit) (mine:int)
     R.entails_star pair (S.pure (x == mine)) rest S.emp;
     R.with_pure (S.star (piece r g h x y) (half g mine)) (x == mine)
 
+(** Agreement with the private zero half fixes x=0. Combine the two halves
+    before changing the ghost contribution; split afterward and restore the
+    existential invariant. On CAS failure neither physical nor ghost state
+    changes. Explicit #int prevents accidentally using the PCM for bit. *)
 let cas_piece (mask:S.inames) (r:H.core_ref) (g h:G.name)
   (x y:B.bit) (expected:int)
   : Lemma (P.atomic mask (S.star (piece r g h x y) (half g 0))
@@ -341,8 +359,8 @@ let read_two (i:S.iref) (r:H.core_ref) (g h:G.name)
       (P.prepend_post (S.inv i contents) (P.returns_value 2)) (P.returns_value 2)
 
 let run_at (#ctx:list ty) (r flag:expr ctx TRef) : expr ctx TInt =
-  Seq (Fork (Seq (increment_at r) (J.signal_at flag)))
-    (Seq (increment_at r) (Seq (J.wait_at flag) (Load r)))
+  fork (increment_at r >> J.signal_at flag) >>
+  (increment_at r >> (J.wait_at flag >> load r))
 
 let run (r flag:H.core_ref) = run_at (Val #[] r) (Val flag)
 
@@ -350,6 +368,10 @@ let run_pre (i j:S.iref) (r flag:H.core_ref) (g h:G.name) =
   S.star (S.inv i (body r g h))
     (S.star (J.handle j flag (half h 1)) (S.star (half g 0) (half h 0)))
 
+(** Separate the child and parent halves before fork. The child publishes its
+    completed half; the parent keeps its own across wait and recovers the other.
+    read_two can then force both hidden contributions to one. Sharing invariant
+    handles never duplicates the private receipts. *)
 let run_correct (i j:S.iref) (r flag:H.core_ref) (g h:G.name)
   : Lemma (P.hoare (run_pre i j r flag g h) (run r flag) (P.returns_value 2))
   = S.sep_laws ();
@@ -423,6 +445,9 @@ let from_ghost_owned (r flag:H.core_ref) (g h:G.name)
     introduce forall v. S.implies (q v) (q v) with R.entails_refl (q v);
     P.consequence prepared (initialized r flag g h) e q q
 
+(** Ghost initialization is absorbed before run's first source step. Allocate
+    both cells existentially, then instantiate the already-proved initialized
+    program; no ghost names or later credits are assumed in the caller's pre. *)
 let from_owned (r flag:H.core_ref)
   : Lemma (P.hoare (owned r flag) (run r flag) (P.returns_value 2))
   = S.sep_laws ();
@@ -451,12 +476,23 @@ let from_owned (r flag:H.core_ref)
     R.exists_star ticket physical;
     P.update_hoare physical mid e q
 
+(** Open continuations for applying the let rule to program's allocations. *)
 let flag_body (r:H.core_ref) : expr [TRef] TInt =
   run_at (Val r) (Var Here)
 let counter_body : expr [TRef] TInt =
-  Let (Alloc (Val 0)) (run_at (Var (There Here)) (Var Here))
-let program : expr [] TInt = Let (Alloc (Val 0)) counter_body
+  let counter = Var Here in
+  let! completion = alloc (int_ 0) in
+  run_at (weaken counter) completion
+let program : expr [] TInt =
+  let! counter = alloc (int_ 0) in
+  let! completion = alloc (int_ 0) in
+  let counter = weaken counter in
+  fork (increment_at counter >> J.signal_at completion) >>
+  (increment_at counter >> (J.wait_at completion >> load counter))
 
+(** Physical allocation supplies the counter and flag ownership. The nested
+    let rules discharge their binders, leaving the proved exact result from emp.
+    counter_body/flag_body above are continuation views used by those rules. *)
 let program_correct ()
   : Lemma (P.hoare S.emp program (P.returns_value 2))
   = S.sep_laws ();

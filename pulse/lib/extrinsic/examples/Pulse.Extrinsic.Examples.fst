@@ -15,7 +15,15 @@
 *)
 module Pulse.Extrinsic.Examples
 
+(** OPERATIONAL REGRESSIONS ONLY, not the method for proving client programs.
+    Construct selected executions to exercise allocation, substitution, fork,
+    and competing CAS results in the independent semantics. These witnesses
+    do not establish correctness for all schedules.
+    All separation-logic examples live alongside this file and instead end in
+    source Hoare triples, with soundness supplied once by core adequacy. *)
+
 open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
 open Pulse.Extrinsic.HeapLang.Semantics
 module H = PulseCore.Heap
 module M = Pulse.Extrinsic.HeapLang.Memory
@@ -135,3 +143,29 @@ let substitution_does_not_capture ()
       substitute 10
         (Let (Val #_ #TInt 20) (Add (Var (There Here)) (Var Here))) ==
       Let (Val #[] #TInt 20) (Add (Val 10) (Var Here)))
+
+(** Shadowing may change the bound variable's type: the inner name is the
+    loaded integer, whereas the load operand still names the outer reference. *)
+let named_shadowing : expr [] TInt =
+  let! cell = alloc (int_ 0) in
+  let! cell = load cell in
+  add cell (int_ 1)
+
+let named_shadowing_expands ()
+  : Lemma (named_shadowing ==
+      Let (Alloc (Val 0)) (Let (Load (Var Here)) (Add (Var Here) (Val 1))))
+  = assert_norm (named_shadowing ==
+      Let (Alloc (Val 0)) (Let (Load (Var Here)) (Add (Var Here) (Val 1))))
+
+(** Weakening shifts a free variable through BOTH the added context slot and
+    the existing let binder, while preserving the internally bound variable. *)
+let nested_binding : expr [TInt] TInt =
+  let outer = Var Here in
+  let! inner = int_ 20 in
+  add (weaken outer) inner
+
+let weakening_preserves_bound_variables ()
+  : Lemma ((weaken nested_binding <: expr [TRef; TInt] TInt) ==
+      Let (Val 20) (Add (Var (There (There Here))) (Var Here)))
+  = assert_norm ((weaken nested_binding <: expr [TRef; TInt] TInt) ==
+      Let (Val 20) (Add (Var (There (There Here))) (Var Here)))

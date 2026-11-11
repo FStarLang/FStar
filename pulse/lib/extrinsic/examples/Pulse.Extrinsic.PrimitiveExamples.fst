@@ -12,7 +12,15 @@
 *)
 module Pulse.Extrinsic.PrimitiveExamples
 
+(** Small source clients isolating allocation and CAS/while reasoning.
+    new_counter allocates old, performs a non-atomic exclusive increment, and
+    returns its reference with ownership of old+1. cas_until_failure runs
+    CAS(0,1) until it fails; starting from a bit cell, either branch of the CAS
+    leaves value 1, giving an exact exit assertion without a trace argument.
+    Larger concurrent examples rely on the same primitive and loop rules. *)
+
 open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
 module P = Pulse.Extrinsic.HeapLang.Proof
 module L = Pulse.Extrinsic.HeapLang.Loops
 module C = Pulse.Extrinsic.HeapLang.Logic
@@ -23,10 +31,12 @@ module X = Pulse.Extrinsic.LogicExamples
 module GS = Pulse.Lib.GhostSet
 
 let initialize : expr [TRef] TRef =
-  Seq (Store (Var Here) (Add (Load (Var Here)) (Val 1))) (Var Here)
+  let cell = Var Here in
+  store cell (add (load cell) (int_ 1)) >> cell
 
 let new_counter (old:int) : expr [] TRef =
-  Let (Alloc (Val old)) initialize
+  let! cell = alloc (int_ old) in
+  store cell (add (load cell) (int_ 1)) >> cell
 
 let new_counter_correct (old:int)
   : Lemma (P.hoare S.emp (new_counter old) (P.allocation_post (old + 1)))
@@ -44,7 +54,7 @@ let new_counter_correct (old:int)
     P.let_rule S.emp (Alloc (Val old)) initialize (P.allocation_post old) q
 
 let cas_until_failure (r:PulseCore.Heap.core_ref) : expr [] TUnit =
-  While (Cas (Val r) (Val 0) (Val 1)) (Val ())
+  while_ (cas (ref_ r) (int_ 0) (int_ 1)) unit_
 
 let cas_until_failure_correct (r:PulseCore.Heap.core_ref)
   : Lemma (P.hoare (B.bit_cell r) (cas_until_failure r)

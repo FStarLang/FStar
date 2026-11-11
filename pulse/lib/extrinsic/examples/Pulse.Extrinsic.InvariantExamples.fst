@@ -15,7 +15,18 @@
 *)
 module Pulse.Extrinsic.InvariantExamples
 
+(** Mutable invariant clients over an existential bit cell.
+    write_atomic_inv opens one invariant around one store, changes its bit
+    witness, and closes it. read_inv proves a bit result without retaining
+    ownership of the body. Concurrent writers share only invariant handles.
+
+    concurrent_readback returns 0 or 1, not necessarily the parent's value:
+    fork does not join. concurrent_from_owned allocates the logical invariant
+    from ordinary cell ownership. These proofs use the general invariant rule,
+    never native actions or scheduler traces. *)
+
 open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
 module P = Pulse.Extrinsic.HeapLang.Proof
 module C = Pulse.Extrinsic.HeapLang.Logic
 module B = Pulse.Extrinsic.ExamplePredicates
@@ -95,7 +106,7 @@ let read_inv (r:PulseCore.Heap.core_ref) (i:S.iref)
     P.atomic_to_hoare (S.inv i body) e (P.prepend_post (S.inv i body) bit_result)
 
 let concurrent (r:PulseCore.Heap.core_ref) : expr [] TUnit =
-  Seq (Fork (Store (Val r) (Val 0))) (Store (Val r) (Val 1))
+  fork (store (ref_ r) (int_ 0)) >> store (ref_ r) (int_ 1)
 
 let concurrent_correct (r:PulseCore.Heap.core_ref) (i:S.iref)
   : Lemma (P.hoare (S.inv i (B.bit_cell r)) (concurrent r)
@@ -114,7 +125,7 @@ let concurrent_correct (r:PulseCore.Heap.core_ref) (i:S.iref)
     P.sequence p p (Fork child) parent (P.constant_post p)
 
 let concurrent_readback (r:PulseCore.Heap.core_ref) : expr [] TInt =
-  Seq (concurrent r) (Load (Val r))
+  concurrent r >> load (ref_ r)
 
 let concurrent_readback_correct (r:PulseCore.Heap.core_ref) (i:S.iref)
   : Lemma (P.hoare (S.inv i (B.bit_cell r)) (concurrent_readback r)

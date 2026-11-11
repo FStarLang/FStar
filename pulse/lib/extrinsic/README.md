@@ -5,9 +5,9 @@ operational semantics over PulseCore heaps, and a separation logic proved
 sound for arbitrary concurrent schedules.
 
 **Program proofs use the source-logic interface in
-[HeapLang.Proof.fsti](Pulse.Extrinsic.HeapLang.Proof.fsti).
+[HeapLang.Proof.fsti](core/Pulse.Extrinsic.HeapLang.Proof.fsti).
 Adequacy is a theorem of that interface, proved once for all programs in
-[HeapLang.Adequacy](Pulse.Extrinsic.HeapLang.Adequacy.fsti).**
+[HeapLang.Adequacy](core/Pulse.Extrinsic.HeapLang.Adequacy.fsti).**
 
 The client examples finish with Hoare triples. They do not mention logical
 memories, physical heaps, source transitions, execution traces, native actions,
@@ -38,9 +38,28 @@ The spinlock has an explicit exposure premise on its payload, and the atomic
 update is a resource-parametric protocol judgment, not a first-class Iris AU
 assertion. See [remaining work](#12-remaining-work) for the precise limits.
 
-Core logic lives directly in this directory. The [examples](examples) directory
-contains source-program proofs, example-specific assertion definitions,
-negative interface tests, and explicitly separate operational regressions.
+The directory boundary matches the proof boundary:
+
+```text
+extrinsic/
+  core/       syntax, semantics, assertions, logical rules, uniform adequacy
+  examples/   derived source libraries, their clients, and regression tests
+  README.md   foundations-to-programs navigation
+```
+
+[core](core) contains the semantic foundation and general logical interface.
+[examples](examples) contains **all proofs of particular programs**, including
+the join, spinlock, list, stack, and CAS-increment libraries. Their existing
+`Pulse.Extrinsic.HeapLang.*` module names are preserved; their directory, not
+their name prefix, identifies them as verified source libraries. Core modules
+never import these libraries. The general while rule and atomic-update
+protocol remain in core: they define logical principles, not client programs.
+
+Each source/interface file starts with a construction or proof roadmap;
+comments at the important proof steps explain resource transfers and semantic
+obligations. Programs use [typed notation](#named-source-notation) to name
+bindings instead of spelling out de Bruijn indices. Operational examples are
+explicitly labeled regressions, not the method of program verification.
 
 ## Reading guide
 
@@ -174,10 +193,10 @@ is a source language and a logic connecting these assertions to its steps.
 
 ## 2. The independent operational model
 
-**Read in order:** [Language](Pulse.Extrinsic.Language.fst),
-[HeapLang](Pulse.Extrinsic.HeapLang.fst),
-[HeapLang.Memory](Pulse.Extrinsic.HeapLang.Memory.fst), and
-[HeapLang.Semantics](Pulse.Extrinsic.HeapLang.Semantics.fst).
+**Read in order:** [Language](core/Pulse.Extrinsic.Language.fst),
+[HeapLang](core/Pulse.Extrinsic.HeapLang.fst),
+[HeapLang.Memory](core/Pulse.Extrinsic.HeapLang.Memory.fst), and
+[HeapLang.Semantics](core/Pulse.Extrinsic.HeapLang.Semantics.fst).
 
 ### 2.1 The generic language and scheduler
 
@@ -232,6 +251,55 @@ Intrinsic typing rules out ill-typed syntax, but does not prove memory safety:
 a reference value need not designate an allocated cell. The logic supplies
 the ownership and invariant conditions needed for safe execution.
 
+#### Named source notation
+
+Read [HeapLang.Notation](core/Pulse.Extrinsic.HeapLang.Notation.fst).
+It is a transparent syntax-construction layer, not a second language, parser,
+or interpreter. For example, the actual allocating parallel-increment program
+in [ParallelIncrement](examples/Pulse.Extrinsic.ParallelIncrement.fst) is:
+
+```fstar
+open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
+module J = Pulse.Extrinsic.HeapLang.Join
+
+let program : expr [] TInt =
+  let! counter = alloc (int_ 0) in
+  let! completion = alloc (int_ 0) in
+  let counter = weaken counter in
+  fork (increment_at counter >> J.signal_at completion) >>
+  (increment_at counter >> (J.wait_at completion >> load counter))
+```
+
+`increment_at` is the CAS-loop syntax generator proved in that module.
+`let!` is a **source** binding: evaluate the bound expression and substitute
+its result into the body. `>>` is source sequencing. `alloc`, `load`, `store`,
+`cas`, `add`, `eq`, `if_`, `fork`, and `while_` are typed constructor aliases.
+`node`, `data`, `next`, and `link` expose the node operations; `int_`, `bool_`,
+`unit_`, `ref_`, and `null` construct values.
+
+The syntax remains intrinsically typed with de Bruijn binders underneath.
+Inside a new `let!`, use `weaken` once to transport an **outer** expression
+into the extended context. In the example, `counter` was bound outside
+`completion`, so it needs one weakening; `completion` does not. Rebinding
+outer syntax with an ordinary F* `let` keeps the rest of the body readable.
+Weakening traverses nested binders capture-avoidably; it is not raw index
+increment everywhere.
+
+Ordinary F* `let` only names syntax; it does **not** evaluate it in HeapLang.
+For example, `let read = load r in add read read` performs two source loads,
+whereas `let! observed = load r in add observed observed` performs one.
+The callback implementing `let!` runs while constructing the AST and is not
+stored in the resulting program. F* name shadowing works normally.
+
+Use parentheses to make nested sequencing and conditional branches explicit.
+The existing logical rules still apply to exactly the same `Let`, `Seq`, etc.
+trees; `assert_norm` in proofs discharges syntax expansion/substitution
+equalities, not operational correctness. The notation regression lemmas in
+[Examples](examples/Pulse.Extrinsic.Examples.fst) check type-changing shadowing
+and weakening beneath an existing binder. The source Hoare proofs exercise
+these constructs in allocating and concurrent programs.
+
 ### 2.3 Physical state and primitive heap relations
 
 In `HeapLang.Memory`, follow `cell_value_of`, `cell_pcm_of`, `contents_of`,
@@ -277,7 +345,7 @@ step. `transition`, `read_transition`, `beta_transition`, and `store_atomic`
 package such facts for logical-rule implementations.
 
 The optional [Examples](examples/Pulse.Extrinsic.Examples.fst) module exercises this
-model directly. [Safety](Pulse.Extrinsic.Safety.fst) gives a separate bounded
+model directly. [Safety](core/Pulse.Extrinsic.Safety.fst) gives a separate bounded
 operational safety formulation. Neither is the source-program proof interface
 or a prerequisite for understanding the resource WP.
 
@@ -287,8 +355,8 @@ what it means for a source program to run.
 
 ## 3. Guarded fixed points
 
-**Read:** [Guarded.fsti](Pulse.Extrinsic.Guarded.fsti), then
-[Guarded.fst](Pulse.Extrinsic.Guarded.fst).
+**Read:** [Guarded.fsti](core/Pulse.Extrinsic.Guarded.fsti), then
+[Guarded.fst](core/Pulse.Extrinsic.Guarded.fst).
 
 ### 3.1 The missing ingredient is a fixed point, not a new assertion model
 
@@ -329,8 +397,8 @@ strictly smaller levels. No new fixed-point axiom is assumed.
 
 ## 4. The resource WP
 
-**Read:** [WP.fsti](Pulse.Extrinsic.WP.fsti), then
-[WP.fst](Pulse.Extrinsic.WP.fst), initially through `wp_lift`.
+**Read:** [WP.fsti](core/Pulse.Extrinsic.WP.fsti), then
+[WP.fst](core/Pulse.Extrinsic.WP.fst), initially through `wp_lift`.
 
 ### 4.1 Identify the parameters and recursive occurrences
 
@@ -417,13 +485,13 @@ interface that client program proofs should repeatedly use.
 
 ## 5. Composition and generic rules
 
-**Read:** the rest of [WP.fsti](Pulse.Extrinsic.WP.fsti) and
-[WP.fst](Pulse.Extrinsic.WP.fst),
-[Rules.fsti](Pulse.Extrinsic.Rules.fsti) and
-[Rules.fst](Pulse.Extrinsic.Rules.fst), and
-[HeapLang.Contexts](Pulse.Extrinsic.HeapLang.Contexts.fst).
+**Read:** the rest of [WP.fsti](core/Pulse.Extrinsic.WP.fsti) and
+[WP.fst](core/Pulse.Extrinsic.WP.fst),
+[Rules.fsti](core/Pulse.Extrinsic.Rules.fsti) and
+[Rules.fst](core/Pulse.Extrinsic.Rules.fst), and
+[HeapLang.Contexts](core/Pulse.Extrinsic.HeapLang.Contexts.fst).
 For the pure primitive adapters, continue to
-[HeapLang.Rules](Pulse.Extrinsic.HeapLang.Rules.fst).
+[HeapLang.Rules](core/Pulse.Extrinsic.HeapLang.Rules.fst).
 
 ### 5.1 Frame and consequence
 
@@ -503,10 +571,10 @@ allocation, CAS, and node operations once their arguments are values.
 
 ## 6. Native heap and action bridges
 
-**Read:** [Atomic.fsti](Pulse.Extrinsic.Atomic.fsti) and
-[Atomic.fst](Pulse.Extrinsic.Atomic.fst), then
-[HeapLang.Logic.fsti](Pulse.Extrinsic.HeapLang.Logic.fsti) and
-[HeapLang.Logic.fst](Pulse.Extrinsic.HeapLang.Logic.fst).
+**Read:** [Atomic.fsti](core/Pulse.Extrinsic.Atomic.fsti) and
+[Atomic.fst](core/Pulse.Extrinsic.Atomic.fst), then
+[HeapLang.Logic.fsti](core/Pulse.Extrinsic.HeapLang.Logic.fsti) and
+[HeapLang.Logic.fst](core/Pulse.Extrinsic.HeapLang.Logic.fst).
 
 ### 6.1 Expose core actions without replacing source semantics
 
@@ -582,8 +650,8 @@ bridge.
 
 ## 7. Atomic source logic and invariants
 
-**Read:** [AtomicLogic.fsti](Pulse.Extrinsic.AtomicLogic.fsti), then
-[AtomicLogic.fst](Pulse.Extrinsic.AtomicLogic.fst).
+**Read:** [AtomicLogic.fsti](core/Pulse.Extrinsic.AtomicLogic.fsti), then
+[AtomicLogic.fst](core/Pulse.Extrinsic.AtomicLogic.fst).
 
 ### 7.1 A judgment about source steps
 
@@ -676,8 +744,8 @@ not in the invariant-using client.
 
 ### 7.4 Compose explicit ghost mask updates
 
-**Read:** [Updates.fsti](Pulse.Extrinsic.Updates.fsti) and
-[Updates.fst](Pulse.Extrinsic.Updates.fst), then `AtomicLogic.updates`.
+**Read:** [Updates.fsti](core/Pulse.Extrinsic.Updates.fsti) and
+[Updates.fst](core/Pulse.Extrinsic.Updates.fst), then `AtomicLogic.updates`.
 The typed interface exposes the judgment as:
 
 ```text
@@ -731,8 +799,8 @@ value; that larger change to WP remains separate work.
 
 ## 8. The typed source-logic interface
 
-**Read:** [HeapLang.Proof.fsti](Pulse.Extrinsic.HeapLang.Proof.fsti), then
-[HeapLang.Proof.fst](Pulse.Extrinsic.HeapLang.Proof.fst).
+**Read:** [HeapLang.Proof.fsti](core/Pulse.Extrinsic.HeapLang.Proof.fsti), then
+[HeapLang.Proof.fst](core/Pulse.Extrinsic.HeapLang.Proof.fst).
 This is the boundary between the semantic implementation and program proofs.
 
 ### 8.1 Typed triples and postconditions
@@ -869,14 +937,14 @@ The additional primitive specifications are:
 the success branch to a native write and the failure branch to unchanged
 memory. Both have ordinary empty-mask wrappers.
 
-For nodes, read [HeapLang.Nodes](Pulse.Extrinsic.HeapLang.Nodes.fsti).
+For nodes, read [HeapLang.Nodes](core/Pulse.Extrinsic.HeapLang.Nodes.fsti).
 `node r data next` owns a single physical cell containing `(data, next)`.
 `new_node` returns that ownership, reads retain it and prove the exact field
 value, and `write_next` changes only the link while retaining the data.
 Their backend correspondence lives in `Nodes.fst` and `Semantics`, not in
 list or stack clients.
 
-Read [HeapLang.Loops](Pulse.Extrinsic.HeapLang.Loops.fsti) next. Its while
+Read [HeapLang.Loops](core/Pulse.Extrinsic.HeapLang.Loops.fsti) next. Its while
 rule takes a condition triple whose true branch yields the body precondition
 and whose false branch yields the exit assertion, plus a body triple
 restoring the loop invariant. The implementation uses a private logical clock
@@ -937,9 +1005,9 @@ rejections check the source interface, not just the types of native actions.
 
 ## 9. Adequacy once for the logic
 
-**Read:** [Adequacy.fst](Pulse.Extrinsic.Adequacy.fst), then
-[HeapLang.Adequacy.fsti](Pulse.Extrinsic.HeapLang.Adequacy.fsti) and
-[HeapLang.Adequacy.fst](Pulse.Extrinsic.HeapLang.Adequacy.fst).
+**Read:** [Adequacy.fst](core/Pulse.Extrinsic.Adequacy.fst), then
+[HeapLang.Adequacy.fsti](core/Pulse.Extrinsic.HeapLang.Adequacy.fsti) and
+[HeapLang.Adequacy.fst](core/Pulse.Extrinsic.HeapLang.Adequacy.fst).
 
 Before using the interface to prove examples, close the soundness argument.
 This layer relates *any* triple to the independent executions from stop 2.
@@ -1062,7 +1130,8 @@ source-level substitution.
 `LogicExamples.sequential r` is:
 
 ```fstar
-Let (Load (Val r)) (Add (Var Here) (Val 1))
+let! observed = load (ref_ r) in
+add observed (int_ 1)
 ```
 
 `sequential_correct` proves:
@@ -1096,7 +1165,7 @@ There is no callback proving a load or `Let` transition.
 `LogicExamples.round_trip r desired` is:
 
 ```fstar
-Seq (Store (Val r) (Val desired)) (Load (Val r))
+store (ref_ r) (int_ desired) >> load (ref_ r)
 ```
 
 Its entire proof is:
@@ -1237,7 +1306,7 @@ by the reader alongside the handle.
 `InvariantExamples.concurrent r` is:
 
 ```fstar
-Seq (Fork (Store (Val r) (Val 0))) (Store (Val r) (Val 1))
+fork (store (ref_ r) (int_ 0)) >> store (ref_ r) (int_ 1)
 ```
 
 Follow `concurrent_correct`:
@@ -1261,7 +1330,7 @@ in this argument.
 `concurrent_readback r` adds a final load:
 
 ```fstar
-Seq (concurrent r) (Load (Val r))
+concurrent r >> load (ref_ r)
 ```
 
 `concurrent_readback_correct` calls `concurrent_correct`, calls `read_inv`,
@@ -1394,8 +1463,8 @@ verified primitive rules and the general while rule.
 
 ### 10.13 Fractional ghost state and Owicki-Gries parallel increment
 
-Read [Ghost](Pulse.Extrinsic.Ghost.fsti), then
-[Ghost.Fractional](Pulse.Extrinsic.Ghost.Fractional.fsti).
+Read [Ghost](core/Pulse.Extrinsic.Ghost.fsti), then
+[Ghost.Fractional](core/Pulse.Extrinsic.Ghost.Fractional.fsti).
 The generic layer lifts a Type0 PCM into native ghost memory and provides
 allocation, frame-preserving writes, splitting, and compatibility. Its backend
 uses `MemoryAlt.ghost_alloc` and `ghost_write`; these are not fresh axioms or
@@ -1417,7 +1486,7 @@ Now follow [ParallelIncrement](examples/Pulse.Extrinsic.ParallelIncrement.fst):
 3. `read_shared`, `retry_correct`, and `increment_correct` prove the actual
    load/add/CAS retry loop. Its source syntax is shared with
    `HeapLang.AtomicIncrement`; it is not a two-attempt special case.
-4. Read [HeapLang.Join](Pulse.Extrinsic.HeapLang.Join.fsti). A flag moves from
+4. Read [HeapLang.Join](examples/Pulse.Extrinsic.HeapLang.Join.fsti). A flag moves from
    pending (0), to payload available (1), to claimed (2). `signal_correct`
    deposits owned payload. `wait_correct` uses a successful CAS to obtain it.
    The payload must satisfy `exposed payload |-- payload`; ghost fractions do.
@@ -1446,7 +1515,7 @@ theorem, supplies the child's receipt.
 
 ### 10.14 An allocating sequential linked list
 
-Read [HeapLang.List](Pulse.Extrinsic.HeapLang.List.fsti) after the node rules.
+Read [HeapLang.List](examples/Pulse.Extrinsic.HeapLang.List.fsti) after the node rules.
 `is_list r xs` relates an actual linked chain to a mathematical list. Its
 empty case requires the null reference; its cons case owns the head node and
 the entire tail. `cons_correct` allocates a new head without losing tail
@@ -1462,7 +1531,7 @@ All allocated node ownership is returned in the postcondition.
 
 ### 10.15 A spinlock with a real protected-resource client
 
-Read [HeapLang.Spinlock](Pulse.Extrinsic.HeapLang.Spinlock.fsti).
+Read [HeapLang.Spinlock](examples/Pulse.Extrinsic.HeapLang.Spinlock.fsti).
 It reuses the completion protocol's CAS claim/store release mechanism.
 The deposited payload contains both the protected assertion and an exclusive
 ghost token. `acquire_correct` transfers them to the caller;
@@ -1488,8 +1557,8 @@ it does not claim an arbitrary higher-order-resource lock rule.
 
 ### 10.16 Multi-step logical atomicity via an abortable update protocol
 
-Read [HeapLang.AtomicUpdate](Pulse.Extrinsic.HeapLang.AtomicUpdate.fst),
-then [HeapLang.AtomicIncrement](Pulse.Extrinsic.HeapLang.AtomicIncrement.fsti).
+Read [HeapLang.AtomicUpdate](core/Pulse.Extrinsic.HeapLang.AtomicUpdate.fst),
+then [HeapLang.AtomicIncrement](examples/Pulse.Extrinsic.HeapLang.AtomicIncrement.fsti).
 The protocol separates ownership from reusable logical evidence:
 
 ```text
@@ -1528,7 +1597,7 @@ itself provide a general history-based linearizability theorem.
 
 ### 10.17 Concurrent insertion into a linked structure
 
-Read [HeapLang.Stack](Pulse.Extrinsic.HeapLang.Stack.fsti).
+Read [HeapLang.Stack](examples/Pulse.Extrinsic.HeapLang.Stack.fsti).
 `contents root xs` owns a header whose link points to a list representing
 `xs`. `push_correct` allocates a new node and updates the header, proving
 the precise transition `xs -> x :: xs`. `peek_correct` proves the head value
@@ -1555,37 +1624,39 @@ All names in the table have prefix `Pulse.Extrinsic`.
 
 | Module | Responsibility |
 | --- | --- |
-| [Language](Pulse.Extrinsic.Language.fst) | Generic reductions, thread pools, executions, and observations. |
-| [HeapLang](Pulse.Extrinsic.HeapLang.fst) | Typed deep syntax and substitution. |
-| [HeapLang.Memory](Pulse.Extrinsic.HeapLang.Memory.fst) | Physical cell PCM and heap-operation relations. |
-| [HeapLang.Semantics](Pulse.Extrinsic.HeapLang.Semantics.fst) | Independent reductions and their structural properties. |
-| [Guarded](Pulse.Extrinsic.Guarded.fsti) | Contractive assertion families and fixed points. |
-| [WP](Pulse.Extrinsic.WP.fsti) | Generic operational WP, lifting, framing, monotonicity, and bind. |
-| [Rules](Pulse.Extrinsic.Rules.fsti) | Generic entailments and Hoare rules; also backend lifting helpers. |
-| [HeapLang.Contexts](Pulse.Extrinsic.HeapLang.Contexts.fst) | Generic WP-context instance for every typed HeapLang evaluation context. |
-| [HeapLang.Rules](Pulse.Extrinsic.HeapLang.Rules.fst) | Lower-level packed-value rules and semantic lifting helpers. |
-| [Atomic](Pulse.Extrinsic.Atomic.fsti) | Lower-level native action and invariant adapters. |
-| [HeapLang.Logic](Pulse.Extrinsic.HeapLang.Logic.fsti) | General heap/assertion bridges and exposure lemmas. |
-| [Updates](Pulse.Extrinsic.Updates.fsti) | Frame-preserving ghost mask updates, composition, allocation, and later elimination. |
-| [AtomicLogic](Pulse.Extrinsic.AtomicLogic.fsti) | Generic masked atomic source judgments and their rules. |
-| [HeapLang.Proof](Pulse.Extrinsic.HeapLang.Proof.fsti) | Typed client-facing Hoare and atomic source rules. |
-| [HeapLang.Loops](Pulse.Extrinsic.HeapLang.Loops.fsti) | General partial-correctness while rule with private guarded induction. |
-| [Ghost](Pulse.Extrinsic.Ghost.fsti), [Ghost.Fractional](Pulse.Extrinsic.Ghost.Fractional.fsti) | Native PCM ghost ownership and fractional agreement/update rules. |
-| [HeapLang.Join](Pulse.Extrinsic.HeapLang.Join.fsti) | Source-level completion and payload transfer. |
-| [HeapLang.Spinlock](Pulse.Extrinsic.HeapLang.Spinlock.fsti) | Abstract exclusive held token, resource transfer, and critical-section bracketing. |
-| [HeapLang.AtomicUpdate](Pulse.Extrinsic.HeapLang.AtomicUpdate.fst), [HeapLang.AtomicIncrement](Pulse.Extrinsic.HeapLang.AtomicIncrement.fsti) | Abort/commit protocol judgment and multi-step CAS implementation. |
-| [HeapLang.Nodes](Pulse.Extrinsic.HeapLang.Nodes.fsti) | Primitive rules for actual reference-containing nodes. |
-| [HeapLang.List](Pulse.Extrinsic.HeapLang.List.fsti), [HeapLang.Stack](Pulse.Extrinsic.HeapLang.Stack.fsti) | List ownership, allocation, field access, and header-based insertion. |
+| [Language](core/Pulse.Extrinsic.Language.fst) | Generic reductions, thread pools, executions, and observations. |
+| [HeapLang](core/Pulse.Extrinsic.HeapLang.fst) | Typed deep syntax and substitution. |
+| [HeapLang.Notation](core/Pulse.Extrinsic.HeapLang.Notation.fst) | Transparent named `let!` bindings, explicit weakening, sequencing, and readable primitive syntax. |
+| [HeapLang.Memory](core/Pulse.Extrinsic.HeapLang.Memory.fst) | Physical cell PCM and heap-operation relations. |
+| [HeapLang.Semantics](core/Pulse.Extrinsic.HeapLang.Semantics.fst) | Independent reductions and their structural properties. |
+| [Guarded](core/Pulse.Extrinsic.Guarded.fsti) | Contractive assertion families and fixed points. |
+| [WP](core/Pulse.Extrinsic.WP.fsti) | Generic operational WP, lifting, framing, monotonicity, and bind. |
+| [Rules](core/Pulse.Extrinsic.Rules.fsti) | Generic entailments and Hoare rules; also backend lifting helpers. |
+| [HeapLang.Contexts](core/Pulse.Extrinsic.HeapLang.Contexts.fst) | Generic WP-context instance for every typed HeapLang evaluation context. |
+| [HeapLang.Rules](core/Pulse.Extrinsic.HeapLang.Rules.fst) | Lower-level packed-value rules and semantic lifting helpers. |
+| [Atomic](core/Pulse.Extrinsic.Atomic.fsti) | Lower-level native action and invariant adapters. |
+| [HeapLang.Logic](core/Pulse.Extrinsic.HeapLang.Logic.fsti) | General heap/assertion bridges and exposure lemmas. |
+| [Updates](core/Pulse.Extrinsic.Updates.fsti) | Frame-preserving ghost mask updates, composition, allocation, and later elimination. |
+| [AtomicLogic](core/Pulse.Extrinsic.AtomicLogic.fsti) | Generic masked atomic source judgments and their rules. |
+| [HeapLang.Proof](core/Pulse.Extrinsic.HeapLang.Proof.fsti) | Typed client-facing Hoare and atomic source rules. |
+| [HeapLang.Loops](core/Pulse.Extrinsic.HeapLang.Loops.fsti) | General partial-correctness while rule with private guarded induction. |
+| [Ghost](core/Pulse.Extrinsic.Ghost.fsti), [Ghost.Fractional](core/Pulse.Extrinsic.Ghost.Fractional.fsti) | Native PCM ghost ownership and fractional agreement/update rules. |
+| [HeapLang.Join](examples/Pulse.Extrinsic.HeapLang.Join.fsti) | Source-level completion and payload transfer. |
+| [HeapLang.Spinlock](examples/Pulse.Extrinsic.HeapLang.Spinlock.fsti) | Abstract exclusive held token, resource transfer, and critical-section bracketing. |
+| [HeapLang.AtomicUpdate](core/Pulse.Extrinsic.HeapLang.AtomicUpdate.fst) | General abort/commit protocol judgment (core). |
+| [HeapLang.AtomicIncrement](examples/Pulse.Extrinsic.HeapLang.AtomicIncrement.fsti) | Multi-step CAS program and proof against that protocol (examples). |
+| [HeapLang.Nodes](core/Pulse.Extrinsic.HeapLang.Nodes.fsti) | Primitive rules for actual reference-containing nodes. |
+| [HeapLang.List](examples/Pulse.Extrinsic.HeapLang.List.fsti), [HeapLang.Stack](examples/Pulse.Extrinsic.HeapLang.Stack.fsti) | List ownership, allocation, field access, and header-based insertion. |
 | [ProofRejections](examples/Pulse.Extrinsic.ProofRejections.fst) | Negative checks at the source-logic interface. |
-| [Adequacy](Pulse.Extrinsic.Adequacy.fst) | Generic thread-pool preservation and soundness. |
-| [HeapLang.Adequacy](Pulse.Extrinsic.HeapLang.Adequacy.fsti) | Once-for-all adequacy for that interface and reusable initialization. |
+| [Adequacy](core/Pulse.Extrinsic.Adequacy.fst) | Generic thread-pool preservation and soundness. |
+| [HeapLang.Adequacy](core/Pulse.Extrinsic.HeapLang.Adequacy.fsti) | Once-for-all adequacy for that interface and reusable initialization. |
 | [ExamplePredicates](examples/Pulse.Extrinsic.ExamplePredicates.fsti) | Example-specific bit-cell assertions and entailments, outside the core logic. |
 | [LogicExamples](examples/Pulse.Extrinsic.LogicExamples.fst) | Sequential source proofs, including arithmetic, store, equality, and conditional contexts. |
 | [InvariantExamples](examples/Pulse.Extrinsic.InvariantExamples.fst) | General invariant-rule clients, concurrent composition, and logical allocation. |
 | [MaskExamples](examples/Pulse.Extrinsic.MaskExamples.fst) | Composable ghost allocation and explicit source-level opening/closing updates. |
 | [NestedExamples](examples/Pulse.Extrinsic.NestedExamples.fst) | Nested masks and invariant-containing-invariant proofs, including concurrent writers. |
 | [Examples](examples/Pulse.Extrinsic.Examples.fst) | Operational regression examples, not client program proofs. |
-| [Safety](Pulse.Extrinsic.Safety.fst) | A separate purely operational bounded-safety formulation. |
+| [Safety](core/Pulse.Extrinsic.Safety.fst) | A separate purely operational bounded-safety formulation. |
 
 Do not confuse the three rule-related modules: `Rules` supplies generic
 entailments and backend rules; `HeapLang.Rules` is the packed, semantic
@@ -1648,8 +1719,9 @@ The opt-in target is defined in
 fraction PCM library. The default cache is
 `pulse/build/lib.extrinsic.checked`. The target is not added to the default
 build, CI, or installation targets.
-The root discovery includes `examples/`, and the target adds that directory
-to its include path; the core library does not depend on it.
+Root discovery recursively includes both `core/` and `examples/`, and the
+target adds both directories to its include path. Core has no dependencies
+on examples; only the aggregate verification target needs both.
 
 To use an installed compiler:
 

@@ -15,6 +15,14 @@
 *)
 module Pulse.Extrinsic.MaskExamples
 
+(** Clients of explicit mask updates rather than the convenient invariant rule.
+    allocate_two composes ghost allocations with framing. read_with_updates
+    opens a name, exposes physical ownership, performs one atomic source load,
+    and restores the exposed body before closing. allocate_and_read combines
+    ghost initialization and that source triple before a non-value.
+    The value/non-value boundary matters: these rules do not add updates to
+    the postcondition of an already-returned value. *)
+
 open Pulse.Extrinsic.HeapLang
 module P = Pulse.Extrinsic.HeapLang.Proof
 module C = Pulse.Extrinsic.HeapLang.Logic
@@ -33,6 +41,8 @@ let allocate_two (p q:S.slprop)
     P.update_trans GS.empty GS.empty GS.empty
       (S.star p q) (S.star (P.allocated p) q) (S.star (P.allocated p) (P.allocated q))
 
+(** Opening changes the mask, not the physical state. The handle is framed
+    across the load; the returned value fact is framed across closing. *)
 let read_with_updates (r:PulseCore.Heap.core_ref) (old:int) (i:S.iref)
   : Lemma (P.hoare (S.inv i (C.points_to r old)) (Load (Val r))
       (P.prepend_post (S.inv i (C.points_to r old)) (P.returns_value old)))

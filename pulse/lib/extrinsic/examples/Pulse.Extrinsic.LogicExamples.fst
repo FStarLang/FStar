@@ -15,16 +15,28 @@
 *)
 module Pulse.Extrinsic.LogicExamples
 
+(** Introductory source-level proofs: load/add, store/read, computed operands,
+    and conditional update. Exact pure result facts are kept alongside the
+    physical ownership needed by subsequent instructions. Each proof composes
+    typed logical rules; assert_norm only checks capture-avoiding syntax
+    substitution, not an execution.
+
+    Read sequential_correct and round_trip_correct first, then load_plus and
+    increment for context composition, and finally zero_test/set_if_zero.
+    increment requires exclusive points-to and is NOT a concurrent increment. *)
+
 open Pulse.Extrinsic.HeapLang
+open Pulse.Extrinsic.HeapLang.Notation
 module P = Pulse.Extrinsic.HeapLang.Proof
 module C = Pulse.Extrinsic.HeapLang.Logic
 module R = Pulse.Extrinsic.Rules
 module S = PulseCore.IndirectionTheorySep
 
-let increment_result : expr [TInt] TInt = Add (Var Here) (Val 1)
+let increment_result : expr [TInt] TInt = add (Var Here) (int_ 1)
 
 let sequential (r:PulseCore.Heap.core_ref) : expr [] TInt =
-  Let (Load (Val r)) increment_result
+  let! observed = load (ref_ r) in
+  add observed (int_ 1)
 
 let sequential_correct (r:PulseCore.Heap.core_ref) (old:int)
   : Lemma (P.hoare (C.points_to r old) (sequential r)
@@ -43,7 +55,7 @@ let sequential_correct (r:PulseCore.Heap.core_ref) (old:int)
     P.let_rule p (Load (Val r)) increment_result (P.read_post r old) q
 
 let round_trip (r:PulseCore.Heap.core_ref) (desired:int) : expr [] TInt =
-  Seq (Store (Val r) (Val desired)) (Load (Val r))
+  store (ref_ r) (int_ desired) >> load (ref_ r)
 
 let round_trip_correct (r:PulseCore.Heap.core_ref) (old desired:int)
   : Lemma (P.hoare (C.points_to r old) (round_trip r desired) (P.read_post r desired))
@@ -53,7 +65,7 @@ let round_trip_correct (r:PulseCore.Heap.core_ref) (old desired:int)
       (Store (Val r) (Val desired)) (Load (Val r)) (P.read_post r desired)
 
 let load_plus (r:PulseCore.Heap.core_ref) : expr [] TInt =
-  Add (Load (Val r)) (Val 1)
+  add (load (ref_ r)) (int_ 1)
 
 let load_plus_correct (r:PulseCore.Heap.core_ref) (old:int)
   : Lemma (P.hoare (C.points_to r old) (load_plus r)
@@ -71,7 +83,7 @@ let load_plus_correct (r:PulseCore.Heap.core_ref) (old:int)
     P.context_rule k p (Load (Val r)) (P.read_post r old) q
 
 let increment (r:PulseCore.Heap.core_ref) : expr [] TUnit =
-  Store (Val r) (load_plus r)
+  store (ref_ r) (load_plus r)
 
 let increment_correct (r:PulseCore.Heap.core_ref) (old:int)
   : Lemma (P.hoare (C.points_to r old) (increment r)
@@ -89,7 +101,7 @@ let increment_correct (r:PulseCore.Heap.core_ref) (old:int)
     P.context_rule k p (load_plus r) mid q
 
 let zero_test (r:PulseCore.Heap.core_ref) : expr [] TBool =
-  Eq (Val 0) (Load (Val r))
+  eq (int_ 0) (load (ref_ r))
 
 let zero_test_correct (r:PulseCore.Heap.core_ref) (old:int)
   : Lemma (P.hoare (C.points_to r old) (zero_test r)
@@ -107,7 +119,7 @@ let zero_test_correct (r:PulseCore.Heap.core_ref) (old:int)
     P.context_rule k p (Load (Val r)) (P.read_post r old) q
 
 let set_if_zero (r:PulseCore.Heap.core_ref) : expr [] TUnit =
-  If (zero_test r) (Store (Val r) (Val 1)) (Val ())
+  if_ (zero_test r) (store (ref_ r) (int_ 1)) unit_
 
 let set_if_zero_correct (r:PulseCore.Heap.core_ref) (old:int)
   : Lemma (P.hoare (C.points_to r old) (set_if_zero r)

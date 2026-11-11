@@ -4,6 +4,8 @@ OUTPUT_DIR := build/lib.extrinsic.ml
 FSTAR_OPTIONS += --include lib/core
 FSTAR_OPTIONS += --include lib/common
 FSTAR_OPTIONS += --include lib/pulse/lib
+# Foundations are independent of examples; the aggregate target checks both.
+FSTAR_OPTIONS += --include lib/extrinsic/core
 FSTAR_OPTIONS += --include lib/extrinsic/examples
 ROOTS := $(shell find $(SRC) -name '*.fst' -o -name '*.fsti')
 DEPFLAGS += --already_cached 'Prims,FStar,FStarC'

@@ -15,6 +15,12 @@
 *)
 module Pulse.Extrinsic.ExamplePredicates
 
+(** Example-specific bit-cell assertion, deliberately outside the foundation.
+    bit_cell hides whether the owned integer is 0 or 1; unfolding exposes that
+    witness and introduction restores it after a write. Exposure facts justify
+    using this physical predicate inside invariants. They do not assert that
+    arbitrary invariant bodies or invariant handles are timeless. *)
+
 module H = PulseCore.Heap
 module S = PulseCore.IndirectionTheorySep
 module C = Pulse.Extrinsic.HeapLang.Logic

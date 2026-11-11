@@ -15,6 +15,16 @@
 *)
 module Pulse.Extrinsic.NestedExamples
 
+(** Two distinct forms of nested invariant reasoning.
+    nested_open opens two distinct names around one atomic write.
+    nested_handle_write opens an invariant whose BODY is another handle:
+    exposure yields later(inner handle), requiring a supplied later credit
+    before that inner invariant can be opened.
+
+    nested_concurrent duplicates the outer handle but splits two explicit
+    credits, one per thread. It neither assumes handles timeless nor invents
+    credits from source steps. These remain ordinary source-logic proofs. *)
+
 open Pulse.Extrinsic.HeapLang
 module P = Pulse.Extrinsic.HeapLang.Proof
 module B = Pulse.Extrinsic.ExamplePredicates
@@ -52,6 +62,10 @@ let nested_open (r s:PulseCore.Heap.core_ref) (desired:B.bit)
     P.atomic_consequence GS.empty protected protected e (P.prepend_post (S.inv i body) q) post;
     P.atomic_to_hoare protected e post
 
+(** Remove locality from the exposed handle but retain its later. Spend the
+    credit to open the inner invariant; after writing, reintroduce later to
+    restore the outer body. This is where nested ownership differs from merely
+    opening two independent invariant names. *)
 let nested_handle_write (r:PulseCore.Heap.core_ref) (desired:B.bit)
   (i:S.iref) (j:S.iref{not (j == i)})
   : Lemma (P.hoare
