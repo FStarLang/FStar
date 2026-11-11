@@ -766,7 +766,7 @@ let instance_facts (then_:bool) (b:term)
   let pred = mk_imp (RT.eq2 u0 tm_bool b (if then_ then tm_true else tm_false)) body in
   [pack_term_view (Tm_Pure pred) (T.range_of_term body)]
 
-let join_hoisted (pick:option bool) (linked:bool) g b (p1 p2:slprop)
+let join_hoisted (pick:option bool) (linked links:bool) g b (p1 p2:slprop)
 : T.Tac slprop
 = (* At least one branch's postcondition is existentially quantified or
      guarded by a [with_pure], at the top or below a star. The first is the
@@ -817,20 +817,20 @@ let join_hoisted (pick:option bool) (linked:bool) g b (p1 p2:slprop)
       then []
       else [leftover pick b rest1 rest2]
     in
-    let links1 = instance_facts true b bs1 newbs insts gs1 (indep1@dep1) in
-    let links2 = instance_facts false b bs2 newbs insts gs2 (indep2@dep2) in
+    let links1 = if links then instance_facts true b bs1 newbs insts gs1 (indep1@dep1) else [] in
+    let links2 = if links then instance_facts false b bs2 newbs insts gs2 (indep2@dep2) else [] in
     close_hoisted_exists newbs (list_as_slprop (remaining@links1@links2@pures1@pures2@lifted))
 
-let rec join_slprop (pick:option bool) (linked:bool) g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
+let rec join_slprop (pick:option bool) (linked links:bool) g b (ex1 ex2:list (universe & binder)) (p1 p2:slprop)
 : T.Tac slprop
 = match inspect_term p1, inspect_term p2 with
   | Tm_IsUnreachable, _ -> p2
   | _, Tm_IsUnreachable -> p1
 
   | Tm_WithPure pred1 n1 p1, _ ->
-    guard_with_pure true b pred1 n1 <| join_slprop pick linked g b ex1 ex1 p1 p2
+    guard_with_pure true b pred1 n1 <| join_slprop pick linked links g b ex1 ex1 p1 p2
   | _, Tm_WithPure pred2 n2 p2 ->
-    guard_with_pure false b pred2 n2 <| join_slprop pick linked g b ex1 ex1 p1 p2
+    guard_with_pure false b pred2 n2 <| join_slprop pick linked links g b ex1 ex1 p1 p2
 
   | Tm_ForallSL .., _
   | _, Tm_ForallSL .. ->
@@ -839,11 +839,11 @@ let rec join_slprop (pick:option bool) (linked:bool) g b (ex1 ex2:list (universe
 
   | Tm_ExistsSL .., _
   | _, Tm_ExistsSL .. ->
-    join_hoisted pick linked g b p1 p2
+    join_hoisted pick linked links g b p1 p2
 
   | _ ->
     if needs_hoist p1 || needs_hoist p2
-    then join_hoisted pick linked g b p1 p2
+    then join_hoisted pick linked links g b p1 p2
     else
     let open Pulse.Show in
     let p1s, p2s = slprop_as_list p1, slprop_as_list p2 in
@@ -864,7 +864,7 @@ let rec join_slprop (pick:option bool) (linked:bool) g b (ex1 ex2:list (universe
       let remaining = leftover pick b (list_as_slprop p1s) (list_as_slprop p2s) in
       list_as_slprop (remaining::pures1@pures2@matched)
 
-let join_post_candidate (pick:option bool) (linked:bool) #g #hyp #b
+let join_post_candidate (pick:option bool) (linked links:bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
 : T.Tac term
@@ -879,7 +879,7 @@ let join_post_candidate (pick:option bool) (linked:bool) #g #hyp #b
   let p1_post = normalize_slprop g' p1_post true in
   let p2_post = open_term_nv p2.post (ppname_default, x) in
   let p2_post = normalize_slprop g' p2_post true in
-  let joined_post = join_slprop pick linked g' b [] [] p1_post p2_post in
+  let joined_post = join_slprop pick linked links g' b [] [] p1_post p2_post in
   let joined_post = close_term joined_post x in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf "Inferred joint postcondition:\n%s\n"
