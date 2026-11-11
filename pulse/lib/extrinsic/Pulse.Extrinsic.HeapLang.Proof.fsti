@@ -55,6 +55,18 @@ val fork (parent child:S.slprop) (e:expr [] TUnit) (q:post TUnit)
 val add (x y:int)
   : Lemma (hoare S.emp (Add (Val x) (Val y)) (returns_value (x + y)))
 
+val context_rule (#a #b:ty) (k:context a b) (p:S.slprop) (e:expr [] a)
+  (mid:post a) (q:post b)
+  : Lemma
+      (requires hoare p e mid /\ (forall v. hoare (mid v) (fill k (Val v)) q))
+      (ensures hoare p (fill k e) q)
+
+val eq (x y:int)
+  : Lemma (hoare S.emp (Eq (Val x) (Val y)) (returns_value (x = y)))
+val if_value (#t:ty) (p:S.slprop) (b:bool) (yes no:expr [] t) (q:post t)
+  : Lemma (requires hoare p (if b then yes else no) q)
+      (ensures hoare p (If (Val b) yes no) q)
+
 let exposed (p:S.slprop) = S.somewhere (S.later p)
 val atomic (#t:ty) (mask:S.inames) (p:S.slprop) (e:expr [] t) (q:post t) : prop
 val atomic_consequence (#t:ty) (mask:S.inames) (p p':S.slprop)
@@ -97,3 +109,36 @@ val store (r:PulseCore.Heap.core_ref) (old desired:int)
 val allocate_invariant (#t:ty) (p pre:S.slprop) (e:expr [] t) (q:post t)
   (proof:(i:S.iref -> Lemma (hoare (S.star (S.inv i p) pre) e q)))
   : Lemma (requires to_val e == None) (ensures hoare (S.star p pre) e q)
+
+val update (before after:S.inames) (p q:S.slprop) : prop
+val update_entails (mask:S.inames) (p q:S.slprop)
+  : Lemma (requires S.implies p q) (ensures update mask mask p q)
+val update_trans (before middle after:S.inames) (p q r:S.slprop)
+  : Lemma (requires update before middle p q /\ update middle after q r)
+      (ensures update before after p r)
+val update_frame (before after:S.inames) (p q f:S.slprop)
+  : Lemma (requires update before after p q)
+      (ensures update before after (S.star p f) (S.star q f))
+val update_exists (#a:Type0) (before after:S.inames) (p:a -> S.slprop) (q:S.slprop)
+  : Lemma (requires forall x. update before after (p x) q)
+      (ensures update before after (S.op_exists_Star p) q)
+val open_invariant (mask:S.inames) (i:S.iref{not (S.mem_inv mask i)}) (p:S.slprop)
+  : Lemma (update mask (S.add_inv mask i) (S.inv i p) (S.star (S.inv i p) (exposed p)))
+val close_invariant (mask:S.inames) (i:S.iref{not (S.mem_inv mask i)}) (p:S.slprop)
+  : Lemma (update (S.add_inv mask i) mask (S.star (S.inv i p) (exposed p)) (S.inv i p))
+let allocated (p:S.slprop) = S.op_exists_Star (fun (i:S.iref) -> S.inv i p)
+val update_allocate (p:S.slprop)
+  : Lemma (update Pulse.Lib.GhostSet.empty Pulse.Lib.GhostSet.empty p (allocated p))
+val update_later_elim (mask:S.inames) (p:S.slprop)
+  : Lemma (update mask mask (S.star (S.later p) (S.later_credit 1)) p)
+val update_hoare (#t:ty) (p mid:S.slprop) (e:expr [] t) (q:post t)
+  : Lemma
+      (requires to_val e == None /\
+        update Pulse.Lib.GhostSet.empty Pulse.Lib.GhostSet.empty p mid /\ hoare mid e q)
+      (ensures hoare p e q)
+val atomic_updates (#t:ty) (outer inner:S.inames) (p mid:S.slprop)
+  (e:expr [] t) (q post:post t)
+  : Lemma
+      (requires update outer inner p mid /\ atomic inner mid e q /\
+        (forall v. update inner outer (q v) (post v)))
+      (ensures atomic outer p e post)

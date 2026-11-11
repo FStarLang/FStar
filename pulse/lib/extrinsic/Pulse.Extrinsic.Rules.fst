@@ -119,3 +119,17 @@ let hoare_pure l physical p fact e q proof =
     S.mem_le_iff owned h)
 
 let entails_pure p q = ()
+
+let entails_later p =
+  S.implies_intro p (S.later p) (fun _ -> S.reveal_slprop_ok ())
+
+let exposed_inv i p =
+  PulseCore.KnotInstantiation.mem_pred_ext
+    (S.somewhere (S.later (S.inv i p))) (S.later (S.inv i p)) (fun h ->
+      assert_norm (S.somewhere (S.later (S.inv i p)) h ==
+        (exists loc. S.on loc (S.later (S.inv i p)) h));
+      introduce forall loc. S.on loc (S.later (S.inv i p)) == S.later (S.inv i p)
+      with (S.on_later_eq loc (S.inv i p); S.on_inv_eq loc i p);
+      introduce S.later (S.inv i p) h ==> S.somewhere (S.later (S.inv i p)) h with (
+        introduce exists loc. S.on loc (S.later (S.inv i p)) h
+        with Pulse.Lib.Loc.dummy_loc and ()))

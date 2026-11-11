@@ -20,6 +20,7 @@ module W = Pulse.Extrinsic.WP
 module R = Pulse.Extrinsic.Rules
 module A = Pulse.Extrinsic.Atomic
 module S = PulseCore.IndirectionTheorySep
+module U = Pulse.Extrinsic.Updates
 
 let hoare l physical mask p e q =
   l.L.to_val e == None /\
@@ -229,4 +230,46 @@ let lift l physical mask p e q proof =
   with (
     introduce A.enabled mask p f m ==> step_post l physical mask e q f m
     with proof f m
+  )
+
+let updates l physical outer inner p mid e q post =
+  S.sep_laws ();
+  introduce forall f (m:S.full_mem). A.enabled outer p f m ==>
+    step_post l physical outer e post f m
+  with (
+    introduce A.enabled outer p f m ==> step_post l physical outer e post f m
+    with (
+      U.apply l physical outer inner p mid f m;
+      eliminate exists (opened:S.full_mem). U.result l physical inner mid f m opened with (
+        assert (A.enabled inner mid f opened);
+        assert (step_post l physical inner e q f opened);
+        introduce forall e' s' spawned. l.L.prim_step e (physical m) e' s' spawned ==>
+          result l physical outer post f m e' s' spawned
+        with (
+          introduce l.L.prim_step e (physical m) e' s' spawned ==>
+            result l physical outer post f m e' s' spawned
+          with (
+            eliminate exists v (next:S.full_mem).
+              l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
+              S.level next <= S.level opened /\ S.budget next >= S.budget opened - 1 /\
+              (S.level next == S.level opened ==> S.budget next >= S.budget opened) /\
+              S.inames_ok inner next /\
+              S.interp (S.star (S.star (q v) f) (S.mem_invariant inner next)) next
+            with (
+              U.apply l physical inner outer (q v) (post v) f next;
+              eliminate exists (closed:S.full_mem). U.result l physical outer (post v) f next closed
+              with (
+                introduce exists v (next:S.full_mem).
+                  l.L.to_val e' == Some v /\ spawned == [] /\ physical next == s' /\
+                  S.level next <= S.level m /\ S.budget next >= S.budget m - 1 /\
+                  (S.level next == S.level m ==> S.budget next >= S.budget m) /\
+                  S.inames_ok outer next /\
+                  S.interp (S.star (S.star (post v) f) (S.mem_invariant outer next)) next
+                with v closed and ()
+              )
+            )
+          )
+        )
+      )
+    )
   )

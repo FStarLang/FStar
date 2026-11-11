@@ -126,21 +126,6 @@ let write_memory mask r old desired frame m =
   let _, next = write_core mask r old desired frame m in
   next
 
-let bit_base (r:H.core_ref) =
-  H2.h_exists (fun (n:bit) -> H2.pts_to #M.cell_value #M.cell_pcm r (M.Full n))
-
-let bit_cell r = S.lift (bit_base r)
-
-let bit_cell_unfold r =
-  K.mem_pred_ext (bit_cell r) (S.op_exists_Star (bit_point r)) (fun h ->
-    assert_norm (bit_cell r h == (exists (n:bit). points_to r n h));
-    assert_norm (S.op_exists_Star (bit_point r) h == (exists (n:bit). points_to r n h)))
-
-let bit_cell_intro r n =
-  bit_cell_unfold r;
-  S.implies_intro (points_to r n) (bit_cell r) (fun h ->
-    introduce exists (v:bit). points_to r v h with n and ())
-
 let exposed_lift (p:PM.slprop u#0)
   : Lemma (A.exposed (S.lift p) == S.later (S.lift p))
   = K.mem_pred_ext (A.exposed (S.lift p)) (S.later (S.lift p)) (fun h ->
@@ -153,30 +138,7 @@ let exposed_lift (p:PM.slprop u#0)
         with Pulse.Lib.Loc.dummy_loc and ()
       ))
 
-let bit_cell_exposed r =
-  exposed_lift (bit_base r);
-  S.timeless_lift (bit_base r);
-  S.implies_intro (bit_cell r) (A.exposed (bit_cell r)) (fun _ -> S.reveal_slprop_ok ())
-
-let bit_cell_witness mask r frame m =
-  S.sep_laws ();
-  bit_cell_exposed r;
-  bit_cell_unfold r;
-  let rest = S.star frame (S.mem_invariant mask m) in
-  R.entails_refl rest;
-  R.entails_star (A.exposed (bit_cell r)) (bit_cell r) rest rest;
-  S.elim_implies (S.star (A.exposed (bit_cell r)) rest) (S.star (bit_cell r) rest) m;
-  let n, next = IA.witness_exists #mask (bit_point r) frame m in
-  assert_norm (next == m);
-  n
-
-let bit_invariant_contents r i m =
-  S.sep_laws ();
-  S.inames_ok_empty m;
-  A.open_unchanged GS.empty i (bit_cell r) S.emp m;
-  let _, opened = A.run (A.open_invariant GS.empty i (bit_cell r)) S.emp m in
-  let n = bit_cell_witness (S.add_inv GS.empty i) r (S.inv i (bit_cell r)) opened in
-  S.destruct_star_l (points_to r n)
-    (S.star (S.inv i (bit_cell r)) (S.mem_invariant (S.add_inv GS.empty i) opened)) opened;
-  points_to_contents r n opened;
-  introduce exists (v:bit). M.contents (physical m) r v with (FStar.Ghost.reveal n) and ()
+let points_to_exposed r v =
+  exposed_lift (H2.pts_to #M.cell_value #M.cell_pcm r (M.Full v));
+  S.timeless_lift (H2.pts_to #M.cell_value #M.cell_pcm r (M.Full v));
+  R.entails_later (points_to r v)

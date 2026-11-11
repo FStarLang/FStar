@@ -72,26 +72,10 @@ val write_memory (mask:S.inames) (r:H.core_ref) (old:FStar.Ghost.erased int) (de
       S.interp (S.star (S.star (points_to r desired) frame)
         (S.mem_invariant mask m')) m' }
 
-type bit = n:int{n == 0 \/ n == 1}
-let bit_point (r:H.core_ref) (n:bit) = points_to r n
-val bit_cell (r:H.core_ref) : S.slprop
-val bit_cell_unfold (r:H.core_ref)
-  : Lemma (bit_cell r == S.op_exists_Star (bit_point r))
-val bit_cell_intro (r:H.core_ref) (n:bit)
-  : Lemma (S.implies (points_to r n) (bit_cell r))
-val bit_cell_exposed (r:H.core_ref)
+val exposed_lift (p:PulseCore.MemoryAlt.slprop u#0)
+  : Lemma (Pulse.Extrinsic.Atomic.exposed (S.lift p) == S.later (S.lift p))
+
+val points_to_exposed (r:H.core_ref) (v:int)
   : Lemma (
-      S.implies (Pulse.Extrinsic.Atomic.exposed (bit_cell r)) (bit_cell r) /\
-      S.implies (bit_cell r) (Pulse.Extrinsic.Atomic.exposed (bit_cell r)))
-
-val bit_cell_witness (mask:S.inames) (r:H.core_ref) (frame:S.slprop)
-  (m:S.full_mem {
-    Pulse.Extrinsic.Atomic.enabled mask (Pulse.Extrinsic.Atomic.exposed (bit_cell r)) frame m })
-  : n:FStar.Ghost.erased bit {
-      Pulse.Extrinsic.Atomic.enabled mask (points_to r n) frame m }
-
-val bit_invariant_contents (r:H.core_ref) (i:S.iref) (m:S.full_mem)
-  : Lemma
-      (requires S.budget m > 0 /\
-        S.interp (S.star (S.inv i (bit_cell r)) (Pulse.Extrinsic.WP.invariant m)) m)
-      (ensures exists (n:bit). M.contents (physical m) r n)
+      S.implies (Pulse.Extrinsic.Atomic.exposed (points_to r v)) (points_to r v) /\
+      S.implies (points_to r v) (Pulse.Extrinsic.Atomic.exposed (points_to r v)))

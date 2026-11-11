@@ -24,6 +24,7 @@ module K = Pulse.Extrinsic.HeapLang.Contexts
 module R = Pulse.Extrinsic.Rules
 module W = Pulse.Extrinsic.WP
 module A = Pulse.Extrinsic.AtomicLogic
+module U = Pulse.Extrinsic.Updates
 
 let packed_post (#t:ty) (q:post t) (v:E.packed_value) =
   let E.PackValue u v = v in
@@ -112,6 +113,35 @@ let add x y =
   H.wp_value S.emp (x + y) q;
   H.wp_transition S.emp (Add (Val x) (Val y)) (Val (x + y)) [] q
     (fun m -> E.add_transition x y (C.physical m))
+
+let context_rule #a #b k p e mid q =
+  let ctx = K.make_context k in
+  let next = W.bind_post E.language C.physical ctx (packed_post q) in
+  introduce forall v. S.implies (packed_post mid v) (next v)
+  with (
+    let E.PackValue t v = v in
+    if t = a then R.entails_refl (wp (fill k (Val v)) q)
+    else R.entails_false (next (E.PackValue t v))
+  );
+  W.wp_mono E.language C.physical (E.Pack a e) (packed_post mid) next;
+  R.entails_trans p (wp e mid) (W.wp E.language C.physical (E.Pack a e) next);
+  W.wp_bind E.language C.physical ctx (E.Pack a e) (packed_post q);
+  R.entails_trans p (W.wp E.language C.physical (E.Pack a e) next) (wp (fill k e) q)
+
+let eq x y =
+  let q = packed_post (returns_value (x = y)) in
+  S.sep_laws ();
+  W.children_nil E.language (W.wp_family E.language C.physical);
+  R.entails_fact S.emp ((x = y) == (x = y));
+  H.wp_value S.emp (x = y) q;
+  H.wp_transition S.emp (Eq (Val x) (Val y)) (Val (x = y)) [] q
+    (fun m -> E.eq_transition x y (C.physical m))
+
+let if_value #t p b yes no q =
+  S.sep_laws ();
+  W.children_nil E.language (W.wp_family E.language C.physical);
+  H.wp_transition p (If (Val b) yes no) (if b then yes else no) [] (packed_post q)
+    (fun m -> E.if_transition b yes no (C.physical m))
 
 let atomic #t mask p e q = A.hoare E.language C.physical mask p (E.Pack t e) (packed_post q)
 
@@ -222,3 +252,21 @@ let allocate_invariant #t p pre e q proof =
       proof i;
       H.apply_frame (S.star (S.inv i p) pre) (wp e q) (S.star f (W.invariant next)) next;
       W.wp_step E.language C.physical (E.Pack t e) (packed_post q) f next)
+
+let update before after p q = U.hoare E.language C.physical before after p q
+let update_entails mask p q = U.entails E.language C.physical mask p q
+let update_trans before middle after p q r = U.trans E.language C.physical before middle after p q r
+let update_frame before after p q f = U.frame E.language C.physical before after p q f
+let update_exists #a before after p q = U.exists_pre E.language C.physical before after p q
+let open_invariant mask i p = U.open_invariant E.language C.physical mask i p
+let close_invariant mask i p = U.close_invariant E.language C.physical mask i p
+let update_allocate p = U.allocate E.language C.physical p C.ghost_physical
+let update_later_elim mask p = U.later_elim E.language C.physical mask p C.ghost_physical
+let update_hoare #t p mid e q = U.bind_wp E.language C.physical p mid (E.Pack t e) (packed_post q)
+let atomic_updates #t outer inner p mid e q post =
+  introduce forall v. U.hoare E.language C.physical inner outer (packed_post q v) (packed_post post v)
+  with (
+    let E.PackValue u v = v in
+    if u <> t then U.false_pre E.language C.physical inner outer (S.pure False)
+  );
+  A.updates E.language C.physical outer inner p mid (E.Pack t e) (packed_post q) (packed_post post)

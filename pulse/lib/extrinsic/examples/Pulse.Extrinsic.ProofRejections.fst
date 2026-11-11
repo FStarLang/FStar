@@ -17,6 +17,7 @@ module Pulse.Extrinsic.ProofRejections
 
 open Pulse.Extrinsic.HeapLang
 module P = Pulse.Extrinsic.HeapLang.Proof
+module R = Pulse.Extrinsic.Rules
 module S = PulseCore.IndirectionTheorySep
 module GS = Pulse.Lib.GhostSet
 
@@ -44,3 +45,22 @@ let open_around_ordinary_triple (i:S.iref) (p pre:S.slprop) (e:expr [] TUnit) (q
   (body:(unit -> Lemma (P.hoare (S.star (P.exposed p) pre) e (P.prepend_post (P.exposed p) q))))
   = body ();
     P.atomic_invariant GS.empty i p pre e q
+
+[@@expect_failure [19]]
+let update_without_credit (mask:S.inames) (p:S.slprop)
+  : Lemma (P.update mask mask (S.later p) p)
+  = P.update_later_elim mask p
+
+[@@expect_failure [19]]
+let escape_update (i:S.iref) (p:S.slprop)
+  : Lemma (P.update GS.empty GS.empty (S.inv i p) (S.star (S.inv i p) (P.exposed p)))
+  = P.open_invariant GS.empty i p
+
+[@@expect_failure [19]]
+let update_at_value (p q:S.slprop)
+  (proof:(unit -> Lemma (P.update GS.empty GS.empty p q)))
+  : Lemma (P.hoare p (Val ()) (P.constant_post q))
+  = proof ();
+    R.entails_refl q;
+    P.value_rule q () (P.constant_post q);
+    P.update_hoare p q (Val ()) (P.constant_post q)

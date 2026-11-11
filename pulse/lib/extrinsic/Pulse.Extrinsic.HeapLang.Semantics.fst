@@ -22,44 +22,6 @@ module H = PulseCore.Heap
 
 let thread = expr [] TUnit
 
-// Evaluation contexts contain syntax, never host-language continuations.
-noeq
-type context : ty -> ty -> Type0 =
-  | Hole: #t:ty -> context t t
-  | LetCtx: #a:ty -> #b:ty -> #t:ty -> context t a -> expr [a] b -> context t b
-  | IfCtx: #a:ty -> #t:ty -> context t TBool -> expr [] a -> expr [] a -> context t a
-  | SeqCtx: #a:ty -> #t:ty -> context t TUnit -> expr [] a -> context t a
-  | AddLeft: #t:ty -> context t TInt -> expr [] TInt -> context t TInt
-  | AddRight: #t:ty -> int -> context t TInt -> context t TInt
-  | EqLeft: #t:ty -> context t TInt -> expr [] TInt -> context t TBool
-  | EqRight: #t:ty -> int -> context t TInt -> context t TBool
-  | AllocCtx: #t:ty -> context t TInt -> context t TRef
-  | LoadCtx: #t:ty -> context t TRef -> context t TInt
-  | StoreLeft: #t:ty -> context t TRef -> expr [] TInt -> context t TUnit
-  | StoreRight: #t:ty -> H.core_ref -> context t TInt -> context t TUnit
-  | CasRef: #t:ty -> context t TRef -> expr [] TInt -> expr [] TInt -> context t TBool
-  | CasExpected: #t:ty -> H.core_ref -> context t TInt -> expr [] TInt -> context t TBool
-  | CasDesired: #t:ty -> H.core_ref -> int -> context t TInt -> context t TBool
-
-let rec fill (#a #b:ty) (k:context a b) (e:expr [] a)
-  : Tot (expr [] b) (decreases k)
-  = match k with
-    | Hole -> e
-    | LetCtx k body -> Let (fill k e) body
-    | IfCtx k e1 e2 -> If (fill k e) e1 e2
-    | SeqCtx k e2 -> Seq (fill k e) e2
-    | AddLeft k e2 -> Add (fill k e) e2
-    | AddRight v k -> Add (Val v) (fill k e)
-    | EqLeft k e2 -> Eq (fill k e) e2
-    | EqRight v k -> Eq (Val v) (fill k e)
-    | AllocCtx k -> Alloc (fill k e)
-    | LoadCtx k -> Load (fill k e)
-    | StoreLeft k e2 -> Store (fill k e) e2
-    | StoreRight r k -> Store (Val r) (fill k e)
-    | CasRef k e2 e3 -> Cas (fill k e) e2 e3
-    | CasExpected r k e3 -> Cas (Val r) (fill k e) e3
-    | CasDesired r v k -> Cas (Val r) (Val v) (fill k e)
-
 noeq
 type head_step : #t:ty -> expr [] t -> M.heap -> expr [] t -> M.heap -> list thread -> Type u#4 =
   | Beta: #a:ty -> #b:ty -> v:value a -> body:expr [a] b -> h:M.heap ->
@@ -201,6 +163,159 @@ let invert_seq (#t:ty) (first:thread) (rest:expr [] t)
         )
     | _ -> ()
 
+let rec compose (#a #b #c:ty) (outer:context b c) (inner:context a b)
+  : Tot (context a c) (decreases outer)
+  = match outer with
+    | Hole -> inner
+    | LetCtx k body -> LetCtx (compose k inner) body
+    | IfCtx k yes no -> IfCtx (compose k inner) yes no
+    | SeqCtx k rest -> SeqCtx (compose k inner) rest
+    | AddLeft k right -> AddLeft (compose k inner) right
+    | AddRight left k -> AddRight left (compose k inner)
+    | EqLeft k right -> EqLeft (compose k inner) right
+    | EqRight left k -> EqRight left (compose k inner)
+    | AllocCtx k -> AllocCtx (compose k inner)
+    | LoadCtx k -> LoadCtx (compose k inner)
+    | StoreLeft k right -> StoreLeft (compose k inner) right
+    | StoreRight left k -> StoreRight left (compose k inner)
+    | CasRef k expected desired -> CasRef (compose k inner) expected desired
+    | CasExpected r k desired -> CasExpected r (compose k inner) desired
+    | CasDesired r expected k -> CasDesired r expected (compose k inner)
+
+let rec fill_compose (#a #b #c:ty) (outer:context b c) (inner:context a b) (e:expr [] a)
+  : Lemma (fill (compose outer inner) e == fill outer (fill inner e)) (decreases outer)
+  = match outer with
+    | Hole -> ()
+    | LetCtx k _ -> fill_compose k inner e
+    | IfCtx k _ _ -> fill_compose k inner e
+    | SeqCtx k _ -> fill_compose k inner e
+    | AddLeft k _ -> fill_compose k inner e
+    | AddRight _ k -> fill_compose k inner e
+    | EqLeft k _ -> fill_compose k inner e
+    | EqRight _ k -> fill_compose k inner e
+    | AllocCtx k -> fill_compose k inner e
+    | LoadCtx k -> fill_compose k inner e
+    | StoreLeft k _ -> fill_compose k inner e
+    | StoreRight _ k -> fill_compose k inner e
+    | CasRef k _ _ -> fill_compose k inner e
+    | CasExpected _ k _ -> fill_compose k inner e
+    | CasDesired _ _ k -> fill_compose k inner e
+
+let head_is_redex (#t:ty) (#e #e':expr [] t) (#h #h':M.heap) (#spawned:list thread)
+  (s:head_step e h e' h' spawned)
+  : Lemma (head_redex e)
+  = match s with
+    | Beta _ _ _ | Branch _ _ _ _ | Sequence _ _ | Plus _ _ _
+    | Equal _ _ _ | New _ _ _ _ _ | Read _ _ _ _ | Write _ _ _ _ _
+    | CompareExchange _ _ _ _ _ _ _ | Spawn _ _ | Unroll _ _ _ -> ()
+
+let rec invert_fill (#a #b:ty) (k:context a b) (e:expr [] a)
+  (#next:expr [] b) (#h #h':M.heap) (#spawned:list thread)
+  (s:step (fill k e) h next h' spawned)
+  : Lemma
+      (requires to_val e == None)
+      (ensures exists (e':expr [] a).
+        next == fill k e' /\ (exists (_:step e h e' h' spawned). True))
+      (decreases k)
+  = let ContextStep #_ #_ actual #head #_ #head' #_ #_ hs = s in
+    head_not_value hs;
+    match k with
+    | Hole ->
+        introduce exists (e':expr [] a).
+          next == fill k e' /\ (exists (_:step e h e' h' spawned). True)
+        with next and (
+          introduce exists (_:step e h next h' spawned). True with s and ())
+    | LetCtx inner _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | LetCtx actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | IfCtx inner _ _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | IfCtx actual_inner _ _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | SeqCtx inner _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | SeqCtx actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | AddLeft inner _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | AddLeft actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | AddRight _ inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | AddRight _ actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | AddLeft actual_inner _ -> fill_not_value actual_inner head
+         | _ -> ())
+    | EqLeft inner _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | EqLeft actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | EqRight _ inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | EqRight _ actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | EqLeft actual_inner _ -> fill_not_value actual_inner head
+         | _ -> ())
+    | AllocCtx inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | AllocCtx actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | LoadCtx inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | LoadCtx actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | StoreLeft inner _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | StoreLeft actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | StoreRight _ inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | StoreRight _ actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | StoreLeft actual_inner _ -> fill_not_value actual_inner head
+         | _ -> ())
+    | CasRef inner _ _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | CasRef actual_inner _ _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | _ -> ())
+    | CasExpected _ inner _ ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | CasExpected _ actual_inner _ -> invert_fill inner e (ContextStep actual_inner hs)
+         | CasRef actual_inner _ _ -> fill_not_value actual_inner head
+         | _ -> ())
+    | CasDesired _ _ inner ->
+        fill_not_value inner e;
+        (match actual with
+         | Hole -> head_is_redex hs
+         | CasDesired _ _ actual_inner -> invert_fill inner e (ContextStep actual_inner hs)
+         | CasRef actual_inner _ _ -> fill_not_value actual_inner head
+         | CasExpected _ actual_inner _ -> fill_not_value actual_inner head
+         | _ -> ())
+
 let transition (#t:ty) (e next:expr [] t) (spawned:list thread) (h:M.heap) : prop =
   (exists (_:step e h next h spawned). True) /\
   (forall (next':expr [] t) (h':M.heap) (spawned':list thread).
@@ -251,6 +366,14 @@ let add_transition (x y:int) (h:M.heap)
 let fork_transition (child:thread) (h:M.heap)
   : Lemma (transition (Fork child) (Val ()) [child] h)
   = head_transition (Spawn child h) (fun _ _ _ hs -> let Spawn _ _ = hs in ())
+
+let eq_transition (x y:int) (h:M.heap)
+  : Lemma (transition (Eq (Val x) (Val y)) (Val (x = y)) [] h)
+  = head_transition (Equal x y h) (fun _ _ _ hs -> let Equal _ _ _ = hs in ())
+
+let if_transition (#t:ty) (b:bool) (yes no:expr [] t) (h:M.heap)
+  : Lemma (transition (If (Val b) yes no) (if b then yes else no) [] h)
+  = head_transition (Branch b yes no h) (fun _ _ _ hs -> let Branch _ _ _ _ = hs in ())
 
 let let_transition (#a #b:ty) (bound next:expr [] a) (body:expr [a] b)
   (spawned:list thread) (h:M.heap)

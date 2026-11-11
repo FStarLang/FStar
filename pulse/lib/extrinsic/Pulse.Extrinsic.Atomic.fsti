@@ -85,7 +85,9 @@ val with_invariant (#a:Type0) (mask:S.inames) (i:S.iref{not (S.mem_inv mask i)})
   : M.action a O.Observable mask mask (S.star (S.inv i p) pre) (protected_post i p post)
 
 val open_unchanged (mask:S.inames) (i:S.iref{not (S.mem_inv mask i)})
-  (p frame:S.slprop) (m:S.full_mem{enabled mask (S.inv i p) frame m})
+  (p frame:S.slprop) (m:S.full_mem{
+    S.budget m >= 0 /\ S.inames_ok mask m /\
+    S.interp (S.star (S.star (S.inv i p) frame) (S.mem_invariant mask m)) m })
   : Lemma ((run (open_invariant mask i p) frame m)._2 == m)
 
 val close_unchanged (mask:S.inames) (i:S.iref{not (S.mem_inv mask i)})
@@ -122,3 +124,13 @@ val allocate_invariant (p frame:S.slprop)
   : i:S.iref & m':S.full_mem {
       S.is_ghost_action m m' /\ S.level m' == S.level m /\ S.budget m' == S.budget m /\
       S.interp (S.star (S.inv i p) (S.star frame (W.invariant m'))) m' }
+
+val eliminate_later (mask:S.inames) (p frame:S.slprop)
+  (m:S.full_mem {
+    S.budget m >= 0 /\ S.inames_ok mask m /\
+    S.interp (S.star (S.star (S.later p) (S.later_credit 1))
+      (S.star frame (S.mem_invariant mask m))) m })
+  : next:S.full_mem {
+      S.is_ghost_action m next /\ S.level next < S.level m /\ S.budget next == S.budget m /\
+      S.inames_ok mask next /\
+      S.interp (S.star p (S.star frame (S.mem_invariant mask next))) next }

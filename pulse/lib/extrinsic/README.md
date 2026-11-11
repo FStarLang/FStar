@@ -14,12 +14,16 @@ memories, physical heaps, source transitions, execution traces, native actions,
 or per-program budget/adequacy arguments. The semantic implementation of the
 logic is responsible for those concerns.
 
-The interface currently supports typed postconditions, value/frame/consequence
-rules, general `Let` and sequence composition, fork, addition, load, store,
-mask-aware atomic source triples, general invariant opening around atomic
-source proofs, and ghost invariant allocation before a source step. It is not
-yet a complete rule library for every constructor of HeapLang: allocation of
-physical cells, CAS, and loops still need client-facing rules.
+The interface supports typed postconditions, structural rules, composition
+through every HeapLang evaluation context, fork, addition, equality,
+conditionals, load, store, mask-aware atomic triples, and composable ghost mask
+updates. Invariant examples include both nested opening and an invariant whose
+body is another invariant handle. Physical allocation, CAS, and loops still
+need client-facing primitive rules.
+
+Core logic lives directly in this directory. The [examples](examples) directory
+contains source-program proofs, example-specific assertion definitions,
+negative interface tests, and explicitly separate operational regressions.
 
 ## Reading guide
 
@@ -37,7 +41,7 @@ Module names below omit the `Pulse.Extrinsic` prefix unless stated otherwise.
 | [4. Resource WP](#4-the-resource-wp) | What does ownership of a WP promise about every next source step? |
 | [5. Composition](#5-composition-and-generic-rules) | Why can triples be composed without re-proving reductions? |
 | [6. Native bridges](#6-native-heap-and-action-bridges) | How do native heap operations and mask actions meet source semantics? |
-| [7. Atomic source logic](#7-atomic-source-logic-and-invariants) | Why is opening an invariant around an atomic source proof sound? |
+| [7. Atomic source logic](#7-atomic-source-logic-and-invariants) | How do mask updates and atomic proofs support invariant opening and closing? |
 | [8. Typed interface](#8-the-typed-source-logic-interface) | Which rules can a program proof use without semantic arguments? |
 | [9. Uniform adequacy](#9-adequacy-once-for-the-logic) | Why does any such proof imply safety under arbitrary schedules? |
 | [10. Source proofs](#10-source-level-proof-walkthroughs) | How do the rules prove sequential and invariant-sharing programs? |
@@ -51,7 +55,7 @@ Language + HeapLang + heap relations ----> WP ----> generic Adequacy
                                           |
                          context/bind and structural rules
                                           |
-PulseCore heap/mask actions -> bridges -> AtomicLogic
+PulseCore heap/mask actions -> bridges -> Updates -> AtomicLogic
                                           |
                                    HeapLang.Proof
                                      /         \
@@ -179,7 +183,9 @@ In particular, the scheduler is not restricted to schedules chosen by proofs.
 ### 2.2 Deep syntax and substitution
 
 In `HeapLang`, follow `ty`, `value`, `var`, `expr`, `rename`, `subst`,
-`substitute`, and `to_val`.
+`substitute`, and `to_val`, then the typed `context` datatype and `fill`.
+Evaluation contexts are source syntax, so client composition rules can
+mention them without importing the operational semantics.
 
 `HeapLang.expr g t` is syntax indexed by a typing context `g` and result type
 `t`. The types are unit, booleans, mathematical integers, and references to
@@ -225,9 +231,10 @@ allocation, not just the chosen witness.
 
 ### 2.4 Reductions, contexts, and the generic-language instance
 
-In `HeapLang.Semantics`, read `context` and `fill`, then `head_step` and
-`step`. Continue with `invert_head`, `invert_let`, and `invert_seq`, and
-finally `packed_expr`, `packed_value`, `packed_step`, and `language`.
+In `HeapLang.Semantics`, read `head_step` and `step`. Continue with
+`invert_head`, `invert_let`, `invert_seq`, and the general `invert_fill`.
+`compose` and `fill_compose` describe composition of source contexts.
+Finally read `packed_expr`, `packed_value`, `packed_step`, and `language`.
 
 `HeapLang.Semantics.head_step` defines primitive reductions.
 `ContextStep` places one in a deep evaluation context. The contexts specify
@@ -242,7 +249,7 @@ of a compound expression, rather than merely constructing one permitted
 step. `transition`, `read_transition`, `beta_transition`, and `store_atomic`
 package such facts for logical-rule implementations.
 
-The optional [Examples](Pulse.Extrinsic.Examples.fst) module exercises this
+The optional [Examples](examples/Pulse.Extrinsic.Examples.fst) module exercises this
 model directly. [Safety](Pulse.Extrinsic.Safety.fst) gives a separate bounded
 operational safety formulation. Neither is the source-program proof interface
 or a prerequisite for understanding the resource WP.
@@ -434,11 +441,20 @@ trace induction repeated for each compound program.
 
 ### 5.3 Specialize contexts and discharge value reductions
 
-In `HeapLang.Contexts`, follow `let_plug`, `let_resume`, `let_steps`,
-`let_inversion`, and `let_context`; then the corresponding `seq_*`
-declarations. The proofs reuse `Semantics.invert_let` and `invert_seq`.
-Only `Let` and `Seq` currently have these generic WP-context instances,
-although the source semantics has more evaluation contexts.
+In `HeapLang.Contexts`, follow `plug`, `resume`, `steps`, `inversion`, and
+`make_context`. This constructs a generic WP context from **any** typed
+HeapLang evaluation context, including nested combinations.
+
+`steps` uses `Semantics.compose` and `fill_compose` to lift a hole step.
+`inversion` uses `Semantics.invert_fill`, which recurses through the requested
+context and rules out competing evaluation positions. For example, an
+`AddRight` context fixes the left operand to a value, so a source reduction
+cannot instead occur there.
+
+This covers `LetCtx`, `IfCtx`, `SeqCtx`, both addition and equality positions,
+allocation and load operands, both store positions, and all three CAS
+positions. The `let_context` and `seq_context` functions are now small
+specializations of `make_context`, not separate context proofs.
 
 There is still a source reduction after the hole becomes a value:
 `Let (Val v) body` takes a beta step, and `Seq (Val ()) rest` takes a
@@ -453,7 +469,9 @@ special class of read-only invariants.
 
 At [stop 8](#8-the-typed-source-logic-interface), the typed `let_rule` and
 `sequence` combine these value reductions with `wp_bind`. Clients will only
-supply the two component triples.
+supply the two component triples. `context_rule` exposes the general version.
+Having an evaluation-context rule for `Alloc` or `Cas` does not yet provide
+the missing primitive rule once all that operation's arguments are values.
 
 ## 6. Native heap and action bridges
 
@@ -522,10 +540,11 @@ In `HeapLang.Logic`, `world` equips a physical heap with a chosen logical
 budget and initially empty invariant resources. This is initialization
 machinery for generic adequacy, not a task for each program proof.
 
-The same module currently also contains the example predicate `bit_cell`.
-Read `bit_cell_unfold`, `bit_cell_intro`, and `bit_cell_exposed`: they will
-let the invariant examples reason by entailment and existential witnesses,
-without using semantic helpers such as `bit_cell_witness`.
+`points_to_exposed` and `exposed_lift` are general assertion lemmas in this
+module. The example predicate `bit_cell` and its entailments instead live in
+[ExamplePredicates](examples/Pulse.Extrinsic.ExamplePredicates.fsti). No
+bit-specific predicate or witness-extraction helper is part of the core heap
+bridge.
 
 ## 7. Atomic source logic and invariants
 
@@ -621,6 +640,61 @@ resources are restored before the ordinary WP boundary is exposed.
 primitive rules. Its semantic callback belongs in the rule implementation,
 not in the invariant-using client.
 
+### 7.4 Compose explicit ghost mask updates
+
+**Read:** [Updates.fsti](Pulse.Extrinsic.Updates.fsti) and
+[Updates.fst](Pulse.Extrinsic.Updates.fst), then `AtomicLogic.updates`.
+The typed interface exposes the judgment as:
+
+```text
+update E1 E2 P Q
+```
+
+An update transforms logical resources and the open mask without taking a
+source step. Its interpretation quantifies over arbitrary frames and enabled
+full memories, supplying a successor with the same physical heap and budget,
+a non-increasing level, and the postcondition under the new mask.
+
+The update judgment is available even at budget zero. That matters when a
+source step consumes the final unit of budget and an invariant must still be
+closed afterward. The atomic source step itself still requires positive
+budget.
+
+Read `entails`, `trans`, `frame`, and `exists_pre` for the structural
+calculus. Then read `open_invariant`, `close_invariant`, `allocate`, and
+`later_elim` for the core-backed updates. Allocation returns the assertion
+`allocated P = exists* i. inv i P`. Later elimination has the explicit cost:
+
+```text
+update E E (later P ** later_credit 1) P
+```
+
+It uses the actual core later-elimination action. Spending that credit and
+decreasing the level preserves the budget; it is not an axiom that later
+can be erased.
+
+`AtomicLogic.updates`, exposed as `P.atomic_updates`, composes updates around
+an atomic source proof:
+
+```text
+update E1 E2 P P'
+atomic E2 P' e Q'
+forall v. update E2 E1 (Q' v) (Q v)
+-----------------------------------
+atomic E1 P e Q
+```
+
+The first update preserves the source state in which the primitive step is
+proved; the second preserves that step's target. Their masks must match and
+the outer mask must be restored. `Updates.bind_wp`, exposed as
+`P.update_hoare`, also permits a closed-to-closed update before an arbitrary
+**non-value** source program.
+
+These are composable update **judgments**, not an assertion-valued fancy-update
+modality. Ordinary WP remains closed-mask and still has the unmodified value
+equation. In particular, `update_hoare` cannot justify ghost allocation at a
+value; that larger change to WP remains separate work.
+
 ## 8. The typed source-logic interface
 
 **Read:** [HeapLang.Proof.fsti](Pulse.Extrinsic.HeapLang.Proof.fsti), then
@@ -680,6 +754,7 @@ when composing F* proofs.
 | `pure_pre` | Use a pure fact in the precondition while proving the remaining triple. |
 | `let_rule` | Compose a bound expression with its substituted continuation, for every returned value. |
 | `sequence` | Compose an arbitrary unit-returning first program with the rest. |
+| `context_rule` | Compose through any typed source evaluation context, including nested contexts. |
 | `fork` | Split resources between the parent and a child proved with postcondition `emp`. |
 
 The composition rules are genuinely general:
@@ -701,6 +776,20 @@ and `sequence`: they combine packed postcondition reasoning, `WP.wp_mono`,
 the context's `WP.wp_bind`, and the corresponding value reduction.
 `fork` adapts the already-derived packed fork rule.
 
+For arbitrary `k : context a b`, the general rule is:
+
+```text
+{P} e {M}
+forall v. {M v} fill k (Val v) {Q}
+--------------------------------
+{P} fill k e {Q}
+```
+
+Only source syntax and component triples occur in this interface. The
+continuation premise includes any remaining primitive reduction, such as an
+addition, store, or branch selection. Clients do not supply step-lifting or
+inversion certificates.
+
 ### 8.3 Primitive rules and their implementations
 
 The ordinary load and store specifications are:
@@ -713,8 +802,11 @@ The ordinary load and store specifications are:
 { _. r |-> desired }
 ```
 
-`add` proves the exact integer result of adding two values. Frame and
-consequence adapt these specifications to a larger program.
+`add` and `eq` prove the exact arithmetic or boolean result on value operands.
+`if_value` derives a conditional triple from the selected branch's triple.
+Combining it with `context_rule (IfCtx Hole yes no)` handles an arbitrary
+condition computation. Frame and consequence adapt these specifications to
+a larger program.
 
 To connect these convenient contracts to the earlier layers, read
 `primitive_result`, `atomic_load`, and `atomic_store` in `Proof.fst`.
@@ -763,13 +855,16 @@ still missing.
 
 ### 8.5 Check the boundary with negative examples
 
-[ProofRejections](Pulse.Extrinsic.ProofRejections.fst) checks that the public
+[ProofRejections](examples/Pulse.Extrinsic.ProofRejections.fst) checks that the public
 source interface rejects:
 
 - Reopening a name already in the open mask.
 - Turning an open-mask atomic proof into an ordinary triple.
 - Closing without restoring the exposed invariant body.
 - Opening around an ordinary Hoare proof instead of an atomic source proof.
+- Eliminating later without providing a later credit.
+- Treating an opening update as a closed-to-closed update.
+- Applying `update_hoare` at a value.
 
 The positive invariant examples use the neighboring legal rules. The
 rejections check the source interface, not just the types of native actions.
@@ -880,10 +975,12 @@ that every child has finished.
 
 ## 10. Source-level proof walkthroughs
 
-**Read in order:** [LogicExamples](Pulse.Extrinsic.LogicExamples.fst), then
-[InvariantExamples](Pulse.Extrinsic.InvariantExamples.fst).
+**Read in order:** [LogicExamples](examples/Pulse.Extrinsic.LogicExamples.fst),
+[InvariantExamples](examples/Pulse.Extrinsic.InvariantExamples.fst),
+[MaskExamples](examples/Pulse.Extrinsic.MaskExamples.fst), and
+[NestedExamples](examples/Pulse.Extrinsic.NestedExamples.fst).
 
-Neither client example module imports the operational semantics, WP
+None of these program-proof modules imports the operational semantics, WP
 implementation, or adequacy module. The only reasoning beyond calls to
 `HeapLang.Proof` is ordinary separation entailment, pure reasoning, and
 source-level substitution.
@@ -954,11 +1051,38 @@ points_to r old
 The middle assertion is exactly what `P.sequence` connects. No physical
 successor heap appears in this proof.
 
-### 10.3 Prepare an invariant with a changing witness
+### 10.3 Compute inside arithmetic, store, and conditional contexts
+
+Continue in `LogicExamples`:
+
+| Program | Triple established | Contexts exercised |
+| --- | --- | --- |
+| `load_plus r = Add (Load r) 1` | Returns `old + 1` and retains `r |-> old`. | `AddLeft` |
+| `increment r = Store r (load_plus r)` | Changes `r |-> old` to `r |-> old + 1`. | `StoreRight`, composed with the preceding proof |
+| `zero_test r = Eq 0 (Load r)` | Returns exactly whether `old` is zero, retaining ownership. | `EqRight` |
+| `set_if_zero r` | Sets a zero cell to one; otherwise preserves its old value. | `IfCtx`, composed with `zero_test_correct` |
+
+Read `load_plus_correct` first. It uses `load`, introduces the returned value,
+uses `pure_pre` to expose its equality with `old`, proves the framed addition,
+and applies `context_rule`. Unlike the earlier `Let` example, the load is
+directly inside the arithmetic expression.
+
+`increment_correct` then uses that entire triple as the premise for a
+`StoreRight` context. For each computed integer, `pure_pre` makes its value
+known, and `store` proves the continuation. This is a genuine heap-changing
+read/compute/write program, not a pure-context demonstration.
+
+Finally follow `zero_test_correct` and `set_if_zero_correct`. The former uses
+`eq` under a frame. The latter uses the boolean equality in the intermediate
+postcondition to select either the store triple or the value triple;
+`if_value` proves the branch step and `context_rule` composes the condition.
+No operational lemma is invoked by any of these proofs.
+
+### 10.4 Prepare an invariant with a changing witness
 
 Return briefly to `bit`, `bit_point`, `bit_cell_unfold`, `bit_cell_intro`,
 and `bit_cell_exposed` in
-[HeapLang.Logic.fsti](Pulse.Extrinsic.HeapLang.Logic.fsti).
+[ExamplePredicates.fsti](examples/Pulse.Extrinsic.ExamplePredicates.fsti).
 
 The assertion library defines `bit_cell r`, with a proved unfolding equation:
 
@@ -975,7 +1099,7 @@ locality properties of lifted heap predicates. It is not a generic way to
 discard `later` or `somewhere`, and the general invariant rule is not limited
 to this predicate.
 
-### 10.4 Prove an invariant-protected write
+### 10.5 Prove an invariant-protected write
 
 In `InvariantExamples`, `write_inv` derives:
 
@@ -987,10 +1111,12 @@ In `InvariantExamples`, `write_inv` derives:
 where desired is either 0 or 1
 ```
 
-Follow the actual proof from top to bottom:
+The reusable proof is now `write_atomic_inv`, parameterized by any outer mask
+not already containing the invariant name. `write_inv` specializes it to the
+empty mask and calls `atomic_to_hoare`. Follow the helper from top to bottom:
 
 1. Set `body = bit_cell r`, `handle = inv i body`, and
-   `mask = empty + i`. The inner postcondition is `exposed body ** emp`;
+   `mask = outer + i`. The inner postcondition is `exposed body ** emp`;
    the writer has no additional result resource to return.
 2. Use `bit_cell_unfold`, `bit_cell_intro r desired`, and
    `bit_cell_exposed` to prepare the entailment from ownership of the desired
@@ -1003,14 +1129,14 @@ Follow the actual proof from top to bottom:
 5. Another atomic consequence adapts `exposed body ** emp` to that
    existential precondition, using the assertion lemmas from step 2.
 6. `P.atomic_invariant` wraps the inner source proof with the invariant rule,
-   returning to the empty mask and preserving the handle.
-7. Simplify the postcondition by atomic consequence, then apply
-   `P.atomic_to_hoare`.
+   returning to the outer mask and preserving the handle.
+7. Simplify the postcondition by atomic consequence. Only the closed-mask
+   `write_inv` wrapper then applies `P.atomic_to_hoare`.
 
 The old witness and desired witness may differ. The invariant predicate
 does not change; the resource establishing it does.
 
-### 10.5 Prove an invariant-protected read with a useful result
+### 10.6 Prove an invariant-protected read with a useful result
 
 Next read `bit_result` and `read_inv`. The postcondition is:
 
@@ -1034,7 +1160,7 @@ This proves a property of the returned value, rather than merely that the
 read is well typed. The ownership is returned to the invariant, not retained
 by the reader alongside the handle.
 
-### 10.6 Share the invariant between competing writers
+### 10.7 Share the invariant between competing writers
 
 `InvariantExamples.concurrent r` is:
 
@@ -1058,7 +1184,7 @@ The exclusive points-to assertion is never duplicated. Only the invariant
 handle is shared. There is no schedule enumeration or fork-transition proof
 in this argument.
 
-### 10.7 Compose a readback without assuming a join
+### 10.8 Compose a readback without assuming a join
 
 `concurrent_readback r` adds a final load:
 
@@ -1072,7 +1198,7 @@ The child is not joined, so the main thread's write does not determine the
 readback value. The specification correctly permits either bit, without
 requiring the proof to know when the child writes.
 
-### 10.8 Allocate the invariant from ordinary ownership
+### 10.9 Allocate the invariant from ordinary ownership
 
 Finally, `concurrent_from_owned` starts with **ordinary cell ownership**:
 
@@ -1101,9 +1227,92 @@ memory, choose a budget, or prove adequacy for this program. Its operational
 meaning comes from the already-proved theorem at
 [stop 9](#9-adequacy-once-for-the-logic).
 
-### 10.9 Keep operational regressions separate
+### 10.10 Use mask updates directly
 
-[Examples](Pulse.Extrinsic.Examples.fst) contains independent regression
+In [MaskExamples](examples/Pulse.Extrinsic.MaskExamples.fst),
+`allocate_two` composes two ghost allocations. It frames the untouched
+resource around each allocation and connects the intermediate assertions
+with `update_trans`:
+
+```text
+update empty empty (P ** Q) (allocated P ** allocated Q)
+```
+
+This is a ghost-resource proof, not a source instruction or a claim that the
+existential names are distinct.
+
+`read_with_updates` proves an exact-value read from an invariant protecting
+`points_to r old`, using separate opening and closing rules:
+
+1. `open_invariant` changes the empty mask to `{i}`.
+2. `points_to_exposed`, `update_entails`, and `update_trans` turn the exposed
+   body into cell ownership, retaining the handle.
+3. `atomic_load` and `atomic_frame` prove the read under `{i}`.
+4. For each returned value, frame its equality fact around `close_invariant`.
+   Entailment and transitivity adapt the read's resources to that closing
+   update.
+5. `atomic_updates` combines opening, the source read, and closing;
+   `atomic_to_hoare` exports the ordinary triple.
+
+`allocate_and_read` starts with ordinary points-to ownership and ends with
+`pure (result == old)`. It first uses `update_allocate`. For every name in the
+resulting existential, `read_with_updates` supplies the source triple.
+`update_exists` and `update_trans` connect these proofs, and `update_hoare`
+absorbs the closed update before the load. Its intermediate assertion uses
+the abstract `P.wp`; the proof never unfolds it or constructs a logical
+memory.
+
+### 10.11 Open nested invariants without erasing later
+
+In [NestedExamples](examples/Pulse.Extrinsic.NestedExamples.fst), read
+`nested_open`, `nested_handle_write`, and `nested_concurrent`.
+
+`nested_open` opens two distinct invariants around the same source store.
+It calls `write_atomic_inv` while the first name is already in the mask,
+frames the first exposed body around that proof, and then closes the outer
+invariant with `atomic_invariant`. Both handles are preserved; the inner
+bit-cell witness may change.
+
+`nested_handle_write` exercises a stronger form of nesting: the outer
+invariant's **body is the inner invariant handle**. Its specification is:
+
+```text
+{ inv i (inv j (bit_cell r)) ** later_credit 1 }
+  Store r desired
+{ _. inv i (inv j (bit_cell r)) }
+
+i and j are distinct; desired is a bit
+```
+
+Opening the outer invariant exposes `somewhere (later (inv j ...))`, not a
+plain inner handle. The proof proceeds as follows:
+
+1. `Rules.exposed_inv` removes only the location wrapper, using the core
+   locality property of invariant handles. The **later remains**.
+2. `update_later_elim` consumes the supplied credit to obtain the inner
+   handle under the outer open mask.
+3. `write_atomic_inv` opens and closes the inner invariant for the store.
+4. `entails_later` restores the guarded inner handle. `atomic_updates`
+   composes the credit-consuming update, source proof, and restoring update.
+5. `atomic_invariant` closes the outer invariant; consequence adapts the
+   postcondition, and `atomic_to_hoare` yields the displayed triple.
+
+The proof does not assume invariant handles are timeless. Nor does it
+manufacture a credit: the specification explicitly requires one.
+
+`nested_concurrent` uses this triple for the two competing writers. It starts
+with the outer handle and two separately owned credits, duplicates only the
+handle, gives one credit to each thread, and applies `fork` and `sequence`.
+The postcondition retains the outer handle. The credits are consumed by the
+respective nested openings, including under arbitrary interference.
+
+These are source-level proofs. The generic adequacy theorem is unchanged;
+operational corollaries still require a realization of their stated
+preconditions, including the credits where present.
+
+### 10.12 Keep operational regressions separate
+
+[Examples](examples/Pulse.Extrinsic.Examples.fst) contains independent regression
 examples for the source semantics: allocation/store/load, a main result with
 a looping child, and a CAS interleaving.
 
@@ -1124,18 +1333,22 @@ All names in the table have prefix `Pulse.Extrinsic`.
 | [Guarded](Pulse.Extrinsic.Guarded.fsti) | Contractive assertion families and fixed points. |
 | [WP](Pulse.Extrinsic.WP.fsti) | Generic operational WP, lifting, framing, monotonicity, and bind. |
 | [Rules](Pulse.Extrinsic.Rules.fsti) | Generic entailments and Hoare rules; also backend lifting helpers. |
-| [HeapLang.Contexts](Pulse.Extrinsic.HeapLang.Contexts.fst) | `Let`/`Seq` instances of the generic WP context contract. |
+| [HeapLang.Contexts](Pulse.Extrinsic.HeapLang.Contexts.fst) | Generic WP-context instance for every typed HeapLang evaluation context. |
 | [HeapLang.Rules](Pulse.Extrinsic.HeapLang.Rules.fst) | Lower-level packed-value rules and semantic lifting helpers. |
 | [Atomic](Pulse.Extrinsic.Atomic.fsti) | Lower-level native action and invariant adapters. |
-| [HeapLang.Logic](Pulse.Extrinsic.HeapLang.Logic.fsti) | Heap/assertion bridges and the specialized bit-cell assertion lemmas. |
+| [HeapLang.Logic](Pulse.Extrinsic.HeapLang.Logic.fsti) | General heap/assertion bridges and exposure lemmas. |
+| [Updates](Pulse.Extrinsic.Updates.fsti) | Frame-preserving ghost mask updates, composition, allocation, and later elimination. |
 | [AtomicLogic](Pulse.Extrinsic.AtomicLogic.fsti) | Generic masked atomic source judgments and their rules. |
 | [HeapLang.Proof](Pulse.Extrinsic.HeapLang.Proof.fsti) | Typed client-facing Hoare and atomic source rules. |
-| [ProofRejections](Pulse.Extrinsic.ProofRejections.fst) | Negative checks at the source-logic interface. |
+| [ProofRejections](examples/Pulse.Extrinsic.ProofRejections.fst) | Negative checks at the source-logic interface. |
 | [Adequacy](Pulse.Extrinsic.Adequacy.fst) | Generic thread-pool preservation and soundness. |
 | [HeapLang.Adequacy](Pulse.Extrinsic.HeapLang.Adequacy.fsti) | Once-for-all adequacy for that interface and reusable initialization. |
-| [LogicExamples](Pulse.Extrinsic.LogicExamples.fst) | Sequential source-program proofs using only logical rules. |
-| [InvariantExamples](Pulse.Extrinsic.InvariantExamples.fst) | General invariant-rule clients, concurrent composition, and logical allocation. |
-| [Examples](Pulse.Extrinsic.Examples.fst) | Operational regression examples, not client program proofs. |
+| [ExamplePredicates](examples/Pulse.Extrinsic.ExamplePredicates.fsti) | Example-specific bit-cell assertions and entailments, outside the core logic. |
+| [LogicExamples](examples/Pulse.Extrinsic.LogicExamples.fst) | Sequential source proofs, including arithmetic, store, equality, and conditional contexts. |
+| [InvariantExamples](examples/Pulse.Extrinsic.InvariantExamples.fst) | General invariant-rule clients, concurrent composition, and logical allocation. |
+| [MaskExamples](examples/Pulse.Extrinsic.MaskExamples.fst) | Composable ghost allocation and explicit source-level opening/closing updates. |
+| [NestedExamples](examples/Pulse.Extrinsic.NestedExamples.fst) | Nested masks and invariant-containing-invariant proofs, including concurrent writers. |
+| [Examples](examples/Pulse.Extrinsic.Examples.fst) | Operational regression examples, not client program proofs. |
 | [Safety](Pulse.Extrinsic.Safety.fst) | A separate purely operational bounded-safety formulation. |
 
 Do not confuse the three rule-related modules: `Rules` supplies generic
@@ -1145,7 +1358,10 @@ The client examples use entailments from the first and triples from the
 last, not semantic lifting callbacks from the middle.
 
 The semantic implementations use `friend` access where representations are
-needed. Client examples do not use `friend` or semantic lifting helpers.
+needed. `ExamplePredicates.fst` also accesses assertion representations to
+prove its unfolding and exposure lemmas; it does not prove program traces.
+The four program-proof modules use neither `friend` nor semantic lifting
+helpers. Core logic modules never import example modules.
 `HeapLang.Adequacy` alone connects the abstract typed WP to the generic
 operational adequacy theorem.
 
@@ -1156,22 +1372,19 @@ existing F*/PulseCore foundations.
 
 The current interface is a usable slice, not the final framework.
 
-- Add source-level rules for physical allocation, CAS, conditionals, equality,
-  and loops. Their presence in the syntax does not imply that a client rule is
-  already available.
-- Instantiate the generic bind theorem for the other HeapLang evaluation
-  contexts, beyond `Let` and `Seq`.
-- Develop a general update/fancy-update interface if needed. Ordinary WP is
-  still closed-mask; masks are exposed through the atomic source judgment.
-  Ghost invariant allocation currently requires a non-value expression.
-- Exercise nested invariants and predicates needing nontrivial later/locality
-  reasoning. The general rule is not restricted to timeless predicates, but
-  the current bit-cell client uses timelessness.
+- Add source-level primitive rules for physical allocation, CAS, and loops.
+  Their operand contexts are supported, but a context rule does not supply
+  the primitive specification.
+- Develop an assertion-valued fancy-update modality and its interaction with
+  WP values if needed. The current mask updates are composable judgments;
+  ordinary WP remains closed-mask, and its update-introduction rule requires
+  a non-value expression.
+- Extend the nested examples with additional ghost-state protocols and
+  initialization lemmas for their resource preconditions. The current
+  invariant-containing-invariant example explicitly uses later credits.
 - Derive logical atomicity or atomic-update specifications for multi-step
   implementations. The current `atomic` judgment concerns a single
   value-producing source step; it is not such a specification.
-- Separate example-specific bit-cell assertions from the general heap bridge
-  as the assertion library grows.
 
 These extensions should preserve the boundary established here: semantic
 work belongs in rule implementations and generic soundness, while program
@@ -1191,6 +1404,8 @@ The opt-in target is defined in
 `.fsti` roots and their core/common dependency closure. The default cache is
 `pulse/build/lib.extrinsic.checked`. The target is not added to the default
 build, CI, or installation targets.
+The root discovery includes `examples/`, and the target adds that directory
+to its include path; the core library does not depend on it.
 
 To use an installed compiler:
 

@@ -92,3 +92,7 @@ val hoare_pure (l:L.language) (physical:W.projection l)
 
 val entails_pure (p q:prop)
   : Lemma (requires p ==> q) (ensures S.implies (S.pure p) (S.pure q))
+
+val entails_later (p:S.slprop) : Lemma (S.implies p (S.later p))
+val exposed_inv (i:S.iref) (p:S.slprop)
+  : Lemma (S.somewhere (S.later (S.inv i p)) == S.later (S.inv i p))

@@ -49,7 +49,9 @@ let with_invariant #a mask i p pre post f =
     x, closed
 
 let open_unchanged (mask:S.inames) (i:S.iref{not (S.mem_inv mask i)})
-  (p frame:S.slprop) (m:S.full_mem{enabled mask (S.inv i p) frame m})
+  (p frame:S.slprop) (m:S.full_mem{
+    S.budget m >= 0 /\ S.inames_ok mask m /\
+    S.interp (S.star (S.star (S.inv i p) frame) (S.mem_invariant mask m)) m })
   : Lemma ((run (open_invariant mask i p) frame m)._2 == m)
   = S.sep_laws ();
     assert_norm (((reveal (M.open_invariant mask i p)) frame m)._2 == m);
@@ -149,3 +151,14 @@ let allocate_invariant p frame m =
   S.disjoint_join_levels m fresh;
   assert_norm (next == S.join_mem m fresh);
   (| i, next |)
+
+let eliminate_later mask p frame m =
+  S.sep_laws ();
+  S.destruct_star_l (S.later_credit 1)
+    (S.star (S.later p) (S.star frame (S.mem_invariant mask m))) m;
+  S.interp_later_credit 1 m;
+  S.age_level m;
+  S.spend_lemma (S.age_mem m);
+  let _, next = IA.later_elim mask p frame m in
+  assert_norm (next == S.spend_mem (S.age_mem m));
+  next

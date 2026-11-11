@@ -115,3 +115,41 @@ let to_val (#g:list ty) (#t:ty) (e:expr g t) : option (value t) =
   match e with
   | Val v -> Some v
   | _ -> None
+
+// Evaluation contexts contain source syntax, not host-language continuations.
+noeq
+type context : ty -> ty -> Type0 =
+  | Hole: #t:ty -> context t t
+  | LetCtx: #a:ty -> #b:ty -> #t:ty -> context t a -> expr [a] b -> context t b
+  | IfCtx: #a:ty -> #t:ty -> context t TBool -> expr [] a -> expr [] a -> context t a
+  | SeqCtx: #a:ty -> #t:ty -> context t TUnit -> expr [] a -> context t a
+  | AddLeft: #t:ty -> context t TInt -> expr [] TInt -> context t TInt
+  | AddRight: #t:ty -> int -> context t TInt -> context t TInt
+  | EqLeft: #t:ty -> context t TInt -> expr [] TInt -> context t TBool
+  | EqRight: #t:ty -> int -> context t TInt -> context t TBool
+  | AllocCtx: #t:ty -> context t TInt -> context t TRef
+  | LoadCtx: #t:ty -> context t TRef -> context t TInt
+  | StoreLeft: #t:ty -> context t TRef -> expr [] TInt -> context t TUnit
+  | StoreRight: #t:ty -> H.core_ref -> context t TInt -> context t TUnit
+  | CasRef: #t:ty -> context t TRef -> expr [] TInt -> expr [] TInt -> context t TBool
+  | CasExpected: #t:ty -> H.core_ref -> context t TInt -> expr [] TInt -> context t TBool
+  | CasDesired: #t:ty -> H.core_ref -> int -> context t TInt -> context t TBool
+
+let rec fill (#a #b:ty) (k:context a b) (e:expr [] a)
+  : Tot (expr [] b) (decreases k)
+  = match k with
+    | Hole -> e
+    | LetCtx k body -> Let (fill k e) body
+    | IfCtx k e1 e2 -> If (fill k e) e1 e2
+    | SeqCtx k e2 -> Seq (fill k e) e2
+    | AddLeft k e2 -> Add (fill k e) e2
+    | AddRight v k -> Add (Val v) (fill k e)
+    | EqLeft k e2 -> Eq (fill k e) e2
+    | EqRight v k -> Eq (Val v) (fill k e)
+    | AllocCtx k -> Alloc (fill k e)
+    | LoadCtx k -> Load (fill k e)
+    | StoreLeft k e2 -> Store (fill k e) e2
+    | StoreRight r k -> Store (Val r) (fill k e)
+    | CasRef k e2 e3 -> Cas (fill k e) e2 e3
+    | CasExpected r k e3 -> Cas (Val r) (fill k e) e3
+    | CasDesired r v k -> Cas (Val r) (Val v) (fill k e)

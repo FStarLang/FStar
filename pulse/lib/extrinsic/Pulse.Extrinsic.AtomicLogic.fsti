@@ -84,3 +84,11 @@ val lift (l:L.language) (physical:W.projection l) (mask:S.inames)
       (ensures step_post l physical mask e q f m)))
   : Lemma (requires l.L.to_val e == None)
       (ensures hoare l physical mask p e q)
+
+val updates (l:L.language) (physical:W.projection l)
+  (outer inner:S.inames) (p mid:S.slprop) (e:l.L.expr) (q post:W.post l)
+  : Lemma
+      (requires Pulse.Extrinsic.Updates.hoare l physical outer inner p mid /\
+        hoare l physical inner mid e q /\
+        (forall v. Pulse.Extrinsic.Updates.hoare l physical inner outer (q v) (post v)))
+      (ensures hoare l physical outer p e post)
