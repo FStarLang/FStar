@@ -655,17 +655,17 @@ let pat_head_lemma (p:pattern)
 
 let qs_head (s:aqualv_spec) : GTot nat =
   match s with
-  | Qs_Implicit -> 0 | Qs_Explicit -> 1 | Qs_Equality -> 2 | Qs_Meta _ -> 3
+  | Qs_Implicit -> 0 | Qs_Explicit -> 1 | Qs_Equality -> 2 | Qs_Meta _ -> 3 | Qs_TcArg -> 4
 
 let qv_head (q:aqualv) : GTot nat =
   match q with
-  | Q_Implicit -> 0 | Q_Explicit -> 1 | Q_Equality -> 2 | Q_Meta _ -> 3
+  | Q_Implicit -> 0 | Q_Explicit -> 1 | Q_Equality -> 2 | Q_Meta _ -> 3 | Q_TcArg -> 4
 
 let aqual_head_lemma (q:aqualv)
   : Lemma (qs_head (denote_aqualv q) == qv_head q)
           [SMTPat (denote_aqualv q)]
   = match q with
-    | Q_Implicit | Q_Explicit | Q_Equality | Q_Meta _ -> ()
+    | Q_Implicit | Q_Explicit | Q_Equality | Q_Meta _ | Q_TcArg -> ()
 
 (* -------------------------------------------------------------------- *)
 (* The mutual term comparator, now over denotational relations. *)
@@ -781,6 +781,7 @@ and aqual_cmp a1 a2 =
   | Q_Explicit, Q_Explicit -> Eq
   | Q_Equality, Q_Equality -> Eq
   | Q_Meta m1, Q_Meta m2 -> co (term_cmp m1 m2) ()
+  | Q_TcArg, Q_TcArg -> Eq
   | _ -> Neq
 
 and match_returns_ascription_cmp asc1 asc2 =

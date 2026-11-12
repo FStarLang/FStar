@@ -101,7 +101,8 @@ let rec recover_bs (g: env) (qbs: list (option qualifier & binder & bv)) (ty: te
       match qual with
       | Q_Implicit -> Some Implicit
       | Q_Explicit | Q_Equality -> None
-      | Q_Meta t -> Some (Meta t) in
+      | Q_Meta t -> Some (Meta t)
+      | Q_TcArg -> Some TcArg in
     (qual, { binder_ty = sort; binder_ppname = fst px; binder_attrs = attrs }, { bv_index = x; bv_ppname = fst px }) :: bs, c
   | qb::qbs, Some (_, c) ->
     let q, b, qbv = qb in

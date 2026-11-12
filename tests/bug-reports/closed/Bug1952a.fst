@@ -3,8 +3,9 @@ module Bug1952a
 type carrier = Type -> Type
 
 // lawless functor
-type t (c: carrier) =
-  #a:Type -> #b:Type -> (a -> b) -> c a -> c b
+class t (c: carrier) = {
+  fmap : #a:Type -> #b:Type -> (a -> b) -> c a -> c b
+}
 
 let map (#c: carrier) {|map: t c|}: t c = map
 

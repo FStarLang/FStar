@@ -24,7 +24,10 @@ noeq type lvm (m:Type->Type) = { lvm_monad : monad m; g : int -> ML (m int) }
 
 instance _lvm_monad (#m:_) (d : lvm m) : Tot (monad m) = d.lvm_monad
 
-let go (#m:Type->Type) (d:lvm m) (l:list int) : ML (m (list int)) = mapM d.g l
+(* Only locals whose type is a class are instances: bind the dictionary. *)
+let go (#m:Type->Type) (d:lvm m) (l:list int) : ML (m (list int)) =
+  let _ : monad m = _lvm_monad d in
+  mapM d.g l
 
 let mk () : lvm option = { lvm_monad = monad_option; g = (fun x -> Some (x + 1)) }
 

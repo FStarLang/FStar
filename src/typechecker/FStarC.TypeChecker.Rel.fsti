@@ -53,6 +53,14 @@ val head_matches_delta (env:env) (logical:bool) (smt_ok:bool) (t1 t2:typ) : ML (
 val flex_prob_closing         : env -> binders -> prob -> ML bool
 val simplify_vc               : full_norm_allowed:bool -> env -> term -> ML term (* the inner simplification of simplify_guard. *)
 val simplify_guard            : env -> guard_t -> ML guard_t
+(* The argument positions of a typeclass that are functional dependencies,
+   from its [@@Tactics.Typeclasses.fundeps [...]] attribute. *)
+val class_fundeps (env:env) (cls:Ident.lident) : ML (list int)
+
+(* Whether a typeclass goal has free uvars outside of the functional
+   dependencies of its class. *)
+val typeclass_goal_is_open (env:env) (typ:typ) : ML bool
+
 val print_pending_implicits: guard_t -> ML string
 val guard_to_string           : env -> guard_t -> ML string
 (* Rel is an elaborator: it solves unification variables, but it computes
@@ -87,6 +95,7 @@ In any case, if these functions return, they return a guard with guard_f = Trivi
 val discharge_guard           : env -> guard_t -> ML guard_t
 val discharge_guard_no_smt    : env -> guard_t -> ML guard_t
 val teq_nosmt        : env -> typ -> typ -> ML (option guard_t)
+
 val subtype_nosmt       : env -> typ -> typ -> ML (option guard_t)
 val try_subtype : env -> typ -> typ -> ML (option guard_t)
 (* Solve the implicits whose type has a single inhabitant (e.g. unit,
