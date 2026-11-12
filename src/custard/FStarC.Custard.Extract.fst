@@ -805,6 +805,16 @@ let norm_optional_open (st:state) (steps:list TcEnv.step) (t:term)
   try norm_optional st steps t
   with Failure _ -> None
 
+(* Whether [l] is bound by a [Sig_let], the only thing [UnfoldOnly [l]] can
+   unfold.  The unfold-and-rescan walks (sections 88 and 109) check this
+   before calling the normalizer: their usual head is an inductive or an
+   assumed type, for which the call would build a config and reduce the term
+   only to change nothing. *)
+let has_definition (st:state) (l:Ident.lid) : ML bool =
+  match TcEnv.lookup_qname (tcenv st) l with
+  | Some (Inr ({sigel = Sig_let _}, _), _) -> true
+  | _ -> false
+
 (* Section 31.  [@@normalize_for_extraction steps] says: reduce this
    definition with exactly these steps before compiling it.  The ML pipeline
    honours it in {!FStarC.Extraction.ML.Modul.extract_sig_let}, and EverParse
@@ -2856,7 +2866,7 @@ and builtin_rules_at (st:state) (fuel:int) (t:term) : ML (list string) =
        | Some (Builtins.Rule_type _) -> Ident.string_of_lid l :: sub args
        | _ ->
          let unfolded =
-           if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t0
+           if fuel > 0 && has_definition st l && FStarC.Syntax.CheckLN.is_ln t0
            then match norm_optional_open st
                         [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                          TcEnv.Beta; TcEnv.Iota; TcEnv.UnfoldOnly [l]] t0 with
@@ -2956,10 +2966,6 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
      fuel is for.  Fuel rather than a visited-set because a type abbreviation
      may be applied to different arguments at each level, so the name is not
      a sound key. *)
-  let has_definition (l:Ident.lid) : ML bool =
-    match TcEnv.lookup_qname (tcenv st) l with
-    | Some (Inr ({sigel = Sig_let _}, _), _) -> true
-    | _ -> false in
   let rec scan (fuel:int) (t:term) : ML unit =
     let _ = Visit.visit_term false (fun t ->
       (match (SS.compress t).n with
@@ -2999,11 +3005,7 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
                   actually occurs; an occurrence under an inner binder is
                   simply not reached, which leaves it exactly where it was
                   before section 88 rather than anywhere worse. *)
-               (* [has_definition] first: [UnfoldOnly [l]] can only unfold a
-                  [Sig_let], and an inductive or an assumed type is by far
-                  the common head here, so the normalizer call would be
-                  pure overhead. *)
-               if fuel > 0 && has_definition l && FStarC.Syntax.CheckLN.is_ln t &&
+               if fuel > 0 && has_definition st l && FStarC.Syntax.CheckLN.is_ln t &&
                   Mono.is_type_term (tcenv st) t
                then match norm_optional_open st
                             [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
