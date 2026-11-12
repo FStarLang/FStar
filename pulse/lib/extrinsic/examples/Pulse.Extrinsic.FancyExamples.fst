@@ -26,11 +26,23 @@ module P = Pulse.Extrinsic.HeapLang.Proof
 module FP = Pulse.Extrinsic.HeapLang.FancyProof
 module R = Pulse.Extrinsic.Rules
 module GS = Pulse.Lib.GhostSet
+module A = Pulse.Extrinsic.HeapLang.Adequacy
+module E = Pulse.Extrinsic.HeapLang.Semantics
+module Lang = Pulse.Extrinsic.Language
 
 let allocate_at_value (p:S.slprop)
   : Lemma (FP.hoare p (Val ()) (P.constant_post (P.allocated p)))
   = P.update_allocate p;
     FP.value_rule p () (P.constant_post (P.allocated p))
+
+(** Already-returned programs need not manufacture a source step, even when
+    their postcondition performs a ghost update and the horizon is positive. *)
+let value_runs (h:PulseCore.Heap.full_heap u#3) (n:nat)
+  : Lemma (Lang.runs_for E.language n
+      { Lang.threads = [E.Pack TUnit (Val ())]; Lang.state = h })
+  = allocate_at_value S.emp;
+    A.emp_realizable h;
+    A.can_run_fancy S.emp (Val ()) (P.constant_post (P.allocated S.emp)) h n
 
 let deferred_allocation (p:S.slprop)
   : Lemma (S.implies p (FP.fupd GS.empty GS.empty (P.allocated p)))

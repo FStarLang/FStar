@@ -29,6 +29,9 @@ module R = Pulse.Extrinsic.Rules
 module B = Pulse.Extrinsic.ExamplePredicates
 module X = Pulse.Extrinsic.LogicExamples
 module GS = Pulse.Lib.GhostSet
+module A = Pulse.Extrinsic.HeapLang.Adequacy
+module E = Pulse.Extrinsic.HeapLang.Semantics
+module Lang = Pulse.Extrinsic.Language
 
 let initialize : expr [TRef] TRef =
   let cell = Var Here in
@@ -52,6 +55,15 @@ let new_counter_correct (old:int)
         (X.increment r) (Val r) q
     );
     P.let_rule S.emp (Alloc (Val old)) initialize (P.allocation_post old) q
+
+(** Operational safety is an application of the uniform theorem, not a
+    separate execution induction for this allocating program. *)
+let new_counter_runs (old:int) (h:PulseCore.Heap.full_heap u#3) (n:nat)
+  : Lemma (Lang.runs_for E.language n
+      { Lang.threads = [E.Pack TRef (new_counter old)]; Lang.state = h })
+  = new_counter_correct old;
+    A.emp_realizable h;
+    A.can_run S.emp (new_counter old) (P.allocation_post (old + 1)) h n
 
 let cas_until_failure (r:PulseCore.Heap.core_ref) : expr [] TUnit =
   while_ (cas (ref_ r) (int_ 0) (int_ 1)) unit_

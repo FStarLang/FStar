@@ -112,20 +112,17 @@ let adequate (#t:ty) (p:S.slprop) (e:expr [] t) (q:P.post t) (phi:value t -> pro
       )
     )
 
-let adequate_points_to (#t:ty) (r:H.core_ref) (initial:int)
-  (e:expr [] t) (q:P.post t) (phi:value t -> prop) (h:H.full_heap u#3)
-  (#n:nat) (#last:L.config E.language)
-  (run:L.execution E.language n
-    ({ L.threads = [E.Pack t e]; L.state = h }) last)
-  : Lemma
-      (requires H.interp (M.points_to r initial) h /\
-        P.hoare (C.points_to r initial) e q /\
-        (forall v. S.implies (q v) (S.pure (phi v))))
-      (ensures L.safe E.language last /\
-        (forall result. L.main_returns E.language last result ==>
-          exists (v:value t). result == E.PackValue t v /\ phi v))
-  = points_to_realizable r initial h;
-    adequate (C.points_to r initial) e q phi h run
+let safe_execution #t p e q h =
+  let initial = { L.threads = [E.Pack t e]; L.state = h } in
+  introduce forall v. S.implies (q v) (S.pure True)
+  with Pulse.Extrinsic.Rules.entails_fact (q v) True;
+  introduce forall (n:nat) (last:L.config E.language)
+    (run:L.execution E.language n initial last). L.safe E.language last
+  with adequate p e q (fun _ -> True) h run
+
+let can_run #t p e q h n =
+  safe_execution p e q h;
+  L.safe_execution_runs E.language n { L.threads = [E.Pack t e]; L.state = h }
 
 module FP = Pulse.Extrinsic.HeapLang.FancyProof
 module F = Pulse.Extrinsic.FancyUpdates
@@ -179,3 +176,15 @@ let adequate_fancy #t p e q phi h #n #last run =
       )
     )
   )
+
+let safe_execution_fancy #t p e q h =
+  let initial = { L.threads = [E.Pack t e]; L.state = h } in
+  introduce forall v. S.implies (q v) (S.pure True)
+  with R.entails_fact (q v) True;
+  introduce forall (n:nat) (last:L.config E.language)
+    (run:L.execution E.language n initial last). L.safe E.language last
+  with adequate_fancy p e q (fun _ -> True) h run
+
+let can_run_fancy #t p e q h n =
+  safe_execution_fancy p e q h;
+  L.safe_execution_runs E.language n { L.threads = [E.Pack t e]; L.state = h }

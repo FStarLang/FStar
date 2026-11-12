@@ -1129,7 +1129,34 @@ Program proofs will not repeat it.
 
 ### 9.3 Relate the typed interface to generic adequacy
 
-The public typed theorem has this schematic form:
+Start with `HeapLang.Adequacy.safe_execution` and `can_run`. Neither requires
+an execution argument or a pure observation:
+
+```text
+realizable h P
+hoare P e Q
+----------------------------------------------------------
+safe_execution ([e], h)
+and, for any n, runs_for n ([e], h)
+```
+
+`Language.safe_execution` means every finite execution prefix is safe,
+including the zero-step prefix. `Language.runs_for n` asserts existence of
+an execution of length `k <= n` whose endpoint is safe, with either `k = n`
+or **all** threads being values. The latter is not just main-thread return.
+Together these corollaries say the program can run for the requested horizon
+or finish sooner, and no operational choice reaches a stuck thread.
+`safe_execution_fancy` and `can_run_fancy` provide the same guarantees for
+update-closed triples.
+
+The generic proof `Language.safe_execution_runs` uses progress at each
+prefix to extend the execution. The typed corollaries apply adequacy to the
+original triple and initial state, not a new triple or realizability premise
+for each reduct. Internally, preservation carries one logical-memory witness
+with its decreasing budget; `n + 1` units suffice for `n` steps and endpoint
+safety. Public realizability supplies every requested finite budget.
+
+For observing a returned value, `adequate` has this schematic form:
 
 ```text
 realizable h P
@@ -1166,10 +1193,9 @@ The adequacy statement is about the public logical judgment.
 
 ### 9.4 Initialize once, instantiate for any program
 
-Read `points_to_realizable` and `adequate_points_to`.
+Read `points_to_realizable` and `emp_realizable`.
 `points_to_realizable` uses `HeapLang.Logic.world` and `points_to_intro` to
-establish realizability from physical ownership. `adequate_points_to`
-packages that initialization with the uniform theorem.
+establish realizability from physical ownership.
 
 `emp_realizable` supplies the corresponding reusable initialization for
 allocating programs. For any full physical starting heap, it establishes
@@ -1177,10 +1203,20 @@ realizability of `emp` at every requested budget. Combining it with `adequate`
 and any example's `program_correct` is sufficient; no program-specific
 world construction or schedule proof is necessary.
 
+These are two initialization lemmas for **one** `realizable` predicate, not
+two definitions or instances of soundness. `emp_realizable` works over any
+full physical heap: `emp` means no owned resources, not an empty physical
+heap. `points_to_realizable` additionally requires that the physical heap
+satisfy the specified cell ownership. Arbitrary assertions, such as
+`pure False`, need not be realizable. The former `adequate_points_to`
+convenience wrapper is removed: compose initialization with the uniform
+theorem instead.
+
 The final example at stop 10 supplies a triple for `concurrent_readback`
 starting from ordinary points-to ownership and returning a bit. To obtain
-an operational corollary, instantiate `adequate_points_to` with that program,
-its proved triple, and `phi v = (v == 0 \/ v == 1)`. There is no need to add a
+an operational corollary, call `points_to_realizable`, then instantiate
+`adequate` with that program, its proved triple, and
+`phi v = (v == 0 \/ v == 1)`. There is no need to add a
 `concurrent_adequate` proof, recreate worlds or budgets in the example, or
 analyze its schedules.
 

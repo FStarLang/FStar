@@ -91,3 +91,70 @@ let main_returns (l:language) (c:config l) (v:l.value) : prop =
   match c.threads with
   | [] -> False
   | e :: _ -> l.to_val e == Some v
+
+(** Unlike main_returns, termination here includes every spawned thread. *)
+let terminated (l:language) (c:config l) : prop =
+  forall e. memP e c.threads ==> Some? (l.to_val e)
+
+(** Safety of all finite execution prefixes, including the empty prefix. *)
+let safe_execution (l:language) (c:config l) : prop =
+  forall (n:nat) (last:config l) (run:execution l n c last). safe l last
+
+(** A finite run reaches the requested horizon, or all threads finish sooner.
+    This is existence of an execution, not an executable scheduler. *)
+let runs_for (l:language) (n:nat) (c:config l) : prop =
+  exists (k:nat) (last:config l) (run:execution l k c last).
+    k <= n /\ safe l last /\ (k == n \/ terminated l last)
+
+let progress (l:language) (c:config l)
+  : Lemma (requires safe l c)
+      (ensures terminated l c \/ (exists next. nonempty (pool_step l c next)))
+  = if terminated l c then ()
+    else (
+      eliminate exists e. memP e c.threads /\ l.to_val e == None with (
+        FStar.List.Tot.Properties.lemma_split_using c.threads e;
+        let before, rest = split_using c.threads e in
+        match rest with
+        | [] -> ()
+        | _ :: after ->
+          eliminate exists e' s' spawned. l.prim_step e c.state e' s' spawned with (
+            let next = { threads = before @ (e' :: (after @ spawned)); state = s' } in
+            let step = Schedule before e after c.state e' s' spawned () in
+            introduce exists next. nonempty (pool_step l c next)
+            with next and (
+              introduce exists (step:pool_step l c next). True with step and ()
+            )
+          )
+      )
+    )
+
+let rec safe_execution_runs (l:language) (n:nat) (c:config l)
+  : Lemma (requires safe_execution l c) (ensures runs_for l n c)
+      (decreases n)
+  = eliminate forall (k:nat) (last:config l) (run:execution l k c last).
+      safe l last with 0 c (Done c);
+    if n = 0 || terminated l c then (
+      introduce exists (k:nat) (last:config l) (run:execution l k c last).
+        k <= n /\ safe l last /\ (k == n \/ terminated l last)
+      with 0 c (Done c) and ()
+    ) else (
+      progress l c;
+      eliminate exists next. nonempty (pool_step l c next) with (
+        eliminate exists (step:pool_step l c next). True with (
+          introduce forall (k:nat) (last:config l) (run:execution l k next last).
+            safe l last
+          with (
+            eliminate forall (k:nat) (last:config l) (run:execution l k c last).
+              safe l last with (k + 1) last (Step step run)
+          );
+          safe_execution_runs l (n - 1) next;
+          eliminate exists (k:nat) (last:config l) (run:execution l k next last).
+            k <= n - 1 /\ safe l last /\ (k == n - 1 \/ terminated l last)
+          with (
+            introduce exists (k:nat) (last:config l) (run:execution l k c last).
+              k <= n /\ safe l last /\ (k == n \/ terminated l last)
+            with (k + 1) last (Step step run) and ()
+          )
+        )
+      )
+    )
