@@ -849,12 +849,19 @@ let rec check_relation' (g:env) (rel:relation) (t0 t1:typ)
                rather than necessary (e.g., [False == p x] needs
                propositional extensionality, while [on_domain a (fun _ ->
                False) == on_domain a p] may be a hypothesis), so either may
-               be proven. *)
+               be proven. When the argument-wise guard is weakened into that
+               disjunction, the cache of computing it is dropped, as in
+               [either_guard]: its entries claim that the argument-wise
+               guards were emitted, and later identical obligations would be
+               dropped as cache hits, e.g. when relating [a /\ b] to
+               [a' /\ b'] where both conjuncts need [s == s'] (#4890). *)
             let args_or_eq () : result unit =
+              let! cache0 = get_cache () in
               with_guard (compare_head_and_args ()) (function
                 | Inr err -> fail_propagate err
                 | Inl ((), None) -> return ()
                 | Inl ((), Some phi) ->
+                  put_cache cache0 ;!
                   let! _, t_typ, _ = do_check g t0 in
                   let! u = universe_of_well_typed_term g t_typ in
                   reemit_guard g (U.mk_disj phi (U.mk_eq2 u t_typ t0 t1)))
