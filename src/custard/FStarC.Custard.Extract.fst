@@ -2956,6 +2956,10 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
      fuel is for.  Fuel rather than a visited-set because a type abbreviation
      may be applied to different arguments at each level, so the name is not
      a sound key. *)
+  let has_definition (l:Ident.lid) : ML bool =
+    match TcEnv.lookup_qname (tcenv st) l with
+    | Some (Inr ({sigel = Sig_let _}, _), _) -> true
+    | _ -> false in
   let rec scan (fuel:int) (t:term) : ML unit =
     let _ = Visit.visit_term false (fun t ->
       (match (SS.compress t).n with
@@ -2995,7 +2999,11 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
                   actually occurs; an occurrence under an inner binder is
                   simply not reached, which leaves it exactly where it was
                   before section 88 rather than anywhere worse. *)
-               if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t &&
+               (* [has_definition] first: [UnfoldOnly [l]] can only unfold a
+                  [Sig_let], and an inductive or an assumed type is by far
+                  the common head here, so the normalizer call would be
+                  pure overhead. *)
+               if fuel > 0 && has_definition l && FStarC.Syntax.CheckLN.is_ln t &&
                   Mono.is_type_term (tcenv st) t
                then match norm_optional_open st
                             [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
