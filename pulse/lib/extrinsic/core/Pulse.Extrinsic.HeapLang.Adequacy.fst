@@ -124,6 +124,17 @@ let can_run #t p e q h n =
   safe_execution p e q h;
   L.safe_execution_runs E.language n { L.threads = [E.Pack t e]; L.state = h }
 
+let sound #t p e q phi h =
+  let initial = { L.threads = [E.Pack t e]; L.state = h } in
+  introduce forall (n:nat). L.runs_for E.language n initial
+  with can_run p e q h n;
+  introduce forall (n:nat) (last:L.config E.language)
+    (run:L.execution E.language n initial last).
+    L.safe E.language last /\
+    (forall result. L.main_returns E.language last result ==>
+      exists (v:value t). result == E.PackValue t v /\ phi v)
+  with adequate p e q phi h run
+
 module FP = Pulse.Extrinsic.HeapLang.FancyProof
 module F = Pulse.Extrinsic.FancyUpdates
 module U = Pulse.Extrinsic.Updates
@@ -188,3 +199,14 @@ let safe_execution_fancy #t p e q h =
 let can_run_fancy #t p e q h n =
   safe_execution_fancy p e q h;
   L.safe_execution_runs E.language n { L.threads = [E.Pack t e]; L.state = h }
+
+let sound_fancy #t p e q phi h =
+  let initial = { L.threads = [E.Pack t e]; L.state = h } in
+  introduce forall (n:nat). L.runs_for E.language n initial
+  with can_run_fancy p e q h n;
+  introduce forall (n:nat) (last:L.config E.language)
+    (run:L.execution E.language n initial last).
+    L.safe E.language last /\
+    (forall result. L.main_returns E.language last result ==>
+      exists (v:value t). result == E.PackValue t v /\ phi v)
+  with adequate_fancy p e q phi h run

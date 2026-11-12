@@ -29,6 +29,7 @@ module R = Pulse.Extrinsic.Rules
 module G = Pulse.Extrinsic.Ghost
 module K = Pulse.Extrinsic.HeapLang.Spinlock
 module M = Pulse.Extrinsic.MaskExamples
+module A = Pulse.Extrinsic.HeapLang.Adequacy
 
 let client_at (#g:list ty) (cell flag:expr g TRef) =
   K.with_lock_at flag (load cell)
@@ -89,3 +90,12 @@ let program_correct ()
       assert_norm (substitute cell continuation == Let (Alloc (Val 1)) body)
     );
     P.let_rule S.emp (Alloc (Val 37)) continuation (P.allocation_post 37) (P.returns_value 37)
+
+(** Instantiate uniform soundness without choosing or analyzing a schedule. *)
+let program_sound (h:H.full_heap u#3)
+  : Lemma (A.execution_correct program h (fun v -> v == 37))
+  = program_correct ();
+    A.emp_realizable h;
+    introduce forall v. S.implies (P.returns_value 37 v) (S.pure (v == 37))
+    with R.entails_refl (S.pure (v == 37));
+    A.sound S.emp program (P.returns_value 37) (fun v -> v == 37) h

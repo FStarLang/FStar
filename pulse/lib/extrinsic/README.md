@@ -1076,6 +1076,7 @@ source interface rejects:
 - Claiming a failed CAS when its expected value matches.
 - Releasing a spinlock without its held token, or duplicating that token.
 - Using integer-cell ownership to read a node's reference field.
+- Using soundness to claim a returned value of 38 from a postcondition fixing it at 37.
 
 The positive invariant examples use the neighboring legal rules. The
 rejections check the source interface, not just the types of native actions.
@@ -1129,25 +1130,31 @@ Program proofs will not repeat it.
 
 ### 9.3 Relate the typed interface to generic adequacy
 
-Start with `HeapLang.Adequacy.safe_execution` and `can_run`. Neither requires
-an execution argument or a pure observation:
+Start with `HeapLang.Adequacy.sound` (or `sound_fancy` for update-closed
+triples). It retains the observable consequence of the postcondition without
+requiring an execution argument:
 
 ```text
 realizable h P
 hoare P e Q
+forall v. Q v |-- pure (phi v)
 ----------------------------------------------------------
-safe_execution ([e], h)
-and, for any n, runs_for n ([e], h)
+execution_correct e h phi
 ```
 
-`Language.safe_execution` means every finite execution prefix is safe,
-including the zero-step prefix. `Language.runs_for n` asserts existence of
+`execution_correct` combines three guarantees: an execution exists for every
+finite horizon (or all threads finish sooner); **every** finite execution
+prefix is safe; and whenever the main thread has returned at any prefix,
+its value has the expected type and satisfies `phi`. The result guarantee is
+universal over schedules, not restricted to the executions whose existence
+is established, and does not wait for child threads to finish.
+
+The safety-only conveniences `safe_execution` and `can_run` remain available
+when no result property is needed, with corresponding `_fancy` variants.
+`Language.safe_execution` includes the zero-step prefix.
+`Language.runs_for n` asserts existence of
 an execution of length `k <= n` whose endpoint is safe, with either `k = n`
 or **all** threads being values. The latter is not just main-thread return.
-Together these corollaries say the program can run for the requested horizon
-or finish sooner, and no operational choice reaches a stuck thread.
-`safe_execution_fancy` and `can_run_fancy` provide the same guarantees for
-update-closed triples.
 
 The generic proof `Language.safe_execution_runs` uses progress at each
 prefix to extend the execution. The typed corollaries apply adequacy to the
@@ -1156,7 +1163,8 @@ for each reduct. Internally, preservation carries one logical-memory witness
 with its decreasing budget; `n + 1` units suffice for `n` steps and endpoint
 safety. Public realizability supplies every requested finite budget.
 
-For observing a returned value, `adequate` has this schematic form:
+The combined corollary packages the existing per-execution theorem
+`adequate`, whose schematic form is:
 
 ```text
 realizable h P
@@ -1202,6 +1210,10 @@ allocating programs. For any full physical starting heap, it establishes
 realizability of `emp` at every requested budget. Combining it with `adequate`
 and any example's `program_correct` is sufficient; no program-specific
 world construction or schedule proof is necessary.
+For a complete no-execution-argument statement, combine it with `sound`
+instead: `HigherOrderExamples.program_sound` instantiates this theorem to
+retain the exact returned value **37**, and
+`FancyExamples.returned_value_sound` covers a zero-step modal value.
 
 These are two initialization lemmas for **one** `realizable` predicate, not
 two definitions or instances of soundness. `emp_realizable` works over any

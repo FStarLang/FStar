@@ -44,6 +44,17 @@ let value_runs (h:PulseCore.Heap.full_heap u#3) (n:nat)
     A.emp_realizable h;
     A.can_run_fancy S.emp (Val ()) (P.constant_post (P.allocated S.emp)) h n
 
+(** The result clause includes the zero-step prefix of a modal value. *)
+let returned_value_sound (h:PulseCore.Heap.full_heap u#3)
+  : Lemma (A.execution_correct (Val #[] #TInt 37) h (fun v -> v == 37))
+  = R.entails_fact S.emp (37 == 37);
+    P.value_rule S.emp 37 (P.returns_value 37);
+    FP.embed S.emp (Val 37) (P.returns_value 37);
+    A.emp_realizable h;
+    introduce forall v. S.implies (P.returns_value 37 v) (S.pure (v == 37))
+    with R.entails_refl (S.pure (v == 37));
+    A.sound_fancy S.emp (Val 37) (P.returns_value 37) (fun v -> v == 37) h
+
 let deferred_allocation (p:S.slprop)
   : Lemma (S.implies p (FP.fupd GS.empty GS.empty (P.allocated p)))
   = P.update_allocate p;

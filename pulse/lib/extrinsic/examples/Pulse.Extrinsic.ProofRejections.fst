@@ -21,7 +21,8 @@ module Pulse.Extrinsic.ProofRejections
     later credits, and updates at values; the remaining cases guard ghost
     write permissions, CAS results, held-token ownership, and cell kinds.
     The final cases reject unguarded extraction from a localized invariant and
-    returning from an update-closed value with an outstanding open mask.
+    returning from an update-closed value with an outstanding open mask,
+    and claiming an observable result not implied by the postcondition.
     Run with --print_expected_failures and inspect diagnostics when changing
     these rules. This file is not evidence that arbitrary unprovable triples
     are semantically false; it checks these specific invalid rule applications. *)
@@ -124,3 +125,11 @@ let fancy_value_escapes_mask (i:S.iref) (p:S.slprop)
   = P.open_invariant GS.empty i p;
     Pulse.Extrinsic.HeapLang.FancyProof.value_rule (S.inv i p) ()
       (P.constant_post (S.star (S.inv i p) (P.exposed p)))
+
+[@@expect_failure [19]]
+let soundness_cannot_change_result (h:PulseCore.Heap.full_heap u#3)
+  = R.entails_fact S.emp (37 == 37);
+    P.value_rule S.emp 37 (P.returns_value 37);
+    Pulse.Extrinsic.HeapLang.Adequacy.emp_realizable h;
+    Pulse.Extrinsic.HeapLang.Adequacy.sound S.emp (Val 37)
+      (P.returns_value 37) (fun v -> v == 38) h
