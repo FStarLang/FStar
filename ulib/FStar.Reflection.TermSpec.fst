@@ -80,6 +80,7 @@ and aqualv_spec =
   | Qs_Explicit : aqualv_spec
   | Qs_Equality : aqualv_spec
   | Qs_Meta     : term_spec -> aqualv_spec
+  | Qs_TcArg    : aqualv_spec
 
 (* A binder in the spec model keeps only its sort and qualifier; the
    pretty-print name and attributes are irrelevant to the type theory. *)
@@ -187,6 +188,7 @@ and denote_aqualv (q:aqualv) : Tot aqualv_spec (decreases q) =
   | Q_Explicit -> Qs_Explicit
   | Q_Equality -> Qs_Equality
   | Q_Meta m   -> Qs_Meta (denote_term m)
+  | Q_TcArg    -> Qs_TcArg
 
 and denote_binder (b:binder) : Tot binder_spec (decreases b) =
   let bv = inspect_binder b in

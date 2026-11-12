@@ -177,7 +177,7 @@ let rec pat_bindings_ty (g: env) (p: R.pattern) (ty: typ) (bs: list (nvar & typ)
           | cb::cbs ->
             let cb = R.inspect_binder cb in
             let q = match cb.qual with
-                    | R.Q_Meta _ -> R.Q_Implicit
+                    | R.Q_Meta _ | R.Q_TcArg -> R.Q_Implicit
                     | q -> q in
             match params with
             | par::params ->

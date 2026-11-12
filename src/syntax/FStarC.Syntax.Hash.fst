@@ -259,6 +259,7 @@ and equal_binder_qualifier (c:bool) b1 b2
   match b1, b2 with
   | Implicit b1, Implicit b2 -> b1 = b2
   | Equality, Equality -> true
+  | TcArg, TcArg -> true
   | Meta t1, Meta t2 -> equal_term_c c t1 t2
   | _ -> false
 

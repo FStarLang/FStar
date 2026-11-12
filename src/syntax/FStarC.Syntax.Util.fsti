@@ -695,3 +695,6 @@ val eq_binding (b1 b2 : binding) : ML bool
 
 (* Destruct application: head, universes, and args. *)
 val hua (t:term) : ML (option (fv & list universe & args))
+
+(* Is this the qualifier of a typeclass argument ([TcArg])? *)
+val is_tc_bqual (q:bqual) : ML bool

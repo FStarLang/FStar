@@ -2684,9 +2684,7 @@ and trans_bqual env (_x_:option AST.arg_qualifier) : ML _ = match _x_ with
   | Some AST.Equality -> Some S.Equality
   | Some (AST.Meta t) ->
     Some (S.Meta (desugar_term env t))
-  | Some (AST.TypeClassArg) ->
-    let tcresolve = desugar_term env (mk_term (Var C.tcresolve_lid) Range.dummyRange Expr) in
-    Some (S.Meta tcresolve)
+  | Some (AST.TypeClassArg) -> Some S.TcArg
   | None -> None
 
 let typars_of_binders env bs : ML (_ & binders) =

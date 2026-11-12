@@ -2994,6 +2994,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
 
         (* Expect an implicit but user provided a concrete argument, instantiate the implicit. *)
         | ({binder_bv=x;binder_qual=Some (Implicit _)})::rest, (_, None)::_
+        | ({binder_bv=x;binder_qual=Some TcArg})::rest, (_, None)::_
         | ({binder_bv=x;binder_qual=Some (Meta _)})::rest, (_, None)::_
           ->
           (* We compute a range by combining the range of the head
@@ -3009,7 +3010,9 @@ and check_application_args env head (chead:comp) ghead args expected_topt : ML (
           instantiate_one_and_go r (List.hd bs) rest args
 
         (* User provided a _ for a meta arg, keep the meta for the unknown. *)
-        | ({binder_bv=x;binder_qual=Some (Meta tau);binder_attrs=b_attrs})::rest,
+        | ({binder_bv=x;binder_qual=Some TcArg;binder_attrs=b_attrs})::rest,
+          ({n = Tm_unknown}, Some {aqual_implicit=true})::rest'
+        | ({binder_bv=x;binder_qual=Some (Meta _);binder_attrs=b_attrs})::rest,
           ({n = Tm_unknown}, Some {aqual_implicit=true})::rest' ->
           instantiate_one_and_go (pos (fst (List.hd args))) (List.hd bs) rest rest' (* NB: rest' instead of args, we consume the _ *)
 

@@ -2257,6 +2257,7 @@ let remove_reify (t: S.term): ML S.term =
 let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) : ML _ =
   match aq, attrs with
   | Some (Meta _), _
+  | Some TcArg, _
   | Some (Implicit _), _::_ -> true
   | _ -> false
 
@@ -2277,13 +2278,13 @@ let instantiate_one_binder (env:env_t) (r:Range.t) (b:binder) : ML (term & typ &
     Format.print1 "instantiate_one_binder: Instantiating implicit binder ‘%s’\n" (show b);
   let (++) = Env.conj_guard in
   let { binder_bv=x } = b in
-  let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder b in (* meta/attrs computed here *)
+  let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder env b in (* meta/attrs computed here *)
   let t = x.sort in
   let varg, _, implicits =
     let msg =
       let is_typeclass =
         match ctx_uvar_meta with
-        | Some (Ctx_uvar_meta_tac tau) -> U.is_fvar C.tcresolve_lid tau
+        | Some (Ctx_uvar_meta_tc _) -> true
         | _ -> false
       in
       let name = "‘" ^ show x ^ "’" in
@@ -2361,6 +2362,7 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : ML (term & typ & guard_t)
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
                   | _, {binder_qual = Some (Implicit _)} ::rest
+                  | _, {binder_qual = Some TcArg} ::rest
                   | _, {binder_qual = Some (Meta _)} ::rest ->
                       let b = List.hd bs in
                       let b = SS.subst_binder subst b in
@@ -2488,6 +2490,7 @@ let maybe_add_implicit_binders (env:env) (bs:binders) : ML binders =
         let q = b.binder_qual in
         match q with
         | Some (Implicit _)
+        | Some TcArg
         | Some (Meta _) -> true
         | _ -> false in
 

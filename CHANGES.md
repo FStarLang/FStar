@@ -495,6 +495,25 @@ Guidelines for the changelog:
     attribute together with the instances that needed it; see
     `Pulse.Class.PtsTo` for an example.
 
+  * Typeclass resolution is now implemented natively in the typechecker
+    (`FStarC.TypeChecker.TcResolve`) instead of as a tactic. It only builds
+    the instance; the refinements it relies on are checked afterwards like
+    any other implicit. Results are cached by goal, with the functional
+    dependencies of the class erased (e.g. `has_pts_to (ref int) _`) and
+    modulo universe unification variables, so that searches through
+    hierarchies with many diamonds no longer take exponential time (#2612).
+    The cache is invalidated when an instance is added or when a variable whose
+    type is a class (a local instance) is pushed. Whether a variable is a
+    local instance is decided when it is pushed: in `fun x -> ...` where the
+    type of `x` is still unknown, `x` is not a local instance; annotate it.
+    `FStar.Tactics.Typeclasses.tcresolve` is kept and calls the new primitive
+    `tcresolve_native`.
+
+    Typeclass arguments have a new binder qualifier, reflected as `Q_TcArg`
+    in `FStar.Stubs.Reflection.V2.Data.aqualv`; they used to be reflected as
+    `Q_Meta (`tcresolve)`. Tactics that match on `Q_Meta` to recognize
+    typeclass arguments should also handle `Q_TcArg`.
+
   * PR https://github.com/FStarLang/FStar/pull/4374 adds a new case
     `C_MachineInt of int -> int_signedness -> int_width -> vconst` to the
     reflected constants (`FStar.Stubs.Reflection.V2.Data.vconst`). Machine

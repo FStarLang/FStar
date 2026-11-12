@@ -279,6 +279,7 @@ let hash_bqual (bq:binder_qualifier) : H.hash_code =
   | Implicit false -> hc 421
   | Meta t -> H.mix (hc 431) t.hash_code
   | Equality -> hc 433
+  | TcArg -> hc 439
 
 let hash_binder (b:binder) : ML H.hash_code =
   mix3 (hash_bv b.binder_bv) (hash_option hash_bqual b.binder_qual)
@@ -596,7 +597,7 @@ let pat_bvs (p:pat) : ML (list bv) =
 
 let is_bqual_implicit = function Some (Implicit _) -> true | _ -> false
 let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
-let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
+let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) | Some TcArg -> true | _ -> false
 let as_bqual_implicit = function true -> Some imp_tag | _ -> None
 let as_aqual_implicit = function true -> Some ({aqual_implicit=true; aqual_attributes=[]}) | _ -> None
 

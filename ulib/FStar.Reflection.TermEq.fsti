@@ -100,6 +100,7 @@ and faithful_qual (q:aqualv) : prop =
   | Q_Explicit -> True
   | Q_Equality -> True
   | Q_Meta m -> faithful m
+  | Q_TcArg -> True
 
 and faithful_binder (b:binder) : prop =
   match inspect_binder b with

@@ -238,6 +238,7 @@ let ref_Q_Explicit  = fstar_refl_data_const "Q_Explicit"
 let ref_Q_Implicit  = fstar_refl_data_const "Q_Implicit"
 let ref_Q_Equality  = fstar_refl_data_const "Q_Equality"
 let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
+let ref_Q_TcArg     = fstar_refl_data_const "Q_TcArg"
 
 (* subst_elt *)
 let ref_DB          = fstar_syntax_syntax_const ["DB"]
