@@ -3542,7 +3542,24 @@ let non_info_norm env t =
                ForExtraction //and refinement types
                ]
   in
-  non_informative env (normalize steps env t)
+  (* An application of an inductive or of a [new] type is already in head
+     normal form, and [non_informative] only looks at the head, so the
+     normalizer call can be skipped.  This is the common case in extraction,
+     which asks this question about every type it meets. *)
+  let rigid_head () : ML bool =
+    let hd, _ = U.head_and_args_full t in
+    match (U.un_uinst (SS.compress hd)).n with
+    | Tm_fvar fv ->
+      (match Env.lookup_qname env fv.fv_name with
+       | Some (Inr ({sigel = Sig_inductive_typ _; sigattrs}, _), _) ->
+         None? (find_map sigattrs Parser.Const.ExtractAs.is_extract_as_attr)
+       | Some (Inr ({sigel = Sig_declare_typ _; sigquals; sigattrs}, _), _) ->
+         List.existsb New? sigquals &&
+         None? (find_map sigattrs Parser.Const.ExtractAs.is_extract_as_attr)
+       | _ -> false)
+    | _ -> false in
+  if rigid_head () then non_informative env t
+  else non_informative env (normalize steps env t)
 
 (*
  * Ghost T to Pure T promotion
