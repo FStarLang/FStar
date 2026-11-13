@@ -206,6 +206,7 @@ let defaults = [
   ("custard_dump_ir"                           , Bool false);
   ("custard_dump_specializations"              , Bool false);
   ("custard_dump_layouts"                     , Bool false);
+  ("custard_type_stats"                       , Bool false);
   ("custard_warn_any"                          , Bool false);
   ("custard_fuel"                              , Int 100000);
   ("custard_max_specializations"               , Int 10000);
@@ -480,6 +481,7 @@ let get_target                  ()      = lookup_opt "target"                   
 let get_custard_dump_ir         ()      = lookup_opt "custard_dump_ir"          as_bool
 let get_custard_dump_specializations () = lookup_opt "custard_dump_specializations" as_bool
 let get_custard_dump_layouts ()          = lookup_opt "custard_dump_layouts"          as_bool
+let get_custard_type_stats ()            = lookup_opt "custard_type_stats"            as_bool
 let get_custard_warn_any ()             = lookup_opt "custard_warn_any"             as_bool
 let get_custard_fuel            ()      = lookup_opt "custard_fuel"             as_int
 let get_custard_max_specializations () = lookup_opt "custard_max_specializations" as_int
@@ -976,6 +978,15 @@ specialization fuel exhaustion.");
     text "Print the layout Custard computed for every type: erased, collapsed \
 to a single field, or a struct. Useful to understand why a field or argument \
 disappeared from the generated code.");
+
+  ( noshort,
+    "custard_type_stats",
+    Const (Bool true),
+    text "Cherry: print, for every reference-counted record and variant, how \
+many counted references a value holds by value, its approximate size in words, \
+how many function parameters and results take it by value, and for a boxed \
+type the same counts for its heap cell. Large unboxed types that are passed \
+around a lot are candidates for [@@cherry_boxed].");
 
   ( noshort,
     "custard_warn_any",
@@ -2303,6 +2314,7 @@ let custard_main                 () = get_custard_main ()
 let custard_dump_ir              () = get_custard_dump_ir ()
 let custard_dump_specializations () = get_custard_dump_specializations ()
 let custard_dump_layouts ()         = get_custard_dump_layouts ()
+let custard_type_stats ()           = get_custard_type_stats ()
 let custard_warn_any ()             = get_custard_warn_any ()
 let custard_fuel                 () = get_custard_fuel ()
 let custard_max_specializations  () = get_custard_max_specializations ()
