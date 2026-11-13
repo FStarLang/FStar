@@ -1775,13 +1775,35 @@ let is_identity (dl:dlet) : ML bool =
    | [b], EVar v -> b.b_name = v
    | _ -> false)
 
+(* Under Cherry, a definition whose body reads a field (or a chain of fields)
+   of its one parameter, [let sigtab env = env.sigtab], is inlined as well.
+   The call costs more than the read: the result is returned owned, so a
+   multi-reference record is inc'd field by field in the callee and dec'd
+   again in the caller, where the inlined read of a borrowed value costs
+   nothing.  The projection only exists once [depat] has run, so it is the
+   second [inline_decls] that finds these. *)
+let is_projector (dl:dlet) : ML bool =
+  let rec proj_of (v:string) (e:expr) : ML bool =
+    match e.e with
+    | EVar w -> w = v
+    | EProj (e, _, _) -> proj_of v e
+    | _ -> false in
+  Options.custard_cherry () &&
+  arrow_arity dl.dl_ret = 0 &&
+  not (dl.dl_flags |> List.existsb Rec?) &&
+  (match dl.dl_binders, dl.dl_body.e with
+   | [b], EProj (e, _, _) -> proj_of b.b_name e
+   | _ -> false)
+
+let inlined_unasked (dl:dlet) : ML bool = is_identity dl || is_projector dl
+
 let inline_decls (prog:program) : ML program =
   let tbl : HashTable.t string (list string & list binder & expr) = HashTable.create 50 in
   let used : HashTable.t string bool = HashTable.create 50 in
   let inl : HashTable.t string dlet = HashTable.create 50 in
   prog |> List.iter (fun d ->
     match d with
-    | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
+    | DLet dl when dl.dl_flags |> List.existsb Inline? || inlined_unasked dl ->
       HashTable.add inl (string_of_name dl.dl_name) dl
     | _ -> ());
   let visiting : HashTable.t string bool = HashTable.create 50 in
@@ -1799,7 +1821,7 @@ let inline_decls (prog:program) : ML program =
     end in
   prog |> List.iter (fun d ->
     match d with
-    | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
+    | DLet dl when dl.dl_flags |> List.existsb Inline? || inlined_unasked dl ->
       fill (string_of_name dl.dl_name)
     | _ -> ());
   let prog = prog |> List.map (fun d ->
@@ -4389,7 +4411,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      identity function is not something anyone writes on purpose. *)
   let prog =
     if prog |> List.existsb (fun d -> match d with
-                                      | DLet dl -> is_identity dl
+                                      | DLet dl -> inlined_unasked dl
                                       | _ -> false)
     then let prog = pass "inline_ids" inline_decls prog in
          pass "simpl_ids" simpl_all prog
