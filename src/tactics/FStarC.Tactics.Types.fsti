@@ -55,6 +55,9 @@ type guard_policy =
 instance val showable_guard_policy : showable guard_policy
 instance val pretty_guard_policy   : pretty guard_policy
 
+(* Large and passed around much more often than built: boxed under Cherry,
+   so that passing it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type proofstate = {
     main_context : env;          //the shared top-level context for all goals
     all_implicits: implicits ;   //all the implicits currently open, partially resolved
