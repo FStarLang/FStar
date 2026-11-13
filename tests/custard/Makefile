@@ -3786,6 +3786,15 @@ $(CHERRY_DIR)/CherryAliasBorrow.chgrep: $(CHERRY_DIR)/CherryAliasBorrow.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryAliasBorrow.chgrep
 
+# Cherry: a definition that only projects a field of its parameter is
+# inlined, whatever its effect.
+CHERRY_TESTS += CherryProjInline
+$(CHERRY_DIR)/CherryProjInline.chgrep: $(CHERRY_DIR)/CherryProjInline.chc
+	$(Q)! sed -n '/^static .* CherryProjInline_use(.*{$$/,/^}/p' $< | grep -q 'CherryProjInline_get_t' \
+	  || { echo "ERROR: CherryProjInline_use calls a projector"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryProjInline.chgrep
+
 # Cherry: a function used as a value keeps the arity eta-reduction took from
 # it, so a direct call is not a partial application.
 CHERRY_TESTS += CherryEtaValue
