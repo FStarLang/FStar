@@ -3760,6 +3760,25 @@ $(CHERRY_DIR)/CherryBoxedAttr.chgrep: $(CHERRY_DIR)/CherryBoxedAttr.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryBoxedAttr.chgrep
 
+# Cherry: --custard_type_stats counts a nested unboxed record's fields, a
+# variant's largest constructor plus a tag, and a boxed type as one
+# reference, with its cell's counts alongside.
+$(CHERRY_DIR)/CherryTypeStats.stats: $(CACHE_DIR)/CherryTypeStats.fst.checked $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryTypeStats)
+	@mkdir -p $(CHERRY_DIR)
+	$(FSTAR) --codegen Cherry --custard_type_stats \
+	  --custard_main CherryTypeStats.main CherryTypeStats.fst \
+	  -o $(CHERRY_DIR)/CherryTypeStats.c > $@.out
+	$(Q)printf '%s\t%s\t%s\t%s\t%s\n' \
+	  5 5 1 - CherryTypeStats.seg \
+	  5 6 1 - CherryTypeStats.shape \
+	  2 2 0 - CherryTypeStats.pt \
+	  1 1 1 'boxed 6/6' CherryTypeStats.big > $@.exp
+	$(Q)tail -n +2 $@.out | diff $@.exp - \
+	  || { echo "ERROR: unexpected --custard_type_stats output"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryTypeStats.stats
+
 # Cherry: a matched cell that dies on one arm of a conditional inside the
 # branch is reused there.
 $(CHERRY_DIR)/CherryReuse.chgrep: $(CHERRY_DIR)/CherryReuse.chc

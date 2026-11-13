@@ -2157,6 +2157,69 @@ let tv_any_decl (d:decl) : ML decl =
                   dl_body = tv_any_expr l.dl_body }
   | _ -> d
 
+(* --custard_type_stats: for every counted record and variant, how many
+   references a value of it holds by value (each one an inc or dec when the
+   value is copied or dropped), its approximate size in 8-byte words, how many
+   function parameters and results take it by value, and, for a boxed type,
+   the same counts for its heap cell.  A large unboxed type with many
+   parameters is a candidate for [@@cherry_boxed] (cherry.md, "Inductive
+   types"). *)
+let type_stats (p:program) : ML unit =
+  let tbl = type_table p in
+  let memo : HashTable.t string (int & int) = HashTable.create 50 in
+  let add2 ((a, b):int & int) ((c, d):int & int) : int & int = (a + c, b + d) in
+  let rec size (t:cty) : ML (int & int) =
+    match t with
+    | TAny -> (1, 2)
+    | TArrow _ | TExn | TRef (RGc, _) -> (1, 1)
+    | TTuple ts -> List.fold_left add2 (0, 0) (List.map size ts)
+    | TUnit -> (0, 0)
+    | TApp (n, _) ->
+      let k = string_of_name n in
+      if is_iarray_name n || HashTable.mem !boxed_tbl k || List.mem k runtime_types then (1, 1)
+      else (match HashTable.try_find memo k with
+            | Some r -> r
+            | None ->
+              match HashTable.try_find tbl k with
+              | Some d -> let r = body_size d.dt_body in HashTable.add memo k r; r
+              | None -> (0, 1))
+    | _ -> (0, 1)
+  and body_size (b:tydef) : ML (int & int) =
+    match b with
+    | TAbbrev c -> size c
+    | TRecord fs -> List.fold_left add2 (0, 0) (fs |> List.map (fun (_, t) -> size t))
+    | TVariant cs ->
+      let ss = cs |> List.map (fun (_, fs) ->
+                 List.fold_left add2 (0, 0) (fs |> List.map (fun (_, t) -> size t))) in
+      List.fold_left (fun (a, b) (c, d) -> ((if c > a then c else a), (if d > b then d else b))) (0, 0) ss
+      |> (fun (c, w) -> (c, w + 1))
+    | TAbstract -> (0, 1) in
+  let params : HashTable.t string int = HashTable.create 50 in
+  let note (t:cty) : ML unit =
+    by_value t |> List.iter (fun k ->
+      HashTable.add params k (1 + (match HashTable.try_find params k with Some n -> n | None -> 0))) in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l -> l.dl_binders |> List.iter (fun (b:binder) -> note b.b_ty); note l.dl_ret
+    | _ -> ());
+  let rows = p |> List.collect (fun d ->
+    match d with
+    | DType dt when (TRecord? dt.dt_body || TVariant? dt.dt_body)
+                 && HashTable.mem !np_tbl (string_of_name dt.dt_name) ->
+      let k = string_of_name dt.dt_name in
+      let boxed = HashTable.mem !boxed_tbl k in
+      let (c, w) = if boxed then (1, 1) else size (TApp (dt.dt_name, [])) in
+      let cell = if boxed then Some (body_size dt.dt_body) else None in
+      let n = match HashTable.try_find params k with Some n -> n | None -> 0 in
+      [(c, w, n, cell, k)]
+    | _ -> []) in
+  let rows = rows |> List.sortWith (fun (c1, _, n1, _, k1) (c2, _, n2, _, k2) ->
+    if c1 <> c2 then c2 - c1 else if n1 <> n2 then n2 - n1 else String.compare k1 k2) in
+  FStarC.Format.print_string "Cherry type statistics (counted references, words, parameters and results by value, boxed cell):\n";
+  rows |> List.iter (fun (c, w, n, cell, k) ->
+    FStarC.Format.print5 "%s\t%s\t%s\t%s\t%s\n" (string_of_int c) (string_of_int w) (string_of_int n)
+      (match cell with Some (cc, cw) -> "boxed " ^ string_of_int cc ^ "/" ^ string_of_int cw | None -> "-") k)
+
 let run (p:program) : ML program =
   co_counter := 0;
   let p = raise_failures p in
@@ -2167,6 +2230,7 @@ let run (p:program) : ML program =
   let bx = HashTable.create 50 in
   boxed_types p |> List.iter (fun k -> HashTable.add bx k true);
   boxed_tbl := bx;
+  if Options.custard_type_stats () then type_stats p;
   let p = derecord bx p in
   let ct = HashTable.create 50 in
   let rt = HashTable.create 50 in
