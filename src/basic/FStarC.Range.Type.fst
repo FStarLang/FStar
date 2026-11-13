@@ -57,7 +57,10 @@ type rng = {
   start_pos:pos;
   end_pos:pos;
 }
-[@@ PpxDerivingYoJson; PpxDerivingShow ]
+(* Boxed under Cherry: every syntax node, identifier and error carries a
+   range, so passing one should be passing a pointer rather than six counted
+   fields. *)
+[@@ PpxDerivingYoJson; PpxDerivingShow; FStar.Attributes.cherry_boxed ]
 type range = {
   def_range:rng;
   use_range:rng
