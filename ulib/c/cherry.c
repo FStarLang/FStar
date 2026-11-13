@@ -669,15 +669,45 @@ int64_t cherry_str_compare_i64(cherry_string a, cherry_string b) {
   return (int64_t)str_compare(a, b);
 }
 
-/* 64-bit FNV-1a over the UTF-8 bytes (FStarC.Hash.of_string). */
-uint64_t cherry_str_fnv1a(cherry_string s) {
+/* A hash of the UTF-8 bytes (FStarC.Hash.of_string), eight at a time: each
+   little-endian word goes through MurmurHash3's 64-bit block mixing, and the
+   result through its finalizer, so that the low bits a hash table uses
+   depend on every byte.  Strings are mostly qualified names, where hashing a
+   byte at a time cost as much as the lookups it served. */
+static inline uint64_t str_hash_rotl(uint64_t x, int r) {
+  return (x << r) | (x >> (64 - r));
+}
+
+static inline uint64_t str_hash_block(uint64_t h, uint64_t k) {
+  k *= 0x87c37b91114253d5u;
+  k = str_hash_rotl(k, 31);
+  k *= 0x4cf5ad432745937fu;
+  h ^= k;
+  return str_hash_rotl(h, 27) * 5 + 0x52dce729u;
+}
+
+uint64_t cherry_str_hash(cherry_string s) {
   const unsigned char *p = (const unsigned char *)cherry_str_data(s);
   size_t n = cherry_str_size(s);
-  uint64_t h = 0xcbf29ce484222325u;
-  for (size_t i = 0; i < n; i++) {
-    h ^= p[i];
-    h *= 0x100000001b3u;
+  uint64_t h = 0x9e3779b97f4a7c15u ^ (uint64_t)n;
+  for (; n >= 8; p += 8, n -= 8) {
+    uint64_t k;
+    memcpy(&k, p, 8);
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    k = __builtin_bswap64(k);
+#endif
+    h = str_hash_block(h, k);
   }
+  if (n > 0) {
+    uint64_t k = 0;
+    for (size_t i = 0; i < n; i++) k |= (uint64_t)p[i] << (8 * i);
+    h = str_hash_block(h, k);
+  }
+  h ^= h >> 33;
+  h *= 0xff51afd7ed558ccdu;
+  h ^= h >> 33;
+  h *= 0xc4ceb9fe1a85ec53u;
+  h ^= h >> 33;
   return h;
 }
 

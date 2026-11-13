@@ -482,7 +482,7 @@ uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
 int64_t cherry_str_compare_i64(cherry_string a, cherry_string b);
-uint64_t cherry_str_fnv1a(cherry_string s);
+uint64_t cherry_str_hash(cherry_string s);
 /* Nanoseconds of the monotonic clock (FStarC.Timing). */
 uint64_t cherry_now_ns(void);
 /* Wall-clock nanoseconds since the Unix epoch (FStarC.Time). */
