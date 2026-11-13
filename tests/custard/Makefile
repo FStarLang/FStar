@@ -3775,14 +3775,17 @@ $(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryMoveFields.chgrep
 
-# Cherry: a field of an owned boxed value is borrowed from it, and a call
-# that takes such a field owned stays a tail call.
+# Cherry: a field of an owned boxed value is borrowed from it, a leaf call
+# borrows it too, and a call in a loop of tail calls that takes such a field
+# owned stays a tail call.
 CHERRY_TESTS += CherryAliasBorrow
 $(CHERRY_DIR)/CherryAliasBorrow.chgrep: $(CHERRY_DIR)/CherryAliasBorrow.chc
 	$(Q)! sed -n '/^static .* CherryAliasBorrow_first_len(.*{$$/,/^}/p' $< | grep -q 'cherry_inc' \
 	  || { echo "ERROR: CherryAliasBorrow_first_len counts a borrowed field"; exit 1; }
-	$(Q)sed -n '/^static .* CherryAliasBorrow_kids_count(.*{$$/,/^}/p' $< | grep -q 'CHERRY_MUSTTAIL return' \
-	  || { echo "ERROR: CherryAliasBorrow_kids_count lost its tail call"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryAliasBorrow_kids_count(.*{$$/,/^}/p' $< | grep -q 'cherry_inc' \
+	  || { echo "ERROR: CherryAliasBorrow_kids_count counts a field passed to a leaf"; exit 1; }
+	$(Q)sed -n '/^static .* CherryAliasBorrow_walk(.*{$$/,/^}/p' $< | grep -q 'CHERRY_MUSTTAIL return' \
+	  || { echo "ERROR: CherryAliasBorrow_walk lost its tail call"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryAliasBorrow.chgrep
 

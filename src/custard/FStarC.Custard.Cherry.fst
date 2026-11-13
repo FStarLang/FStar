@@ -952,6 +952,96 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       HashTable.add fixed f (bs |> List.map (fun (i, b) -> is_np b.b_ty && Some? (mode i)));
       HashTable.add tbl f (bs |> List.map (fun (i, b) ->
         not (is_np b.b_ty) || (match mode i with Some o -> o | None -> false))));
+  (* Where the tail-call rule applies (cherry.md, "Borrow inference"): a tail
+     call from [f] to [g] that passes an owned value to a borrowed parameter
+     makes [g] take it owned only if the call can be part of a loop of tail
+     calls -- [g] reaches [f] back through saturated tail calls (they are in
+     one strongly connected component), or [g]'s tail calls can reach a call
+     of a closure or of something whose body is not here.  Otherwise the call
+     becomes an ordinary one followed by a release, which costs a frame that
+     no chain of tail calls from [g] can come back to, so only boundedly many
+     pile up; and a leaf such as an equality test called in tail position
+     with a fresh value does not make every caller give up its argument. *)
+  let def_tbl : HashTable.t string dlet = HashTable.create 50 in
+  defs |> List.iter (fun (l:dlet) -> HashTable.add def_tbl (string_of_name l.dl_name) l);
+  (* The definitions [e] calls in tail position, and whether it calls
+     anything else there. *)
+  let rec tail_calls (e:expr) (acc:list string & bool) : ML (list string & bool) =
+    match e.e with
+    | ELet (_, _, _, b) | ESeq (_, b) -> tail_calls b acc
+    | EIf (_, t, f) -> tail_calls f (tail_calls t acc)
+    | EMatch (_, brs) -> List.fold_left (fun acc ((_, _, b):branch) -> tail_calls b acc) acc brs
+    | EApp (hd, args) ->
+      let (cs, esc) = acc in
+      (match hd.e with
+       | EQual (g, _) ->
+         let gs = string_of_name g in
+         if HashTable.mem !extern_tbl gs then acc else
+         (match HashTable.try_find def_tbl gs with
+          | Some l ->
+            let n = List.length l.dl_binders in
+            if List.length args = n then (gs :: cs, esc)
+            else if List.length args < n then acc
+            else (cs, true)
+          | None -> (cs, true))
+       | _ -> (cs, true))
+    | _ -> acc in
+  let tcalls : HashTable.t string (list string) = HashTable.create 50 in
+  let escapes : HashTable.t string bool = HashTable.create 50 in
+  let callers : HashTable.t string (list string) = HashTable.create 50 in
+  defs |> List.iter (fun (l:dlet) ->
+    let f = string_of_name l.dl_name in
+    let (cs, esc) = tail_calls l.dl_body ([], false) in
+    HashTable.add tcalls f cs;
+    if esc then HashTable.add escapes f true;
+    cs |> List.iter (fun g ->
+      HashTable.add callers g (f :: (match HashTable.try_find callers g with Some l -> l | None -> []))));
+  (* Whatever reaches an escaping definition through tail calls escapes. *)
+  let rec spread (work:list string) : ML unit =
+    match work with
+    | [] -> ()
+    | g :: rest ->
+      let fs = (match HashTable.try_find callers g with Some l -> l | None -> []) in
+      let fresh = fs |> List.filter (fun f -> not (HashTable.mem escapes f)) in
+      fresh |> List.iter (fun f -> HashTable.add escapes f true);
+      spread (fresh @ rest) in
+  spread (HashTable.fold escapes (fun f _ acc -> f :: acc) []);
+  (* The strongly connected components of the tail-call graph (Tarjan). *)
+  let comp : HashTable.t string int = HashTable.create 50 in
+  let index : HashTable.t string int = HashTable.create 50 in
+  let low : HashTable.t string int = HashTable.create 50 in
+  let on_stack : HashTable.t string bool = HashTable.create 50 in
+  let stack : ref (list string) = mk_ref [] in
+  let next = mk_ref 0 in
+  let get (t:HashTable.t string int) (v:string) : ML int =
+    match HashTable.try_find t v with Some i -> i | None -> 0 in
+  let rec strong (v:string) : ML unit =
+    HashTable.add index v !next; HashTable.add low v !next; next := !next + 1;
+    stack := v :: !stack; HashTable.add on_stack v true;
+    (match HashTable.try_find tcalls v with Some l -> l | None -> []) |> List.iter (fun w ->
+      if not (HashTable.mem index w) then begin
+        strong w;
+        if get low w < get low v then HashTable.add low v (get low w)
+      end else if HashTable.try_find on_stack w = Some true then
+        (if get index w < get low v then HashTable.add low v (get index w)));
+    if get low v = get index v then begin
+      let c = get index v in
+      let rec pop () : ML unit =
+        match !stack with
+        | w :: rest ->
+          stack := rest; HashTable.add on_stack w false; HashTable.add comp w c;
+          if w <> v then pop ()
+        | [] -> () in
+      pop ()
+    end in
+  defs |> List.iter (fun (l:dlet) ->
+    let v = string_of_name l.dl_name in
+    if not (HashTable.mem index v) then strong v);
+  let keeps_tail (f g:string) : ML bool =
+    HashTable.mem escapes g || not (HashTable.mem def_tbl g) ||
+    (match HashTable.try_find comp f, HashTable.try_find comp g with
+     | Some a, Some b -> a = b
+     | _ -> true) in
   let changed = mk_ref true in
   let own (f:string) (i:int) : ML unit =
     if (match HashTable.try_find fixed f with
@@ -1013,7 +1103,7 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
                 if List.length args = List.length bs then
                   args |> List.iteri (fun i (a:expr) ->
                     if List.nth fl i then own_arg a
-                    else if tail && is_np a.ty then
+                    else if tail && is_np a.ty && keeps_tail me gs then
                       (match a.e with
                        | EVar y -> if is_owned_var bf y then own gs i
                        | EQual _ -> ()
