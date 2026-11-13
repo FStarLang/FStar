@@ -62,11 +62,11 @@ let of_int (i:int) : hash_code =
   else if i < 0 then mix_chunks 2UL (-i)
   else mix_chunks 1UL i
 
-(* 64-bit FNV-1a over the UTF-8 bytes, in ulib/c/cherry.c. *)
-[@@custard_extern "cherry_str_fnv1a"]
-private assume val str_fnv1a : string -> U64.t
+(* A 64-bit hash of the UTF-8 bytes, in ulib/c/cherry.c. *)
+[@@custard_extern "cherry_str_hash"]
+private assume val str_hash : string -> U64.t
 
-let of_string (s:string) : hash_code = mask63 (str_fnv1a s)
+let of_string (s:string) : hash_code = mask63 (str_hash s)
 
 (* See FStarC.Hash-ocaml.fst. *)
 let mix (a b:hash_code) : hash_code = mix_ a b
