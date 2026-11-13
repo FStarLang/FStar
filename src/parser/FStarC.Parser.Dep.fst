@@ -361,6 +361,9 @@ let parsing_data_elt_eq (e1:parsing_data_elt) (e2:parsing_data_elt) =
 
 let empty_parsing_data = { elts = []; no_prelude = false }
 
+(* Large and passed around much more often than built: boxed under Cherry,
+   so that passing it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type deps = {
     dep_graph:dependence_graph;                 //dependences of the entire project, not just those reachable from the command line
     file_system_map:files_for_module_name;      //an abstraction of the file system, keys are lowercase module names

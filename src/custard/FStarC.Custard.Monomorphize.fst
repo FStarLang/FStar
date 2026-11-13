@@ -121,6 +121,9 @@ let clip (s:string) : ML string =
 (* State                                                                *)
 (* -------------------------------------------------------------------- *)
 
+(* Large and passed around much more often than built: boxed under Cherry,
+   so that passing it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type state = {
   (* Every type declaration, by name: needed to read a constructor's field
      types back when descending into a pattern. *)

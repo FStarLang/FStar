@@ -353,6 +353,9 @@ let string_of_key (k:spec_key) : ML string =
 (* State                                                                *)
 (* -------------------------------------------------------------------- *)
 
+(* Large and passed around much more often than built: boxed under Cherry,
+   so that passing it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type state = {
   deps:    Dep.deps;
   env:     ref TcEnv.env;

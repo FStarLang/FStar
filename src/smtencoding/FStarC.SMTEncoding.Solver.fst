@@ -66,6 +66,9 @@ let error_to_short_string err =
             (show err.error_fuel)
             (show err.error_ifuel)
 
+(* Large and passed around much more often than built: boxed under Cherry,
+   so that passing it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type query_settings = {
     query_env:env_t;
     query_name:string;
