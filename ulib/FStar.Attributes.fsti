@@ -66,11 +66,6 @@ type __internal_ocaml_attributes =
   | CIfDef (* KaRaMeL-only: on a given `val foo`, compile if foo with #ifdef. *)
   | CMacro
 (* KaRaMeL-only: for a top-level `let v = e`, compile as a macro *)
-  | CNoInline
-    (* For security-sensitive functions only: generate special attributes in C
-       to prevent inlining; if the function is subjected to a -static-header
-       option, the `inline` attribute will be removed, but the static will
-       remain. *)
 
 (** The [inline_let] attribute on a local let-binding, instructs the
     extraction pipeline to inline the definition. This may be both to

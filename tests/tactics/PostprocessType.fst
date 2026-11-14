@@ -22,5 +22,5 @@ type t = int
 let foo1 : t = 123
 
 (* In Ocaml, foo2 should be annotated with int instead of t *)
-[@@postprocess_for_extraction_with (fun () -> compute (); trefl ()); postprocess_type]
+[@@postprocess_with (fun () -> compute (); trefl ()); postprocess_type]
 let foo2 : t = 123

@@ -39,10 +39,10 @@ open FStarC.Ident
 open FStarC.Syntax.Syntax
 module Env = FStarC.TypeChecker.Env
 
-(* Run the [postprocess_with] tactic of a [Sig_let] on its definitions (or
-   [postprocess_for_extraction_with], if [for_extraction]), and on their
-   types too if [postprocess_type] is also given; the attribute is removed. *)
-val run_postprocess (for_extraction:bool) (env:Env.env) (se:sigelt) : ML sigelt
+(* Run the [postprocess_with] tactic of a [Sig_let] on its definitions, and
+   on their types too if [postprocess_type] is also given; the attribute is
+   removed. *)
+val run_postprocess (env:Env.env) (se:sigelt) : ML sigelt
 
 (* Check [se], the declaration [Sig_let {lbs; lids}] at range [r]. Returns
    the checked declaration, no new declarations, and [env]. *)

@@ -57,6 +57,12 @@ Guidelines for the changelog:
   * The F# library (`fsharp/base`, `ulibfs`) and Pulse's `pulse2rust` are
     removed. The F# backend still exists (`--codegen FSharp`).
 
+  * The attributes `FStar.Attributes.CNoInline` and
+    `FStar.Tactics.Effect.postprocess_for_extraction_with` are removed;
+    Custard silently ignored both (issues #4867, #4901). Use
+    `postprocess_with` (which also affects typechecking) or
+    `normalize_for_extraction` instead of `postprocess_for_extraction_with`.
+
   * The OCaml library `fstar.lib` no longer contains OCaml extracted from
     ulib; it holds only the hand-written realizations in `ulib/ml/app`
     (now including `FStar_SizeT`). Custard compiles the rest of ulib into
