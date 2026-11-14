@@ -128,6 +128,9 @@ type state = {
   (* Every type declaration, by name: needed to read a constructor's field
      types back when descending into a pattern. *)
   types:  HashTable.t string dtype;
+  (* Constructor -> the variant declaring it, for a scrutinee whose type the
+     extractor could not tell (see [mono_pat]). *)
+  ctor_owner: HashTable.t string dtype;
   (* Type declarations that must stay polymorphic: see [frozen]. *)
   frozen: HashTable.t string bool;
   (* Instantiation key -> the name its clone got. *)
@@ -300,9 +303,14 @@ let rec unfold_cty (st:state) (fuel:int) (c:cty) : ML cty =
         hand-written; unfolding it puts the model in the emitted signature and
         the program no longer refers to the type it actually has.  A
         realization is precisely the statement that the name, not the body, is
-        what the target knows. *)
+        what the target knows.
+
+        Only on the OCaml path, as with {!freeze_realized}: a C backend links
+        no hand-written OCaml and emits the abbreviation itself, so there the
+        name is just the body.  Keeping it made [FStarC.Reflection.Types.name
+        & typ] and [list string & term] two different clones of [tuple2]. *)
      | Some ({ dt_body = TAbbrev _; dt_flags = fl })
-       when has_flag fl Realized -> c
+       when has_flag fl Realized && freeze_realized () -> c
      (* Section 77.  The same argument as the line above, for a name the
         program gave itself rather than one a realization owns: the point of
         [--custard_no_unfold] is that the abbreviation, not the body, is what
@@ -478,6 +486,16 @@ let lookup (env:env) (x:string) : ML (option cty) =
 let rec mono_pat (st:state) (t:cty) (p:pat) : ML (pat & env) =
   let t = unfold_cty st 100 t in
   match p with
+  (* The scrutinee's type is not always known: a call to a definition that has
+     not been extracted yet has type [any] (Extract.callee_sig).  A
+     constructor of a type with no parameters says the type itself, and its
+     field types then say the subpatterns', so a polymorphic constructor
+     nested inside it is still renamed. *)
+  | PCtor (cn, _) when TAny? t
+                     && (match HashTable.try_find st.ctor_owner (string_of_name cn) with
+                         | Some d -> Nil? d.dt_params
+                         | None -> false) ->
+    mono_pat st (TApp ((Some?.v (HashTable.try_find st.ctor_owner (string_of_name cn))).dt_name, [])) p
   | PCtor (cn, ps) ->
     let fields =
       match shape_of st t with
@@ -486,6 +504,18 @@ let rec mono_pat (st:state) (t:cty) (p:pat) : ML (pat & env) =
         (match HashTable.try_find !exn_fields (string_of_name cn) with
          | Some fs -> fs
          | None -> []) in
+    (* [| Sg_Let of bool & list letbinding] has one (inlined) tuple field, but
+       a pattern written against a curried declaration of the same
+       constructor -- the [FStar.Stubs] view of a compiler type -- has one
+       subpattern per component, as the field will have once
+       [Simplify.inline_fields] has spread it out. *)
+    let fields =
+      match fields with
+      | [TApp (n, ts)] when n.ns = ["FStar"; "Pervasives"; "Native"]
+                           && FStarC.Util.starts_with n.id "tuple"
+                           && List.length ps > 1
+                           && List.length ts = List.length ps -> ts
+      | _ -> fields in
     let cn' =
       match resolve_owner st t with
       | Some (owner, args) -> with_spec (request_inst st owner args) cn
@@ -632,6 +662,7 @@ let rec drain (st:state) : ML unit =
 
 let run (prog:program) : ML program =
   let st = { types  = HashTable.create 100;
+             ctor_owner = HashTable.create 100;
              frozen = HashTable.create 10;
              names  = HashTable.create 100;
              taken  = HashTable.create 100;
@@ -648,6 +679,9 @@ let run (prog:program) : ML program =
     | DExn x -> HashTable.add !exn_fields (string_of_name x.de_name) x.de_args
     | DType t ->
       HashTable.add st.types (string_of_name t.dt_name) t;
+      (match t.dt_body with
+       | TVariant cs -> cs |> List.iter (fun (c, _) -> HashTable.add st.ctor_owner (string_of_name c) t)
+       | _ -> ());
       HashTable.add st.taken (string_of_name t.dt_name) true
     | DExternal x ->
       HashTable.add st.exts (string_of_name x.dx_name) x;

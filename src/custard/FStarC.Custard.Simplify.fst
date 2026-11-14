@@ -984,8 +984,22 @@ let rec reduce (x:expr) : ML expr =
         application moves. *)
      | EMatch (scrut, brs) when args |> List.for_all is_atomic
                              && brs |> List.existsb (fun (_, _, bd) -> EFun? bd.e) ->
-       let brs = brs |> List.map (fun (p, gd, bd) ->
-         (p, gd, { x with e = EApp (bd, args) })) in
+       (* An application typed [any] says nothing about an arm whose arrow
+          says more: the call of one arm's lambda may be typed [any] because
+          another arm calls a definition not extracted yet, and beta hands
+          its type on to the body -- an unboxed [bool] typed [any]. *)
+       let rec peel (n:int) (t:cty) : option cty =
+         if n = 0 then Some t else
+         match t with
+         | TArrow (_, _, r) -> peel (n - 1) r
+         | _ -> None in
+       let arm_ty (bd:expr) : cty =
+         if not (TAny? x.ty) then x.ty else
+         match peel (List.length args) bd.ty with
+         | Some t -> t
+         | None -> x.ty in
+       let brs = brs |> List.map (fun (p, gd, (bd:expr)) ->
+         (p, gd, { x with e = EApp (bd, args); ty = arm_ty bd })) in
        reduce { x with e = EMatch (scrut, brs) }
      | _ -> { x with e = EApp (h, args) })
 
