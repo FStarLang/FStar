@@ -3746,6 +3746,18 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/MutualTail.chgrep
 
+# Cherry: a function used as a closure borrows its parameters when no
+# chain of its tail calls reaches a closure call (cherry.md, "Borrow
+# inference").
+CUSTARD_TESTS += CherryClosureBorrow
+$(CHERRY_DIR)/CherryClosureBorrow.chgrep: $(CHERRY_DIR)/CherryClosureBorrow.chc
+	$(Q)awk "/CherryClosureBorrow_same\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	  || { echo "ERROR: CherryClosureBorrow's C output has no same"; exit 1; }
+	$(Q)! awk "/CherryClosureBorrow_same\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_dec' \
+	  || { echo "ERROR: CherryClosureBorrow's same owns a parameter"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryClosureBorrow.chgrep
+
 # Cherry: [@@cherry_boxed] boxes a non-recursive record, mutual bundle or
 # variant, and a call passing one is a guaranteed tail call.
 CUSTARD_TESTS += CherryBoxedAttr
