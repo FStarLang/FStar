@@ -107,6 +107,11 @@ type env_t = {
        it. Only the names are needed, which lets a module's encoding be
        registered here without deserializing it. *)
     global_cache:HashTable.t string (list string & lident);
+    (* A memo of the sorts of local variables normalized for [encode_query],
+       see [norm_gamma_sort].  Shared by the queries of a top-level
+       definition: it is not copied by [push_env], and is cleared by
+       [encode_sig]. *)
+    gamma_sorts:HashTable.t int (FStarC.Syntax.Syntax.term & FStarC.Syntax.Syntax.term & FStarC.Syntax.Syntax.term);
 }
 
 val print_env : env_t -> ML string
