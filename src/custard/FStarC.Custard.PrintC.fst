@@ -2903,6 +2903,16 @@ let rec strip_coerce (e:expr) : expr =
   | ECoerce (e', _) -> strip_coerce e'
   | _ -> e
 
+(* An argument C can put in a static initializer: a literal (not a
+   [Prims.int] too big to be a scalar), or a definition's static closure. *)
+let is_static_const (a:expr) : ML bool =
+  TUnit? a.ty ||
+  (match a.e with
+  | EConst (CInt (v, _, None)) -> v < 1073741824 && v > -1073741824
+  | EConst (CInt _) | EConst (CBool _) | EConst (CChar _) | EConst (CString _) | EConst (CFloat _) -> true
+  | EQual (n, _) -> Some? (fn_sig n)
+  | _ -> false)
+
 (* The environment struct and the entry point of the closures whose code is
    the lifted definition [nm] (section 19.12), which takes the captured
    values [caps] first and the boxed function's parameters after them.  The
@@ -3030,6 +3040,17 @@ and c_expr_doc (out:ref c_body) (ind:string) (e:expr) : ML c_expression =
     (match hd.e with
      | EQual (n, _) when Some? (fn_sig n) ->
        clo_request (ReqPap (n, k, e.ty));
+       (* All arguments constants: the closure is one too, a persistent cell
+          in static storage rather than one allocated on every evaluation.
+          In a block of its own, since the statement may follow a label. *)
+       if List.for_all (fun (a:expr) -> is_static_const (strip_coerce a)) eargs then begin
+         let tmp = fresh "spap" in
+         out := !out ++ local_decl ind ("cherry_fn " ^ tmp) tmp LKPointer None None
+                     ++ CText (ind ^ "{ " ^ pap_name n k ^ "_static(cherry_spap, " ^
+                               String.concat ", " args ^ "); " ^
+                               tmp ^ " = (cherry_fn)&cherry_spap; }\n");
+         c_postfix tmp
+       end else
        c_postfix (pap_name n k ^ "(" ^ String.concat ", " args ^ ")")
      | _ ->
        let f = c_expr out ind hd in
@@ -6450,6 +6471,13 @@ let cherry_closure_helpers () : ML (list string & list string) =
               (ctor:string) : ML unit =
     let fields = nonunit fields in
     let s = layout fields in
+    let counted = fields |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
+    let drop, mark = if counted then s ^ "_dec", s ^ "_mark" else "NULL", "NULL" in
+    (* The same closure as a persistent cell [v] in static storage, for
+       constant fields. *)
+    protos := rev_push !protos [
+      "#define " ^ ctor ^ "_static(v, ...) static struct " ^ s ^ " v = { { { 0, CHERRY_TAG_CLOSURE }, (cherry_code)" ^
+      entry ^ ", " ^ drop ^ ", " ^ mark ^ ", " ^ arity ^ " }, __VA_ARGS__ }\n"];
     fn ("static inline " ^ decl_of ret (entry ^ "(cherry_fn self" ^ params eparams ^ ")"))
        ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)self;\n  (void)env;\n" ^ body);
     protos := rev_push !protos [
