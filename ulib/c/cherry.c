@@ -34,7 +34,9 @@ typedef struct { cherry_obj *o; cherry_work_fn f; int mode; } job;
 
 static _Thread_local job *jobs;
 static _Thread_local size_t njobs, cap;
-static _Thread_local bool busy;
+/* How many visits are running on this thread's C stack. */
+static _Thread_local unsigned depth;
+#define CHERRY_DEFER_DEPTH 64
 
 _Thread_local cherry_exn cherry_exn_slot;
 
@@ -71,22 +73,25 @@ void cherry_exit(cherry_int n) {
 }
 
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode) {
-  if (busy) {
-    if (njobs == cap) {
-      cap = cap == 0 ? 64 : 2 * cap;
-      jobs = (job *)realloc(jobs, cap * sizeof(job));
-      if (jobs == NULL) abort();
+  if (CHERRY_LIKELY(depth < CHERRY_DEFER_DEPTH)) {
+    depth++;
+    f(o, mode);
+    if (--depth == 0 && njobs > 0) {
+      depth = 1;
+      while (njobs > 0) {
+        job j = jobs[--njobs];
+        j.f(j.o, j.mode);
+      }
+      depth = 0;
     }
-    jobs[njobs++] = (job){ o, f, mode };
     return;
   }
-  busy = true;
-  f(o, mode);
-  while (njobs > 0) {
-    job j = jobs[--njobs];
-    j.f(j.o, j.mode);
+  if (njobs == cap) {
+    cap = cap == 0 ? 64 : 2 * cap;
+    jobs = (job *)realloc(jobs, cap * sizeof(job));
+    if (jobs == NULL) abort();
   }
-  busy = false;
+  jobs[njobs++] = (job){ o, f, mode };
 }
 
 /* The persistent ML references, and the visit function that marks each
