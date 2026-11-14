@@ -281,169 +281,179 @@ let check
                text (Printf.sprintf "The types %s and %s are not equal"
                        (T.term_to_string ret_ty) (T.term_to_string post_else.ret_ty))]);
         (* Untrusted: see [post_hint_of_candidate]. *)
-        let candidate (pick:option bool) (linked:bool) : T.Tac term =
-          J.join_post_candidate pick linked #g #hyp #b post_then post_else in
-        let post = post_hint_of_candidate g ret_ty (candidate None false) in
-        let prove_both (post:post_hint_for_env g) ()
-          : T.Tac (ph:post_hint_for_env g &
-                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
-                   checker_result_t (g_with_eq tm_false) pre (PostHint ph)) =
-          let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
-          let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
-          (| post, then_, else_ |)
-        in
-        (* A candidate is only accepted once both branches have been
-           elaborated against it: the prover leaves some of its checks (e.g.
-           that two cells it matched hold the same value) to elaboration. *)
-        let prove_and_extract (post:post_hint_for_env g) ()
-          : T.Tac (ph:post_hint_for_env g &
-                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
-                   checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
-                   option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
-                           c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
-                                        comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
-                           e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
-                           c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
-                                        comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
-          let (| post, then_, else_ |) = prove_both post () in
-          let (| e1, c1 |) = extract_nat then_ in
-          let (| e2, c2 |) = extract_nat else_ in
-          (| post, then_, else_, Some (| e1, c1, e2, c2 |) |)
-        in
-        (* Search for a useful common postcondition, not just an entailed one.
-           [post] is the default, unlinked join [candidate None false].
-           [linked_post = candidate None true] is only a shape probe: it shows
-           what would remain conditional if we refused to generalize a
-           witness shared by several conjuncts. We do not accept that term
-           merely because of its shape.
-
-           A no-pick join leaves unmatched resources under the condition.
-           Picking replaces only that leftover with one branch's version;
-           matched resources are still joined. The prover may establish the
-           picked version in the other branch using its automatic folds and
-           unfolds (`pulse_intro`).
-
-           For example, suppose [boxed r] abbreviates the folded resource
-           [exists* v. r |-> v], and the branches leave:
-
-             p_then = r |-> v ** flag |-> 1
-             p_else = boxed r ** flag |-> f
-
-           The no-pick join keeps:
-
-             (if b then r |-> v else boxed r) **
-             flag |-> (if b then 1 else f)
-
-           Picking the else leftover instead proposes:
-
-             boxed r ** flag |-> (if b then 1 else f)
-
-           Folding can prove this of the then-branch too. Taking the WHOLE
-           else postcondition would instead require [flag |-> f] in the
-           then-branch, which generally fails: that branch wrote [1].
-
-           Prefer linked picks, which keep a cell with other conjuncts naming
-           its existential witness. An unlinked join can be provable, and
-           contain no conditional, yet lose a connection needed by later code.
-           For example, for an opaque [P:int -> slprop] whose applications
-           match without requiring equal arguments:
-
-             p_then = exists* x. r |-> x ** P x
-             p_else = exists* y. r |-> y ** P y
-
-           [post] can generalize the two matched conjuncts independently:
-
-             exists* u v. r |-> u ** P v
-
-           But [linked_post] keeps [if b then p_then else p_else]. Picking
-           either linked leftover recovers [exists* x. r |-> x ** P x].
-           This is why testing only [post] for a conditional would miss useful
-           alternatives: the unlinked join already erased the connection.
-
-           Preferring linked candidates does not guarantee precision. For
-           example, let [Q] be another opaque predicate like [P], with a
-           distinct head, and suppose:
-
-             p_then = exists* x y. r |-> x ** P x ** Q y
-             p_else = exists* x y. r |-> x ** P y ** Q x
-
-           Here neither linked pick is generally provable of both branches:
-           the cell's value is tied to [P] in one branch and [Q] in the other.
-           The unlinked join instead forgets both connections:
-
-             exists* u v w. r |-> u ** P v ** Q w
-
-           It has no conditional, so the unlinked picks are skipped and this
-           weaker [post] is accepted as the fallback. A subsequent call whose
-           precondition is:
-
-             exists* u v w. r |-> u ** P v ** Q w **
-               pure (u == v \/ u == w)
-
-           would be justified by either original branch (the left equality
-           holds in the then-branch, the right in the else-branch), but cannot
-           in general be proved from the inferred postcondition. Thus a valid
-           join can cause verification to fail later in the continuation.
-           The same loss can occur in a picked unlinked candidate: picking
-           does not restore the connections already lost by generalization.
-           We search using only the two branches, not the continuation, and
-           do not retry alternatives if the continuation later fails. An
-           explicit [ensures] on the [if] can retain the common fact needed
-           downstream instead of relying on this inference heuristic.
-
-           The search order is:
-           (1) If [linked_post] keeps a conditional, try [Some false, true],
-               then [Some true, true] (arguments are [pick, linked]).
-           (2) If [post] keeps a conditional, try [Some false, false],
-               then [Some true, false], allowing witness links to be lost.
-           (3) If no pick succeeds, prove both branches against [post].
-           Else-first is just the order in which we try the two leftovers;
-           success still requires the candidate to work for BOTH branches.
-
-           [post_keeps_conditional] is a syntactic heuristic for a leftover:
-           it finds a match at slprop position under [**], [exists*], or
-           [with_pure], not a conditional value inside a resource such as
-           [flag |-> (if b then 1 else f)]. Without such a leftover in the
-           corresponding no-pick join, there is nothing extra to select by
-           picking. In particular, if [linked_post] has none, we skip only
-           (1), not the separate test in (2). If keeping links has blocked no
-           generalization, the two no-pick joins agree up to fresh binder names;
-           there is no reason to validate [linked_post] separately from [post].
-
-           These shape tests only schedule attempts; they prove no entailment
-           and do not guarantee that later code can use a candidate. Every
-           picked candidate is core-checked, proved of both branches, and
-           elaborated before acceptance. The fallback [post] is also checked
-           and proved, with elaboration below; if it fails, inference fails. *)
-        (* Only inspected, to decide which candidates to try. *)
-        let linked_post = candidate None true in
-        let with_leftover_of (linked then_:bool) () =
-          prove_and_extract (post_hint_of_candidate g ret_ty (candidate (Some then_) linked)) ()
-        in
-        let rec first (cs:list (bool & bool))
-          : T.Tac (ph:post_hint_for_env g &
-                   checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
-                   checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
-                   option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
-                           c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
-                                        comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
-                           e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
-                           c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
-                                        comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
-          match cs with
-          | (linked, then_)::cs ->
-            (match RU.try_quietly (with_leftover_of linked then_) with
-             | Some r -> r
-             | None -> first cs)
-          | _ ->
+        (* [links]: whether candidates state, per branch, what a generalized
+           binder stands for (see [J.join_post_candidate]). Those facts are
+           proved by SMT, which can fail where the same branch proves the
+           candidates without them; so if no candidate with them works, the
+           search is repeated without. *)
+        let search (links:bool) () =
+          let candidate (pick:option bool) (linked:bool) : T.Tac term =
+            J.join_post_candidate pick linked links #g #hyp #b post_then post_else in
+          let post = post_hint_of_candidate g ret_ty (candidate None false) in
+          let prove_both (post:post_hint_for_env g) ()
+            : T.Tac (ph:post_hint_for_env g &
+                     checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                     checker_result_t (g_with_eq tm_false) pre (PostHint ph)) =
+            let then_ = Pulse.Checker.Prover.prove_post_hint then_ (PostHint post) e1.range in
+            let else_ = Pulse.Checker.Prover.prove_post_hint else_ (PostHint post) e2.range in
+            (| post, then_, else_ |)
+          in
+          (* A candidate is only accepted once both branches have been
+             elaborated against it: the prover leaves some of its checks (e.g.
+             that two cells it matched hold the same value) to elaboration. *)
+          let prove_and_extract (post:post_hint_for_env g) ()
+            : T.Tac (ph:post_hint_for_env g &
+                     checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                     checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
+                     option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
+                             c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
+                                          comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
+                             e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
+                             c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
+                                          comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
             let (| post, then_, else_ |) = prove_both post () in
-            (| post, then_, else_, None |)
+            let (| e1, c1 |) = extract_nat then_ in
+            let (| e2, c2 |) = extract_nat else_ in
+            (| post, then_, else_, Some (| e1, c1, e2, c2 |) |)
+          in
+          (* Search for a useful common postcondition, not just an entailed one.
+             [post] is the default, unlinked join [candidate None false].
+             [linked_post = candidate None true] is only a shape probe: it shows
+             what would remain conditional if we refused to generalize a
+             witness shared by several conjuncts. We do not accept that term
+             merely because of its shape.
+
+             A no-pick join leaves unmatched resources under the condition.
+             Picking replaces only that leftover with one branch's version;
+             matched resources are still joined. The prover may establish the
+             picked version in the other branch using its automatic folds and
+             unfolds (`pulse_intro`).
+
+             For example, suppose [boxed r] abbreviates the folded resource
+             [exists* v. r |-> v], and the branches leave:
+
+               p_then = r |-> v ** flag |-> 1
+               p_else = boxed r ** flag |-> f
+
+             The no-pick join keeps:
+
+               (if b then r |-> v else boxed r) **
+               flag |-> (if b then 1 else f)
+
+             Picking the else leftover instead proposes:
+
+               boxed r ** flag |-> (if b then 1 else f)
+
+             Folding can prove this of the then-branch too. Taking the WHOLE
+             else postcondition would instead require [flag |-> f] in the
+             then-branch, which generally fails: that branch wrote [1].
+
+             Prefer linked picks, which keep a cell with other conjuncts naming
+             its existential witness. An unlinked join can be provable, and
+             contain no conditional, yet lose a connection needed by later code.
+             For example, for an opaque [P:int -> slprop] whose applications
+             match without requiring equal arguments:
+
+               p_then = exists* x. r |-> x ** P x
+               p_else = exists* y. r |-> y ** P y
+
+             [post] can generalize the two matched conjuncts independently:
+
+               exists* u v. r |-> u ** P v
+
+             But [linked_post] keeps [if b then p_then else p_else]. Picking
+             either linked leftover recovers [exists* x. r |-> x ** P x].
+             This is why testing only [post] for a conditional would miss useful
+             alternatives: the unlinked join already erased the connection.
+
+             Preferring linked candidates does not guarantee precision. For
+             example, let [Q] be another opaque predicate like [P], with a
+             distinct head, and suppose:
+
+               p_then = exists* x y. r |-> x ** P x ** Q y
+               p_else = exists* x y. r |-> x ** P y ** Q x
+
+             Here neither linked pick is generally provable of both branches:
+             the cell's value is tied to [P] in one branch and [Q] in the other.
+             The unlinked join instead forgets both connections:
+
+               exists* u v w. r |-> u ** P v ** Q w
+
+             It has no conditional, so the unlinked picks are skipped and this
+             weaker [post] is accepted as the fallback. A subsequent call whose
+             precondition is:
+
+               exists* u v w. r |-> u ** P v ** Q w **
+                 pure (u == v \/ u == w)
+
+             would be justified by either original branch (the left equality
+             holds in the then-branch, the right in the else-branch), but cannot
+             in general be proved from the inferred postcondition. Thus a valid
+             join can cause verification to fail later in the continuation.
+             The same loss can occur in a picked unlinked candidate: picking
+             does not restore the connections already lost by generalization.
+             We search using only the two branches, not the continuation, and
+             do not retry alternatives if the continuation later fails. An
+             explicit [ensures] on the [if] can retain the common fact needed
+             downstream instead of relying on this inference heuristic.
+
+             The search order is:
+             (1) If [linked_post] keeps a conditional, try [Some false, true],
+                 then [Some true, true] (arguments are [pick, linked]).
+             (2) If [post] keeps a conditional, try [Some false, false],
+                 then [Some true, false], allowing witness links to be lost.
+             (3) If no pick succeeds, prove both branches against [post].
+             Else-first is just the order in which we try the two leftovers;
+             success still requires the candidate to work for BOTH branches.
+
+             [post_keeps_conditional] is a syntactic heuristic for a leftover:
+             it finds a match at slprop position under [**], [exists*], or
+             [with_pure], not a conditional value inside a resource such as
+             [flag |-> (if b then 1 else f)]. Without such a leftover in the
+             corresponding no-pick join, there is nothing extra to select by
+             picking. In particular, if [linked_post] has none, we skip only
+             (1), not the separate test in (2). If keeping links has blocked no
+             generalization, the two no-pick joins agree up to fresh binder names;
+             there is no reason to validate [linked_post] separately from [post].
+
+             These shape tests only schedule attempts; they prove no entailment
+             and do not guarantee that later code can use a candidate. Every
+             picked candidate is core-checked, proved of both branches, and
+             elaborated before acceptance. The fallback [post] is also checked
+             and proved, with elaboration below; if it fails, inference fails. *)
+          (* Only inspected, to decide which candidates to try. *)
+          let linked_post = candidate None true in
+          let with_leftover_of (linked then_:bool) () =
+            prove_and_extract (post_hint_of_candidate g ret_ty (candidate (Some then_) linked)) ()
+          in
+          let rec first (cs:list (bool & bool))
+            : T.Tac (ph:post_hint_for_env g &
+                     checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
+                     checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
+                     option (e1:st_term { ~(hyp `Set.mem` freevars_st e1) } &
+                             c1:comp_st { comp_pre c1 == pre /\ comp_res c1 == ph.ret_ty /\
+                                          comp_u c1 == ph.u /\ comp_post c1 == ph.post } &
+                             e2:st_term { ~(hyp `Set.mem` freevars_st e2) } &
+                             c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
+                                          comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
+            match cs with
+            | (linked, then_)::cs ->
+              (match RU.try_quietly (with_leftover_of linked then_) with
+               | Some r -> r
+               | None -> first cs)
+            | _ ->
+              let (| post, then_, else_ |) = prove_both post () in
+              (| post, then_, else_, None |)
+          in
+          let linked_cs =
+            if post_keeps_conditional linked_post then [(true, false); (true, true)] else [] in
+          let unlinked_cs =
+            if post_keeps_conditional post.post then [(false, false); (false, true)] else [] in
+          first (linked_cs @ unlinked_cs)
         in
-        let linked_cs =
-          if post_keeps_conditional linked_post then [(true, false); (true, true)] else [] in
-        let unlinked_cs =
-          if post_keeps_conditional post.post then [(false, false); (false, true)] else [] in
-        first (linked_cs @ unlinked_cs)
+        match RU.try_quietly (search true) with
+        | Some r -> r
+        | None -> search false ()
   in
   let (| post_hint', then_, else_, extracted |) = joinable in
 

@@ -115,8 +115,20 @@ val guard_branch_post (#g:env) (b:term) (then_:bool) (p:post_hint_for_env g)
 
      In contrast, if [p1 = exists* x. r |-> x] and
      [p2 = exists* y. r |-> y], there is no shared witness to preserve:
-     every choice of [pick] and [linked] yields [exists* z. r |-> z]. *)
-val join_post_candidate (pick:option bool) (linked:bool) #g #hyp #b
+     every choice of [pick] and [linked] yields [exists* z. r |-> z].
+
+   * With [links], a binder introduced by generalizing a position also gets,
+     per branch, a pure fact guarded by the branch condition saying what the
+     branch had there, together with the branch's pure facts about it:
+
+       p1 = exists* c. r |-> f c ** pure (phi c)
+       p2 = r |-> v
+       result = exists* w. r |-> w **
+                  pure (b == true ==> (exists c. w == f c /\ phi c)) **
+                  pure (b == false ==> w == v)
+
+     Without [links], those facts are omitted. *)
+val join_post_candidate (pick:option bool) (linked links:bool) #g #hyp #b
     (p1:post_hint_for_env (g_with_eq g hyp b tm_true))
     (p2:post_hint_for_env (g_with_eq g hyp b tm_false))
 : T.Tac term
