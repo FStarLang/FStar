@@ -178,8 +178,9 @@ static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
 }
 
 /* Counting is on every path of the generated code, which is large enough
-   that GCC stops inlining it: the common case, a cell of this thread's, is
-   forced inline, and the others (shared or persistent) are not. */
+   that GCC stops inlining it: the common cases, a cell of this thread's and
+   a persistent one (which is not counted: global constants, read often),
+   are forced inline, and a shared cell's atomic update is not. */
 #if defined(__GNUC__)
 #define CHERRY_ALWAYS_INLINE inline __attribute__((always_inline))
 #define CHERRY_NOINLINE __attribute__((noinline, unused))
@@ -190,19 +191,18 @@ static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
 #define CHERRY_LIKELY(c) (c)
 #endif
 
-static CHERRY_NOINLINE void cherry_inc_slow(cherry_obj *o, int32_t rc) {
-  if (rc < 0) __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);
+static CHERRY_NOINLINE void cherry_inc_slow(cherry_obj *o) {
+  __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);
 }
 
 static CHERRY_ALWAYS_INLINE void cherry_inc(cherry_obj *o) {
   if (cherry_is_scalar(o)) return;
   int32_t rc = cherry_rc_load(o);
   if (CHERRY_LIKELY(rc > 0)) cherry_rc_store(o, rc + 1);
-  else cherry_inc_slow(o, rc);
+  else if (rc < 0) cherry_inc_slow(o);
 }
 
-static CHERRY_NOINLINE bool cherry_dec_ref_slow(cherry_obj *o, int32_t rc) {
-  if (rc == 0) return false;
+static CHERRY_NOINLINE bool cherry_dec_ref_slow(cherry_obj *o) {
   return __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) == 0;
 }
 
@@ -213,7 +213,8 @@ static CHERRY_ALWAYS_INLINE bool cherry_dec_ref(cherry_obj *o) {
   int32_t rc = cherry_rc_load(o);
   if (CHERRY_LIKELY(rc > 1)) { cherry_rc_store(o, rc - 1); return false; }
   if (rc == 1) return true;
-  return cherry_dec_ref_slow(o, rc);
+  if (rc == 0) return false;
+  return cherry_dec_ref_slow(o);
 }
 
 /* Marking walks everything a value reaches, in one of two modes: making it
