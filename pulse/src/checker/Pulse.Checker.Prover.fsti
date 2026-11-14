@@ -44,3 +44,12 @@ val try_frame_pre (allow_ambiguous : bool) (#g:env)
     (d:(t:st_term & c:comp_st))
     (res_ppname:ppname) :
   T.Tac (checker_result_t g ctxt NoHint)
+
+// Unlike prove/try_frame_pre, do not return a frame to retain across a call.
+// Abortive exits must transfer all nonduplicable ownership to goals (including
+// any crossed cleanup obligations); reject leftovers using the same criterion
+// as prove_post_hint. Duplicable leftovers and unreachable contexts are allowed.
+// The returned elaborator expects goals alone, not goals ** a hidden frame.
+val prove_exact (rng:range) (g:env) (ctxt goals:slprop) :
+  T.Tac (g':env { env_extends g' g } &
+    continuation_elaborator g ctxt g' goals)

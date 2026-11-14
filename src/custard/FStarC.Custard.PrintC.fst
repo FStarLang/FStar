@@ -1265,6 +1265,14 @@ and base_ty (t:cty) : ML string =
 (* The abstract declarator: a type as a cast or a compound literal spells it. *)
 let ty (t:cty) : ML string = decl_of t ""
 
+(* The pending-exception result is never consumed. Use a tagged integer zero,
+   not a null heap pointer: after inlining, GCC otherwise diagnoses impossible
+   reference-count accesses on the dummy/normal-result join at -O2. *)
+let exn_dummy_return (ind:string) (t:cty) : ML string =
+  if is_int_ty t then ind ^ "return CHERRY_INT_SMALL(0);\n"
+  else ind ^ "{ " ^ decl_of t "cherry_dummy" ^
+    "; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }\n"
+
 (* Cherry: how the C of a call in tail position of the definition being
    printed starts -- the name of the function it calls, or for a closure the
    prefix of every apply helper -- when the call can be a guaranteed tail call: a definition,
@@ -3831,7 +3839,13 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
        around the rest of the block, so a [return] in the last position leaves
        exactly this behind. *)
     !out ++
-    (if body_empty tt && body_empty ft then empty_body
+    (if body_empty tt && body_empty ft then
+       (* Cherry can bind a dynamically unboxed payload solely for this test.
+          Keep its use when both branches erase, rather than leaving a C
+          variable assigned but never read. Ownership is already explicit. *)
+       (if Options.custard_cherry ()
+        then CText (ind ^ "(void)" ^ group cs ^ ";\n")
+        else empty_body)
      else if body_empty tt then CText (ind ^ "if (" ^ negate cs ^ ")") ++ brace ind ft
      else CText (ind ^ "if (" ^ unparen cs ^ ")") ++ brace ind tt ++
           (if body_empty ft then empty_body else CText (ind ^ "else") ++ brace ind ft))
@@ -3961,9 +3975,8 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
      | None -> ind ^ "cherry_exn_uncaught();\n"
      | Some _ when !void_ret -> ind ^ "return;\n"
      | Some t when !trmc_on ->
-       trmc_unwind ind ^
-       ind ^ "{ " ^ decl_of t "cherry_dummy" ^ "; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }\n"
-     | Some t -> ind ^ "{ " ^ decl_of t "cherry_dummy" ^ "; memset(&cherry_dummy, 0, sizeof cherry_dummy); return cherry_dummy; }\n")
+       trmc_unwind ind ^ exn_dummy_return ind t
+     | Some t -> exn_dummy_return ind t)
 
   | EOp ({ po_op = RcInc }, [a]) | EOp ({ po_op = RcDec }, [a]) ->
     let out = mk_ref empty_body in
@@ -6535,7 +6548,7 @@ let cherry_closure_helpers () : ML (list string & list string) =
         "      if (CHERRY_EXN_PENDING()) {\n" ^
         String.concat "" (rest |> List.collect (fun (x, xt) ->
           if is_nonplain_ty xt then ["        " ^ rc_call "dec" xt x ^ ";\n"] else [])) ^
-        "        " ^ decl_of rk "r" ^ ";\n        memset(&r, 0, sizeof r);\n        return r;\n" ^
+        exn_dummy_return "        " rk ^
         "      }\n" ^
         "      " ^ decl_of rk "r" ^ " = " ^ apply_name tm (k - cut) ^ "(" ^
                 String.concat ", " ("g" :: names rest) ^ ");\n" ^

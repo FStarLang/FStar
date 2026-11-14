@@ -31,3 +31,9 @@ val check
   (res_ppname:ppname)
   (t:st_term { Tm_Goto? t.term })
 : T.Tac (checker_result_t g pre post_hint)
+
+// Check the same lexical ownership transfer, but retain a typed runtime raise.
+val check_native_raise
+  (g:env) (pre:term) (post_hint:post_hint_opt g) (res_ppname:ppname)
+  (t:st_term { Tm_Goto? t.term }) (exn_ty payload:term)
+  : T.Tac (checker_result_t g pre post_hint)
