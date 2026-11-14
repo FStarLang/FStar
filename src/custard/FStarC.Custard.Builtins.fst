@@ -1264,9 +1264,27 @@ let is_stub_module (ns : list string) : bool =
    second [Stop], raises that one, and the compiler's handler does not catch
    it.  The failure is a Pulse tactic reporting
    [Custard_FStarC_Tactics_Common.FStarC_Tactics_Common_Stop] as an error
-   message.  [UEnv.new_mlpath_of_lident] carries the same entry. *)
+   message.  [UEnv.new_mlpath_of_lident] carries the same entry.
+
+   [FStar.Stubs.Reflection.Types] has no compiler module at all: its abstract
+   types are the compiler's syntax, which [FStarC_Reflection_Types.ml] says
+   with OCaml abbreviations.  Without these entries a backend that does not
+   compile that file (Cherry) has nothing to lay the types out with. *)
 let stub_aliases : list (string & string) = [
   "FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop";
+  "FStar.Stubs.Reflection.Types.namedv", "FStarC.Syntax.Syntax.bv";
+  "FStar.Stubs.Reflection.Types.bv", "FStarC.Syntax.Syntax.bv";
+  "FStar.Stubs.Reflection.Types.binder", "FStarC.Syntax.Syntax.binder";
+  "FStar.Stubs.Reflection.Types.term", "FStarC.Syntax.Syntax.term";
+  "FStar.Stubs.Reflection.Types.env", "FStarC.TypeChecker.Env.env";
+  "FStar.Stubs.Reflection.Types.fv", "FStarC.Syntax.Syntax.fv";
+  "FStar.Stubs.Reflection.Types.comp", "FStarC.Syntax.Syntax.comp";
+  "FStar.Stubs.Reflection.Types.sigelt", "FStarC.Syntax.Syntax.sigelt";
+  "FStar.Stubs.Reflection.Types.ctx_uvar_and_subst", "FStarC.Syntax.Syntax.ctx_uvar_and_subst";
+  "FStar.Stubs.Reflection.Types.letbinding", "FStarC.Syntax.Syntax.letbinding";
+  "FStar.Stubs.Reflection.Types.ident", "FStarC.Ident.ident";
+  "FStar.Stubs.Reflection.Types.universe_uvar", "FStarC.Syntax.Syntax.universe_uvar";
+  "FStar.Stubs.Reflection.Types.universe", "FStarC.Syntax.Syntax.universe";
 ]
 
 (* Issue #4692.  [FStarC.NormSteps] is not a stub but a copy: the compiler
@@ -1578,6 +1596,8 @@ let is_type_only_realized_module (ns : list string) : ML bool =
    implementations, [FStar.Pprint-c.cherry.fst] and
    [FStar.String-c.cherry.fst], which target selection picks. *)
 let cherry_source_modules : list (list string) = [
+  (* [FStar.Issue-c.cherry.fst], with the compiler's issue type. *)
+  ["FStar"; "Issue"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
@@ -1598,6 +1618,8 @@ let cherry_source_modules : list (list string) = [
   ["FStarC"; "SmallInt"];
   ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
+  (* [FStar.Stubs.Tactics.Unseal], whose interface defines [unseal]. *)
+  ["FStarC"; "Tactics"; "Unseal"];
   ["FStarC"; "Time"];
   ["FStarC"; "Timing"];
   ["FStarC"; "Util"];
@@ -1730,6 +1752,27 @@ let dyn_rule (id:string) : ML (option rule) =
   | "undyn" -> prim "get" (fun t -> t)
   | _ -> None
 
+(* [FStar.Sealed] is realized by [FStar_Sealed.ml], where a [sealed a] is the
+   [a] itself and every operation is the identity or an application.  Cherry
+   has no OCaml to link, and the type is [assume]d, so there is no F* source
+   to compile either: the rules say the same thing as the realization. *)
+let sealed_rule (id:string) : ML (option rule) =
+  let ty (ts:list cty) (i:int) : ML cty =
+    if List.length ts > i then List.nth ts i else TAny in
+  match id with
+  | "sealed" -> Some (Rule_type (fun ts -> ty ts 0))
+  | "seal" | "unseal" ->
+    Some (Rule_prim (1, fun _ args ->
+      match args with
+      | [x] -> x
+      | _ -> failwith "FStar.Sealed applied to the wrong number of arguments"))
+  | "map_seal" | "bind_seal" ->
+    Some (Rule_prim (2, fun ts args ->
+      match args with
+      | [x; f] -> mk (EApp (f, [x])) (ty ts 1) E_Impure
+      | _ -> failwith "FStar.Sealed applied to the wrong number of arguments"))
+  | _ -> None
+
 let shape_rule (l:Ident.lident) : ML (option rule) =
   let path = Ident.path_of_lid l in
   match List.rev path with
@@ -1773,6 +1816,9 @@ let shape_rule (l:Ident.lident) : ML (option rule) =
        then iarray_rule id
        else if ns = ["FStar"; "Dyn"] && Some? (dyn_rule id)
        then dyn_rule id
+       else if Options.custard_cherry () && ns = ["FStar"; "Sealed"] &&
+               Some? (sealed_rule id)
+       then sealed_rule id
        (* A rule for one name beats the module-wide [Rule_realized], as
           for every family above. *)
        else if Some? (pulse_rule ns id) then pulse_rule ns id

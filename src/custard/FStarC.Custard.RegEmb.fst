@@ -256,18 +256,41 @@ let str (s:string) : ML term = S.mk (Tm_constant (Const_string (s, Range.dummyRa
 
 (* [call f [ty..] [arg..]] is [f #ty.. arg..].  Every function this module
    generates a call to is polymorphic only in leading implicit binders, which
-   is what F* makes of the ['a] in a signature, so passing the type arguments
-   first and positionally is exactly right.  {!signature_of} checks it. *)
+   is what F* makes of the ['a] in a signature, so the type arguments go
+   first, in binder order ({!instantiate}).  {!signature_of} checks it. *)
 let call (f:Ident.lident) (tys:list term) (args:list term) : ML term =
   U.mk_app (S.fvar f None) (List.map S.iarg tys @ List.map S.as_arg args)
 
+(* The type arguments of [f], given [tys], the types its embedding binders
+   embed in order.  Binder order is not textual order: the implicits of
+   [mk_tactic_interpretation_1 (t : 't1 -> tac 'r) (e1:embedding 't1)
+   (er:embedding 'r)] come out as ['r] then ['t1].  So each type goes to the
+   implicit its embedding binder mentions; when some binder does not name
+   one, the order is taken as given. *)
+let instantiate (imps:list binder) (rest:list binder) (tys:list term) : ML (list term) =
+  let is_imp (x:bv) : ML bool = imps |> List.existsb (fun (b:binder) -> S.bv_eq b.binder_bv x) in
+  let embedded = rest |> List.collect (fun (b:binder) ->
+    match U.head_and_args_full b.binder_bv.sort with
+    | _, [(a, _)] ->
+      (match (SS.compress a).n with
+       | Tm_name x when is_imp x -> [x]
+       | _ -> [])
+    | _ -> []) in
+  if List.length embedded <> List.length tys then tys else
+  let pairs = List.zip embedded tys in
+  let found = imps |> List.map (fun (b:binder) ->
+    List.tryFind (fun (x, _) -> S.bv_eq x b.binder_bv) pairs) in
+  if List.existsb None? found then tys
+  else List.map (fun o -> snd (Some?.v o)) found
+
 (* The binders of [f] after its leading [tys] implicit ones have been
-   instantiated, and its result type.  This is where the generated code gets
-   the *types* of the variables it binds -- the [psc], the [args] -- rather
-   than inventing them; and it is the check that [call]'s positional
-   convention holds, since a mismatch shows up as too few binders. *)
+   instantiated, its result type, and the type arguments in binder order (see
+   {!instantiate}).  This is where the generated code gets the *types* of the
+   variables it binds -- the [psc], the [args] -- rather than inventing them;
+   and it is the check that [call]'s positional convention holds, since a
+   mismatch shows up as too few binders. *)
 let signature_of (st:Extract.state) (f:Ident.lident) (tys:list term)
-  : ML (list binder & typ) =
+  : ML (list binder & typ & list term) =
   Extract.ensure_lid_available st f;
   match TcEnv.try_lookup_lid (Extract.tcenv st) f with
   | None -> raise (NoEmbedding ("no declaration for " ^ Ident.string_of_lid f))
@@ -280,8 +303,9 @@ let signature_of (st:Extract.state) (f:Ident.lident) (tys:list term)
     List.iter2 (fun (b:binder) (_:term) ->
       if None? b.binder_qual then
         raise (NoEmbedding (Ident.string_of_lid f ^ " does not begin with implicit binders"))) imps tys;
+    let tys = instantiate imps rest tys in
     let s = List.map2 (fun (b:binder) (t:term) -> NT (b.binder_bv, t)) imps tys in
-    (SS.subst_binders s rest, SS.subst s (U.comp_result c))
+    (SS.subst_binders s rest, SS.subst s (U.comp_result c), tys)
 
 (* [f]'s last [n] binders, which is what a generated lambda binds: the
    normalizer hands a primitive step its callbacks and its argument list, and
@@ -665,10 +689,10 @@ let interp_term (st:Extract.state) (k:kind) (tac:bool) (fv_lid:Ident.lident)
        has the type this expects -- a function into [tac] -- so unlike the ML
        pipeline there is no [from_tactic_n] to insert. *)
     let h = lid ("FStarC.Tactics.InterpFuns.mk_tactic_interpretation_" ^ show n) in
-    let hbs, hres = signature_of st h tys in
+    let hbs, hres, htys = signature_of st h tys in
     let vs = fresh_bvs (last_binders 4 hbs) in
     let body = wrap vs hres (fun vs ->
-      call h tys ([str (Ident.string_of_lid fv_lid ^ " (plugin)"); f]
+      call h htys ([str (Ident.string_of_lid fv_lid ^ " (plugin)"); f]
                   @ embs @ List.map S.bv_to_name vs)) in
     U.abs (List.map S.mk_binder vs) body None
   end else begin
@@ -679,12 +703,12 @@ let interp_term (st:Extract.state) (k:kind) (tac:bool) (fv_lid:Ident.lident)
     let h = match k with
             | SyntaxTerm -> lid ("FStarC.Syntax.Embeddings.arrow_as_prim_step_" ^ show n)
             | NBETerm    -> lid ("FStarC.TypeChecker.NBETerm.arrow_as_prim_step_" ^ show n) in
-    let hbs, hres = signature_of st h tys in
+    let hbs, hres, htys = signature_of st h tys in
     (* [cb], then the [universes] and [args] of the returned function. *)
     let vs = fresh_bvs (last_binders 3 hbs) in
     let lid_of_str = call (lid "FStarC.Ident.lid_of_str") [] [str (Ident.string_of_lid fv_lid)] in
     let body = wrap vs hres (fun vs ->
-      call h tys (embs @ [f; lid_of_str] @ List.map S.bv_to_name vs)) in
+      call h htys (embs @ [f; lid_of_str] @ List.map S.bv_to_name vs)) in
     let vs = match k with
              | NBETerm -> vs
              | SyntaxTerm ->

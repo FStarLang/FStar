@@ -1747,6 +1747,35 @@ let rec unfold_abbrevs (st:state) (fuel:int) (ty:cty) : ML cty =
     | TApp (n, args) -> TApp (n, List.map go args)
     | _ -> ty
 
+(* [t] and [u] with their arrows' effects joined, if they are otherwise the
+   same type.  The effect on an arrow does not change the closure's
+   representation. *)
+let rec join_arrow_effs (t u:cty) : ML (option cty) =
+  let both (xs ys:list cty) : ML (option (list cty)) =
+    if List.length xs <> List.length ys then None else
+    List.fold_right (fun (x, y) acc ->
+      match acc with
+      | None -> None
+      | Some acc -> (match join_arrow_effs x y with
+                     | Some z -> Some (z :: acc)
+                     | None -> None))
+      (List.zip xs ys) (Some []) in
+  if t = u then Some t else
+  match t, u with
+  | TArrow (a, e, b), TArrow (a', e', b') ->
+    (match both [a; b] [a'; b'] with
+     | Some [a; b] -> Some (TArrow (a, join_eff e e', b))
+     | _ -> None)
+  | TTuple xs, TTuple ys ->
+    (match both xs ys with Some zs -> Some (TTuple zs) | None -> None)
+  | TBuf x, TBuf y ->
+    (match join_arrow_effs x y with Some z -> Some (TBuf z) | None -> None)
+  | TRef (k, x), TRef (k', y) when k = k' ->
+    (match join_arrow_effs x y with Some z -> Some (TRef (k, z)) | None -> None)
+  | TApp (n, xs), TApp (n', ys) when n = n' ->
+    (match both xs ys with Some zs -> Some (TApp (n, zs)) | None -> None)
+  | _ -> None
+
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
    parameter, or a local closure -- gets its effect: there is no declaration to
@@ -3845,9 +3874,21 @@ and expr_of_term (st:state) (t:term) : ML expr =
       | [] -> TAny
       | t :: ts ->
         if ts |> List.for_all (fun u -> u = t) then t else
+        (* Nor do arrows that differ only in their effects: in a [Tac]
+           function returning [fun ps -> false] from one branch and a
+           closure that calls an impure function from the other, the
+           representation is the same closure. *)
+        let join (t:cty) (ts:list cty) : ML (option cty) =
+          List.fold_left (fun (j:option cty) u ->
+            match j with Some j -> join_arrow_effs j u | None -> None)
+            (Some t) ts in
+        match join t ts with
+        | Some j -> j
+        | None ->
         let t' = unfold_abbrevs st 100 t in
-        if ts |> List.for_all (fun u -> unfold_abbrevs st 100 u = t') then t
-        else TAny in
+        match join t' (List.map (unfold_abbrevs st 100) ts) with
+        | Some j -> if j = t' then t else j
+        | None -> TAny in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
@@ -4745,7 +4786,10 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     | None ->
     let cs = binder_classes st l in
     let margs, msubst, rest, holes = split_mono_args st l cs args in
-    let key = { sk_lid = l; sk_args = margs; sk_subst = msubst;
+    (* Unstubbed here as well as in {!request}, which keys [st.emitted] by the
+       unstubbed name: {!callee_sig} and {!callee_eff} must look it up under
+       the same key, or a call into a stub is typed [any]. *)
+    let key = { sk_lid = unstub_lid st l; sk_args = margs; sk_subst = msubst;
                 sk_holes = List.length holes } in
     let nm = request st key in
     (* Uniform compilation (section 5.0) deletes the type arguments from the
