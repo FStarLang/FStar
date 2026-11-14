@@ -4527,7 +4527,8 @@ let body_occurs (target:string) (b:tydef) : ML bool =
     | TApp (n, _) ->
       let k = string_of_name n in
       k = target ||
-      (if HashTable.mem seen k then false else begin
+      (* A boxed type is a pointer too, so the search stops there. *)
+      (if HashTable.mem seen k || is_boxed_name n then false else begin
          HashTable.add seen k true;
          match find_type n with
          | Some d -> body d.dt_body

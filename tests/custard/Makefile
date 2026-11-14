@@ -3874,6 +3874,17 @@ $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	  || { echo "ERROR: CherryPap_make tests a partial application for an exception"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryPap.chgrep
+# Cherry: a small record on a cycle, and a constructor's payload record, are
+# unboxed when another boxed type breaks the cycle.
+$(CHERRY_DIR)/CherryUnboxCycle.chgrep: $(CHERRY_DIR)/CherryUnboxCycle.chc
+	$(Q)grep -q 'typedef struct FStar_Pervasives_Native_tuple2__term_bool_s ' $(<:.chc=.h) \
+	  || { echo "ERROR: CherryUnboxCycle: term & bool is boxed"; exit 1; }
+	$(Q)grep -q 'typedef struct CherryUnboxCycle_lam_s ' $(<:.chc=.h) \
+	  || { echo "ERROR: CherryUnboxCycle: lam is boxed"; exit 1; }
+	$(Q)grep -q 'typedef cherry_obj \*CherryUnboxCycle_term;' $(<:.chc=.h) \
+	  || { echo "ERROR: CherryUnboxCycle: term is not boxed"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryUnboxCycle.chgrep
 
 # Cherry: [@@custard_inline] combinators are inlined, so a lambda given to
 # one is no closure, and an eta-reduced one becomes a direct call.
@@ -3910,6 +3921,7 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
+CHERRY_TESTS += CherryUnboxCycle
 CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec CherryGlobalRefShare
 # A low budget so that a regression fails in seconds rather than a minute.
 FLAGS_CherryMonoLocalRec = --custard_norm_budget 1000000
