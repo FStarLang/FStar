@@ -1057,6 +1057,13 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
      calls") instead of one followed by their release. *)
   let rec own_from (f:string) (k n:int) : ML unit =
     if k < n then (own f k; own_from f (k + 1) n) in
+  (* Only where that call can be part of a loop of tail calls, as in
+     [keeps_tail]: when [f]'s tail calls can reach a closure call or an
+     unknown definition.  Otherwise the entry point releases the borrowed
+     arguments after an ordinary call, and the direct calls of [f] -- of a
+     leaf such as [lid_equals], passed around as a closure -- stay cheap. *)
+  let own_closure (f:string) (k n:int) : ML unit =
+    if HashTable.mem escapes f || not (HashTable.mem def_tbl f) then own_from f k n in
   let visit (l:dlet) : ML unit =
     let me = string_of_name l.dl_name in
     let params = l.dl_binders |> List.mapi (fun i b -> (b.b_name, i)) in
@@ -1110,7 +1117,7 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
                        | _ -> own gs i))
                 else begin
                   List.iter own_arg args;
-                  own_from gs (List.length args) (List.length bs)
+                  own_closure gs (List.length args) (List.length bs)
                 end
               | _ ->
                 (* A global holding a closure. *)
@@ -1195,7 +1202,7 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       (* A definition used as a value is a closure too. *)
       | EQual (g, _) ->
         (match HashTable.try_find !fn_tbl (string_of_name g) with
-         | Some (bs, _) -> own_from (string_of_name g) 0 (List.length bs)
+         | Some (bs, _) -> own_closure (string_of_name g) 0 (List.length bs)
          | None -> ())
       | EVar y when tail && List.existsb (fun (z, _) -> z = y) !fields_of -> own_arg e
       | _ -> () in
