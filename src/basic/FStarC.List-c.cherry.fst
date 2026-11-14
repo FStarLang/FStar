@@ -15,10 +15,13 @@
 *)
 module FStarC.List
 
-(* The Cherry implementation.  Cherry turns only self tail calls into loops,
-   so everything that walks a list builds its result in reverse and reverses
-   it, and runs in constant stack as the OCaml implementation (Batteries)
-   does.  Functions are applied to the elements from left to right. *)
+(* The Cherry implementation.  Everything runs in constant stack, as the
+   OCaml implementation (Batteries) does: a self call in tail position is a
+   loop, and so is one whose result goes straight into a cons that is then
+   returned (tail recursion modulo constructors, cherry.md, "Tail calls"), so
+   [map], [append], [filter] and the like build their result in one pass,
+   front to back.  The rest build it in reverse and reverse it.  Functions
+   are applied to the elements from left to right. *)
 
 open FStarC.Effect
 
@@ -49,7 +52,7 @@ let rec rev_acc l acc = match l with [] -> acc | x :: t -> rev_acc t (x :: acc)
 
 let rev l = rev_acc l []
 
-let append l1 l2 = rev_acc (rev l1) l2
+let rec append l1 l2 = match l1 with [] -> l2 | x :: t -> x :: append t l2
 
 let ( @ ) l1 l2 = append l1 l2
 
@@ -73,21 +76,18 @@ private let rec iteri_from (#a:Type) ([@@@FStar.Attributes.monomorphize] f:int -
 [@@FStar.Attributes.custard_inline]
 let iteri ([@@@FStar.Attributes.monomorphize] f) l = iteri_from f 0 l
 
-private let rec map_acc (#a #b:Type) ([@@@FStar.Attributes.monomorphize] f:a -> ML b) (l:list a) (acc:list b) : ML (list b) =
-  match l with [] -> rev acc | x :: t -> let y = f x in map_acc f t (y :: acc)
+let rec map ([@@@FStar.Attributes.monomorphize] f) l =
+  match l with [] -> [] | x :: t -> let y = f x in y :: map f t
 
-[@@FStar.Attributes.custard_inline]
-let map ([@@@FStar.Attributes.monomorphize] f) l = map_acc f l []
-
-private let rec mapi_acc (#a #b:Type) ([@@@FStar.Attributes.monomorphize] f:int -> a -> ML b) (l:list a) (i:int) (acc:list b)
+private let rec mapi_from (#a #b:Type) ([@@@FStar.Attributes.monomorphize] f:int -> a -> ML b) (l:list a) (i:int)
   : ML (list b) =
-  match l with [] -> rev acc | x :: t -> let y = f i x in mapi_acc f t (i + 1) (y :: acc)
+  match l with [] -> [] | x :: t -> let y = f i x in y :: mapi_from f t (i + 1)
 
 [@@FStar.Attributes.custard_inline]
-let mapi_init ([@@@FStar.Attributes.monomorphize] f) l i = mapi_acc f l i []
+let mapi_init ([@@@FStar.Attributes.monomorphize] f) l i = mapi_from f l i
 
 [@@FStar.Attributes.custard_inline]
-let mapi ([@@@FStar.Attributes.monomorphize] f) l = mapi_acc f l 0 []
+let mapi ([@@@FStar.Attributes.monomorphize] f) l = mapi_from f l 0
 
 private let rec collect_acc (#a #b:Type) ([@@@FStar.Attributes.monomorphize] f:a -> ML (list b)) (l:list a) (acc:list b)
   : ML (list b) =
@@ -96,25 +96,17 @@ private let rec collect_acc (#a #b:Type) ([@@@FStar.Attributes.monomorphize] f:a
 [@@FStar.Attributes.custard_inline]
 let concatMap ([@@@FStar.Attributes.monomorphize] f) l = collect_acc f l []
 
-private let rec map2_acc (#a #b #c:Type) ([@@@FStar.Attributes.monomorphize] f:a -> b -> ML c) (l1:list a) (l2:list b) (acc:list c)
-  : ML (list c) =
+let rec map2 ([@@@FStar.Attributes.monomorphize] f) l1 l2 =
   match l1, l2 with
-  | [], [] -> rev acc
-  | x :: t1, y :: t2 -> let z = f x y in map2_acc f t1 t2 (z :: acc)
+  | [], [] -> []
+  | x :: t1, y :: t2 -> let z = f x y in z :: map2 f t1 t2
   | _, _ -> failwith "map2: list lengths differ"
 
-[@@FStar.Attributes.custard_inline]
-let map2 ([@@@FStar.Attributes.monomorphize] f) l1 l2 = map2_acc f l1 l2 []
-
-private let rec map3_acc (#a #b #c #d:Type) ([@@@FStar.Attributes.monomorphize] f:a -> b -> c -> ML d)
-  (l1:list a) (l2:list b) (l3:list c) (acc:list d) : ML (list d) =
+let rec map3 ([@@@FStar.Attributes.monomorphize] f) l1 l2 l3 =
   match l1, l2, l3 with
-  | [], [], [] -> rev acc
-  | x :: t1, y :: t2, z :: t3 -> let w = f x y z in map3_acc f t1 t2 t3 (w :: acc)
+  | [], [], [] -> []
+  | x :: t1, y :: t2, z :: t3 -> let w = f x y z in w :: map3 f t1 t2 t3
   | _, _, _ -> failwith "The lists do not have the same length"
-
-[@@FStar.Attributes.custard_inline]
-let map3 ([@@@FStar.Attributes.monomorphize] f) l1 l2 l3 = map3_acc f l1 l2 l3 []
 
 let rec fold_left ([@@@FStar.Attributes.monomorphize] f) a l = match l with [] -> a | x :: t -> fold_left f (f a x) t
 
@@ -157,11 +149,8 @@ let existsML ([@@@FStar.Attributes.monomorphize] f) l = existsb f l
 
 let rec find ([@@@FStar.Attributes.monomorphize] f) l = match l with [] -> None | x :: t -> if f x then Some x else find f t
 
-private let rec filter_acc (#a:Type) ([@@@FStar.Attributes.monomorphize] f:a -> ML bool) (l:list a) (acc:list a) : ML (list a) =
-  match l with [] -> rev acc | x :: t -> if f x then filter_acc f t (x :: acc) else filter_acc f t acc
-
-[@@FStar.Attributes.custard_inline]
-let filter ([@@@FStar.Attributes.monomorphize] f) l = filter_acc f l []
+let rec filter ([@@@FStar.Attributes.monomorphize] f) l =
+  match l with [] -> [] | x :: t -> if f x then x :: filter f t else filter f t
 
 let rec for_all ([@@@FStar.Attributes.monomorphize] f) l = match l with [] -> true | x :: t -> f x && for_all f t
 
@@ -182,14 +171,10 @@ let rec tryPick ([@@@FStar.Attributes.monomorphize] f) l =
   | [] -> None
   | x :: t -> (match f x with Some y -> Some y | None -> tryPick f t)
 
-private let rec choose_acc (#a #b:Type) ([@@@FStar.Attributes.monomorphize] f:a -> ML (option b)) (l:list a) (acc:list b)
-  : ML (list b) =
+let rec choose ([@@@FStar.Attributes.monomorphize] f) l =
   match l with
-  | [] -> rev acc
-  | x :: t -> (match f x with Some y -> choose_acc f t (y :: acc) | None -> choose_acc f t acc)
-
-[@@FStar.Attributes.custard_inline]
-let choose ([@@@FStar.Attributes.monomorphize] f) l = choose_acc f l []
+  | [] -> []
+  | x :: t -> (match f x with Some y -> y :: choose f t | None -> choose f t)
 
 private let rec partition_acc (#a:Type) ([@@@FStar.Attributes.monomorphize] f:a -> ML bool) (l:list a) (yes no:list a)
   : ML (list a & list a) =
@@ -272,7 +257,7 @@ let concat ls = flatten_acc ls []
 let unzip l = unzip_acc l [] []
 
 [@@FStar.Attributes.custard_inline]
-let filter_map ([@@@FStar.Attributes.monomorphize] f) l = choose_acc f l []
+let filter_map ([@@@FStar.Attributes.monomorphize] f) l = choose f l
 
 private let rec count_acc (#a:eqtype) (x:a) (l:list a) (n:nat) : Tot nat (decreases l) =
   match l with [] -> n | y :: t -> count_acc x t (if x = y then n + 1 else n)

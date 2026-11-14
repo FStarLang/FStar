@@ -154,7 +154,10 @@ let optional_def (f : 'a -> ML PP.document) (def : PP.document) (o : option 'a) 
   | Some x -> f x
   | None -> def
 
-let issue_to_doc' (print_hdr:bool) (issue:issue) : ML PP.document =
+(* This and [format_issue] are FStar.Issue's [issue_to_doc] and [render_issue]
+   on Cherry, as [custard_extern]s (src/basic/FStar.Issue-c.cherry.fst), which
+   borrow their arguments. *)
+let issue_to_doc' (print_hdr:bool) ([@@@FStar.Attributes.cherry_borrowed] issue:issue) : ML PP.document =
   let open FStarC.Pprint in
   // Text uses stored source paths; only structured locations need resolution.
   let r = issue.issue_range in
@@ -206,7 +209,7 @@ let issue_to_doc' (print_hdr:bool) (issue:issue) : ML PP.document =
 let format_issue' (print_hdr:bool) (issue:issue) : ML string =
   issue_to_doc' print_hdr issue |> renderdoc
 
-let format_issue issue : ML string = format_issue' true issue
+let format_issue ([@@@FStar.Attributes.cherry_borrowed] issue) : ML string = format_issue' true issue
 
 let print_issue_json issue =
     json_of_issue issue |> string_of_json |> Format.print1_error "%s\n"

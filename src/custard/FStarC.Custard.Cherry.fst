@@ -2153,11 +2153,76 @@ let derecord (bx:HashTable.t string bool) (p:program) : ML program =
    field at their own position of one variable [x] of the same type as are
    not, the constructor becomes an [Update] of [x], which changes [x] in
    place when it is unique instead of building a cell and counting every
-   field it keeps. *)
+   field it keeps.  An unboxed record built from fields of one variable [x]
+   of its type becomes a match on [x] that binds the fields kept, with the
+   new values bound first: when [x] is owned and dies there, the match moves
+   the kept fields out of it ([take_fields]) instead of counting them. *)
 let record_updates (p:program) : ML program =
+  let n = mk_ref 0 in
+  let name () : ML string = n := !n + 1; "cherry_upd" ^ string_of_int !n in
   let rec go (e:expr) : ML expr =
     let e = map_children go e in
     match e.e with
+    | ERecord (rn, fes) when unboxed_record e.ty ->
+      let src (fa:string & expr) : option string =
+        match fa with
+        | (f, { e = EProj ({ e = EVar x; ty = t }, _, g) }) when g = f && t = e.ty -> Some x
+        | _ -> None in
+      (match List.tryFind Some? (List.map src fes) with
+       | Some (Some x) ->
+         let fes = fes |> List.map (fun (f, a) ->
+                     (f, a, (if src (f, a) = Some x then Inl (name ()) else Inr (name ())))) in
+         let changed = fes |> List.collect (fun (_, a, v) -> match v with Inr _ -> [a] | Inl _ -> []) in
+         (* The new values read the fields of [x] they need off the match
+            too, when [x] occurs in them only free and projected. *)
+         let read = mk_ref [] in
+         let rec occ (a:expr) : ML unit =
+           (match a.e with
+            | EProj ({ e = EVar y }, _, g) when y = x ->
+              if not (List.mem g !read) then read := g :: !read
+            | EVar y when y = x -> read := "" :: !read
+            | _ -> ignore (map_children (fun c -> occ c; c) a)) in
+         let count (a:expr) : ML int = List.length (List.filter (fun y -> y = x) (fv a)) in
+         let rec raw (a:expr) : ML int =
+           match a.e with
+           | EVar y -> if y = x then 1 else 0
+           | _ -> let n = mk_ref 0 in ignore (map_children (fun c -> n := !n + raw c; c) a); !n in
+         List.iter occ changed;
+         let inner = not (List.mem "" !read) &&
+                     List.for_all (fun a -> raw a = count a) changed in
+         let rfs = (match HashTable.try_find !record_tbl (string_of_name rn) with Some fs -> fs | None -> []) in
+         let extra = if not inner then [] else
+                     !read |> List.collect (fun g ->
+                       if fes |> List.existsb (fun (f, _, v) -> f = g && Inl? v) then [] else
+                       match List.tryFind (fun (f, _) -> f = g) rfs with
+                       | Some (_, t) -> [(g, name (), t)]
+                       | None -> []) in
+         let pv (g:string) : ML (option (string & cty)) =
+           match List.tryFind (fun (f, _, v) -> f = g && Inl? v) fes with
+           | Some (_, a, Inl v) -> Some (v, a.ty)
+           | _ -> (match List.tryFind (fun (f, _, _) -> f = g) extra with
+                   | Some (_, v, t) -> Some (v, t)
+                   | None -> None) in
+         let rec sub (a:expr) : ML expr =
+           let a = map_children sub a in
+           match a.e with
+           | EProj ({ e = EVar y }, _, g) when y = x ->
+             (match pv g with Some (v, t) -> mk (EVar v) t E_Pure | None -> a)
+           | _ -> a in
+         let body = mk (ERecord (rn, fes |> List.map (fun (f, (a:expr), v) ->
+                      (f, mk (EVar (match v with Inl v | Inr v -> v)) a.ty E_Pure)))) e.ty E_Pure in
+         let lets (b:expr) : ML expr =
+           List.fold_right (fun (_, (a:expr), v) (b:expr) ->
+             match v with
+             | Inr t -> let a = if inner then sub a else a in
+                        mk (ELet (t, a.ty, a, b)) e.ty (join_eff a.eff b.eff)
+             | Inl _ -> b) fes b in
+         let pat = PRecord (rn, (fes |> List.collect (fun (f, _, v) ->
+                     match v with Inl v -> [(f, PVar v)] | Inr _ -> [])) @
+                     (extra |> List.map (fun (g, v, _) -> (g, PVar v)))) in
+         let m (b:expr) = mk (EMatch (mk (EVar x) e.ty E_Pure, [(pat, None, b)])) e.ty b.eff in
+         if inner then m (lets body) else lets (m body)
+       | _ -> e)
     | ECtor (cn, args) when Cons? args ->
       (match HashTable.try_find !ctor_tbl (string_of_name cn) with
        | Some fs when List.length fs = List.length args && same_boxed e.ty e.ty ->
