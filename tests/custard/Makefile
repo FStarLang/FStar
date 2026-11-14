@@ -3746,6 +3746,18 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/MutualTail.chgrep
 
+# Cherry: a match on a tuple of variables borrows them and counts neither
+# the tuple nor what its patterns bind (cherry.md, "Matching on a tuple").
+CUSTARD_TESTS += CherryTupleMatch
+$(CHERRY_DIR)/CherryTupleMatch.chgrep: $(CHERRY_DIR)/CherryTupleMatch.chc
+	$(Q)for f in eq_step pick; do \
+	  awk "/CherryTupleMatch_$$f\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	    || { echo "ERROR: CherryTupleMatch's C output has no $$f"; exit 1; }; \
+	  ! awk "/CherryTupleMatch_$$f\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_dec' \
+	    || { echo "ERROR: CherryTupleMatch's $$f releases a reference"; exit 1; }; done
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryTupleMatch.chgrep
+
 # Cherry: an update of an unboxed record that dies moves its fields.
 CUSTARD_TESTS += CherryUnboxedUpdate
 $(CHERRY_DIR)/CherryUnboxedUpdate.chgrep: $(CHERRY_DIR)/CherryUnboxedUpdate.chc

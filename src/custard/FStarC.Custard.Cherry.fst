@@ -922,6 +922,48 @@ let unboxed_record (t:cty) : ML bool =
     HashTable.mem !record_tbl (string_of_name n)
   | _ -> false
 
+(* A match on a tuple of variables, [match a, b with ...], whose branches
+   all take the tuple apart (cherry.md, "Matching on a tuple"): for each
+   branch, the variables each component's pattern binds.  Such a tuple is
+   only a view of [a] and [b], which the match borrows: it is not counted,
+   and what a component's pattern binds is borrowed from that component. *)
+let is_tuple_ctor (c:name) : ML bool =
+  c.ns = ["FStar"; "Pervasives"; "Native"] &&
+  String.length c.id > 7 && String.substring c.id 0 7 = "Mktuple"
+
+let rec tuple_parts (n:int) (p:pat) : ML (option (list (list string))) =
+  match p with
+  | PWild ->
+    let rec nils (k:int) : ML (list (list string)) = if k <= 0 then [] else [] :: nils (k - 1) in
+    Some (nils n)
+  | PTuple ps when List.length ps = n -> Some (List.map pat_vars ps)
+  | PCtor (c, ps) when List.length ps = n && is_tuple_ctor c -> Some (List.map pat_vars ps)
+  | POr (q :: qs) ->
+    List.fold_left (fun (acc:option (list (list string))) (q:pat) ->
+      match acc, tuple_parts n q with
+      | Some a, Some b -> Some (List.map2 (fun x y -> x @ y) a b)
+      | _ -> None) (tuple_parts n q) qs
+  | _ -> None
+
+let tuple_view (sc:expr) (brs:list branch) : ML (option (list expr & list (list (list string)))) =
+  let comps : option (list expr) =
+    match sc.e, sc.ty with
+    | ETuple es, _ -> Some es
+    | ECtor (c, es), TApp (n, [])
+      when is_tuple_ctor c && not (HashTable.mem !boxed_tbl (string_of_name n)) -> Some es
+    | _ -> None in
+  match comps with
+  | Some es when Cons? es && es |> List.for_all (fun (a:expr) ->
+                     EVar? a.e || (is_atom a && not (is_np a.ty))) ->
+    let n = List.length es in
+    let parts = brs |> List.map (fun ((p, g, b):branch) ->
+      if Some? g then None else
+      match p with
+      | PVar v when not (List.mem v (fv b)) -> tuple_parts n PWild
+      | _ -> tuple_parts n p) in
+    if List.for_all Some? parts then Some (es, List.map Some?.v parts) else None
+  | _ -> None
+
 let rec set_nth (i:int) (x:bool) (l:list bool) : ML (list bool) =
   match l with
   | [] -> []
@@ -1138,6 +1180,18 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
         go' bf tail b
       | ESeq (a, b) -> go false a; go tail b
       | EIf (c, t, f) -> go false c; go tail t; go tail f
+      | EMatch (sc, brs) when Some? (tuple_view sc brs) ->
+        let Some (es, parts) = tuple_view sc brs in
+        List.iter (go false) es;
+        List.zip brs parts |> List.iter (fun ((br:branch), (vss:list (list string))) ->
+          let (p, _, b) = br in
+          let vs = pat_vars p in
+          let bf = List.filter (fun y -> not (List.mem y vs)) bf in
+          let bf = List.zip es vss |> List.fold_left (fun bf ((a:expr), (vs:list string)) ->
+                     match a.e with
+                     | EVar y when is_np a.ty && not (is_owned_var bf y) -> vs @ bf
+                     | _ -> bf) bf in
+          go' bf tail b)
       | EMatch (sc, brs) ->
         go false sc;
         (* A parameter matched in a branch that stops needing it, there
@@ -1477,8 +1531,8 @@ let with_roots (xs:list string) : ML (list string) =
   if Nil? !aliases then xs else
   xs @ List.collect (fun x -> match root_of x with Some r -> [r] | None -> []) xs
 
-(* Run [f] with [xs] borrowed from the root [r]; [r = None] runs it
-   unchanged. *)
+(* Run [f] with [xs] borrowed from [r] (or from [r]'s root, when [r] is an
+   alias itself); [r = None] runs it unchanged. *)
 let with_aliases (#a:Type) (r:option string) (xs:list string) (f:unit -> ML a) : ML a =
   match r with
   | None -> f ()
@@ -1623,6 +1677,21 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | EOp ({ po_op = Or }, [a; b]) when not (is_atom b) ->
     rc_live o { e with e = EIf (a, mk (EConst (CBool true)) e.ty E_Pure, b) }
 
+  | EMatch (s, brs) when Some? (tuple_view s brs) ->
+    let Some (es, parts) = tuple_view s brs in
+    let x = fresh () in
+    let brs = List.zip brs parts |> List.map (fun ((br:branch), (vss:list (list string))) ->
+      let (p, g, b) = br in
+      let rec under (l:list (expr & list string)) : ML expr =
+        match l with
+        | [] -> rc o b
+        | (a, vs) :: rest ->
+          match a.e with
+          | EVar y when is_np a.ty && Cons? vs ->
+            with_aliases (if is_owned y then Some y else root_of y) vs (fun () -> under rest)
+          | _ -> under rest in
+      (p, g, under (List.zip es vss))) in
+    let_ x s.ty s { e with e = EMatch (var x s.ty, brs); eff = E_Impure }
   | EMatch (s, brs) when not (EVar? s.e) ->
     if is_atom s && not (is_np s.ty) then
       { e with e = EMatch (s, List.map (rc_branch o None s.ty) brs); eff = E_Impure }
