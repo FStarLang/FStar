@@ -217,6 +217,18 @@ static CHERRY_ALWAYS_INLINE bool cherry_dec_ref(cherry_obj *o) {
   return cherry_dec_ref_slow(o);
 }
 
+/* Drop a reference to a cell whose fields [f] frees (NULL: none).  Only the
+   common case is inline: the rest, freeing included, is out of line, which
+   keeps the code of every drop small enough to inline everywhere. */
+typedef void (*cherry_work_fn)(cherry_obj *, int);
+void cherry_dec_last(cherry_obj *o, int32_t rc, cherry_work_fn f);
+static CHERRY_ALWAYS_INLINE void cherry_dec_with(cherry_obj *o, cherry_work_fn f) {
+  if (cherry_is_scalar(o)) return;
+  int32_t rc = cherry_rc_load(o);
+  if (CHERRY_LIKELY(rc > 1)) cherry_rc_store(o, rc - 1);
+  else cherry_dec_last(o, rc, f);
+}
+
 /* Marking walks everything a value reaches, in one of two modes: making it
    shared between threads (a negative reference count, updated atomically),
    or making it persistent (a reference count of zero: never updated and
@@ -252,21 +264,11 @@ static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
    in which case it joins the work list that the outermost visit drains.  A
    visit function follows a field of its own type in a loop, so a list's
    spine never reaches the work list. */
-typedef void (*cherry_work_fn)(cherry_obj *, int);
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode);
 
-/* A literal is persistent and a scalar is not a cell, so neither reaches
-   [free]; GCC cannot tell once it inlines one into this. */
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
-#endif
 static CHERRY_ALWAYS_INLINE void cherry_dec(cherry_obj *o) {
-  if (cherry_dec_ref(o)) free(o);
+  cherry_dec_with(o, NULL);
 }
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 static inline void cherry_mark(cherry_obj *o, int mode) {
   (void)cherry_mark_ref(o, mode);
@@ -651,7 +653,10 @@ static inline bool cherry_exn_is(cherry_exn e, const cherry_exn_info *info) {
 }
 
 static inline void cherry_exn_dec(cherry_exn e) {
-  if (cherry_dec_ref(e)) cherry_defer(e, ((cherry_exn_hdr *)e)->info->free, 0);
+  if (cherry_is_scalar(e)) return;
+  int32_t rc = cherry_rc_load(e);
+  if (CHERRY_LIKELY(rc > 1)) cherry_rc_store(e, rc - 1);
+  else cherry_dec_last(e, rc, ((cherry_exn_hdr *)e)->info->free);
 }
 
 static inline void cherry_exn_mark(cherry_exn e, int mode) {
@@ -729,20 +734,9 @@ typedef struct cherry_closure {
 
 void cherry_free_closure(cherry_obj *f, int mode);
 
-/* A static closure is persistent, so it never reaches [free]; GCC cannot
-   tell once it inlines one into this. */
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
-#endif
-static inline void cherry_dec_fn(cherry_fn f) {
-  if (!cherry_dec_ref(f)) return;
-  if (CHERRY_CLOSURE(f)->drop != NULL) cherry_defer(f, cherry_free_closure, 0);
-  else free(f);
+static CHERRY_ALWAYS_INLINE void cherry_dec_fn(cherry_fn f) {
+  cherry_dec_with(f, cherry_free_closure);
 }
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 static inline void cherry_mark_fn(cherry_fn f, int mode) {
   if (cherry_mark_ref(f, mode) && CHERRY_CLOSURE(f)->mark != NULL)
