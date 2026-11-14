@@ -4,15 +4,13 @@ module ExtUIntMask
 /// unary negation `minus`. These are completely untested by the existing
 /// extraction suite despite being the primitives HACL* leans on hardest.
 ///
-/// Three things make them worth their own module:
+/// Two things make them worth their own module:
 ///
 ///  1. They are specified by their *result*, not by their implementation:
 ///     `eq_mask a b` is `2^n - 1` when `a = b` and `0` otherwise. A backend is
 ///     free to implement them however it likes, so nothing but a runtime check
 ///     ties the implementations together.
-///  2. They carry `[@ CNoInline ]`, so this is also a test that the attribute
-///     does not break extraction.
-///  3. `gte_mask` must be an *unsigned* comparison. Implemented with a signed
+///  2. `gte_mask` must be an *unsigned* comparison. Implemented with a signed
 ///     one, `gte_mask 0xFFFFFFFF 1` yields 0 instead of all-ones -- a silent
 ///     wrong value in exactly the code that is supposed to be constant time.
 ///

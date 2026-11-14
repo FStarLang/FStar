@@ -19,16 +19,8 @@ let  x  : int = (foo 1)
 let  x'  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ((postprocess_with tau)); (postprocess_type)]
 let  x''  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
-[@ ((postprocess_for_extraction_with tau))]
-let  y  : int = (foo 1)
-[@ ((postprocess_for_extraction_with tau))]
-let  y'  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
-[@ ((postprocess_for_extraction_with tau)); (postprocess_type)]
-let  y''  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ]
 private let  uu___0  : _ = (_assert (eq2 x (foo 2)))
-[@ ]
-private let  uu___1  : _ = (_assert (eq2 y (foo 1)))
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t1  : Type
@@ -138,8 +130,6 @@ in
 let  yy  : _ = (lift xx)
 [@ ((postprocess_with push_lifts))]
 let  zz1  : _ = (lift (C1 (fun y -> (C1 (fun x -> A1)))))
-[@ ((postprocess_for_extraction_with push_lifts))]
-let  zz2  : _ = (lift (C1 (fun y -> (C1 (fun x -> A1)))))
 ]
 
 Module before type checking:
@@ -163,16 +153,8 @@ let  x  : int = (foo 1)
 let  x'  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ((postprocess_with tau)); (postprocess_type)]
 let  x''  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
-[@ ((postprocess_for_extraction_with tau))]
-let  y  : int = (foo 1)
-[@ ((postprocess_for_extraction_with tau))]
-let  y'  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
-[@ ((postprocess_for_extraction_with tau)); (postprocess_type)]
-let  y''  : (z#0:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ]
 private let  uu___0  : _ = (_assert (eq2 x (foo 2)))
-[@ ]
-private let  uu___1  : _ = (_assert (eq2 y (foo 1)))
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t1  : Type
@@ -282,8 +264,6 @@ in
 let  yy  : _ = (lift xx)
 [@ ((postprocess_with push_lifts))]
 let  zz1  : _ = (lift (C1 (fun y -> (C1 (fun x -> A1)))))
-[@ ((postprocess_for_extraction_with push_lifts))]
-let  zz2  : _ = (lift (C1 (fun y -> (C1 (fun x -> A1)))))
 ]
 
 Module after type checking:
@@ -307,16 +287,8 @@ visible let  x  : int = (foo 2)
 visible let  x'  : (z#9:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 2)
 [@ (postprocess_type)]
 visible let  x''  : (z#9:int{(eq2 z@0:(Tm_unknown) (foo 2))}) = (foo 2)
-[@ ((postprocess_for_extraction_with tau))]
-visible let  y  : int = (foo 1)
-[@ ((postprocess_for_extraction_with tau))]
-visible let  y'  : (z#9:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
-[@ ((postprocess_for_extraction_with tau)); (postprocess_type)]
-visible let  y''  : (z#9:int{(eq2 z@0:(Tm_unknown) (foo 1))}) = (foo 1)
 [@ ]
 visible private let  uu___0  : unit = (_assert (eq2 x (foo 2)))
-[@ ]
-visible private let  uu___1  : unit = (_assert (eq2 y (foo 1)))
 [@ ]
 (* Sig_bundle *)[@ ]
 noeq type Postprocess.t1  : Type
@@ -476,7 +448,5 @@ visible let  yy  : t2 = (C2 (fun x -> (lift (match x@0:(Tm_unknown) as uu___ ret
 	|x#205  -> (B1 24)))))
 [@ ]
 visible let  zz1  : t2 = (C2 (fun x -> (C2 (fun x -> A2))))
-[@ ((postprocess_for_extraction_with push_lifts))]
-visible let  zz2  : t2 = (lift (C1 (fun y -> (C1 (fun x -> A1)))))
 ]
 

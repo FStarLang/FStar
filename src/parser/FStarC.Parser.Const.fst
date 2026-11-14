@@ -582,7 +582,6 @@ let fv_lid = lid_of_path (["FStar"; "Stubs"; "Reflection"; "Types"; "fv"]) FStar
 let postprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_with"]
 let postprocess_type = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_type"]
 let preprocess_with = p2l ["FStar"; "Tactics"; "Effect"; "preprocess_with"]
-let postprocess_extr_with = p2l ["FStar"; "Tactics"; "Effect"; "postprocess_for_extraction_with"]
 let term_lid       = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "term"]
 let ctx_uvar_and_subst_lid = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "ctx_uvar_and_subst"]
 let universe_uvar_lid      = p2l ["FStar"; "Stubs"; "Reflection"; "Types"; "universe_uvar"]

@@ -258,8 +258,6 @@ let store_sigopts (se:sigelt) : ML sigelt =
 let tc_decls_knot : ref (option (Env.env -> list sigelt -> ML (list sigelt & Env.env))) =
   mk_ref None
 
-let run_postprocess = TcLet.run_postprocess
-
 let snapshot_context env msg = BU.atomically (fun () ->
     TypeChecker.Env.snapshot env msg)
 

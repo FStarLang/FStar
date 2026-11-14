@@ -34,11 +34,7 @@ let x' : (z:int{z == foo 1}) = foo 1
 [@@postprocess_with tau; postprocess_type]
 let x'' : (z:int{z == foo 1}) = foo 1
 
-[@@(postprocess_for_extraction_with tau)]
-let y : int = foo 1
-
 let _ = assert (x == foo 2)
-let _ = assert (y == foo 1) // but `foo 2` in extracted code
 
 (* More hardcore transformations *)
 
@@ -149,5 +145,3 @@ let yy = lift xx
 [@@(postprocess_with push_lifts)]
 let zz1 = lift (C1 (fun y -> (C1 (fun x -> A1))))
 
-[@@(postprocess_for_extraction_with push_lifts)]
-let zz2 = lift (C1 (fun y -> (C1 (fun x -> A1))))
