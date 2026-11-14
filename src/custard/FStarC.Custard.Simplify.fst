@@ -1482,8 +1482,17 @@ let eta_expand_decl (tbl : HashTable.t string int) (uses : HashTable.t string in
          absorb (n - List.length lbs) (bs @ lbs) lbody ret' ef'
        | None -> (bs, body, ret, ef))
     | _ -> (bs, body, ret, ef) in
+  (* Cherry calls a function with fewer arguments than it takes by building
+     a partial application (cherry.md), so a caller that supplies fewer does
+     not bound the expansion there: it is the callers that supply them all
+     whose calls would otherwise build a closure and then call it.  A
+     single [List.existsb (fv_eq_lid fv) lids] kept [fv_eq_lid fv lid] at
+     the one binder [eta_reduce] left it, and every full call allocated. *)
+  let bounding_uses (n:name) : ML (option int) =
+    if Options.custard_cherry () then None
+    else HashTable.try_find uses (string_of_name n) in
   let absorb_room =
-    match HashTable.try_find uses (string_of_name l.dl_name) with
+    match bounding_uses l.dl_name with
     | Some k -> let r = k - List.length l.dl_binders in if r < 0 then 0 else r
     | None -> arrow_arity l.dl_ret in
   let abs_bs, abs_body, abs_ret, abs_ef =
@@ -1522,7 +1531,7 @@ let eta_expand_decl (tbl : HashTable.t string int) (uses : HashTable.t string in
            let have = arrow_arity l.dl_ret in
            let room =
              (* Never past what the callers ask for. *)
-             match HashTable.try_find uses (string_of_name l.dl_name) with
+             match bounding_uses l.dl_name with
              | Some k -> if k - List.length l.dl_binders < 0
                          then 0 else k - List.length l.dl_binders
              | None -> have in
