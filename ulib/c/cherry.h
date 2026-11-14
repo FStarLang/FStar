@@ -510,6 +510,9 @@ static inline int64_t cherry_str_byte_at64(cherry_string s, int64_t i) {
     ? (unsigned char)cherry_str_data(s)[i] : -1;
 }
 cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j);
+/* The first offset from [from] on where [t] occurs in [s], or [s]'s size if
+   there is none. */
+int64_t cherry_str_find64(cherry_string s, cherry_string t, int64_t from);
 /* FStarC.Util's substring tests, on bytes: whether [sub] occurs in [s], and
    whether it occurs at the offset [i] (false out of bounds). */
 bool cherry_str_contains(cherry_string s, cherry_string sub);

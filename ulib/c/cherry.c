@@ -585,6 +585,20 @@ cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j) {
   return cherry_str_of_bytes(cherry_str_data(s) + a, (size_t)(b - a));
 }
 
+int64_t cherry_str_find64(cherry_string s, cherry_string t, int64_t from) {
+  const char *d = cherry_str_data(s), *p = cherry_str_data(t);
+  size_t n = cherry_str_size(s), m = cherry_str_size(t);
+  if (from < 0 || (size_t)from > n || m > n - (size_t)from) return (int64_t)n;
+  if (m == 0) return from;
+  const char *last = d + (n - m);
+  for (const char *q = d + from; q <= last; q++) {
+    q = memchr(q, p[0], (size_t)(last - q) + 1);
+    if (q == NULL) break;
+    if (memcmp(q + 1, p + 1, m - 1) == 0) return (int64_t)(q - d);
+  }
+  return (int64_t)n;
+}
+
 bool cherry_str_contains(cherry_string s, cherry_string sub) {
   const char *p = cherry_str_data(s), *q = cherry_str_data(sub);
   size_t n = cherry_str_size(s), m = cherry_str_size(sub);
