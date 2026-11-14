@@ -3746,6 +3746,16 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/MutualTail.chgrep
 
+# Cherry: an update of an unboxed record that dies moves its fields.
+CUSTARD_TESTS += CherryUnboxedUpdate
+$(CHERRY_DIR)/CherryUnboxedUpdate.chgrep: $(CHERRY_DIR)/CherryUnboxedUpdate.chc
+	$(Q)awk "/CherryUnboxedUpdate_upd\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	  || { echo "ERROR: CherryUnboxedUpdate's C output has no upd"; exit 1; }
+	$(Q)! awk "/CherryUnboxedUpdate_upd\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_inc\|cherry_dec' \
+	  || { echo "ERROR: CherryUnboxedUpdate's upd counts a field"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryUnboxedUpdate.chgrep
+
 # Cherry: [@@cherry_boxed] boxes a non-recursive record, mutual bundle or
 # variant, and a call passing one is a guaranteed tail call.
 CUSTARD_TESTS += CherryBoxedAttr
