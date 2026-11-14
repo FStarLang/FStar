@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F* dependence viewer</title>
+<link rel="stylesheet" href="assets/viewer.css">
+</head>
+<body>
+<header id="topbar">
+  <span id="title">F<sup>*</sup> dependence viewer</span>
+  <nav id="crumbs"></nav>
+  <span class="spacer"></span>
+  <input id="search" type="search" placeholder="search modules and definitions (/)" autocomplete="off">
+  <div id="results" class="hidden"></div>
+  <button id="btn-unused" title="Unused definition report">Unused</button>
+  <button id="btn-fit" title="Fit graph to window (f)">Fit</button>
+  <button id="btn-help" title="Help (?)">?</button>
+</header>
+
+<main>
+  <section id="graphpane">
+    <div id="graphtools">
+      <label><input type="checkbox" id="opt-hide-unused"> hide unused</label>
+      <label><input type="checkbox" id="opt-hide-generated" checked> hide generated</label>
+      <label id="depth-wrap">depth <input type="number" id="opt-depth" min="1" max="4" value="1"></label>
+      <span id="graphinfo"></span>
+    </div>
+    <svg id="graph" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z"/>
+        </marker>
+        <marker id="arrow-hi" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z"/>
+        </marker>
+      </defs>
+      <g id="viewport">
+        <g id="edges"></g>
+        <g id="nodes"></g>
+      </g>
+    </svg>
+    <div id="empty" class="hidden">nothing to show</div>
+  </section>
+
+  <div id="splitter"></div>
+
+  <aside id="sidepane">
+    <div id="sidehead">
+      <div id="sidetitle">Details</div>
+      <div id="sidesub"></div>
+    </div>
+    <div id="sidebody"></div>
+  </aside>
+</main>
+
+<div id="modal" class="hidden"><div id="modalbox"><button id="modalclose">&times;</button><div id="modalbody"></div></div></div>
+
+<script src="assets/layout.js"></script>
+<script src="assets/viewer.js"></script>
+<script src="data/index.js"></script>
+<script>DG.start();</script>
+</body>
+</html>
