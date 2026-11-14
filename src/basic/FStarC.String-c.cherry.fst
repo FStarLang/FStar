@@ -33,6 +33,8 @@ private assume val size64 : string -> I.t
 private assume val byte_at64 : string -> I.t -> I.t
 [@@custard_extern "cherry_str_slice64"]
 private assume val slice64 : string -> I.t -> I.t -> string
+[@@custard_extern "cherry_str_find64"]
+private assume val find64 : string -> string -> I.t -> I.t
 [@@custard_extern "cherry_str_of_byte"]
 private assume val of_byte : U32.t -> string
 [@@custard_extern "cherry_str_lowercase_ascii"]
@@ -90,33 +92,23 @@ let next_code_point s i =
 
 let byte_substring s i j = slice64 s i j
 
-(* Whether [t] occurs in [s] at offset [i]: compares [t]'s bytes from [k] on.
+(* The pieces of [s] from [start] on, the earlier ones in [acc] in reverse.
    The fuel bounds the recursion; it is never what stops it. *)
 private
-let rec occurs_at (s t:string) (i k tlen:I.t) (fuel:nat) : Tot bool (decreases fuel) =
-  if fuel = 0 || I.(k >= tlen) then true
-  else if byte_at s I.(i + k) = byte_at t k then occurs_at s t i I.(k + one) tlen (fuel - 1)
-  else false
-
-(* The pieces of [s] from [start] on, the earlier ones in [acc] in reverse.
-   [i] is where to look for [t] next. *)
-private
-let rec split_from (s t:string) (slen tlen start i:I.t) (fuel:nat) (acc:list string)
+let rec split_from (s t:string) (slen tlen start:I.t) (fuel:nat) (acc:list string)
   : Tot (list string) (decreases fuel)
-  = if fuel = 0 || I.(i + tlen > slen) then
+  = let i = find64 s t start in
+    if fuel = 0 || I.(i >= slen) then
       List.Tot.rev (byte_substring s start slen :: acc)
-    else if occurs_at s t i I.zero tlen (fuel_of tlen) then
-      let j = I.(i + tlen) in
-      split_from s t slen tlen j j (fuel - 1) (byte_substring s start i :: acc)
     else
-      split_from s t slen tlen start I.(i + one) (fuel - 1) acc
+      split_from s t slen tlen I.(i + tlen) (fuel - 1) (byte_substring s start i :: acc)
 
 let split_on_string s sep =
   let slen = byte_length s in
   let tlen = byte_length sep in
   if slen = I.zero then []
   else if tlen = I.zero then [s]
-  else split_from s sep slen tlen I.zero I.zero (fuel_of slen + 1) []
+  else split_from s sep slen tlen I.zero (fuel_of slen + 1) []
 
 (* As [BatUTF8.init], a negative length makes the empty string. *)
 let make i c = if i <= 0 then "" else S.make i c

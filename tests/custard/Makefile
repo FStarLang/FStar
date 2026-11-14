@@ -4342,6 +4342,35 @@ $(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRC
 
 all: $(INTEXTRA_DIR)/CherryIntExtra.chran
 
+STRING_DIR = $(CHERRY_DIR)/string
+STRING_ABS = $(abspath $(STRING_DIR))
+STRING_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst
+$(STRING_DIR)/CherryString.chran: string/CherryString.fst $(STRING_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryString)
+	$(Q)rm -rf $(STRING_ABS) && mkdir -p $(STRING_ABS)/src
+	$(Q)ln -s $(STRING_SRCS) $(STRING_ABS)/src/
+	$(Q)cd string && for f in $(addprefix $(STRING_ABS)/src/,$(notdir $(STRING_SRCS))) \
+	    CherryString.fst; do \
+	  $(FSTAR_EXE) --include $(STRING_ABS)/src --cache_dir $(STRING_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd string && $(FSTAR_EXE) --include $(STRING_ABS)/src --cache_dir $(STRING_ABS) \
+	  --already_cached '*' --odir $(STRING_ABS) --codegen Cherry \
+	  --custard_main CherryString.main \
+	  CherryString.fst -o $(STRING_ABS)/CherryString.c > /dev/null
+	$(call msg, "CC-ASAN", CherryString)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(STRING_ABS) -I$(CHERRY_INC) \
+	  -x c $(STRING_ABS)/CherryString.c $(CHERRY_INC)/cherry.c \
+	  -o $(STRING_ABS)/CherryString.chexe
+	$(call msg, "RUN-ASAN", CherryString)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(STRING_ABS)/CherryString.chexe
+	$(Q)touch $@
+
+all: $(STRING_DIR)/CherryString.chran
+
 # Debug mode (cherry.md): each program breaks a fact F* would have proved, in
 # code whose queries are admitted, and must abort with the message below.
 # It is also compiled without -DCHERRY_DEBUG, to check that the release
