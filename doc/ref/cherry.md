@@ -86,6 +86,10 @@ The root has to be a boxed value that is not itself peeked: an unboxed value's f
 At a call, a root that is live only through aliases passed as arguments is dec'd after the arguments are inc'd and before the call, so that a tail call stays a tail call.
 Test: `tests/custard/CherryAliasBorrow.fst`.
 
+### Matching on a tuple
+
+`match a, b with ...`, a match on a tuple of variables (and plain atoms) of an unboxed tuple type whose branches all take the tuple apart, or bind it to a variable they do not use, is a view of `a` and `b`. The tuple is built but not counted, and what each component's pattern binds is borrowed from that component, as the fields of a borrowed scrutinee are. A borrowed component's bindings borrow from it, or from its root. An owned component stays alive while its bindings are used, as a field of an owned boxed value does (`aliases`). Borrow inference treats the components the same way: they are not stored, so they do not become owned, and what a borrowed component's pattern binds is borrowed for the tail-call rule. `Env.eq_step` used to take both steps owned, increment the fields it recursed on, and release the tuple in every branch; it no longer counts anything. Test: `tests/custard/CherryTupleMatch`.
+
 ## The any type
 
 The any type is represented as a fat pointer: a pair of a uintptr_t and an RTTI pointer. The RTTI contains the inc, dec, and mark functions (and maybe some inspection functions for debugging). Types that are small enough to fit into a uintptr_t are stored directly, for larger types we allocate a heap cell with a reference count and store the pointer in the uintptr_t.

@@ -3746,6 +3746,18 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/MutualTail.chgrep
 
+# Cherry: a match on a tuple of variables borrows them and counts neither
+# the tuple nor what its patterns bind (cherry.md, "Matching on a tuple").
+CUSTARD_TESTS += CherryTupleMatch
+$(CHERRY_DIR)/CherryTupleMatch.chgrep: $(CHERRY_DIR)/CherryTupleMatch.chc
+	$(Q)for f in eq_step pick; do \
+	  awk "/CherryTupleMatch_$$f\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	    || { echo "ERROR: CherryTupleMatch's C output has no $$f"; exit 1; }; \
+	  ! awk "/CherryTupleMatch_$$f\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_dec' \
+	    || { echo "ERROR: CherryTupleMatch's $$f releases a reference"; exit 1; }; done
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryTupleMatch.chgrep
+
 # Cherry: [@@cherry_boxed] boxes a non-recursive record, mutual bundle or
 # variant, and a call passing one is a guaranteed tail call.
 CUSTARD_TESTS += CherryBoxedAttr
