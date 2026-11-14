@@ -49,7 +49,14 @@ type cell : Type u#(a + 1) =
 *)
 val heap  : Type u#(a + 1)
 
+val extent (h:heap u#a) : nat
+
 val select (i:nat) (m:heap u#a) : option (cell u#a)
+
+val heap_ext (h0 h1:heap u#a)
+  : Lemma
+      (requires extent h0 == extent h1 /\ (forall i. select i h0 == select i h1))
+      (ensures h0 == h1)
 
 (* An empty heap *)
 val empty_heap : heap u#a
@@ -546,6 +553,7 @@ val upd_gen_modifies
       (h:full_hheap (pts_to r x))
 : Lemma (
       let (| _, h1 |) = upd_gen_action r x y f h in
+      extent h == extent h1 /\
       (forall (a:nat). a <> core_ref_as_addr r ==> select a h == select a h1) /\
       related_cells (select (core_ref_as_addr r) h) (select (core_ref_as_addr r) h1)
   )
@@ -618,6 +626,19 @@ val extend
       emp 
       (ref a pcm)
       (fun r -> pts_to r x)
+
+val extend_modifies
+  (#a:Type u#a)
+  (#pcm:pcm a)
+  (x:a{pcm.refine x})
+  (h:full_hheap emp)
+  : Lemma (
+      let (| r, h' |) = extend #a #pcm x h in
+      not (core_ref_is_null r) /\
+      extent h' == extent h + 1 /\
+      select (core_ref_as_addr r) h == None /\
+      select (core_ref_as_addr r) h' == Some (Ref a pcm x) /\
+      (forall i. i <> core_ref_as_addr r ==> select i h == select i h'))
 
 val frame (#a:Type)
           #immut

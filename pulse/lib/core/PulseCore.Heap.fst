@@ -27,10 +27,22 @@ type heap : Type u#(a + 1) =
   Seq.seq (option (cell u#a))
 
 let ctr (h: heap) : nat = Seq.length h
+let extent (h:heap) : nat = ctr h
 
 [@@"opaque_to_smt"]
 let select i h =
   if i < ctr h then Seq.index h i else None
+
+let heap_ext h0 h1 =
+  introduce forall (i:nat). i < Seq.length h0 ==> Seq.index h0 i == Seq.index h1 i
+  with (
+    if i < Seq.length h0 then (
+      reveal_opaque (`%select) (select i h0);
+      reveal_opaque (`%select) (select i h1)
+    )
+  );
+  Seq.lemma_eq_intro h0 h1;
+  Seq.lemma_eq_elim h0 h1
 
 let empty_heap' n : heap u#a = Seq.create n None
 
@@ -1074,6 +1086,7 @@ let upd_gen_modifies
       (h:full_hheap (pts_to r x))
 : Lemma (
       let (| _, h1 |) = upd_gen_action r x y f h in
+      extent h == extent h1 /\
       (forall (a:nat). a <> core_ref_as_addr r ==> select a h == select a h1) /\
       related_cells (select (core_ref_as_addr r) h) (select (core_ref_as_addr r) h1)
   )
@@ -1192,6 +1205,10 @@ let extend #a #pcm
         (x:a{pcm.refine x})
  : action #mut_heap emp (ref a pcm) (fun r -> pts_to r x)
  = extend_fp #a #pcm x; extend_alt x
+
+let extend_modifies #a #pcm x h =
+  let (| r, h' |) = extend #a #pcm x h in
+  reveal_opaque (`%select) (select u#a (core_ref_as_addr r) h)
 
 #push-options "--max_fuel 1 --max_ifuel 1"
 #restart-solver
