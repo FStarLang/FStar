@@ -244,13 +244,13 @@ static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
 #define CHERRY_TAG_BIGINT 0xFFFFFFF0u
 #define CHERRY_TAG_STRING 0xFFFFFFF1u
 
-/* Freeing and marking walk values of any depth without recursing on the C
-   stack.  The generated [dec] and [mark] of a type hand the cell whose
-   fields have to be visited to [cherry_defer], with the function that
-   visits them: it runs at once, unless a walk is already under way on this
-   thread, in which case it joins that walk's work list.  A visit function
-   follows a field of its own type in a loop, so a list's spine never
-   reaches the work list. */
+/* Freeing and marking walk values of any depth with a bounded C stack.
+   The generated [dec] and [mark] of a type hand the cell whose fields have
+   to be visited to [cherry_defer], with the function that visits them: it
+   runs at once, unless too many visits are already on this thread's stack,
+   in which case it joins the work list that the outermost visit drains.  A
+   visit function follows a field of its own type in a loop, so a list's
+   spine never reaches the work list. */
 typedef void (*cherry_work_fn)(cherry_obj *, int);
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode);
 
