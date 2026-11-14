@@ -1001,6 +1001,15 @@ let rec reduce (x:expr) : ML expr =
        let brs = brs |> List.map (fun (p, gd, (bd:expr)) ->
          (p, gd, { x with e = EApp (bd, args); ty = arm_ty bd })) in
        reduce { x with e = EMatch (scrut, brs) }
+     (* Cherry: [(f a) b] is [f a b], which the printer splits by [f]'s
+        arity again; otherwise [f a] builds a partial application only to
+        apply it at once.  Inlining makes these: [lookup_opt s c = c
+        (get_option s)] given [c = as_option (as_list as_string)].  [b] must
+        be pure, since it now runs before the call of [f a] if that call is
+        saturated. *)
+     | EApp (f, a) when Options.custard_cherry () && EQual? f.e
+                     && args |> List.for_all (fun (e:expr) -> is_pure e.eff) ->
+       { x with e = EApp (f, a @ args) }
      | _ -> { x with e = EApp (h, args) })
 
   | EMatch (scrut, brs) ->

@@ -3874,6 +3874,14 @@ $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	  || { echo "ERROR: CherryPap_make tests a partial application for an exception"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryPap.chgrep
+# Cherry: an application of an application, which inlining makes, is one
+# call; the inner partial application is not built only to be applied.
+$(CHERRY_DIR)/CherryAppFlatten.chgrep: $(CHERRY_DIR)/CherryAppFlatten.chc
+	$(Q)sed -n '/^static .* CherryAppFlatten_doubled(.*{$$/,/^}/p' $< > $@.tmp; \
+	  grep -q 'CherryAppFlatten_wrap(' $@.tmp && ! grep -q 'cherry_pap_CherryAppFlatten_wrap' $@.tmp \
+	    || { echo "ERROR: CherryAppFlatten_doubled builds a partial application of wrap"; exit 1; }
+	$(Q)rm -f $@.tmp; touch $@
+all: $(CHERRY_DIR)/CherryAppFlatten.chgrep
 
 # Cherry: [@@custard_inline] combinators are inlined, so a lambda given to
 # one is no closure, and an eta-reduced one becomes a direct call.
@@ -3910,6 +3918,7 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
+CHERRY_TESTS += CherryAppFlatten
 CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec CherryGlobalRefShare
 # A low budget so that a regression fails in seconds rather than a minute.
 FLAGS_CherryMonoLocalRec = --custard_norm_budget 1000000
