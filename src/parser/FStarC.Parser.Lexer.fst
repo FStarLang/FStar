@@ -45,6 +45,8 @@ type extra =
   (* ext name, contents, position after the header, position of the header start *)
   | Blob of string & string & R.pos & R.pos
   | LexError of Codes.error_code & string & R.range
+  (* The lines of a documentation comment *)
+  | DocLines of list string
 
 (* [kind] is the kind of the token (see FStarC.Parser.TokenKind).  [text]
    is the token payload, if any: the identifier, the operator, the
@@ -326,6 +328,7 @@ let lit_2 = cps "\\\"'bfntrv0"
 let lit_3 = cps "LF"
 let lit_4 = cps "*)"
 let lit_5 = cps "(*"
+let lit_doc = cps "(*|"
 let lit_6 = cps "```"
 let lit_7 = cps ";;"
 let lit_8 = cps "y"
@@ -672,6 +675,7 @@ type rule =
   | RReal
   | RBadNumber
   | RCommentStart
+  | RDocStart
   | RInFStar
   | RLineComment
   | RString
@@ -774,6 +778,115 @@ let rec comment (st:lstate) (inner:bool) (buf:ref (list string)) (startpos:R.pos
     st.cur := j;
     comment st inner buf startpos startcol
   end
+
+(* A documentation comment, opened by a paren, star and bar, is lexed into
+   a DOC token carrying one string per line; the grammar turns it into a
+   `doc` attribute (see FStarC.Docs and ulib/FStar.Attributes.fsti).  The
+   delimiters cannot be written literally here: comments nest.
+
+   The payload is opaque to F*.  In particular, a leading star on a
+   continuation line is part of that line.  Only layout that is an
+   artifact of where the delimiters sit is undone:
+     - continuation lines are dedented by their common indentation; the
+       first line follows the opener, so it only loses leading blanks;
+     - trailing whitespace goes, since it is invisible;
+     - wholly blank lines at either end go. *)
+
+(* The text between the opener (already consumed) and the matching closer.
+   Unlike [comment], nested comments stay part of the text. *)
+let rec doc_comment (st:lstate) (depth:int) (buf:ref (list string)) (startpos:R.pos) : ML string =
+  let i = !st.cur in
+  let j = run_end st comment_stop i in
+  if j > i then begin
+    buf := lexeme st i j :: !buf;
+    st.cur := j;
+    doc_comment st depth buf startpos
+  end else
+  let c = byte st i in
+  if c = ch '(' && byte st (i + one) = ch '*' then begin
+    buf := "(*" :: !buf;
+    st.cur := i + of_int 2;
+    doc_comment st Prims.(depth + 1) buf startpos
+  end else
+  let nl = match_newline st i in
+  if nl >= zero then begin
+    st.cur := nl;
+    new_line st;
+    buf := lexeme st i nl :: !buf;
+    doc_comment st depth buf startpos
+  end else if c = ch '*' && byte st (i + one) = ch ')' then begin
+    st.cur := i + of_int 2;
+    if depth = 0 then chunks_to_string !buf
+    else begin
+      buf := "*)" :: !buf;
+      doc_comment st Prims.(depth - 1) buf startpos
+    end
+  end else if i >= st.len then
+    (* A documentation comment is a token: one that swallowed the rest of
+       the file must say so. *)
+    lex_error st Codes.Fatal_SyntaxError
+      "Syntax error: unterminated documentation comment" startpos (cur_pos st)
+  else begin
+    let j = next st i in
+    buf := lexeme st i j :: !buf;
+    st.cur := j;
+    doc_comment st depth buf startpos
+  end
+
+(* The number of leading blanks of [s], or -1 if [s] is all blanks *)
+let doc_indent (s:string) : ML t =
+  let n = S.byte_length s in
+  let rec go (i:t) : ML t =
+    if i >= n then minus_one
+    else
+      let c = S.byte_at s i in
+      if c = ch ' ' || c = ch '\t' then go (i + one) else i
+  in
+  go zero
+
+let doc_rstrip (s:string) : ML string =
+  let rec go (n:t) : ML t =
+    if n > zero
+    && (let c = S.byte_at s (n - one) in c = ch ' ' || c = ch '\t' || c = ch '\r')
+    then go (n - one)
+    else n
+  in
+  S.byte_substring s zero (go (S.byte_length s))
+
+let doc_drop (s:string) (k:t) : string =
+  if k >= S.byte_length s then "" else S.byte_substring s k (S.byte_length s)
+
+let doc_dedent (lines:list string) : ML (list string) =
+  match lines with
+  | [] -> []
+  | first :: rest ->
+    let common =
+      List.fold_left
+        (fun (acc:t) (s:string) ->
+           let i = doc_indent s in
+           if i < zero then acc
+           else if acc < zero || i < acc then i
+           else acc)
+        minus_one rest
+    in
+    let strip (s:string) : string = if common > zero then doc_drop s common else s in
+    first :: List.map strip rest
+
+let rec doc_drop_blank (l:list string) : ML (list string) =
+  match l with
+  | h :: tl when S.byte_length h = zero -> doc_drop_blank tl
+  | _ -> l
+
+let doc_lines_of_text (body:string) : ML (list string) =
+  let lines = List.map doc_rstrip (S.split ['\n'] body) in
+  let lines =
+    match lines with
+    | [] -> []
+    | first :: rest ->
+      let k = doc_indent first in
+      (if k < zero then "" else doc_drop first k) :: rest
+  in
+  List.rev (doc_drop_blank (List.rev (doc_drop_blank (doc_dedent lines))))
 
 let line_comment (st:lstate) (pre:string) : ML unit =
   let i = !st.cur in
@@ -941,7 +1054,11 @@ let select (st:lstate) (i:t) : ML (rule & t) =
     try_ RReal (match_real st i);
     try_ RBadNumber (match_bad_number st i)
   end;
-  if c = ch '(' then try_ RCommentStart (match_lit st (lit_5) i);
+  if c = ch '(' then begin
+    try_ RCommentStart (match_lit st (lit_5) i);
+    (* Longest match: the three-character opener wins over a plain comment *)
+    try_ RDocStart (match_lit st (lit_doc) i)
+  end;
   if c = ch '/' then begin
     try_ RInFStar (match_lit st cps_in_fstar i);
     try_ RLineComment (match_lit st (lit_14) i)
@@ -1047,6 +1164,11 @@ let rec next_token (st:lstate) : ML token =
     let buf = mk_ref ["(*"] in
     comment st false buf sp startcol;
     next_token st
+  | RDocStart ->
+    st.cur := e;
+    let body = doc_comment st 0 (mk_ref []) sp in
+    let ep = cur_pos st in
+    { tok DOC "" sp ep !st.ncomments with extra = DocLines (doc_lines_of_text body) }
   | RInFStar -> st.cur := e; next_token st
   | RLineComment ->
     st.cur := e;

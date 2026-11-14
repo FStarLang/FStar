@@ -209,6 +209,7 @@ type qualifiers = list qualifier
 type decoration =
   | Qualifier of qualifier
   | DeclAttributes of list term
+  | DocAttribute of term
 
 (* A sub-effect declaration is an edge in the effect lattice:
      sub_effect Pure ~> Div
