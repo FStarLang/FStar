@@ -482,6 +482,7 @@ C_TESTS += DeclareInCHeader
 CUSTARD_TESTS += DeclareInCHeaderOCaml
 FLAGS_DeclareInCHeader += --custard_entry DeclareInCHeader.rooted
 CEXTRA_DeclareInCHeader = DeclareInCHeader_stubs.c
+CHERRY_TESTS += CherryStaticPap
 CHERRY_TESTS += DeclareInCHeaderCherry
 CEXTRA_DeclareInCHeaderCherry = DeclareInCHeaderCherry_stubs.c
 CHGREP_DeclareInCHeader += "extern DeclareInCHeader_pair DeclareInCHeader_swap(DeclareInCHeader_pair);"
@@ -3874,6 +3875,14 @@ $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	  || { echo "ERROR: CherryPap_make tests a partial application for an exception"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryPap.chgrep
+
+$(CHERRY_DIR)/CherryStaticPap.chgrep: $(CHERRY_DIR)/CherryStaticPap.chc
+	$(Q)grep -q 'cherry_pap_CherryStaticPap_twice_1_static(cherry_spap, ((cherry_fn)&cherry_clo_CherryStaticPap_incr))' $< \
+	  && grep -q 'cherry_pap_CherryStaticPap_tag_2_static(cherry_spap, ((cherry_string)&' $< \
+	  || { echo "ERROR: CherryStaticPap allocates a partial application of constants"; exit 1; }
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherryStaticPap.chgrep
 # Cherry: an application of an application, which inlining makes, is one
 # call; the inner partial application is not built only to be applied.
 $(CHERRY_DIR)/CherryAppFlatten.chgrep: $(CHERRY_DIR)/CherryAppFlatten.chc
