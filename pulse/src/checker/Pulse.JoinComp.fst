@@ -412,6 +412,44 @@ let indep_of (xs:list var) (t:term) : bool =
   let fvs = freevars t in
   List.Tot.for_all (fun x -> not (x `Set.mem` fvs)) xs
 
+(* The head of an applied predicate, if [p] is one. *)
+let app_head (p:slprop) : option R.term =
+  match inspect_term p with
+  | Tm_FStar f ->
+    let hd, args = R.collect_app_ln f in
+    if Nil? args then None else Some hd
+  | _ -> None
+
+let count_head (hd:R.term) (ps:list slprop) : T.Tac nat =
+  List.Tot.length (T.filter (fun p -> match app_head p with
+                                      | Some h -> T.term_eq h hd
+                                      | None -> false) ps)
+
+(* A second pass for conjuncts left unmatched below binders. Matching keys
+   keep apart two applications of a predicate whose key arguments differ,
+   but when one of them is a branch's own hoisted variable that is no
+   evidence they describe different things: a branch that binds a fresh
+   value [y] and holds [p y] against one that holds [p v] is the common
+   case. Pair such conjuncts when each is the only application of its head
+   on its side; whether they can be joined is still up to generalization. *)
+let pair_unique_heads (xs1 xs2:list var) (ps qs:list slprop)
+: T.Tac (list (slprop & slprop) & list slprop & list slprop)
+= T.fold_right
+    (fun p (matches, ps', qs) ->
+      match app_head p with
+      | None -> matches, p::ps', qs
+      | Some hd ->
+        if count_head hd ps <> 1 || count_head hd qs <> 1 then matches, p::ps', qs else
+        let q_hd, q_rest = List.Tot.partition (fun q -> match app_head q with
+                                                       | Some h -> T.term_eq h hd
+                                                       | None -> false) qs in
+        match q_hd with
+        | [q] ->
+          if indep_of xs1 p && indep_of xs2 q then matches, p::ps', qs
+          else (p, q)::matches, ps', q_rest
+        | _ -> matches, p::ps', qs)
+    ps ([], [], qs)
+
 (* Strip a branch's postcondition down to a flat list of conjuncts, collecting
    the [exists*] binders and [with_pure] guards it sat under. Both wrappers
    distribute over [**] in the direction a join needs:
@@ -685,6 +723,44 @@ let rec salvage_matches (linked:bool) (all1 all2:list term)
         g, newbs, is, lifted, c1::kept1, c2::kept2
     )
 
+(* Two generalized positions that stand for the same pair of terms, e.g. a
+   value [y] bound in one branch and [v] in the other, appearing both in
+   [r |-> y] and in a predicate about [y], get one binder, not two that
+   nothing relates. *)
+let dedupe_insts (newbs:list (universe & binder & var)) (insts:list inst) (lifted:list slprop)
+: T.Tac (list (universe & binder & var) & list inst & list slprop)
+= let ty_of (x:var) : option term =
+    match List.Tot.find (fun (_, _, y) -> y = x) newbs with
+    | Some (_, b, _) -> Some b.binder_ty
+    | None -> None
+  in
+  let rec go (seen:list inst) (todo:list inst) (drop:list var) (ss:list RT.subst_elt)
+  : T.Tac (list inst & list var & list RT.subst_elt)
+  = match todo with
+    | [] -> List.Tot.rev seen, drop, ss
+    | (x, t1, t2)::todo ->
+      let same (j:inst) : T.Tac bool =
+        let y, u1, u2 = j in
+        T.term_eq t1 u1 && T.term_eq t2 u2 &&
+        (match ty_of x, ty_of y with
+         | Some a, Some b -> T.term_eq a b
+         | _ -> false)
+      in
+      let rec find (l:list inst) : T.Tac (option inst) =
+        match l with
+        | [] -> None
+        | j::l -> if same j then Some j else find l
+      in
+      match find seen with
+      | Some (y, _, _) -> go seen todo (x::drop) (RT.NT x (term_of_no_name_var y)::ss)
+      | None -> go ((x, t1, t2)::seen) todo drop ss
+  in
+  let insts, drop, ss = go [] insts [] [] in
+  if Nil? drop then newbs, insts, lifted else
+  List.Tot.filter (fun (_, _, x) -> not (List.Tot.mem x drop)) newbs,
+  insts,
+  List.Tot.map (fun c -> Pulse.Syntax.Naming.subst_term c ss) lifted
+
 (* What the branches do not agree on. With no [pick], it stays under the
    condition. Otherwise it is the part of the picked branch alone, with that
    branch's pure facts guarded by its condition. Everything the branches did
@@ -727,27 +803,92 @@ let rec needs_hoist (p:slprop) : T.Tac bool =
    holds trivially under the branch hypothesis. [gs] are the branch's
    [with_pure] guards that mention a hoisted variable, [cs] its remaining
    conjuncts, of which only the pure ones are kept. *)
+(* If [t] is [reveal #_ y] for a variable [y], that variable. *)
+let revealed_var (t:term) : option var =
+  let hd, args = R.collect_app_ln t in
+  match is_fvar hd, args with
+  | Some (l, _), [_; (e, R.Q_Explicit)] ->
+    if l = reveal_lid
+    then (match is_var e with | Some nm -> Some nm.nm_index | None -> None)
+    else None
+  | _ -> None
+
 let instance_facts (then_:bool) (b:term)
                    (bs:list (universe & binder & var))
                    (newbs:list (universe & binder & var))
                    (insts:list inst) (gs:list (term & ppname)) (cs:list slprop)
 : T.Tac (list slprop)
-= let eqs : list term =
-    T.filter_map
-      (fun (i:inst) ->
-        let x, t1, t2 = i in
-        let t = if then_ then t1 else t2 in
-        match List.Tot.find (fun (_, _, y) -> y = x) newbs with
-        | None -> None
-        | Some (u, bx, _) -> Some (RT.eq2 u bx.binder_ty (term_of_no_name_var x) t))
-      insts
+= let new_binder (x:var) = List.Tot.find (fun (_, _, y) -> y = x) newbs in
+  let branch (i:inst) : term = let _, t1, t2 = i in if then_ then t1 else t2 in
+  let insts : list (inst & universe & binder) =
+    T.filter_map (fun (i:inst) ->
+                    let x, _, _ = i in
+                    match new_binder x with
+                    | Some (u, bx, _) -> Some (i, u, bx)
+                    | None -> None) insts
   in
-  if Nil? eqs then [] else
+  if Nil? insts then [] else
   let facts =
     List.Tot.map fst gs @
     T.filter_map (fun c -> match inspect_term c with
                            | Tm_Pure p -> Some p
                            | _ -> None) cs
+  in
+  (* An instantiation that is exactly a hoisted variable [y] of the same
+     type as its new binder [w] needs no quantifier: substitute [w] for [y]
+     rather than state [exists y. .. /\ w == y]. Likewise [reveal y] for a
+     hoisted [y : erased t] and [w : t], with [hide w] for [y]. Left
+     quantified, such an
+     equation on an erased type is an [eq2] application that the SMT solver
+     does not eliminate by itself, and a link with several of them, though
+     trivially true, can time out. *)
+  let rec elim (bs:list (universe & binder & var)) (facts:list term)
+               (todo:list (inst & universe & binder)) (kept:list (inst & universe & binder))
+  : T.Tac (list (universe & binder & var) & list term & list (inst & universe & binder))
+  = match todo with
+    | [] -> bs, facts, List.Tot.rev kept
+    | (i, u, bx)::todo ->
+      let x, _, _ = i in
+      (* [y] itself, or [reveal y] for a hoisted [y : erased t] standing
+         for [w : t]: what to substitute for [y]. *)
+      let w = term_of_no_name_var x in
+      let target : option (var & term) =
+        match is_var (branch i) with
+        | Some nm ->
+          (match List.Tot.find (fun (_, _, y) -> y = nm.nm_index) bs with
+           | Some (_, b_y, y) ->
+             if T.term_eq bx.binder_ty b_y.binder_ty then Some (y, w) else None
+           | None -> None)
+        | None ->
+          match revealed_var (branch i) with
+          | Some y ->
+            (match List.Tot.find (fun (_, _, z) -> z = y) bs with
+             | Some (_, b_y, _) ->
+               if T.term_eq (mk_erased u bx.binder_ty) b_y.binder_ty
+               then Some (y, mk_hide u bx.binder_ty w)
+               else None
+             | None -> None)
+          | None -> None
+      in
+      match target with
+      | Some (y, e) ->
+        let ss = [RT.NT y e] in
+        let sub (t:term) : term = Pulse.Syntax.Naming.subst_term t ss in
+        let sub_inst (j:inst & universe & binder) : inst & universe & binder =
+          let (z, a1, a2), uj, bj = j in
+          (if then_ then (z, sub a1, a2) else (z, a1, sub a2)), uj, bj
+        in
+        elim (List.Tot.filter (fun (_, _, z) -> z <> y) bs)
+             (List.Tot.map sub facts) (List.Tot.map sub_inst todo) (List.Tot.map sub_inst kept)
+      | None -> elim bs facts todo ((i, u, bx)::kept)
+  in
+  let bs, facts, insts = elim bs facts insts [] in
+  let eqs : list term =
+    T.map (fun (j:inst & universe & binder) ->
+            let i, u, bx = j in
+            let x, _, _ = i in
+            RT.eq2 u bx.binder_ty (term_of_no_name_var x) (branch i))
+          insts
   in
   let rec close (bs:list (universe & binder & var)) (p:term) : T.Tac term =
     match bs with
@@ -765,6 +906,7 @@ let instance_facts (then_:bool) (b:term)
      variable the branch knows satisfies the refinement), and a conjunction
      types its right conjunct under its left one, not the other way. *)
   let all = facts @ eqs in
+  if Nil? all then [] else
   let conj = List.Tot.fold_left mk_and (List.Tot.hd all) (List.Tot.tl all) in
   let body = close bs conj in
   let pred = mk_imp (RT.eq2 u0 tm_bool b (if then_ then tm_true else tm_false)) body in
@@ -785,6 +927,8 @@ let join_hoisted (pick:option bool) (linked links:bool) g b (p1 p2:slprop)
   let xs1 = List.Tot.map (fun (_, _, x) -> x) bs1 in
   let xs2 = List.Tot.map (fun (_, _, x) -> x) bs2 in
   let matches, cs1, cs2 = partition_matches g2 cs1 cs2 in
+  let matches', cs1, cs2 = pair_unique_heads xs1 xs2 cs1 cs2 in
+  let matches = matches @ matches' in
   Pulse.Checker.Util.debug g "pulse.join_comp" (fun _ ->
     Printf.sprintf
       "Hoisted %d and %d binders.\nMatches: %s\nRemaining ps=%s\nRemaining qs=%s\n"
@@ -800,6 +944,7 @@ let join_hoisted (pick:option bool) (linked links:bool) g b (p1 p2:slprop)
   let all2 = List.Tot.map fst gs2 @ cs2 @ List.Tot.map snd matches in
   let g2, newbs, insts, lifted, kept1, kept2 =
     salvage_matches linked all1 all2 g2 b bs1 bs2 xs1 xs2 matches in
+  let newbs, insts, lifted = dedupe_insts newbs insts lifted in
   if Nil? lifted
   then leftover pick b p1 p2 // nothing was salvaged; keep the term as it was
   else
@@ -814,8 +959,20 @@ let join_hoisted (pick:option bool) (linked links:bool) g b (p1 p2:slprop)
     let pures2, indep2 = guard_pures false b indep2 in
     let pures1 = gpures1@pures1 in
     let pures2 = gpures2@pures2 in
-    let rest1 = close_hoisted_exists bs1 (rewrap_guards gs1 (list_as_slprop (indep1@dep1))) in
-    let rest2 = close_hoisted_exists bs2 (rewrap_guards gs2 (list_as_slprop (indep2@dep2))) in
+    (* With links, a branch's guards are stated in its link. A guard about
+       none of the hoisted variables left in the conditional then only
+       weakens the latter, by asking for witnesses that nothing there
+       determines; leave it out. *)
+    let rest_guards (xs:list var) (gs:list (term & ppname)) (cs:list slprop)
+    : list (term & ppname)
+    = if not links then gs else
+      let used = List.Tot.filter (fun x -> List.Tot.existsb (fun c -> not (indep_of [x] c)) cs) xs in
+      List.Tot.filter (fun (pred, _) -> not (indep_of used pred)) gs
+    in
+    let rest1 = close_hoisted_exists bs1
+                  (rewrap_guards (rest_guards xs1 gs1 (indep1@dep1)) (list_as_slprop (indep1@dep1))) in
+    let rest2 = close_hoisted_exists bs2
+                  (rewrap_guards (rest_guards xs2 gs2 (indep2@dep2)) (list_as_slprop (indep2@dep2))) in
     let remaining =
       if is_emp rest1 && is_emp rest2
       then []
