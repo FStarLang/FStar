@@ -760,7 +760,11 @@ let instance_facts (then_:bool) (b:term)
                     bx.binder_ty R.Q_Explicit (close_term p y) in
         mk_l_exists u bx.binder_ty abs
   in
-  let all = eqs @ facts in
+  (* The facts come first: an instantiation may only be well-typed given one
+     of them (e.g. a constructor whose field is refined, applied to a hoisted
+     variable the branch knows satisfies the refinement), and a conjunction
+     types its right conjunct under its left one, not the other way. *)
+  let all = facts @ eqs in
   let conj = List.Tot.fold_left mk_and (List.Tot.hd all) (List.Tot.tl all) in
   let body = close bs conj in
   let pred = mk_imp (RT.eq2 u0 tm_bool b (if then_ then tm_true else tm_false)) body in
