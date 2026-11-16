@@ -398,6 +398,7 @@ let check
              downstream instead of relying on this inference heuristic.
 
              The search order is:
+             (0) With links, if [post] keeps no conditional, try [post].
              (1) If [linked_post] keeps a conditional, try [Some false, true],
                  then [Some true, true] (arguments are [pick, linked]).
              (2) If [post] keeps a conditional, try [Some false, false],
@@ -426,7 +427,7 @@ let check
           let with_leftover_of (linked then_:bool) () =
             prove_and_extract (post_hint_of_candidate g ret_ty (candidate (Some then_) linked)) ()
           in
-          let rec first (cs:list (bool & bool))
+          let rec first (cs:list (option (bool & bool)))
             : T.Tac (ph:post_hint_for_env g &
                      checker_result_t (g_with_eq tm_true) pre (PostHint ph) &
                      checker_result_t (g_with_eq tm_false) pre (PostHint ph) &
@@ -437,8 +438,12 @@ let check
                              c2:comp_st { comp_pre c2 == pre /\ comp_res c2 == ph.ret_ty /\
                                           comp_u c2 == ph.u /\ comp_post c2 == ph.post })) =
             match cs with
-            | (linked, then_)::cs ->
+            | Some (linked, then_)::cs ->
               (match RU.try_quietly (with_leftover_of linked then_) with
+               | Some r -> r
+               | None -> first cs)
+            | None::cs ->
+              (match RU.try_quietly (prove_and_extract post) with
                | Some r -> r
                | None -> first cs)
             | _ ->
@@ -446,10 +451,16 @@ let check
               (| post, then_, else_, None |)
           in
           let linked_cs =
-            if post_keeps_conditional linked_post then [(true, false); (true, true)] else [] in
+            if post_keeps_conditional linked_post then [Some (true, false); Some (true, true)] else [] in
           let unlinked_cs =
-            if post_keeps_conditional post.post then [(false, false); (false, true)] else [] in
-          first (linked_cs @ unlinked_cs)
+            if post_keeps_conditional post.post then [Some (false, false); Some (false, true)] else [] in
+          (* With links and nothing left under the condition, [post] states
+             of each generalized binder exactly what it stands for in each
+             branch: it is as precise as the branches themselves, and a pick,
+             which keeps only one branch's facts about a shared witness, can
+             only be weaker. Try it first. *)
+          let post_first = if links && not (post_keeps_conditional post.post) then [None] else [] in
+          first (post_first @ linked_cs @ unlinked_cs)
         in
         match RU.try_quietly (search true) with
         | Some r -> r
