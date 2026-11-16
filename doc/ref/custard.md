@@ -23123,7 +23123,9 @@ proofstate was then pure, and, with its result unused, deleted as dead code,
 together with the `fail` in the `any` branch.  Pulse's checker lost the check
 rejecting a ghost application of a stateful function this way (fixed
 indirectly by FStarLang/FStar#4905, which stopped that branch being `any`).
-`tests/custard/TacAnyArm.fst` has both shapes.
+`tests/custard/TacAnyArm.fst` has both shapes.  A `try` is typed by the same
+rule, over its body and its handlers: `try_with`'s rule used to take the
+body's type alone, which could miss a handler's effects in the same way.
 
 ### 125.9 Two more ways an `any` reaches a pattern
 
