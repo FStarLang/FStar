@@ -5984,8 +5984,8 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
            "      default: break;\n    }\n" in
          let counted = cs |> List.existsb (fun (_, fs) -> has_counted fs) in
          if not counted then begin
-           fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
-              "  if (cherry_dec_ref(x)) free(x);\n";
+           fn ("static CHERRY_ALWAYS_INLINE void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
+              "  cherry_dec_with(x, NULL);\n";
            fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
               "  (void)cherry_mark_ref(x, m);\n"
          end else begin
@@ -5997,8 +5997,8 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
               ("  for (;;) {\n    " ^ n ^ " next = CHERRY_SCALAR(0);\n" ^
                cases "mark" ^
                "    if (!cherry_mark_ref(next, m)) return;\n    x = next;\n  }\n");
-           fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
-              ("  if (cherry_dec_ref(x)) cherry_defer(x, cherry_free_" ^ n ^ ", 0);\n");
+           fn ("static CHERRY_ALWAYS_INLINE void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
+              ("  cherry_dec_with(x, cherry_free_" ^ n ^ ");\n");
            fn_out home ("void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
               ("  if (cherry_mark_ref(x, m)) cherry_defer(x, cherry_markf_" ^ n ^ ", m);\n")
          end
@@ -6018,8 +6018,17 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
                  "      break;\n"])) ^
               "    default: break;\n  }\n"
             | TAbstract -> "") in
+         (* GCC leaves many small helpers out of line in a large unit;
+            one count to change is less code than the call. *)
+         let single =
+           match dt.dt_body with
+           | TAbbrev _ -> true
+           | TRecord fs | TVariant [(_, fs)] ->
+             List.length (List.filter (fun (_, t) -> is_nonplain_ty t) fs) <= 1
+           | _ -> false in
+         let inl = if single then "static CHERRY_ALWAYS_INLINE void " else "static inline void " in
          ["inc"; "dec"] |> List.iter (fun op ->
-           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x)") (body op));
+           fn (inl ^ "cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x)") (body op));
          fn_out home ("void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
            ("  (void)m;\n" ^ body "mark"))
     | _ -> ());
@@ -6068,8 +6077,8 @@ let cherry_ref_helpers () : ML (list string & list string) =
         "  cherry_ref_lock(r);\n" ^
         when_counted ("  old = c->v;\n") ^
         "  c->v = v;\n  cherry_ref_unlock(r);\n" ^ op "dec" "old";
-        (if counted then "  if (cherry_dec_ref(r)) cherry_defer(r, " ^ p ^ "_free, 0);\n"
-         else "  if (cherry_dec_ref(r)) free(r);\n");
+        (if counted then "  cherry_dec_with(r, " ^ p ^ "_free);\n"
+         else "  cherry_dec_with(r, NULL);\n");
         (if counted then
            "  if (cherry_mark_ref(r, m)) {\n" ^
            "    if (m == CHERRY_PERSIST) cherry_note_global_ref(r, " ^ p ^ "_markf);\n" ^

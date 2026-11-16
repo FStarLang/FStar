@@ -72,6 +72,17 @@ void cherry_exit(cherry_int n) {
   exit((int)cherry_int_to_i64(n));
 }
 
+/* The rest of [cherry_dec_with]: a persistent cell stays, a shared one is
+   counted atomically, and the last reference frees the cell.  A closure
+   without counted fields has no [drop] to defer to. */
+CHERRY_NOINLINE void cherry_dec_last(cherry_obj *o, int32_t rc, cherry_work_fn f) {
+  if (rc == 0) return;
+  if (rc < 0 && __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) != 0) return;
+  if (f == cherry_free_closure && CHERRY_CLOSURE(o)->drop == NULL) f = NULL;
+  if (f != NULL) cherry_defer(o, f, 0);
+  else free(o);
+}
+
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode) {
   if (CHERRY_LIKELY(depth < CHERRY_DEFER_DEPTH)) {
     depth++;
