@@ -770,6 +770,18 @@ GREP_Deriving  += "^}$$"
 GREP_Deriving  += "} \[@@deriving yojson\]"
 GREP_Deriving  += "^  \[@@deriving yojson\]$$"
 
+# A reified [Tac] match with an arm typed [any] and a pure closure arm was
+# typed as the pure closure, so its application to the proofstate was deleted
+# as dead code, together with the [fail] in the other arm.  Pulse's checker
+# lost a soundness check this way.  Extraction only: [fail] needs the
+# compiler's own modules to link.
+ROOT_TESTS += TacAnyArm
+ROOTS_TacAnyArm = check check_dep
+FLAGS_TacAnyArm = --warn_error -367
+GREP_TacAnyArm += "fStar_Tactics_V2_Derived_fail \"A\""
+GREP_TacAnyArm += "tacAnyArm_side b"
+GREP_TacAnyArm += "tacAnyArm_side (not b)"
+
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.
 REJECT_TESTS += MonoPoly

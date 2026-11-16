@@ -23113,6 +23113,18 @@ lost its type should not be able to make the whole match lose its own ---
 `any` there would cost a coercion at every use.  Disagreement between two
 *ground* branch types is the case that has to answer `any`, and now does.
 
+What dropping an `any` branch must not drop is its *effect*.  A branch typed
+`any` may be a closure that does anything when called, so when one is set
+aside and the type that is left contains arrows, those arrows are made
+`Impure`.  Without this, a reified `Tac` match --- whose branches are closures
+over the proofstate --- with an `any` branch next to a pure
+`fun ps -> ()` was typed as the pure closure; its application to the
+proofstate was then pure, and, with its result unused, deleted as dead code,
+together with the `fail` in the `any` branch.  Pulse's checker lost the check
+rejecting a ghost application of a stateful function this way (fixed
+indirectly by FStarLang/FStar#4905, which stopped that branch being `any`).
+`tests/custard/TacAnyArm.fst` has both shapes.
+
 ### 125.9 Two more ways an `any` reaches a pattern
 
 The other two are §14 coercions that were not inserted, and both are

@@ -1776,6 +1776,18 @@ let rec join_arrow_effs (t u:cty) : ML (option cty) =
     (match both xs ys with Some zs -> Some (TApp (n, zs)) | None -> None)
   | _ -> None
 
+(* [ty] with every arrow it returns made [E_Impure]: what a value of type
+   [ty] may do when called, if it may also be a value we know nothing about.
+   Argument types are left alone; only what a caller can run is weakened. *)
+let rec impure_arrows (ty:cty) : ML cty =
+  match ty with
+  | TArrow (a, _, b) -> TArrow (a, E_Impure, impure_arrows b)
+  | TTuple xs -> TTuple (List.map impure_arrows xs)
+  | TBuf x -> TBuf (impure_arrows x)
+  | TRef (k, x) -> TRef (k, impure_arrows x)
+  | TApp (n, xs) -> TApp (n, List.map impure_arrows xs)
+  | _ -> ty
+
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
    parameter, or a local closure -- gets its effect: there is no declaration to
@@ -3868,9 +3880,9 @@ and expr_of_term (st:state) (t:term) : ML expr =
        abbreviations: [if c then r.file_name else refind r.file_name] has a
        branch of type [file_name] and one of type [string], and calling that
        [any] made Cherry box both arms into a [string] variable. *)
+    let arm_tys = brs |> List.map (fun (_, _, (b:expr)) -> b.ty) in
     let ty =
-      match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
-                |> List.filter (fun t -> not (TAny? t)) with
+      match arm_tys |> List.filter (fun t -> not (TAny? t)) with
       | [] -> TAny
       | t :: ts ->
         if ts |> List.for_all (fun u -> u = t) then t else
@@ -3889,6 +3901,16 @@ and expr_of_term (st:state) (t:term) : ML expr =
         match join t' (List.map (unfold_abbrevs st 100) ts) with
         | Some j -> if j = t' then t else j
         | None -> TAny in
+    (* An [any] arm set aside above may be a closure that does anything when
+       called: in a reified [Tac] match, an arm typed [any] next to a pure
+       [fun ps -> ()] made the whole match a pure closure, so its application
+       to the proofstate was pure, and dead code if its result was unused --
+       the effects of the [any] arm were deleted with it. *)
+    let ty =
+      if TAny? ty || not (arm_tys |> List.existsb TAny?) then ty else
+      let u = unfold_abbrevs st 100 ty in
+      let u' = impure_arrows u in
+      if u' = u then ty else u' in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
