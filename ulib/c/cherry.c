@@ -34,7 +34,9 @@ typedef struct { cherry_obj *o; cherry_work_fn f; int mode; } job;
 
 static _Thread_local job *jobs;
 static _Thread_local size_t njobs, cap;
-static _Thread_local bool busy;
+/* How many visits are running on this thread's C stack. */
+static _Thread_local unsigned depth;
+#define CHERRY_DEFER_DEPTH 64
 
 _Thread_local cherry_exn cherry_exn_slot;
 
@@ -70,23 +72,37 @@ void cherry_exit(cherry_int n) {
   exit((int)cherry_int_to_i64(n));
 }
 
+/* The rest of [cherry_dec_with]: a persistent cell stays, a shared one is
+   counted atomically, and the last reference frees the cell.  A closure
+   without counted fields has no [drop] to defer to. */
+CHERRY_NOINLINE void cherry_dec_last(cherry_obj *o, int32_t rc, cherry_work_fn f) {
+  if (rc == 0) return;
+  if (rc < 0 && __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) != 0) return;
+  if (f == cherry_free_closure && CHERRY_CLOSURE(o)->drop == NULL) f = NULL;
+  if (f != NULL) cherry_defer(o, f, 0);
+  else free(o);
+}
+
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode) {
-  if (busy) {
-    if (njobs == cap) {
-      cap = cap == 0 ? 64 : 2 * cap;
-      jobs = (job *)realloc(jobs, cap * sizeof(job));
-      if (jobs == NULL) abort();
+  if (CHERRY_LIKELY(depth < CHERRY_DEFER_DEPTH)) {
+    depth++;
+    f(o, mode);
+    if (--depth == 0 && njobs > 0) {
+      depth = 1;
+      while (njobs > 0) {
+        job j = jobs[--njobs];
+        j.f(j.o, j.mode);
+      }
+      depth = 0;
     }
-    jobs[njobs++] = (job){ o, f, mode };
     return;
   }
-  busy = true;
-  f(o, mode);
-  while (njobs > 0) {
-    job j = jobs[--njobs];
-    j.f(j.o, j.mode);
+  if (njobs == cap) {
+    cap = cap == 0 ? 64 : 2 * cap;
+    jobs = (job *)realloc(jobs, cap * sizeof(job));
+    if (jobs == NULL) abort();
   }
-  busy = false;
+  jobs[njobs++] = (job){ o, f, mode };
 }
 
 /* The persistent ML references, and the visit function that marks each
@@ -578,6 +594,20 @@ cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j) {
   if (b > n) b = n;
   if (b <= a) return cherry_str_of_bytes("", 0);
   return cherry_str_of_bytes(cherry_str_data(s) + a, (size_t)(b - a));
+}
+
+int64_t cherry_str_find64(cherry_string s, cherry_string t, int64_t from) {
+  const char *d = cherry_str_data(s), *p = cherry_str_data(t);
+  size_t n = cherry_str_size(s), m = cherry_str_size(t);
+  if (from < 0 || (size_t)from > n || m > n - (size_t)from) return (int64_t)n;
+  if (m == 0) return from;
+  const char *last = d + (n - m);
+  for (const char *q = d + from; q <= last; q++) {
+    q = memchr(q, p[0], (size_t)(last - q) + 1);
+    if (q == NULL) break;
+    if (memcmp(q + 1, p + 1, m - 1) == 0) return (int64_t)(q - d);
+  }
+  return (int64_t)n;
 }
 
 bool cherry_str_contains(cherry_string s, cherry_string sub) {

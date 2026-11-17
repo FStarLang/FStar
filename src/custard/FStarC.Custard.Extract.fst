@@ -1776,6 +1776,59 @@ let rec join_arrow_effs (t u:cty) : ML (option cty) =
     (match both xs ys with Some zs -> Some (TApp (n, zs)) | None -> None)
   | _ -> None
 
+(* [ty] with every arrow it returns made [E_Impure]: what a value of type
+   [ty] may do when called, if it may also be a value we know nothing about.
+   Argument types are left alone; only what a caller can run is weakened. *)
+let rec impure_arrows (ty:cty) : ML cty =
+  match ty with
+  | TArrow (a, _, b) -> TArrow (a, E_Impure, impure_arrows b)
+  | TTuple xs -> TTuple (List.map impure_arrows xs)
+  | TBuf x -> TBuf (impure_arrows x)
+  | TRef (k, x) -> TRef (k, impure_arrows x)
+  | TApp (n, xs) -> TApp (n, List.map impure_arrows xs)
+  | _ -> ty
+
+(* Section 125.8.  The type of a node that returns whichever of [arm_tys] runs:
+   a [match]'s branches, or a [try]'s body and handlers.  The first arm's type
+   is the node's only when the arms agree.  When they do not, the node really
+   does return a value of no common representation, and saying otherwise is a
+   claim the rest of the pipeline believes: [narrow_rets] reads a body's type
+   straight off the node, so a [d:dir -> arg_type d] whose first branch is a
+   [bool] came out declared [bool].  Agreement is up to abbreviations:
+   [if c then r.file_name else refind r.file_name] has a branch of type
+   [file_name] and one of type [string], and calling that [any] made Cherry
+   box both arms into a [string] variable. *)
+let arms_type (st:state) (arm_tys:list cty) : ML cty =
+  let ty =
+    match arm_tys |> List.filter (fun t -> not (TAny? t)) with
+    | [] -> TAny
+    | t :: ts ->
+      if ts |> List.for_all (fun u -> u = t) then t else
+      (* Nor do arrows that differ only in their effects: in a [Tac]
+         function returning [fun ps -> false] from one branch and a
+         closure that calls an impure function from the other, the
+         representation is the same closure. *)
+      let join (t:cty) (ts:list cty) : ML (option cty) =
+        List.fold_left (fun (j:option cty) u ->
+          match j with Some j -> join_arrow_effs j u | None -> None)
+          (Some t) ts in
+      match join t ts with
+      | Some j -> j
+      | None ->
+      let t' = unfold_abbrevs st 100 t in
+      match join t' (List.map (unfold_abbrevs st 100) ts) with
+      | Some j -> if j = t' then t else j
+      | None -> TAny in
+  (* An [any] arm set aside above may be a closure that does anything when
+     called: in a reified [Tac] match, an arm typed [any] next to a pure
+     [fun ps -> ()] made the whole match a pure closure, so its application
+     to the proofstate was pure, and dead code if its result was unused --
+     the effects of the [any] arm were deleted with it. *)
+  if TAny? ty || not (arm_tys |> List.existsb TAny?) then ty else
+  let u = unfold_abbrevs st 100 ty in
+  let u' = impure_arrows u in
+  if u' = u then ty else u'
+
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
    parameter, or a local closure -- gets its effect: there is no declaration to
@@ -3859,36 +3912,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let e = List.fold_left (fun e (_, g, b) ->
               join_eff e (join_eff b.eff (match g with None -> E_Pure | Some g -> g.eff)))
               scrut.eff brs in
-    (* Section 125.8.  The first branch's type is the whole match's only when
-       the branches agree.  When they do not, the match really does return a
-       value of no common representation, and saying otherwise is a claim the
-       rest of the pipeline believes: [narrow_rets] reads a body's type
-       straight off this node, so a [d:dir -> arg_type d] whose first branch
-       is a [bool] came out declared [bool].  Agreement is up to
-       abbreviations: [if c then r.file_name else refind r.file_name] has a
-       branch of type [file_name] and one of type [string], and calling that
-       [any] made Cherry box both arms into a [string] variable. *)
-    let ty =
-      match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
-                |> List.filter (fun t -> not (TAny? t)) with
-      | [] -> TAny
-      | t :: ts ->
-        if ts |> List.for_all (fun u -> u = t) then t else
-        (* Nor do arrows that differ only in their effects: in a [Tac]
-           function returning [fun ps -> false] from one branch and a
-           closure that calls an impure function from the other, the
-           representation is the same closure. *)
-        let join (t:cty) (ts:list cty) : ML (option cty) =
-          List.fold_left (fun (j:option cty) u ->
-            match j with Some j -> join_arrow_effs j u | None -> None)
-            (Some t) ts in
-        match join t ts with
-        | Some j -> j
-        | None ->
-        let t' = unfold_abbrevs st 100 t in
-        match join t' (List.map (unfold_abbrevs st 100) ts) with
-        | Some j -> if j = t' then t else j
-        | None -> TAny in
+    let ty = arms_type st (brs |> List.map (fun (_, _, (b:expr)) -> b.ty)) in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
@@ -4527,6 +4551,15 @@ and erasable_result (st:state) (ty:typ) (args:args) : ML bool =
    under-applied use has to be eta-expanded rather than passed along. *)
 and prim_app (st:state) (l:Ident.lident) (n:int)
              (f : list cty -> list expr -> ML expr) (args:args) : ML expr =
+  (* [try_with]'s rule types the [ETry] by its body alone; a handler may
+     return a closure with effects the body's does not have, or one the body's
+     [any] says nothing about.  Typed like a [match] (section 125.8). *)
+  let f (tys:list cty) (xs:list expr) : ML expr =
+    let e = f tys xs in
+    match e.e with
+    | ETry (b, brs) ->
+      { e with ty = arms_type st (b.ty :: List.map (fun (_, _, (h:expr)) -> h.ty) brs) }
+    | _ -> e in
   let args0 = List.map fst args in
   let decl_ty = match lookup_lid_typ st l with
                 | Some ((_, ty), _) -> Some ty
