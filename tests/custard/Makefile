@@ -3899,6 +3899,13 @@ $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	  || { echo "ERROR: CherryPap_make tests a partial application for an exception"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryPap.chgrep
+# Cherry: a partial use of an eta-reduced definition does not stop it being
+# eta-expanded again, so its full calls build no closure.
+$(CHERRY_DIR)/CherryEtaPartial.chgrep: $(CHERRY_DIR)/CherryEtaPartial.chc
+	$(Q)! sed -n '/^static .* CherryEtaPartial_both(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryEtaPartial_both calls same_id through a closure"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryEtaPartial.chgrep
 
 $(CHERRY_DIR)/CherryStaticPap.chgrep: $(CHERRY_DIR)/CherryStaticPap.chc
 	$(Q)grep -q 'cherry_pap_CherryStaticPap_twice_1_static(cherry_spap, ((cherry_fn)&cherry_clo_CherryStaticPap_incr))' $< \
@@ -3951,6 +3958,7 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
+CHERRY_TESTS += CherryEtaPartial
 CHERRY_TESTS += CherryAppFlatten
 CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec CherryGlobalRefShare
 # A low budget so that a regression fails in seconds rather than a minute.
