@@ -2903,6 +2903,16 @@ let rec strip_coerce (e:expr) : expr =
   | ECoerce (e', _) -> strip_coerce e'
   | _ -> e
 
+(* An argument C can put in a static initializer: a literal (not a
+   [Prims.int] too big to be a scalar), or a definition's static closure. *)
+let is_static_const (a:expr) : ML bool =
+  TUnit? a.ty ||
+  (match a.e with
+  | EConst (CInt (v, _, None)) -> v < 1073741824 && v > -1073741824
+  | EConst (CInt _) | EConst (CBool _) | EConst (CChar _) | EConst (CString _) | EConst (CFloat _) -> true
+  | EQual (n, _) -> Some? (fn_sig n)
+  | _ -> false)
+
 (* The environment struct and the entry point of the closures whose code is
    the lifted definition [nm] (section 19.12), which takes the captured
    values [caps] first and the boxed function's parameters after them.  The
@@ -3030,6 +3040,17 @@ and c_expr_doc (out:ref c_body) (ind:string) (e:expr) : ML c_expression =
     (match hd.e with
      | EQual (n, _) when Some? (fn_sig n) ->
        clo_request (ReqPap (n, k, e.ty));
+       (* All arguments constants: the closure is one too, a persistent cell
+          in static storage rather than one allocated on every evaluation.
+          In a block of its own, since the statement may follow a label. *)
+       if List.for_all (fun (a:expr) -> is_static_const (strip_coerce a)) eargs then begin
+         let tmp = fresh "spap" in
+         out := !out ++ local_decl ind ("cherry_fn " ^ tmp) tmp LKPointer None None
+                     ++ CText (ind ^ "{ " ^ pap_name n k ^ "_static(cherry_spap, " ^
+                               String.concat ", " args ^ "); " ^
+                               tmp ^ " = (cherry_fn)&cherry_spap; }\n");
+         c_postfix tmp
+       end else
        c_postfix (pap_name n k ^ "(" ^ String.concat ", " args ^ ")")
      | _ ->
        let f = c_expr out ind hd in
@@ -5984,8 +6005,8 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
            "      default: break;\n    }\n" in
          let counted = cs |> List.existsb (fun (_, fs) -> has_counted fs) in
          if not counted then begin
-           fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
-              "  if (cherry_dec_ref(x)) free(x);\n";
+           fn ("static CHERRY_ALWAYS_INLINE void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
+              "  cherry_dec_with(x, NULL);\n";
            fn ("static inline void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
               "  (void)cherry_mark_ref(x, m);\n"
          end else begin
@@ -5997,8 +6018,8 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
               ("  for (;;) {\n    " ^ n ^ " next = CHERRY_SCALAR(0);\n" ^
                cases "mark" ^
                "    if (!cherry_mark_ref(next, m)) return;\n    x = next;\n  }\n");
-           fn ("static inline void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
-              ("  if (cherry_dec_ref(x)) cherry_defer(x, cherry_free_" ^ n ^ ", 0);\n");
+           fn ("static CHERRY_ALWAYS_INLINE void cherry_dec_" ^ n ^ "(" ^ n ^ " x)")
+              ("  cherry_dec_with(x, cherry_free_" ^ n ^ ");\n");
            fn_out home ("void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
               ("  if (cherry_mark_ref(x, m)) cherry_defer(x, cherry_markf_" ^ n ^ ", m);\n")
          end
@@ -6018,8 +6039,17 @@ let cherry_helpers (p:program) : ML (list string & list string & list (string & 
                  "      break;\n"])) ^
               "    default: break;\n  }\n"
             | TAbstract -> "") in
+         (* GCC leaves many small helpers out of line in a large unit;
+            one count to change is less code than the call. *)
+         let single =
+           match dt.dt_body with
+           | TAbbrev _ -> true
+           | TRecord fs | TVariant [(_, fs)] ->
+             List.length (List.filter (fun (_, t) -> is_nonplain_ty t) fs) <= 1
+           | _ -> false in
+         let inl = if single then "static CHERRY_ALWAYS_INLINE void " else "static inline void " in
          ["inc"; "dec"] |> List.iter (fun op ->
-           fn ("static inline void cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x)") (body op));
+           fn (inl ^ "cherry_" ^ op ^ "_" ^ n ^ "(" ^ n ^ " x)") (body op));
          fn_out home ("void cherry_mark_" ^ n ^ "(" ^ n ^ " x, int m)")
            ("  (void)m;\n" ^ body "mark"))
     | _ -> ());
@@ -6068,8 +6098,8 @@ let cherry_ref_helpers () : ML (list string & list string) =
         "  cherry_ref_lock(r);\n" ^
         when_counted ("  old = c->v;\n") ^
         "  c->v = v;\n  cherry_ref_unlock(r);\n" ^ op "dec" "old";
-        (if counted then "  if (cherry_dec_ref(r)) cherry_defer(r, " ^ p ^ "_free, 0);\n"
-         else "  if (cherry_dec_ref(r)) free(r);\n");
+        (if counted then "  cherry_dec_with(r, " ^ p ^ "_free);\n"
+         else "  cherry_dec_with(r, NULL);\n");
         (if counted then
            "  if (cherry_mark_ref(r, m)) {\n" ^
            "    if (m == CHERRY_PERSIST) cherry_note_global_ref(r, " ^ p ^ "_markf);\n" ^
@@ -6450,6 +6480,13 @@ let cherry_closure_helpers () : ML (list string & list string) =
               (ctor:string) : ML unit =
     let fields = nonunit fields in
     let s = layout fields in
+    let counted = fields |> List.existsb (fun (_, t) -> is_nonplain_ty t) in
+    let drop, mark = if counted then s ^ "_dec", s ^ "_mark" else "NULL", "NULL" in
+    (* The same closure as a persistent cell [v] in static storage, for
+       constant fields. *)
+    protos := rev_push !protos [
+      "#define " ^ ctor ^ "_static(v, ...) static struct " ^ s ^ " v = { { { 0, CHERRY_TAG_CLOSURE }, (cherry_code)" ^
+      entry ^ ", " ^ drop ^ ", " ^ mark ^ ", " ^ arity ^ " }, __VA_ARGS__ }\n"];
     fn ("static inline " ^ decl_of ret (entry ^ "(cherry_fn self" ^ params eparams ^ ")"))
        ("  struct " ^ s ^ " *env = (struct " ^ s ^ " *)self;\n  (void)env;\n" ^ body);
     protos := rev_push !protos [
