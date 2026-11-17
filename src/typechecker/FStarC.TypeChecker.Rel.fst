@@ -252,7 +252,7 @@ let new_uvar reason wl r gamma binders k should_check meta : ML (ctx_uvar & term
          ctx_uvar_meta=meta;
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
-    let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
+    let t = mk (Tm_uvar (ctx_uvar, {subst_lists=[]; subst_use_range=NoUseRange})) r in
     let imp = { imp_reason = reason
               ; imp_tm     = t
               ; imp_uvar   = ctx_uvar
@@ -410,7 +410,7 @@ let term_to_string t : ML _
     | Tm_uvar (u, s) ->
       Format.fmt3 "%s%s %s"
             (show u)
-            ("@" ^ show (fst s))
+            ("@" ^ show s.subst_lists)
             (show args)
     | _ -> show t
 
@@ -905,7 +905,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
     in
     let head, args = U.head_and_args_full t0 in
     match (SS.compress head).n with
-    | Tm_uvar (uv, ([], _)) ->
+    | Tm_uvar (uv, {subst_lists=[]}) ->
       (* No subst, nothing to do *)
       t0, wl
 
@@ -3183,7 +3183,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
       //and avoid abstracting over the binders in the uvar,
       //which leads to big perf wins in some cases (esp. in Pulse)
       let is_subst_noop (subst:subst_ts) rhs =
-        match fst subst with
+        match subst.subst_lists with
         | [] | [[]] -> true
         | _ -> 
           names_subset_binders (Free.names rhs) ctx_uv.ctx_uvar_binders &&

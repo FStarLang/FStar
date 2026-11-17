@@ -58,11 +58,11 @@ let apply_until_some_then_map (f : 'a -> ML (option 'b)) (s : list 'a) (g : list
 //the order of concatenation is important!
 //the range of s2 take precedence, if present
 let compose_subst (s1 s2 : subst_ts) : subst_ts =
-    let s = fst s1 @ fst s2 in
-    let ropt = match snd s2 with
-               | SomeUseRange _ -> snd s2
-               | _ -> snd s1 in
-    (s, ropt)
+    let s = s1.subst_lists @ s2.subst_lists in
+    let ropt = match s2.subst_use_range with
+               | SomeUseRange _ -> s2.subst_use_range
+               | _ -> s1.subst_use_range in
+    { subst_lists = s; subst_use_range = ropt }
 
 //apply a delayed substitution s to t,
 //composing it with any other delayed substitution that may already be there
@@ -102,7 +102,7 @@ let rec force_uvar' t : ML _ =
 let force_uvar t : ML _ =
   let t', forced = force_uvar' t in
   if forced
-  then delay t' ([], SomeUseRange t.pos)
+  then delay t' { subst_lists = []; subst_use_range = SomeUseRange t.pos }
   else t
 
 let rec compress_univ u : ML _ = match u with
@@ -151,7 +151,7 @@ let rec subst_univ s u : ML _ =
       | U_max us -> U_max (List.map (subst_univ s) us)
 
 let tag_with_range (t : term) (s : subst_ts) : ML term =
-    match snd s with
+    match s.subst_use_range with
     | NoUseRange -> t
     | SomeUseRange r ->
       if Range.rng_included (Range.use_range t.pos) (Range.use_range r)
@@ -167,7 +167,7 @@ let tag_with_range (t : term) (s : subst_ts) : ML term =
       end
 
 let tag_lid_with_range l s =
-    match (snd s) with
+    match s.subst_use_range with
     | NoUseRange -> l
     | SomeUseRange r ->
       if Range.rng_included (Range.use_range (Ident.range_of_lid l)) (Range.use_range r)
@@ -175,7 +175,7 @@ let tag_lid_with_range l s =
       else Ident.set_lid_range l (Range.set_use_range (Ident.range_of_lid l) (Range.use_range r))
 
 let mk_range r (s:subst_ts) =
-    match snd s with
+    match s.subst_use_range with
     | NoUseRange -> r
     | SomeUseRange r' ->
       if Range.rng_included (Range.use_range r) (Range.use_range r')
@@ -186,10 +186,10 @@ let mk_range r (s:subst_ts) =
      immediately if it is a variable
      or builds a delayed node otherwise *)
 let rec subst' (s:subst_ts) (t:term) : ML term =
-  let subst_tail (tl:list (list subst_elt)) = subst' (tl, snd s) in
+  let subst_tail (tl:list (list subst_elt)) = subst' { s with subst_lists = tl } in
   match s with
-  | [], NoUseRange
-  | [[]], NoUseRange -> t
+  | { subst_lists = []; subst_use_range = NoUseRange }
+  | { subst_lists = [[]]; subst_use_range = NoUseRange } -> t
   | _ ->
     let t0 = t in
     match t0.n with
@@ -205,13 +205,13 @@ let rec subst' (s:subst_ts) (t:term) : ML term =
         mk_Tm_delayed (t', compose_subst s' s) t.pos
 
     | Tm_bvar a ->
-        apply_until_some_then_map (subst_bv a) (fst s) subst_tail t0
+        apply_until_some_then_map (subst_bv a) s.subst_lists subst_tail t0
 
     | Tm_name a ->
-        apply_until_some_then_map (subst_nm a) (fst s) subst_tail t0
+        apply_until_some_then_map (subst_nm a) s.subst_lists subst_tail t0
 
     | Tm_type u ->
-        mk (Tm_type (subst_univ (fst s) u)) (mk_range t0.pos s)
+        mk (Tm_type (subst_univ s.subst_lists u)) (mk_range t0.pos s)
 
     | _ ->
       //NS: 04/12/2018
@@ -241,8 +241,8 @@ let subst_aqual' s (i:aqual) : ML aqual =
 
 let subst_comp_typ' s t : ML _ =
   match s with
-  | [], NoUseRange
-  | [[]], NoUseRange -> t
+  | { subst_lists = []; subst_use_range = NoUseRange }
+  | { subst_lists = [[]]; subst_use_range = NoUseRange } -> t
   | _ ->
     {t with effect_name=tag_lid_with_range t.effect_name s;
             source_effect_name=tag_lid_with_range t.source_effect_name s;
@@ -251,8 +251,8 @@ let subst_comp_typ' s t : ML _ =
 
 let subst_comp' s t : ML _ =
   match s with
-  | [], NoUseRange
-  | [[]], NoUseRange -> t
+  | { subst_lists = []; subst_use_range = NoUseRange }
+  | { subst_lists = [[]]; subst_use_range = NoUseRange } -> t
   | _ ->
     match t.n with
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
@@ -274,7 +274,7 @@ let shift n s = match s with
     | UD(x, i) -> UD(x, i+n)
     | NT _  -> s
 let shift_subst n s = List.map (shift n) s
-let shift_subst' n s : ML _ = fst s |> List.map (shift_subst n), snd s
+let shift_subst' n s : ML _ = { s with subst_lists = s.subst_lists |> List.map (shift_subst n) }
 let subst_binder' s b : ML _ =
   S.mk_binder_with_attrs
     ({ b.binder_bv with sort = subst' s b.binder_bv.sort })
@@ -282,13 +282,13 @@ let subst_binder' s b : ML _ =
     b.binder_positivity
     (b.binder_attrs |> List.map (subst' s))
 
-let subst_binder s (b:binder) : ML _ = subst_binder' ([s], NoUseRange) b
+let subst_binder s (b:binder) : ML _ = subst_binder' { subst_lists = [s]; subst_use_range = NoUseRange } b
 
 let subst_binders' s bs : ML _ =
     bs |> List.mapi (fun i b ->
         if i=0 then subst_binder' s b
         else subst_binder' (shift_subst' i s) b)
-let subst_binders s (bs:binders) : ML _ = subst_binders' ([s], NoUseRange) bs
+let subst_binders s (bs:binders) : ML _ = subst_binders' { subst_lists = [s]; subst_use_range = NoUseRange } bs
 
 
 // NOTE: We don't descend into `imp` here since one cannot *apply* a
@@ -307,7 +307,7 @@ let subst_pat' s p : ML (pat & int) =
       | Pat_constant _ -> p, n
 
       | Pat_cons(fv, us_opt, pats) ->
-        let us_opt = subst_univs_opt (fst (shift_subst' n s)) us_opt in
+        let us_opt = subst_univs_opt ((shift_subst' n s).subst_lists) us_opt in
         let pats, n = pats |> List.fold_left (fun (pats, n) (p, imp) ->
             let p, m = aux n p in
             ((p,imp)::pats, m)) ([], n) in
@@ -346,12 +346,12 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : ML subst_ts =
               hd_subst |> List.collect (function
               | NT(x, t) ->
                 if should_retain x
-                then [NT(x, delay t (rest, NoUseRange))]
+                then [NT(x, delay t { subst_lists = rest; subst_use_range = NoUseRange })]
                 else []
               | NM(x, i) ->
                 if should_retain x
                 then let x_i = S.bv_to_tm ({x with index=i}) in
-                     let t = subst' (rest, NoUseRange) x_i in
+                     let t = subst' { subst_lists = rest; subst_use_range = NoUseRange } x_i in
                      match t.n with
                      | Tm_bvar x_j -> [NM(x, x_j.index)]
                      | _ -> [NT(x, t)]
@@ -360,9 +360,9 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : ML subst_ts =
           in
           hd @ aux rest
     in
-    match aux (fst s0 @ fst s) with
-    | [] -> [], snd s
-    |  s' -> [s'], snd s
+    match aux (s0.subst_lists @ s.subst_lists) with
+    | [] -> { s with subst_lists = [] }
+    |  s' -> { s with subst_lists = [s'] }
 
 //
 // If resolve_uvars is true, it will lookup the unionfind graph
@@ -410,7 +410,7 @@ let rec push_subst_aux (resolve_uvars:bool) s t : ML _ =
     | Tm_uinst(t', us) ->
         //t' must be an fvar---it cannot be substituted
         //but the universes may be substituted
-        let us = List.map (subst_univ (fst s)) us in
+        let us = List.map (subst_univ s.subst_lists) us in
         tag_with_range (mk (Tm_uinst (t', us))) s
 
     | Tm_app {hd=t0; arg} -> mk (Tm_app {hd=subst' s t0; arg=subst_arg' s arg})
@@ -545,13 +545,13 @@ and compress (t:term) : ML term =
     | _ ->
         t
 
-let subst s t : ML _ = subst' ([s], NoUseRange) t
-let set_use_range r t : ML _ = subst' ([], SomeUseRange (Range.set_def_range r (Range.use_range r))) t
-let subst_comp s t : ML _ = subst_comp' ([s], NoUseRange) t
-let subst_bqual s imp : ML _ = subst_bqual' ([s], NoUseRange) imp
-let subst_aqual s imp : ML _ = subst_aqual' ([s], NoUseRange) imp
-let subst_ascription s (asc:ascription) : ML _ = subst_ascription' ([s], NoUseRange) asc
-let subst_decreasing_order s dec : ML _ = subst_dec_order' ([s], NoUseRange) dec
+let subst s t : ML _ = subst' { subst_lists = [s]; subst_use_range = NoUseRange } t
+let set_use_range r t : ML _ = subst' { subst_lists = []; subst_use_range = SomeUseRange (Range.set_def_range r (Range.use_range r)) } t
+let subst_comp s t : ML _ = subst_comp' { subst_lists = [s]; subst_use_range = NoUseRange } t
+let subst_bqual s imp : ML _ = subst_bqual' { subst_lists = [s]; subst_use_range = NoUseRange } imp
+let subst_aqual s imp : ML _ = subst_aqual' { subst_lists = [s]; subst_use_range = NoUseRange } imp
+let subst_ascription s (asc:ascription) : ML _ = subst_ascription' { subst_lists = [s]; subst_use_range = NoUseRange } asc
+let subst_decreasing_order s dec : ML _ = subst_dec_order' { subst_lists = [s]; subst_use_range = NoUseRange } dec
 let subst_residual_comp s rc : ML _ =
   match rc.residual_typ with
   | None -> rc

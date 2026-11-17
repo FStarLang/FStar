@@ -375,8 +375,13 @@ and unresolved_constructor = {
 and lbname = either bv fv
 and letbindings = bool & list letbinding        (* let recs may have more than one element; top-level lets have lidents *)
                                                 (* boolean true indicates rec *)
-and subst_ts = list (list subst_elt)            (* A composition of parallel substitutions *)
-             & maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
+(* A record rather than a pair: Custard lays a tuple-typed constructor field
+   out inline, and the abbreviation is unfolded inside this recursive group,
+   so as a pair every read of [Tm_delayed]'s [substs] would rebuild it. *)
+and subst_ts = {
+  subst_lists : list (list subst_elt);     (* A composition of parallel substitutions *)
+  subst_use_range : maybe_set_use_range;   (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
+}
 and subst_elt =
    | DB of int & bv                            (* DB i bv: replace a bound variable with index i with name bv                 *)
    | DT of int & term                          (* DT i t: replace a bound variable with index i for term *)
