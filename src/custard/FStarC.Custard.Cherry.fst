@@ -92,15 +92,92 @@ let reaches (tbl:HashTable.t string dtype) (target:string) (t:cty) : ML bool =
        end)) in
   go t
 
+(* At most this many words, a record on a cycle may still be unboxed. *)
+let small_record_words : int = 2
+
+(* A record, or a variant of one constructor -- a tuple is one: a value of
+   it is its fields and nothing else. *)
+let single_cell (b:tydef) : bool =
+  match b with
+  | TRecord _ -> true
+  | TVariant [_] -> true
+  | _ -> false
+
 let boxed_types (p:program) : ML (list string) =
   let tbl = type_table p in
-  p |> List.collect (fun d ->
+  let bx : HashTable.t string bool = HashTable.create 50 in
+  let cands = p |> List.collect (fun d ->
     match d with
     | DType dt when (TVariant? dt.dt_body || TRecord? dt.dt_body) ->
       let k = string_of_name dt.dt_name in
-      if has_flag dt.dt_flags CherryBoxed ||
-         field_types dt.dt_body |> List.existsb (reaches tbl k) then [k] else []
-    | _ -> [])
+      if has_flag dt.dt_flags CherryBoxed then (HashTable.add bx k true; [])
+      else if field_types dt.dt_body |> List.existsb (reaches tbl k)
+      then (HashTable.add bx k true; if single_cell dt.dt_body then [dt] else [])
+      else []
+    | _ -> []) in
+  (* Boxing every type on a cycle boxes more than it has to: one boxed type
+     on each cycle is enough to give the others a size.  A small record on a
+     cycle through a boxed variant -- the [term & aqual] of an argument list,
+     reached again through the term -- is then one allocation per value
+     where the cell holding it already is one.  So a record of at most
+     [small_record_words] words comes out of the boxed set when every cycle
+     through it still passes through another boxed type.  Taking one record
+     at a time keeps that true of the ones taken before it. *)
+  let rec cycle_free (target:string) (seen:HashTable.t string bool) (t:cty) : ML bool =
+    by_value t |> List.for_all (fun n ->
+      n <> target &&
+      (HashTable.mem bx n || HashTable.mem seen n ||
+       (HashTable.add seen n true;
+        match HashTable.try_find tbl n with
+        | Some d -> field_types d.dt_body |> List.for_all (cycle_free target seen)
+        | None -> true))) in
+  let rec words (t:cty) : ML int =
+    match t with
+    | TUnit -> 0
+    | TAny -> 2
+    | TTuple ts -> List.fold_left (fun a t -> a + words t) 0 ts
+    | TApp (n, _) ->
+      let k = string_of_name n in
+      if is_iarray_name n || HashTable.mem bx k || k = "Prims.int" || k = "Prims.string" then 1
+      else (match HashTable.try_find tbl k with
+            | Some d ->
+              (match d.dt_body with
+               | TRecord fs -> List.fold_left (fun a (_, t) -> a + words t) 0 fs
+               | TAbbrev c -> words c
+               | TVariant [(_, fs)] -> List.fold_left (fun a (_, t) -> a + words t) 0 fs
+               | TVariant _ -> small_record_words + 1
+               | TAbstract -> 1)
+            | None -> 1)
+    | _ -> 1 in
+  (* A record no function takes or returns by value -- the payload record of
+     a constructor, [Tm_app {hd; arg; arg1}] -- lives only in the cell of a
+     boxed type, and is never copied whatever its size: unboxing it saves
+     its own allocation for nothing. *)
+  let roots : HashTable.t string bool = HashTable.create 500 in
+  let root (t:cty) : ML unit = by_value t |> List.iter (fun n -> HashTable.add roots n true) in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l -> l.dl_binders |> List.iter (fun (b:binder) -> root b.b_ty); root l.dl_ret
+    | _ -> ());
+  let root_names = HashTable.keys roots in
+  let passed (target:string) : ML bool =
+    let seen : HashTable.t string bool = HashTable.create 50 in
+    let rec go (n:string) : ML bool =
+      n = target ||
+      (not (HashTable.mem bx n) && not (HashTable.mem seen n) &&
+       (HashTable.add seen n true;
+        match HashTable.try_find tbl n with
+        | Some d -> field_types d.dt_body |> List.existsb (fun t -> by_value t |> List.existsb go)
+        | None -> false)) in
+    root_names |> List.existsb go in
+  cands |> List.iter (fun (dt:dtype) ->
+    let k = string_of_name dt.dt_name in
+    HashTable.remove bx k;
+    let fs = field_types dt.dt_body in
+    if not (fs |> List.for_all (cycle_free k (HashTable.create 20)))
+       || (List.fold_left (fun a t -> a + words t) 0 fs > small_record_words && passed k)
+    then HashTable.add bx k true);
+  HashTable.keys bx
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
 let runtime_types : list string = ["Prims.int"; "Prims.string"; iarray_key]
