@@ -22,6 +22,7 @@ open FStar.ExtractAs
 include Pulse.Lib.Loc
 module I = PulseCore.InstantiatedSemantics
 module A = PulseCore.Atomic
+module M = PulseCore.Masks
 module T = FStar.Tactics.V2
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
@@ -293,6 +294,27 @@ let on_slprop_ref_pts_to_eq l x y = Sep.on_slprop_ref_pts_to_eq l x y
 let slprop_ref_alloc x = A.slprop_ref_alloc x
 let slprop_ref_share x #y = A.slprop_ref_share x y
 let slprop_ref_gather x #y1 #y2 = A.slprop_ref_gather x y1 y2
+
+//////////////////////////////////////////////////////////////////////
+// Mask-changing actions
+//////////////////////////////////////////////////////////////////////
+let action = M.action
+let gaction = M.gaction
+let return_action = M.return_action
+let bind_action = M.bind_action
+let frame_action = M.frame_action
+let lift_atomic_action = M.lift_atomic_action
+let lift_ghost_action = M.lift_ghost_action
+let ghost_to_action = M.ghost_to_action
+let bind_gaction = M.bind_gaction
+let frame_gaction = M.frame_gaction
+let action_to_ghost = M.action_to_ghost
+let sub_gaction = M.sub_gaction
+let reindex_gaction = M.reindex_gaction
+let localize_gaction = M.localize_gaction
+let finish_gaction = M.finish_gaction
+let run_action = M.run_action
+let run_closed_action = M.run_closed_action
 
 //////////////////////////////////////////////////////////////////////////
 // Some basic actions and ghost operations

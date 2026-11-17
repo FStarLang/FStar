@@ -12,7 +12,7 @@
       helper:
       _: Prims.unit
           -> fn
-               requires Pulse.Class.PtsTo.pts_to r 1
-               ensures Pulse.Class.PtsTo.pts_to r 1
+               requires Pulse.Lib.Reference.pts_to r 1
+               ensures Pulse.Lib.Reference.pts_to r 1
   - See also ClosureError.fst(17,2-18,4)
 

@@ -41,6 +41,9 @@ module SI = FStarC.SmallInt
    every bucket.  It may name a bucket that has since been emptied, or name
    one twice.  [nused] is its length; past the number of buckets, [used] is
    no longer kept, and [clear] replaces the whole array instead. *)
+(* Boxed, so that passing a table, or a record holding one, counts one
+   reference rather than four. *)
+[@@FStar.Attributes.cherry_boxed]
 noeq type tbl (k v:Type0) = {
   size: ref int;
   data: ref (A.array (list (k & v)));

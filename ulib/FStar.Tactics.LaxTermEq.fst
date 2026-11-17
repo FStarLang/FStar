@@ -156,6 +156,7 @@ and aqual_eq a1 a2 =
   | Q_Explicit, Q_Explicit -> true
   | Q_Equality, Q_Equality -> true
   | Q_Meta m1, Q_Meta m2 -> term_eq m1 m2
+  | Q_TcArg, Q_TcArg -> true
   | _ -> false
 
 and match_returns_ascription_eq asc1 asc2 =

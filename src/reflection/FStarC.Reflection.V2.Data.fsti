@@ -110,6 +110,7 @@ type aqualv =
     | Q_Explicit
     | Q_Equality
     | Q_Meta of term
+    | Q_TcArg
 
 type argv = term & aqualv
 

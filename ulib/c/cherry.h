@@ -178,8 +178,9 @@ static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
 }
 
 /* Counting is on every path of the generated code, which is large enough
-   that GCC stops inlining it: the common case, a cell of this thread's, is
-   forced inline, and the others (shared or persistent) are not. */
+   that GCC stops inlining it: the common cases, a cell of this thread's and
+   a persistent one (which is not counted: global constants, read often),
+   are forced inline, and a shared cell's atomic update is not. */
 #if defined(__GNUC__)
 #define CHERRY_ALWAYS_INLINE inline __attribute__((always_inline))
 #define CHERRY_NOINLINE __attribute__((noinline, unused))
@@ -190,19 +191,18 @@ static inline cherry_obj *cherry_alloc(size_t size, uint32_t tag) {
 #define CHERRY_LIKELY(c) (c)
 #endif
 
-static CHERRY_NOINLINE void cherry_inc_slow(cherry_obj *o, int32_t rc) {
-  if (rc < 0) __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);
+static CHERRY_NOINLINE void cherry_inc_slow(cherry_obj *o) {
+  __atomic_fetch_sub(&o->rc, 1, __ATOMIC_RELAXED);
 }
 
 static CHERRY_ALWAYS_INLINE void cherry_inc(cherry_obj *o) {
   if (cherry_is_scalar(o)) return;
   int32_t rc = cherry_rc_load(o);
   if (CHERRY_LIKELY(rc > 0)) cherry_rc_store(o, rc + 1);
-  else cherry_inc_slow(o, rc);
+  else if (rc < 0) cherry_inc_slow(o);
 }
 
-static CHERRY_NOINLINE bool cherry_dec_ref_slow(cherry_obj *o, int32_t rc) {
-  if (rc == 0) return false;
+static CHERRY_NOINLINE bool cherry_dec_ref_slow(cherry_obj *o) {
   return __atomic_add_fetch(&o->rc, 1, __ATOMIC_ACQ_REL) == 0;
 }
 
@@ -213,7 +213,20 @@ static CHERRY_ALWAYS_INLINE bool cherry_dec_ref(cherry_obj *o) {
   int32_t rc = cherry_rc_load(o);
   if (CHERRY_LIKELY(rc > 1)) { cherry_rc_store(o, rc - 1); return false; }
   if (rc == 1) return true;
-  return cherry_dec_ref_slow(o, rc);
+  if (rc == 0) return false;
+  return cherry_dec_ref_slow(o);
+}
+
+/* Drop a reference to a cell whose fields [f] frees (NULL: none).  Only the
+   common case is inline: the rest, freeing included, is out of line, which
+   keeps the code of every drop small enough to inline everywhere. */
+typedef void (*cherry_work_fn)(cherry_obj *, int);
+void cherry_dec_last(cherry_obj *o, int32_t rc, cherry_work_fn f);
+static CHERRY_ALWAYS_INLINE void cherry_dec_with(cherry_obj *o, cherry_work_fn f) {
+  if (cherry_is_scalar(o)) return;
+  int32_t rc = cherry_rc_load(o);
+  if (CHERRY_LIKELY(rc > 1)) cherry_rc_store(o, rc - 1);
+  else cherry_dec_last(o, rc, f);
 }
 
 /* Marking walks everything a value reaches, in one of two modes: making it
@@ -244,28 +257,18 @@ static inline bool cherry_mark_ref(cherry_obj *o, int mode) {
 #define CHERRY_TAG_BIGINT 0xFFFFFFF0u
 #define CHERRY_TAG_STRING 0xFFFFFFF1u
 
-/* Freeing and marking walk values of any depth without recursing on the C
-   stack.  The generated [dec] and [mark] of a type hand the cell whose
-   fields have to be visited to [cherry_defer], with the function that
-   visits them: it runs at once, unless a walk is already under way on this
-   thread, in which case it joins that walk's work list.  A visit function
-   follows a field of its own type in a loop, so a list's spine never
-   reaches the work list. */
-typedef void (*cherry_work_fn)(cherry_obj *, int);
+/* Freeing and marking walk values of any depth with a bounded C stack.
+   The generated [dec] and [mark] of a type hand the cell whose fields have
+   to be visited to [cherry_defer], with the function that visits them: it
+   runs at once, unless too many visits are already on this thread's stack,
+   in which case it joins the work list that the outermost visit drains.  A
+   visit function follows a field of its own type in a loop, so a list's
+   spine never reaches the work list. */
 void cherry_defer(cherry_obj *o, cherry_work_fn f, int mode);
 
-/* A literal is persistent and a scalar is not a cell, so neither reaches
-   [free]; GCC cannot tell once it inlines one into this. */
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
-#endif
 static CHERRY_ALWAYS_INLINE void cherry_dec(cherry_obj *o) {
-  if (cherry_dec_ref(o)) free(o);
+  cherry_dec_with(o, NULL);
 }
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 static inline void cherry_mark(cherry_obj *o, int mode) {
   (void)cherry_mark_ref(o, mode);
@@ -482,7 +485,7 @@ uint32_t cherry_str_index(cherry_string s, cherry_int i);
 cherry_string cherry_str_sub(cherry_string s, cherry_int i, cherry_int l);
 cherry_int cherry_str_compare(cherry_string a, cherry_string b);
 int64_t cherry_str_compare_i64(cherry_string a, cherry_string b);
-uint64_t cherry_str_fnv1a(cherry_string s);
+uint64_t cherry_str_hash(cherry_string s);
 /* Nanoseconds of the monotonic clock (FStarC.Timing). */
 uint64_t cherry_now_ns(void);
 /* Wall-clock nanoseconds since the Unix epoch (FStarC.Time). */
@@ -509,6 +512,13 @@ static inline int64_t cherry_str_byte_at64(cherry_string s, int64_t i) {
     ? (unsigned char)cherry_str_data(s)[i] : -1;
 }
 cherry_string cherry_str_slice64(cherry_string s, int64_t i, int64_t j);
+/* The first offset from [from] on where [t] occurs in [s], or [s]'s size if
+   there is none. */
+int64_t cherry_str_find64(cherry_string s, cherry_string t, int64_t from);
+/* FStarC.Util's substring tests, on bytes: whether [sub] occurs in [s], and
+   whether it occurs at the offset [i] (false out of bounds). */
+bool cherry_str_contains(cherry_string s, cherry_string sub);
+bool cherry_str_matches_at64(cherry_string s, cherry_string sub, int64_t i);
 /* The one-byte string of [b] < 256, which need not be UTF-8. */
 cherry_string cherry_str_of_byte(uint32_t b);
 /* ASCII case mapping; other bytes are unchanged. */
@@ -646,7 +656,10 @@ static inline bool cherry_exn_is(cherry_exn e, const cherry_exn_info *info) {
 }
 
 static inline void cherry_exn_dec(cherry_exn e) {
-  if (cherry_dec_ref(e)) cherry_defer(e, ((cherry_exn_hdr *)e)->info->free, 0);
+  if (cherry_is_scalar(e)) return;
+  int32_t rc = cherry_rc_load(e);
+  if (CHERRY_LIKELY(rc > 1)) cherry_rc_store(e, rc - 1);
+  else cherry_dec_last(e, rc, ((cherry_exn_hdr *)e)->info->free);
 }
 
 static inline void cherry_exn_mark(cherry_exn e, int mode) {
@@ -724,20 +737,9 @@ typedef struct cherry_closure {
 
 void cherry_free_closure(cherry_obj *f, int mode);
 
-/* A static closure is persistent, so it never reaches [free]; GCC cannot
-   tell once it inlines one into this. */
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
-#endif
-static inline void cherry_dec_fn(cherry_fn f) {
-  if (!cherry_dec_ref(f)) return;
-  if (CHERRY_CLOSURE(f)->drop != NULL) cherry_defer(f, cherry_free_closure, 0);
-  else free(f);
+static CHERRY_ALWAYS_INLINE void cherry_dec_fn(cherry_fn f) {
+  cherry_dec_with(f, cherry_free_closure);
 }
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 static inline void cherry_mark_fn(cherry_fn f, int mode) {
   if (cherry_mark_ref(f, mode) && CHERRY_CLOSURE(f)->mark != NULL)
@@ -764,17 +766,31 @@ static inline void cherry_call_thunk(cherry_fn f) {
    a spinlock and the value; the generated code defines the cell for each
    value type and the operations on it (cherry_ref<N>_new/get/set/dec/mark).
    While the cell is reachable from one thread only, reads and writes leave
-   the lock alone.  Otherwise -- shared, or persistent, since a global is
-   reachable from every thread -- they hold the lock while they copy the
-   value and count the copy, so that a writer cannot free the old value
-   before a reader has taken its reference to it, and the value written is
-   marked shared first. */
+   the lock alone.  Otherwise -- shared, or persistent once the program has
+   started a thread, since a global is reachable from every thread -- they
+   hold the lock while they copy the value and count the copy, so that a
+   writer cannot free the old value before a reader has taken its reference
+   to it, and the value written is marked shared first.
+
+   Until the program starts its first thread, a persistent reference (one
+   reachable from a global) is local too, so that what is stored into it is
+   not marked shared and counted atomically ever after.  Making a reference
+   persistent records it ([cherry_note_global_ref], with the function that
+   marks its value), and [cherry_start_threads], which whatever starts a
+   thread calls first, shares the values all of them hold then.  The test of
+   [cherry_threads] comes after the one of the count, so that it costs a
+   local reference nothing. */
 typedef cherry_obj *cherry_ref;
 
 typedef struct cherry_ref_hdr { cherry_obj hdr; int32_t lock; } cherry_ref_hdr;
 
+extern bool cherry_threads;
+void cherry_note_global_ref(cherry_ref r, cherry_work_fn f);
+void cherry_start_threads(void);
+
 static inline bool cherry_ref_is_local(cherry_ref r) {
-  return __atomic_load_n(&r->rc, __ATOMIC_RELAXED) > 0;
+  int32_t rc = __atomic_load_n(&r->rc, __ATOMIC_RELAXED);
+  return rc > 0 || (rc == 0 && !cherry_threads);
 }
 
 static inline void cherry_ref_lock(cherry_ref r) {

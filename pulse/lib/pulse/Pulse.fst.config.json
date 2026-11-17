@@ -11,8 +11,8 @@
 		"../../build/lib.common.checked",
 		"../../build/lib.pulse.checked",
 		"../common",
-		"../core",
 		"c",
-		"lib"
+		"lib",
+		"logical_atomicity"
 	]
 }

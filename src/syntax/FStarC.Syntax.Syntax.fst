@@ -161,10 +161,9 @@ let on_antiquoted (f : (term -> ML term)) (qi : quoteinfo) : ML quoteinfo =
 
 (* Requires that bv.index is in scope. *)
 let lookup_aq (bv : bv) (aq : antiquotations) : ML term =
-    try List.nth (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) // subtract shift
-    with
-    | _ ->
-      failwith "antiquotation out of bounds"
+    match FStarC.Common.nth_opt (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) with // subtract shift
+    | Some t -> t
+    | None -> failwith "antiquotation out of bounds"
 
 // This is set in FStarC.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> ML term)) = mk_ref None
@@ -280,6 +279,7 @@ let hash_bqual (bq:binder_qualifier) : H.hash_code =
   | Implicit false -> hc 421
   | Meta t -> H.mix (hc 431) t.hash_code
   | Equality -> hc 433
+  | TcArg -> hc 439
 
 let hash_binder (b:binder) : ML H.hash_code =
   mix3 (hash_bv b.binder_bv) (hash_option hash_bqual b.binder_qual)
@@ -597,7 +597,7 @@ let pat_bvs (p:pat) : ML (list bv) =
 
 let is_bqual_implicit = function Some (Implicit _) -> true | _ -> false
 let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
-let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
+let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) | Some TcArg -> true | _ -> false
 let as_bqual_implicit = function true -> Some imp_tag | _ -> None
 let as_aqual_implicit = function true -> Some ({aqual_implicit=true; aqual_attributes=[]}) | _ -> None
 

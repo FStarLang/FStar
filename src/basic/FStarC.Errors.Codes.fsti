@@ -425,6 +425,7 @@ type error_code =
   | Error_CustardBadFunctor
   | Error_CustardBadIfDef
   | Error_CustardTypeVarInstantiation
+  | Warning_TypeclassResolutionBudget
 
 type error_setting = error_code & error_flag & int
 

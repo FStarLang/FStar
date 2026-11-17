@@ -353,6 +353,9 @@ let string_of_key (k:spec_key) : ML string =
 (* State                                                                *)
 (* -------------------------------------------------------------------- *)
 
+(* Large and passed around much more often than built: boxed under Cherry,
+   so that passing it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type state = {
   deps:    Dep.deps;
   env:     ref TcEnv.env;
@@ -373,6 +376,12 @@ type state = {
      and answered by normalizing every binder's sort.  Keyed by a tag and the
      lid; see {!binder_flags} and section 12.14. *)
   bflags:  HashTable.t string (list bool);
+  (* lid -> whether it is marked [@@custard_compile_time]; see
+     {!compile_time_demanded}, which asks at every application node. *)
+  ct_marked: HashTable.t string bool;
+  (* Modules {!ensure_lid_available} has seen loaded.  A module is never
+     unloaded, and asking the dependency graph is not cheap. *)
+  loaded_mods: HashTable.t string unit;
   (* lid -> how many specializations of it we have created so far. *)
   counts:  HashTable.t string int;
   (* The mangled names handed out already, so that two specializations whose
@@ -494,6 +503,8 @@ let init (deps:Dep.deps) (env:TcEnv.env) : ML state =
   order   = mk_ref [];
   classes = HashTable.create 100;
   bflags = HashTable.create 100;
+  ct_marked = HashTable.create 100;
+  loaded_mods = HashTable.create 100;
   counts  = HashTable.create 100;
   suffixes = HashTable.create 100;
   fuel    = mk_ref (Options.custard_fuel ());
@@ -722,6 +733,13 @@ let env_for_term (env:TcEnv.env) (t:term) : ML TcEnv.env =
 let env_for_comp (env:TcEnv.env) (c:comp) : ML TcEnv.env =
   with_free_names env (elems (Free.names_comp c))
 
+(* [Effects.maybe_reify] in [env_for_term env t], which is only computed when
+   [l] is reifiable: most code is in a non-reifiable effect, and [t] is often
+   a whole definition, whose free names are not free to find. *)
+let reify_in (env:TcEnv.env) (t:term) (l:Ident.lident) : ML term =
+  if Effects.is_reifiable env l then Effects.maybe_reify (env_for_term env t) t l
+  else t
+
 let norm_bounded_in (st:state) (env:TcEnv.env) (what:string)
                     (steps:list TcEnv.step) (t:term) : ML term =
   try let env = env_for_term env t in
@@ -789,6 +807,16 @@ let norm_optional_open (st:state) (steps:list TcEnv.step) (t:term)
   : ML (option term) =
   try norm_optional st steps t
   with Failure _ -> None
+
+(* Whether [l] is bound by a [Sig_let], the only thing [UnfoldOnly [l]] can
+   unfold.  The unfold-and-rescan walks (sections 88 and 109) check this
+   before calling the normalizer: their usual head is an inductive or an
+   assumed type, for which the call would build a config and reduce the term
+   only to change nothing. *)
+let has_definition (st:state) (l:Ident.lid) : ML bool =
+  match TcEnv.lookup_qname (tcenv st) l with
+  | Some (Inr ({sigel = Sig_let _}, _), _) -> true
+  | _ -> false
 
 (* Section 31.  [@@normalize_for_extraction steps] says: reduce this
    definition with exactly these steps before compiling it.  The ML pipeline
@@ -889,8 +917,11 @@ let type_matched_heads (env:TcEnv.env) (t:term) : ML (list Ident.lident) =
    is the on-demand part of section 4.1. *)
 let ensure_lid_available (st:state) (l:Ident.lident) : ML unit =
   let m = Ident.nsstr l in
-  if m <> "" && not (Loader.module_is_loaded st.deps (tcenv st) m) then
-    st.env := Prof.timed "load" (fun () -> Loader.ensure_loaded st.deps (tcenv st) m)
+  if m <> "" && None? (HashTable.try_find st.loaded_mods m) then begin
+    if not (Loader.module_is_loaded st.deps (tcenv st) m) then
+      st.env := Prof.timed "load" (fun () -> Loader.ensure_loaded st.deps (tcenv st) m);
+    HashTable.add st.loaded_mods m ()
+  end
 
 (* Section 30.11.  Which of a definition's names have to be known at extraction
    time because something marked [@@custard_compile_time] is applied to them.
@@ -924,8 +955,14 @@ let compile_time_demanded (st:state) (t:term) : ML (list int) =
     match (U.un_uinst (SS.compress hd)).n with
     | Tm_fvar fv ->
       let l = S.lid_of_fv fv in
-      ensure_lid_available st l;
-      TcEnv.fv_has_attr (tcenv st) fv PC.custard_compile_time_attr
+      let key = Ident.string_of_lid l in
+      (match HashTable.try_find st.ct_marked key with
+       | Some b -> b
+       | None ->
+         ensure_lid_available st l;
+         let b = TcEnv.fv_has_attr (tcenv st) fv PC.custard_compile_time_attr in
+         HashTable.add st.ct_marked key b;
+         b)
     | _ -> false in
   let contains_marked (t:term) : ML bool =
     let found = mk_ref false in
@@ -937,6 +974,9 @@ let compile_time_demanded (st:state) (t:term) : ML (list int) =
      separately from the lambda's and so are different [bv]s for the same
      parameter.  Opening the lambda here is also what turns its binders into
      [Tm_name]s that [Free.names] can see at all. *)
+  (* Nearly no definition applies a marked function, and the scan below
+     re-walks every branch of every match, so check for one first. *)
+  if not (contains_marked t) then [] else
   let bs, body, _ = U.abs_formals t in
   let acc : ref (list bv) = mk_ref [] in
   let add (t:term) : ML unit = acc := FlatSet.elems (Free.names t) @ !acc in
@@ -1706,6 +1746,88 @@ let rec unfold_abbrevs (st:state) (fuel:int) (ty:cty) : ML cty =
     | TInline c -> TInline (go c)
     | TApp (n, args) -> TApp (n, List.map go args)
     | _ -> ty
+
+(* [t] and [u] with their arrows' effects joined, if they are otherwise the
+   same type.  The effect on an arrow does not change the closure's
+   representation. *)
+let rec join_arrow_effs (t u:cty) : ML (option cty) =
+  let both (xs ys:list cty) : ML (option (list cty)) =
+    if List.length xs <> List.length ys then None else
+    List.fold_right (fun (x, y) acc ->
+      match acc with
+      | None -> None
+      | Some acc -> (match join_arrow_effs x y with
+                     | Some z -> Some (z :: acc)
+                     | None -> None))
+      (List.zip xs ys) (Some []) in
+  if t = u then Some t else
+  match t, u with
+  | TArrow (a, e, b), TArrow (a', e', b') ->
+    (match both [a; b] [a'; b'] with
+     | Some [a; b] -> Some (TArrow (a, join_eff e e', b))
+     | _ -> None)
+  | TTuple xs, TTuple ys ->
+    (match both xs ys with Some zs -> Some (TTuple zs) | None -> None)
+  | TBuf x, TBuf y ->
+    (match join_arrow_effs x y with Some z -> Some (TBuf z) | None -> None)
+  | TRef (k, x), TRef (k', y) when k = k' ->
+    (match join_arrow_effs x y with Some z -> Some (TRef (k, z)) | None -> None)
+  | TApp (n, xs), TApp (n', ys) when n = n' ->
+    (match both xs ys with Some zs -> Some (TApp (n, zs)) | None -> None)
+  | _ -> None
+
+(* [ty] with every arrow it returns made [E_Impure]: what a value of type
+   [ty] may do when called, if it may also be a value we know nothing about.
+   Argument types are left alone; only what a caller can run is weakened. *)
+let rec impure_arrows (ty:cty) : ML cty =
+  match ty with
+  | TArrow (a, _, b) -> TArrow (a, E_Impure, impure_arrows b)
+  | TTuple xs -> TTuple (List.map impure_arrows xs)
+  | TBuf x -> TBuf (impure_arrows x)
+  | TRef (k, x) -> TRef (k, impure_arrows x)
+  | TApp (n, xs) -> TApp (n, List.map impure_arrows xs)
+  | _ -> ty
+
+(* Section 125.8.  The type of a node that returns whichever of [arm_tys] runs:
+   a [match]'s branches, or a [try]'s body and handlers.  The first arm's type
+   is the node's only when the arms agree.  When they do not, the node really
+   does return a value of no common representation, and saying otherwise is a
+   claim the rest of the pipeline believes: [narrow_rets] reads a body's type
+   straight off the node, so a [d:dir -> arg_type d] whose first branch is a
+   [bool] came out declared [bool].  Agreement is up to abbreviations:
+   [if c then r.file_name else refind r.file_name] has a branch of type
+   [file_name] and one of type [string], and calling that [any] made Cherry
+   box both arms into a [string] variable. *)
+let arms_type (st:state) (arm_tys:list cty) : ML cty =
+  let ty =
+    match arm_tys |> List.filter (fun t -> not (TAny? t)) with
+    | [] -> TAny
+    | t :: ts ->
+      if ts |> List.for_all (fun u -> u = t) then t else
+      (* Nor do arrows that differ only in their effects: in a [Tac]
+         function returning [fun ps -> false] from one branch and a
+         closure that calls an impure function from the other, the
+         representation is the same closure. *)
+      let join (t:cty) (ts:list cty) : ML (option cty) =
+        List.fold_left (fun (j:option cty) u ->
+          match j with Some j -> join_arrow_effs j u | None -> None)
+          (Some t) ts in
+      match join t ts with
+      | Some j -> j
+      | None ->
+      let t' = unfold_abbrevs st 100 t in
+      match join t' (List.map (unfold_abbrevs st 100) ts) with
+      | Some j -> if j = t' then t else j
+      | None -> TAny in
+  (* An [any] arm set aside above may be a closure that does anything when
+     called: in a reified [Tac] match, an arm typed [any] next to a pure
+     [fun ps -> ()] made the whole match a pure closure, so its application
+     to the proofstate was pure, and dead code if its result was unused --
+     the effects of the [any] arm were deleted with it. *)
+  if TAny? ty || not (arm_tys |> List.existsb TAny?) then ty else
+  let u = unfold_abbrevs st 100 ty in
+  let u' = impure_arrows u in
+  if u' = u then ty else u'
 
 (* Applying [n] arguments to something of type [ty] runs the effects of the
    first [n] arrows.  This is how a call through a *variable* -- a function
@@ -2829,7 +2951,7 @@ and builtin_rules_at (st:state) (fuel:int) (t:term) : ML (list string) =
        | Some (Builtins.Rule_type _) -> Ident.string_of_lid l :: sub args
        | _ ->
          let unfolded =
-           if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t0
+           if fuel > 0 && has_definition st l && FStarC.Syntax.CheckLN.is_ln t0
            then match norm_optional_open st
                         [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
                          TcEnv.Beta; TcEnv.Iota; TcEnv.UnfoldOnly [l]] t0 with
@@ -2968,7 +3090,7 @@ and template_index_scan (st:state) (ts:list term) : ML (list bv & list string) =
                   actually occurs; an occurrence under an inner binder is
                   simply not reached, which leaves it exactly where it was
                   before section 88 rather than anywhere worse. *)
-               if fuel > 0 && FStarC.Syntax.CheckLN.is_ln t &&
+               if fuel > 0 && has_definition st l && FStarC.Syntax.CheckLN.is_ln t &&
                   Mono.is_type_term (tcenv st) t
                then match norm_optional_open st
                             [TcEnv.AllowUnboundUniverses; TcEnv.EraseUniverses;
@@ -3539,8 +3661,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let body =
       match rc with
       | Some rc ->
-        Effects.maybe_reify (env_for_term (tcenv st) body) body
-                            rc.residual_effect
+        reify_in (tcenv st) body rc.residual_effect
       | None -> body in
     let body = expr_of_term st body in
     let flags =
@@ -3634,7 +3755,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
         applied to. *)
      | Tm_constant (Const_reify (Some l)) when Cons? args ->
        let e0 = args |> List.hd |> fst in
-       let e = Effects.maybe_reify (env_for_term (tcenv st) e0) e0 l in
+       let e = reify_in (tcenv st) e0 l in
        expr_of_term st (S.mk_Tm_app (TcUtil.remove_reify e) (List.tl args) t.pos)
 
      | _ ->
@@ -3791,24 +3912,7 @@ and expr_of_term (st:state) (t:term) : ML expr =
     let e = List.fold_left (fun e (_, g, b) ->
               join_eff e (join_eff b.eff (match g with None -> E_Pure | Some g -> g.eff)))
               scrut.eff brs in
-    (* Section 125.8.  The first branch's type is the whole match's only when
-       the branches agree.  When they do not, the match really does return a
-       value of no common representation, and saying otherwise is a claim the
-       rest of the pipeline believes: [narrow_rets] reads a body's type
-       straight off this node, so a [d:dir -> arg_type d] whose first branch
-       is a [bool] came out declared [bool].  Agreement is up to
-       abbreviations: [if c then r.file_name else refind r.file_name] has a
-       branch of type [file_name] and one of type [string], and calling that
-       [any] made Cherry box both arms into a [string] variable. *)
-    let ty =
-      match brs |> List.map (fun (_, _, (b:expr)) -> b.ty)
-                |> List.filter (fun t -> not (TAny? t)) with
-      | [] -> TAny
-      | t :: ts ->
-        if ts |> List.for_all (fun u -> u = t) then t else
-        let t' = unfold_abbrevs st 100 t in
-        if ts |> List.for_all (fun u -> unfold_abbrevs st 100 u = t') then t
-        else TAny in
+    let ty = arms_type st (brs |> List.map (fun (_, _, (b:expr)) -> b.ty)) in
     mk (EMatch (scrut, brs)) ty e
 
   | Tm_ascribed {tm} -> expr_of_term st tm
@@ -4150,7 +4254,7 @@ and lift_locals (st:state) (lbs:list letbinding) (body:term) : ML expr =
         let eff_name = match rc with
                        | Some rc -> rc.residual_effect
                        | None -> ambient () in
-        Effects.maybe_reify (env_for_term (tcenv st) def_body) def_body eff_name in
+        reify_in (tcenv st) def_body eff_name in
       let ret, eff = local_result st lb.lbtyp xs in
       (* F* generalizes a local [let rec] just as it does a top-level one, so
          the definiens may bind type variables of its own.  They hold no
@@ -4447,6 +4551,15 @@ and erasable_result (st:state) (ty:typ) (args:args) : ML bool =
    under-applied use has to be eta-expanded rather than passed along. *)
 and prim_app (st:state) (l:Ident.lident) (n:int)
              (f : list cty -> list expr -> ML expr) (args:args) : ML expr =
+  (* [try_with]'s rule types the [ETry] by its body alone; a handler may
+     return a closure with effects the body's does not have, or one the body's
+     [any] says nothing about.  Typed like a [match] (section 125.8). *)
+  let f (tys:list cty) (xs:list expr) : ML expr =
+    let e = f tys xs in
+    match e.e with
+    | ETry (b, brs) ->
+      { e with ty = arms_type st (b.ty :: List.map (fun (_, _, (h:expr)) -> h.ty) brs) }
+    | _ -> e in
   let args0 = List.map fst args in
   let decl_ty = match lookup_lid_typ st l with
                 | Some ((_, ty), _) -> Some ty
@@ -4706,7 +4819,10 @@ and app_of_fv' (st:state) (fv:fv) (args:args) : ML expr =
     | None ->
     let cs = binder_classes st l in
     let margs, msubst, rest, holes = split_mono_args st l cs args in
-    let key = { sk_lid = l; sk_args = margs; sk_subst = msubst;
+    (* Unstubbed here as well as in {!request}, which keys [st.emitted] by the
+       unstubbed name: {!callee_sig} and {!callee_eff} must look it up under
+       the same key, or a call into a stub is typed [any]. *)
+    let key = { sk_lid = unstub_lid st l; sk_args = margs; sk_subst = msubst;
                 sk_holes = List.length holes } in
     let nm = request st key in
     (* Uniform compilation (section 5.0) deletes the type arguments from the
@@ -6934,10 +7050,8 @@ and extract_letbinding (st:state) (l:Ident.lident) (nm:name) (lb:letbinding)
   let body =
     Prof.timed "reify" (fun () ->
     match rc with
-    | Some rc -> Effects.maybe_reify (env_for_term benv body) body
-                                     rc.residual_effect
-    | None -> Effects.maybe_reify (env_for_term benv body) body
-                                  (U.comp_effect_name c)) in
+    | Some rc -> reify_in benv body rc.residual_effect
+    | None -> reify_in benv body (U.comp_effect_name c)) in
   (* Register the signature before extracting the body, so that a
      self-recursive call inside it finds an exact effect and an exact type
      instead of {!callee_eff}'s and {!callee_sig}'s conservative fallbacks.

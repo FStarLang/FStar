@@ -1914,6 +1914,15 @@ let unshelve (t : term) : ML (tac unit) = wrap_err "unshelve" <| (
     | _ -> fail "not a uvar"
     )
 
+(* Solve the goal by typeclass resolution, in the scope of its context. *)
+let tcresolve_native () : ML (tac unit) = (
+  let! g = cur_goal in
+  let env = goal_env g in
+  let t, imps = env.tc_resolve env (Env.tc_scope_of env) (goal_type g) (goal_range g) in
+  add_implicits imps;!
+  solve' g t
+)
+
 let tac_and (t1 : tac bool) (t2 : tac bool)  : ML (tac bool) =
   match! t1 with
   | false -> return false

@@ -17,6 +17,7 @@ static void *thread_main(void *arg) {
    everything the closure reaches is marked shared first, since both threads
    may now count it. */
 void Pulse_Lib_Core_fork_core(cherry_fn f) {
+  cherry_start_threads();
   cherry_mark_fn(f, CHERRY_SHARE);
   cherry_inc(f);
   pthread_t t;

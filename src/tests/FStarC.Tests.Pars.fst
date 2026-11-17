@@ -75,6 +75,8 @@ let do_init () =
                 Const.prims_lid
                 NBE.normalize_for_unit_test
                 FStarC.Universal.core_check
+        FStarC.TypeChecker.TcResolve.class_of_typ
+        FStarC.TypeChecker.TcResolve.resolve
   in
   env.solver.init env;
   let prelude_file =

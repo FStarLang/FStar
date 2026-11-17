@@ -984,9 +984,32 @@ let rec reduce (x:expr) : ML expr =
         application moves. *)
      | EMatch (scrut, brs) when args |> List.for_all is_atomic
                              && brs |> List.existsb (fun (_, _, bd) -> EFun? bd.e) ->
-       let brs = brs |> List.map (fun (p, gd, bd) ->
-         (p, gd, { x with e = EApp (bd, args) })) in
+       (* An application typed [any] says nothing about an arm whose arrow
+          says more: the call of one arm's lambda may be typed [any] because
+          another arm calls a definition not extracted yet, and beta hands
+          its type on to the body -- an unboxed [bool] typed [any]. *)
+       let rec peel (n:int) (t:cty) : option cty =
+         if n = 0 then Some t else
+         match t with
+         | TArrow (_, _, r) -> peel (n - 1) r
+         | _ -> None in
+       let arm_ty (bd:expr) : cty =
+         if not (TAny? x.ty) then x.ty else
+         match peel (List.length args) bd.ty with
+         | Some t -> t
+         | None -> x.ty in
+       let brs = brs |> List.map (fun (p, gd, (bd:expr)) ->
+         (p, gd, { x with e = EApp (bd, args); ty = arm_ty bd })) in
        reduce { x with e = EMatch (scrut, brs) }
+     (* Cherry: [(f a) b] is [f a b], which the printer splits by [f]'s
+        arity again; otherwise [f a] builds a partial application only to
+        apply it at once.  Inlining makes these: [lookup_opt s c = c
+        (get_option s)] given [c = as_option (as_list as_string)].  [b] must
+        be pure, since it now runs before the call of [f a] if that call is
+        saturated. *)
+     | EApp (f, a) when Options.custard_cherry () && EQual? f.e
+                     && args |> List.for_all (fun (e:expr) -> is_pure e.eff) ->
+       { x with e = EApp (f, a @ args) }
      | _ -> { x with e = EApp (h, args) })
 
   | EMatch (scrut, brs) ->
@@ -1468,8 +1491,17 @@ let eta_expand_decl (tbl : HashTable.t string int) (uses : HashTable.t string in
          absorb (n - List.length lbs) (bs @ lbs) lbody ret' ef'
        | None -> (bs, body, ret, ef))
     | _ -> (bs, body, ret, ef) in
+  (* Cherry calls a function with fewer arguments than it takes by building
+     a partial application (cherry.md), so a caller that supplies fewer does
+     not bound the expansion there: it is the callers that supply them all
+     whose calls would otherwise build a closure and then call it.  A
+     single [List.existsb (fv_eq_lid fv) lids] kept [fv_eq_lid fv lid] at
+     the one binder [eta_reduce] left it, and every full call allocated. *)
+  let bounding_uses (n:name) : ML (option int) =
+    if Options.custard_cherry () then None
+    else HashTable.try_find uses (string_of_name n) in
   let absorb_room =
-    match HashTable.try_find uses (string_of_name l.dl_name) with
+    match bounding_uses l.dl_name with
     | Some k -> let r = k - List.length l.dl_binders in if r < 0 then 0 else r
     | None -> arrow_arity l.dl_ret in
   let abs_bs, abs_body, abs_ret, abs_ef =
@@ -1508,7 +1540,7 @@ let eta_expand_decl (tbl : HashTable.t string int) (uses : HashTable.t string in
            let have = arrow_arity l.dl_ret in
            let room =
              (* Never past what the callers ask for. *)
-             match HashTable.try_find uses (string_of_name l.dl_name) with
+             match bounding_uses l.dl_name with
              | Some k -> if k - List.length l.dl_binders < 0
                          then 0 else k - List.length l.dl_binders
              | None -> have in
@@ -1775,13 +1807,35 @@ let is_identity (dl:dlet) : ML bool =
    | [b], EVar v -> b.b_name = v
    | _ -> false)
 
+(* Under Cherry, a definition whose body reads a field (or a chain of fields)
+   of its one parameter, [let sigtab env = env.sigtab], is inlined as well.
+   The call costs more than the read: the result is returned owned, so a
+   multi-reference record is inc'd field by field in the callee and dec'd
+   again in the caller, where the inlined read of a borrowed value costs
+   nothing.  The projection only exists once [depat] has run, so it is the
+   second [inline_decls] that finds these. *)
+let is_projector (dl:dlet) : ML bool =
+  let rec proj_of (v:string) (e:expr) : ML bool =
+    match e.e with
+    | EVar w -> w = v
+    | EProj (e, _, _) -> proj_of v e
+    | _ -> false in
+  Options.custard_cherry () &&
+  arrow_arity dl.dl_ret = 0 &&
+  not (dl.dl_flags |> List.existsb Rec?) &&
+  (match dl.dl_binders, dl.dl_body.e with
+   | [b], EProj (e, _, _) -> proj_of b.b_name e
+   | _ -> false)
+
+let inlined_unasked (dl:dlet) : ML bool = is_identity dl || is_projector dl
+
 let inline_decls (prog:program) : ML program =
   let tbl : HashTable.t string (list string & list binder & expr) = HashTable.create 50 in
   let used : HashTable.t string bool = HashTable.create 50 in
   let inl : HashTable.t string dlet = HashTable.create 50 in
   prog |> List.iter (fun d ->
     match d with
-    | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
+    | DLet dl when dl.dl_flags |> List.existsb Inline? || inlined_unasked dl ->
       HashTable.add inl (string_of_name dl.dl_name) dl
     | _ -> ());
   let visiting : HashTable.t string bool = HashTable.create 50 in
@@ -1799,7 +1853,7 @@ let inline_decls (prog:program) : ML program =
     end in
   prog |> List.iter (fun d ->
     match d with
-    | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
+    | DLet dl when dl.dl_flags |> List.existsb Inline? || inlined_unasked dl ->
       fill (string_of_name dl.dl_name)
     | _ -> ());
   let prog = prog |> List.map (fun d ->
@@ -4389,7 +4443,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      identity function is not something anyone writes on purpose. *)
   let prog =
     if prog |> List.existsb (fun d -> match d with
-                                      | DLet dl -> is_identity dl
+                                      | DLet dl -> inlined_unasked dl
                                       | _ -> false)
     then let prog = pass "inline_ids" inline_decls prog in
          pass "simpl_ids" simpl_all prog

@@ -1,0 +1,14 @@
+{
+  "fstar_exe": "../../../../../../stage3/out/bin/fstar.exe",
+  "options": [
+    "--query_cache",
+    "--ext", "optimize_let_vc",
+    "--ext", "fly_deps"
+  ],
+  "include_dirs": [
+    ".",
+    "../../../../../lib/pulse/logical_atomicity",
+    "../../../../../lib/core",
+    "../../../../../build/lib.core.checked"
+  ]
+}

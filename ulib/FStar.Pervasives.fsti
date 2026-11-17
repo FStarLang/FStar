@@ -376,16 +376,9 @@ let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
     using the normalization [steps], and then proceed to extract it as
     usual.
 
-    Almost the same behavior can be achieved by using a
-    [postprocess_for_extraction_with t] attribute, which runs tactic
-    [t] on the goal [e == ?u] and extracts the solution to [?u] in
-    place of [e]. However, using a tactic to postprocess a term is
-    more general than needed for some cases.
-
-    In particular, if we intend to only normalize [e] before
-    extraction (rather than applying some other form of equational
-    reasoning), then using [normalize_for_extraction] can be more
-    efficient, for the following reason:
+    Normalizing [e] only just before extraction can also be more
+    efficient than normalizing it during typechecking, for the
+    following reason:
 
     Since we are reducing [e] just before extraction, F* can enable an
     otherwise non-user-facing normalization feature that allows all

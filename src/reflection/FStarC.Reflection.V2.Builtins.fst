@@ -88,6 +88,7 @@ let inspect_bqual (bq : bqual) : aqualv =
     | Some (Implicit _) -> Data.Q_Implicit
     | Some (Meta t)     -> Data.Q_Meta t
     | Some Equality     -> Data.Q_Equality
+    | Some TcArg        -> Data.Q_TcArg
     | None              -> Data.Q_Explicit
 
 let inspect_aqual (aq : aqual) : aqualv =
@@ -100,12 +101,14 @@ let pack_bqual (aqv : aqualv) : bqual =
     match aqv with
     | Data.Q_Implicit -> Some (Implicit false)
     | Data.Q_Meta t   -> Some (Meta t)
+    | Data.Q_TcArg    -> Some TcArg
     | Data.Q_Equality -> Some Equality
     | Data.Q_Explicit -> None
 
 let pack_aqual (aqv : aqualv) : ML aqual =
     match aqv with
-    | Data.Q_Implicit -> S.as_aqual_implicit true
+    | Data.Q_Implicit
+    | Data.Q_TcArg -> S.as_aqual_implicit true
     | _ -> None
 
 let inspect_fv (fv:fv) : ML (list string) =
@@ -834,6 +837,8 @@ and aqual_eq (aq1 : aqualv) (aq2 : aqualv) : ML bool =
   | Q_Implicit, Q_Implicit -> true
   | Q_Explicit, Q_Explicit -> true
   | Q_Meta t1, Q_Meta t2 -> term_eq t1 t2
+  | Q_Equality, Q_Equality -> true
+  | Q_TcArg, Q_TcArg -> true
   | _ -> false
 
 and binder_eq (b1 : binder) (b2 : binder) : ML bool =

@@ -146,6 +146,13 @@ let built_in_primitive_steps_list : list primitive_step =
 
 let env_dependent_ops (env:Env.env_t) : ML _ = Primops.Eq.dec_eq_ops env
 
+let env_dependent_op_lids = [PC.op_Eq; PC.op_notEq]
+
+let env_dependent_op (env:Env.env_t) (l:Ident.lident) : ML (option primitive_step) =
+  if List.existsb (FStarC.Ident.lid_equals l) env_dependent_op_lids
+  then List.tryFind (fun (ps:primitive_step) -> FStarC.Ident.lid_equals ps.name l) (env_dependent_ops env)
+  else None
+
 let simplification_ops_list (env:Env.env_t) : ML (list primitive_step) =
   Primops.Eq.prop_eq_ops env
   @ Primops.Real.simplify_ops

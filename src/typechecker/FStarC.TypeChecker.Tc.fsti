@@ -19,12 +19,6 @@ open FStarC.Syntax.Syntax
 open FStarC.TypeChecker.Env
 open FStarC.TypeChecker.Common
 
-val run_postprocess
-  (for_extraction : bool)
-  (env : env)
-  (se : sigelt)
-  : ML sigelt
-
 val snapshot_context: env -> string -> ML ((int & int & solver_depth_t & int) & env)
 val rollback_context: solver_t -> string -> option (int & int & solver_depth_t & int) -> ML env
 val push_context: env -> string -> ML env

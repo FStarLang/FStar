@@ -482,6 +482,7 @@ C_TESTS += DeclareInCHeader
 CUSTARD_TESTS += DeclareInCHeaderOCaml
 FLAGS_DeclareInCHeader += --custard_entry DeclareInCHeader.rooted
 CEXTRA_DeclareInCHeader = DeclareInCHeader_stubs.c
+CHERRY_TESTS += CherryStaticPap
 CHERRY_TESTS += DeclareInCHeaderCherry
 CEXTRA_DeclareInCHeaderCherry = DeclareInCHeaderCherry_stubs.c
 CHGREP_DeclareInCHeader += "extern DeclareInCHeader_pair DeclareInCHeader_swap(DeclareInCHeader_pair);"
@@ -769,6 +770,18 @@ ROOTS_Deriving  = pick shift widen
 GREP_Deriving  += "^}$$"
 GREP_Deriving  += "} \[@@deriving yojson\]"
 GREP_Deriving  += "^  \[@@deriving yojson\]$$"
+
+# A reified [Tac] match with an arm typed [any] and a pure closure arm was
+# typed as the pure closure, so its application to the proofstate was deleted
+# as dead code, together with the [fail] in the other arm.  Pulse's checker
+# lost a soundness check this way.  Extraction only: [fail] needs the
+# compiler's own modules to link.
+ROOT_TESTS += TacAnyArm
+ROOTS_TacAnyArm = check check_dep
+FLAGS_TacAnyArm = --warn_error -367
+GREP_TacAnyArm += "fStar_Tactics_V2_Derived_fail \"A\""
+GREP_TacAnyArm += "tacAnyArm_side b"
+GREP_TacAnyArm += "tacAnyArm_side (not b)"
 
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.
@@ -3746,6 +3759,40 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/MutualTail.chgrep
 
+# Cherry: a function used as a closure borrows its parameters when no
+# chain of its tail calls reaches a closure call (cherry.md, "Borrow
+# inference").
+CUSTARD_TESTS += CherryClosureBorrow
+$(CHERRY_DIR)/CherryClosureBorrow.chgrep: $(CHERRY_DIR)/CherryClosureBorrow.chc
+	$(Q)awk "/CherryClosureBorrow_same\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	  || { echo "ERROR: CherryClosureBorrow's C output has no same"; exit 1; }
+	$(Q)! awk "/CherryClosureBorrow_same\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_dec' \
+	  || { echo "ERROR: CherryClosureBorrow's same owns a parameter"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryClosureBorrow.chgrep
+
+# Cherry: a match on a tuple of variables borrows them and counts neither
+# the tuple nor what its patterns bind (cherry.md, "Matching on a tuple").
+CUSTARD_TESTS += CherryTupleMatch
+$(CHERRY_DIR)/CherryTupleMatch.chgrep: $(CHERRY_DIR)/CherryTupleMatch.chc
+	$(Q)for f in eq_step pick; do \
+	  awk "/CherryTupleMatch_$$f\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	    || { echo "ERROR: CherryTupleMatch's C output has no $$f"; exit 1; }; \
+	  ! awk "/CherryTupleMatch_$$f\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_dec' \
+	    || { echo "ERROR: CherryTupleMatch's $$f releases a reference"; exit 1; }; done
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryTupleMatch.chgrep
+
+# Cherry: an update of an unboxed record that dies moves its fields.
+CUSTARD_TESTS += CherryUnboxedUpdate
+$(CHERRY_DIR)/CherryUnboxedUpdate.chgrep: $(CHERRY_DIR)/CherryUnboxedUpdate.chc
+	$(Q)awk "/CherryUnboxedUpdate_upd\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	  || { echo "ERROR: CherryUnboxedUpdate's C output has no upd"; exit 1; }
+	$(Q)! awk "/CherryUnboxedUpdate_upd\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_inc\|cherry_dec' \
+	  || { echo "ERROR: CherryUnboxedUpdate's upd counts a field"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryUnboxedUpdate.chgrep
+
 # Cherry: [@@cherry_boxed] boxes a non-recursive record, mutual bundle or
 # variant, and a call passing one is a guaranteed tail call.
 CUSTARD_TESTS += CherryBoxedAttr
@@ -3759,6 +3806,25 @@ $(CHERRY_DIR)/CherryBoxedAttr.chgrep: $(CHERRY_DIR)/CherryBoxedAttr.chc
 	    || { echo "ERROR: CherryBoxedAttr's C output is missing $$p"; exit 1; }; done
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryBoxedAttr.chgrep
+
+# Cherry: --custard_type_stats counts a nested unboxed record's fields, a
+# variant's largest constructor plus a tag, and a boxed type as one
+# reference, with its cell's counts alongside.
+$(CHERRY_DIR)/CherryTypeStats.stats: $(CACHE_DIR)/CherryTypeStats.fst.checked $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryTypeStats)
+	@mkdir -p $(CHERRY_DIR)
+	$(FSTAR) --codegen Cherry --custard_type_stats \
+	  --custard_main CherryTypeStats.main CherryTypeStats.fst \
+	  -o $(CHERRY_DIR)/CherryTypeStats.c > $@.out
+	$(Q)printf '%s\t%s\t%s\t%s\t%s\n' \
+	  5 5 1 - CherryTypeStats.seg \
+	  5 6 1 - CherryTypeStats.shape \
+	  2 2 0 - CherryTypeStats.pt \
+	  1 1 1 'boxed 6/6' CherryTypeStats.big > $@.exp
+	$(Q)tail -n +2 $@.out | diff $@.exp - \
+	  || { echo "ERROR: unexpected --custard_type_stats output"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryTypeStats.stats
 
 # Cherry: a matched cell that dies on one arm of a conditional inside the
 # branch is reused there.
@@ -3774,6 +3840,29 @@ $(CHERRY_DIR)/CherryMoveFields.chgrep: $(CHERRY_DIR)/CherryMoveFields.chc
 	  || { echo "ERROR: CherryMoveFields counts the fields it takes"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryMoveFields.chgrep
+
+# Cherry: a field of an owned boxed value is borrowed from it, a leaf call
+# borrows it too, and a call in a loop of tail calls that takes such a field
+# owned stays a tail call.
+CHERRY_TESTS += CherryAliasBorrow
+$(CHERRY_DIR)/CherryAliasBorrow.chgrep: $(CHERRY_DIR)/CherryAliasBorrow.chc
+	$(Q)! sed -n '/^static .* CherryAliasBorrow_first_len(.*{$$/,/^}/p' $< | grep -q 'cherry_inc' \
+	  || { echo "ERROR: CherryAliasBorrow_first_len counts a borrowed field"; exit 1; }
+	$(Q)! sed -n '/^static .* CherryAliasBorrow_kids_count(.*{$$/,/^}/p' $< | grep -q 'cherry_inc' \
+	  || { echo "ERROR: CherryAliasBorrow_kids_count counts a field passed to a leaf"; exit 1; }
+	$(Q)sed -n '/^static .* CherryAliasBorrow_walk(.*{$$/,/^}/p' $< | grep -q 'CHERRY_MUSTTAIL return' \
+	  || { echo "ERROR: CherryAliasBorrow_walk lost its tail call"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryAliasBorrow.chgrep
+
+# Cherry: a definition that only projects a field of its parameter is
+# inlined, whatever its effect.
+CHERRY_TESTS += CherryProjInline
+$(CHERRY_DIR)/CherryProjInline.chgrep: $(CHERRY_DIR)/CherryProjInline.chc
+	$(Q)! sed -n '/^static .* CherryProjInline_use(.*{$$/,/^}/p' $< | grep -q 'CherryProjInline_get_t' \
+	  || { echo "ERROR: CherryProjInline_use calls a projector"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryProjInline.chgrep
 
 # Cherry: a function used as a value keeps the arity eta-reduction took from
 # it, so a direct call is not a partial application.
@@ -3810,6 +3899,40 @@ $(CHERRY_DIR)/CherryPap.chgrep: $(CHERRY_DIR)/CherryPap.chc
 	  || { echo "ERROR: CherryPap_make tests a partial application for an exception"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryPap.chgrep
+# Cherry: a small record on a cycle, and a constructor's payload record, are
+# unboxed when another boxed type breaks the cycle.
+$(CHERRY_DIR)/CherryUnboxCycle.chgrep: $(CHERRY_DIR)/CherryUnboxCycle.chc
+	$(Q)grep -q 'typedef struct FStar_Pervasives_Native_tuple2__term_bool_s ' $(<:.chc=.h) \
+	  || { echo "ERROR: CherryUnboxCycle: term & bool is boxed"; exit 1; }
+	$(Q)grep -q 'typedef struct CherryUnboxCycle_lam_s ' $(<:.chc=.h) \
+	  || { echo "ERROR: CherryUnboxCycle: lam is boxed"; exit 1; }
+	$(Q)grep -q 'typedef cherry_obj \*CherryUnboxCycle_term;' $(<:.chc=.h) \
+	  || { echo "ERROR: CherryUnboxCycle: term is not boxed"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryUnboxCycle.chgrep
+# Cherry: a partial use of an eta-reduced definition does not stop it being
+# eta-expanded again, so its full calls build no closure.
+$(CHERRY_DIR)/CherryEtaPartial.chgrep: $(CHERRY_DIR)/CherryEtaPartial.chc
+	$(Q)! sed -n '/^static .* CherryEtaPartial_both(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryEtaPartial_both calls same_id through a closure"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryEtaPartial.chgrep
+
+$(CHERRY_DIR)/CherryStaticPap.chgrep: $(CHERRY_DIR)/CherryStaticPap.chc
+	$(Q)grep -q 'cherry_pap_CherryStaticPap_twice_1_static(cherry_spap, ((cherry_fn)&cherry_clo_CherryStaticPap_incr))' $< \
+	  && grep -q 'cherry_pap_CherryStaticPap_tag_2_static(cherry_spap, ((cherry_string)&' $< \
+	  || { echo "ERROR: CherryStaticPap allocates a partial application of constants"; exit 1; }
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherryStaticPap.chgrep
+# Cherry: an application of an application, which inlining makes, is one
+# call; the inner partial application is not built only to be applied.
+$(CHERRY_DIR)/CherryAppFlatten.chgrep: $(CHERRY_DIR)/CherryAppFlatten.chc
+	$(Q)sed -n '/^static .* CherryAppFlatten_doubled(.*{$$/,/^}/p' $< > $@.tmp; \
+	  grep -q 'CherryAppFlatten_wrap(' $@.tmp && ! grep -q 'cherry_pap_CherryAppFlatten_wrap' $@.tmp \
+	    || { echo "ERROR: CherryAppFlatten_doubled builds a partial application of wrap"; exit 1; }
+	$(Q)rm -f $@.tmp; touch $@
+all: $(CHERRY_DIR)/CherryAppFlatten.chgrep
 
 # Cherry: [@@custard_inline] combinators are inlined, so a lambda given to
 # one is no closure, and an eta-reduced one becomes a direct call.
@@ -3846,7 +3969,10 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # The Cherry backend (cherry.md): C with reference-counted heap cells for the
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
-CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec
+CHERRY_TESTS += CherryUnboxCycle
+CHERRY_TESTS += CherryEtaPartial
+CHERRY_TESTS += CherryAppFlatten
+CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec CherryGlobalRefShare
 # A low budget so that a regression fails in seconds rather than a minute.
 FLAGS_CherryMonoLocalRec = --custard_norm_budget 1000000
 
@@ -4268,6 +4394,35 @@ $(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRC
 	$(Q)touch $@
 
 all: $(INTEXTRA_DIR)/CherryIntExtra.chran
+
+STRING_DIR = $(CHERRY_DIR)/string
+STRING_ABS = $(abspath $(STRING_DIR))
+STRING_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst
+$(STRING_DIR)/CherryString.chran: string/CherryString.fst $(STRING_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryString)
+	$(Q)rm -rf $(STRING_ABS) && mkdir -p $(STRING_ABS)/src
+	$(Q)ln -s $(STRING_SRCS) $(STRING_ABS)/src/
+	$(Q)cd string && for f in $(addprefix $(STRING_ABS)/src/,$(notdir $(STRING_SRCS))) \
+	    CherryString.fst; do \
+	  $(FSTAR_EXE) --include $(STRING_ABS)/src --cache_dir $(STRING_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd string && $(FSTAR_EXE) --include $(STRING_ABS)/src --cache_dir $(STRING_ABS) \
+	  --already_cached '*' --odir $(STRING_ABS) --codegen Cherry \
+	  --custard_main CherryString.main \
+	  CherryString.fst -o $(STRING_ABS)/CherryString.c > /dev/null
+	$(call msg, "CC-ASAN", CherryString)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(STRING_ABS) -I$(CHERRY_INC) \
+	  -x c $(STRING_ABS)/CherryString.c $(CHERRY_INC)/cherry.c \
+	  -o $(STRING_ABS)/CherryString.chexe
+	$(call msg, "RUN-ASAN", CherryString)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(STRING_ABS)/CherryString.chexe
+	$(Q)touch $@
+
+all: $(STRING_DIR)/CherryString.chran
 
 # Debug mode (cherry.md): each program breaks a fact F* would have proved, in
 # code whose queries are admitted, and must abort with the message below.

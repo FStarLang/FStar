@@ -64,7 +64,7 @@ let bv_as_unique_ident (x:S.bv) : ML I.ident =
 Typeclass args are not considered implicit for printing. *)
 let is_imp_bqual a =
   match a with
-  | Some (S.Meta t) when U.is_fvar C.tcresolve_lid t -> false
+  | Some S.TcArg -> false
   | Some (S.Implicit _)
   | Some (S.Meta _) -> true
   | _ -> false
@@ -1393,7 +1393,7 @@ and resugar_bqual env (q:S.bqual) : ML (option A.arg_qualifier) =
   | None -> None
   | Some (S.Implicit b) -> Some A.Implicit
   | Some S.Equality -> Some A.Equality
-  | Some (S.Meta t) when U.is_fvar C.tcresolve_lid t -> Some (A.TypeClassArg)
+  | Some S.TcArg -> Some A.TypeClassArg
   | Some (S.Meta t) -> Some (A.Meta (resugar_term' env t))
 
 and resugar_aqual env (q:S.aqual) : ML A.imp =

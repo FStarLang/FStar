@@ -73,6 +73,7 @@ let refine_intro x1 = B.refine_intro x1
 let tc x1 x2 = B.tc x1 x2
 let tcc x1 x2 = B.tcc x1 x2
 let unshelve x1 = B.unshelve x1
+let tcresolve_native x1 = B.tcresolve_native x1
 let norm x1 = B.norm x1
 let norm_term_env x1 x2 x3 = B.norm_term_env x1 x2 x3
 let norm_binding_type x1 x2 = B.norm_binding_type x1 x2

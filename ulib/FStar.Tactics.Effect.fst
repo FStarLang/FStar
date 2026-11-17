@@ -40,8 +40,6 @@ let preprocess_with _ = ()
 
 let postprocess_with _ = ()
 
-let postprocess_for_extraction_with _ = ()
-
 let postprocess_type = ()
 
 #set-options "--no_tactics"

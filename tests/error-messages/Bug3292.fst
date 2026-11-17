@@ -10,10 +10,10 @@ let op_Less #a (x y : a) = (x,y)
 let op_GreaterEquals #a (x y : a) = (x,y)
 let op_LessEquals #a (x y : a) = (x,y)
 
-let _ = 1 + 1
+let _ = Bug3292.op_Plus 1 1
 let _ = 1 - 1
-let _ = 1 / 1
-let _ = 1 > 1
-let _ = 1 < 1
+let _ = Bug3292.op_Slash 1 1
+let _ = Bug3292.op_Greater 1 1
+let _ = Bug3292.op_Less 1 1
 let _ = 1 >= 1
 let _ = 1 <= 1

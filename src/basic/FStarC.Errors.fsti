@@ -79,6 +79,7 @@ type error_handler = {
 }
 
 val issue_message : issue -> ML error_message
+val issue_to_doc' : bool -> issue -> ML FStarC.Pprint.document
 val format_issue' : bool -> issue -> ML string
 val format_issue : issue -> ML string
 val print_issue : issue -> ML unit

@@ -1094,6 +1094,7 @@ let grandparent_after_swap #t {| total_order t |}
     // heap_down_at s child means: s[child] <=? s[left_idx child] and s[child] <=? s[right_idx child]
     ()
 
+#restart-solver
 #push-options "--fuel 1 --ifuel 1 --z3rlimit_factor 4"
 fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.t)
   (#s:erased (Seq.seq t){SZ.v idx < Seq.length s /\ SZ.v len == Seq.length s /\ 

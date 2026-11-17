@@ -34,7 +34,10 @@ let make #a n x =
   else mk_ref (push_n (IA.of_list []) n x)
 
 (* [length], [get] and [set] borrow the array: a caller looking up an
-   element should not have to count a reference to it. *)
+   element should not have to count a reference to it.  [length] and [get]
+   are inlined, so that the C compiler sees through the element they return
+   (Cherry's ref peek still applies inside the caller). *)
+[@@custard_inline]
 let length #a ([@@@FStar.Attributes.cherry_borrowed] arr) = S.of_int (IA.length !arr)
 
 (* The bounds are checked on [S.t], with no [int] arithmetic.  Inlined, so
@@ -47,6 +50,7 @@ let pos (len:nat) (i:S.t) : ML (j:nat{j < len}) =
     j
   end else failwith "FStarC.Array: index out of bounds"
 
+[@@custard_inline]
 let get #a ([@@@FStar.Attributes.cherry_borrowed] arr) i =
   let cur = !arr in
   IA.index cur (pos (IA.length cur) i)

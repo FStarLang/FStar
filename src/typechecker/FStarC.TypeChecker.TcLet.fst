@@ -58,7 +58,7 @@ let profile (env:env) (phase:string) (f:unit -> ML 'a) : ML 'a =
 (* Pre- and postprocessing tactics                                          *)
 (****************************************************************************)
 
-let read_postprocess_with_attr (for_extraction : bool) (env:Env.env) (ats:list attribute)
+let read_postprocess_with_attr (env:Env.env) (ats:list attribute)
     : ML (list attribute & option term & bool)
       (* returns:
          - remaining attrs
@@ -76,18 +76,12 @@ let read_postprocess_with_attr (for_extraction : bool) (env:Env.env) (ats:list a
       ];
       ats, None
   in
-  let lid = if for_extraction then PC.postprocess_extr_with else PC.postprocess_with in
-  let ats, pt = get1 ats lid in
-  let on_type =
-    (* NOTE: retain the attribute even if we find it. So postprocess_type can work
-    with a postprocess_with and postprocess_for_extraction_with simultaneously 
-    on a single definition. *)
-    Some? (U.extract_attr' PC.postprocess_type ats)
-  in
+  let ats, pt = get1 ats PC.postprocess_with in
+  let on_type = Some? (U.extract_attr' PC.postprocess_type ats) in
   ats, pt, on_type
 
-let run_postprocess (for_extraction : bool) env (se : sigelt) : ML sigelt =
-  let attrs, pt, on_type = read_postprocess_with_attr for_extraction env se.sigattrs in
+let run_postprocess env (se : sigelt) : ML sigelt =
+  let attrs, pt, on_type = read_postprocess_with_attr env se.sigattrs in
 
   (* remove the postprocess_with, if any *)
   let se = { se with sigattrs = attrs } in
@@ -645,7 +639,7 @@ let tc_sig_let env r se lbs lids =
 
   (* 4. Recording *)
   let se, lbs = to_sigelt se lids quals e in
-  let se = run_postprocess false env' se in
+  let se = run_postprocess env' se in
   let se = drop_inferred_postconditions unannotated se in
   check_no_subtyping env' se lbs;
   record_types env lbs;

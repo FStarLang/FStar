@@ -147,12 +147,11 @@ let add_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok (fun a b -> a + b) x y }) 
 
 let sub_u32 (x:FStar.UInt32.t) (y:FStar.UInt32.t { ok (fun a b -> a - b) x y}) = x - y
 
-//this work and resolved to int, because of the 1
+//these resolve to Prims.op_Plus: overloading prefers the candidate whose
+//argument type (int) matches the arguments' type over the class method
 let add_nat_1 (x:nat) = x + 1
 
-//But, to add two nats, this fails, since typeclass resolution doesn't consider subtyping
-[@@expect_failure]
-let add_nat (x y:nat) = x + y
+let add_nat_int (x y:nat) : int = x + y
 
 let nat_as_int (x:nat) : int = x
 

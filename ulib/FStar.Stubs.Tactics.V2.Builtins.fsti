@@ -69,6 +69,10 @@ you want one anyway. For example, if you request a uvar through
 explicitly. *)
 val unshelve : term -> Tac unit
 
+(** [tcresolve_native ()] solves the goal by typeclass resolution, with the
+instances in scope and the local instances of the goal's context. *)
+val tcresolve_native : unit -> Tac unit
+
 (** [unquote t] with turn a quoted term [t] into an actual value, of
 any type. This will fail at tactic runtime if the quoted term does not
 typecheck to type [a]. *)
