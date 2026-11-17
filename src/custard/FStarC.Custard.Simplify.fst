@@ -1231,7 +1231,12 @@ let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)
    karamel backends a definition keeps its [unit] binders (Mono's rule 1),
    and a [fn f (_:unit) : t = (x:_) ...] forwarding to [g x] would otherwise
    be reduced to [f () = g] and expanded back under [g]'s binder names rather
-   than its own -- the same function, renamed. *)
+   than its own -- the same function, renamed.
+
+   Under Cherry the other arguments must be atoms.  Reducing
+   [mk_Tm_delayed lr pos = mk (Tm_delayed ..) pos] would leave a definition
+   that builds a partial application of [mk], allocated and then applied at
+   every call, and that [eta_expand] does not undo, since its body computes. *)
 
 let rec split_last (es:list 'a) : ML (option (list 'a & 'a)) =
   match es with
@@ -1250,7 +1255,9 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
      | Some (args', { e = EVar v }) when v = b.b_name
                                       && is_pure f.eff
                                       && not (occurs v f)
-                                      && not (args' |> List.existsb (occurs v)) ->
+                                      && not (args' |> List.existsb (occurs v))
+                                      && not (Options.custard_cherry ()
+                                              && not (List.for_all is_atomic args')) ->
        let ret' = TArrow (b.b_ty, ef, ret) in
        let body' = match args' with
                    | [] -> { f with ty = ret' }
