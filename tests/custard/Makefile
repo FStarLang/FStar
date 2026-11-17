@@ -3759,6 +3759,18 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/MutualTail.chgrep
 
+# Cherry: a function used as a closure borrows its parameters when no
+# chain of its tail calls reaches a closure call (cherry.md, "Borrow
+# inference").
+CUSTARD_TESTS += CherryClosureBorrow
+$(CHERRY_DIR)/CherryClosureBorrow.chgrep: $(CHERRY_DIR)/CherryClosureBorrow.chc
+	$(Q)awk "/CherryClosureBorrow_same\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	  || { echo "ERROR: CherryClosureBorrow's C output has no same"; exit 1; }
+	$(Q)! awk "/CherryClosureBorrow_same\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_dec' \
+	  || { echo "ERROR: CherryClosureBorrow's same owns a parameter"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryClosureBorrow.chgrep
+
 # Cherry: a match on a tuple of variables borrows them and counts neither
 # the tuple nor what its patterns bind (cherry.md, "Matching on a tuple").
 CUSTARD_TESTS += CherryTupleMatch
@@ -3898,6 +3910,13 @@ $(CHERRY_DIR)/CherryUnboxCycle.chgrep: $(CHERRY_DIR)/CherryUnboxCycle.chc
 	  || { echo "ERROR: CherryUnboxCycle: term is not boxed"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryUnboxCycle.chgrep
+# Cherry: a partial use of an eta-reduced definition does not stop it being
+# eta-expanded again, so its full calls build no closure.
+$(CHERRY_DIR)/CherryEtaPartial.chgrep: $(CHERRY_DIR)/CherryEtaPartial.chc
+	$(Q)! sed -n '/^static .* CherryEtaPartial_both(.*{$$/,/^}/p' $< | grep -q 'cherry_pap_\|cherry_apply_' \
+	  || { echo "ERROR: CherryEtaPartial_both calls same_id through a closure"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryEtaPartial.chgrep
 
 $(CHERRY_DIR)/CherryStaticPap.chgrep: $(CHERRY_DIR)/CherryStaticPap.chc
 	$(Q)grep -q 'cherry_pap_CherryStaticPap_twice_1_static(cherry_spap, ((cherry_fn)&cherry_clo_CherryStaticPap_incr))' $< \
@@ -3951,6 +3970,7 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
 CHERRY_TESTS += CherryUnboxCycle
+CHERRY_TESTS += CherryEtaPartial
 CHERRY_TESTS += CherryAppFlatten
 CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec CherryGlobalRefShare
 # A low budget so that a regression fails in seconds rather than a minute.
