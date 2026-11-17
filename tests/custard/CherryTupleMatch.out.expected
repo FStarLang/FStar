@@ -1,0 +1,9 @@
+true
+false
+[c]
+Ex([a;b])
+A
+Ex([d]) [d] B
+Ex([f;g]) [e] [f;g] [e]
+A
+h i j,k none

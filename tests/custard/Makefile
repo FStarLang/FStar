@@ -482,6 +482,7 @@ C_TESTS += DeclareInCHeader
 CUSTARD_TESTS += DeclareInCHeaderOCaml
 FLAGS_DeclareInCHeader += --custard_entry DeclareInCHeader.rooted
 CEXTRA_DeclareInCHeader = DeclareInCHeader_stubs.c
+CHERRY_TESTS += CherryStaticPap
 CHERRY_TESTS += DeclareInCHeaderCherry
 CEXTRA_DeclareInCHeaderCherry = DeclareInCHeaderCherry_stubs.c
 CHGREP_DeclareInCHeader += "extern DeclareInCHeader_pair DeclareInCHeader_swap(DeclareInCHeader_pair);"
@@ -769,6 +770,18 @@ ROOTS_Deriving  = pick shift widen
 GREP_Deriving  += "^}$$"
 GREP_Deriving  += "} \[@@deriving yojson\]"
 GREP_Deriving  += "^  \[@@deriving yojson\]$$"
+
+# A reified [Tac] match with an arm typed [any] and a pure closure arm was
+# typed as the pure closure, so its application to the proofstate was deleted
+# as dead code, together with the [fail] in the other arm.  Pulse's checker
+# lost a soundness check this way.  Extraction only: [fail] needs the
+# compiler's own modules to link.
+ROOT_TESTS += TacAnyArm
+ROOTS_TacAnyArm = check check_dep
+FLAGS_TacAnyArm = --warn_error -367
+GREP_TacAnyArm += "fStar_Tactics_V2_Derived_fail \"A\""
+GREP_TacAnyArm += "tacAnyArm_side b"
+GREP_TacAnyArm += "tacAnyArm_side (not b)"
 
 # Extraction of each of these must fail with the given error code: they are
 # the diagnostics of sections 3.2 and 3.6.
@@ -3746,6 +3759,18 @@ $(CHERRY_DIR)/MutualTail.chgrep: $(CHERRY_DIR)/MutualTail.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/MutualTail.chgrep
 
+# Cherry: a match on a tuple of variables borrows them and counts neither
+# the tuple nor what its patterns bind (cherry.md, "Matching on a tuple").
+CUSTARD_TESTS += CherryTupleMatch
+$(CHERRY_DIR)/CherryTupleMatch.chgrep: $(CHERRY_DIR)/CherryTupleMatch.chc
+	$(Q)for f in eq_step pick; do \
+	  awk "/CherryTupleMatch_$$f\\(.*\\{\$$/,/^}/" $< | grep -q . \
+	    || { echo "ERROR: CherryTupleMatch's C output has no $$f"; exit 1; }; \
+	  ! awk "/CherryTupleMatch_$$f\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_dec' \
+	    || { echo "ERROR: CherryTupleMatch's $$f releases a reference"; exit 1; }; done
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryTupleMatch.chgrep
+
 # Cherry: an update of an unboxed record that dies moves its fields.
 CUSTARD_TESTS += CherryUnboxedUpdate
 $(CHERRY_DIR)/CherryUnboxedUpdate.chgrep: $(CHERRY_DIR)/CherryUnboxedUpdate.chc
@@ -3870,6 +3895,22 @@ $(CHERRY_DIR)/CherryEtaPartial.chgrep: $(CHERRY_DIR)/CherryEtaPartial.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryEtaPartial.chgrep
 
+$(CHERRY_DIR)/CherryStaticPap.chgrep: $(CHERRY_DIR)/CherryStaticPap.chc
+	$(Q)grep -q 'cherry_pap_CherryStaticPap_twice_1_static(cherry_spap, ((cherry_fn)&cherry_clo_CherryStaticPap_incr))' $< \
+	  && grep -q 'cherry_pap_CherryStaticPap_tag_2_static(cherry_spap, ((cherry_string)&' $< \
+	  || { echo "ERROR: CherryStaticPap allocates a partial application of constants"; exit 1; }
+	$(Q)touch $@
+
+all: $(CHERRY_DIR)/CherryStaticPap.chgrep
+# Cherry: an application of an application, which inlining makes, is one
+# call; the inner partial application is not built only to be applied.
+$(CHERRY_DIR)/CherryAppFlatten.chgrep: $(CHERRY_DIR)/CherryAppFlatten.chc
+	$(Q)sed -n '/^static .* CherryAppFlatten_doubled(.*{$$/,/^}/p' $< > $@.tmp; \
+	  grep -q 'CherryAppFlatten_wrap(' $@.tmp && ! grep -q 'cherry_pap_CherryAppFlatten_wrap' $@.tmp \
+	    || { echo "ERROR: CherryAppFlatten_doubled builds a partial application of wrap"; exit 1; }
+	$(Q)rm -f $@.tmp; touch $@
+all: $(CHERRY_DIR)/CherryAppFlatten.chgrep
+
 # Cherry: [@@custard_inline] combinators are inlined, so a lambda given to
 # one is no closure, and an eta-reduced one becomes a direct call.
 $(CHERRY_DIR)/CherryInlineHO.chgrep: $(CHERRY_DIR)/CherryInlineHO.chc
@@ -3906,6 +3947,7 @@ all: $(CHERRY_DIR)/CherrySpecializeHO.chgrep
 # recursive datatypes.  The run is under AddressSanitizer, whose leak checker
 # is the assertion that every cell allocated is freed exactly once.
 CHERRY_TESTS += CherryEtaPartial
+CHERRY_TESTS += CherryAppFlatten
 CHERRY_TESTS += CherryList CherryTree CherryOpt CherryInt CherryString CherryClosure CherryGlobal CherryRef CherryBorrow CherryDeep CherryReuse CherryEq CherryIArray CherryExn CherryDyn CherryExtOwn CherryEdge CherryGuards CherryProjVal CherryMoveFields CherryRecordUpdate CherryPap CherryInlineHO CherryInlineDyn CherryErasedClosure CherryLocalFn CherrySpecializeHO CherryTRMC CherrySharedGlobal CherryClaim CherryMonoLocalRec CherryGlobalRefShare
 # A low budget so that a regression fails in seconds rather than a minute.
 FLAGS_CherryMonoLocalRec = --custard_norm_budget 1000000
@@ -4328,6 +4370,35 @@ $(INTEXTRA_DIR)/CherryIntExtra.chran: intextra/CherryIntExtra.fst $(INTEXTRA_SRC
 	$(Q)touch $@
 
 all: $(INTEXTRA_DIR)/CherryIntExtra.chran
+
+STRING_DIR = $(CHERRY_DIR)/string
+STRING_ABS = $(abspath $(STRING_DIR))
+STRING_SRCS = $(HASH_SRC)/FStarC.Effect.fsti \
+  $(HASH_SRC)/FStarC.SmallInt.fsti $(HASH_SRC)/FStarC.SmallInt-c.cherry.fst \
+  $(HASH_SRC)/FStarC.String.fsti $(HASH_SRC)/FStarC.String-c.cherry.fst
+$(STRING_DIR)/CherryString.chran: string/CherryString.fst $(STRING_SRCS) $(FSTAR_EXE)
+	$(call msg, "CHERRY", CherryString)
+	$(Q)rm -rf $(STRING_ABS) && mkdir -p $(STRING_ABS)/src
+	$(Q)ln -s $(STRING_SRCS) $(STRING_ABS)/src/
+	$(Q)cd string && for f in $(addprefix $(STRING_ABS)/src/,$(notdir $(STRING_SRCS))) \
+	    CherryString.fst; do \
+	  $(FSTAR_EXE) --include $(STRING_ABS)/src --cache_dir $(STRING_ABS) \
+	    --warn_error -239 --cache_checked_modules --already_cached 'Prims FStar' $$f \
+	    > /dev/null || exit 1; done
+	$(Q)cd string && $(FSTAR_EXE) --include $(STRING_ABS)/src --cache_dir $(STRING_ABS) \
+	  --already_cached '*' --odir $(STRING_ABS) --codegen Cherry \
+	  --custard_main CherryString.main \
+	  CherryString.fst -o $(STRING_ABS)/CherryString.c > /dev/null
+	$(call msg, "CC-ASAN", CherryString)
+	$(Q)$(CHERRY_CC) -std=c11 -Wall -Wextra -Werror -g $(CHERRY_DEBUG) -fsanitize=address,undefined \
+	  -fno-sanitize-recover=undefined -I$(STRING_ABS) -I$(CHERRY_INC) \
+	  -x c $(STRING_ABS)/CherryString.c $(CHERRY_INC)/cherry.c \
+	  -o $(STRING_ABS)/CherryString.chexe
+	$(call msg, "RUN-ASAN", CherryString)
+	$(Q)ASAN_OPTIONS=detect_leaks=1 $(STRING_ABS)/CherryString.chexe
+	$(Q)touch $@
+
+all: $(STRING_DIR)/CherryString.chran
 
 # Debug mode (cherry.md): each program breaks a fact F* would have proved, in
 # code whose queries are admitted, and must abort with the message below.
