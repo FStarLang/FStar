@@ -2151,7 +2151,7 @@ let new_tac_implicit_var
       ctx_uvar_meta=meta;
   } in
   check_uvar_ctx_invariant reason r true gamma binders;
-  let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
+  let t = mk (Tm_uvar (ctx_uvar, {subst_lists=[]; subst_use_range=NoUseRange})) r in
   let imp = { imp_reason = reason
             ; imp_tm     = t
             ; imp_uvar   = ctx_uvar

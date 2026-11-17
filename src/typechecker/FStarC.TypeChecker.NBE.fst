@@ -453,7 +453,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
     | Tm_ascribed {tm=t} ->
       translate cfg bs t
 
-    | Tm_uvar (u, (subst, set_use_range)) ->
+    | Tm_uvar (u, s) ->
       let norm_uvar () =
         let norm_subst_elt = function
           | NT(x, t) ->
@@ -466,8 +466,8 @@ let rec translate (cfg:config) (bs:list t) (e:term) : ML t =
             | _ -> NT(x, t))
           | _ -> failwith "Impossible: subst invariant of uvar nodes"
         in
-        let subst = List.map (List.map norm_subst_elt) subst in
-        { e with n = Tm_uvar(u, (subst, set_use_range)) }
+        let subst = List.map (List.map norm_subst_elt) s.subst_lists in
+        { e with n = Tm_uvar(u, { s with subst_lists = subst }) }
       in
       mk_t <| Accu(UVar (Thunk.mk norm_uvar), [])
 

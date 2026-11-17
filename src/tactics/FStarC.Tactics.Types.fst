@@ -66,7 +66,7 @@ let set_proofstate_range ps r =
 let goal_env (g:goal) = g.goal_main_env
 let goal_range (g:goal) = g.goal_main_env.range
 let goal_witness (g:goal) : ML _ =
-    FStarC.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, ([], NoUseRange))) Range.dummyRange
+    FStarC.Syntax.Syntax.mk (Tm_uvar (g.goal_ctx_uvar, {subst_lists=[]; subst_use_range=NoUseRange})) Range.dummyRange
 let goal_type (g:goal) : ML _ = U.ctx_uvar_typ g.goal_ctx_uvar
 let goal_opts (g:goal) = g.opts
 

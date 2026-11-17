@@ -182,7 +182,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : ML eq_result =
       // updates should be done with care.
       equal_iff (eq_const c d)
 
-    | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
+    | Tm_uvar (u1, {subst_lists=[]}), Tm_uvar (u2, {subst_lists=[]}) ->
       equal_if (Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
 
     | Tm_app {hd=h1; arg=arg1}, Tm_app {hd=h2; arg=arg2} ->
