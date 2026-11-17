@@ -3873,6 +3873,17 @@ $(CHERRY_DIR)/CherryEtaValue.chgrep: $(CHERRY_DIR)/CherryEtaValue.chc
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryEtaValue.chgrep
 
+# Cherry: eta-reduction does not leave a definition returning a partial
+# application of a callee whose other arguments compute.
+CHERRY_TESTS += CherryEtaAtomic
+$(CHERRY_DIR)/CherryEtaAtomic.chgrep: $(CHERRY_DIR)/CherryEtaAtomic.chc
+	$(Q)grep -q '^static CherryEtaAtomic_cell CherryEtaAtomic_wrap(.*, cherry_int k) {$$' $< \
+	  || { echo "ERROR: CherryEtaAtomic_wrap lost a parameter"; exit 1; }
+	$(Q)! grep -q 'cherry_pap_CherryEtaAtomic_mk_node' $< \
+	  || { echo "ERROR: CherryEtaAtomic_wrap builds a partial application"; exit 1; }
+	$(Q)touch $@
+all: $(CHERRY_DIR)/CherryEtaAtomic.chgrep
+
 # Cherry: a [[@@@cherry_borrowed]] on an implementation binder holds when an
 # interface gives the type and the function is specialized.
 CHERRY_TESTS += CherryBorrowIface
