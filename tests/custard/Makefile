@@ -3790,6 +3790,8 @@ $(CHERRY_DIR)/CherryUnboxedUpdate.chgrep: $(CHERRY_DIR)/CherryUnboxedUpdate.chc
 	  || { echo "ERROR: CherryUnboxedUpdate's C output has no upd"; exit 1; }
 	$(Q)! awk "/CherryUnboxedUpdate_upd\\(.*\\{\$$/,/^}/" $< | grep -q 'cherry_inc\|cherry_dec' \
 	  || { echo "ERROR: CherryUnboxedUpdate's upd counts a field"; exit 1; }
+	$(Q)awk "/CherryUnboxedUpdate_upd\\(.*\\{\$$/,/^}/" $< | grep -q 'memcpy' \
+	  || { echo "ERROR: CherryUnboxedUpdate's upd does not copy the record"; exit 1; }
 	$(Q)touch $@
 all: $(CHERRY_DIR)/CherryUnboxedUpdate.chgrep
 

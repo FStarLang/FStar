@@ -2252,7 +2252,35 @@ let record_updates (p:program) : ML program =
         match fa with
         | (f, { e = EProj ({ e = EVar x; ty = t }, _, g) }) when g = f && t = e.ty -> Some x
         | _ -> None in
+      let rfs = (match HashTable.try_find !record_tbl (string_of_name rn) with Some fs -> fs | None -> []) in
+      (* Whether [a] reads [x] only through fields of a plain type. *)
+      let rec plain_reads (x:string) (a:expr) : ML bool =
+        match a.e with
+        | EProj ({ e = EVar y }, _, g) when y = x ->
+          (match List.tryFind (fun (f, _) -> f = g) rfs with
+           | Some (_, t) -> not (is_np t)
+           | None -> false)
+        | EVar y -> y <> x
+        | _ -> let ok = mk_ref true in
+               ignore (map_children (fun c -> (if not (plain_reads x c) then ok := false); c) a);
+               !ok in
       (match List.tryFind Some? (List.map src fes) with
+       | Some (Some x)
+           when List.length fes = List.length rfs &&
+                (let nk = List.length (List.filter (fun fa -> src fa = Some x) fes) in
+                 2 * nk >= List.length fes) &&
+                fes |> List.for_all (fun fa -> src fa = Some x || plain_reads x (snd fa)) ->
+         (* Most fields kept, and the new values read no counted field of
+            [x]: an in-place [Update] of a copy of [x], which C compiles to a
+            block copy and a store per new value. *)
+         let changed = rfs |> List.mapi (fun i (f, _) -> (i, f)) |> List.collect (fun (i, f) ->
+                         match List.tryFind (fun (g, _) -> g = f) fes with
+                         | Some fa when src fa <> Some x -> [(i, snd fa)]
+                         | _ -> []) in
+         if List.length changed + List.length (List.filter (fun fa -> src fa = Some x) fes) <> List.length fes
+         then e else
+         { e with e = EOp ({ po_op = Update (rn, List.map fst changed); po_ty = None },
+                           mk (EVar x) e.ty E_Pure :: List.map snd changed) }
        | Some (Some x) ->
          let fes = fes |> List.map (fun (f, a) ->
                      (f, a, (if src (f, a) = Some x then Inl (name ()) else Inr (name ())))) in
@@ -2274,7 +2302,6 @@ let record_updates (p:program) : ML program =
          List.iter occ changed;
          let inner = not (List.mem "" !read) &&
                      List.for_all (fun a -> raw a = count a) changed in
-         let rfs = (match HashTable.try_find !record_tbl (string_of_name rn) with Some fs -> fs | None -> []) in
          let extra = if not inner then [] else
                      !read |> List.collect (fun g ->
                        if fes |> List.existsb (fun (f, _, v) -> f = g && Inl? v) then [] else

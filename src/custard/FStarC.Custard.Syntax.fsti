@@ -437,7 +437,9 @@ type op =
       constructor [c], and the values [vs], and returns a cell of [c] with
       the fields at the positions [is] (ascending) replaced by [vs] and the
       others as in [x]: [x] itself if it is unique, which loses the fields
-      it replaces, and otherwise a copy, with its fields counted. *)
+      it replaces, and otherwise a copy, with its fields counted.  When [c]
+      names an unboxed record, [x] is that record, and the result a copy of
+      it with the fields at [is] released and replaced. *)
   | Update of name & list int
   (** Cherry: an operation on an immutable array ([FStar.ImmutableArray.Base.t],
       which Cherry represents as a counted cell), named as in that module:

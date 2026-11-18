@@ -3966,7 +3966,28 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
          ind ^ fld ^ " = " ^ v ^ ";\n") in
        !out ++ typed_local ind e.ty u (Some (cell_unshare dt cn ^ "(" ^ x ^ ")")) ++
        CText (String.concat "" sets) ++ finish ind d u
-     | None -> failwith "Cherry: update of an unknown constructor")
+     | None ->
+     match find_type cn with
+     | Some { dt_body = TRecord fs } ->
+       (* An unboxed record: a copy of [x] with the new values stored.  The
+          copy is a [memcpy], which compilers keep a block copy, where a
+          struct assignment gets split into its fields. *)
+       let out = mk_ref empty_body in
+       let x = c_expr out ind a in
+       let vals = vs |> List.map (fun (v:expr) -> c_rvalue out ind v.ty v) in
+       let u = fresh "u" in
+       let init =
+         if is_lvalue a && not (binds_by_ref e.ty)
+         then typed_local ind e.ty u None ++
+              CText (ind ^ "memcpy(&" ^ u ^ ", &" ^ x ^ ", sizeof " ^ u ^ ");\n")
+         else typed_local ind e.ty u (Some x) in
+       let sets = List.zip is vals |> List.map (fun (i, v) ->
+         let (f, t) = List.nth fs i in
+         let fld = u ^ "." ^ c_var f in
+         (if is_nonplain_ty t then ind ^ rc_call "dec" t fld ^ ";\n" else "") ^
+         ind ^ fld ^ " = " ^ v ^ ";\n") in
+       !out ++ init ++ CText (String.concat "" sets) ++ finish ind d u
+     | _ -> failwith "Cherry: update of an unknown constructor")
 
   (* Exceptions (cherry.md, "Exceptions"). *)
   | EOp ({ po_op = ExnRaise }, [a]) ->
