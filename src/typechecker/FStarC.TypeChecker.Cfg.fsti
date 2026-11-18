@@ -36,6 +36,10 @@ open FStarC.Class.Deq
 module S  = FStarC.Syntax.Syntax
 module I  = FStarC.Ident
 
+(* 176 bytes unboxed, and built by a fold over the steps of every
+   normalizer call: boxed under Cherry, so that the fold updates one cell in
+   place rather than copying the record in and out of each step. *)
+[@@FStar.Attributes.cherry_boxed]
 type fsteps = {
      beta : bool;
      iota : bool;
