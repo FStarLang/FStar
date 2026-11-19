@@ -19,6 +19,15 @@ CUSTARD_KRML_C += Null
 
 include $(PULSE_ROOT)/mk/custard-test.mk
 
+# Documentation comments on Pulse declarations: the JSON index of a module,
+# read out of its checked file, compared against PulseDocs.docs.json.expected.
+# Source ranges appear in it, so keep absolute paths out.
+OTHERFLAGS += --ext fstar:no_absolute_paths
+
+$(OUTPUT_DIR)/%.docs.json: $(CACHE_DIR)/%.fst.checked
+	$(call msg, "EXPORT_DOCS", $(basename $(notdir $<)))
+	$(FSTAR) --export_docs $< > $@
+
 # Pulse compiles [goto], [break] and [return] into a flag that the code after
 # the jump tests, and the last write to that flag is by construction never
 # read -- as is the write to a local the jump skips over.  A C compiler is

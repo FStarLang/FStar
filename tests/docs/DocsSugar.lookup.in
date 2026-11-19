@@ -1,0 +1,5 @@
+{"query-id": "1", "query": "push", "args": {"kind": "lax", "code": "module DocsSugar\n", "line": 1, "column": 0}}
+{"query-id": "2", "query": "push", "args": {"kind": "lax", "code": "(*| Doubles 'x'. *)\nlet double (x:int) : int = x + x\n", "line": 2, "column": 0}}
+{"query-id": "3", "query": "push", "args": {"kind": "lax", "code": "(** An ordinary comment, not documentation. *)\nlet quadruple (x:int) : int = 4 * x\n", "line": 4, "column": 0}}
+{"query-id": "4", "query": "lookup", "args": {"context": "code", "symbol": "DocsSugar.double", "requested-info": ["documentation"]}}
+{"query-id": "5", "query": "lookup", "args": {"context": "code", "symbol": "DocsSugar.quadruple", "requested-info": ["documentation"]}}
