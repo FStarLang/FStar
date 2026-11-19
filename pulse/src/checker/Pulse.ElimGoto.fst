@@ -137,6 +137,13 @@ the previous result value is stored in `cond.result` instead.
 *)
 let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option st_term) =
   match t.term with
+  // Conditionalization only knows checked lexical jumps. Interpreting raw
+  // exception syntax here would bypass payload/ownership and cleanup checks;
+  // Exceptions must have lowered it to labels, gotos, and outcome matches.
+  | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+    fail g (Some t.range) "Internal error: exceptions must be checked before eliminating jumps"
+  | Tm_NativeRaise _ | Tm_NativeScope _ | Tm_NativeTry _ ->
+    fail g (Some t.range) "Internal error: native exceptions require native jump extraction"
   | Tm_Return ..
   | Tm_Abs ..
   | Tm_IntroPure ..
@@ -316,15 +323,22 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
     match conditionalize g body cond, conditionalize g handler cond with
     | None, None -> None
     | Some body, None ->
-      Some { t with term = Tm_Defer { handler_pre; handler = add_write_if_necessary g handler cond; body } }
+      Some { t with term = Tm_Defer { result_ty=tm_unit; handler_pre; handler = add_write_if_necessary g handler cond; body } }
     | None, Some handler ->
-      Some { t with term = Tm_Defer { handler_pre; handler; body = add_write_if_necessary g body cond } }
+      Some { t with term = Tm_Defer { result_ty=tm_unit; handler_pre; handler; body = add_write_if_necessary g body cond } }
     | Some body, Some handler ->
-      Some { t with term = Tm_Defer { handler_pre; handler; body } }
+      Some { t with term = Tm_Defer { result_ty=tm_unit; handler_pre; handler; body } }
   )
 
 let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
   match t.term with
+  // Enforce the same phase boundary even when no enclosing label invokes
+  // conditionalize. A residual exception node is a checker bug, not an
+  // unsupported runtime exception to silently retain for extraction.
+  | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+    fail g (Some t.range) "Internal error: exceptions must be checked before eliminating jumps"
+  | Tm_NativeRaise _ | Tm_NativeScope _ | Tm_NativeTry _ ->
+    fail g (Some t.range) "Internal error: native exceptions require native jump extraction"
   | Tm_Return ..
   | Tm_IntroPure ..
   | Tm_ElimExists ..
@@ -393,10 +407,10 @@ let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
     { t with term = Tm_WithLocalArray { binder; initializer; length; body } }
   | Tm_ProofHintWithBinders { hint_type; binders; t } ->
     T.fail "elim_gotos: Unexpected constructor: ProofHintWithBinders should have been desugared away"
-  | Tm_Defer { handler_pre; handler; body } ->
+  | Tm_Defer { result_ty; handler_pre; handler; body } ->
     let handler = elim_gotos g handler in
     let body = elim_gotos g body in
-    { t with term = Tm_Defer { handler_pre; handler; body } }
+    { t with term = Tm_Defer { result_ty; handler_pre; handler; body } }
   | Tm_ForwardJumpLabel { lbl; body; post } ->
     let cond_var = fresh g in
     let g' = push_goto g cond_var lbl (goto_comp_of_block_comp post) in

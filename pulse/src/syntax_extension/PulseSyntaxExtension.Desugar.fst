@@ -131,6 +131,7 @@ let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : ML (err S
   let enss  = filter (fun (a, _) -> Ensures?  a) cs in
   let rets  = filter (fun (a, _) -> Returns?  a) cs in
   let opens = filter (fun (a, _) -> Opens?    a) cs in
+  let raises = filter (fun (a, _) -> Raises? a) cs in
 
   // let reqs  = choose (function (Sugar.Requires t, _) -> Some t | _ -> None) cs in
   // let enss  = choose (function (Sugar.Ensures  t, _) -> Some t | _ -> None) cs in
@@ -179,6 +180,12 @@ let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : ML (err S
       else
         check_order cs req ret ens
   in
+  let! raises =
+    match raises with
+    | [] -> return None
+    | [(Raises t, _)] -> return (Some t)
+    | _::(_,r)::_ -> fail "Multiple raises clauses are not allowed." r
+  in
   check_order cs false false false;!
   return {
     precondition = req;
@@ -186,7 +193,28 @@ let parse_annots (r:Range.range) (cs : list Sugar.computation_annot) : ML (err S
     return_name = return_name;
     return_type = return_type;
     opens = opens;
+    raises = raises;
   }
+
+let without_raises (c:Sugar.computation_type) =
+  { c with annots=List.Tot.filter (fun (a, _) -> not (Sugar.Raises? a)) c.annots }
+
+let lower_raises (c:Sugar.computation_type) : ML (err Sugar.computation_type) =
+  let! a = parse_annots c.range c.annots in
+  match a.Sugar.raises with
+  | None -> return c
+  | Some exceptional ->
+    if c.tag <> Sugar.ST && c.tag <> Sugar.STDiv then
+      fail "raises is not allowed in ghost or atomic computations" c.range
+    else
+      let name, ty, post = Sugar.outcome_spec c.range a.Sugar.return_name a.Sugar.return_type a.Sugar.postcondition exceptional in
+      let annots = [
+        Sugar.Requires a.Sugar.precondition, c.range;
+        Sugar.Returns (Some name, ty), c.range;
+        Sugar.Ensures post, c.range
+      ] in
+      let annots = match a.Sugar.opens with None -> annots | Some t -> (Sugar.Opens t, c.range)::annots in
+      return { c with annots }
 
 let as_term (t:S.term)
   : term
@@ -199,7 +227,8 @@ let as_term (t:S.term)
 let comp_to_ast_term (c:Sugar.computation_type) : ML (err A.term) =
   let open Sugar in
   let open FStarC.Parser.AST in
-  let! annots = parse_annots c.range c.annots in
+  let! c : Sugar.computation_type = lower_raises c in
+  let! annots : Sugar.parsed_annots = parse_annots c.range c.annots in
   let return_ty = annots.return_type in
   let r = c.range in
   let head =
@@ -361,6 +390,7 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : ML (err comp)
   = //let! pres = map_err (desugar_slprop env) c.preconditions in
     //let pre = fold_right1 (fun a b -> tm_star a b c.range) pres in
+    let! c : Sugar.computation_type = lower_raises c in
     let! annots = parse_annots c.range c.annots in
     let! pre = desugar_slprop_annot env annots.Sugar.precondition c.literally in
 
@@ -736,6 +766,34 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let! arg : S.term = tosyntax env arg in
       return (swr (PSBuild.tm_goto lbl arg) s.range)
 
+    | Raise { arg } ->
+      let! arg = desugar_term env arg in
+      return (swr (Tm_Raise { arg }) s.range)
+
+    | Try { contract; body; handlers } ->
+      let! a = parse_annots contract.range contract.annots in
+      let! exceptional =
+        match a.Sugar.raises with
+        | None -> fail "try requires an explicit raises contract for its protected body" s.range
+        | Some r -> desugar_term env r
+      in
+      if List.Tot.existsb (fun (a, _) -> Requires? a || Preserves? a || Opens? a) contract.annots then
+        fail "try supports returns, ensures, and raises annotations; its precondition is the current context" s.range
+      else return ();!
+      let! normal = desugar_computation_type env (without_raises contract) in
+      let! body = desugar_stmt env body in
+      let payload = Ident.gen' "caught" s.range in
+      let env', bv = push_bv env payload in
+      let payload_term = PSP.term_of_nvar (ppname_of_id payload, bv.index) in
+      let! handlers = handlers |> mapM (desugar_branch env') in
+      let fallback = mk_branch (pat_var "_" s.range)
+        (swr (Tm_Raise {arg=payload_term}) s.range) false in
+      let handler = swr (Tm_Match {
+        sc=swr (PSBuild.tm_return PSP.tm_unknown false payload_term) s.range;
+        returns_=None; brs=handlers@[fallback] }) s.range in
+      let handler = PSN.close_st_term handler bv.index in
+      return (swr (Tm_Try { normal; exceptional; body; handler }) s.range)
+
     | Defer { handler_pre; defer_handler } ->
       fail "defer must be followed by a body (use defer pre { handler }; body)" s.range
 
@@ -1019,9 +1077,23 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
     in
     let body = { body with s = Sugar.ForwardJumpLabel { body; lbl = id_of_text "_return"; post = None } } in
     let! body = desugar_stmt env body in
+    let! body = wrap_exception_body env ascription body range in
     let! qbs = map2 faux bs bvs in
     let abs = mk_abs_with_comp qbs comp body range in
     return abs
+
+and wrap_exception_body (env:env_t) (ascription:option Sugar.computation_type) (body:st_term) range
+  : ML (err st_term) =
+  match ascription with
+  | None -> return body
+  | Some c ->
+    let! a = parse_annots c.range c.annots in
+    match a.Sugar.raises with
+    | None -> return body
+    | Some r ->
+      let! normal = desugar_computation_type env (without_raises c) in
+      let! exceptional = desugar_term env r in
+      return (swr (Tm_ExceptionScope { normal; exceptional; body }) range)
 
 and as_qual (env:env_t) (q:A.aqual) rng : ML (err qual) =
   match q with
@@ -1059,6 +1131,7 @@ let desugar_decl (env:env_t) (d:Sugar.decl)
     in
     let body = { body with s = Sugar.ForwardJumpLabel { body; lbl = id_of_text "_return"; post = None } } in
     let! body = desugar_stmt env body in
+    let! body = wrap_exception_body env (Some ascription) body range in
     let! qbs = map2 faux bs bvs in
     return (fn_defn range id is_rec us qbs comp meas body)
 

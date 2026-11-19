@@ -25,6 +25,20 @@ open FStarC.Syntax.Syntax
 
 let p2l l = lid_of_path l dummyRange
 let extract_as_lid = p2l ["FStar"; "ExtractAs"; "extract_as"]
+let extraction_error_lid = p2l ["FStar"; "ExtractAs"; "extraction_error"]
+
+let check_extraction_error (se:sigelt) : ML unit =
+  List.iter (fun attr ->
+    let head, args = Syntax.Util.head_and_args_full attr in
+    match (Subst.compress head).n, args with
+    | Tm_fvar fv, [(message, _)] when Syntax.fv_eq_lid fv extraction_error_lid ->
+      let message =
+        match (Subst.compress message).n with
+        | Tm_constant (Const_string (message, _)) -> message
+        | _ -> "Cannot extract a definition marked with extraction_error"
+      in
+      Errors.raise_error_text se.sigrng Errors.Fatal_ExtractionUnsupported message
+    | _ -> ()) se.sigattrs
 
 let is_extract_as_attr (attr: attribute) : ML (option term) =
   let head, args = Syntax.Util.head_and_args_full attr in
@@ -34,4 +48,3 @@ let is_extract_as_attr (attr: attribute) : ML (option term) =
     | Tm_quoted(impl, _) -> Some impl
     | _ -> None)
   | _ -> None
-

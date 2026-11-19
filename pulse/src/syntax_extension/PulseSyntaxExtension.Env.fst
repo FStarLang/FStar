@@ -149,6 +149,7 @@ let free_vars_annot (env:env_t) (a:Sugar.computation_annot) : ML _ =
   match fst a with
   | Requires t -> free_vars_slprop env t
   | Ensures t -> free_vars_slprop env t
+  | Raises t -> free_vars_term env t
   | Returns (None, t) -> free_vars_term env t
   | Returns (_, t) -> free_vars_term env t
   | Opens t -> free_vars_term env t
@@ -159,6 +160,7 @@ let free_vars_comp (env:env_t) (c:Sugar.parsed_annots)
         free_vars_slprop env c.precondition @
         free_vars_term env c.return_type @
         free_vars_slprop (fst (push_bv env c.return_name)) c.postcondition @
+        (match c.raises with Some r -> free_vars_term env r | None -> []) @
         (match c.opens with
          | Some o -> free_vars_term (fst (push_bv env c.return_name)) o
          | None -> [])

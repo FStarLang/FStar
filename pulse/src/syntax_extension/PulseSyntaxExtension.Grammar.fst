@@ -70,6 +70,7 @@ let keywords : list string = [
   "continue";
   "break";
   "defer";
+  "raises";
 ]
 
 let rewrite_token (t:L.token) : ML L.token =
@@ -175,7 +176,7 @@ let p_returns (ps:pstate) : ML computation_annot' =
 
 let is_annot_start (ps:pstate) : ML bool =
   let k = peek_kind ps in
-  k = KEYWORD "preserves" || k = REQUIRES || k = ENSURES || k = RETURNS || k = KEYWORD "opens"
+  k = KEYWORD "preserves" || k = REQUIRES || k = ENSURES || k = RETURNS || k = KEYWORD "opens" || k = KEYWORD "raises"
 
 (* pulseComputationAnnot1 *)
 let p_annot (ps:pstate) : ML computation_annot =
@@ -185,6 +186,7 @@ let p_annot (ps:pstate) : ML computation_annot =
     | KEYWORD "preserves" -> ignore (advance ps); Preserves (p_slprop ps)
     | REQUIRES -> ignore (advance ps); Requires (p_slprop ps)
     | ENSURES -> ignore (advance ps); Ensures (p_slprop ps)
+    | KEYWORD "raises" -> ignore (advance ps); Raises (p_appTermNoRecordExp ps)
     | RETURNS -> p_returns ps
     | KEYWORD "opens" -> ignore (advance ps); Opens (p_appTermNoRecordExp ps)
     | _ -> fail ps
@@ -246,6 +248,16 @@ let build_fn_type_term (bs:list binder) (comp:computation_type) (r:R.range) : ML
   let ret_name = match ret_info with Some (Some id, _) -> id | _ -> mk_ident ("_", r) in
   let pre = star_join reqs in
   let post = star_join enss in
+  let raises = filter_map (function Raises t -> Some t | _ -> None) annots in
+  let ret_name, ret_ty, post =
+    match raises with
+    | [] -> ret_name, ret_ty, post
+    | [exceptional] ->
+      if comp.tag <> ST && comp.tag <> STDiv then
+        syntax_error r "raises is not allowed in ghost or atomic computations";
+      S.outcome_spec r ret_name ret_ty post exceptional
+    | _ -> syntax_error r "Multiple raises clauses are not allowed"
+  in
   let post_pat = mk_pattern (PatVar (ret_name, None, [])) r in
   let post_lam = mk_term (Abs ([post_pat], post)) r Un in
   let stt_name =
@@ -423,6 +435,9 @@ and p_let_init (ps:pstate) : ML let_init =
       match attempt ps (fun () -> p_if ps) with
       | Some s -> Stmt_initializer (mk_stmt s (loc ps i0))
       | None -> default_init ps
+    else if is ps TRY then
+      let s = p_stmt_noseq ps in
+      Stmt_initializer (mk_stmt s (loc ps i0))
     else if accept ps LBRACK_BAR then begin
       let v = p_noSeqTerm ps in
       if accept ps SEMICOLON then begin
@@ -564,6 +579,24 @@ and p_stmt_noseq (ps:pstate) : ML stmt' =
     ignore (advance ps);
     let lbl = p_lident ps in
     mk_goto lbl (opt_noSeqTerm ps)
+  | IDENT when (peek ps).text = "raise" ->
+    ignore (advance ps);
+    Raise { arg=p_noSeqTerm ps }
+  | TRY ->
+    ignore (advance ps);
+    let contract = p_comp_type ps in
+    let body = p_braced_stmt ps in
+    let catch_token = expect ps IDENT in
+    if catch_token.text <> "catch" then
+      syntax_error (tok_rng ps catch_token) "Expected catch after the protected block";
+    ignore (expect ps LBRACE);
+    let rec handlers () : ML (list (bool & pattern & stmt)) =
+      if is ps RBRACE then []
+      else let b = p_match_branch ps in b :: handlers ()
+    in
+    let hs = handlers () in
+    ignore (expect ps RBRACE);
+    Try { contract; body; handlers=hs }
   | KEYWORD "defer" ->
     ignore (advance ps);
     let pre = p_appTermNoRecordExp ps in

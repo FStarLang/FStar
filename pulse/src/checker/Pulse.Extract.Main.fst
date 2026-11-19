@@ -37,6 +37,51 @@ module RU = Pulse.RuntimeUtils
 //
 module ECL = Pulse.Extract.CompilerLib
 
+// Checked native nodes preserve the control structure that must bypass
+// ElimGoto. The reserved result type also identifies automatically unwrapped
+// calls, including calls whose exceptional post is False. Inspect before
+// simplification, and keep ordinary outcome data on the non-native path.
+let rec uses_native_exceptions (p:st_term) : Tot bool =
+  let native ty = Some? (Pulse.Checker.Exceptions.outcome_types ty) in
+  match p.term with
+  | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ -> true
+  | Tm_NativeRaise _ | Tm_NativeScope _ | Tm_NativeTry _ -> true
+  | Tm_ForwardJumpLabel { body; post } ->
+    native (comp_res post) || uses_native_exceptions body
+  | Tm_Return { expected_type } -> native expected_type
+  | Tm_Abs { body }
+  | Tm_TotBind { body }
+  | Tm_WithLocal { body }
+  | Tm_WithLocalArray { body }
+  | Tm_PragmaWithOptions { body } -> uses_native_exceptions body
+  | Tm_Bind { binder; head; body } ->
+    native binder.binder_ty ||
+    uses_native_exceptions head || uses_native_exceptions body
+  | Tm_ST { args } -> uses_native_exceptions_list args
+  | Tm_If { b; then_; else_ } ->
+    uses_native_exceptions b ||
+    uses_native_exceptions then_ || uses_native_exceptions else_
+  | Tm_Match { sc; brs } ->
+    uses_native_exceptions sc ||
+    uses_native_exceptions_branches brs
+  | Tm_While { condition; body } ->
+    uses_native_exceptions condition || uses_native_exceptions body
+  | Tm_Defer { handler; body } ->
+    uses_native_exceptions handler || uses_native_exceptions body
+  | Tm_ProofHintWithBinders { t } -> uses_native_exceptions t
+  | Tm_IntroPure _ | Tm_ElimExists _ | Tm_IntroExists _
+  | Tm_Rewrite _ | Tm_Admit _ | Tm_Unreachable _ | Tm_Goto _ -> false
+
+and uses_native_exceptions_list (ps:list st_term) : Tot bool =
+  match ps with
+  | [] -> false
+  | p::ps -> uses_native_exceptions p || uses_native_exceptions_list ps
+
+and uses_native_exceptions_branches (bs:list branch) : Tot bool =
+  match bs with
+  | [] -> false
+  | b::bs -> uses_native_exceptions b.e || uses_native_exceptions_branches bs
+
 let name = ppname & nat
 
 let debug (g:env) (f: unit -> T.Tac string)
@@ -162,6 +207,17 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   let with_open b e = with_open g b e simplify_st_term in
 
   match e.term with
+  // Exception checking must precede simplification. Only the resulting
+  // outcome matches/lexical jumps may be simplified; dropping an unchecked
+  // scope or clause here could hide an unproved exceptional resource transfer.
+  | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+    T.fail "Internal error: unchecked exception syntax in simplification"
+  | Tm_NativeRaise _ -> e
+  | Tm_NativeScope { body } -> ret (Tm_NativeScope { body=simplify_st_term g body })
+  | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+    let b = mk_binder_ppname exn_ty ppname_default in
+    ret (Tm_NativeTry { exn_ty; result_ty;
+                       body=simplify_st_term g body; handler=with_open b handler })
   | Tm_Return _
   | Tm_IntroPure _
   | Tm_ElimExists _
@@ -172,8 +228,8 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_Goto _
   | Tm_ProofHintWithBinders _ -> e
 
-  | Tm_Defer { handler_pre; handler; body } ->
-    ret (Tm_Defer { handler_pre; handler = simplify_st_term g handler; body = simplify_st_term g body })
+  | Tm_Defer { result_ty; handler_pre; handler; body } ->
+    ret (Tm_Defer { result_ty; handler_pre; handler = simplify_st_term g handler; body = simplify_st_term g body })
 
   | Tm_Abs { b; q; ascription; body } ->
     ret (Tm_Abs { b; q; ascription; body = with_open b body })
@@ -267,6 +323,16 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
   then unit_tm
   else begin
     match p.term with
+    // Native exceptions are stateful, not proof annotations to erase. Their
+    // unchecked syntax has no extraction meaning; its contracts must already
+    // have been discharged and its control flow lowered by Exceptions.
+    | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+      T.fail "Internal error: unchecked exception syntax in erasure"
+    | Tm_NativeRaise _ -> p
+    | Tm_NativeScope { body } -> ret (Tm_NativeScope { body=erase_ghost_subterms g body })
+    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+      ret (Tm_NativeTry { exn_ty; result_ty; body=erase_ghost_subterms g body;
+                         handler=open_erase_close g (mk_binder_ppname exn_ty ppname_default) handler })
     | Tm_IntroPure _
     | Tm_ElimExists _
     | Tm_IntroExists _ 
@@ -339,8 +405,8 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
 
     | Tm_Goto _ -> p
 
-    | Tm_Defer { handler_pre; handler; body } ->
-      ret (Tm_Defer { handler_pre; handler = erase_ghost_subterms g handler; body = erase_ghost_subterms g body })
+    | Tm_Defer { result_ty; handler_pre; handler; body } ->
+      ret (Tm_Defer { result_ty; handler_pre; handler = erase_ghost_subterms g handler; body = erase_ghost_subterms g body })
       
   end
 
@@ -427,10 +493,56 @@ let unit_binder (ppname: string) =
 let small_type0 = tm_constant R.C_Unit
 
 open Pulse.Syntax.Naming
-let rec extract_dv g (p:st_term) : T.Tac R.term =
+let runtime_binder ty name =
+  R.pack_binder { sort=ty; ppname=T.seal name; attrs=[]; qual=R.Q_Explicit }
+
+let runtime_app name tys args =
+  R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv name)))
+    (L.map (fun t -> t, R.Q_Implicit) tys @ L.map (fun t -> t, R.Q_Explicit) args)
+
+let runtime_bv0 = tm_bvar { bv_index=0; bv_ppname=ppname_default }
+let runtime_exn = R.pack_ln (R.Tv_FVar (R.pack_fv ["Prims"; "exn"]))
+let runtime_dyn = R.pack_ln (R.Tv_FVar (R.pack_fv ["FStar"; "Dyn"; "dyn"]))
+let runtime_raise ty arg =
+  ECL.mk_meta_monadic (runtime_app ["FStar"; "All"; "raise"] [ty] [arg])
+let runtime_seq head body =
+  // Callers keep surrounding binders opened as named variables.
+  ECL.mk_let (runtime_binder ECL.unit_ty "_cleanup") head body
+let runtime_try ty body handler =
+  ECL.mk_meta_monadic (runtime_app ["FStar"; "All"; "try_with"] [ty]
+    [mk_abs (unit_binder "_try") body; handler])
+
+let rec extract_dv native g (p:st_term) : T.Tac R.term =
   if is_erasable p then ECL.mk_return ECL.unit_tm
   else begin
     match p.term with
+    // Do not map source raise/try directly to host-language exceptions. The
+    // checker has selected lexical destinations and accounted for cleanup;
+    // extraction consumes that checked lowering, not a second exception model.
+    | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
+      T.fail "Internal error: unchecked exception syntax in extraction"
+    | Tm_NativeRaise { exn_ty; result_ty; arg } ->
+      let packed = runtime_app ["FStar"; "Dyn"; "mkdyn"] [exn_ty] [arg] in
+      runtime_raise result_ty
+        (runtime_app ["Pulse"; "Lib"; "NativeExceptions"; "NativeException"] [] [packed])
+    | Tm_NativeScope { body } -> extract_dv native g body
+    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+      let body = extract_dv native g body in
+      let b = mk_binder_ppname exn_ty ppname_default in
+      let g', payload = extend_env'_binder g b in
+      let handler = extract_dv native g' (open_st_term_nv handler payload) in
+      let unpack = runtime_app ["FStar"; "Dyn"; "undyn"] [exn_ty] [runtime_bv0] in
+      let handler = ECL.mk_let (extract_dv_binder b None) unpack (close_term handler payload._2) in
+      // Only Pulse's payload channel is caught. Lexical returns/breaks and
+      // foreign host exceptions must unwind through this handler unchanged.
+      let branches = [
+        R.Pat_Cons (R.pack_fv ["Pulse"; "Lib"; "NativeExceptions"; "NativeException"]) None
+          [R.Pat_Var (T.seal runtime_dyn) (T.seal "_payload"), false], handler;
+        R.Pat_Var (T.seal runtime_exn) (T.seal "_other"),
+          runtime_raise result_ty runtime_bv0
+      ] in
+      runtime_try result_ty body
+        (mk_abs (runtime_binder runtime_exn "_caught") (R.pack_ln (R.Tv_Match runtime_bv0 None branches)))
     | Tm_IntroPure _
     | Tm_ElimExists _
     | Tm_IntroExists _ 
@@ -440,7 +552,7 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
     | Tm_Abs { b; q; body } ->
       let b' = extract_dv_binder b q in
       let g, x = extend_env'_binder g b in
-      let body = extract_dv g (open_st_term_nv body x) in
+      let body = extract_dv native g (open_st_term_nv body x) in
       mk_abs b' (close_term body x._2)
 
     | Tm_Return { term } -> ECL.mk_return term
@@ -449,9 +561,9 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
 
     | Tm_Bind { binder; head; body } ->
       let b' = extract_dv_binder binder None in
-      let e1 = extract_dv g head in
+      let e1 = extract_dv native g head in
       let g, x = extend_env'_binder g binder in
-      let body = extract_dv g (open_st_term_nv body x) in
+      let body = extract_dv native g (open_st_term_nv body x) in
       if Tm_Abs? head.term then
         // Create a pure let binding for inner functions.
         // This allow extraction to remove them if they're not used,
@@ -464,26 +576,26 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       let b' = extract_dv_binder binder None in
       let e1 = ECL.mk_return head in
       let g, x = extend_env'_binder g binder in
-      let e2 = extract_dv g (open_st_term_nv body x) in
+      let e2 = extract_dv native g (open_st_term_nv body x) in
       ECL.mk_let b' e1 (close_term e2 x._2)
 
     | Tm_If { b; then_; else_ } ->
       let b = (match b.term with
                | Tm_Return { term } -> term
-               | _ -> extract_dv g b) in
-      let then_ = extract_dv g then_ in
-      let else_ = extract_dv g else_ in
+               | _ -> extract_dv native g b) in
+      let then_ = extract_dv native g then_ in
+      let else_ = extract_dv native g else_ in
       ECL.mk_if b then_ else_
 
     | Tm_Match { sc; brs } ->
       let sc = (match sc.term with
                 | Tm_Return { term } -> term
-                | _ -> extract_dv g sc) in
-      R.pack_ln (R.Tv_Match sc None (T.map (extract_dv_branch g) brs))
+                | _ -> extract_dv native g sc) in
+      R.pack_ln (R.Tv_Match sc None (T.map (extract_dv_branch native g) brs))
 
     | Tm_While { condition; body } ->
-      let condition = extract_dv g condition in
-      let body = extract_dv g body in
+      let condition = extract_dv native g condition in
+      let body = extract_dv native g body in
       ECL.mk_meta_monadic
         (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "while_"])))
           [mk_abs (unit_binder "while_cond") condition, R.Q_Explicit;
@@ -499,7 +611,7 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
             [get_type_of_ref binder.binder_ty, R.Q_Implicit; small_type0, R.Q_Explicit; ECL.unit_tm, R.Q_Explicit]
       in
       let g, x = extend_env'_binder g binder in
-      let body = extract_dv g (open_st_term_nv body x) in
+      let body = extract_dv native g (open_st_term_nv body x) in
       ECL.mk_let b' allocator (close_term body x._2)
 
     | Tm_WithLocalArray { binder; initializer; length; body } ->
@@ -517,7 +629,7 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
             [get_type_of_array binder.binder_ty, R.Q_Implicit; small_type0, R.Q_Explicit; length, R.Q_Explicit]
       in
       let g, x = extend_env'_binder g binder in
-      let body = extract_dv g (open_st_term_nv body x) in
+      let body = extract_dv native g (open_st_term_nv body x) in
       ECL.mk_let b' allocator (close_term body x._2)
 
     | Tm_Admit { typ } ->
@@ -529,7 +641,7 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
       ECL.mk_meta_monadic (R.mk_app (R.pack_ln (R.Tv_FVar (R.pack_fv ["Pulse"; "Lib"; "Dv"; "unreachable"])))
         [comp_res c, R.Q_Explicit; unit_tm, R.Q_Explicit])
 
-    | Tm_PragmaWithOptions { body } -> extract_dv g body
+    | Tm_PragmaWithOptions { body } -> extract_dv native g body
 
     | Tm_Goto { lbl; arg } ->
       let lblv: var =
@@ -540,54 +652,94 @@ let rec extract_dv g (p:st_term) : T.Tac R.term =
         match E.lookup_goto g lblv with
         | Some (name, c) -> name, st_comp_of_comp c
         | _ -> T.fail (Printf.sprintf "invalid goto, no matching block: %s" (show p)) in
-      ECL.mk_meta_monadic <|  
-        R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "goto"]) [c.u])) [
-          c.res, R.Q_Implicit;
-          tm_var { nm_index = lblv; nm_ppname = lbln }, R.Q_Explicit;
-          arg, R.Q_Explicit;
-        ]
+      let call = ECL.mk_meta_monadic (R.mk_app (tm_var { nm_index=lblv; nm_ppname=lbln }) [arg, R.Q_Explicit]) in
+      // The label function's ABI returns unit, but a jump's continuation has
+      // any result type. It cannot run: every label function throws.
+      runtime_seq call (ECL.mk_meta_monadic
+        (runtime_app ["Pulse"; "Lib"; "Dv"; "unreachable"] [] [tm_unknown; ECL.unit_tm]))
     
     | Tm_ForwardJumpLabel { lbl; body; post } ->
-      let x = fresh g in
-      let g' = E.push_goto g x lbl post in
-      let body = extract_dv g' (open_st_term_nv body (lbl, x)) in
-      let post = st_comp_of_comp post in
-      ECL.mk_meta_monadic <|
-        R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "forward_jump_label"]) [post.u])) [
-          post.res, R.Q_Implicit;
-          R.pack_ln (R.Tv_Abs (R.pack_binder {
-            sort = R.mk_app (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Dv"; "goto_label"]) [post.u]))
-              [post.res, R.Q_Explicit];
-            qual = R.Q_Explicit;
-            attrs = [];
-            ppname = lbl.name;
-          }) (close_term body x)), R.Q_Explicit;
-        ]
+      // A lexical jump carries its value in a scoped slot and throws on a
+      // separate channel. None initializes the slot safely even for managed
+      // Cherry values. Recursion is safe: each activation catches its own exit,
+      // and the checker forbids capturing a label across a function boundary.
+      let ty = comp_res post in
+      let option_ty = runtime_app ["FStar"; "Pervasives"; "Native"; "option"] [] [ty] in
+      let slot_b = mk_binder_ppname (Pulse.Typing.mk_ref option_ty) (mk_ppname_no_range "_jump_result") in
+      let g', slot = extend_env'_binder g slot_b in
+      let x = fresh g' in
+      let g' = E.push_goto g' x lbl post in
+      let body = extract_dv native g' (open_st_term_nv body (lbl, x)) in
+      let key = String.concat "." (T.cur_module ()) ^ "." ^ Printf.sprintf "%d" (RU.next_id ()) in
+      let key_tm = R.pack_ln (R.Tv_Const (R.C_String key)) in
+      let jump = runtime_app ["Pulse"; "Lib"; "NativeExceptions"; "ControlFlow"] [] [key_tm] in
+      let some = runtime_app ["FStar"; "Pervasives"; "Native"; "Some"] [ty] [runtime_bv0] in
+      let write = ECL.mk_meta_monadic
+        (runtime_app ["Pulse"; "Lib"; "Reference"; "write"] [option_ty] [term_of_nvar slot; some]) in
+      let label_fn = mk_abs (runtime_binder ty "_jump_value")
+        (runtime_seq write (runtime_raise ECL.unit_ty jump)) in
+      let label_ty = runtime_app ["Pulse"; "Lib"; "Dv"; "goto_label"] [] [ty] in
+      let body = ECL.mk_pure_let (R.pack_binder { sort=label_ty; ppname=lbl.name; attrs=[]; qual=R.Q_Explicit })
+        label_fn (close_term body x) in
+      let read = ECL.mk_meta_monadic (R.mk_app
+        (R.pack_ln (R.Tv_UInst (R.pack_fv ["Pulse"; "Lib"; "Reference"; "read"]) [u0]))
+        [option_ty, R.Q_Implicit; term_of_nvar slot, R.Q_Explicit;
+         ECL.unit_tm, R.Q_Implicit; tm_full_perm, R.Q_Implicit]) in
+      let missing = runtime_raise ty jump in
+      let value = R.pack_ln (R.Tv_Match read None [
+        R.Pat_Cons (R.pack_fv ["FStar"; "Pervasives"; "Native"; "Some"]) None
+          [R.Pat_Dot_Term (Some ty), true;
+           R.Pat_Var (T.seal ty) (T.seal "_result"), false], runtime_bv0;
+        R.Pat_Cons (R.pack_fv ["FStar"; "Pervasives"; "Native"; "None"]) None
+          [R.Pat_Dot_Term (Some ty), true], missing
+      ]) in
+      let handler = mk_abs (runtime_binder runtime_exn "_control")
+        (R.pack_ln (R.Tv_Match runtime_bv0 None [
+          R.Pat_Cons (R.pack_fv ["Pulse"; "Lib"; "NativeExceptions"; "ControlFlow"]) None
+            [R.Pat_Constant (R.C_String key), false], value;
+          R.Pat_Var (T.seal runtime_exn) (T.seal "_other"), runtime_raise ty runtime_bv0
+        ])) in
+      let body = runtime_try ty body handler in
+      let initial = runtime_app ["FStar"; "Pervasives"; "Native"; "None"] [ty] [] in
+      let alloc = runtime_app ["Pulse"; "Lib"; "Reference"; "alloc"] [option_ty] [small_type0; initial] in
+      ECL.mk_let (extract_dv_binder slot_b None) alloc (close_term body slot._2)
 
-    | Tm_Defer { handler_pre; handler; body } ->
-      let body = extract_dv g body in
-      let handler = extract_dv g handler in
-      let b = R.pack_binder { sort = ECL.unit_ty; ppname = T.seal "_"; attrs = []; qual = R.Q_Explicit } in
-      ECL.mk_let b body handler
+    | Tm_Defer { result_ty; handler_pre; handler; body } ->
+      let body = extract_dv native g body in
+      let handler = extract_dv native g handler in
+      if native then
+        // Cleanup is outside the protected body's normal continuation. A
+        // cleanup failure must not cause the same cleanup to run a second time.
+        let _, pending = extend_env' g (mk_ppname_no_range "_pending") runtime_exn in
+        let on_exn = mk_abs (runtime_binder runtime_exn "_pending")
+          (close_term (runtime_seq handler (runtime_raise result_ty (term_of_nvar pending))) pending._2) in
+        let body = runtime_try result_ty body on_exn in
+        let _, result = extend_env' g (mk_ppname_no_range "_result") result_ty in
+        ECL.mk_let (runtime_binder result_ty "_result") body
+          (close_term (runtime_seq handler (term_of_nvar result)) result._2)
+      else
+        let b = runtime_binder ECL.unit_ty "_" in
+        ECL.mk_let b body handler
 
   end
 
-and extract_dv_branch g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
+and extract_dv_branch native g (b:Pulse.Syntax.Base.branch) : T.Tac R.branch =
   let {pat; e=body; norw} = b in
   let g, pat, bs = extract_dv_pattern g pat in
   pat, LN.close_term_n
-    (extract_dv g (Pulse.Checker.Match.open_st_term_bs body bs))
+    (extract_dv native g (Pulse.Checker.Match.open_st_term_bs body bs))
     (L.map (fun (b: Pulse.Typing.Env.var_binding) -> b.x) bs)
 
 let extract_pulse_dv (g: env) (p:st_term) : T.Tac R.term =
   debug g (fun _ -> Printf.sprintf "input: %s" (show p));
+  let native = uses_native_exceptions p in
   let p = erase_ghost_subterms g p in
   debug g (fun _ -> Printf.sprintf "post erasure: %s" (show p));
   let p = simplify_st_term g p in
   debug g (fun _ -> Printf.sprintf "after simp: %s" (show p));
-  let p = Pulse.ElimGoto.elim_gotos g p in
+  let p = if native then p else Pulse.ElimGoto.elim_gotos g p in
   debug g (fun _ -> Printf.sprintf "post goto elim: %s" (show p));
-  let p = extract_dv g p in
+  let p = extract_dv native g p in
   debug g (fun _ -> Printf.sprintf "output: %s" (show p));
   p
 

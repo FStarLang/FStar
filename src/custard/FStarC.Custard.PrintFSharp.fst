@@ -1051,12 +1051,13 @@ and no_operator (_op:prim_op) : ML string =
 and coerce (ind:string) (e1:expr) (t:cty) : ML string =
   match e1.ty, t with
   | TAny, TAny -> term ind e1
-  | _, TAny -> let pre = "(box " in pre ^ term (after ind pre) e1 ^ ")"
+  // Source bindings named box/unbox must not capture generated coercions.
+  | _, TAny -> let pre = "(Microsoft.FSharp.Core.Operators.box " in pre ^ term (after ind pre) e1 ^ ")"
   | a, b when erased_pun a b -> reject_coercion a b
   | TAny, _ ->
-    let pre = "(unbox<" ^ ty t ^ "> " in pre ^ term (after ind pre) e1 ^ ")"
+    let pre = "(Microsoft.FSharp.Core.Operators.unbox<" ^ ty t ^ "> " in pre ^ term (after ind pre) e1 ^ ")"
   | _ ->
-    let pre = "(unbox<" ^ ty t ^ "> (box " in
+    let pre = "(Microsoft.FSharp.Core.Operators.unbox<" ^ ty t ^ "> (Microsoft.FSharp.Core.Operators.box " in
     pre ^ term (after ind pre) e1 ^ "))"
 
 (* An array index or a shift count: the IR value is a machine integer, and

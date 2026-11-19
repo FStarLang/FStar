@@ -35,3 +35,7 @@ open FStar.Stubs.Reflection.Types
     but then you need to construct the attribute via a tactic.
  *)
 let extract_as (impl: term) = ()
+
+(** Allows verification, but rejects extraction of the annotated definition
+    with the given diagnostic. The message must be a string literal. *)
+let extraction_error (message: string) = ()

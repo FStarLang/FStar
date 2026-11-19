@@ -247,7 +247,35 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' lbl x i;
       close_open_inverse' arg x i
 
-    | Tm_Defer { handler_pre; handler; body } ->
+    // Mirror subst_st_term's binder depths. ExceptionScope adds no binder;
+    // Try's extra payload binder is confined to handler, so its inverse
+    // closing/opening proof recurses at i+1 rather than i.
+    | Tm_Raise { arg } ->
+      close_open_inverse' arg x i
+    | Tm_NativeRaise { exn_ty; result_ty; arg } ->
+      close_open_inverse' exn_ty x i;
+      close_open_inverse' result_ty x i;
+      close_open_inverse' arg x i
+    | Tm_NativeScope { body } -> close_open_inverse_st' body x i
+    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+      close_open_inverse' exn_ty x i;
+      close_open_inverse' result_ty x i;
+      close_open_inverse_st' body x i;
+      close_open_inverse_st' handler x (i + 1)
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      close_open_inverse_comp' normal x i;
+      close_open_inverse' exceptional x i;
+      close_open_inverse_st' body x i
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      close_open_inverse_comp' normal x i;
+      close_open_inverse' exceptional x i;
+      close_open_inverse_st' body x i;
+      close_open_inverse_st' handler x (i + 1)
+
+    | Tm_Defer { result_ty; handler_pre; handler; body } ->
+      close_open_inverse' result_ty x i;
       close_open_inverse' handler_pre x i;
       close_open_inverse_st' handler x i;
       close_open_inverse_st' body x i

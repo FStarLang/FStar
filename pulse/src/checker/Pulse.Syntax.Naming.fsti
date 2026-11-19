@@ -449,8 +449,24 @@ let rec freevars_st (t:st_term)
     | Tm_Goto { lbl; arg } ->
       freevars lbl ++ freevars arg
 
-    | Tm_Defer { handler_pre; handler; body } ->
-      freevars handler_pre ++ freevars_st handler ++ freevars_st body
+    // Include contract terms, which can refer to surrounding owned resources.
+    // A try's index-0 payload is bound (not a named free variable), so freevars
+    // unions the handler directly; only depth-sensitive traversals shift there.
+    | Tm_Raise { arg } -> freevars arg
+    | Tm_NativeRaise { exn_ty; result_ty; arg } ->
+      freevars exn_ty ++ freevars result_ty ++ freevars arg
+    | Tm_NativeScope { body } -> freevars_st body
+    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+      freevars exn_ty ++ freevars result_ty ++ freevars_st body ++ freevars_st handler
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      freevars_comp normal ++ freevars exceptional ++ freevars_st body
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      freevars_comp normal ++ freevars exceptional ++ freevars_st body ++ freevars_st handler
+
+    | Tm_Defer { result_ty; handler_pre; handler; body } ->
+      freevars result_ty ++ freevars handler_pre ++ freevars_st handler ++ freevars_st body
 
 and freevars_branches (t:list branch) : Set.set var =
   match t with
@@ -642,8 +658,23 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Goto { lbl; arg } ->
       ln' lbl i && ln' arg i
 
-    | Tm_Defer { handler_pre; handler; body } ->
-      ln' handler_pre i && ln_st' handler i && ln_st' body i
+    // ExceptionScope creates no source binder. Try binds only its caught
+    // payload in handler; the protected body and both contracts stay at depth i.
+    | Tm_Raise { arg } -> ln' arg i
+    | Tm_NativeRaise { exn_ty; result_ty; arg } ->
+      ln' exn_ty i && ln' result_ty i && ln' arg i
+    | Tm_NativeScope { body } -> ln_st' body i
+    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+      ln' exn_ty i && ln' result_ty i && ln_st' body i && ln_st' handler (i+1)
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      ln_c' normal i && ln' exceptional i && ln_st' body i
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      ln_c' normal i && ln' exceptional i && ln_st' body i && ln_st' handler (i+1)
+
+    | Tm_Defer { result_ty; handler_pre; handler; body } ->
+      ln' result_ty i && ln' handler_pre i && ln_st' handler i && ln_st' body i
 
 and ln_branch' (b : branch) (i:int) : Tot bool (decreases b) =
   ln_pattern' b.pat i &&
@@ -912,8 +943,28 @@ let rec subst_st_term (t:st_term) (ss:subst)
     | Tm_Goto { lbl; arg } ->
       Tm_Goto { lbl=subst_term lbl ss; arg=subst_term arg ss }
 
-    | Tm_Defer { handler_pre; handler; body } ->
-      Tm_Defer { handler_pre=subst_term handler_pre ss; handler=subst_st_term handler ss; body=subst_st_term body ss }
+    // Keep this binder convention aligned with ln_st' and the closing proofs:
+    // only the try handler needs a shifted substitution. The exception label
+    // is generated later by the checker, not bound by either source node.
+    | Tm_Raise { arg } ->
+      Tm_Raise { arg=subst_term arg ss }
+    | Tm_NativeRaise { exn_ty; result_ty; arg } ->
+      Tm_NativeRaise { exn_ty=subst_term exn_ty ss; result_ty=subst_term result_ty ss; arg=subst_term arg ss }
+    | Tm_NativeScope { body } -> Tm_NativeScope { body=subst_st_term body ss }
+    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+      Tm_NativeTry { exn_ty=subst_term exn_ty ss; result_ty=subst_term result_ty ss;
+                    body=subst_st_term body ss; handler=subst_st_term handler (shift_subst ss) }
+
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      Tm_ExceptionScope { normal=subst_comp normal ss; exceptional=subst_term exceptional ss;
+                          body=subst_st_term body ss }
+
+    | Tm_Try { normal; exceptional; body; handler } ->
+      Tm_Try { normal=subst_comp normal ss; exceptional=subst_term exceptional ss;
+               body=subst_st_term body ss; handler=subst_st_term handler (shift_subst ss) }
+
+    | Tm_Defer { result_ty; handler_pre; handler; body } ->
+      Tm_Defer { result_ty=subst_term result_ty ss; handler_pre=subst_term handler_pre ss; handler=subst_st_term handler ss; body=subst_st_term body ss }
 
     in
     { t with term = t' }

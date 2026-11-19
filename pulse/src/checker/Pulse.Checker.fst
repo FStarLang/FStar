@@ -264,6 +264,17 @@ let maybe_elaborate_stateful_head (g:env) (t:st_term)
     in
     Pulse.Checker.Base.hoist g (Inl arg) true rebuild  
 
+  | Tm_Raise { arg } ->
+    // Evaluate a stateful payload before transferring control (e.g. raise !r).
+    // Exceptions.check_raise only checks the resulting total term; hoisting
+    // here also gives payload evaluation the ordinary native-call propagation
+    // behavior if it itself raises.
+    let rebuild (arg:either term st_term {Inl? arg}) : T.Tac st_term =
+      let Inl arg = arg in
+      { t with term=Tm_Raise { arg } }
+    in
+    Pulse.Checker.Base.hoist g (Inl arg) true rebuild
+
   | _ -> None
 #pop-options
 #restart-solver
@@ -329,8 +340,10 @@ let rec check
         T.fail "Tm_Abs check should not have been called in the checker"
 
       | Tm_ST _ ->
+        // Native calls generate a match whose Raised branch must re-enter this
+        // dispatcher, including its scope/cleanup checks, via the callback.
         RU.record_stats "check_st" (fun _ ->
-        Pulse.Checker.ST.check g pre post_hint res_ppname t)
+        Pulse.Checker.ST.check g pre post_hint res_ppname t check)
 
       | Tm_ElimExists _ ->
         Exists.check_elim_exists g pre post_hint res_ppname t
@@ -505,8 +518,24 @@ let rec check
       | Tm_Goto _ ->
         Goto.check g pre post_hint res_ppname t
 
+      // These are pre-checking constructs only. Exceptions lowers scopes to
+      // outcome-valued labels, raises to exact gotos, and tries to matches.
+      // The callback checks generated terms before extraction can see them.
+      | Tm_Raise { arg } ->
+        Pulse.Checker.Exceptions.check_raise g pre post_hint res_ppname arg t.range
+
+      | Tm_ExceptionScope { normal; exceptional; body } ->
+        Pulse.Checker.Exceptions.check_scope g pre post_hint res_ppname
+          normal exceptional body t.range check
+
+      | Tm_Try { normal; exceptional; body; handler } ->
+        Pulse.Checker.Exceptions.check_try g pre post_hint res_ppname
+          normal exceptional body handler t.range check
+
       | Tm_Defer _ ->
         Defer.check g pre post_hint res_ppname t check
+      | Tm_NativeRaise _ | Tm_NativeScope _ | Tm_NativeTry _ ->
+        fail g (Some t.range) "Internal error: checked native exception syntax passed to the source checker"
     in
 
     let (| x, g1, t, pre', k |) = r in

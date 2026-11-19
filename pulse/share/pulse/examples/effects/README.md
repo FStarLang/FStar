@@ -1,0 +1,450 @@
+# Effects examples: what is verified and what is executed
+
+This directory exercises the resource-indexed effects library in
+[`lib/pulse/lib/effects`](../../../../lib/pulse/lib/effects/README.md).
+All library examples use the single graded model in `Pulse.Lib.Effects.Core`
+and its `Exception` layer. `Rules` exercises the two-exit rules derived through
+that interpreter. Negative examples check invalid ownership and grade uses.
+`Native` and `NativeRejected` separately exercise the native two-exit checker,
+without constructing effect trees. `NativeRuntime` executes native exceptions
+through Custard on OCaml, F#, and Cherry C. Standalone C extraction is rejected.
+
+Start with `Core`, `Exception`, and `Nested`, then `Graded` and `Rules`.
+
+## File map
+
+| File | What to look for |
+| --- | --- |
+| [`Example.Effects.Core.fst`](Example.Effects.Core.fst) | Delayed heap actions, an operation with a state-changing request/reply contract, explicit tree framing, an erased old-state witness, consequence, and forwarding through an exception layer that cannot throw. |
+| [`Example.Effects.Exception.fst`](Example.Effects.Exception.fst) | A throwing branch and a normal branch, exact recovery ownership, unreachable continuation code, and framing around the handled result. |
+| [`Example.Effects.Nested.fst`](Example.Effects.Nested.fst) | Two unit-payload exception layers distinguished by tags. Ordinary handlers compose without policy proofs, changing the result type from empty to int to bool. |
+| [`Example.Effects.Graded.fst`](Example.Effects.Graded.fst) | Nested handling of an open framed tree, returning-operation framing, divergent actions/implementations/clauses, mixed-grade bind, and exact outcome round trips. Verification only. |
+| [`Example.Effects.Rules.fst`](Example.Effects.Rules.fst) | Tree-derived two-exit bind, frame, partial handling and re-raising, local reclamation on both exits, and divergent callbacks. Verification only. |
+| [`Example.Effects.Rejected.fst`](Example.Effects.Rejected.fst) | Twelve expected failures covering ownership, operation kinds, unresolved effects, framing, and grades. Not an executable test module. |
+| [`Example.Effects.Native.fst`](Example.Effects.Native.fst) | Native raises contracts, partial catches, re-raising, exact state transfers, framing, local reclamation, cleanup, loops, recursion, and higher-order calls. Verification only. |
+| [`Example.Effects.NativeRejected.fst`](Example.Effects.NativeRejected.fst) | Expected rejections for lost ownership, unhandled calls, incomplete handlers, escaping cleanup, invalid local reclamation, and ghost/atomic raises. Verification only. |
+| [`Example.Effects.NativeExtraction.fst`](Example.Effects.NativeExtraction.fst) | Standalone-C refusals for implicit native calls and nonraising native scopes, with raw outcome data as an extractable control. |
+| [`Example.Effects.NativeNoExtract.fst`](Example.Effects.NativeNoExtract.fst) | The `pulse.noextract` debugging option must refuse native extraction, including from a checked file. |
+| [`Example.Effects.NativeRuntime.fst`](Example.Effects.NativeRuntime.fst) | Native runtime regressions: early return, non-unit cleanup results, unwinding, separate control exits, locally handled cleanup, extensible and managed payloads, re-raising, recursion, higher-order calls, loops, framing, and raw outcome data. |
+| [`Example.Effects.NativeStress.fst`](Example.Effects.NativeStress.fst) | Independently observed cleanup order/count, nested loop/handler exits, deep and repeated unwinding, managed record/list payloads, capturing callbacks, and exception-name collisions. |
+| [`Example.Effects.NativeBoundary.fsti`](Example.Effects.NativeBoundary.fsti), [`.fst`](Example.Effects.NativeBoundary.fst) | A separately checked native interface with a polymorphic raising function and a stateful native callback; also compiled as a separate Custard unit. |
+| [`Native_runtime.ml.expected`](Native_runtime.ml.expected) | Complete expected OCaml extraction of the native runtime suite, including its example callees. |
+| [`Native_runtime.c.expected`](Native_runtime.c.expected), [`Native_runtime.h.expected`](Native_runtime.h.expected) | Complete expected Cherry implementation and header, including exception descriptors, payload ownership helpers, and the exported ABI. |
+| [`Example.Effects.Runtime.fst`](Example.Effects.Runtime.fst) | Tree-based runtime entry point. Calls five concrete cases and returns a list of runtime comparisons, with a proof that they are all true. |
+| [`driver.ml`](driver.ml) | External OCaml harness that checks the complete list returned by the extracted entry point and fails the executable if any observation differs. |
+| [`Makefile`](Makefile) | Builds the library first, verifies all examples, extracts the runtime entry, links the driver, and records a successful run incrementally. |
+| [`.fst.config.json`](.fst.config.json) | VS Code compiler/options/include configuration. It includes both source and cache directories of the library; see the field descriptions below. |
+| `README.md` | This scenario guide, expected observations, build-stage descriptions, and editor setup. |
+
+The original sketch `../Effects.fst` is outside this directory and is not part
+of this suite. Generated `.depend`, `_cache/`, and `_output/` files are not
+additional authored examples and should not be edited.
+
+`make check-native-extraction` checks that native exception entry points fail
+with the intended diagnostic for standalone C, from source and from checked
+files, while raw outcomes still extract.
+
+`make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry native-separate`
+executes the native runtime regressions. The three `native_driver.*` files check
+the same returned booleans and exact cleanup trace. Cherry runs distinct `-O0`
+and `-O2` executables with `CHERRY_DEBUG`, strict warnings,
+address/undefined-behavior sanitizers, and leak detection: the cleanup cases
+must free their boxes exactly once. These checks run under
+`make all`, with the F# leg enabled when `dotnet` is available (SDK 10 required).
+Cherry requires GCC 15 or later; set `CHERRY_CC` if the default C compiler is
+older. `NOCHERRY=1` skips the default build's Cherry execution legs, not its
+Cherry extraction/golden comparisons.
+
+### Cleanup and boundary stress tests
+
+The observer callback has an ordinary `emp`-to-`emp` Pulse contract. Each driver
+implements it using driver-private state, outside the verified heap. Cleanup
+does not discard an owned log reference or rely on a new axiom. The callback
+must return normally and must not modify Pulse-owned memory.
+
+The drivers assert this exact trace:
+
+```text
+100, 2, 1, 101, 2, 1, 102, 2, 1,
+200, 3, 5, 4, 5, 201, 8, 7, 300,
+0, 1, ..., 256, 400, [1000 occurrences of 6]
+```
+
+The first three groups distinguish nested LIFO cleanup on normal completion,
+early return, and raise. The next groups exercise continue/break through a
+handler and two defers, then return through a handler and two defers. The
+recursive case unwinds 257 frames, each owning a box with a dynamically
+constructed string list. Its ascending trace distinguishes unwind order from
+call-entry order. The final loop catches 1,000 exceptions, freeing a fresh box
+each time; it checks pending-exception reset and payload preservation across
+successive handlers. These are bounded CI regressions, not stack-depth or
+throughput benchmarks.
+
+`NativeBoundary.choose` is used at record, string, and integer types.
+Its concrete `deliver` wrapper forces Cherry's record calls across the unit
+boundary; other polymorphic instantiations may be specialized in the client.
+`NativeBoundary.invoke` calls a closure capturing a reference and managed
+payload; its exceptional ownership crosses the interface while a separate
+cell remains framed. A user exception named `NativeException` deliberately
+collides with the runtime carrier's short name, but must remain a distinct
+constructor.
+
+`native-separate` extracts `NativeBoundary` first, writes its `.cui`, and then
+extracts the same runtime client with `--custard_link`. OCaml links two generated
+modules; Cherry links two generated C translation units at both optimization
+levels. These executables use the same drivers and observations as the
+whole-program builds. The OCaml build also checks that the client imports,
+rather than redefines, the library function; Cherry checks that the client
+object has unresolved references to both `deliver` and `invoke` before linking
+the library. F# currently exercises whole-program extraction only.
+
+## Reviewing native exception extraction
+
+The three `Native_runtime.*.expected` files are the actual generated code, not
+handwritten sketches or filtered excerpts. They cover the executable cases in
+`NativeRuntime.test` and `NativeRuntime.stress`, including their callees.
+The golden checks compare all lines using the shared `test.mk` diff rules
+(only CRLF line endings are ignored). Names, control-flow keys, reference
+counting, and unreachable code are not normalized away.
+
+From this directory:
+
+```sh
+make check-native-goldens
+make CHERRY_CC=gcc-15 native-ocaml native-cherry
+```
+
+The first command extracts and compares OCaml, Cherry C, and its header; it
+does not require a C compiler. The second also compiles and runs the matching
+code, with sanitizers and leak detection for Cherry. `make all` includes the
+golden checks, even with `NOCHERRY=1`. A changed implementation or header fails
+with a unified diff; normal test targets never update the expected files.
+
+Start with `handled_bool`, the smallest example of an actual raise and catch.
+OCaml function names have the prefix `example_Effects_`; Cherry names use
+`Example_Effects_`. Cherry's `__cloN` functions are lifted protected bodies:
+read them together with their callers, rather than as independent examples.
+
+| Source definitions to locate in the snapshots | What to review |
+| --- | --- |
+| `NativeExtraction.handled_bool` | OCaml raises the `Pulse_Lib_NativeExceptions_NativeException` carrier and uses `try ... with`. Cherry constructs the exception, calls `cherry_raise`, tests `CHERRY_EXN_PENDING()`, takes the exception, checks its descriptor, and unboxes its payload. Both return an ordinary `bool`. |
+| `NativeRuntime.early`, `return_through_try` | The ordinary result is an integer, not an outcome. `ControlFlow` carries lexical returns on a separate channel; the user catch cannot intercept them. The result slot starts at `None` and is written before the control exception is raised. |
+| `NativeRuntime.cleanup`, `cleanup_return` | Normal completion preserves the body result. Exceptional completion frees the box and re-raises the saved exception; an early return crosses the same cleanup. In OCaml, `B.free` becomes `()` because references are garbage collected; Cherry emits `cherry_pbuf1_free`. |
+| `NativeRuntime.cleanup_handles` | Cleanup catches a local Boolean exception and a local loop break without losing the pending integer exception. Follow `_cexn` through cleanup to its final re-raise. |
+| `NativeRuntime.reraises`, `Native.reraised` | A handler can translate or re-raise a payload without catching its own raise. The stateful example updates the owned cell before re-raising and before final recovery. |
+| `NativeRuntime.stack_payload`, `return_payload` | Dynamically allocated strings survive boxing and unwinding. Cherry drops the scoped local's owned value before leaving on an exception, and drops the return slot after acquiring its result. |
+| `NativeRuntime.recurse`, `Native.invoke`, `Native.locally_defined` | Recursive and higher-order calls use the normal-result ABI, with exceptions propagated by the backend rather than outcome matching. |
+| `NativeStress.nested`, `loop_exits`, `return_handled`, `unwind` | Each exit must execute the same cleanup calls in the driver-observed order, exactly once. User handlers must not catch lexical control exits. Recursive calls are not tail calls: each frame still owes cleanup. |
+| `NativeStress.captured`, `NativeBoundary.choose`, `invoke` | Managed payloads and closures survive boxing and cross-module calls. Compare the whole-program snapshots with `_output/native-ocaml-split/` and `_output/native-cherry-split/` to review imported calls and shared exception identity. |
+| `NativeExtraction.raw_outcome` | This deliberately remains an ordinary tagged datatype. Its `Normal`/`Raised` constructors in the snapshots and header are not the native exception ABI. |
+
+Cherry's `cherry_dummy` and `CHERRY_INT_SMALL(0)` returns are placeholders on exceptional exits,
+not successful results: the caller must test the pending-exception flag before
+using the return value. Tail calls delegate that test to their caller. Some
+generated cleanup/unreachable scaffolding remains after unconditional returns;
+it is included in the snapshots, but is not executed a second time.
+
+For an intentional extraction change, inspect the failing diffs against the
+source examples and the checks above, then explicitly regenerate the baseline:
+
+```sh
+make accept-native-goldens
+git diff -- Native_runtime.ml.expected Native_runtime.c.expected Native_runtime.h.expected
+make CHERRY_CC=gcc-15 check-native-goldens native-ocaml native-cherry
+```
+
+Do not accept a change merely to make the diff pass. Fresh source verification
+and re-extraction should reproduce the same snapshots; executable checks remain
+necessary because an unchanged snapshot alone does not establish correctness.
+
+## The five executable observations
+
+`Runtime.test` returns five booleans in the following fixed order.
+
+| Case | Observed value | What it exercises |
+| --- | --- | --- |
+| `Core.test ()` | `(0, 42, 2, 7)` | Tree construction leaves the initial cell untouched; execution forwards an exchange request, returns 42, finishes at state 2, and preserves a framed cell at 7. |
+| `Exception.test true` | `(42, 2)` | The throwing branch transfers ownership at state 1 to recovery, which writes 2 and returns 42. |
+| `Exception.test false` | `(7, 3)` | Normal completion writes 3 and returns 7 through the normal clause, without exceptional recovery. |
+| `Nested.test true` | `(true, 2)` | The inner exception is caught; its result is passed to the outer normal clause and translated to true. |
+| `Nested.test false` | `(false, 3)` | The outer exception is forwarded through the inner handler and caught by the outer exceptional clause. |
+
+These are exact result/state specifications, not just type-safety checks. The
+driver also evaluates the comparisons in extracted code; it requires exactly
+`[true; true; true; true; true]` before printing success.
+
+The exception and nested test flags are marked `monomorphize`. Their proofs
+cover either flag value, while `Runtime.test` supplies literal flags so Custard
+can specialize the tree shapes. This suite does not demonstrate arbitrary
+runtime-dependent exception-tree shape extraction.
+
+## Ownership and control scenarios
+
+### Graded intrinsic trees
+
+`Graded.nested_frame b` follows the same routes as `Nested.test`,
+but frames the **open** computation with a second cell initially at 1.
+Both local and outer exceptions acquire that cell in their protocols.
+The result is exactly `(b, (2, 2))` when `b`, and `(b, (3, 3))` otherwise:
+either handler receives and updates both cells. The one `framed_layer` call
+exposes the framed outer signature without a separate ownership proof.
+
+`Graded.returning_frame ()` returns `(10, (1, 5))`. The returning operation updates
+only its request cell; the private framed cell stays at 5 while the request is
+forwarded through an exception handler.
+`mixed_steps` joins a terminating prefix with a potentially divergent action.
+`divergent_implementation` and `divergent_handler` start from terminating request
+trees but produce potentially divergent interpretations or handled trees.
+Their recursive callback genuinely loops when requested, rather than merely
+being an ordinary action annotated as divergent.
+
+`Graded.outcome_round_trip b` returns exactly `(b, (10, 1))` or
+`(b, (7, 1))`. It embeds an arbitrary-style two-exit callback, handles its
+exception into data, and interprets the result; both its outcome and heap
+update survive the bridge.
+
+`Rules.bind_frame_reraise b` returns `(20, (2, 5))` on the normal route.
+On the exceptional route it skips the bind continuation, lets the handler
+update the framed cell, and re-raises: the result is `(8, (3, 6))`.
+`with_local` preserves the callback's exact two-exit contract while reclaiming
+the local on either route. `divergent_program` checks the same bind/frame/handler
+composition for a genuinely recursive callback.
+
+`Graded` and `Rules` are proof examples, not extraction entry points.
+The five-case executable uses the same canonical model. It is independent of
+the native runtime executable and does not exercise arbitrary delayed request
+generation.
+
+### Core operations
+
+`ops r` describes an exchange over a particular reference. Its input contains
+an erased old-state witness and a runtime new value. The reply returns the old
+integer together with ownership at the new state, making both the returned data
+and the state transition available to the continuation's proof.
+
+`client` composes the read, exchange, and final update. `through_handler` embeds
+the operations under an uninhabited exception layer and removes that layer again;
+its requests must still reach the original exchange implementation. `test`
+combines that forwarding with explicit `Core.frame`.
+
+`framed` is a smaller, separately verified framing helper. `positive_client`
+and its ghost helpers exercise consequence by weakening result 42 to a positive
+result without losing reference ownership. They are not additional runtime
+entry-point calls.
+
+### Local exception recovery
+
+`exceptional` owns the cell at 1, before the exception clause runs. `normal`
+describes an ordinary body return at state 3 with result 7. `handled` combines
+the two routes into an exact flag-indexed final contract.
+
+`body` sequences a deliberately impossible `dead_write` after `throw`. Its
+precondition contains `pure False`; verification of that helper does not make it
+reachable. The exception operation has no reply value, and abortive sequencing
+bypasses the continuation. Recovery instead uses the ownership transferred in
+the exceptional protocol to write 2.
+
+`framed_test` verifies that an unrelated cell at 17 can remain outside the
+exception protocol when framing execution of the already handled computation.
+It does not frame an open throwing tree, and it is not called by `Runtime.test`.
+
+### Nested routing
+
+The two layers both use unit payloads. An inner request uses `Throw`; an outer
+request, seen from the inner environment, uses `Other Throw`. This tests static
+layer identity independently of payload type.
+
+`body` prepares the selected request's ownership and constructs an `Abort`.
+`handle_inner` removes the local layer and forwards an outer abort unchanged.
+`handle_outer` then removes the outer layer. The constructor types suffice:
+there are no separate request-policy or policy-preservation lemmas.
+
+Both requests carry ownership at state 0. An inner recovery writes 2 and returns
+10; an outer recovery must still see state 0 and writes 3. The outer normal
+clause changes the intermediate integer result to bool true. There are no
+dynamically allocated effect instances or first-class resumptions in this test.
+
+### Native syntax and exact two-exit contracts
+
+For example, `Native.maybe_value` specifies both paths:
+
+```pulse
+fn maybe_value (b:bool)
+  returns x:int
+  ensures pure (not b /\ x == 7)
+  raises (fun (e:nat) -> pure (b /\ e == 1))
+{
+  if (b) { raise 1 } else { 7 }
+}
+```
+
+A handler gives an explicit contract for exceptions leaving its protected body:
+
+```pulse
+try
+  returns x:int
+  ensures pure (x == (if b then 42 else 7))
+  raises (fun (e:nat) -> pure (b /\ e == 1))
+{ maybe_value b }
+catch { 1 -> { 42 } }
+```
+
+The implicit fallback forwards unmatched payloads. Without an outer exception
+scope, its reachability must be refuted. `raises (fun _ -> emp)` allows an
+exception with no resources; only an impossible assertion such as `pure False`
+rules it out. Omitting `raises` does not let a caller discard a possible
+exception by ignoring the call's result.
+
+| Definitions | What they establish |
+| --- | --- |
+| `raise_code`, `catch_code` | A direct throwing call and complete recovery with result 7. |
+| `failure`, `failed`, `update_and_raise` | A payload-indexed ownership protocol, state update, and reclamation of an exited local scope. |
+| `partial`, `framed_call` | Only `Second` escapes, with its resources and an unrelated framed cell preserved. |
+| `reraised`, `translate` | Clauses execute outside their own catch; they can change owned state and re-raise or replace the payload. |
+| `handler_inside_scope` | A catch still inside a local's scope can read and update it. |
+| `maybe_value`, `catch_then_continue`, `increment_result`, `known_normal` | Precise normal/exceptional branch facts, try as an initializer, native call sequencing, and elimination of an impossible exceptional exit without a handler. |
+| `invoke`, `locally_defined`, `countdown` | Higher-order, local, and recursive native functions retain their exceptional contracts. |
+| `raw_raise`, `raw_outcome` | Raw semantic outcomes remain explicit data rather than being mistaken for native control effects. |
+| `deferred_free`, `cleanup_handles_locally`, `cleanup_local_loop` | Nonraising cleanup frees real heap ownership, and cleanup may use internally contained catches and loop exits. |
+| `loop_exit`, `skipped_write`, `raise_read`, `early_return` | Propagation across loops, unreachable continuation code, stateful payload evaluation, and ordinary early return in a native function. |
+
+See the [library guide](../../../../lib/pulse/lib/effects/README.md) for
+the derived rules, native result-type convention, and current restrictions.
+Native scenarios are not included in `Runtime.test` or its five observations.
+
+### Extensible exceptions
+
+The final group in `Native` uses F*'s shared extensible `exn` rather than raw
+numbers or a closed exception datatype:
+
+```fstar
+exception BadRequest of nat
+exception ConnectionLost of string
+```
+
+Both constructors produce `exn`, so every nested contract has type
+`exn -> slprop`. Forwarding needs no payload embedding. The exceptional
+assertions describe which constructors can occur and what resources they carry;
+they do not change the exception value's type.
+
+| Definitions | What they establish |
+| --- | --- |
+| `is_bad_request` | An explicit match defines the handled domain; exception declarations do not generate closed-datatype `C?` discriminators. |
+| `exn_raise` | Raising an arbitrary `exn` transfers ownership at state 1 and reclaims a temporary local. |
+| `exn_recover_request` | `BadRequest code` recovers with state and result `code + 1`. Every other exception propagates unchanged, with state 1 and a fact excluding `BadRequest`. |
+| `exn_nested` | The inner recovery handles `BadRequest 4`; the outer handler handles `ConnectionLost "database"`. The final state/result is exactly 5 or 42, according to the input flag. |
+| `exn_reraised` | Re-raising preserves the string payload while transferring the updated state 2 to the outer handler, which finishes at state 3 with result 42. |
+| `RetryLater`, `exn_later_extension` | A constructor declared after the selective handler is forwarded through it without changing its contract. `RetryLater 9` is distinct from `BadRequest 9` despite carrying the same payload type. |
+
+The general selective handler never assumes that it knows all constructors.
+Complete recovery in its clients is justified by their precise exceptional
+contracts, not by treating `exn` as a closed datatype. The corresponding
+rejection scenario below checks that distinction.
+
+## Negative scenarios and their expected failures
+
+| Definition | Invalid claim | Expected error category |
+| --- | --- | --- |
+| `stale_ownership` | After exchanging 0 for 1, the continuation still owns the cell at 0. | 19: refinement/resource-index proof failure |
+| `missing_request_ownership` | Owning a program description suffices to execute it without owning its required cell. | 228: Pulse cannot establish the required ownership |
+| `unhandled_exception` | A body whose signature still contains Throw can be treated as an empty-environment computation. | 12: type mismatch |
+| `stranded_abort_frame` | An abort can retain another cell outside its request protocol. | 19: resource-index proof failure |
+| `abort_as_perform`, `returning_as_abort` | Operation kind can be ignored when choosing a node constructor. | 19: kind refinement failure |
+| `downgrade_divergent_step` | A potentially divergent tree can be weakened to terminating. | 19: grade-bound proof failure |
+| `ignore_implementation_grade`, `ignore_handler_grade` | A terminating request tree makes its implementation or handler terminate. | 12: grade/computation type mismatch |
+| `forget_outer_frame` | Framing an inner tree leaves its outer exception contract unchanged. | 19: signature mismatch |
+| `lose_acquired_resource` | Ownership acquired by an embedded action can disappear at an abort. | 19: resource-index proof failure |
+| `wrong_exception_state` | The exceptional entry contract at state 1 permits proving a read equals 0. | 19: false pure assertion |
+
+`expect_failure` means the declaration must fail with the indicated category.
+It is neither an admitted valid program nor code that the runtime driver calls.
+Successful verification of this module is evidence that all twelve misuses were
+rejected at the intended boundaries.
+
+`NativeRejected` separately checks:
+
+| Definitions | Rejected behavior | Error |
+| --- | --- | --- |
+| `ignored_exception`, `cleanup_call_escapes` | Ignoring a native call result to swallow an exception, including across a cleanup boundary. | 19 |
+| `captured_exception_exit` | Capturing an enclosing function's exception exit in a local function. | 19 |
+| `catch_is_not_termination` | Claiming termination just because a potentially divergent call's exceptions are caught, including under defer. | 228 |
+| `cleanup_return_abandons_exception` | Returning out of cleanup and abandoning a pending exception's ownership. | 228 |
+| `missing_exception_resource` | Raising without the promised ownership. | 228 |
+| `lost_frame`, `reraise_abandons_resource` | Propagating a call or re-raising while abandoning owned resources. | 228 |
+| `unmatched`, `unhandled_reraise` | Leaving a possible payload unhandled, or treating a clause as protected by its own catch. | 19 |
+| `stale_handler_state` | Recovering with the pre-call state instead of the exceptional state. | 19 |
+| `ghost_raise`, `atomic_raise` | Raising in a non-stateful computation. | 228 |
+| `escaping_cleanup` | Replacing a pending exit by an exception escaping `defer`. | 19 |
+| `escaped_local_permission` | Exporting half a local's permission while also claiming to reclaim it. | 19 |
+| `return_abandons_frame` | Using ordinary return inside a try to hide lost ownership behind an impossible normal continuation. | 228 |
+| `exn_known_cases_are_not_exhaustive` | Treating the example constructors as exhaustive for an arbitrary value of extensible type `exn`. | 19 |
+
+These are seventeen expected failures, not admitted programs. Both direct
+raises and automatically propagated calls must satisfy the ownership checks.
+
+## Build stages and generated files
+
+The installed repository compiler at `stage3/out/bin/fstar.exe` must be available.
+From this directory:
+
+```sh
+make -j8       # Library + all proofs + extraction + linking + recorded execution
+make verify   # Library and example proofs, including expected failures
+make extract  # Produce _output/Effects_runtime.ml
+make build    # Produce the extracted module and _output/effects.exe
+make run      # Build as needed, then explicitly rerun the executable
+make CHERRY_CC=gcc-15 native-ocaml native-fsharp native-cherry
+make clean    # Remove this directory's generated artifacts only
+```
+
+`extract`, `build`, and `run` follow the runtime entry's dependencies; default
+`make` and `make verify` also check both standalone negative-test modules and
+the native scenarios. `verify` does not request extraction. The unprefixed
+`extract`, `build`, and `run` targets concern the five-case tree-based entry;
+the `native-*` targets execute the native exception suite.
+
+The library owns its own `_cache`; these examples keep their checked files in
+this directory's `_cache`. F* generates `.depend`. Custard produces
+`_output/Effects_runtime.ml`, and the Makefile copies `driver.ml` into `_output`
+so OCaml's auxiliary files stay there. `_output/effects.out` records successful
+execution and avoids rerunning that tree-based driver on an unchanged build.
+The native targets rerun their executables.
+
+The dependency distinctions are intentional:
+
+| Change | Required downstream work |
+| --- | --- |
+| Library interface | Recheck dependent library/client proofs, then update the runtime if affected. |
+| Library implementation only | Recheck that implementation and re-extract/relink/rerun; unchanged client interfaces need no new proof. |
+| An example used by Runtime | Recheck its dependents and update the runtime. |
+| `Example.Effects.Rejected.fst` only | Recheck the negative scenarios; do not re-extract an unrelated runtime entry. |
+| `Example.Effects.Native.fst` or `Example.Effects.NativeRejected.fst` | Recheck affected native proofs; these modules are not runtime-entry dependencies. |
+| `driver.ml` only | Relink and rerun; no F* rechecking or extraction is needed. |
+| Missing generated runtime artifact | Recreate the missing stage and update its dependents. |
+
+The recursive library build refreshes the parent's view of checked-file
+timestamps without touching unchanged files. The Makefile also narrows the
+shared rules' blanket `.SECONDARY` behavior so missing runtime artifacts do not
+silently remain missing. Cleaning examples does not clean the library cache;
+use the library's own `make clean` when that is wanted.
+
+## Editor configuration: `.fst.config.json`
+
+The nearest configuration is used for files in this directory. With the
+installed F* VS Code extension, its directory supplies the default working
+directory, so paths remain portable within the checkout.
+
+| Field or option | Purpose |
+| --- | --- |
+| `fstar_exe` | `../../../../../stage3/out/bin/fstar.exe`, the installed compiler used for the development. |
+| `include_dirs` | This directory, the effects library source directory, the local example cache, and the library cache. This resolves both source names and current checked interfaces. |
+| `--cache_dir _cache` | Reads the example cache; use `make verify` to build dependencies before browsing. |
+| `--already_cached ...` | Reuses checked F*/Pulse modules, including the effects library built by its Makefile. Unlike the library's config, it does not exclude `Pulse.Lib.Effects`. |
+| `--z3rlimit 10` | Uses the same proof budget as the Makefiles. |
+| `--warn_error -321` | Matches the build's unexpected-checked-location warning suppression, not proof-error suppression. |
+| `--ext optimize_let_vc` and `--ext fly_deps` | Match the build's verification-condition and dependency-loading settings. |
+
+The JSON files deliberately remain strict JSON; their documentation lives in
+these READMEs rather than unsupported JSON comments. After configuration changes
+or dependency rebuilds, use **F*: Restart** on already-open files to load a fresh
+session. Verification here requires no changes to the proof contracts or admits.

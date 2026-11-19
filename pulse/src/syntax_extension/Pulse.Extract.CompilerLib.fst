@@ -86,3 +86,8 @@ let mk_extracted_as_attr (impl:R.term) : Dv R.term =
   ml_dv (fun () ->
     let q = S.mk (S.Tm_quoted (co impl, { S.qkind = S.Quote_static; S.antiquotations = (0, []) })) r_ in
     co (S.mk_Tm_app (S.tconst FStarC.Parser.Const.ExtractAs.extract_as_lid) [q, None] r_))
+
+let mk_extraction_error_attr (message:string) : Dv R.term =
+  ml_dv (fun () ->
+    co (S.mk_Tm_app (S.tconst FStarC.Parser.Const.ExtractAs.extraction_error_lid)
+      [S.mk (S.Tm_constant (FStarC.Const.Const_string (message, r_))) r_, None] r_))

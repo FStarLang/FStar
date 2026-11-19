@@ -1198,7 +1198,10 @@ let build_tables (homes : HashTable.t string string) (p:program) : ML unit =
           | TVariant cs -> cs |> List.iter (fun (cn, _) ->
                              HashTable.add quals (string_of_name cn) m)
           | _ -> ())
-       | DExn _ | DModule _ -> ())
+       (* Native Pulse raises and handlers must name the same exception
+          constructor, including when its declaration came from another unit. *)
+       | DExn e -> HashTable.add quals (string_of_name e.de_name) m
+       | DModule _ -> ())
     | None ->
     match d with
     | DExternal e ->
@@ -1317,9 +1320,14 @@ let build_tables (homes : HashTable.t string string) (p:program) : ML unit =
      two exceptions with the same short name both stay mangled -- picking one
      would make which of them is readable depend on declaration order. *)
   exn_idents := HashTable.create 0;
+  (* A unit's exported exception names are ABI, not a local readability choice:
+     its consumer may have a different set of colliding constructors. Keep
+     unsplit exports mangled, and never reselect a short name for an import.
+     Split declarations already have stable at-home names and qualifiers. *)
   let exns = p |> List.collect (fun d ->
     match d with
     | DExn e when None? e.de_name.spec && not (is_at_home e.de_name)
+               && None? (Options.custard_unit ()) && None? (imported_unit d)
                && None? (extern_exn e)
                && not (has_flag e.de_flags Realized) ->
       [e.de_name]

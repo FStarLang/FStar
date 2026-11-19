@@ -337,6 +337,25 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "goto %s %s"
         (term_to_string lbl)
         (term_to_string arg)
+    // Diagnostics can inspect these nodes before checking has lowered them.
+    // Print both contracts, and keep the handler's locally nameless payload
+    // representation rather than pretending this is a round-trippable parser AST.
+    | Tm_Raise { arg } ->
+      sprintf "raise %s" (term_to_string arg)
+    | Tm_NativeRaise { arg } ->
+      sprintf "native_raise %s" (term_to_string arg)
+    | Tm_NativeScope { body } -> st_term_to_string' level body
+    | Tm_NativeTry { body; handler } ->
+      sprintf "native_try { %s } catch { %s }"
+        (st_term_to_string' (indent level) body)
+        (st_term_to_string' (indent level) handler)
+    | Tm_ExceptionScope { normal; exceptional; body } ->
+      sprintf "%s raises %s { %s }" (comp_to_string normal)
+        (term_to_string exceptional) (st_term_to_string' (indent level) body)
+    | Tm_Try { normal; exceptional; body; handler } ->
+      sprintf "try %s raises %s { %s } catch { %s }" (comp_to_string normal)
+        (term_to_string exceptional) (st_term_to_string' (indent level) body)
+        (st_term_to_string' (indent level) handler)
     | Tm_Defer { handler_pre; handler; body } ->
       sprintf "defer %s { %s };\n%s%s"
         (term_to_string handler_pre)
@@ -413,6 +432,13 @@ let tag_of_st_term (t:st_term) =
   | Tm_PragmaWithOptions _ -> "Tm_PragmaWithOptions"
   | Tm_ForwardJumpLabel _ -> "Tm_ForwardJumpLabel"
   | Tm_Goto _ -> "Tm_Goto"
+  // Preserve the pre-checking node names in traces of exception elaboration.
+  | Tm_Raise _ -> "Tm_Raise"
+  | Tm_NativeRaise _ -> "Tm_NativeRaise"
+  | Tm_NativeScope _ -> "Tm_NativeScope"
+  | Tm_NativeTry _ -> "Tm_NativeTry"
+  | Tm_ExceptionScope _ -> "Tm_ExceptionScope"
+  | Tm_Try _ -> "Tm_Try"
   | Tm_Defer _ -> "Tm_Defer"
 
 let tag_of_comp (c:comp) : T.Tac string =
@@ -455,6 +481,13 @@ let print_st_head (t:st_term)
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
   | Tm_ForwardJumpLabel _ -> "ForwardJumpLabel"
   | Tm_Goto _ -> "Goto"
+  // These heads identify source exception syntax, not the generated goto/match.
+  | Tm_Raise _ -> "Raise"
+  | Tm_NativeRaise _ -> "NativeRaise"
+  | Tm_NativeScope _ -> "NativeScope"
+  | Tm_NativeTry _ -> "NativeTry"
+  | Tm_ExceptionScope _ -> "ExceptionScope"
+  | Tm_Try _ -> "Try"
   | Tm_Defer _ -> "Defer"
 
 let rec print_skel (t:st_term) = 
@@ -479,6 +512,14 @@ let rec print_skel (t:st_term) =
   | Tm_PragmaWithOptions _ -> "PragmaWithOptions"
   | Tm_ForwardJumpLabel {body} -> Printf.sprintf "(ForwardJumpLabel %s)" (print_skel body)
   | Tm_Goto _ -> "Goto"
+  // A try has two separately scoped children; include both in skeleton traces
+  // to distinguish a protected raise from a handler's outward re-raise.
+  | Tm_Raise _ -> "Raise"
+  | Tm_NativeRaise _ -> "NativeRaise"
+  | Tm_NativeScope {body} -> Printf.sprintf "(NativeScope %s)" (print_skel body)
+  | Tm_NativeTry {body;handler} -> Printf.sprintf "(NativeTry %s %s)" (print_skel body) (print_skel handler)
+  | Tm_ExceptionScope {body} -> Printf.sprintf "(ExceptionScope %s)" (print_skel body)
+  | Tm_Try {body;handler} -> Printf.sprintf "(Try %s %s)" (print_skel body) (print_skel handler)
   | Tm_Defer {body} -> Printf.sprintf "(Defer %s)" (print_skel body)
 
 let decl_to_string (d:decl) : T.Tac string =
