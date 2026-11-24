@@ -13,11 +13,13 @@ let major_type_uint64 : UInt8.t = 0uy
 [@@ CMacro ]
 let major_type_text_string : UInt8.t = 3uy
 
-[@@ CMacro ]
+(* A [@@Comment] is written before the [#define], in the header for a public
+   macro and in the source for a private one. *)
+[@@ CMacro; Comment "the largest simple value" ]
 let max_simple_value : UInt8.t = 23uy
 
 (* Private, so it is a macro in the source rather than in the header. *)
-[@@ CMacro ]
+[@@ CMacro; Comment "the internal limit" ]
 private
 let internal_limit : UInt32.t = 65535ul
 
