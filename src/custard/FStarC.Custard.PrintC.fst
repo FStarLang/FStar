@@ -489,6 +489,21 @@ let arities : ref (HashTable.t string int) = mk_ref (HashTable.create 0)
 (* Whether the definition currently being printed returns [void]. *)
 let void_ret : ref bool = mk_ref false
 
+(* --custard_early_return, for the definition being printed: "no" outside a
+   function body, and for the definitions the option does not apply to.
+   [in_early] is set while printing a branch that returns before the end of
+   the function -- the then-branch of a tail [if] whose else-branch follows
+   it -- and [early_used] records that such a branch jumped to the exit label
+   (goto mode), which is what makes the function need one.  [early_flat]
+   records that some else-branch was moved out of its block.  The label and
+   the result variable are named once the body is printed. *)
+let early_mode : ref string = mk_ref "no"
+let in_early : ref bool = mk_ref false
+let early_used : ref bool = mk_ref false
+let early_flat : ref bool = mk_ref false
+let exit_label : ref string = mk_ref "exit"
+let exit_result : ref string = mk_ref "result"
+
 (* Cherry: tail calls that become a jump, as OCaml's would, since ML code
    loops by recursion and C does not promise to eliminate the call
    (cherry.md, "Tail calls").  Each entry is a definition the C function
@@ -2101,6 +2116,12 @@ type c_body =
   | CFor of c_local & string & c_body & string
   | CIfdef of string & c_body & c_body & string
   | CLocal of c_local
+  (* --custard_early_return goto: a return, of the value if any, at this
+     indentation.  It is a [return] unless the function has an early return,
+     in which case it assigns the result variable and, if the flag is set,
+     jumps to the exit label.  A node rather than text, so that the jumps can
+     be checked against the declarations they skip. *)
+  | CExit of string & option string & bool
 (* What a local declares, so that --custard_init_locals can spell a zero of
    it once the declaration has reached its final place. *)
 and local_kind =
@@ -2155,7 +2176,18 @@ let render_body (b:c_body) : ML string =
     | CLocal l ->
       add l.cl_ind; add l.cl_decl;
       (match l.cl_init with None -> () | Some v -> add " = "; add v);
-      add ";\n" in
+      add ";\n"
+    | CExit (ind, v, jump) ->
+      if !early_used then begin
+        (match v with
+         | Some v -> add ind; add !exit_result; add " = "; add v; add ";\n"
+         | None -> ());
+        if jump then (add ind; add "goto "; add !exit_label; add ";\n")
+      end else begin
+        add ind; add "return";
+        (match v with Some v -> add " "; add v | None -> ());
+        add ";\n"
+      end in
   let sb = SB.create 1024 in
   go sb b;
   SB.contents sb
@@ -2199,6 +2231,7 @@ let hoist_body (b:c_body) : ML c_body =
   let rec collect (leading:bool) (b:c_body) : ML (c_body & c_body & bool) =
     match b with
     | CText s -> (empty_body, b, leading && s = "")
+    | CExit _ -> (empty_body, b, false)
     | CComment _ -> if leading then (b, empty_body, true) else (empty_body, b, false)
     | CAppend (a, b) ->
       let ah, ar, leading = collect leading a in
@@ -2325,7 +2358,7 @@ let local_zero (mode:string) (l:c_local) : ML string =
 let init_locals_body (mode:string) (b:c_body) : ML c_body =
   let rec go (b:c_body) : ML c_body =
     match b with
-    | CText _ | CComment _ -> b
+    | CText _ | CComment _ | CExit _ -> b
     | CAppend (x, y) -> CAppend (go x, go y)
     | CBlock (pre, x, post) -> CBlock (pre, go x, post)
     | CFor (l, rest, x, post) -> CFor (l, rest, go x, post)
@@ -2335,11 +2368,78 @@ let init_locals_body (mode:string) (b:c_body) : ML c_body =
       else CLocal { l with cl_init = Some (local_zero mode l) } in
   go b
 
+(* --custard_early_return.  Moving an else-branch out of its block puts its
+   declarations in the enclosing one, and goto mode adds a result variable:
+   both rely on every local of a function having a name of its own, which
+   the allocator ensures, and which is checked here rather than assumed. *)
+let check_unique_locals (b:c_body) : ML unit =
+  let seen : HashTable.t string bool = HashTable.create 20 in
+  let see (nm:string) : ML unit =
+    if HashTable.mem seen nm then
+      reject_ir ("a second declaration of the local " ^ nm)
+        ["--custard_early_return needs the locals of a function to have distinct names.";
+         "This is a compiler bug: please report it, with the definition named above."]
+    else HashTable.add seen nm true in
+  let rec go (b:c_body) : ML unit =
+    match b with
+    | CText _ | CComment _ | CExit _ -> ()
+    | CAppend (x, y) | CIfdef (_, x, y, _) -> go x; go y
+    | CBlock (_, x, _) -> go x
+    | CFor (l, _, x, _) -> see l.cl_name; go x
+    | CLocal l -> see l.cl_name in
+  go b
+
+(* --custard_early_return goto.  A jump to the exit label leaves every block
+   it is in, and enters the function's outermost one at its end, so the only
+   declarations it skips are those of that block after the first jump.  C
+   forbids a jump into the scope of a variable-length array, and C++ a jump
+   past a declaration with an initializer. *)
+let check_early_jumps (b:c_body) : ML unit =
+  let rec has_exit (b:c_body) : ML bool =
+    match b with
+    | CExit (_, _, jump) -> jump
+    | CAppend (x, y) | CIfdef (_, x, y, _) -> has_exit x || has_exit y
+    | CBlock (_, x, _) | CFor (_, _, x, _) -> has_exit x
+    | _ -> false in
+  let skipped (l:c_local) (why:string) (fix:string) : ML unit =
+    E.raise_error0 E.Error_CustardNoCRepresentation [
+      text ("Custard: --custard_early_return goto cannot jump past " ^ l.cl_name ^
+            " in " ^ l.cl_origin ^ ": " ^ why ^ ".");
+      text ("The exit label is in its scope, and an early return before its \
+             declaration would skip it. " ^ fix) ] in
+  let rec go (seen:bool) (b:c_body) : ML bool =
+    match b with
+    | CAppend (x, y) -> go (go seen x) y
+    (* Not a scope: what the arms declare is declared in the enclosing block. *)
+    | CIfdef (_, x, y, _) -> let sx = go seen x in let sy = go seen y in sx || sy
+    | CBlock _ | CFor _ | CExit _ -> seen || has_exit b
+    | CLocal l ->
+      if seen then begin
+        (match l.cl_kind with
+         | LKArray (_, true) ->
+           skipped l "it is a variable-length stack array"
+             "Use --custard_early_return return, or fixed-size storage."
+         | _ -> ());
+        (match l.cl_init, l.cl_barrier with
+         | Some _, _ ->
+           skipped l "it has an initializer, which C++ does not let a jump skip"
+             "Use --custard_hoist_locals to declare it at the top of the function."
+         | None, Some why ->
+           skipped l why
+             "Use --custard_early_return return."
+         | None, None -> ())
+      end;
+      seen
+    | CText _ | CComment _ -> seen in
+  let _ = go false b in ()
+
 let function_body (b:c_body) : ML string =
   let b = if Options.custard_hoist_locals () then hoist_body b else b in
   let mode = Options.custard_init_locals () in
-  FStarC.Custard.Prof.timed "c.render_body" (fun () ->
-    render_body (if mode = "no" then b else init_locals_body mode b))
+  let b = if mode = "no" then b else init_locals_body mode b in
+  if !early_flat || !early_used then check_unique_locals b;
+  if !early_used then check_early_jumps b;
+  FStarC.Custard.Prof.timed "c.render_body" (fun () -> render_body b)
 
 (* Where the value of an expression goes once it has been computed. *)
 type dest =
@@ -2390,8 +2490,8 @@ let declared : ref (HashTable.t string bool) = mk_ref (HashTable.create 0)
 let reset_scope () : ML unit =
   scope := []; declared := HashTable.create 20
 
-let bind_gen (x:string) (cell:bool) : ML string =
-  let base = c_var x in
+(* A name no local of the definition being printed has, nor any global. *)
+let reserve_name (base:string) : ML string =
   let rec pick (i:int) : ML string =
     let cand = if i = 0 then base else base ^ "_" ^ show i in
     if Some? (HashTable.try_find !declared cand) ||
@@ -2399,6 +2499,10 @@ let bind_gen (x:string) (cell:bool) : ML string =
     then pick (i + 1) else cand in
   let nm = pick 0 in
   HashTable.add !declared nm true;
+  nm
+
+let bind_gen (x:string) (cell:bool) : ML string =
+  let nm = reserve_name (c_var x) in
   scope := (x, (c_postfix nm, cell)) :: !scope;
   nm
 
@@ -3579,12 +3683,34 @@ and finish (ind:string) (d:dest) (s:string) : ML c_body =
     if s = unit_value then empty_body else CText (ind ^ "(void)" ^ group s ^ ";\n")
   | D_Return when !trmc_on ->
     CText (ind ^ "*" ^ trmc_dst ^ " = " ^ s ^ ";\n" ^ ind ^ "return " ^ trmc_result ^ ";\n")
+  | D_Return when !early_mode = "goto" ->
+    if !in_early then early_used := true;
+    CExit (ind, Some s, true)
   | D_Return -> CText (ind ^ "return " ^ s ^ ";\n")
   | D_Assign x -> CText (ind ^ x ^ " = " ^ s ^ ";\n")
   (* The value is computed for its effect; the cast silences the warning that
      it is unused.  A unit constant computes nothing, so it needs neither. *)
   | D_Ignore ->
     if s = unit_value then empty_body else CText (ind ^ "(void)" ^ group s ^ ";\n")
+
+(* --custard_early_return: what ends a then-branch of a [void] function that
+   its else-branch now follows, since falling off its end would run it. *)
+and early_exit (ind:string) : ML c_body =
+  if !early_mode = "goto" then (early_used := true; CExit (ind, None, true))
+  else CText (ind ^ "return;\n")
+
+(* --custard_early_return: whether a conditional in this position returns
+   from its then-branch, and lets its else-branch follow it. *)
+and flattens (d:dest) : ML bool =
+  D_Return? d && !early_mode <> "no"
+
+(* A then-branch printed in early-return position. *)
+and in_early_branch (f:unit -> ML c_body) : ML c_body =
+  let saved = !in_early in
+  in_early := true;
+  let b = f () in
+  in_early := saved;
+  b
 
 (* Cherry: leaving a definition printed with [trmc_on] with an exception
    pending.  The hole gets a value that needs no release, and the cells
@@ -3836,6 +3962,25 @@ and emit (ind:string) (d:dest) (e:expr) : ML c_body =
     let tt = arm (CText tv ++ emit ind' d t) in
     let ft = arm (CText fv ++ emit ind' d f) in
     CIfdef (cond, tt, ft, ind)
+
+  | EIf (c, t, f) when flattens d ->
+    let out = mk_ref empty_body in
+    let cs = c_expr out ind c in
+    let tt = in_early_branch (fun () -> emit ind' d t) in
+    (* A [void] then-branch that does nothing has nothing to return early
+       from: the [if] is printed as usual, with its condition negated. *)
+    if body_empty tt then
+      let ft = emit ind' d f in
+      !out ++
+      (if body_empty ft then empty_body
+       else CText (ind ^ "if (" ^ negate cs ^ ")") ++ brace ind ft)
+    else begin
+      let ft = emit ind d f in
+      early_flat := true;
+      !out ++ CText (ind ^ "if (" ^ unparen cs ^ ")") ++
+      brace ind (if !void_ret && not (body_empty ft) then tt ++ early_exit ind' else tt) ++
+      ft
+    end
 
   | EIf (c, t, f) ->
     let out = mk_ref empty_body in
@@ -4483,9 +4628,13 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML c_body 
     begin
     let saved_ctr = !ctr in
     let saved_declared = HashTable.copy !declared in
+    let saved_used = !early_used in
+    let saved_flat = !early_flat in
     let s = branch_body ind' p b in
     ctr := saved_ctr;
     declared := saved_declared;
+    early_used := saved_used;
+    early_flat := saved_flat;
     body_empty s
     end in
   let rec trim (rbs:list branch) : ML (list branch) =
@@ -4545,6 +4694,25 @@ and emit_match (ind:string) (d:dest) (scrut:expr) (brs:list branch) : ML c_body 
       (* Irrefutable, so it is the last branch that can run; anything after it
          is dead and C would warn about it. *)
       if Nil? tests then last [] p b
+      (* --custard_early_return: an arm that returns is an [if] of its own,
+         and the arms after it follow it rather than its [else].  Only from
+         the start of the chain: once an arm is in an [else], so are the
+         rest. *)
+      else if first && flattens d then begin
+        let body = in_early_branch (fun () -> branch_body ind' p b) in
+        let test = CText (ind ^ "if (" ^ String.concat " && " tests ^ ")") in
+        (* A [void] arm that does nothing would let its inputs fall through
+           to the later arms: it keeps the [else] chain. *)
+        if body_empty body then test ++ brace ind body ++ go false rest
+        else begin
+          let after = go true rest in
+          early_flat := true;
+          test ++
+          brace ind (if !void_ret && not (body_empty after)
+                     then body ++ early_exit ind' else body) ++
+          after
+        end
+      end
       else
         let after = go false rest in
         CText ((if first then ind else ind ^ "else ") ^
@@ -5070,21 +5238,54 @@ let let_decl (l:dlet) : ML string =
   let trmc = ok && is_boxed_ty l.dl_ret && has_trmc_site l.dl_ret l.dl_body in
   trmc_on := trmc;
   musttail_ok := ok && not trmc;
+  early_mode := (if ok then "no" else Options.custard_early_return ());
+  in_early := false;
+  early_used := false;
+  early_flat := false;
   let body = emit "  " D_Return l.dl_body in
   tail_targets := [];
   musttail_ok := false;
   trmc_on := false;
+  (* --custard_early_return goto, in a function that returns early: one
+     result variable, declared first, and one exit label, last.  A last
+     return is an assignment that falls through to the label. *)
+  let exit_decl, exit_tail =
+    if not !early_used then empty_body, empty_body else begin
+      exit_label := reserve_name "exit";
+      let tail = CText ("  " ^ !exit_label ^ ":\n") in
+      if !void_ret then empty_body, tail ++ CText "  return;\n" else begin
+        exit_result := reserve_name "result";
+        let init =
+          if Options.custard_init_locals () = "no"
+          then Some (zero_init true 16 l.dl_ret) else None in
+        typed_local "  " l.dl_ret !exit_result init,
+        tail ++ CText ("  return " ^ !exit_result ^ ";\n")
+      end
+    end in
+  let rec fall_through (b:c_body) : ML c_body =
+    match b with
+    | CExit (i, v, true) -> CExit (i, v, false)
+    | CAppend (x, y) ->
+      if body_empty y then CAppend (fall_through x, y) else CAppend (x, fall_through y)
+    | _ -> b in
+  let body = if !early_used then fall_through body else body in
   let voids = String.concat "" (kept_binders l |> List.collect (fun b ->
     let v = lookup_var b.b_name in
     if List.existsb (fun y -> y = b.b_name) used &&
        not (List.mem v !tail_kept) then []
     else ["  (void)" ^ v ^ ";\n"])) in
-  signature l ^ " {\n" ^
-  function_body (CText (voids ^ (if trmc
-   then "  " ^ decl_of l.dl_ret trmc_result ^ " = NULL;\n" ^
-        "  " ^ decl_of l.dl_ret ("*" ^ trmc_dst) ^ " = &" ^ trmc_result ^ ";\n"
-   else "") ^
-  (if Cons? !tail_used then "custard_tail:;\n" else "")) ++ body) ^ "}\n"
+  let s =
+    signature l ^ " {\n" ^
+    function_body (exit_decl ++ CText (voids ^ (if trmc
+     then "  " ^ decl_of l.dl_ret trmc_result ^ " = NULL;\n" ^
+          "  " ^ decl_of l.dl_ret ("*" ^ trmc_dst) ^ " = &" ^ trmc_result ^ ";\n"
+     else "") ^
+    (if Cons? !tail_used then "custard_tail:;\n" else "")) ++ body ++ exit_tail) ^ "}\n" in
+  early_mode := "no";
+  in_early := false;
+  early_used := false;
+  early_flat := false;
+  s
 
 (* Cherry: the C function a tail group is printed as (cherry.md, "Tail
    calls").  Every member's parameters are its locals, named apart; it starts
