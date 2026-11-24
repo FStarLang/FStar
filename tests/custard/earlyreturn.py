@@ -29,6 +29,9 @@ def run(command, error=None):
 
 
 def extract(name, tag, *flags, error=None):
+    if name == "GotoReturn":
+        flags += ("--custard_entry", "GotoReturn.pulse_early_return",
+                  "--custard_entry", "GotoReturn.no_early_return")
     path = out / (name + "-" + tag + ".c")
     command = fstar + [
         "--codegen", "C", "--custard_monomorphize_types", "true",
@@ -137,6 +140,47 @@ if Path("EarlyReturn.fst").exists():
             "--custard_main", "EarlyReturn.main", "EarlyReturn.fst",
         ], error="--custard_early_return requires --codegen C")
 else:
+    # The port of karamel's test/pulse/GotoReturn.fst.
+    early = ["early_return_int", "early_return_two_args", "collision_test",
+             "early_return_bool", "early_return_uint32",
+             "early_return_uint64", "early_return_int64",
+             "early_return_void", "early_return_struct"]
+    early = ["GotoReturn_" + name for name in early]
+    unchanged = ["GotoReturn_" + name for name in
+                 ("no_early_return", "unit_return", "pulse_early_return")]
+    default = extract("GotoReturn", "default")
+    compile_run(default)
+    before = functions(default)
+    for tag, flags in (
+            ("goto", []),
+            ("goto-hoist", ["--custard_hoist_locals"]),
+            ("goto-lines", ["--custard_line_comments"])):
+        source = extract("GotoReturn", tag, "--custard_early_return", "goto",
+                         *flags)
+        check_flat(source, early)
+        check_goto(source, early, ["GotoReturn_early_return_void"])
+        bodies = functions(source)
+        for name in unchanged:
+            assert "goto" not in bodies[name], (source, name)
+            assert bodies[name] == before[name], (source, name)
+        # The result variable gets a zero of its type, and a fresh name.
+        assert re.search(r"^\s*bool result = false;",
+                         bodies["GotoReturn_early_return_bool"], re.M), source
+        for name in ("uint64", "int64"):
+            assert re.search(r"^\s*u?int64_t result = 0\w*;",
+                             bodies["GotoReturn_early_return_" + name],
+                             re.M), (source, name)
+        collision = bodies["GotoReturn_collision_test"]
+        assert re.search(r"^\s*int32_t result = \(?gr_opaque_int32\(x\)", collision, re.M), source
+        assert re.search(r"^\s*return result_1;", collision, re.M), source
+        # A Pulse return is a flag: the function has a single C return.
+        pulse = bodies["GotoReturn_pulse_early_return"]
+        assert len(re.findall(r"\breturn\b", pulse)) == 1, (source, pulse)
+        # Top-level comments stay block comments.
+        assert re.search(r"/\*+\s*This function has no early return\.",
+                         source.read_text()), source
+        compile_run(source, strict="hoist" in tag)
+
     # A variable-length array after the early exit: goto mode cannot jump
     # into its scope, even with hoisting; return mode is fine.
     source = extract("EarlyReturnVla", "return",

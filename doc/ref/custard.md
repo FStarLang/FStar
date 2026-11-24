@@ -3297,7 +3297,9 @@ return, each `CExit` renders as a plain `return`.
 
 Tests: `tests/custard/earlyreturn.py`, run from `tests/custard`
 (`EarlyReturn`, `EarlyReturnLate`) and `tests/custard/pulse`
-(`EarlyReturnVla`). It checks that `no` is the default output, that flattened
+(`EarlyReturnVla`, and `GotoReturn`, a port of karamel's
+`test/pulse/GotoReturn.fst` checked in `goto` mode, alone and with hoisting or
+line comments). It checks that `no` is the default output, that flattened
 functions have no `else`, and the shape of the `goto` output. It also checks
 that functions without early returns are unchanged, the errors of both
 guards, and that the other backends reject the option. Each output is

@@ -17,7 +17,7 @@ $(OUTPUT_DIR)/hoist-locals.checked: $(addprefix $(CACHE_DIR)/, HoistArrays.fst.c
 	$(Q)touch $@
 
 all: $(OUTPUT_DIR)/early-return.checked
-$(OUTPUT_DIR)/early-return.checked: $(addprefix $(CACHE_DIR)/, EarlyReturnVla.fst.checked) $(FSTAR_EXE) ../earlyreturn.py
+$(OUTPUT_DIR)/early-return.checked: $(addprefix $(CACHE_DIR)/, EarlyReturnVla.fst.checked GotoReturn.fst.checked) $(FSTAR_EXE) ../earlyreturn.py GotoReturn_stubs.h
 	$(Q)CC="$(CC)" CXX="$(CXX)" python3 ../earlyreturn.py $(OUTPUT_DIR)/early-return -- $(FSTAR)
 	$(Q)touch $@
 
