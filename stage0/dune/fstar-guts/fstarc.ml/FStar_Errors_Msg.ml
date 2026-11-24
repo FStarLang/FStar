@@ -6,6 +6,3 @@ type error_message = (PPrint.document) list
 let mkmsg (s : string) : (PPrint.document) list =
   ((PPrint.arbitrary_string s) :: [])
 
-let text (s : string) : PPrint.document =
-  (PPrint.flow (FStar_Pprint.break_ Prims.int_one) (PPrint.words s))
-

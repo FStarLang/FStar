@@ -99,29 +99,6 @@ let e_document : (PPrint.document) FStarC_Syntax_Embeddings_Base.embedding =
   (let tmp = (FStarC_Syntax_Syntax.fvar FStarC_Parser_Const.document_lid None) in
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_doc tmp))
 
-let e_any : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_Syntax_Embeddings_Base.embedding =
-  (let em = (fun t r u__shadow u__norm -> { FStarC_Syntax_Syntax.n = (t).FStarC_Syntax_Syntax.n;
-      pos = r;
-      hash_code = (t).FStarC_Syntax_Syntax.hash_code }) in
-  let un = (fun t u__n -> (Some (t))) in
-  (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_term) FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.term_lid), [])))))
-
-let e_abstract_term : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_Syntax_Embeddings_Base.embedding =
-  (FStarC_Syntax_Embeddings_Base.embed_as e_any (fun x -> x) (fun x -> x) None)
-
-let e_bool : (bool) FStarC_Syntax_Embeddings_Base.embedding =
-  (let em = (fun b rng u__shadow u__norm -> (let t = (if b then FStarC_Syntax_Util.exp_true_bool else FStarC_Syntax_Util.exp_false_bool) in
-    { FStarC_Syntax_Syntax.n = (t).FStarC_Syntax_Syntax.n;
-      pos = rng;
-      hash_code = (t).FStarC_Syntax_Syntax.hash_code })) in
-  let un = (fun t u__norm -> (let tmp = (FStarC_Syntax_Subst.compress t) in
-    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
-    (match tmp1 with
-      | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_bool (b)))) -> (Some (b))
-      | tmp2 -> None
-    ))) in
-  (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_bool) Prims.string_of_bool (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.bool_lid), [])))))
-
 let e_string : (string) FStarC_Syntax_Embeddings_Base.embedding =
   (let emb_t_string = (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.string_lid), [])) in
   let em = (fun s rng u__shadow u__norm -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_string (s, rng)))) rng)) in
@@ -279,6 +256,19 @@ let e_int : (Prims.int) FStarC_Syntax_Embeddings_Base.embedding =
     )))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> ty) FStarC_Class_Show.fStarC_Class_Show_show__int (fun tmp -> emb_t_int)))
 
+let e_bool : (bool) FStarC_Syntax_Embeddings_Base.embedding =
+  (let em = (fun b rng u__shadow u__norm -> (let t = (if b then FStarC_Syntax_Util.exp_true_bool else FStarC_Syntax_Util.exp_false_bool) in
+    { FStarC_Syntax_Syntax.n = (t).FStarC_Syntax_Syntax.n;
+      pos = rng;
+      hash_code = (t).FStarC_Syntax_Syntax.hash_code })) in
+  let un = (fun t u__norm -> (let tmp = (FStarC_Syntax_Subst.compress t) in
+    let tmp1 = (tmp).FStarC_Syntax_Syntax.n in
+    (match tmp1 with
+      | (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_bool (b)))) -> (Some (b))
+      | tmp2 -> None
+    ))) in
+  (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_bool) Prims.string_of_bool (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.bool_lid), [])))))
+
 let e_char : (int) FStarC_Syntax_Embeddings_Base.embedding =
   (let em = (fun c rng u__shadow u__norm -> (let t = (FStarC_Syntax_Util.exp_char c) in
     { FStarC_Syntax_Syntax.n = (t).FStarC_Syntax_Syntax.n;
@@ -291,6 +281,16 @@ let e_char : (int) FStarC_Syntax_Embeddings_Base.embedding =
       | tmp2 -> None
     ))) in
   (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_char) (fun i -> BatUTF8.init 1 (fun _ -> BatUChar.chr i)) (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.char_lid), [])))))
+
+let e_any : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_Syntax_Embeddings_Base.embedding =
+  (let em = (fun t r u__shadow u__norm -> { FStarC_Syntax_Syntax.n = (t).FStarC_Syntax_Syntax.n;
+      pos = r;
+      hash_code = (t).FStarC_Syntax_Syntax.hash_code }) in
+  let un = (fun t u__n -> (Some (t))) in
+  (FStarC_Syntax_Embeddings_Base.mk_emb_full em un (fun tmp -> FStarC_Syntax_Syntax.t_term) FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' (fun tmp -> (FStarC_Syntax_Syntax.ET_app ((FStarC_Ident.string_of_lid FStarC_Parser_Const.term_lid), [])))))
+
+let e_abstract_term : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStarC_Syntax_Embeddings_Base.embedding =
+  (FStarC_Syntax_Embeddings_Base.embed_as e_any (fun x -> x) (fun x -> x) None)
 
 let e_range : (FStarC_Range_Type.range) FStarC_Syntax_Embeddings_Base.embedding =
   (let em = (fun r rng u__shadow u__norm -> (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_constant ((FStarC_Const.Const_range (r)))) rng)) in

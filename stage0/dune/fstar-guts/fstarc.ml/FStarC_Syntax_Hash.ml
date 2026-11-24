@@ -110,6 +110,7 @@ and equal_binder_qualifier (c : bool) (b1 : FStarC_Syntax_Syntax.binder_qualifie
   (match (b1, b2) with
     | ((FStarC_Syntax_Syntax.Implicit (b11)), (FStarC_Syntax_Syntax.Implicit (b21))) -> ((=) b11 b21)
     | (FStarC_Syntax_Syntax.Equality, FStarC_Syntax_Syntax.Equality) -> true
+    | (FStarC_Syntax_Syntax.TcArg, FStarC_Syntax_Syntax.TcArg) -> true
     | ((FStarC_Syntax_Syntax.Meta (t1)), (FStarC_Syntax_Syntax.Meta (t2))) -> (equal_term_c c t1 t2)
     | tmp -> false
   )
@@ -218,19 +219,15 @@ and equal_subst_elt (c : bool) (s1 : FStarC_Syntax_Syntax.subst_elt) (s2 : FStar
     | tmp -> false
   )
 
-and equal_uvar (c : bool) (x1 : (FStarC_Syntax_Syntax.ctx_uvar * (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range))) (x2 : (FStarC_Syntax_Syntax.ctx_uvar * (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range))) : bool =
+and equal_uvar (c : bool) (x1 : (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Syntax_Syntax.subst_ts)) (x2 : (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Syntax_Syntax.subst_ts)) : bool =
   (match x1 with
-    | (u1, (s1, tmp)) -> (match x2 with
-        | (u2, (s2, tmp1)) -> (if ((=) (uvar_unique_id ((u1).FStarC_Syntax_Syntax.ctx_uvar_head, (u1).FStarC_Syntax_Syntax.ctx_uvar_head1, (u1).FStarC_Syntax_Syntax.ctx_uvar_head2)) (uvar_unique_id ((u2).FStarC_Syntax_Syntax.ctx_uvar_head, (u2).FStarC_Syntax_Syntax.ctx_uvar_head1, (u2).FStarC_Syntax_Syntax.ctx_uvar_head2))) then (equal_list (equal_list (equal_subst_elt c)) s1 s2) else false)
+    | (u1, { FStarC_Syntax_Syntax.subst_lists = s1; subst_use_range = tmp; _ }) -> (match x2 with
+        | (u2, { FStarC_Syntax_Syntax.subst_lists = s2; subst_use_range = tmp1; _ }) -> (if ((=) (uvar_unique_id ((u1).FStarC_Syntax_Syntax.ctx_uvar_head, (u1).FStarC_Syntax_Syntax.ctx_uvar_head1, (u1).FStarC_Syntax_Syntax.ctx_uvar_head2)) (uvar_unique_id ((u2).FStarC_Syntax_Syntax.ctx_uvar_head, (u2).FStarC_Syntax_Syntax.ctx_uvar_head1, (u2).FStarC_Syntax_Syntax.ctx_uvar_head2))) then (equal_list (equal_list (equal_subst_elt c)) s1 s2) else false)
       )
   )
 
-and equal_subst_ts (c : bool) (s1 : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range)) (s2 : (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range)) : bool =
-  (equal_list (equal_list (equal_subst_elt c)) (match s1 with
-    | (u__1, u__2) -> u__1
-  ) (match s2 with
-    | (u__1, u__2) -> u__1
-  ))
+and equal_subst_ts (c : bool) (s1 : FStarC_Syntax_Syntax.subst_ts) (s2 : FStarC_Syntax_Syntax.subst_ts) : bool =
+  (equal_list (equal_list (equal_subst_elt c)) (s1).FStarC_Syntax_Syntax.subst_lists (s2).FStarC_Syntax_Syntax.subst_lists)
 
 and equal_meta (c : bool) (m1 : FStarC_Syntax_Syntax.metadata) (m2 : FStarC_Syntax_Syntax.metadata) : bool =
   (match (m1, m2) with
@@ -287,8 +284,8 @@ and equal_term_c (c : bool) (t1 : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syn
         | ((FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = r1; lbs1 = lbs1; body = t12; _ })), (FStarC_Syntax_Syntax.Tm_let ({ FStarC_Syntax_Syntax.lbs = r2; lbs1 = lbs2; body = t22; _ }))) -> (let tmp1 = (if ((=) r1 r2) then (equal_list (equal_letbinding c) lbs1 lbs2) else false) in
           (if tmp1 then (equal_term_c c t12 t22) else false))
         | ((FStarC_Syntax_Syntax.Tm_uvar (u__1, u__2)), (FStarC_Syntax_Syntax.Tm_uvar (u__11, u__21))) -> (equal_uvar c (u__1, u__2) (u__11, u__21))
-        | ((FStarC_Syntax_Syntax.Tm_delayed ({ FStarC_Syntax_Syntax.tm = t12; substs = u__1; substs1 = u__2; _ })), (FStarC_Syntax_Syntax.Tm_delayed ({ FStarC_Syntax_Syntax.tm = t22; substs = u__11; substs1 = u__21; _ }))) -> (let tmp1 = (equal_term_c c t12 t22) in
-          (if tmp1 then (equal_subst_ts c (u__1, u__2) (u__11, u__21)) else false))
+        | ((FStarC_Syntax_Syntax.Tm_delayed ({ FStarC_Syntax_Syntax.tm = t12; substs = s1; _ })), (FStarC_Syntax_Syntax.Tm_delayed ({ FStarC_Syntax_Syntax.tm = t22; substs = s2; _ }))) -> (let tmp1 = (equal_term_c c t12 t22) in
+          (if tmp1 then (equal_subst_ts c s1 s2) else false))
         | ((FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t12; meta = m1; _ })), (FStarC_Syntax_Syntax.Tm_meta ({ FStarC_Syntax_Syntax.tm = t22; meta = m2; _ }))) -> (let tmp1 = (equal_term_c c t12 t22) in
           (if tmp1 then (equal_meta c m1 m2) else false))
         | ((FStarC_Syntax_Syntax.Tm_lazy (l1)), (FStarC_Syntax_Syntax.Tm_lazy (l2))) -> (equal_lazyinfo c l1 l2)
@@ -363,7 +360,7 @@ let term_map_lookup (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.synta
   (fStarC_HashMap_lookup__syntax_term' t m)
 
 let term_map_fold (f : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> ('a -> ('b -> 'b)))) (m : (Prims.int, (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * 'a)) list) FStarC_AVLMap.tree) (acc : 'b) : 'b =
-  (FStarC_HashMap.fStarC_HashMap_fold__syntax_term' f m acc)
+  (FStarC_Syntax_Syntax.fStarC_HashMap_fold__syntax_term' f m acc)
 
 let fStarC_Class_Hashable_hash__binding (tmp : FStarC_Syntax_Syntax.binding) : int =
   (match tmp with

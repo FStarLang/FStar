@@ -42,6 +42,9 @@ let exec_name : string =
 let get_exec_dir (tmp : unit) : string =
   (Filename.dirname exec_name)
 
+let float_of_string (s : string) : float =
+  (Stdlib.float_of_string s)
+
 let trim_string (s : string) : string =
   (BatString.trim s)
 
@@ -54,9 +57,6 @@ let rec find_map (l : ('u___a) list) (f : ('u___a -> ('u___b) option)) : ('u___b
         | y -> y
       ))
   )
-
-let float_of_string (s : string) : float =
-  (Stdlib.float_of_string s)
 
 let splitlines (s : string) : (string) list =
   (if ((=) s "") then ("" :: []) else (FStarC_String.split_on_string s "\n"))
@@ -111,11 +111,14 @@ let for_some (f : ('u___a -> bool)) : (('u___a) list -> bool) =
 let starts_with (long : string) (eta : string) : bool =
   (BatString.starts_with long eta)
 
-let sort_with (f : ('u___a -> ('u___a -> Prims.int))) (eta : ('u___a) list) : ('u___a) list =
-  ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) f eta)
+let for_all (f : ('u___a -> bool)) (eta : ('u___a) list) : bool =
+  (BatList.for_all f eta)
 
 let ends_with (long : string) : (string -> bool) =
   (BatString.ends_with long)
+
+let sort_with (f : ('u___a -> ('u___a -> Prims.int))) (eta : ('u___a) list) : ('u___a) list =
+  ((fun f l -> BatList.sort (fun x y -> Z.to_int (f x y)) l) f eta)
 
 let rec first_N__aux (n : Prims.int) (acc : ('u___a) list) (i : Prims.int) (l : ('u___a) list) : (('u___a) list * ('u___a) list) =
   (if ((=) i n) then ((FStar_List_Tot_Base.rev acc), l) else (match l with
@@ -137,9 +140,6 @@ let is_upper (c : int) : bool =
 
 let strcat (s1 : string) (eta : string) : string =
   (Prims.strcat s1 eta)
-
-let for_all (f : ('u___a -> bool)) (eta : ('u___a) list) : bool =
-  (BatList.for_all f eta)
 
 let kill_process' (p : proc_rec) : unit =
   (let tmp = (!((p).killed)) in

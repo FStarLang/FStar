@@ -133,7 +133,7 @@ and eq_tm (env : FStarC_TypeChecker_Env.env) (t1 : (FStarC_Syntax_Syntax.term') 
         | FStarC_Order.Gt -> NotEqual
       )
     | ((FStarC_Syntax_Syntax.Tm_constant (c)), (FStarC_Syntax_Syntax.Tm_constant (d))) -> (equal_iff (FStarC_Const.eq_const c d))
-    | ((FStarC_Syntax_Syntax.Tm_uvar (u1, ([], tmp2))), (FStarC_Syntax_Syntax.Tm_uvar (u2, ([], tmp3)))) -> (let tmp4 = (FStarC_Syntax_Unionfind.equiv ((u1).FStarC_Syntax_Syntax.ctx_uvar_head, (u1).FStarC_Syntax_Syntax.ctx_uvar_head1, (u1).FStarC_Syntax_Syntax.ctx_uvar_head2) ((u2).FStarC_Syntax_Syntax.ctx_uvar_head, (u2).FStarC_Syntax_Syntax.ctx_uvar_head1, (u2).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
+    | ((FStarC_Syntax_Syntax.Tm_uvar (u1, { FStarC_Syntax_Syntax.subst_lists = []; subst_use_range = tmp2; _ })), (FStarC_Syntax_Syntax.Tm_uvar (u2, { FStarC_Syntax_Syntax.subst_lists = []; subst_use_range = tmp3; _ }))) -> (let tmp4 = (FStarC_Syntax_Unionfind.equiv ((u1).FStarC_Syntax_Syntax.ctx_uvar_head, (u1).FStarC_Syntax_Syntax.ctx_uvar_head1, (u1).FStarC_Syntax_Syntax.ctx_uvar_head2) ((u2).FStarC_Syntax_Syntax.ctx_uvar_head, (u2).FStarC_Syntax_Syntax.ctx_uvar_head1, (u2).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
       (equal_if tmp4))
     | ((FStarC_Syntax_Syntax.Tm_app ({ FStarC_Syntax_Syntax.hd = h1; arg = u__1; arg1 = u__2; _ })), (FStarC_Syntax_Syntax.Tm_app ({ FStarC_Syntax_Syntax.hd = h2; arg = u__11; arg1 = u__21; _ }))) -> (let tmp2 = (FStarC_Syntax_Util.un_uinst h1) in
       let tmp3 = (tmp2).FStarC_Syntax_Syntax.n in

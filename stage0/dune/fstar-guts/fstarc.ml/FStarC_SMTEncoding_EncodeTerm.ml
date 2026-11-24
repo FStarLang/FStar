@@ -570,7 +570,7 @@ and encode_smt_patterns (pats_l : ((((FStarC_Syntax_Syntax.term') FStarC_Syntax_
               | (t, d) -> (match (FStarC_SMTEncoding_Term.check_pattern_ok t) with
                   | None -> ((t :: pats1), (BatList.append d decls1))
                   | (Some (illegal_subterm)) -> (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' p) in
-                    let tmp6 = (FStarC_SMTEncoding_Term.fStarC_Class_Show_show__term_145 illegal_subterm) in
+                    let tmp6 = (FStarC_SMTEncoding_Term.fStarC_Class_Show_show__term_146 illegal_subterm) in
                     let tmp7 = (FStarC_Format.fmt2 "Pattern %s contains illegal sub-term (%s); dropping it" tmp5 tmp6) in
                     (FStarC_Errors.fStarC_Errors_log_issue__syntax_term'_string p FStarC_Errors_Codes.Warning_SMTPatternIllFormed tmp7);
                     (pats1, (BatList.append d decls1)))
@@ -1161,7 +1161,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
               let tmp6 = ("ApplyTF", tmp5) in
               let tmp7 = (FStarC_SMTEncoding_Util.mkApp tmp6) in
               (true, tmp7))
-            | ((FStarC_SMTEncoding_Term.App (op, (tmp2 :: tmp3), tmp4)), (tmp5 :: tmp6)) -> (let tmp7 = (FStarC_SMTEncoding_Term.fStarC_Class_Show_show__term_145 tok) in
+            | ((FStarC_SMTEncoding_Term.App (op, (tmp2 :: tmp3), tmp4)), (tmp5 :: tmp6)) -> (let tmp7 = (FStarC_SMTEncoding_Term.fStarC_Class_Show_show__term_146 tok) in
               let tmp8 = (FStarC_Format.fmt1 "Impossible: Universe applications cannot be curried: head is %s" tmp7) in
               (FStarC_Effect.failwith tmp8))
             | ((FStarC_SMTEncoding_Term.FreeV (tmp2)), []) -> (true, tok)
@@ -1209,7 +1209,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
               let tmp9 = ("ApplyTF", tmp8) in
               let tmp10 = (FStarC_SMTEncoding_Util.mkApp tmp9) in
               (true, tmp10))
-            | ((FStarC_SMTEncoding_Term.App (op, (tmp5 :: tmp6), tmp7)), (tmp8 :: tmp9)) -> (let tmp10 = (FStarC_SMTEncoding_Term.fStarC_Class_Show_show__term_145 tok) in
+            | ((FStarC_SMTEncoding_Term.App (op, (tmp5 :: tmp6), tmp7)), (tmp8 :: tmp9)) -> (let tmp10 = (FStarC_SMTEncoding_Term.fStarC_Class_Show_show__term_146 tok) in
               let tmp11 = (FStarC_Format.fmt1 "Impossible: Universe applications cannot be curried: head is %s" tmp10) in
               (FStarC_Effect.failwith tmp11))
             | ((FStarC_SMTEncoding_Term.FreeV (tmp5)), []) -> (true, tok)
@@ -1273,7 +1273,6 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                   use_eq_strict = (tmp8).FStarC_TypeChecker_Env.use_eq_strict;
                   is_iface = (tmp8).FStarC_TypeChecker_Env.is_iface;
                   admit = true;
-                  phase1 = (tmp8).FStarC_TypeChecker_Env.phase1;
                   failhard = (tmp8).FStarC_TypeChecker_Env.failhard;
                   flychecking = (tmp8).FStarC_TypeChecker_Env.flychecking;
                   uvar_subtyping = (tmp8).FStarC_TypeChecker_Env.uvar_subtyping;
@@ -1301,6 +1300,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                   strict_args_tab = (tmp8).FStarC_TypeChecker_Env.strict_args_tab;
                   disc_proj_tab = (tmp8).FStarC_TypeChecker_Env.disc_proj_tab;
                   erasable_types_tab = (tmp8).FStarC_TypeChecker_Env.erasable_types_tab;
+                  spec_arg_tab = (tmp8).FStarC_TypeChecker_Env.spec_arg_tab;
                   enable_defer_to_tac = (tmp8).FStarC_TypeChecker_Env.enable_defer_to_tac;
                   unif_allow_ref_guards = (tmp8).FStarC_TypeChecker_Env.unif_allow_ref_guards;
                   erase_erasable_args = (tmp8).FStarC_TypeChecker_Env.erase_erasable_args;
@@ -1309,7 +1309,12 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
                   iface_todo = (tmp8).FStarC_TypeChecker_Env.iface_todo;
                   iface_hidden = (tmp8).FStarC_TypeChecker_Env.iface_hidden;
                   iface_lids = (tmp8).FStarC_TypeChecker_Env.iface_lids;
-                  iface_val_lids = (tmp8).FStarC_TypeChecker_Env.iface_val_lids } in
+                  iface_val_lids = (tmp8).FStarC_TypeChecker_Env.iface_val_lids;
+                  tc_global = (tmp8).FStarC_TypeChecker_Env.tc_global;
+                  tc_scope = (tmp8).FStarC_TypeChecker_Env.tc_scope;
+                  tc_scope_gamma = (tmp8).FStarC_TypeChecker_Env.tc_scope_gamma;
+                  tc_class_of_typ = (tmp8).FStarC_TypeChecker_Env.tc_class_of_typ;
+                  tc_resolve = (tmp8).FStarC_TypeChecker_Env.tc_resolve } in
               let tmp9 = (FStarC_TypeChecker_Util.pure_or_ghost_pre_and_post tcenv_bs res) in
               (match tmp9 with
                 | (pre_opt, res_t) -> (let tmp10 = (encode_term_pred None res_t env' app) in
@@ -1719,7 +1724,7 @@ and encode_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (
               (match tmp4 with
                 | (vars, guards, envbody, decls, tmp5) -> (let tmp6 = (FStarC_SMTEncoding_Util.is_smt_reifiable_rc (env).FStarC_SMTEncoding_Env.tcenv rc) in
                   let body1 = (if tmp6 then (let tmp7 = (FStarC_Syntax_Util.mk_reify body (Some ((rc).FStarC_Syntax_Syntax.residual_effect))) in
-                    (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Util_norm_reify (envbody).FStarC_SMTEncoding_Env.tcenv [] tmp7)) else body) in
+                    (FStarC_TypeChecker_Util.norm_reify (envbody).FStarC_SMTEncoding_Env.tcenv [] tmp7)) else body) in
                   let tmp7 = (encode_term body1 envbody) in
                   (match tmp7 with
                     | (body2, decls') -> (let is_pure = (FStarC_Syntax_Util.is_pure_effect (rc).FStarC_Syntax_Syntax.residual_effect) in

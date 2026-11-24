@@ -141,6 +141,7 @@ let reifying_false (cfg : config) : config =
     debug = (tmp).FStarC_TypeChecker_Cfg.debug;
     delta_level = (tmp).FStarC_TypeChecker_Cfg.delta_level;
     primitive_steps = (tmp).FStarC_TypeChecker_Cfg.primitive_steps;
+    env_dependent_steps = (tmp).FStarC_TypeChecker_Cfg.env_dependent_steps;
     strong = (tmp).FStarC_TypeChecker_Cfg.strong;
     memoize_lazy = (tmp).FStarC_TypeChecker_Cfg.memoize_lazy;
     normalize_pure_lets = (tmp).FStarC_TypeChecker_Cfg.normalize_pure_lets;
@@ -154,6 +155,7 @@ let reifying_true (cfg : config) : config =
     debug = (tmp).FStarC_TypeChecker_Cfg.debug;
     delta_level = (tmp).FStarC_TypeChecker_Cfg.delta_level;
     primitive_steps = (tmp).FStarC_TypeChecker_Cfg.primitive_steps;
+    env_dependent_steps = (tmp).FStarC_TypeChecker_Cfg.env_dependent_steps;
     strong = (tmp).FStarC_TypeChecker_Cfg.strong;
     memoize_lazy = (tmp).FStarC_TypeChecker_Cfg.memoize_lazy;
     normalize_pure_lets = (tmp).FStarC_TypeChecker_Cfg.normalize_pure_lets;
@@ -202,6 +204,7 @@ let zeta_false (cfg : config) : config =
       debug = (cfg_core).FStarC_TypeChecker_Cfg.debug;
       delta_level = (cfg_core).FStarC_TypeChecker_Cfg.delta_level;
       primitive_steps = (cfg_core).FStarC_TypeChecker_Cfg.primitive_steps;
+      env_dependent_steps = (cfg_core).FStarC_TypeChecker_Cfg.env_dependent_steps;
       strong = (cfg_core).FStarC_TypeChecker_Cfg.strong;
       memoize_lazy = (cfg_core).FStarC_TypeChecker_Cfg.memoize_lazy;
       normalize_pure_lets = (cfg_core).FStarC_TypeChecker_Cfg.normalize_pure_lets;
@@ -847,12 +850,12 @@ and translate_letbinding (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) lis
 and translate_fv (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (fvar : FStarC_Syntax_Syntax.fv) : FStarC_TypeChecker_NBETerm.t =
   (let debug_ = (debug cfg) in
   let qninfo = (FStarC_TypeChecker_Env.lookup_qname (FStarC_TypeChecker_Cfg.cfg_env (cfg).core_cfg) (FStarC_Syntax_Syntax.lid_of_fv fvar)) in
-  (if ((is_constr qninfo) || (is_constr_fv fvar)) then (FStarC_TypeChecker_NBETerm.mkConstruct fvar [] []) else (let tmp = (FStarC_TypeChecker_Normalize_Unfolding.should_unfold false (cfg).core_cfg (fun tmp -> ((cfg).core_cfg).FStarC_TypeChecker_Cfg.reifying) fvar qninfo) in
+  (if ((is_constr qninfo) || (is_constr_fv fvar)) then (FStarC_TypeChecker_NBETerm.mkConstruct fvar [] []) else (let tmp = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Normalize_Unfolding_should_unfold false (cfg).core_cfg (fun tmp -> ((cfg).core_cfg).FStarC_TypeChecker_Cfg.reifying) fvar qninfo) in
   (match tmp with
     | FStarC_TypeChecker_Normalize_Unfolding.Should_unfold_fully -> (FStarC_Effect.failwith "Not yet handled")
     | FStarC_TypeChecker_Normalize_Unfolding.Should_unfold_no -> ((debug_ (fun tmp1 -> (let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fvar) in
       (FStarC_Format.print1 "(1) Decided to not unfold %s\n" tmp2))));
-      let tmp1 = (FStarC_TypeChecker_Cfg.find_prim_step (cfg).core_cfg fvar) in
+      let tmp1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Cfg_find_prim_step (cfg).core_cfg fvar) in
       (match tmp1 with
         | (Some (prim_step)) when (prim_step).FStarC_TypeChecker_Primops_Base.strong_reduction_ok -> (let arity = (Prims.op_Plus (prim_step).FStarC_TypeChecker_Primops_Base.arity (prim_step).FStarC_TypeChecker_Primops_Base.univ_arity) in
           (debug_ (fun tmp2 -> (let tmp3 = (FStarC_Syntax_Syntax.fStarC_Class_Show_show__fv fvar) in
@@ -1049,7 +1052,7 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
     | (FStarC_Syntax_Syntax.Tm_refine ({ FStarC_Syntax_Syntax.b = bv; phi = tm; _ })) -> (if ((((cfg).core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.for_extraction || (((cfg).core_cfg).FStarC_TypeChecker_Cfg.steps).FStarC_TypeChecker_Cfg.unrefine) then (translate cfg bs (bv).FStarC_Syntax_Syntax.sort) else (mk_t_ (FStarC_TypeChecker_NBETerm.Refinement ((fun y -> (translate cfg (y :: bs) tm)), (fun tmp2 -> (let tmp3 = (translate cfg bs (bv).FStarC_Syntax_Syntax.sort) in
       (FStarC_TypeChecker_NBETerm.as_arg tmp3)))))))
     | (FStarC_Syntax_Syntax.Tm_ascribed ({ FStarC_Syntax_Syntax.tm = t; asc = u__1; asc1 = u__2; asc2 = u__3; eff_opt = tmp2; _ })) -> (translate cfg bs t)
-    | (FStarC_Syntax_Syntax.Tm_uvar (u, (subst, set_use_range))) -> (let norm_uvar = (fun tmp2 -> (let norm_subst_elt = (fun tmp3 -> (match tmp3 with
+    | (FStarC_Syntax_Syntax.Tm_uvar (u, s)) -> (let norm_uvar = (fun tmp2 -> (let norm_subst_elt = (fun tmp3 -> (match tmp3 with
             | (FStarC_Syntax_Syntax.NT (x, t)) -> (let tmp4 = (translate cfg bs t) in
               let tmp5 = (readback cfg tmp4) in
               let tmp6 = (x, tmp5) in
@@ -1065,8 +1068,9 @@ and translate (cfg : config) (bs : (FStarC_TypeChecker_NBETerm.t) list) (e : (FS
               ))
             | tmp4 -> (FStarC_Effect.failwith "Impossible: subst invariant of uvar nodes")
           )) in
-        let subst1 = (BatList.map (BatList.map norm_subst_elt) subst) in
-        { FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_uvar (u, (subst1, set_use_range)));
+        let subst = (BatList.map (BatList.map norm_subst_elt) (s).FStarC_Syntax_Syntax.subst_lists) in
+        { FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_uvar (u, { FStarC_Syntax_Syntax.subst_lists = subst;
+            subst_use_range = (s).FStarC_Syntax_Syntax.subst_use_range }));
           pos = (e).FStarC_Syntax_Syntax.pos;
           hash_code = (e).FStarC_Syntax_Syntax.hash_code })) in
       let tmp2 = (FStarC_Thunk.mk norm_uvar) in
@@ -1362,6 +1366,7 @@ let normalize (psteps : (FStarC_TypeChecker_Primops_Base.primitive_step) list) (
       debug = (cfg).FStarC_TypeChecker_Cfg.debug;
       delta_level = (cfg).FStarC_TypeChecker_Cfg.delta_level;
       primitive_steps = (cfg).FStarC_TypeChecker_Cfg.primitive_steps;
+      env_dependent_steps = (cfg).FStarC_TypeChecker_Cfg.env_dependent_steps;
       strong = (cfg).FStarC_TypeChecker_Cfg.strong;
       memoize_lazy = (cfg).FStarC_TypeChecker_Cfg.memoize_lazy;
       normalize_pure_lets = (cfg).FStarC_TypeChecker_Cfg.normalize_pure_lets;

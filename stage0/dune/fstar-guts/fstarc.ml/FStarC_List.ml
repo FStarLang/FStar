@@ -23,13 +23,13 @@ let rec unzip3 (l : (('u___a * 'u___b * 'u___c)) list) : (('u___a) list * ('u___
       ))
   )
 
-let rev_map_onto (f : ('u___a -> 'u___b)) (l : ('u___a) list) (acc : ('u___b) list) : ('u___b) list =
-  (BatList.fold_left (fun acc1 x -> (let tmp = (f x) in
-  (tmp :: acc1))) acc l)
-
 let rec assoc (x : 'a) (l : (('a * 'b)) list) : ('b) option =
   (match l with
     | [] -> None
     | ((y, v) :: tl_) -> (if ((=) x y) then (Some (v)) else (assoc x tl_))
   )
+
+let rev_map_onto (f : ('u___a -> 'u___b)) (l : ('u___a) list) (acc : ('u___b) list) : ('u___b) list =
+  (BatList.fold_left (fun acc1 x -> (let tmp = (f x) in
+  (tmp :: acc1))) acc l)
 

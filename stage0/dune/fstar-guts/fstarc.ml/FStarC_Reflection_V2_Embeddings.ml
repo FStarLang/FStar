@@ -91,6 +91,7 @@ let e_aqualv : (FStarC_Reflection_V2_Data.aqualv) FStarC_Syntax_Embeddings_Base.
           let tmp1 = (FStarC_Syntax_Syntax.as_arg tmp) in
           let tmp2 = (tmp1 :: []) in
           (FStarC_Syntax_Syntax.mk_Tm_app (FStarC_Reflection_V2_Constants.ref_Q_Meta).FStarC_Reflection_V2_Constants.t tmp2 FStarC_Range_Type.dummyRange))
+        | FStarC_Reflection_V2_Data.Q_TcArg -> (FStarC_Reflection_V2_Constants.ref_Q_TcArg).FStarC_Reflection_V2_Constants.t
       ) in
     { FStarC_Syntax_Syntax.n = (r).FStarC_Syntax_Syntax.n;
       pos = rng;
@@ -116,6 +117,11 @@ let e_aqualv : (FStarC_Reflection_V2_Data.aqualv) FStarC_Syntax_Embeddings_Base.
                   | tmp3 -> None
                 ))
               | tmp1 when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_Meta).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = ((FStarC_Syntax_Embeddings_AppEmb.op_Less_Star_Greater (FStarC_Syntax_Embeddings_AppEmb.pure (fun u__eta -> (FStarC_Reflection_V2_Data.Q_Meta (u__eta)))) (FStarC_Syntax_Embeddings_AppEmb.one e_term)) args) in
+                (match tmp2 with
+                  | (Some ((r, []))) -> (Some (r))
+                  | tmp3 -> None
+                ))
+              | tmp1 when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_TcArg).FStarC_Reflection_V2_Constants.lid) -> (let tmp2 = ((FStarC_Syntax_Embeddings_AppEmb.pure FStarC_Reflection_V2_Data.Q_TcArg) args) in
                 (match tmp2 with
                   | (Some ((r, []))) -> (Some (r))
                   | tmp3 -> None
@@ -357,7 +363,7 @@ let e_vconst : (FStarC_Reflection_V2_Data.vconst) FStarC_Syntax_Embeddings_Base.
     ))) in
   (mk_emb embed_const unembed_const FStarC_Reflection_V2_Constants.fstar_refl_vconst_fv))
 
-let e_ctx_uvar_and_subst : ((FStarC_Syntax_Syntax.ctx_uvar * (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range))) FStarC_Syntax_Embeddings_Base.embedding =
+let e_ctx_uvar_and_subst : ((FStarC_Syntax_Syntax.ctx_uvar * FStarC_Syntax_Syntax.subst_ts)) FStarC_Syntax_Embeddings_Base.embedding =
   (FStarC_Syntax_Embeddings_Base.e_lazy FStarC_Syntax_Syntax.Lazy_uvar FStarC_Reflection_V2_Constants.fstar_refl_ctx_uvar_and_subst)
 
 let e_match_returns_annotation : (((FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) option) FStarC_Syntax_Embeddings_Base.embedding =

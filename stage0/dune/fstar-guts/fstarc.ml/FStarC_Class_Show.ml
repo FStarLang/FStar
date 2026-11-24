@@ -11,6 +11,9 @@ let fStarC_Class_Show_show__sys (tmp : FStarC_Platform_Base.sys) : string =
 let fStarC_Class_Show_show__int (tmp : Prims.int) : string =
   (Prims.string_of_int tmp)
 
+let fStarC_Class_Show_show__int_16 (tmp : Prims.int) : string =
+  (fStarC_Class_Show_show__int tmp)
+
 let fStarC_Class_Show_show__string (tmp : string) : string =
   (Prims.strcat "\"" (Prims.strcat tmp "\""))
 
@@ -28,9 +31,6 @@ let fStarC_Class_Show_show__list_string (tmp : (string) list) : string =
   (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_string tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
-
-let fStarC_Class_Show_show__int_16 (tmp : Prims.int) : string =
-  (fStarC_Class_Show_show__int tmp)
 
 let fStarC_Class_Show_show__bool (tmp : bool) : string =
   (Prims.string_of_bool tmp)

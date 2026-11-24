@@ -78,14 +78,6 @@ let rec filter (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> bool)))
       (hd :: x1)) else ((filter f tl) ps))))
   )
 
-let rec concatMap (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> ('u___b) list))) (l : ('u___a) list) : ((FStarC_Tactics_Types.proofstate ref) -> ('u___b) list) =
-  (match l with
-    | [] -> (fun tmp -> [])
-    | (x :: xs) -> (fun ps -> (let x1 = (f x ps) in
-      let x2 = (concatMap f xs ps) in
-      (FStar_List_Tot_Base.op_At x1 x2)))
-  )
-
 let rec string_of_list (f : ('a -> ((FStarC_Tactics_Types.proofstate ref) -> string))) (l : ('a) list) : ((FStarC_Tactics_Types.proofstate ref) -> string) =
   (match l with
     | [] -> (fun tmp -> "")

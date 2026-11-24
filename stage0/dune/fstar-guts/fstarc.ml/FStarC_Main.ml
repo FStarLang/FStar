@@ -216,7 +216,7 @@ let go_normal (tmp : unit) : unit =
               (FStarC_Format.print1 "Karamel format version: %s\n" tmp12);
               (BatList.iter (fun tmp13 -> (match tmp13 with
                 | (name, decls) -> ((FStarC_Format.print1 "%s:\n" name);
-                  (BatList.iter (fun d -> (let tmp14 = (FStarC_Custard_KrmlAst.fStarC_Class_Show_show__decl_163 d) in
+                  (BatList.iter (fun d -> (let tmp14 = (FStarC_Custard_KrmlAst.fStarC_Class_Show_show__decl_165 d) in
                   (FStarC_Format.print1 "%s\n\n" tmp14))) decls))
               )) files))
           ))

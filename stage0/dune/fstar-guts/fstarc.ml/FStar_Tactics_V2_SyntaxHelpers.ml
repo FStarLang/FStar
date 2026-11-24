@@ -65,17 +65,6 @@ let collect_arr_bs (t : FStarC_Reflection_Types.typ) : ((FStarC_Tactics_Types.pr
     | (bs, c) -> ((FStar_List_Tot_Base.rev bs), c)
   )))
 
-let hua (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Reflection_Types.fv * (FStarC_Syntax_Syntax.universe) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list)) option) =
-  (fun ps -> (let x = (collect_app t ps) in
-  (match x with
-    | (hd, args) -> (let x1 = (FStar_Tactics_NamedView.inspect hd ps) in
-      (match x1 with
-        | (FStar_Tactics_NamedView.Tv_FVar (fv)) -> (Some ((fv, [], args)))
-        | (FStar_Tactics_NamedView.Tv_UInst (fv, us)) -> (Some ((fv, us, args)))
-        | tmp -> None
-      ))
-  )))
-
 let lookup_lb (lbs : (FStar_Tactics_NamedView.letbinding) list) (nm : FStarC_Reflection_Types.name) : ((FStarC_Tactics_Types.proofstate ref) -> FStar_Tactics_NamedView.letbinding) =
   (fun ps -> (let x = (FStar_List_Tot_Base.find (fun lb -> (let tmp = (FStarC_Reflection_V2_Builtins.inspect_fv (lb).FStar_Tactics_NamedView.lb_fv) in
     ((=) tmp nm))) lbs) in
@@ -120,6 +109,17 @@ let u___plugin_inspect_unascribe : unit =
 
 let u___plugin_collect_app : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.collect_app" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.collect_app (plugin)" collect_app FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_aqualv))) tmp tmp1 tmp2 tmp3)))
+
+let hua (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> ((FStarC_Reflection_Types.fv * (FStarC_Syntax_Syntax.universe) list * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * FStarC_Reflection_V2_Data.aqualv)) list)) option) =
+  (fun ps -> (let x = (collect_app t ps) in
+  (match x with
+    | (hd, args) -> (let x1 = (FStar_Tactics_NamedView.inspect hd ps) in
+      (match x1 with
+        | (FStar_Tactics_NamedView.Tv_FVar (fv)) -> (Some ((fv, [], args)))
+        | (FStar_Tactics_NamedView.Tv_UInst (fv, us)) -> (Some ((fv, us, args)))
+        | tmp -> None
+      ))
+  )))
 
 let u___plugin_hua : unit =
   (FStarC_Tactics_Native.register_tactic "FStar.Tactics.V2.SyntaxHelpers.hua" (Prims.of_int (2)) (fun tmp tmp1 tmp2 tmp3 -> (FStarC_Tactics_InterpFuns.mk_tactic_interpretation_1 "FStar.Tactics.V2.SyntaxHelpers.hua (plugin)" hua FStarC_Reflection_V2_Embeddings.e_term (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple3 FStarC_Reflection_V2_Embeddings.e_fv (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_universe) (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_term FStarC_Reflection_V2_Embeddings.e_aqualv)))) tmp tmp1 tmp2 tmp3)))

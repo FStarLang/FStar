@@ -27,7 +27,7 @@ let fv_to_string (fv : FStarC_Syntax_Syntax.fv) : string =
 
 let filter_imp (aq : (FStarC_Syntax_Syntax.binder_qualifier) option) : bool =
   (match aq with
-    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) when (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t) -> true
+    | (Some (FStarC_Syntax_Syntax.TcArg)) -> true
     | (Some ((FStarC_Syntax_Syntax.Implicit (tmp)))) -> false
     | (Some ((FStarC_Syntax_Syntax.Meta (tmp)))) -> false
     | tmp -> true
@@ -443,7 +443,7 @@ and term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
         ) in
       let tmp2 = (fv_to_string f) in
       (Prims.strcat pref tmp2))
-    | (FStarC_Syntax_Syntax.Tm_uvar (u, ([], tmp2))) -> (let tmp3 = (FStarC_Options.print_bound_var_types ()) in
+    | (FStarC_Syntax_Syntax.Tm_uvar (u, { FStarC_Syntax_Syntax.subst_lists = []; subst_use_range = tmp2; _ })) -> (let tmp3 = (FStarC_Options.print_bound_var_types ()) in
       let tmp4 = (if tmp3 then (FStarC_Options.print_effect_args ()) else false) in
       (if tmp4 then (ctx_uvar_to_string_aux true u) else (let tmp5 = (FStarC_Syntax_Unionfind.uvar_id ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
       let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp5) in
@@ -451,9 +451,7 @@ and term_to_string (x : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
     | (FStarC_Syntax_Syntax.Tm_uvar (u, s)) -> (let tmp2 = (FStarC_Options.print_bound_var_types ()) in
       let tmp3 = (if tmp2 then (FStarC_Options.print_effect_args ()) else false) in
       (if tmp3 then (let tmp4 = (ctx_uvar_to_string_aux true u) in
-      let tmp5 = (BatList.map subst_to_string (match s with
-          | (u__1, u__2) -> u__1
-        )) in
+      let tmp5 = (BatList.map subst_to_string (s).FStarC_Syntax_Syntax.subst_lists) in
       let tmp6 = (BatString.concat "; " tmp5) in
       (FStarC_Format.fmt2 "(%s @ %s)" tmp4 tmp6)) else (let tmp4 = (FStarC_Syntax_Unionfind.uvar_id ((u).FStarC_Syntax_Syntax.ctx_uvar_head, (u).FStarC_Syntax_Syntax.ctx_uvar_head1, (u).FStarC_Syntax_Syntax.ctx_uvar_head2)) in
       let tmp5 = (FStarC_Class_Show.fStarC_Class_Show_show__int tmp4) in
@@ -566,7 +564,7 @@ and bqual_to_string' (s : string) (q : (FStarC_Syntax_Syntax.binder_qualifier) o
     | (Some ((FStarC_Syntax_Syntax.Implicit (false)))) -> (Prims.strcat "#" s)
     | (Some ((FStarC_Syntax_Syntax.Implicit (true)))) -> (Prims.strcat "#." s)
     | (Some (FStarC_Syntax_Syntax.Equality)) -> (Prims.strcat "$" s)
-    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) when (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t) -> (Prims.strcat "{|" (Prims.strcat s "|}"))
+    | (Some (FStarC_Syntax_Syntax.TcArg)) -> (Prims.strcat "{|" (Prims.strcat s "|}"))
     | (Some ((FStarC_Syntax_Syntax.Meta (t)))) -> (let tmp = (term_to_string t) in
       let tmp1 = (Prims.strcat tmp (Prims.strcat "]" s)) in
       (Prims.strcat "#[" tmp1))

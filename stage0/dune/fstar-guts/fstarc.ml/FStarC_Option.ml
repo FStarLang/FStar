@@ -13,6 +13,13 @@ let must (tmp : ('u___a) option) : 'u___a =
     | None -> (FStarC_Effect.failwith "FStarC.Option.must: called on None")
   )
 
+let rec find (f : ('u___a -> bool)) (xs : ('u___a) list) : ('u___a) option =
+  (match xs with
+    | [] -> None
+    | (x :: xs1) -> (let tmp = (f x) in
+      (if tmp then (Some (x)) else (find f xs1)))
+  )
+
 let iter (f : ('u___a -> unit)) (tmp : ('u___a) option) : unit =
   (match tmp with
     | (Some (x)) -> (f x)
@@ -23,12 +30,5 @@ let bind (o : ('u___a) option) (f : ('u___a -> ('u___b) option)) : ('u___b) opti
   (match o with
     | (Some (x)) -> (f x)
     | None -> None
-  )
-
-let rec find (f : ('u___a -> bool)) (xs : ('u___a) list) : ('u___a) option =
-  (match xs with
-    | [] -> None
-    | (x :: xs1) -> (let tmp = (f x) in
-      (if tmp then (Some (x)) else (find f xs1)))
   )
 

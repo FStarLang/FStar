@@ -126,6 +126,8 @@ type op =
   | RefNew
   | RefGet
   | RefSet
+  | RefPeek
+  | RefUnpeek
   | Reset of name * (bool) list
   | Reuse of name * name
   | ResetFree
@@ -608,6 +610,12 @@ let mangled_name (n : name) : string =
     | (Some (s)) -> (Prims.strcat base (Prims.strcat "__" s))
   ))
 
+let uu___is_TAny (projectee : cty) : bool =
+  (match projectee with
+    | TAny -> true
+    | tmp -> false
+  )
+
 let text (s : string) : PPrint.document =
   (PPrint.string s)
 
@@ -968,6 +976,8 @@ let rec is_droppable (e : expr) : bool =
     | (EOp ({ po_op = RefNew; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = RefGet; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = RefSet; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = RefPeek; po_ty = tmp; _ }, tmp1)) -> false
+    | (EOp ({ po_op = RefUnpeek; po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = (Reset (u__1, u__2)); po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = (Reuse (u__1, u__2)); po_ty = tmp; _ }, tmp1)) -> false
     | (EOp ({ po_op = ResetFree; po_ty = tmp; _ }, tmp1)) -> false
@@ -1292,6 +1302,8 @@ let op_to_string (o : prim_op) : string =
     | RefNew -> "ref_new"
     | RefGet -> "ref_get"
     | RefSet -> "ref_set"
+    | RefPeek -> "ref_peek"
+    | RefUnpeek -> "ref_unpeek"
     | (Reset (u__1, u__2)) -> "reset"
     | (Reuse (u__1, u__2)) -> "reuse"
     | ResetFree -> "reset_free"

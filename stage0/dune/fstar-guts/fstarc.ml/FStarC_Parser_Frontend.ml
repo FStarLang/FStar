@@ -137,21 +137,22 @@ let contents_at (contents : string) : (FStarC_Range_Type.range -> code_fragment)
 let parse_lang (lang : string) (fn : parse_frag) : parse_result =
   (let frag = (frag_of fn) in
   (try (let frag_pos = (FStarC_Range_Type.mk_pos (frag).frag_line (frag).frag_col) in
-  let rng = (FStarC_Range_Type.mk_range (frag).frag_fname frag_pos frag_pos) in
+  let tmp = (FStarC_Find.source_file_name (frag).frag_fname) in
+  let rng = (FStarC_Range_Type.mk_range tmp frag_pos frag_pos) in
   let contents_at_ = (contents_at (frag).frag_text) in
   let decls = (FStarC_Parser_AST_Util.parse_extension_lang lang (frag).frag_text rng) in
   let comments = (FStarC_Parser_AST_Util.flush_comments ()) in
   (match fn with
-    | (Filename (tmp)) -> (let tmp1 = (FStarC_Parser_AST.as_frag decls) in
-      let tmp2 = (tmp1, comments) in
-      (ASTFragment ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
-    | (Toplevel (tmp)) -> (let tmp1 = (FStarC_Parser_AST.as_frag decls) in
-      let tmp2 = (tmp1, comments) in
-      (ASTFragment ((match tmp2 with (custard_tup, _) -> custard_tup), (match tmp2 with (_, custard_tup) -> custard_tup))))
-    | (Incremental (tmp)) -> (let decls1 = (BatList.map (fun d -> (let tmp1 = (contents_at_ (d).FStarC_Parser_AST.drange) in
-        (d, tmp1))) decls) in
+    | (Filename (tmp1)) -> (let tmp2 = (FStarC_Parser_AST.as_frag decls) in
+      let tmp3 = (tmp2, comments) in
+      (ASTFragment ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))
+    | (Toplevel (tmp1)) -> (let tmp2 = (FStarC_Parser_AST.as_frag decls) in
+      let tmp3 = (tmp2, comments) in
+      (ASTFragment ((match tmp3 with (custard_tup, _) -> custard_tup), (match tmp3 with (_, custard_tup) -> custard_tup))))
+    | (Incremental (tmp1)) -> (let decls1 = (BatList.map (fun d -> (let tmp2 = (contents_at_ (d).FStarC_Parser_AST.drange) in
+        (d, tmp2))) decls) in
       (IncrementalFragment ((decls1, comments, None))))
-    | (Fragment (tmp)) -> (ASTFragment ((FStar_Pervasives.Inr (decls)), comments))
+    | (Fragment (tmp1)) -> (ASTFragment ((FStar_Pervasives.Inr (decls)), comments))
   )) with
     | (FStarC_Errors.Error ((e, msg, r, tmp))) -> (ParseError ((e, msg, r)))
   ))

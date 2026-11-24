@@ -136,6 +136,7 @@ let rec aqual_cmp (a1 : FStarC_Reflection_V2_Data.aqualv) (a2 : FStarC_Reflectio
     | (FStarC_Reflection_V2_Data.Q_Explicit, FStarC_Reflection_V2_Data.Q_Explicit) -> Eq
     | (FStarC_Reflection_V2_Data.Q_Equality, FStarC_Reflection_V2_Data.Q_Equality) -> Eq
     | ((FStarC_Reflection_V2_Data.Q_Meta (m1)), (FStarC_Reflection_V2_Data.Q_Meta (m2))) -> (co m1 m2 a1 a2 (term_cmp m1 m2))
+    | (FStarC_Reflection_V2_Data.Q_TcArg, FStarC_Reflection_V2_Data.Q_TcArg) -> Eq
     | tmp -> Neq
   )
 

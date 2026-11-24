@@ -377,7 +377,7 @@ type ctxt = {
   reached : (string) FStarC_RBSet.rbset;
 }
 
-let fStarC_Class_Monad_bind__fn_7 (tmp : (ctxt -> ('a * ctxt))) (tmp1 : ('a -> (ctxt -> ('b * ctxt)))) : (ctxt -> ('b * ctxt)) =
+let fStarC_Class_Monad_bind__fn_5 (tmp : (ctxt -> ('a * ctxt))) (tmp1 : ('a -> (ctxt -> ('b * ctxt)))) : (ctxt -> ('b * ctxt)) =
   (fun s -> (let tmp2 = (tmp s) in
   (match tmp2 with
     | (x, s1) -> (let tmp3 = (tmp1 x) in
@@ -396,11 +396,11 @@ let rec fStarC_Class_Monad_foldM_left__fn_2 (f : ('a -> ('b -> (ctxt -> ('a * ct
   (match xs with
     | [] -> (fun s -> (e, s))
     | (x :: xs1) -> (let tmp = (f e x) in
-      ((fStarC_Class_Monad_bind__fn_7 tmp) (fun e' -> (fStarC_Class_Monad_foldM_left__fn_2 f e' xs1))))
+      ((fStarC_Class_Monad_bind__fn_5 tmp) (fun e' -> (fStarC_Class_Monad_foldM_left__fn_2 f e' xs1))))
   )
 
 let find_assumptions_waiting_on_trigger (x : sym) : (ctxt -> ((passumption) list * ctxt)) =
-  ((fStarC_Class_Monad_bind__fn_7 get) (fun ctxt -> (match (FStarC_PSMap.try_find ((ctxt).p).trigger_to_assumption (x).sym_name) with
+  ((fStarC_Class_Monad_bind__fn_5 get) (fun ctxt -> (match (FStarC_PSMap.try_find ((ctxt).p).trigger_to_assumption (x).sym_name) with
     | None -> (fun s -> ([], s))
     | (Some (l)) -> (fun s -> (l, s))
   )))
@@ -419,7 +419,7 @@ let trigger_reached (p : pruning_state) (trig : string) : pruning_state =
     pruned_ambients = (p).pruned_ambients }
 
 let mark_trigger_reached (x : sym) : (ctxt -> (unit * ctxt)) =
-  ((fStarC_Class_Monad_bind__fn_7 get) (fun ctxt -> (put { p = (trigger_reached (ctxt).p (x).sym_name); reached = (ctxt).reached })))
+  ((fStarC_Class_Monad_bind__fn_5 get) (fun ctxt -> (put { p = (trigger_reached (ctxt).p (x).sym_name); reached = (ctxt).reached })))
 
 let remove_trigger_for_assumption (p : pruning_state) (trig : sym) (aname : string) : (pruning_state * bool * (sym) list) =
   (match (FStarC_PSMap.try_find (p).assumption_to_triggers aname) with
@@ -439,36 +439,36 @@ let remove_trigger_for_assumption (p : pruning_state) (trig : sym) (aname : stri
   )
 
 let remove_trigger_for (trig : sym) (a : passumption) : (ctxt -> ((bool * (sym) list) * ctxt)) =
-  ((fStarC_Class_Monad_bind__fn_7 get) (fun ctxt -> (let tmp = (remove_trigger_for_assumption (ctxt).p trig (a).pa_name) in
+  ((fStarC_Class_Monad_bind__fn_5 get) (fun ctxt -> (let tmp = (remove_trigger_for_assumption (ctxt).p trig (a).pa_name) in
   (match tmp with
-    | (p, eligible, already_triggered) -> ((fStarC_Class_Monad_bind__fn_7 (put { p = p; reached = (ctxt).reached })) (fun tmp1 -> (fun s -> ((eligible, already_triggered), s))))
+    | (p, eligible, already_triggered) -> ((fStarC_Class_Monad_bind__fn_5 (put { p = p; reached = (ctxt).reached })) (fun tmp1 -> (fun s -> ((eligible, already_triggered), s))))
   ))))
 
 let trigger_pending_assumptions (lids : (sym) list) : (ctxt -> ((triggered_assumption) list * ctxt)) =
   (fStarC_Class_Monad_foldM_left__fn_2 (fun acc lid -> (let tmp = (find_assumptions_waiting_on_trigger lid) in
-  ((fStarC_Class_Monad_bind__fn_7 tmp) (fun u__match_op_head -> (match u__match_op_head with
+  ((fStarC_Class_Monad_bind__fn_5 tmp) (fun u__match_op_head -> (match u__match_op_head with
     | [] -> (fun s -> (acc, s))
     | assumptions -> (let tmp1 = (mark_trigger_reached lid) in
-      ((fStarC_Class_Monad_bind__fn_7 tmp1) (fun tmp2 -> (fStarC_Class_Monad_foldM_left__fn_2 (fun acc1 assumption -> (let tmp3 = (remove_trigger_for lid assumption) in
-      ((fStarC_Class_Monad_bind__fn_7 tmp3) (fun tmp4 -> (match tmp4 with
+      ((fStarC_Class_Monad_bind__fn_5 tmp1) (fun tmp2 -> (fStarC_Class_Monad_foldM_left__fn_2 (fun acc1 assumption -> (let tmp3 = (remove_trigger_for lid assumption) in
+      ((fStarC_Class_Monad_bind__fn_5 tmp3) (fun tmp4 -> (match tmp4 with
         | (eligible, triggered_by) -> (if eligible then (fun s -> (({ assumption = assumption; triggered_by = triggered_by } :: acc1), s)) else (fun s -> (acc1, s)))
       ))))) acc assumptions))))
   ))))) [] lids)
 
 let already_reached (aname : string) : (ctxt -> (bool * ctxt)) =
-  ((fStarC_Class_Monad_bind__fn_7 get) (fun ctxt -> (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_mem__string_rbset_string aname (ctxt).reached) in
+  ((fStarC_Class_Monad_bind__fn_5 get) (fun ctxt -> (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_mem__string_rbset_string aname (ctxt).reached) in
   (fun s -> (tmp, s)))))
 
 let should_retain_assumption (a : passumption) : bool =
   (if (a).pa_pretyping then (FStarC_Options_Ext.enabled "pretyping_axioms") else true)
 
 let reached_assumption (aname : string) : (ctxt -> (unit * ctxt)) =
-  ((fStarC_Class_Monad_bind__fn_7 get) (fun ctxt -> (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string aname (ctxt).reached) in
+  ((fStarC_Class_Monad_bind__fn_5 get) (fun ctxt -> (let tmp = (FStarC_RBSet.fStarC_Class_Setlike_add__string_rbset_string aname (ctxt).reached) in
   let tmp1 = { p = (ctxt).p; reached = tmp } in
   (put tmp1))))
 
 let rec scan (ds : (passumption) list) : (ctxt -> (unit * ctxt)) =
-  ((fStarC_Class_Monad_bind__fn_7 get) (fun ctxt -> (let mk_sym = (fun assumption_name l -> { sym_name = l; sym_provenance = assumption_name }) in
+  ((fStarC_Class_Monad_bind__fn_5 get) (fun ctxt -> (let mk_sym = (fun assumption_name l -> { sym_name = l; sym_provenance = assumption_name }) in
   let macro_expand = (fun s -> (match (FStarC_PSMap.try_find ((ctxt).p).macro_freenames (s).sym_name) with
       | None -> (s :: [])
       | (Some (l)) -> (let tmp = (BatList.map (mk_sym (s).sym_provenance) l) in
@@ -478,15 +478,15 @@ let rec scan (ds : (passumption) list) : (ctxt -> (unit * ctxt)) =
     let tmp1 = (BatList.map (mk_sym (a).pa_name) tmp) in
     ((fun f l -> BatList.flatten (BatList.map f l)) macro_expand tmp1))) ds) in
   let tmp = (trigger_pending_assumptions new_syms) in
-  ((fStarC_Class_Monad_bind__fn_7 tmp) (fun u__match_op_head -> (match u__match_op_head with
+  ((fStarC_Class_Monad_bind__fn_5 tmp) (fun u__match_op_head -> (match u__match_op_head with
     | [] -> (fun s -> ((), s))
     | triggered -> (let tmp1 = (fStarC_Class_Monad_foldM_left__fn_2 (fun acc triggered_assumption -> (let assumption = (triggered_assumption).assumption in
         let tmp1 = (already_reached (assumption).pa_name) in
-        ((fStarC_Class_Monad_bind__fn_7 tmp1) (fun u__if_op_head -> (if u__if_op_head then (fun s -> (acc, s)) else (let tmp2 = (should_retain_assumption assumption) in
+        ((fStarC_Class_Monad_bind__fn_5 tmp1) (fun u__if_op_head -> (if u__if_op_head then (fun s -> (acc, s)) else (let tmp2 = (should_retain_assumption assumption) in
         let tmp3 = (not tmp2) in
         (if tmp3 then (fun s -> (acc, s)) else (let tmp4 = (reached_assumption (assumption).pa_name) in
-        ((fStarC_Class_Monad_bind__fn_7 tmp4) (fun tmp5 -> (fun s -> ((assumption :: acc), s)))))))))))) [] triggered) in
-      ((fStarC_Class_Monad_bind__fn_7 tmp1) (fun to_scan -> (scan to_scan))))
+        ((fStarC_Class_Monad_bind__fn_5 tmp4) (fun tmp5 -> (fun s -> ((assumption :: acc), s)))))))))))) [] triggered) in
+      ((fStarC_Class_Monad_bind__fn_5 tmp1) (fun to_scan -> (scan to_scan))))
   ))))))
 
 let debug (f : (unit -> unit)) : unit =
