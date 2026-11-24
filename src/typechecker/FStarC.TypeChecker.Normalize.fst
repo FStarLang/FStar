@@ -2583,8 +2583,10 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
            shape is what [assume_result_eq_pure_term] gives the result type of a
            pure term now that a computation has no postcondition to record it
            in, so it turns up on the result type of any definition ending in a
-           literal. *)
-        | Tm_refine {b; phi} when clearly_inhabited b.sort ->
+           literal.  [t] must be a type constant: [x == e] may type [e] at a
+           supertype of [t], so [x:(y:int{y == 0}){x == 1}] is empty. *)
+        | Tm_refine {b; phi}
+            when Tm_fvar? (U.un_uinst (U.unmeta b.sort)).n && clearly_inhabited b.sort ->
             let bv, phi = SS.open_term_bv b phi in
             let is_name (t:term) : ML bool =
               match (SS.compress t).n with
