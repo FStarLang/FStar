@@ -21,13 +21,13 @@ let map_optRO (f : ('u___a -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___b))
       (Some (x2))))
   )
 
-let fail_doc_at (m : (PPrint.document) list) (r : (FStarC_Range_Type.range) option) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
-  (fun ps -> (let x = (map_optRO FStarC_Tactics_V2_Builtins.fixup_range r ps) in
+let fail_doc_at (m : (PPrint.document) list) (r : (FStarC_Range_Type.range) option) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'a =
+  (let x = (map_optRO FStarC_Tactics_V2_Builtins.fixup_range r ps) in
   (ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure ((m, x))) ps));
-  (failwith "Prims.magic")))
+  (failwith "Prims.magic"))
 
-let fail_at (m : string) (r : (FStarC_Range_Type.range) option) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
-  (fail_doc_at (FStar_Errors_Msg.mkmsg m) r)
+let fail_at (m : string) (r : (FStarC_Range_Type.range) option) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'a =
+  (fail_doc_at (FStar_Errors_Msg.mkmsg m) r ps)
 
 let fail (m : string) : ((FStarC_Tactics_Types.proofstate ref) -> 'a) =
   (fail_at m None)
@@ -140,9 +140,9 @@ let cur_env (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Refl
   (fun ps -> (let x = (u__cur_goal () ps) in
   (FStarC_Tactics_Types.goal_env x)))
 
-let norm_term (s : (FStarC_NormSteps.norm_step) list) (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> FStarC_Reflection_Types.term) =
-  (fun ps -> (let x = (try_with (fun tmp -> (cur_env ())) (Obj.magic ((fun tmp -> (FStarC_Tactics_V2_Builtins.top_env ())))) ps) in
-  (FStarC_Tactics_V2_Builtins.norm_term_env x s t ps)))
+let norm_term (s : (FStarC_NormSteps.norm_step) list) (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.term =
+  (let x = (try_with (fun tmp -> (cur_env ())) (Obj.magic ((fun tmp -> (FStarC_Tactics_V2_Builtins.top_env ())))) ps) in
+  (FStarC_Tactics_V2_Builtins.norm_term_env x s t ps))
 
 let cur_goal (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.typ =
   (let x = (u__cur_goal () ps) in
@@ -210,15 +210,15 @@ let seq (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> unit))) (g : (un
   (focus (fun tmp -> (fun ps -> ((f () ps);
   (iterAll g ps)))))
 
-let smt (tmp : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (fun ps -> (let x = (goals () ps) in
+let smt (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
+  (let x = (goals () ps) in
   let x1 = (smt_goals () ps) in
   let x2 = (x, x1) in
   (match x2 with
     | ([], tmp1) -> ((fail "smt: no active goals") ps)
     | ((g :: gs), gs') -> ((ignore (FStarC_Tactics_V2_Builtins.set_goals gs ps));
       (FStarC_Tactics_V2_Builtins.set_smt_goals (g :: gs') ps))
-  )))
+  ))
 
 let rec repeat (t : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'a))) (ps : (FStarC_Tactics_Types.proofstate ref)) : ('a) list =
   (let x = (FStarC_Tactics_V2_Builtins.catch t ps) in
@@ -322,24 +322,6 @@ let pose (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate 
   (flip () ps);
   (exact t ps);
   (FStarC_Tactics_V2_Builtins.intro () ps)))
-
-let cur_witness (tmp : unit) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.term =
-  (let x = (u__cur_goal () ps) in
-  (FStarC_Tactics_Types.goal_witness x))
-
-let apply_noinst (t : FStarC_Reflection_Types.term) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
-  (FStarC_Tactics_V2_Builtins.t_apply true true false t)
-
-let fresh_uvar (o : (FStarC_Reflection_Types.typ) option) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_Types.term =
-  (let x = (cur_env () ps) in
-  (FStarC_Tactics_V2_Builtins.uvar_env x o ps))
-
-let exact_with_ref (t : FStarC_Reflection_Types.term) (ps : (FStarC_Tactics_Types.proofstate ref)) : unit =
-  (with_policy FStarC_Tactics_Types.SMT (Obj.magic ((fun tmp -> (FStarC_Tactics_V2_Builtins.t_exact true true t)))) ps)
-
-let fail_doc (m : (PPrint.document) list) (ps : (FStarC_Tactics_Types.proofstate ref)) : 'a =
-  ((ignore (FStarC_Tactics_V2_Builtins.raise_core (FStarC_Tactics_Common.TacticFailure ((m, None))) ps));
-  (failwith "Prims.magic"))
 
 let fresh_namedv_named (s : string) (ps : (FStarC_Tactics_Types.proofstate ref)) : FStarC_Reflection_V2_Data.namedv_view =
   (let x = (FStarC_Tactics_V2_Builtins.fresh () ps) in

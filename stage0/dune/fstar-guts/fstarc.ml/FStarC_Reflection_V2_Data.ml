@@ -73,6 +73,7 @@ type aqualv =
   | Q_Explicit
   | Q_Equality
   | Q_Meta of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
+  | Q_TcArg
 
 
 type term_view =
@@ -86,7 +87,7 @@ type term_view =
   | Tv_Type of FStarC_Syntax_Syntax.universe
   | Tv_Refine of FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
   | Tv_Const of vconst
-  | Tv_Uvar of Prims.int * (FStarC_Syntax_Syntax.ctx_uvar * (((FStarC_Syntax_Syntax.subst_elt) list) list * FStarC_Syntax_Syntax.maybe_set_use_range))
+  | Tv_Uvar of Prims.int * (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Syntax_Syntax.subst_ts)
   | Tv_Let of bool * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list * FStarC_Syntax_Syntax.binder * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
   | Tv_Match of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.binder * (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax, (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool))) option * ((pattern * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list
   | Tv_AscribedT of (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option * bool

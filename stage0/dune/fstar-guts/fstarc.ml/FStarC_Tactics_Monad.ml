@@ -484,18 +484,16 @@ let is_goal_safe_as_well_typed (g : FStarC_Tactics_Types.goal) : bool =
   ))) tmp))
 
 let register_goal (g : FStarC_Tactics_Types.goal) : unit =
-  (let tmp = (FStarC_Options.compat_pre_core_should_register ()) in
-  let tmp1 = (not tmp) in
-  (if tmp1 then () else (let env = (FStarC_Tactics_Types.goal_env g) in
-  let tmp2 = (if (env).FStarC_TypeChecker_Env.phase1 then true else (FStarC_Options.admit_smt_queries ())) in
-  (if tmp2 then () else (let uv = (g).FStarC_Tactics_Types.goal_ctx_uvar in
+  (let env = (FStarC_Tactics_Types.goal_env g) in
+  let tmp = (if (env).FStarC_TypeChecker_Env.admit then true else (FStarC_Options.admit_smt_queries ())) in
+  (if tmp then () else (let uv = (g).FStarC_Tactics_Types.goal_ctx_uvar in
   let i = (FStarC_TypeChecker_Core.incr_goal_ctr ()) in
-  let tmp3 = (FStarC_Syntax_Util.ctx_uvar_should_check (g).FStarC_Tactics_Types.goal_ctx_uvar) in
-  let tmp4 = (match tmp3 with
+  let tmp1 = (FStarC_Syntax_Util.ctx_uvar_should_check (g).FStarC_Tactics_Types.goal_ctx_uvar) in
+  let tmp2 = (match tmp1 with
       | (FStarC_Syntax_Syntax.Allow_untyped (u__0)) -> true
-      | tmp4 -> false
+      | tmp2 -> false
     ) in
-  (if tmp4 then () else (let env1 = { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+  (if tmp2 then () else (let env1 = { FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
       range = (env).FStarC_TypeChecker_Env.range;
       curmodule = (env).FStarC_TypeChecker_Env.curmodule;
       gamma = (uv).FStarC_Syntax_Syntax.ctx_uvar_gamma;
@@ -515,7 +513,6 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit =
       use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
       is_iface = (env).FStarC_TypeChecker_Env.is_iface;
       admit = (env).FStarC_TypeChecker_Env.admit;
-      phase1 = (env).FStarC_TypeChecker_Env.phase1;
       failhard = (env).FStarC_TypeChecker_Env.failhard;
       flychecking = (env).FStarC_TypeChecker_Env.flychecking;
       uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
@@ -543,6 +540,7 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit =
       strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
       disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
       erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+      spec_arg_tab = (env).FStarC_TypeChecker_Env.spec_arg_tab;
       enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
       unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
       erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
@@ -551,31 +549,36 @@ let register_goal (g : FStarC_Tactics_Types.goal) : unit =
       iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
       iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
       iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
-      iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids } in
-  let tmp5 = (!(dbg_CoreEq)) in
-  (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-  (FStarC_Format.print1 "(%s) Registering goal\n" tmp6)) else ());
+      iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids;
+      tc_global = (env).FStarC_TypeChecker_Env.tc_global;
+      tc_scope = (env).FStarC_TypeChecker_Env.tc_scope;
+      tc_scope_gamma = (env).FStarC_TypeChecker_Env.tc_scope_gamma;
+      tc_class_of_typ = (env).FStarC_TypeChecker_Env.tc_class_of_typ;
+      tc_resolve = (env).FStarC_TypeChecker_Env.tc_resolve } in
+  let tmp3 = (!(dbg_CoreEq)) in
+  (if tmp3 then (let tmp4 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+  (FStarC_Format.print1 "(%s) Registering goal\n" tmp4)) else ());
   let should_register = (is_goal_safe_as_well_typed g) in
-  (if (not should_register) then (let tmp6 = (!(dbg_Core)) in
-  let tmp7 = (if tmp6 then true else (!(dbg_RegisterGoal))) in
-  (if tmp7 then (let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-  (FStarC_Format.print1 "(%s) Not registering goal since it has unresolved uvar deps\n" tmp8)) else ());
-  ()) else (let tmp6 = (!(dbg_Core)) in
-  let tmp7 = (if tmp6 then true else (!(dbg_RegisterGoal))) in
-  (if tmp7 then (let tmp8 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
-  let tmp9 = (FStarC_Syntax_Print.fStarC_Class_Show_show__ctx_uvar uv) in
-  (FStarC_Format.print2 "(%s) Registering goal for %s\n" tmp8 tmp9)) else ());
+  (if (not should_register) then (let tmp4 = (!(dbg_Core)) in
+  let tmp5 = (if tmp4 then true else (!(dbg_RegisterGoal))) in
+  (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+  (FStarC_Format.print1 "(%s) Not registering goal since it has unresolved uvar deps\n" tmp6)) else ());
+  ()) else (let tmp4 = (!(dbg_Core)) in
+  let tmp5 = (if tmp4 then true else (!(dbg_RegisterGoal))) in
+  (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
+  let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__ctx_uvar uv) in
+  (FStarC_Format.print2 "(%s) Registering goal for %s\n" tmp6 tmp7)) else ());
   let goal_ty = (FStarC_Syntax_Util.ctx_uvar_typ uv) in
-  let tmp8 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Core_compute_term_type env1 goal_ty) in
-  (match tmp8 with
-    | (FStar_Pervasives.Inl ((tmp9, tmp10, None))) -> ()
-    | (FStar_Pervasives.Inl ((tmp9, tmp10, (Some ((g1, tok)))))) -> (FStarC_TypeChecker_Core.commit_guard tok)
-    | (FStar_Pervasives.Inr (err)) -> (let tmp9 = (FStarC_Syntax_Util.ctx_uvar_typ uv) in
-      let tmp10 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tmp9) in
-      let tmp11 = (FStarC_TypeChecker_Core.print_error_short err) in
-      let msg = (FStarC_Format.fmt2 "Failed to check initial tactic goal %s because %s" tmp10 tmp11) in
+  let tmp6 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Core_compute_term_type env1 goal_ty) in
+  (match tmp6 with
+    | (FStar_Pervasives.Inl ((tmp7, tmp8, None))) -> ()
+    | (FStar_Pervasives.Inl ((tmp7, tmp8, (Some ((g1, tok)))))) -> (FStarC_TypeChecker_Core.commit_guard tok)
+    | (FStar_Pervasives.Inr (err)) -> (let tmp7 = (FStarC_Syntax_Util.ctx_uvar_typ uv) in
+      let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tmp7) in
+      let tmp9 = (FStarC_TypeChecker_Core.print_error_short err) in
+      let msg = (FStarC_Format.fmt2 "Failed to check initial tactic goal %s because %s" tmp8 tmp9) in
       (FStarC_Errors.fStarC_Errors_log_issue__range_string (uv).FStarC_Syntax_Syntax.ctx_uvar_range FStarC_Errors_Codes.Warning_FailedToCheckInitialTacticGoal msg))
-  ))))))))))
+  ))))))))
 
 let rec fStarC_Class_Monad_mapM__fn (f : ('a -> ((FStarC_Tactics_Types.proofstate ref) -> 'b))) (l : ('a) list) : ((FStarC_Tactics_Types.proofstate ref) -> ('b) list) =
   (match l with

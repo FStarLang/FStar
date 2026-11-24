@@ -84,6 +84,9 @@ let embed (e : ('u___a) embedding) (eta : 'u___a) : (FStarC_Range_Type.range -> 
 let mk_emb_full (em : ('u___a -> (FStarC_Range_Type.range -> (((((unit -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax), (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either ref)) option -> (((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax))))) (un : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> (((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) -> ('u___a) option))) (typ : (unit -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) (printe : ('u___a -> string)) (emb_typ : (unit -> FStarC_Syntax_Syntax.emb_typ)) : ('u___a) embedding =
   { em = em; un = un; print = printe; typ = typ; e_typ = emb_typ }
 
+let printer_of (e : ('u___a) embedding) : ('u___a -> string) =
+  (e).print
+
 let embed_as (ea : ('u___a) embedding) (ab : ('u___a -> 'u___b)) (ba : ('u___b -> 'u___a)) (o : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : ('u___b) embedding =
   (mk_emb_full (fun x -> (embed ea (ba x))) (fun t cb -> (let t1 = (unmeta_div_results t) in
   let tmp = (FStarC_Syntax_Subst.compress t1) in
@@ -98,9 +101,6 @@ let embed_as (ea : ('u___a) embedding) (ab : ('u___a -> 'u___b)) (ba : ('u___b -
     | tmp1 -> (type_of ea)
   )) (fun x -> (let tmp = ((ea).print (ba x)) in
   (FStarC_Format.fmt1 "(embed_as>> %s)\n" tmp))) (ea).e_typ)
-
-let printer_of (e : ('u___a) embedding) : ('u___a -> string) =
-  (e).print
 
 let unembed (e : ('u___a) embedding) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (n : ((FStarC_Ident.lident, (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) FStar_Pervasives.either -> (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : ('u___a) option =
   (let t1 = (unmeta_div_results t) in

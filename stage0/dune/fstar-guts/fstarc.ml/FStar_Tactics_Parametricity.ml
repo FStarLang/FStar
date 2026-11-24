@@ -250,7 +250,7 @@ and param' (s : param_state) (t : FStarC_Reflection_Types.term) : ((FStarC_Tacti
           let x5 = (x1 bx1 x4 ps) in
           (x1 bx0 x5 ps))
       ))
-    | (FStar_Tactics_NamedView.Tv_Match (t1, None, brs)) -> (let x1 = (param' s t1 ps) in
+    | (FStar_Tactics_NamedView.Tv_Match (t1, tmp, brs)) -> (let x1 = (param' s t1 ps) in
       let x2 = (FStar_Tactics_Util.map (param_br s) brs ps) in
       let x3 = (FStar_Tactics_NamedView.Tv_Match (x1, None, x2)) in
       (FStar_Tactics_NamedView.pack x3))

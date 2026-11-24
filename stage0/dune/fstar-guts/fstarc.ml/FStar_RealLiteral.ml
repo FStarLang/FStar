@@ -29,12 +29,12 @@ let rec strip (m : Prims.int) (e : Prims.int) : real_literal_repr =
 let mk (m : Prims.int) (e : Prims.int) : real_literal_repr =
   (if (Prims.op_Greater_Equals e Prims.int_zero) then { mantissa = (Prims.op_Star m (pow10 e)); exponent = Prims.int_zero } else (strip m e))
 
+let of_int (i : Prims.int) : real_literal_repr =
+  { mantissa = i; exponent = Prims.int_zero }
+
 let compare (r1 : real_literal_repr) (r2 : real_literal_repr) : Prims.int =
   (let e = (if (Prims.op_Less_Equals (r1).exponent (r2).exponent) then (r1).exponent else (r2).exponent) in
   let m1 = (Prims.op_Star (r1).mantissa (pow10 (Prims.op_Minus (r1).exponent e))) in
   let m2 = (Prims.op_Star (r2).mantissa (pow10 (Prims.op_Minus (r2).exponent e))) in
   (if (Prims.op_Less m1 m2) then (Prims.of_int (-1)) else (if ((=) m1 m2) then Prims.int_zero else Prims.int_one)))
-
-let of_int (i : Prims.int) : real_literal_repr =
-  { mantissa = i; exponent = Prims.int_zero }
 

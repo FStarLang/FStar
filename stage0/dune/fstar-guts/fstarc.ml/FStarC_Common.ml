@@ -10,6 +10,24 @@ let option_to_list (o : ('u___a) option) : ('u___a) list =
 let dbg : (bool ref) =
   (FStarC_Debug.get_toggle "Snapshot")
 
+let u___string_of_list (delim : string) (f : ('u___a -> string)) (l : ('u___a) list) : string =
+  (match l with
+    | [] -> "[]"
+    | (x :: xs) -> (let strb = ((fun i -> Buffer.create (Z.to_int i)) (Prims.of_int (80))) in
+      let tmp = (f x) in
+      let tmp1 = ((fun s t -> Buffer.add_string t s; t) "[" strb) in
+      (ignore ((fun s t -> Buffer.add_string t s; t) tmp tmp1));
+      (BatList.iter (fun x1 -> (let tmp2 = (f x1) in
+      let tmp3 = ((fun s t -> Buffer.add_string t s; t) delim strb) in
+      (ignore ((fun s t -> Buffer.add_string t s; t) tmp2 tmp3));
+      ())) xs);
+      (ignore ((fun s t -> Buffer.add_string t s; t) "]" strb));
+      (Buffer.contents strb))
+  )
+
+let string_of_list (f : ('u___a -> string)) (l : ('u___a) list) : string =
+  (u___string_of_list ", " f l)
+
 let snapshot (msg : string) (push : ('u___a -> 'u___b)) (stackref : (('u___c) list ref)) (arg : 'u___a) : (Prims.int * 'u___b) =
   (FStarC_Util.atomically (fun tmp -> (let tmp1 = (!(stackref)) in
   let len = ((fun l -> Z.of_int (BatList.length l)) tmp1) in
@@ -41,24 +59,6 @@ let rollback (msg : string) (pop : (unit -> 'u___a)) (stackref : (('u___c) list 
   (FStarC_Format.print1 " depth is %s\n " tmp5)) else ());
   (FStarC_Util.atomically (fun tmp3 -> (rollback__aux pop n))))
 
-let u___string_of_list (delim : string) (f : ('u___a -> string)) (l : ('u___a) list) : string =
-  (match l with
-    | [] -> "[]"
-    | (x :: xs) -> (let strb = ((fun i -> Buffer.create (Z.to_int i)) (Prims.of_int (80))) in
-      let tmp = (f x) in
-      let tmp1 = ((fun s t -> Buffer.add_string t s; t) "[" strb) in
-      (ignore ((fun s t -> Buffer.add_string t s; t) tmp tmp1));
-      (BatList.iter (fun x1 -> (let tmp2 = (f x1) in
-      let tmp3 = ((fun s t -> Buffer.add_string t s; t) delim strb) in
-      (ignore ((fun s t -> Buffer.add_string t s; t) tmp2 tmp3));
-      ())) xs);
-      (ignore ((fun s t -> Buffer.add_string t s; t) "]" strb));
-      (Buffer.contents strb))
-  )
-
-let string_of_list (f : ('u___a -> string)) (l : ('u___a) list) : string =
-  (u___string_of_list ", " f l)
-
 let string_of_option (f : ('u___a -> string)) (o : ('u___a) option) : string =
   (match o with
     | None -> "None"
@@ -66,13 +66,10 @@ let string_of_option (f : ('u___a -> string)) (o : ('u___a) option) : string =
       (Prims.strcat "Some " tmp))
   )
 
-let rec eq_list (f : ('u___a -> ('u___a -> bool))) (l1 : ('u___a) list) (l2 : ('u___a) list) : bool =
-  (match (l1, l2) with
-    | ([], []) -> true
-    | ([], tmp) -> false
-    | (tmp, []) -> false
-    | ((x1 :: t1), (x2 :: t2)) -> (let tmp = (f x1 x2) in
-      (if tmp then (eq_list f t1 t2) else false))
+let rec nth_opt (l : ('u___a) list) (i : Prims.int) : ('u___a) option =
+  (match l with
+    | [] -> None
+    | (x :: t) -> (if ((=) i Prims.int_zero) then (Some (x)) else (if (Prims.op_Less i Prims.int_zero) then None else (nth_opt t (Prims.op_Minus i Prims.int_one))))
   )
 
 let rec max_suffix__aux (f : ('u___a -> bool)) (acc : ('u___a) list) (xs : ('u___a) list) : (('u___a) list * ('u___a) list) =
@@ -109,8 +106,17 @@ let list_of_option (o : ('u___a) option) : ('u___a) list =
   )
 
 let psmap_keys (m : (string, 'u___a) FStarC_AVLMap.tree) : (string) list =
-  (FStarC_PSMap.fold m (fun k v a -> (k :: a)) [])
+  (FStarC_PSMap.fStarC_PSMap_fold__list_string m [])
+
+let rec eq_list (f : ('u___a -> ('u___a -> bool))) (l1 : ('u___a) list) (l2 : ('u___a) list) : bool =
+  (match (l1, l2) with
+    | ([], []) -> true
+    | ([], tmp) -> false
+    | (tmp, []) -> false
+    | ((x1 :: t1), (x2 :: t2)) -> (let tmp = (f x1 x2) in
+      (if tmp then (eq_list f t1 t2) else false))
+  )
 
 let psmap_values (m : (string, 'u___a) FStarC_AVLMap.tree) : ('u___a) list =
-  (FStarC_PSMap.fold m (fun k v a -> (v :: a)) [])
+  (FStarC_PSMap.fStarC_PSMap_fold__list m [])
 

@@ -512,10 +512,26 @@ let is_builtin_type (n : FStarC_Custard_Syntax.name) : bool =
     | tmp1 -> false
   ))
 
+let unqualify_self (t : string) : string =
+  (let tmp = (!(current_module)) in
+  (match tmp with
+    | None -> t
+    | (Some (m)) -> (let p = (Prims.strcat m ".") in
+      let lp = ((fun s -> Z.of_int (BatUTF8.length s)) p) in
+      let tmp1 = (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) t) lp) then (let tmp1 = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) t Prims.int_zero lp) in
+        ((=) tmp1 p)) else false) in
+      (if tmp1 then ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) t lp (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) t) lp)) else t))
+  ))
+
 let extern_type (n : FStarC_Custard_Syntax.name) : (string) option =
   (let tmp = (!(extern_types)) in
   let tmp1 = (FStarC_Custard_Syntax.string_of_name n) in
-  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp tmp1))
+  let tmp2 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt tmp tmp1) in
+  (match tmp2 with
+    | (Some (t)) -> (let tmp3 = (unqualify_self t) in
+      (Some (tmp3)))
+    | None -> None
+  ))
 
 let ocaml_tyvar (x : string) : string =
   (let tmp = (sanitize x) in
@@ -690,17 +706,6 @@ let ctor_ref (n : FStarC_Custard_Syntax.name) : string =
       ))
   ))
 
-let unqualify_self (t : string) : string =
-  (let tmp = (!(current_module)) in
-  (match tmp with
-    | None -> t
-    | (Some (m)) -> (let p = (Prims.strcat m ".") in
-      let lp = ((fun s -> Z.of_int (BatUTF8.length s)) p) in
-      let tmp1 = (if (Prims.op_Greater ((fun s -> Z.of_int (BatUTF8.length s)) t) lp) then (let tmp1 = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) t Prims.int_zero lp) in
-        ((=) tmp1 p)) else false) in
-      (if tmp1 then ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) t lp (Prims.op_Minus ((fun s -> Z.of_int (BatUTF8.length s)) t) lp)) else t))
-  ))
-
 let external_target (n : FStarC_Custard_Syntax.name) : (string) option =
   (let tmp = (!(externals)) in
   let tmp1 = (FStarC_Custard_Syntax.string_of_name n) in
@@ -716,6 +721,12 @@ let ocaml_local (x : string) : string =
   let tmp = (!(reserved_top)) in
   let tmp1 = (BatList.exists (fun k -> ((=) k s)) tmp) in
   (if tmp1 then (Prims.strcat s "_") else s))
+
+let is_uint8_lit (c : FStarC_Custard_Syntax.constant) : bool =
+  (match c with
+    | (FStarC_Custard_Syntax.CInt (v, tmp, (Some ((FStarC_Const.Unsigned, FStarC_Custard_Syntax.W8))))) -> ((Prims.op_Less_Equals Prims.int_zero v) && (Prims.op_Less v (Prims.of_int (256))))
+    | tmp -> false
+  )
 
 let prims_int_lit (v : Prims.int) (b : FStar_IntegerLiteral.int_base) : string =
   (if ((=) v Prims.int_zero) then "Prims.int_zero" else (if ((=) v Prims.int_one) then "Prims.int_one" else (if ((Prims.op_Less_Equals (Prims.of_int (-1073741824)) v) && (Prims.op_Less_Equals v (Prims.of_int (1073741823)))) then (Prims.strcat "(Prims.of_int (" (Prims.strcat (FStarC_Custard_Syntax.int_lit_to_string v b) "))")) else (Prims.strcat "(Prims.parse_int \"" (Prims.strcat (FStarC_Custard_Syntax.int_lit_to_string v b) "\")")))))
@@ -746,6 +757,7 @@ let escape (s : string) : string =
 
 let constant (c : FStarC_Custard_Syntax.constant) : string =
   (match c with
+    | (FStarC_Custard_Syntax.CInt (v, tmp, (Some ((FStarC_Const.Unsigned, FStarC_Custard_Syntax.W8))))) when (is_uint8_lit c) -> (Prims.strcat "(" (Prims.strcat (Prims.string_of_int v) " : FStar_UInt8.t)"))
     | FStarC_Custard_Syntax.CUnit -> "()"
     | (FStarC_Custard_Syntax.CBool (b)) -> (if b then "true" else "false")
     | (FStarC_Custard_Syntax.CFloat (FStarC_Custard_Syntax.FLNan, fw)) -> ((reject_fwidth fw);
@@ -799,7 +811,7 @@ and defer_ints_fields (n : Prims.int) (fs : ((string * FStarC_Custard_Syntax.pat
 and defer_ints (n : Prims.int) (p : FStarC_Custard_Syntax.pat) : (Prims.int * FStarC_Custard_Syntax.pat * ((string * FStarC_Custard_Syntax.constant)) list) =
   (match p with
     | (FStarC_Custard_Syntax.PConst (c)) when (match c with
-      | (FStarC_Custard_Syntax.CInt (u__1, u__2, u__3)) -> true
+      | (FStarC_Custard_Syntax.CInt (u__1, u__2, u__3)) -> (not (is_uint8_lit c))
       | tmp -> false
     ) -> (let x = (Prims.strcat "_iconst" (Prims.string_of_int n)) in
       ((Prims.op_Plus n Prims.int_one), (FStarC_Custard_Syntax.PVar (x)), ((x, c) :: [])))
@@ -1031,6 +1043,8 @@ let op_name (o : FStarC_Custard_Syntax.prim_op) : string =
           | FStarC_Custard_Syntax.RefNew -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | FStarC_Custard_Syntax.RefGet -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | FStarC_Custard_Syntax.RefSet -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
+          | FStarC_Custard_Syntax.RefPeek -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
+          | FStarC_Custard_Syntax.RefUnpeek -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | (FStarC_Custard_Syntax.Reset (u__11, u__21)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | (FStarC_Custard_Syntax.Reuse (u__11, u__21)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
           | FStarC_Custard_Syntax.ResetFree -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
@@ -1088,6 +1102,8 @@ let op_name (o : FStarC_Custard_Syntax.prim_op) : string =
         | FStarC_Custard_Syntax.RefNew -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | FStarC_Custard_Syntax.RefGet -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | FStarC_Custard_Syntax.RefSet -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
+        | FStarC_Custard_Syntax.RefPeek -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
+        | FStarC_Custard_Syntax.RefUnpeek -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | (FStarC_Custard_Syntax.Reset (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | (FStarC_Custard_Syntax.Reuse (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
         | FStarC_Custard_Syntax.ResetFree -> (FStarC_Effect.failwith "Custard: reference counting is not an OCaml operator")
@@ -1132,10 +1148,17 @@ and case (ind : string) (br : (FStarC_Custard_Syntax.pat * (FStarC_Custard_Synta
     | (p, g, b) -> (let tmp = (defer_ints Prims.int_zero p) in
       (match tmp with
         | (tmp1, p1, eqs) -> (let conds = (BatList.map (fun tmp2 -> (match tmp2 with
-              | (x, c) -> (let tmp3 = (ocaml_local x) in
-                let tmp4 = (constant c) in
-                let tmp5 = (Prims.strcat " = " tmp4) in
-                (Prims.strcat tmp3 tmp5))
+              | (x, c) -> (match c with
+                  | (FStarC_Custard_Syntax.CInt (tmp3, tmp4, None)) -> (let tmp5 = (ocaml_local x) in
+                    let tmp6 = (constant c) in
+                    let tmp7 = (Prims.strcat " " tmp6) in
+                    let tmp8 = (Prims.strcat tmp5 tmp7) in
+                    (Prims.strcat "Z.equal " tmp8))
+                  | tmp3 -> (let tmp4 = (ocaml_local x) in
+                    let tmp5 = (constant c) in
+                    let tmp6 = (Prims.strcat " = " tmp5) in
+                    (Prims.strcat tmp4 tmp6))
+                )
             )) eqs) in
           let conds1 = (match g with
               | None -> conds
@@ -1679,23 +1702,28 @@ let print_split (files : ((string * (FStarC_Custard_Syntax.decl) list)) list) : 
       (BatList.iter (fun d -> (let tmp2 = (FStarC_Custard_Syntax.string_of_name (FStarC_Custard_Syntax.name_of_decl d)) in
       (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace homes tmp2 m1))) ds))
   )) files);
-  (FStarC_Custard_Prof.timed "p.tables" (fun tmp1 -> (let tmp2 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match x with
+  let tmp1 = (FStarC_Custard_Prof.is_enabled ()) in
+  (if tmp1 then (FStarC_Custard_Prof.timed_on "p.tables" (fun tmp2 -> (let tmp3 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match x with
       | (u__1, u__2) -> u__2
     )) files) in
-  (build_tables homes tmp2))));
-  let rendered = (BatList.map (fun tmp1 -> (match tmp1 with
+  (build_tables homes tmp3)))) else (let tmp2 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match x with
+      | (u__1, u__2) -> u__2
+    )) files) in
+  (build_tables homes tmp2)));
+  let rendered = (BatList.map (fun tmp2 -> (match tmp2 with
       | (m, ds) -> (let m1 = (module_name_of_unit m) in
         ((current_module) := (Some (m1)));
         (reserve_top ds);
-        let tmp2 = (FStarC_Custard_Prof.timed "p.decls" (fun tmp2 -> (print_decls ds))) in
-        let r = (m1, tmp2) in
+        let tmp3 = (FStarC_Custard_Prof.is_enabled ()) in
+        let tmp4 = (if tmp3 then (FStarC_Custard_Prof.timed_on "p.decls" (fun tmp4 -> (print_decls ds))) else (print_decls ds)) in
+        let r = (m1, tmp4) in
         ((current_module) := None);
         r)
     )) files) in
-  let rendered1 = (BatList.filter (fun tmp1 -> (match tmp1 with
-      | (tmp2, ds) -> (match ds with
+  let rendered1 = (BatList.filter (fun tmp2 -> (match tmp2 with
+      | (tmp3, ds) -> (match ds with
           | (hd :: tl) -> true
-          | tmp3 -> false
+          | tmp4 -> false
         )
     )) rendered) in
   let n = ((fun l -> Z.of_int (BatList.length l)) rendered1) in
@@ -1703,14 +1731,15 @@ let print_split (files : ((string * (FStarC_Custard_Syntax.decl) list)) list) : 
       | (u__1, u__2) -> u__1
     )))) in
   ((current_module) := last);
-  let tmp1 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match x with
+  let tmp2 = ((fun f l -> BatList.flatten (BatList.map f l)) (fun x -> (match x with
       | (u__1, u__2) -> u__2
     )) files) in
-  let calls = (entry_calls tmp1) in
+  let calls = (entry_calls tmp2) in
   ((current_module) := None);
-  ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp2 -> (match tmp2 with
-    | (m, ds) -> (let tmp3 = (FStarC_Custard_Prof.timed "p.render" (fun tmp3 -> (assemble (if ((=) i (Prims.op_Minus n Prims.int_one)) then (BatList.append ds calls) else ds)))) in
-      (m, tmp3))
+  ((fun f l -> BatList.mapi (fun i x -> f (Z.of_int i) x) l) (fun i tmp3 -> (match tmp3 with
+    | (m, ds) -> (let tmp4 = (FStarC_Custard_Prof.is_enabled ()) in
+      let tmp5 = (if tmp4 then (FStarC_Custard_Prof.timed_on "p.render" (fun tmp5 -> (assemble (if ((=) i (Prims.op_Minus n Prims.int_one)) then (BatList.append ds calls) else ds)))) else (assemble (if ((=) i (Prims.op_Minus n Prims.int_one)) then (BatList.append ds calls) else ds))) in
+      (m, tmp5))
   )) rendered1))
 
 let print_program (p : (FStarC_Custard_Syntax.decl) list) : string =

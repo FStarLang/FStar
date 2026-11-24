@@ -97,7 +97,7 @@ let set_option' (tmp : (string * option_val)) : unit =
   )
 
 let defaults : ((string * option_val)) list =
-  (("abort_on", (Int (Prims.int_zero))) :: (("admit_except", Unset) :: (("admit_smt_queries", (Bool (false))) :: (("already_cached", Unset) :: (("cache_checked_modules", (Bool (false))) :: (("cache_off", (Bool (false))) :: (("codegen", Unset) :: (("custard_entry", (List ([]))) :: (("custard_entrypoints", (List ([]))) :: (("custard_entry_module", (List ([]))) :: (("custard_c_no_prefix", (List ([]))) :: (("custard_static_header", (Bool (false))) :: (("custard_main", Unset) :: (("target", Unset) :: (("custard_dump_ir", (Bool (false))) :: (("custard_dump_specializations", (Bool (false))) :: (("custard_dump_layouts", (Bool (false))) :: (("custard_warn_any", (Bool (false))) :: (("custard_fuel", (Int ((Prims.of_int (100000))))) :: (("custard_max_specializations", (Int ((Prims.of_int (1000))))) :: (("custard_norm_budget", (Int ((Prims.of_int (10000000))))) :: (("custard_monomorphize_types", Unset) :: (("custard_int128", (Bool (true))) :: (("custard_sizet_width", (String ("native"))) :: (("custard_split", (Bool (false))) :: (("custard_unit", Unset) :: (("custard_link", (List ([]))) :: (("custard_extern_type", (List ([]))) :: (("custard_krml_model", (List ([]))) :: (("custard_no_unfold", (List ([]))) :: (("custard_dump_cui", (Bool (false))) :: (("compat_pre_core", Unset) :: (("compat_pre_typed_indexed_effects", (Bool (false))) :: (("debug_all", (Bool (false))) :: (("debug_all_modules", (Bool (false))) :: (("debug", (List ([]))) :: (("defensive", (String ("no"))) :: (("dep", Unset) :: (("disallow_unification_guards", (Bool (false))) :: (("dump_ast", (Bool (false))) :: (("dump_module", (List ([]))) :: (("eager_subtyping", (Bool (false))) :: (("error_contexts", (Bool (false))) :: (("expand_include", Unset) :: (("expose_interfaces", (Bool (false))) :: (("ext", Unset) :: (("force", (Bool (false))) :: (("fuel", Unset) :: (("help", (Bool (false))) :: (("hide_uvar_nums", (Bool (false))) :: (("ide", (Bool (false))) :: (("ide_id_info_off", (Bool (false))) :: (("ifuel", Unset) :: (("include", (List ([]))) :: (("initial_fuel", (Int ((Prims.of_int (2))))) :: (("initial_ifuel", (Int (Prims.int_one))) :: (("keep_query_captions", (Bool (true))) :: (("lang_extensions", (List ([]))) :: (("lax", (Bool (false))) :: (("list_plugins", (Bool (false))) :: (("load_cmxs", (List ([]))) :: (("load", (List ([]))) :: (("locate", (Bool (false))) :: (("locate_file", Unset) :: (("locate_lib", (Bool (false))) :: (("locate_ocaml", (Bool (false))) :: (("locate_z3", Unset) :: (("log_failing_queries", (Bool (false))) :: (("log_queries", (Bool (false))) :: (("log_types", (Bool (false))) :: (("max_fuel", (Int ((Prims.of_int (8))))) :: (("max_ifuel", (Int ((Prims.of_int (2))))) :: (("message_format", (String ("auto"))) :: (("no_plugins", (Bool (false))) :: (("__no_positivity", (Bool (false))) :: (("no_prelude", (Bool (false))) :: (("normalize_pure_terms_for_extraction", (Bool (false))) :: (("no_smt", (Bool (false))) :: (("no_tactics", (Bool (false))) :: (("output_deps_to", Unset) :: (("output_ext", Unset) :: (("output_to", Unset) :: (("pretype", (Bool (true))) :: (("prims_ref", Unset) :: (("prims", Unset) :: (("print", (Bool (false))) :: (("print_bound_var_types", (Bool (false))) :: (("print_cache_version", (Bool (false))) :: (("print_effect_args", (Bool (false))) :: (("print_expected_failures", (Bool (false))) :: (("print_full_names", (Bool (false))) :: (("print_implicits", (Bool (false))) :: (("print_in_place", (Bool (false))) :: (("print_universes", (Bool (false))) :: (("print_z3_statistics", (Bool (false))) :: (("prn", (Bool (false))) :: (("profile_component", Unset) :: (("profile_group_by_decl", (Bool (false))) :: (("profile", Unset) :: (("proof_recovery", (Bool (false))) :: (("quake_hi", (Int (Prims.int_one))) :: (("quake", (Int (Prims.int_zero))) :: (("quake_keep", (Bool (false))) :: (("quake_lo", (Int (Prims.int_one))) :: (("query_cache", (Bool (false))) :: (("query_stats", (Bool (false))) :: (("read_checked_file", Unset) :: (("read_krml_file", Unset) :: (("record_options", (Bool (false))) :: (("report_assumes", Unset) :: (("retry", (Bool (false))) :: (("silent", (Bool (false))) :: (("smtencoding.elim_box", (Bool (false))) :: (("smtencoding.l_arith_repr", (String ("boxwrap"))) :: (("smtencoding.nl_arith_repr", (String ("boxwrap"))) :: (("smt", Unset) :: (("stats", (Bool (false))) :: (("tactic_raw_binders", (Bool (false))) :: (("tactics_failhard", (Bool (false))) :: (("tactics_info", (Bool (false))) :: (("__tactics_nbe", (Bool (false))) :: (("tactic_trace", (Bool (false))) :: (("tactic_trace_d", (Int (Prims.int_zero))) :: (("tcnorm", (Bool (true))) :: (("timing", (Bool (false))) :: (("trace_error", (Bool (false))) :: (("trivial_pre_for_unannotated_effectful_fns", (Bool (true))) :: (("ugly", (Bool (false))) :: (("unsafe_tactic_exec", (Bool (false))) :: (("unthrottle_inductives", (Bool (false))) :: (("use_eq_at_higher_order", (Bool (false))) :: (("use_native_tactics", Unset) :: (("use_nbe", (Bool (false))) :: (("using_facts_from", Unset) :: (("verify_module", (List ([]))) :: (("warn_default_effects", (Bool (false))) :: (("warn_error", (List ([]))) :: (("z3cliopt", (List ([]))) :: (("z3refresh", (Bool (false))) :: (("z3rlimit_factor", (Int (Prims.int_one))) :: (("z3rlimit", (Int ((Prims.of_int (5))))) :: (("z3seed", (Int (Prims.int_zero))) :: (("z3smtopt", (List ([]))) :: (("z3version", (String ("5.3.0"))) :: []))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  (("abort_on", (Int (Prims.int_zero))) :: (("admit_except", Unset) :: (("admit_smt_queries", (Bool (false))) :: (("already_cached", Unset) :: (("cache_checked_modules", (Bool (false))) :: (("cache_off", (Bool (false))) :: (("codegen", Unset) :: (("custard_entry", (List ([]))) :: (("custard_entrypoints", (List ([]))) :: (("custard_entry_module", (List ([]))) :: (("custard_c_no_prefix", (List ([]))) :: (("custard_static_header", (Bool (false))) :: (("custard_hoist_locals", (Bool (false))) :: (("custard_init_locals", (String ("no"))) :: (("custard_line_comments", (Bool (false))) :: (("custard_main", Unset) :: (("target", Unset) :: (("custard_dump_ir", (Bool (false))) :: (("custard_dump_specializations", (Bool (false))) :: (("custard_dump_layouts", (Bool (false))) :: (("custard_type_stats", (Bool (false))) :: (("custard_warn_any", (Bool (false))) :: (("custard_fuel", (Int ((Prims.of_int (100000))))) :: (("custard_max_specializations", (Int ((Prims.of_int (10000))))) :: (("custard_norm_budget", (Int ((Prims.of_int (10000000))))) :: (("custard_monomorphize_types", Unset) :: (("custard_int128", (Bool (true))) :: (("custard_sizet_width", (String ("native"))) :: (("custard_split", (Bool (false))) :: (("custard_unit", Unset) :: (("custard_link", (List ([]))) :: (("custard_extern_type", (List ([]))) :: (("custard_krml_model", (List ([]))) :: (("custard_no_unfold", (List ([]))) :: (("custard_dump_cui", (Bool (false))) :: (("compat_pre_typed_indexed_effects", (Bool (false))) :: (("debug_all", (Bool (false))) :: (("debug_all_modules", (Bool (false))) :: (("debug", (List ([]))) :: (("defensive", (String ("no"))) :: (("dep", Unset) :: (("disallow_unification_guards", (Bool (false))) :: (("dump_ast", (Bool (false))) :: (("dump_module", (List ([]))) :: (("eager_subtyping", (Bool (false))) :: (("error_contexts", (Bool (false))) :: (("expand_include", Unset) :: (("expose_interfaces", (Bool (false))) :: (("ext", Unset) :: (("force", (Bool (false))) :: (("fuel", Unset) :: (("help", (Bool (false))) :: (("hide_uvar_nums", (Bool (false))) :: (("ide", (Bool (false))) :: (("ide_id_info_off", (Bool (false))) :: (("ifuel", Unset) :: (("include", (List ([]))) :: (("initial_fuel", (Int ((Prims.of_int (2))))) :: (("initial_ifuel", (Int (Prims.int_one))) :: (("keep_query_captions", (Bool (true))) :: (("lang_extensions", (List ([]))) :: (("lax", (Bool (false))) :: (("list_plugins", (Bool (false))) :: (("load_cmxs", (List ([]))) :: (("load", (List ([]))) :: (("locate", (Bool (false))) :: (("locate_file", Unset) :: (("locate_lib", (Bool (false))) :: (("locate_ocaml", (Bool (false))) :: (("locate_z3", Unset) :: (("log_failing_queries", (Bool (false))) :: (("log_queries", (Bool (false))) :: (("log_types", (Bool (false))) :: (("max_fuel", (Int ((Prims.of_int (8))))) :: (("max_ifuel", (Int ((Prims.of_int (2))))) :: (("message_format", (String ("auto"))) :: (("no_plugins", (Bool (false))) :: (("__no_positivity", (Bool (false))) :: (("no_prelude", (Bool (false))) :: (("normalize_pure_terms_for_extraction", (Bool (false))) :: (("no_smt", (Bool (false))) :: (("no_tactics", (Bool (false))) :: (("output_deps_to", Unset) :: (("output_ext", Unset) :: (("output_to", Unset) :: (("pretype", (Bool (true))) :: (("prims_ref", Unset) :: (("prims", Unset) :: (("print", (Bool (false))) :: (("print_bound_var_types", (Bool (false))) :: (("print_cache_version", (Bool (false))) :: (("print_effect_args", (Bool (false))) :: (("print_expected_failures", (Bool (false))) :: (("print_full_names", (Bool (false))) :: (("print_implicits", (Bool (false))) :: (("print_in_place", (Bool (false))) :: (("print_universes", (Bool (false))) :: (("print_z3_statistics", (Bool (false))) :: (("prn", (Bool (false))) :: (("profile_component", Unset) :: (("profile_group_by_decl", (Bool (false))) :: (("profile", Unset) :: (("proof_recovery", (Bool (false))) :: (("quake_hi", (Int (Prims.int_one))) :: (("quake", (Int (Prims.int_zero))) :: (("quake_keep", (Bool (false))) :: (("quake_lo", (Int (Prims.int_one))) :: (("query_cache", (Bool (false))) :: (("query_stats", (Bool (false))) :: (("read_checked_file", Unset) :: (("read_krml_file", Unset) :: (("record_options", (Bool (false))) :: (("report_assumes", Unset) :: (("retry", (Bool (false))) :: (("silent", (Bool (false))) :: (("smtencoding.elim_box", (Bool (false))) :: (("smtencoding.l_arith_repr", (String ("boxwrap"))) :: (("smtencoding.nl_arith_repr", (String ("boxwrap"))) :: (("smt", Unset) :: (("stats", (Bool (false))) :: (("tactic_raw_binders", (Bool (false))) :: (("tactics_failhard", (Bool (false))) :: (("tactics_info", (Bool (false))) :: (("__tactics_nbe", (Bool (false))) :: (("tactic_trace", (Bool (false))) :: (("tactic_trace_d", (Int (Prims.int_zero))) :: (("tcnorm", (Bool (true))) :: (("timing", (Bool (false))) :: (("trace_error", (Bool (false))) :: (("trivial_pre_for_unannotated_effectful_fns", (Bool (true))) :: (("ugly", (Bool (false))) :: (("unsafe_tactic_exec", (Bool (false))) :: (("unthrottle_inductives", (Bool (false))) :: (("use_eq_at_higher_order", (Bool (false))) :: (("use_native_tactics", Unset) :: (("use_nbe", (Bool (false))) :: (("using_facts_from", Unset) :: (("verify_module", (List ([]))) :: (("warn_default_effects", (Bool (false))) :: (("warn_error", (List ([]))) :: (("z3cliopt", (List ([]))) :: (("z3refresh", (Bool (false))) :: (("z3rlimit_factor", (Int (Prims.int_one))) :: (("z3rlimit", (Int ((Prims.of_int (5))))) :: (("z3seed", (Int (Prims.int_zero))) :: (("z3smtopt", (List ([]))) :: (("z3version", (String ("5.3.0"))) :: [])))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 
 let init (tmp : unit) : unit =
   ((FStarC_Debug.disable_all ());
@@ -414,38 +414,41 @@ let specs_with_types (warn_unsafe : bool) : ((int * string * opt_type * PPrint.d
   let tmp125 = ((FStarC_Getopt.noshort, "custard_int128", BoolStr, (text "Compile FStar.UInt128 and FStar.Int128 to C's unsigned __int128 and __int128, and FStar.UInt128/FStar.Int128 to .NET's System.UInt128 and System.Int128, rather than to their F* implementations (default true). Only --codegen C and --codegen FSharp are affected; the other backends have no 128-bit machine integer. Set to false for a target whose compiler lacks the extension, such as MSVC or any 32-bit target.")) :: tmp124) in
   let tmp126 = ((FStarC_Getopt.noshort, "custard_monomorphize_types", BoolStr, (text "Monomorphize type binders too, not just type-class dictionaries and binders explicitly marked [@@monomorphize] (default true for --codegen C and --codegen Cherry, which require it, and false otherwise)")) :: tmp125) in
   let tmp127 = ((FStarC_Getopt.noshort, "custard_norm_budget", (IntStr ("positive_integer")), (text "Number of reduction steps Custard may spend normalizing any single term -- a specialization key, a substituted argument, or a definition's body -- before giving up (default 10000000).  Normalization need not terminate, so without this a definition that diverges under reduction would hang the compiler rather than report an error.  A step is a node of work, not a reduction: building a closure's term is charged for every node it copies (section 30.12), so this number is much larger than a count of beta steps")) :: tmp126) in
-  let tmp128 = ((FStarC_Getopt.noshort, "custard_max_specializations", (IntStr ("positive_integer")), (text "Number of specializations Custard may create for any single definition before giving up (default 1000)")) :: tmp127) in
+  let tmp128 = ((FStarC_Getopt.noshort, "custard_max_specializations", (IntStr ("positive_integer")), (text "Number of specializations Custard may create for any single definition before giving up (default 10000)")) :: tmp127) in
   let tmp129 = ((FStarC_Getopt.noshort, "custard_fuel", (IntStr ("positive_integer")), (text "Total number of specializations Custard may create before giving up (default 100000).  This is a whole-program backstop; --custard_max_specializations is the per-definition limit, and is the one that catches a definition recursing through a monomorphized binder")) :: tmp128) in
   let tmp130 = ((FStarC_Getopt.noshort, "custard_warn_any", (Const ((Bool (true)))), (text "Report every place where Custard lost track of a value's representation: a type it had to leave as 'any', or a coercion it could not eliminate. Because a Custard program is whole and monomorphic, these should be rare, and each one is a place where the generated code is less checked than the rest.")) :: tmp129) in
-  let tmp131 = ((FStarC_Getopt.noshort, "custard_dump_layouts", (Const ((Bool (true)))), (text "Print the layout Custard computed for every type: erased, collapsed to a single field, or a struct. Useful to understand why a field or argument disappeared from the generated code.")) :: tmp130) in
-  let tmp132 = ((FStarC_Getopt.noshort, "custard_dump_specializations", (Const ((Bool (true)))), (text "Print, for every definition Custard specialized, how many specializations of it were emitted. Useful to diagnose code bloat and specialization fuel exhaustion.")) :: tmp131) in
-  let tmp133 = ((FStarC_Getopt.noshort, "custard_dump_ir", (Const ((Bool (true)))), (text "Print the Custard IR of the extracted program to standard output")) :: tmp132) in
-  let tmp134 = ((FStarC_Getopt.noshort, "custard_main", (SimpleStr ("long_name")), (text "The definition to invoke when the extracted program starts. It is also a root of the extraction, so --custard_entry need not repeat it. A module name may be given instead, and then the program is that module's top-level effects, as for an OCaml executable. Omit it to extract a program that is meant to be driven by a hand-written wrapper.")) :: tmp133) in
-  let tmp135 = ((FStarC_Getopt.noshort, "target", (SimpleStr ("tag")), (text "The configuration to extract for, as a '-'-separated list of atoms such as s3.silicon or s2.qemu-debug (see doc/ref/targets.md). The language of --codegen (c, rust, ocaml or fsharp) is added to it. Each module is extracted from its most specific file whose tag the configuration implies.")) :: tmp134) in
-  let tmp136 = ((FStarC_Getopt.noshort, "custard_entry_module", (Accumulated ((SimpleStr ("module_name")))), (text "Every top-level definition of the named module is a root of the extraction. May be repeated. This is how a module is compiled as a library rather than as the program reachable from one entry point, and it is what a test of a module's generated code wants: a definition added to the module is extracted without anyone having to name it. A definition with nothing to extract -- a specification, a proof, an [inline_for_extraction] -- is passed over rather than reported, unlike --custard_entry.")) :: tmp135) in
-  let tmp137 = ((FStarC_Getopt.noshort, "custard_static_header", (Const ((Bool (true)))), (text "With --codegen C, emit a single header containing static function definitions and no source file. CInline independently requests inline. Foreign declarations retain extern linkage. -o must name a .h file; the default is Custard.h (or the --custard_unit name). Does not change roots or API names. Non-macro globals, runtime initialization, --custard_main, --custard_split and other code generators are not supported.")) :: tmp136) in
-  let tmp138 = ((FStarC_Getopt.noshort, "custard_c_no_prefix", (Accumulated ((SimpleStr ("module_name")))), (text "With --codegen C, emit the public definitions of the named module under their unqualified names, as krml's -no-prefix does. May be repeated. This applies only to definitions that are already part of the translation unit's interface -- those named by --custard_entry or --custard_entry_module, which are exactly the ones emitted with external linkage and declared in the generated header. It does not apply to a specialization: a specialized name carries a hint (section 30.15) that is free to change when the monomorphizer's input changes, and is not something another translation unit may depend on. Two public definitions that would share an unqualified name is an error.")) :: tmp137) in
-  let tmp139 = ((FStarC_Getopt.noshort, "custard_entrypoints", (Accumulated ((PathStr ("file")))), (text "A file of --custard_entry roots, one per line; blank lines and lines whose first non-blank character is # are ignored. May be repeated. A plugin's hand-written realizations call the compiler by OCaml name, through no request Custard can see, so the plugin ships such a file and the compiler build reads it alongside its own.")) :: tmp138) in
-  let tmp140 = ((FStarC_Getopt.noshort, "custard_entry", (Accumulated ((SimpleStr ("long_name")))), (text "Entry point for whole-program extraction with --codegen. May be repeated; every occurrence is a root of the extraction. Custard only compiles the definitions reachable from these roots. It does *not* make them run: use --custard_main for that. A module name may be given instead of a definition, which makes the module's top-level effects part of the program without naming anything in it.")) :: tmp139) in
-  let tmp141 = ((FStarC_Getopt.noshort, "codegen", (EnumStr (("OCaml" :: ("FSharp" :: ("KrmlC" :: ("KrmlRust" :: ("C" :: ("Cherry" :: ("Plugin" :: []))))))))), (text "Extract the program with Custard, to the given language: OCaml source, F# source for .NET, karamel's AST for compilation to C or to Rust, or self-contained C11 source. KrmlC and KrmlRust share a printer but not a program: karamel models some modules on the Rust path only, so a .krml built for one target cannot be compiled for the other (section 20). FSharp targets net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's own types rather than to a support library, so it accepts the programs the C backend accepts rather than the ones the OCaml backend does (section 122). Cherry is the C backend extended with reference-counted heap cells for recursive inductive types (experimental, see doc/ref/cherry.md). Plugin builds a compiler plugin: OCaml, with the plugin's own modules as entry points, linked against the compiler's unit (section 13.6)")) :: tmp140) in
-  let tmp142 = ((FStarC_Getopt.noshort, "print_cache_version", (Const ((Bool (true)))), (text "Print the version for .checked files and exit.")) :: tmp141) in
-  let tmp143 = ((FStarC_Getopt.noshort, "cache_off", (Const ((Bool (true)))), (text "Do not read or write any .checked files")) :: tmp142) in
-  let tmp144 = ((FStarC_Getopt.noshort, "cache_dir", (PostProcessed ((fun tmp144 -> (match tmp144 with
+  let tmp131 = ((FStarC_Getopt.noshort, "custard_type_stats", (Const ((Bool (true)))), (text "Cherry: print, for every reference-counted record and variant, how many counted references a value holds by value, its approximate size in words, how many function parameters and results take it by value, and for a boxed type the same counts for its heap cell. Large unboxed types that are passed around a lot are candidates for [@@cherry_boxed].")) :: tmp130) in
+  let tmp132 = ((FStarC_Getopt.noshort, "custard_dump_layouts", (Const ((Bool (true)))), (text "Print the layout Custard computed for every type: erased, collapsed to a single field, or a struct. Useful to understand why a field or argument disappeared from the generated code.")) :: tmp131) in
+  let tmp133 = ((FStarC_Getopt.noshort, "custard_dump_specializations", (Const ((Bool (true)))), (text "Print, for every definition Custard specialized, how many specializations of it were emitted. Useful to diagnose code bloat and specialization fuel exhaustion.")) :: tmp132) in
+  let tmp134 = ((FStarC_Getopt.noshort, "custard_dump_ir", (Const ((Bool (true)))), (text "Print the Custard IR of the extracted program to standard output")) :: tmp133) in
+  let tmp135 = ((FStarC_Getopt.noshort, "custard_main", (SimpleStr ("long_name")), (text "The definition to invoke when the extracted program starts. It is also a root of the extraction, so --custard_entry need not repeat it. A module name may be given instead, and then the program is that module's top-level effects, as for an OCaml executable. Omit it to extract a program that is meant to be driven by a hand-written wrapper.")) :: tmp134) in
+  let tmp136 = ((FStarC_Getopt.noshort, "target", (SimpleStr ("tag")), (text "The configuration to extract for, as a '-'-separated list of atoms such as s3.silicon or s2.qemu-debug (see doc/ref/targets.md). The language of --codegen (c, rust, ocaml or fsharp) is added to it. Each module is extracted from its most specific file whose tag the configuration implies.")) :: tmp135) in
+  let tmp137 = ((FStarC_Getopt.noshort, "custard_entry_module", (Accumulated ((SimpleStr ("module_name")))), (text "Every top-level definition of the named module is a root of the extraction. May be repeated. This is how a module is compiled as a library rather than as the program reachable from one entry point, and it is what a test of a module's generated code wants: a definition added to the module is extracted without anyone having to name it. A definition with nothing to extract -- a specification, a proof, an [inline_for_extraction] -- is passed over rather than reported, unlike --custard_entry.")) :: tmp136) in
+  let tmp138 = ((FStarC_Getopt.noshort, "custard_static_header", (Const ((Bool (true)))), (text "With --codegen C, emit a single header containing static function definitions and no source file. CInline independently requests inline. Foreign declarations retain extern linkage. -o must name a .h file; the default is Custard.h (or the --custard_unit name). Does not change roots or API names. Non-macro globals, runtime initialization, --custard_main, --custard_split and other code generators are not supported.")) :: tmp137) in
+  let tmp139 = ((FStarC_Getopt.noshort, "custard_line_comments", (Const ((Bool (true)))), (text "With --codegen C, write the comments that stand as statements in a function body as C line comments (// ...) framed by an empty // line above and below, as krml's -fline-comments does, instead of block comments. Comments around an expression and comments on top-level declarations stay block comments. A comment with a line ending in a backslash stays a block comment, since a line comment would continue onto the next line. Not implemented for Cherry or other code generators.")) :: tmp138) in
+  let tmp140 = ((FStarC_Getopt.noshort, "custard_init_locals", (EnumStr (("no" :: ("c23" :: ("c99" :: ("c89" :: [])))))), (text "With --codegen C, give every automatic local declaration that has no initializer a zero initializer, as krml's -finitialize-locals does: c23 uses = {}; c99 uses designated struct initializers; c89 uses positional ones. Runs after --custard_hoist_locals, so declarations it moves are zero-initialized too, and their original initialization stays an assignment at its execution point. A variable-length array can be initialized only in c23 mode. Not implemented for Cherry or other code generators.")) :: tmp139) in
+  let tmp141 = ((FStarC_Getopt.noshort, "custard_hoist_locals", (Const ((Bool (true)))), (text "With --codegen C, place all automatic local declarations at the beginning of each function, keeping initialization at its original execution point. Unsafe moves of variable-length arrays or C++ reference bindings are errors. This does not enable C89 compatibility or initialize uninitialized locals; see --custard_init_locals for that. Not implemented for Cherry or other code generators.")) :: tmp140) in
+  let tmp142 = ((FStarC_Getopt.noshort, "custard_c_no_prefix", (Accumulated ((SimpleStr ("module_name")))), (text "With --codegen C, emit the public definitions of the named module under their unqualified names, as krml's -no-prefix does. May be repeated. This applies only to definitions that are already part of the translation unit's interface -- those named by --custard_entry or --custard_entry_module, which are exactly the ones emitted with external linkage and declared in the generated header. It does not apply to a specialization: a specialized name carries a hint (section 30.15) that is free to change when the monomorphizer's input changes, and is not something another translation unit may depend on. Two public definitions that would share an unqualified name is an error.")) :: tmp141) in
+  let tmp143 = ((FStarC_Getopt.noshort, "custard_entrypoints", (Accumulated ((PathStr ("file")))), (text "A file of --custard_entry roots, one per line; blank lines and lines whose first non-blank character is # are ignored. May be repeated. A plugin's hand-written realizations call the compiler by OCaml name, through no request Custard can see, so the plugin ships such a file and the compiler build reads it alongside its own.")) :: tmp142) in
+  let tmp144 = ((FStarC_Getopt.noshort, "custard_entry", (Accumulated ((SimpleStr ("long_name")))), (text "Entry point for whole-program extraction with --codegen. May be repeated; every occurrence is a root of the extraction. Custard only compiles the definitions reachable from these roots. It does *not* make them run: use --custard_main for that. A module name may be given instead of a definition, which makes the module's top-level effects part of the program without naming anything in it.")) :: tmp143) in
+  let tmp145 = ((FStarC_Getopt.noshort, "codegen", (EnumStr (("OCaml" :: ("FSharp" :: ("KrmlC" :: ("KrmlRust" :: ("C" :: ("Cherry" :: ("Plugin" :: []))))))))), (text "Extract the program with Custard, to the given language: OCaml source, F# source for .NET, karamel's AST for compilation to C or to Rust, or self-contained C11 source. KrmlC and KrmlRust share a printer but not a program: karamel models some modules on the Rust path only, so a .krml built for one target cannot be compiled for the other (section 20). FSharp targets net10.0 and, unlike OCaml, compiles machine integers and floats to .NET's own types rather than to a support library, so it accepts the programs the C backend accepts rather than the ones the OCaml backend does (section 122). Cherry is the C backend extended with reference-counted heap cells for recursive inductive types (experimental, see doc/ref/cherry.md). Plugin builds a compiler plugin: OCaml, with the plugin's own modules as entry points, linked against the compiler's unit (section 13.6)")) :: tmp144) in
+  let tmp146 = ((FStarC_Getopt.noshort, "print_cache_version", (Const ((Bool (true)))), (text "Print the version for .checked files and exit.")) :: tmp145) in
+  let tmp147 = ((FStarC_Getopt.noshort, "cache_off", (Const ((Bool (true)))), (text "Do not read or write any .checked files")) :: tmp146) in
+  let tmp148 = ((FStarC_Getopt.noshort, "cache_dir", (PostProcessed ((fun tmp148 -> (match tmp148 with
       | (Path (s)) -> ((FStarC_Find.set_cache_dir s);
         Unset)
-    )), (PathStr ("dir")))), (text "Read and write .checked files in directory dir")) :: tmp143) in
-  let tmp145 = ((99, "cache_checked_modules", (Const ((Bool (true)))), (text "Write a '.checked' file for each module after verification.")) :: tmp144) in
-  let tmp146 = ((FStarC_Getopt.noshort, "already_cached", (ReverseAccumulated ((SimpleStr ("One or more space-separated occurrences of '[+|-]( * | namespace | module)'")))), (text "Expects all modules whose names or namespaces match the provided options to already have valid .checked files in the include path")) :: tmp145) in
-  let tmp147 = ((FStarC_Getopt.noshort, "disallow_unification_guards", BoolStr, (text "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')")) :: tmp146) in
-  let tmp148 = ((FStarC_Getopt.noshort, "compat_pre_typed_indexed_effects", (Const ((Bool (true)))), (text "Retain untyped indexed effects implicits")) :: tmp147) in
-  let tmp149 = ((FStarC_Getopt.noshort, "compat_pre_core", (IntStr ("0, 1, 2")), (text "Retain behavior of the tactic engine prior to the introduction of FStarC.TypeChecker.Core (0 is most permissive, 2 is least permissive)")) :: tmp148) in
-  let tmp150 = ((FStarC_Getopt.noshort, "admit_except", (WithSideEffect ((fun tmp150 -> (if warn_unsafe then (option_warning_callback "admit_except") else ())), (SimpleStr ("[symbol|(symbol, id)]")))), (text "Admit all queries, except those with label ( symbol,  id))(e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)")) :: tmp149) in
-  let tmp151 = ((FStarC_Getopt.noshort, "admit_smt_queries", (WithSideEffect ((fun tmp151 -> (if warn_unsafe then (option_warning_callback "admit_smt_queries") else ())), BoolStr)), (text "Admit SMT queries, unsafe! (default 'false')")) :: tmp150) in
-  ((FStarC_Getopt.noshort, "abort_on", (PostProcessed ((fun tmp152 -> (match tmp152 with
+    )), (PathStr ("dir")))), (text "Read and write .checked files in directory dir")) :: tmp147) in
+  let tmp149 = ((99, "cache_checked_modules", (Const ((Bool (true)))), (text "Write a '.checked' file for each module after verification.")) :: tmp148) in
+  let tmp150 = ((FStarC_Getopt.noshort, "already_cached", (ReverseAccumulated ((SimpleStr ("One or more space-separated occurrences of '[+|-]( * | namespace | module)'")))), (text "Expects all modules whose names or namespaces match the provided options to already have valid .checked files in the include path")) :: tmp149) in
+  let tmp151 = ((FStarC_Getopt.noshort, "disallow_unification_guards", BoolStr, (text "Fail if the SMT guard are produced when the tactic engine re-checks solutions produced by the unifier (default 'false')")) :: tmp150) in
+  let tmp152 = ((FStarC_Getopt.noshort, "compat_pre_typed_indexed_effects", (Const ((Bool (true)))), (text "Retain untyped indexed effects implicits")) :: tmp151) in
+  let tmp153 = ((FStarC_Getopt.noshort, "admit_except", (WithSideEffect ((fun tmp153 -> (if warn_unsafe then (option_warning_callback "admit_except") else ())), (SimpleStr ("[symbol|(symbol, id)]")))), (text "Admit all queries, except those with label ( symbol,  id))(e.g. --admit_except '(FStar.Fin.pigeonhole, 1)' or --admit_except FStar.Fin.pigeonhole)")) :: tmp152) in
+  let tmp154 = ((FStarC_Getopt.noshort, "admit_smt_queries", (WithSideEffect ((fun tmp154 -> (if warn_unsafe then (option_warning_callback "admit_smt_queries") else ())), BoolStr)), (text "Admit SMT queries, unsafe! (default 'false')")) :: tmp153) in
+  ((FStarC_Getopt.noshort, "abort_on", (PostProcessed ((fun tmp155 -> (match tmp155 with
     | (Int (x)) -> (((abort_counter) := x);
       (Int (x)))
     | x -> (FStarC_Effect.failwith "?")
-  )), (IntStr ("non-negative integer")))), (text "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)")) :: tmp151))
+  )), (IntStr ("non-negative integer")))), (text "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)")) :: tmp154))
 
 exception InvalidArgument of string
 
@@ -563,7 +566,6 @@ let settable (tmp : string) : bool =
     | "abort_on" -> true
     | "admit_except" -> true
     | "admit_smt_queries" -> true
-    | "compat_pre_core" -> true
     | "compat_pre_typed_indexed_effects" -> true
     | "disallow_unification_guards" -> true
     | "debug" -> true
@@ -755,6 +757,64 @@ let get_ugly (tmp : unit) : bool =
 let ugly (tmp : unit) : bool =
   (get_ugly ())
 
+let get_prn (tmp : unit) : bool =
+  (let tmp1 = (get_option "prn") in
+  (as_bool tmp1))
+
+let get_print_full_names (tmp : unit) : bool =
+  (let tmp1 = (get_option "print_full_names") in
+  (as_bool tmp1))
+
+let print_real_names (tmp : unit) : bool =
+  (let tmp1 = (get_prn ()) in
+  (if tmp1 then true else (get_print_full_names ())))
+
+let get_dump_module (tmp : unit) : (string) list =
+  (let tmp1 = (get_option "dump_module") in
+  ((as_list as_string) tmp1))
+
+let any_dump_module (tmp : unit) : bool =
+  (let tmp1 = (get_dump_module ()) in
+  (match tmp1 with
+    | (hd :: tl) -> true
+    | tmp2 -> false
+  ))
+
+let get_print_implicits (tmp : unit) : bool =
+  (let tmp1 = (get_option "print_implicits") in
+  (as_bool tmp1))
+
+let print_implicits (tmp : unit) : bool =
+  (get_print_implicits ())
+
+let get_print_bound_var_types (tmp : unit) : bool =
+  (let tmp1 = (get_option "print_bound_var_types") in
+  (as_bool tmp1))
+
+let print_bound_var_types (tmp : unit) : bool =
+  (get_print_bound_var_types ())
+
+let get_print_effect_args (tmp : unit) : bool =
+  (let tmp1 = (get_option "print_effect_args") in
+  (as_bool tmp1))
+
+let print_effect_args (tmp : unit) : bool =
+  (get_print_effect_args ())
+
+let get_hide_uvar_nums (tmp : unit) : bool =
+  (let tmp1 = (get_option "hide_uvar_nums") in
+  (as_bool tmp1))
+
+let hide_uvar_nums (tmp : unit) : bool =
+  (get_hide_uvar_nums ())
+
+let get_print_universes (tmp : unit) : bool =
+  (let tmp1 = (get_option "print_universes") in
+  (as_bool tmp1))
+
+let print_universes (tmp : unit) : bool =
+  (get_print_universes ())
+
 let get_lang_extensions (tmp : unit) : (string) list =
   (let tmp1 = (get_option "lang_extensions") in
   ((as_list as_string) tmp1))
@@ -832,17 +892,6 @@ let should_be_already_cached (m : string) : bool =
     | (Some (already_cached_setting)) -> (module_matches_namespace_filter m already_cached_setting)
   )) else false))
 
-let get_dump_module (tmp : unit) : (string) list =
-  (let tmp1 = (get_option "dump_module") in
-  ((as_list as_string) tmp1))
-
-let any_dump_module (tmp : unit) : bool =
-  (let tmp1 = (get_dump_module ()) in
-  (match tmp1 with
-    | (hd :: tl) -> true
-    | tmp2 -> false
-  ))
-
 let get_no_prelude (tmp : unit) : bool =
   (let tmp1 = (get_option "no_prelude") in
   (as_bool tmp1))
@@ -850,59 +899,12 @@ let get_no_prelude (tmp : unit) : bool =
 let no_prelude (tmp : unit) : bool =
   (get_no_prelude ())
 
-let get_prn (tmp : unit) : bool =
-  (let tmp1 = (get_option "prn") in
-  (as_bool tmp1))
-
-let get_print_full_names (tmp : unit) : bool =
-  (let tmp1 = (get_option "print_full_names") in
-  (as_bool tmp1))
-
-let print_real_names (tmp : unit) : bool =
-  (let tmp1 = (get_prn ()) in
-  (if tmp1 then true else (get_print_full_names ())))
-
 let get_expose_interfaces (tmp : unit) : bool =
   (let tmp1 = (get_option "expose_interfaces") in
   (as_bool tmp1))
 
 let expose_interfaces (tmp : unit) : bool =
   (get_expose_interfaces ())
-
-let get_print_universes (tmp : unit) : bool =
-  (let tmp1 = (get_option "print_universes") in
-  (as_bool tmp1))
-
-let print_universes (tmp : unit) : bool =
-  (get_print_universes ())
-
-let get_print_implicits (tmp : unit) : bool =
-  (let tmp1 = (get_option "print_implicits") in
-  (as_bool tmp1))
-
-let print_implicits (tmp : unit) : bool =
-  (get_print_implicits ())
-
-let get_print_bound_var_types (tmp : unit) : bool =
-  (let tmp1 = (get_option "print_bound_var_types") in
-  (as_bool tmp1))
-
-let print_bound_var_types (tmp : unit) : bool =
-  (get_print_bound_var_types ())
-
-let get_print_effect_args (tmp : unit) : bool =
-  (let tmp1 = (get_option "print_effect_args") in
-  (as_bool tmp1))
-
-let print_effect_args (tmp : unit) : bool =
-  (get_print_effect_args ())
-
-let get_hide_uvar_nums (tmp : unit) : bool =
-  (let tmp1 = (get_option "hide_uvar_nums") in
-  (as_bool tmp1))
-
-let hide_uvar_nums (tmp : unit) : bool =
-  (get_hide_uvar_nums ())
 
 let get_profile_component (tmp : unit) : ((string) list) option =
   (let tmp1 = (get_option "profile_component") in
@@ -1149,6 +1151,13 @@ let get_no_positivity (tmp : unit) : bool =
 let no_positivity (tmp : unit) : bool =
   (get_no_positivity ())
 
+let get_no_smt (tmp : unit) : bool =
+  (let tmp1 = (get_option "no_smt") in
+  (as_bool tmp1))
+
+let no_smt (tmp : unit) : bool =
+  (get_no_smt ())
+
 let get_tcnorm (tmp : unit) : bool =
   (let tmp1 = (get_option "tcnorm") in
   (as_bool tmp1))
@@ -1162,31 +1171,6 @@ let get_tactics_nbe (tmp : unit) : bool =
 
 let tactics_nbe (tmp : unit) : bool =
   (get_tactics_nbe ())
-
-let as_int (tmp : option_val) : Prims.int =
-  (match tmp with
-    | (Int (b)) -> b
-    | tmp1 -> (FStarC_Effect.failwith "Impos: expected Int")
-  )
-
-let get_compat_pre_core (tmp : unit) : (Prims.int) option =
-  (let tmp1 = (get_option "compat_pre_core") in
-  ((as_option as_int) tmp1))
-
-let compat_pre_core_should_check (tmp : unit) : bool =
-  (let tmp1 = (get_compat_pre_core ()) in
-  (match tmp1 with
-    | (Some (u__iconst0)) when u__iconst0 = Prims.int_zero -> false
-    | (Some (u__iconst0)) when u__iconst0 = Prims.int_one -> false
-    | tmp2 -> true
-  ))
-
-let compat_pre_core_set (tmp : unit) : bool =
-  (let tmp1 = (get_compat_pre_core ()) in
-  (match tmp1 with
-    | None -> false
-    | tmp2 -> true
-  ))
 
 let get_disallow_unification_guards (tmp : unit) : bool =
   (let tmp1 = (get_option "disallow_unification_guards") in
@@ -1239,6 +1223,12 @@ let get_record_options (tmp : unit) : bool =
 let record_options (tmp : unit) : bool =
   (get_record_options ())
 
+let as_int (tmp : option_val) : Prims.int =
+  (match tmp with
+    | (Int (b)) -> b
+    | tmp1 -> (FStarC_Effect.failwith "Impos: expected Int")
+  )
+
 let get_initial_fuel (tmp : unit) : Prims.int =
   (let tmp1 = (get_option "initial_fuel") in
   (as_int tmp1))
@@ -1254,10 +1244,6 @@ let get_initial_ifuel (tmp : unit) : Prims.int =
 let get_max_ifuel (tmp : unit) : Prims.int =
   (let tmp1 = (get_option "max_ifuel") in
   (as_int tmp1))
-
-let get_no_smt (tmp : unit) : bool =
-  (let tmp1 = (get_option "no_smt") in
-  (as_bool tmp1))
 
 let get_quake_lo (tmp : unit) : Prims.int =
   (let tmp1 = (get_option "quake_lo") in
@@ -1477,13 +1463,6 @@ let get_warn_default_effects (tmp : unit) : bool =
 
 let warn_default_effects (tmp : unit) : bool =
   (get_warn_default_effects ())
-
-let compat_pre_core_should_register (tmp : unit) : bool =
-  (let tmp1 = (get_compat_pre_core ()) in
-  (match tmp1 with
-    | (Some (u__iconst0)) when u__iconst0 = Prims.int_zero -> false
-    | tmp2 -> true
-  ))
 
 type codegen_t =
   | OCaml
@@ -1862,9 +1841,6 @@ let smtencoding_l_arith_native (tmp : unit) : bool =
   (let tmp1 = (get_smtencoding_l_arith_repr ()) in
   ((=) tmp1 "native"))
 
-let no_smt (tmp : unit) : bool =
-  (get_no_smt ())
-
 let get_log_failing_queries (tmp : unit) : bool =
   (let tmp1 = (get_option "log_failing_queries") in
   (as_bool tmp1))
@@ -1945,6 +1921,13 @@ let get_query_cache (tmp : unit) : bool =
 
 let query_cache (tmp : unit) : bool =
   (get_query_cache ())
+
+let get_compat_pre_typed_indexed_effects (tmp : unit) : bool =
+  (let tmp1 = (get_option "compat_pre_typed_indexed_effects") in
+  (as_bool tmp1))
+
+let compat_pre_typed_indexed_effects (tmp : unit) : bool =
+  (get_compat_pre_typed_indexed_effects ())
 
 let get_read_krml_file (tmp : unit) : (string) option =
   (let tmp1 = (get_option "read_krml_file") in
@@ -2072,6 +2055,27 @@ let get_cache_checked_modules (tmp : unit) : bool =
 
 let cache_checked_modules (tmp : unit) : bool =
   (get_cache_checked_modules ())
+
+let get_custard_hoist_locals (tmp : unit) : bool =
+  (let tmp1 = (get_option "custard_hoist_locals") in
+  (as_bool tmp1))
+
+let custard_hoist_locals (tmp : unit) : bool =
+  (get_custard_hoist_locals ())
+
+let get_custard_init_locals (tmp : unit) : string =
+  (let tmp1 = (get_option "custard_init_locals") in
+  (as_string tmp1))
+
+let custard_init_locals (tmp : unit) : string =
+  (get_custard_init_locals ())
+
+let get_custard_line_comments (tmp : unit) : bool =
+  (let tmp1 = (get_option "custard_line_comments") in
+  (as_bool tmp1))
+
+let custard_line_comments (tmp : unit) : bool =
+  (get_custard_line_comments ())
 
 let get_custard_static_header (tmp : unit) : bool =
   (let tmp1 = (get_option "custard_static_header") in
@@ -2227,6 +2231,13 @@ let codegen_krml (tmp : unit) : bool =
     | (Some (KrmlRust)) -> true
     | tmp2 -> false
   ))
+
+let get_custard_type_stats (tmp : unit) : bool =
+  (let tmp1 = (get_option "custard_type_stats") in
+  (as_bool tmp1))
+
+let custard_type_stats (tmp : unit) : bool =
+  (get_custard_type_stats ())
 
 let get_custard_dump_ir (tmp : unit) : bool =
   (let tmp1 = (get_option "custard_dump_ir") in

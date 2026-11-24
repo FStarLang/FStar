@@ -115,6 +115,18 @@ let ident_equals (id1 : ident) (id2 : ident) : bool =
 let reserved_prefix : string =
   "uu___"
 
+let lid_equals (l1 : lident) (l2 : lident) : bool =
+  ((=) (l1).str (l2).str)
+
+let ident_of_lid (l : lident) : ident =
+  (l).ident
+
+let path_of_lid (lid : lident) : (string) list =
+  (BatList.map string_of_id (BatList.append (lid).ns ((lid).ident :: [])))
+
+let path_of_ns (ns : (ident) list) : (string) list =
+  (BatList.map string_of_id ns)
+
 let gen' (s : string) (r : FStarC_Range_Type.range) : ident =
   (let i = (FStarC_GenSym.next_id ()) in
   let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int i) in
@@ -125,17 +137,11 @@ let gen' (s : string) (r : FStarC_Range_Type.range) : ident =
 let gen (r : FStarC_Range_Type.range) : ident =
   (gen' reserved_prefix r)
 
-let ident_of_lid (l : lident) : ident =
-  (l).ident
-
 let ns_of_lid (lid : lident) : (ident) list =
   (lid).ns
 
 let fStarC_Class_HasRange_pos__ident (tmp : ident) : FStarC_Range_Type.range =
   (range_of_id tmp)
-
-let lid_equals (l1 : lident) (l2 : lident) : bool =
-  ((=) (l1).str (l2).str)
 
 let nsstr (l : lident) : string =
   (l).nsstr
@@ -152,9 +158,6 @@ let fStarC_Class_Show_show__lident (tmp : lident) : string =
 let qual_id (lid : lident) (id : ident) : lident =
   (let tmp = (lid_of_ids (BatList.append (lid).ns ((lid).ident :: (id :: [])))) in
   (set_lid_range tmp (range_of_id id)))
-
-let path_of_lid (lid : lident) : (string) list =
-  (BatList.map string_of_id (BatList.append (lid).ns ((lid).ident :: [])))
 
 let ids_of_lid (lid : lident) : (ident) list =
   (BatList.append (lid).ns ((lid).ident :: []))
@@ -184,18 +187,6 @@ let fStarC_Class_Show_show__option_list_ident (tmp : ((ident) list) option) : st
 let id_as_lid (id : ident) : lident =
   (lid_of_ns_and_id [] id)
 
-let fStarC_Class_Setlike_empty__ident_list_ident (tmp : unit) : (ident) list =
-  (FStarC_FlatSet.empty ())
-
-let fStarC_FlatSet_singleton__ident (x : ident) : (ident) list =
-  (x :: [])
-
-let fStarC_Class_Setlike_singleton__ident_list_ident (tmp : ident) : (ident) list =
-  (fStarC_FlatSet_singleton__ident tmp)
-
-let path_of_ns (ns : (ident) list) : (string) list =
-  (BatList.map string_of_id ns)
-
 let rec fStarC_Class_Show_show__show_list_aux__list_lident (l : (lident) list) : string =
   (match l with
     | [] -> ""
@@ -221,9 +212,6 @@ let fStarC_Class_Show_show__option_list_lident (tmp : ((lident) list) option) : 
 let fStarC_Class_PP_pp__lident (tmp : lident) : PPrint.document =
   (let tmp1 = (fStarC_Class_Show_show__lident tmp) in
   (PPrint.arbitrary_string tmp1))
-
-let fStarC_Class_Setlike_empty__ident_list_ident_6 (tmp : unit) : (ident) list =
-  (FStarC_FlatSet.empty ())
 
 let rec fStarC_Class_Show_show__show_list_aux__list_ident_67 (l : (ident) list) : string =
   (match l with
@@ -255,18 +243,18 @@ let fStarC_Class_Show_show__option_lident (tmp : (lident) option) : string =
       (Prims.strcat "Some " tmp1))
   )
 
-let rec fStarC_Class_Show_show__show_list_aux__list_lident_98 (l : (lident) list) : string =
+let rec fStarC_Class_Show_show__show_list_aux__list_lident_106 (l : (lident) list) : string =
   (match l with
     | [] -> ""
     | (x :: []) -> (fStarC_Class_Show_show__lident x)
     | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__lident x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_98 xs) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_106 xs) in
       let tmp2 = (Prims.strcat ", " tmp1) in
       (Prims.strcat tmp tmp2))
   )
 
-let fStarC_Class_Show_show__list_lident_98 (tmp : (lident) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_98 tmp) in
+let fStarC_Class_Show_show__list_lident_106 (tmp : (lident) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_lident_106 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
@@ -304,9 +292,6 @@ let fStarC_Class_Ord_cmp__tuple2_list_ident_list_ident (tmp : ((ident) list * (i
         | (FStarC_Order.Gt, tmp3) -> FStarC_Order.Gt
       ))
   )
-
-let fStarC_Class_Setlike_is_empty__ident_list_ident (tmp : (ident) list) : bool =
-  (FStarC_FlatSet.is_empty tmp)
 
 let fStarC_Class_Hashable_hash__lident (tmp : lident) : int =
   (FStarC_Class_Hashable.fStarC_Class_Hashable_hash__string (string_of_lid tmp))

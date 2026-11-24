@@ -16,17 +16,6 @@ let fStarC_Class_Monad_bind__list (tmp : ('a) list) (tmp1 : ('a -> ('b) list)) :
 let fStarC_Class_Monad_op_Less_Dollar_Greater__list (f : ('a -> 'b)) (x : ('a) list) : ('b) list =
   ((fStarC_Class_Monad_bind__list x) (fun v -> ((f v) :: [])))
 
-type monad = {
-  return : (unit -> (Obj.t -> Obj.t));
-  bind : (unit -> (unit -> (Obj.t -> ((Obj.t -> Obj.t) -> Obj.t))));
-}
-
-let fStarC_Class_Monad_return__id (tmp : 'a) : 'a =
-  tmp
-
-let fStarC_Class_Monad_bind__id_3 (tmp : 'a) (tmp1 : ('a -> 'b)) : 'b =
-  (tmp1 tmp)
-
 let rec fStarC_Class_Monad_mapMi__mapMi_go__option (f : (Prims.int -> ('a -> ('b) option))) (i : Prims.int) (l : ('a) list) : (('b) list) option =
   (match l with
     | [] -> (Some ([]))
@@ -38,9 +27,9 @@ let rec fStarC_Class_Monad_mapMi__mapMi_go__option (f : (Prims.int -> ('a -> ('b
 let fStarC_Class_Monad_mapMi__option (f : (Prims.int -> ('a -> ('b) option))) (l : ('a) list) : (('b) list) option =
   (fStarC_Class_Monad_mapMi__mapMi_go__option f Prims.int_zero l)
 
-let fStarC_Class_Monad_fmap__option (f : ('a -> 'b)) (m : ('a) option) : ('b) option =
-  ((fStarC_Class_Monad_bind__option m) (fun v -> (Some ((f v)))))
-
 let fStarC_Class_Monad_op_Less_Star_Greater__option (ff : (('a -> 'b)) option) (x : ('a) option) : ('b) option =
   ((fStarC_Class_Monad_bind__option ff) (fun f -> ((fStarC_Class_Monad_bind__option x) (fun v -> (Some ((f v)))))))
+
+let fStarC_Class_Monad_fmap__option (f : ('a -> 'b)) (m : ('a) option) : ('b) option =
+  ((fStarC_Class_Monad_bind__option m) (fun v -> (Some ((f v)))))
 

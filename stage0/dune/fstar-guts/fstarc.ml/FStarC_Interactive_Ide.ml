@@ -573,6 +573,14 @@ let run_repl_transaction (st : FStarC_Interactive_Ide_Types.repl_state) (push_ki
       ))
   ))
 
+let same_dep_task (a : FStarC_Interactive_Ide_Types.repl_task) (b : FStarC_Interactive_Ide_Types.repl_task) : bool =
+  (match (a, b) with
+    | ((FStarC_Interactive_Ide_Types.LDSingle (x)), (FStarC_Interactive_Ide_Types.LDSingle (y))) -> ((=) x y)
+    | ((FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile (x)), (FStarC_Interactive_Ide_Types.LDInterfaceOfCurrentFile (y))) -> ((=) x y)
+    | (FStarC_Interactive_Ide_Types.Noop, FStarC_Interactive_Ide_Types.Noop) -> true
+    | tmp -> false
+  )
+
 let rec run_repl_ld_transactions__aux (progress_callback : (FStarC_Interactive_Ide_Types.repl_task -> unit)) (debug : (string -> (FStarC_Interactive_Ide_Types.repl_task -> unit))) (st : FStarC_Interactive_Ide_Types.repl_state) (tasks : (FStarC_Interactive_Ide_Types.repl_task) list) (previous : ((((Prims.int * Prims.int * (Prims.int * Prims.int * Prims.int) * Prims.int) * Prims.int) * (FStarC_Interactive_Ide_Types.repl_task * FStarC_Interactive_Ide_Types.repl_state))) list) : (FStarC_Interactive_Ide_Types.repl_state, FStarC_Interactive_Ide_Types.repl_state) FStar_Pervasives.either =
   (match (tasks, previous) with
     | ([], []) -> (FStar_Pervasives.Inl (st))
@@ -598,7 +606,7 @@ let rec run_repl_ld_transactions__aux (progress_callback : (FStarC_Interactive_I
           (run_repl_ld_transactions__aux progress_callback debug tmp3 tasks1 [])) else (FStar_Pervasives.Inr (st1)))
       ))
     | ((task :: tasks1), (prev :: previous1)) -> (let tmp = (FStarC_Interactive_PushHelper.update_task_timestamps task) in
-      let tmp1 = ((=) (match (match prev with
+      let tmp1 = (same_dep_task (match (match prev with
           | (u__1, u__2) -> u__2
         ) with
           | (u__1, u__2) -> u__1
@@ -734,7 +742,6 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state) (query 
         use_eq_strict = (tmp).FStarC_TypeChecker_Env.use_eq_strict;
         is_iface = (tmp).FStarC_TypeChecker_Env.is_iface;
         admit = (tmp).FStarC_TypeChecker_Env.admit;
-        phase1 = (tmp).FStarC_TypeChecker_Env.phase1;
         failhard = (tmp).FStarC_TypeChecker_Env.failhard;
         flychecking = flag;
         uvar_subtyping = (tmp).FStarC_TypeChecker_Env.uvar_subtyping;
@@ -762,6 +769,7 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state) (query 
         strict_args_tab = (tmp).FStarC_TypeChecker_Env.strict_args_tab;
         disc_proj_tab = (tmp).FStarC_TypeChecker_Env.disc_proj_tab;
         erasable_types_tab = (tmp).FStarC_TypeChecker_Env.erasable_types_tab;
+        spec_arg_tab = (tmp).FStarC_TypeChecker_Env.spec_arg_tab;
         enable_defer_to_tac = (tmp).FStarC_TypeChecker_Env.enable_defer_to_tac;
         unif_allow_ref_guards = (tmp).FStarC_TypeChecker_Env.unif_allow_ref_guards;
         erase_erasable_args = (tmp).FStarC_TypeChecker_Env.erase_erasable_args;
@@ -770,7 +778,12 @@ let run_push_without_deps (st : FStarC_Interactive_Ide_Types.repl_state) (query 
         iface_todo = (tmp).FStarC_TypeChecker_Env.iface_todo;
         iface_hidden = (tmp).FStarC_TypeChecker_Env.iface_hidden;
         iface_lids = (tmp).FStarC_TypeChecker_Env.iface_lids;
-        iface_val_lids = (tmp).FStarC_TypeChecker_Env.iface_val_lids });
+        iface_val_lids = (tmp).FStarC_TypeChecker_Env.iface_val_lids;
+        tc_global = (tmp).FStarC_TypeChecker_Env.tc_global;
+        tc_scope = (tmp).FStarC_TypeChecker_Env.tc_scope;
+        tc_scope_gamma = (tmp).FStarC_TypeChecker_Env.tc_scope_gamma;
+        tc_class_of_typ = (tmp).FStarC_TypeChecker_Env.tc_class_of_typ;
+        tc_resolve = (tmp).FStarC_TypeChecker_Env.tc_resolve });
       repl_stdin = (st1).FStarC_Interactive_Ide_Types.repl_stdin;
       repl_names = (st1).FStarC_Interactive_Ide_Types.repl_names;
       repl_buffered_input_queries = (st1).FStarC_Interactive_Ide_Types.repl_buffered_input_queries;
@@ -1319,7 +1332,7 @@ let run_search (st : FStarC_Interactive_Ide_Types.repl_state) (search_str : stri
   let st_matches = (fun candidate term -> (let found = (match (term).st_term with
         | (NameContainsStr (str)) -> (BatString.exists (FStarC_Ident.string_of_lid (candidate).sc_lid) str)
         | (TypeContainsLid (lid)) -> (let tmp = (sc_fvars tcenv candidate) in
-          (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident_8 lid tmp))
+          (FStarC_RBSet.fStarC_Class_Setlike_mem__lident_rbset_lident_4 lid tmp))
       ) in
     ((<>) found (term).st_negate))) in
   let parse = (fun search_str1 -> (let parse_one = (fun term -> (let negate = (FStarC_Util.starts_with term "-") in

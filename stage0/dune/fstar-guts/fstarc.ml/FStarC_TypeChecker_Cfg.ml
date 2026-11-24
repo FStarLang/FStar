@@ -59,6 +59,7 @@ type cfg = {
   debug : debug_switches;
   delta_level : (FStarC_TypeChecker_Env.delta_level) list;
   primitive_steps : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree;
+  env_dependent_steps : bool;
   strong : bool;
   memoize_lazy : bool;
   normalize_pure_lets : bool;
@@ -1459,22 +1460,15 @@ type prim_step_set = (string, FStarC_TypeChecker_Primops_Base.primitive_step) FS
 let empty_prim_steps (tmp : unit) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (FStarC_PSMap.empty ())
 
-let add_step (s : FStarC_TypeChecker_Primops_Base.primitive_step) (ss : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
-  (FStarC_PSMap.add ss (FStarC_Ident.string_of_lid (s).FStarC_TypeChecker_Primops_Base.name) s)
-
-let add_steps (m : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
-  (BatList.fold_right add_step l m)
-
-let prim_from_list (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
-  (let tmp = (empty_prim_steps ()) in
-  (add_steps tmp l))
-
 let extendable_primops_dirty : (bool ref) =
   (ref true)
 
 type register_prim_step_t = (FStarC_TypeChecker_Primops_Base.primitive_step -> unit)
 
 type retrieve_prim_step_t = (unit -> (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree)
+
+let add_step (s : FStarC_TypeChecker_Primops_Base.primitive_step) (ss : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
+  (FStarC_PSMap.add ss (FStarC_Ident.string_of_lid (s).FStarC_TypeChecker_Primops_Base.name) s)
 
 let mk_extendable_primop_set (tmp : unit) : ((FStarC_TypeChecker_Primops_Base.primitive_step -> unit) * (unit -> (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree)) =
   (let tmp1 = (empty_prim_steps ()) in
@@ -1505,6 +1499,13 @@ let retrieve_extra_steps (tmp : unit) : (string, FStarC_TypeChecker_Primops_Base
 
 let merge_steps (s1 : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) (acc : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
   (FStarC_PSMap.merge s1 acc)
+
+let add_steps (m : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree) (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
+  (BatList.fold_right add_step l m)
+
+let prim_from_list (l : (FStarC_TypeChecker_Primops_Base.primitive_step) list) : (string, FStarC_TypeChecker_Primops_Base.primitive_step) FStarC_AVLMap.tree =
+  (let tmp = (empty_prim_steps ()) in
+  (add_steps tmp l))
 
 let dbg_Norm : (bool ref) =
   (FStarC_Debug.get_toggle "Norm")
@@ -1667,12 +1668,6 @@ let fStarC_Class_Deq_op_Equals_Question__fsteps (tmp : fsteps) (tmp1 : fsteps) :
   let tmp33 = (if tmp32 then (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).default_univs_to_zero (tmp1).default_univs_to_zero) else false) in
   let tmp34 = (if tmp33 then (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).tactics (tmp1).tactics) else false) in
   (if tmp34 then (FStarC_Class_Deq.fStarC_Class_Deq_op_Equals_Question__bool (tmp).reduce_projections (tmp1).reduce_projections) else false))
-
-let find_prim_step (cfg : cfg) (fv : FStarC_Syntax_Syntax.fv) : (FStarC_TypeChecker_Primops_Base.primitive_step) option =
-  (match (FStarC_PSMap.try_find (cfg).primitive_steps (FStarC_Ident.string_of_lid (fv).FStarC_Syntax_Syntax.fv_name)) with
-    | (Some (ps)) when ((ps).FStarC_TypeChecker_Primops_Base.unrepresentable_result && (not ((cfg).steps).unrepresentable_primops)) -> None
-    | r -> r
-  )
 
 let translate_norm_step (s : FStarC_NormSteps.norm_step) : (FStarC_TypeChecker_Env.step) list =
   (match s with

@@ -14,11 +14,12 @@ let mk_pstate (fname : string) (start_pos : Prims.int) (toks : (FStarC_Parser_Le
   (let arr = (Array.of_list toks) in
   let tmp = (ref 0) in
   let tmp1 = (ref 0) in
+  let tmp2 = (FStarC_Find.source_file_name fname) in
   { toks = arr;
     ntoks = (Array.length arr);
     idx = tmp;
     furthest = tmp1;
-    fname = fname;
+    fname = tmp2;
     start_pos = start_pos })
 
 type ctx = {

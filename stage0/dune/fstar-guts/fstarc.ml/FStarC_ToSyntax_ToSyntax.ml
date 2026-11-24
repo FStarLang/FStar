@@ -54,7 +54,7 @@ let rec gather_pattern_bound_vars_maybe_top (acc : (FStarC_Ident.ident) list) (p
   ))
 
 let gather_pattern_bound_vars : (FStarC_Parser_AST.pattern -> (FStarC_Ident.ident) list) =
-  (let acc = (FStarC_Ident.fStarC_Class_Setlike_empty__ident_list_ident_6 ()) in
+  (let acc = (FStarC_FlatSet.fStarC_Class_Setlike_empty__ident_list_ident_6 ()) in
   (fun p -> (gather_pattern_bound_vars_maybe_top acc p)))
 
 let register_extension_tosyntax (lang_name : string) (eta : (FStarC_Syntax_DsEnv.env -> (Obj.t -> ((FStarC_Ident.lident) list -> (FStarC_Range_Type.range -> (FStarC_Syntax_Syntax.sigelt') list))))) : unit =
@@ -425,7 +425,7 @@ let rec fStarC_ToSyntax_ToSyntax_desugar_term_maybe_top__aux__1 (acc : (FStarC_I
   (match sets with
     | [] -> None
     | (set :: sets1) -> (let i = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_inter__ident_list_ident acc set) in
-      let tmp = (FStarC_Ident.fStarC_Class_Setlike_is_empty__ident_list_ident i) in
+      let tmp = (FStarC_FlatSet.fStarC_Class_Setlike_is_empty__ident_list_ident i) in
       (if tmp then (let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_union__ident_list_ident_5 acc set) in
       (fStarC_ToSyntax_ToSyntax_desugar_term_maybe_top__aux__1 tmp1 sets1)) else (let tmp1 = (BatList.hd i) in
       (Some (tmp1)))))
@@ -841,8 +841,7 @@ and trans_bqual (env : FStarC_Syntax_DsEnv.env) (u__x_ : (FStarC_Parser_AST.arg_
     | (Some ((FStarC_Parser_AST.Meta (t)))) -> (let tmp = (desugar_term env t) in
       let tmp1 = (FStarC_Syntax_Syntax.Meta (tmp)) in
       (Some (tmp1)))
-    | (Some (FStarC_Parser_AST.TypeClassArg)) -> (let tcresolve = (desugar_term env (FStarC_Parser_AST.mk_term (FStarC_Parser_AST.Var (FStarC_Parser_Const.tcresolve_lid)) FStarC_Range_Type.dummyRange FStarC_Parser_AST.Expr)) in
-      (Some ((FStarC_Syntax_Syntax.Meta (tcresolve)))))
+    | (Some (FStarC_Parser_AST.TypeClassArg)) -> (Some (FStarC_Syntax_Syntax.TcArg))
     | None -> None
   )
 
@@ -1736,7 +1735,7 @@ and desugar_term_maybe_top (top_level : bool) (env : FStarC_Syntax_DsEnv.env) (t
       let t' = (FStarC_Parser_AST.mk_term tmp8 (top).FStarC_Parser_AST.range FStarC_Parser_AST.Expr) in
       (desugar_term_maybe_top top_level env t'))
     | (FStarC_Parser_AST.Abs (binders, body)) -> (let bvss = (BatList.map gather_pattern_bound_vars binders) in
-      let check_disjoint = (fun sets -> (let tmp1 = (FStarC_Ident.fStarC_Class_Setlike_empty__ident_list_ident_6 ()) in
+      let check_disjoint = (fun sets -> (let tmp1 = (FStarC_FlatSet.fStarC_Class_Setlike_empty__ident_list_ident_6 ()) in
         (fStarC_ToSyntax_ToSyntax_desugar_term_maybe_top__aux__1 tmp1 sets))) in
       let tmp1 = (check_disjoint bvss) in
       (match tmp1 with
@@ -2959,8 +2958,8 @@ let rec desugar_tycon (env : FStarC_Syntax_DsEnv.env) (d : FStarC_Parser_AST.dec
                         (match tmp13 with
                           | (constrNames, constrs1) -> (let tmp14 = (!(dbg_attrs)) in
                             (if tmp14 then (let tmp15 = (FStarC_Ident.fStarC_Class_Show_show__lident tname) in
-                            let tmp16 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_syntax_term'_175 val_attrs) in
-                            let tmp17 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_syntax_term'_175 d_attrs) in
+                            let tmp16 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_syntax_term'_177 val_attrs) in
+                            let tmp17 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_syntax_term'_177 d_attrs) in
                             (FStarC_Format.print3 "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n" tmp15 tmp16 tmp17)) else ());
                             let tmp15 = (FStarC_Syntax_Util.deduplicate_terms (BatList.append val_attrs d_attrs)) in
                             let tmp16 = (FStarC_Syntax_DsEnv.opens_and_abbrevs env1) in
@@ -3214,11 +3213,7 @@ let rec generalize_annotated_univs (s : FStarC_Syntax_Syntax.sigelt) : FStarC_Sy
     ((vars) := tmp7)) else ()))) in
   let get = (fun tmp1 -> (let tmp2 = (!(vars)) in
     (BatList.rev tmp2))) in
-  (ignore (FStarC_Syntax_Visit.visit_sigelt false (fun t -> t) (fun u -> ((match u with
-    | (FStarC_Syntax_Syntax.U_name (nm)) -> (reg nm)
-    | tmp1 -> ()
-  );
-  u)) s));
+  (ignore ((FStarC_Syntax_Visit.fStarC_Syntax_Visit_f_sigelt__1 reg) false s));
   let unames = (get ()) in
   (match (s).FStarC_Syntax_Syntax.sigel with
     | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp1)) -> (FStarC_Effect.failwith "Impossible: collect_annotated_universes: bare data/type constructor")
@@ -3391,7 +3386,7 @@ let rec desugar_decl_core (env : FStarC_Syntax_DsEnv.env) (d_attrs : ((FStarC_Sy
       let tmp1 = (desugar_tycon env d d_attrs tmp tcs) in
       (match tmp1 with
         | (env1, ses) -> (let tmp2 = (!(dbg_attrs)) in
-          (if tmp2 then (let tmp3 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_174 d) in
+          (if tmp2 then (let tmp3 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_176 d) in
           let tmp4 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_sigelt ses) in
           (FStarC_Format.print2 "Desugared tycon from {%s} to {%s}\n" tmp3 tmp4)) else ());
           let mkclass = (fun lid -> (let r = (FStarC_Ident.range_of_lid lid) in

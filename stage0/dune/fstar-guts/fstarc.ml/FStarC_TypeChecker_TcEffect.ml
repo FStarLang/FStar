@@ -22,7 +22,8 @@ let u_type (r : FStarC_Range_Type.range) (u : FStarC_Ident.ident) : (FStarC_Synt
 
 let check_comb (env : FStarC_TypeChecker_Env.env) (us : (FStarC_Ident.ident) list) (expected : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_Ident.ident) list * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) =
   (let env1 = (FStarC_TypeChecker_Env.push_univ_vars env us) in
-  let t1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_check_trivial_guard env1 t expected) in
+  let t1 = (FStarC_TypeChecker_CoreCheck.check_or_elaborate env1 (fun tmp -> ((FStarC_TypeChecker_CoreCheck.check_term env1 "this effect combinator" t expected true);
+    t)) (fun tmp -> (FStarC_TypeChecker_TcTerm.tc_check_trivial_guard env1 t expected))) in
   let tmp = (FStarC_Syntax_Subst.close_univ_vars us t1) in
   (us, tmp))
 
@@ -65,11 +66,11 @@ let repr_universe (env : FStarC_TypeChecker_Env.env) (repr_ts : ((FStarC_Ident.i
       let bv_a = (FStarC_Syntax_Syntax.new_bv (Some (r)) tmp1) in
       let env2 = (FStarC_TypeChecker_Env.push_bv env1 bv_a) in
       let tmp2 = (FStarC_Syntax_Syntax.bv_to_name bv_a) in
-      let tmp3 = (repr_app repr_ts u_a tmp2 r) in
-      let u = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_universe_of env2 tmp3) in
-      let tmp4 = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_type (u)) r) in
-      let tmp5 = (FStarC_Syntax_Subst.close_univ_vars (u_a :: []) tmp4) in
-      ((u_a :: []), tmp5))
+      let t = (repr_app repr_ts u_a tmp2 r) in
+      let u = (FStarC_TypeChecker_CoreCheck.check_or_elaborate env2 (fun tmp3 -> (FStarC_TypeChecker_CoreCheck.universe_of env2 "the representation of this effect" t)) (fun tmp3 -> (FStarC_TypeChecker_TcTerm.universe_of env2 t))) in
+      let tmp3 = (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_type (u)) r) in
+      let tmp4 = (FStarC_Syntax_Subst.close_univ_vars (u_a :: []) tmp3) in
+      ((u_a :: []), tmp4))
   )
 
 let tc_eff_decl (env : FStarC_TypeChecker_Env.env) (ed : FStarC_Syntax_Syntax.eff_decl) (quals : (FStarC_Syntax_Syntax.qualifier) list) (u__attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : FStarC_Syntax_Syntax.eff_decl =

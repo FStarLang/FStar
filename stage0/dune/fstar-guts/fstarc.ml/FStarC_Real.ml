@@ -7,11 +7,11 @@ let to_string (r : FStar_RealLiteral.real_literal_repr) : string =
 let of_string (s : string) : (FStar_RealLiteral.real_literal_repr) option =
   (FStar_RealLiteral_Parse.of_string s)
 
-let cmp (r1 : FStar_RealLiteral.real_literal_repr) (r2 : FStar_RealLiteral.real_literal_repr) : FStarC_Order.order =
-  (FStarC_Order.compare_int (FStar_RealLiteral.compare r1 r2) Prims.int_zero)
-
 let of_int (i : Prims.int) : FStar_RealLiteral.real_literal_repr =
   (FStar_RealLiteral.of_int i)
+
+let cmp (r1 : FStar_RealLiteral.real_literal_repr) (r2 : FStar_RealLiteral.real_literal_repr) : FStarC_Order.order =
+  (FStarC_Order.compare_int (FStar_RealLiteral.compare r1 r2) Prims.int_zero)
 
 let mk (mantissa_ : Prims.int) (e : Prims.int) : FStar_RealLiteral.real_literal_repr =
   (FStar_RealLiteral.mk mantissa_ e)

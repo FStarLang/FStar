@@ -4,42 +4,83 @@
 let empty (tmp : unit) : (string, 'u___value) FStarC_AVLMap.tree =
   (FStarC_AVLMap.empty ())
 
-let cmp : (string -> (string -> int)) =
-  String.compare
+let cmp (eta : string) (eta1 : string) : int =
+  (String.compare eta eta1)
+
+let rec fStarC_AVLMap_find__string_cmp (key : string) (m : (string, 'v) FStarC_AVLMap.tree) : ('v) option =
+  (match m with
+    | FStarC_AVLMap.Leaf -> None
+    | (FStarC_AVLMap.Node (l, k', v', r, tmp)) -> (let o = (cmp key k') in
+      (if ((=) o 0) then (Some (v')) else (if ((<) o 0) then (fStarC_AVLMap_find__string_cmp key l) else (fStarC_AVLMap_find__string_cmp key r))))
+  )
 
 let try_find (map : (string, 'u___value) FStarC_AVLMap.tree) (key : string) : ('u___value) option =
-  (FStarC_AVLMap.find cmp key map)
+  (fStarC_AVLMap_find__string_cmp key map)
+
+let rec fStarC_AVLMap_add__string_cmp (key : string) (value : 'v) (m : (string, 'v) FStarC_AVLMap.tree) : (string, 'v) FStarC_AVLMap.tree =
+  (match m with
+    | FStarC_AVLMap.Leaf -> (FStarC_AVLMap.Node (FStarC_AVLMap.Leaf, key, value, FStarC_AVLMap.Leaf, 1))
+    | (FStarC_AVLMap.Node (l, k', v', r, h)) -> (let o = (cmp key k') in
+      (if ((=) o 0) then (FStarC_AVLMap.Node (l, key, value, r, h)) else (if ((<) o 0) then (FStarC_AVLMap.bal (fStarC_AVLMap_add__string_cmp key value l) k' v' r) else (FStarC_AVLMap.bal l k' v' (fStarC_AVLMap_add__string_cmp key value r)))))
+  )
 
 let add (map : (string, 'u___value) FStarC_AVLMap.tree) (key : string) (value : 'u___value) : (string, 'u___value) FStarC_AVLMap.tree =
-  (FStarC_AVLMap.add cmp key value map)
+  (fStarC_AVLMap_add__string_cmp key value map)
 
-let iter (m : (string, 'u___value) FStarC_AVLMap.tree) (f : (string -> ('u___value -> unit))) : unit =
-  (FStarC_AVLMap.iter f m)
+let fStarC_PSMap_iter__ref_bool (m : (string, (bool ref)) FStarC_AVLMap.tree) : unit =
+  (FStarC_AVLMap.fStarC_AVLMap_iter__string_ref_bool m)
 
 let keys (m : (string, 'u___value) FStarC_AVLMap.tree) : (string) list =
-  (FStarC_AVLMap.fold_pure (fun k tmp acc -> (k :: acc)) m [])
+  (FStarC_AVLMap.fStarC_AVLMap_fold_pure__string_list_string m [])
+
+let fStarC_PSMap_iter__ref_bool_1 (m : (string, (bool ref)) FStarC_AVLMap.tree) : unit =
+  (FStarC_AVLMap.fStarC_AVLMap_iter__string_ref_bool_1 m)
 
 let of_list (l : ((string * 'u___value)) list) : (string, 'u___value) FStarC_AVLMap.tree =
   (FStar_List_Tot_Base.fold_left (fun acc tmp -> (match tmp with
     | (k, v) -> (add acc k v)
   )) (empty ()) l)
 
-let merge (m1 : (string, 'u___value) FStarC_AVLMap.tree) (acc : (string, 'u___value) FStarC_AVLMap.tree) : (string, 'u___value) FStarC_AVLMap.tree =
-  (FStarC_AVLMap.fold_pure (fun k v m -> (FStarC_AVLMap.add cmp k v m)) m1 acc)
+let rec fStarC_AVLMap_fold_pure__string_tree_string (m : (string, 'u___value) FStarC_AVLMap.tree) (acc : (string, 'u___value) FStarC_AVLMap.tree) : (string, 'u___value) FStarC_AVLMap.tree =
+  (match m with
+    | FStarC_AVLMap.Leaf -> acc
+    | (FStarC_AVLMap.Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold_pure__string_tree_string l acc) in
+      let acc2 = (fStarC_AVLMap_add__string_cmp key value acc1) in
+      (fStarC_AVLMap_fold_pure__string_tree_string r acc2))
+  )
 
-let fold (m : (string, 'u___value) FStarC_AVLMap.tree) (f : (string -> ('u___value -> ('u___a -> 'u___a)))) (acc : 'u___a) : 'u___a =
-  (FStarC_AVLMap.fold f m acc)
+let merge (m1 : (string, 'u___value) FStarC_AVLMap.tree) (acc : (string, 'u___value) FStarC_AVLMap.tree) : (string, 'u___value) FStarC_AVLMap.tree =
+  (fStarC_AVLMap_fold_pure__string_tree_string m1 acc)
+
+let rec fStarC_AVLMap_remove__string_cmp (key : string) (m : (string, 'v) FStarC_AVLMap.tree) : (string, 'v) FStarC_AVLMap.tree =
+  (match m with
+    | FStarC_AVLMap.Leaf -> FStarC_AVLMap.Leaf
+    | (FStarC_AVLMap.Node (l, k', v', r, tmp)) -> (let o = (cmp key k') in
+      (if ((=) o 0) then (FStarC_AVLMap.concat l r) else (if ((<) o 0) then (FStarC_AVLMap.bal (fStarC_AVLMap_remove__string_cmp key l) k' v' r) else (FStarC_AVLMap.bal l k' v' (fStarC_AVLMap_remove__string_cmp key r)))))
+  )
+
+let remove (m : (string, 'u___value) FStarC_AVLMap.tree) (key : string) : (string, 'u___value) FStarC_AVLMap.tree =
+  (fStarC_AVLMap_remove__string_cmp key m)
+
+let fStarC_PSMap_fold__ref_bool_list_tuple2_string_bool (m : (string, (bool ref)) FStarC_AVLMap.tree) (acc : ((string * bool)) list) : ((string * bool)) list =
+  (FStarC_AVLMap.fStarC_AVLMap_fold__string_ref_bool_list_tuple2_string_bool m acc)
+
+let fStarC_PSMap_fold__string_list_tuple2_string_string (m : (string, string) FStarC_AVLMap.tree) (acc : ((string * string)) list) : ((string * string)) list =
+  (FStarC_AVLMap.fStarC_AVLMap_fold__string_list_tuple2_string_string m acc)
 
 let find_default (map : (string, 'u___value) FStarC_AVLMap.tree) (key : string) (dflt : 'u___value) : 'u___value =
-  (match (FStarC_AVLMap.find cmp key map) with
+  (match (fStarC_AVLMap_find__string_cmp key map) with
     | (Some (v)) -> v
     | None -> dflt
   )
+
+let fStarC_PSMap_fold__list_string (m : (string, 'u___a) FStarC_AVLMap.tree) (acc : (string) list) : (string) list =
+  (FStarC_AVLMap.fStarC_AVLMap_fold__string_list_string m acc)
 
 let modify (m : (string, 'u___value) FStarC_AVLMap.tree) (k : string) (upd : (('u___value) option -> 'u___value)) : (string, 'u___value) FStarC_AVLMap.tree =
   (let tmp = (upd (try_find m k)) in
   (add m k tmp))
 
-let remove (m : (string, 'u___value) FStarC_AVLMap.tree) (key : string) : (string, 'u___value) FStarC_AVLMap.tree =
-  (FStarC_AVLMap.remove cmp key m)
+let fStarC_PSMap_fold__list (m : (string, 'u___a) FStarC_AVLMap.tree) (acc : ('u___a) list) : ('u___a) list =
+  (FStarC_AVLMap.fStarC_AVLMap_fold__string_list m acc)
 

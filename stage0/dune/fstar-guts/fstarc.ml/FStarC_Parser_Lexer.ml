@@ -851,7 +851,7 @@ let rec next_token (st : lstate) : token =
           (((st).cur) := e);
           let pos = (cur_pos st) in
           (use_lang st [] name pos sp))
-        | RSourceFile -> (finish FStarC_Parser_TokenKind.STRING (FStarC_Filepath.basename (st).fname))
+        | RSourceFile -> (finish FStarC_Parser_TokenKind.STRING (st).fname)
         | RLine -> (let tmp1 = (!((st).lnum)) in
           let tmp2 = (string_of_int tmp1) in
           (finish FStarC_Parser_TokenKind.INT tmp2))
@@ -859,7 +859,7 @@ let rec next_token (st : lstate) : token =
           let tmp2 = (string_of_int tmp1) in
           let tmp3 = (Prims.strcat tmp2 ")") in
           let tmp4 = (Prims.strcat "(" tmp3) in
-          let tmp5 = (Prims.strcat (FStarC_Filepath.basename (st).fname) tmp4) in
+          let tmp5 = (Prims.strcat (st).fname tmp4) in
           (finish FStarC_Parser_TokenKind.STRING tmp5))
         | RWhite -> ((((st).cur) := e);
           (next_token st))
@@ -978,26 +978,27 @@ let rec lex_all__go (st : lstate) (acc : (token) list) : (token) list =
   (if (((=) (t).kind FStarC_Parser_TokenKind.EOF) || ((=) (t).kind FStarC_Parser_TokenKind.ERROR)) then (BatList.rev (t :: acc)) else (lex_all__go st (t :: acc))))
 
 let lex_all (fname : string) (contents : string) (line : Prims.int) (col : Prims.int) : ((token) list * ((string * FStarC_Range_Type.range)) list) =
-  (let tmp = (ref 0) in
-  let tmp1 = (ref (FStarC_SmallInt.of_int line)) in
-  let tmp2 = (ref 0) in
-  let tmp3 = (ref (FStarC_SmallInt.of_int col)) in
-  let tmp4 = (ref 0) in
-  let tmp5 = (ref (FStarC_SmallInt.of_int col)) in
-  let tmp6 = (ref []) in
-  let tmp7 = (ref 0) in
+  (let tmp = (FStarC_Find.source_file_name fname) in
+  let tmp1 = (ref 0) in
+  let tmp2 = (ref (FStarC_SmallInt.of_int line)) in
+  let tmp3 = (ref 0) in
+  let tmp4 = (ref (FStarC_SmallInt.of_int col)) in
+  let tmp5 = (ref 0) in
+  let tmp6 = (ref (FStarC_SmallInt.of_int col)) in
+  let tmp7 = (ref []) in
+  let tmp8 = (ref 0) in
   let st = { buf = contents;
       len = (String.length contents);
-      fname = fname;
-      cur = tmp;
-      lnum = tmp1;
-      bol = tmp2;
-      bol_col = tmp3;
-      cache_off = tmp4;
-      cache_col = tmp5;
-      comments = tmp6;
-      ncomments = tmp7 } in
+      fname = tmp;
+      cur = tmp1;
+      lnum = tmp2;
+      bol = tmp3;
+      bol_col = tmp4;
+      cache_off = tmp5;
+      cache_col = tmp6;
+      comments = tmp7;
+      ncomments = tmp8 } in
   let toks = (lex_all__go st []) in
-  let tmp8 = (!((st).comments)) in
-  (toks, tmp8))
+  let tmp9 = (!((st).comments)) in
+  (toks, tmp9))
 

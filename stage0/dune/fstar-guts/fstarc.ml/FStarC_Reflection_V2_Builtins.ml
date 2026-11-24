@@ -177,6 +177,7 @@ let rec inspect_ln (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax
 let pack_aqual (aqv : FStarC_Reflection_V2_Data.aqualv) : (FStarC_Syntax_Syntax.arg_qualifier) option =
   (match aqv with
     | FStarC_Reflection_V2_Data.Q_Implicit -> (FStarC_Syntax_Syntax.as_aqual_implicit true)
+    | FStarC_Reflection_V2_Data.Q_TcArg -> (FStarC_Syntax_Syntax.as_aqual_implicit true)
     | tmp -> None
   )
 
@@ -454,6 +455,7 @@ let inspect_bqual (bq : (FStarC_Syntax_Syntax.binder_qualifier) option) : FStarC
     | (Some ((FStarC_Syntax_Syntax.Implicit (tmp)))) -> FStarC_Reflection_V2_Data.Q_Implicit
     | (Some ((FStarC_Syntax_Syntax.Meta (t)))) -> (FStarC_Reflection_V2_Data.Q_Meta (t))
     | (Some (FStarC_Syntax_Syntax.Equality)) -> FStarC_Reflection_V2_Data.Q_Equality
+    | (Some (FStarC_Syntax_Syntax.TcArg)) -> FStarC_Reflection_V2_Data.Q_TcArg
     | None -> FStarC_Reflection_V2_Data.Q_Explicit
   )
 
@@ -468,6 +470,7 @@ let pack_bqual (aqv : FStarC_Reflection_V2_Data.aqualv) : (FStarC_Syntax_Syntax.
   (match aqv with
     | FStarC_Reflection_V2_Data.Q_Implicit -> (Some ((FStarC_Syntax_Syntax.Implicit (false))))
     | (FStarC_Reflection_V2_Data.Q_Meta (t)) -> (Some ((FStarC_Syntax_Syntax.Meta (t))))
+    | FStarC_Reflection_V2_Data.Q_TcArg -> (Some (FStarC_Syntax_Syntax.TcArg))
     | FStarC_Reflection_V2_Data.Q_Equality -> (Some (FStarC_Syntax_Syntax.Equality))
     | FStarC_Reflection_V2_Data.Q_Explicit -> None
   )
@@ -610,6 +613,8 @@ let rec aqual_eq (aq1 : FStarC_Reflection_V2_Data.aqualv) (aq2 : FStarC_Reflecti
     | (FStarC_Reflection_V2_Data.Q_Implicit, FStarC_Reflection_V2_Data.Q_Implicit) -> true
     | (FStarC_Reflection_V2_Data.Q_Explicit, FStarC_Reflection_V2_Data.Q_Explicit) -> true
     | ((FStarC_Reflection_V2_Data.Q_Meta (t1)), (FStarC_Reflection_V2_Data.Q_Meta (t2))) -> (term_eq t1 t2)
+    | (FStarC_Reflection_V2_Data.Q_Equality, FStarC_Reflection_V2_Data.Q_Equality) -> true
+    | (FStarC_Reflection_V2_Data.Q_TcArg, FStarC_Reflection_V2_Data.Q_TcArg) -> true
     | tmp -> false
   )
 

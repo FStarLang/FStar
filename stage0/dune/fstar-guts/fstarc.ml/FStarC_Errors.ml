@@ -54,11 +54,7 @@ let optional_def (f : ('u___a -> PPrint.document)) (def : PPrint.document) (o : 
   )
 
 let issue_to_doc' (print_hdr : bool) (issue : FStarC_Errors_Issue.issue) : PPrint.document =
-  (let r = (match (issue).FStarC_Errors_Issue.issue_range with
-      | (Some (x)) -> (let tmp = (FStarC_Range_Ops.refind_range x) in
-        (Some (tmp)))
-      | None -> None
-    ) in
+  (let r = (issue).FStarC_Errors_Issue.issue_range in
   let hdr = (if print_hdr then (let level_header = (PPrint.string (FStarC_Errors_Issue.string_of_issue_level (issue).FStarC_Errors_Issue.issue_level)) in
     let num_opt = (if (((=) (issue).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EError) || ((=) (issue).FStarC_Errors_Issue.issue_level FStarC_Errors_Issue.EWarning)) then (let tmp = (optional_def (fun n -> (let tmp = (FStarC_Class_Show.fStarC_Class_Show_show__int n) in
         (PPrint.string tmp))) (PPrint.string "<unknown>") (issue).FStarC_Errors_Issue.issue_number) in
@@ -473,11 +469,13 @@ let fStarC_Errors_raise_error__range_list_ocaml_document (pos : FStarC_Range_Typ
       (raise tmp4))
   ))
 
-let fStarC_Errors_raise_error0__list_ocaml_document (e : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
-  (fStarC_Errors_raise_error__range_list_ocaml_document FStarC_Range_Type.dummyRange e msg)
+let fStarC_Errors_log_issue__range_string (pos : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : string) : unit =
+  (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
+  let ctx = ((error_context).get ()) in
+  (log_issue_ctx pos (code, msg1) ctx))
 
-let fStarC_Errors_log_issue0__list_ocaml_document (e : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
-  (fStarC_Errors_log_issue__range_list_ocaml_document FStarC_Range_Type.dummyRange e msg)
+let fStarC_Errors_log_issue0__string (e : FStarC_Errors_Codes.error_code) (msg : string) : unit =
+  (fStarC_Errors_log_issue__range_string FStarC_Range_Type.dummyRange e msg)
 
 let fStarC_Errors_raise_error__range_string (pos : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
   (let tmp = (fixup_issue_range (Some (pos))) in
@@ -489,6 +487,21 @@ let fStarC_Errors_raise_error__range_string (pos : FStarC_Range_Type.range) (cod
       let tmp4 = (Error (tmp3)) in
       (raise tmp4))
   ))
+
+let fStarC_Errors_raise_error0__string (e : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
+  (fStarC_Errors_raise_error__range_string FStarC_Range_Type.dummyRange e msg)
+
+let fStarC_Errors_log_issue__syntax_term'_string (pos : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (code : FStarC_Errors_Codes.error_code) (msg : string) : unit =
+  (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__syntax_term' pos) in
+  let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
+  let ctx = ((error_context).get ()) in
+  (log_issue_ctx rng (code, msg1) ctx))
+
+let fStarC_Errors_raise_error0__list_ocaml_document (e : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
+  (fStarC_Errors_raise_error__range_list_ocaml_document FStarC_Range_Type.dummyRange e msg)
+
+let fStarC_Errors_log_issue0__list_ocaml_document (e : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
+  (fStarC_Errors_log_issue__range_list_ocaml_document FStarC_Range_Type.dummyRange e msg)
 
 let raise_error_text (rng : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
   (fStarC_Errors_raise_error__range_string rng code msg)
@@ -505,11 +518,6 @@ let stop_if_err (tmp : unit) : unit =
   (if tmp2 then (raise Stop) else ()))
 
 exception Empty_frag
-
-let fStarC_Errors_log_issue__range_string (pos : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : string) : unit =
-  (let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
-  let ctx = ((error_context).get ()) in
-  (log_issue_ctx pos (code, msg1) ctx))
 
 let log_issue_text (rng : FStarC_Range_Type.range) (code : FStarC_Errors_Codes.error_code) (msg : string) : unit =
   (fStarC_Errors_log_issue__range_string rng code msg)
@@ -543,18 +551,6 @@ let fStarC_Errors_log_issue__lident_string (pos : FStarC_Ident.lident) (code : F
   let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
   let ctx = ((error_context).get ()) in
   (log_issue_ctx rng (code, msg1) ctx))
-
-let fStarC_Errors_raise_error0__string (e : FStarC_Errors_Codes.error_code) (msg : string) : 'u___a =
-  (fStarC_Errors_raise_error__range_string FStarC_Range_Type.dummyRange e msg)
-
-let fStarC_Errors_log_issue__syntax_term'_string (pos : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (code : FStarC_Errors_Codes.error_code) (msg : string) : unit =
-  (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__syntax_term' pos) in
-  let msg1 = (FStarC_Errors_Msg.fStarC_Errors_Msg_to_doc_list__string msg) in
-  let ctx = ((error_context).get ()) in
-  (log_issue_ctx rng (code, msg1) ctx))
-
-let fStarC_Errors_log_issue0__string (e : FStarC_Errors_Codes.error_code) (msg : string) : unit =
-  (fStarC_Errors_log_issue__range_string FStarC_Range_Type.dummyRange e msg)
 
 let fStarC_Errors_log_issue__syntax_term'_list_ocaml_document (pos : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : unit =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__syntax_term' pos) in
@@ -749,6 +745,14 @@ let fStarC_Errors_raise_error__binder_string (pos : FStarC_Syntax_Syntax.binder)
       (raise tmp4))
   ))
 
+let add_many (issues : (FStarC_Errors_Issue.issue) list) : unit =
+  (FStarC_Util.atomically (fun tmp -> (let tmp1 = (!(current_handler)) in
+  let tmp2 = (wrapped_eh_add_one tmp1) in
+  (BatList.iter tmp2 issues))))
+
+let add_issues (issues : (FStarC_Errors_Issue.issue) list) : unit =
+  (add_many issues)
+
 let fStarC_Errors_raise_error__withinfo_t_pat'_list_ocaml_document (pos : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (code : FStarC_Errors_Codes.error_code) (msg : (PPrint.document) list) : 'u___a =
   (let rng = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_pos__withinfo_t_pat' pos) in
   let tmp = (fixup_issue_range (Some (rng))) in
@@ -779,14 +783,6 @@ let catch_errors (f : (unit -> 'u___a)) : ((FStarC_Errors_Issue.issue) list * ('
       (BatList.iter tmp2 rest);
       (errs, r))
   ))
-
-let add_many (issues : (FStarC_Errors_Issue.issue) list) : unit =
-  (FStarC_Util.atomically (fun tmp -> (let tmp1 = (!(current_handler)) in
-  let tmp2 = (wrapped_eh_add_one tmp1) in
-  (BatList.iter tmp2 issues))))
-
-let add_issues (issues : (FStarC_Errors_Issue.issue) list) : unit =
-  (add_many issues)
 
 let print_expected_failures (issues : (FStarC_Errors_Issue.issue) list) : unit =
   (let issues1 = (BatList.map (fun i -> { FStarC_Errors_Issue.issue_msg = ((FStarC_Errors_Msg.text "Expected failure:") :: (i).FStarC_Errors_Issue.issue_msg);

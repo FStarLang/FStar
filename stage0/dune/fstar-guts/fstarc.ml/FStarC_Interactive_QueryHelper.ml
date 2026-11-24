@@ -65,8 +65,10 @@ let symlookup (tcenv : FStarC_TypeChecker_Env.env) (symbol : string) (pos_opt : 
           | (file, row, col) -> (let tmp = (FStarC_TypeChecker_Err.info_at_pos tcenv file row col) in
             (match tmp with
               | (Some (info)) -> (Some (info))
-              | None -> (let base = (FStarC_Filepath.basename file) in
-                (if ((=) base file) then None else (FStarC_TypeChecker_Err.info_at_pos tcenv base row col)))
+              | None -> (let tmp1 = (FStarC_Parser_AST.strip_prefix "file://" file) in
+                let path = (FStarC_Option.dflt file tmp1) in
+                let source_name = (FStarC_Find.source_file_name path) in
+                (if ((=) source_name file) then None else (FStarC_TypeChecker_Err.info_at_pos tcenv source_name row col)))
             ))
         )
       | None -> None

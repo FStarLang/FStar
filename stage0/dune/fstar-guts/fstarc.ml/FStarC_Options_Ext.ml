@@ -41,9 +41,8 @@ let restore (s : (string, string) FStarC_AVLMap.tree) : unit =
   ())
 
 let all (tmp : unit) : ((string * string)) list =
-  (let f = (fun k v acc -> ((k, v) :: acc)) in
-  let tmp1 = (!(cur_state)) in
-  (FStarC_PSMap.fold tmp1 f []))
+  (let tmp1 = (!(cur_state)) in
+  (FStarC_PSMap.fStarC_PSMap_fold__string_list_tuple2_string_string tmp1 []))
 
 let is_prefix (s1 : string) (s2 : string) : bool =
   (let l1 = ((fun s -> Z.of_int (BatUTF8.length s)) s1) in
@@ -51,9 +50,19 @@ let is_prefix (s1 : string) (s2 : string) : bool =
   (if (Prims.op_Greater_Equals l2 l1) then (let tmp = ((fun s i j -> BatUTF8.init (Z.to_int j) (fun k -> BatUTF8.get s (k + Z.to_int i))) s2 Prims.int_zero l1) in
   ((=) tmp s1)) else false))
 
+let rec fStarC_AVLMap_fold__string_list_tuple2 (tmp : string) (m : (string, string) FStarC_AVLMap.tree) (acc : ((string * string)) list) : ((string * string)) list =
+  (match m with
+    | FStarC_AVLMap.Leaf -> acc
+    | (FStarC_AVLMap.Node (l, key, value, r, tmp1)) -> (let acc1 = (fStarC_AVLMap_fold__string_list_tuple2 tmp l acc) in
+      let tmp2 = (is_prefix (Prims.strcat tmp ":") key) in
+      let acc2 = (if tmp2 then ((key, value) :: acc1) else acc1) in
+      (fStarC_AVLMap_fold__string_list_tuple2 tmp r acc2))
+  )
+
+let fStarC_PSMap_fold__string_list_tuple2 (tmp : string) (m : (string, string) FStarC_AVLMap.tree) (acc : ((string * string)) list) : ((string * string)) list =
+  (fStarC_AVLMap_fold__string_list_tuple2 tmp m acc)
+
 let getns (ns : string) : ((string * string)) list =
-  (let f = (fun k v acc -> (let tmp = (is_prefix (Prims.strcat ns ":") k) in
-    (if tmp then ((k, v) :: acc) else acc))) in
-  let tmp = (!(cur_state)) in
-  (FStarC_PSMap.fold tmp f []))
+  (let tmp = (!(cur_state)) in
+  (fStarC_PSMap_fold__string_list_tuple2 ns tmp []))
 
