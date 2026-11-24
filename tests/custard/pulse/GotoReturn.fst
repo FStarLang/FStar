@@ -4,7 +4,14 @@ module GotoReturn
    -goto_for_early_return, and checked by ../earlyreturn.py with
    --custard_early_return goto. As in karamel, branch values go through
    opaque calls so that the tail ifs stay statements; the externs are
-   defined in GotoReturn_stubs.h so that the result can be run. *)
+   defined in GotoReturn_stubs.h so that the result can be run.
+
+   Unlike karamel's, main is a Pulse function that checks the results, so
+   that it can call pulse_early_return. So karamel's two ML functions,
+   early_return_void and unit_return, are Pulse fns, and the side effect is
+   a Pulse extern. *)
+open Pulse
+
 [@@custard_extern "gr_opaque_int32"; custard_c_header "GotoReturn_stubs.h"]
 assume val opaque_int32 (x: Int32.t) : Int32.t
 [@@custard_extern "gr_opaque_bool"; custard_c_header "GotoReturn_stubs.h"]
@@ -67,15 +74,6 @@ let early_return_int64 (x: FStar.Int64.t) : FStar.Int64.t =
   else if x = 1L then opaque_int64 43L
   else opaque_int64 44L
 
-(* Early return with void: use assumed side-effecting function *)
-[@@custard_extern "gr_side_effect"; custard_c_header "GotoReturn_stubs.h"]
-assume val side_effect: Int32.t -> FStar.All.ML unit
-
-let early_return_void (x: Int32.t) : FStar.All.ML unit =
-  if x = 0l then side_effect 1l
-  else if x = 1l then side_effect 2l
-  else side_effect 3l
-
 (* Struct type for testing *)
 type point = { px: Int32.t; py: Int32.t }
 
@@ -85,13 +83,26 @@ let early_return_struct (x: Int32.t) : point =
   else if x = 1l then { px = opaque_int32 3l; py = opaque_int32 4l }
   else { px = opaque_int32 5l; py = opaque_int32 6l }
 
+#lang-pulse
+
 (* Unit/void interaction: returning unit values *)
-let unit_return (x: unit) : FStar.All.ML unit =
-  if true then x else ()
+fn unit_return (x: unit)
+{
+  if (true) { x } else { () }
+}
+
+(* Early return with void: use assumed side-effecting function *)
+[@@custard_extern "gr_side_effect"; custard_c_header "GotoReturn_stubs.h"]
+assume val side_effect (x: Int32.t) : stt unit emp (fun _ -> emp)
+
+fn early_return_void (x: Int32.t)
+{
+  if (x = 0l) { side_effect 1l }
+  else if (x = 1l) { side_effect 2l }
+  else { side_effect 3l }
+}
 
 (* Pulse function with early return *)
-open Pulse
-#lang-pulse
 fn pulse_early_return (x: Int32.t)
   returns r: Int32.t
   ensures pure (x = 0l ==> r = 42l)
@@ -104,47 +115,51 @@ fn pulse_early_return (x: Int32.t)
 }
 
 [@@custard_extern "gr_side_effects"; custard_c_header "GotoReturn_stubs.h"]
-assume val side_effects : unit -> FStar.All.ML Int32.t
+assume val side_effects (_: unit) : stt Int32.t emp (fun _ -> emp)
 
-(* Unlike karamel's, this main checks the results. It cannot call the Pulse
-   function, which is extracted as an extra entry point instead, as is
-   no_early_return, which would otherwise be inlined. *)
-let main () : FStar.All.ML FStar.Int32.t =
-  let i0 = early_return_int 0l in
-  let i1 = early_return_int 1l in
-  let i2 = early_return_int 5l in
-  let n = no_early_return 1l in
-  let t0 = early_return_two_args 0l 1l in
-  let t1 = early_return_two_args 2l 7l in
-  let c0 = collision_test 0l in
-  let c1 = collision_test 1l in
-  let c2 = collision_test 2l in
-  let b0 = early_return_bool 0l in
-  let b1 = early_return_bool 1l in
-  let b2 = early_return_bool 2l in
-  let u0 = early_return_uint32 0ul in
-  let u1 = early_return_uint32 1ul in
-  let u2 = early_return_uint32 2ul in
-  let w0 = early_return_uint64 0UL in
-  let w1 = early_return_uint64 1UL in
-  let w2 = early_return_uint64 2UL in
-  let l0 = early_return_int64 0L in
-  let l1 = early_return_int64 1L in
-  let l2 = early_return_int64 2L in
+(* no_early_return and unit_return are also extracted as entry points,
+   since Custard inlines the one and drops the other here. *)
+fn main () returns r: FStar.Int32.t
+{
+  let i0 = early_return_int 0l;
+  let i1 = early_return_int 1l;
+  let i2 = early_return_int 5l;
+  let n = no_early_return 1l;
+  let t0 = early_return_two_args 0l 1l;
+  let t1 = early_return_two_args 2l 7l;
+  let c0 = collision_test 0l;
+  let c1 = collision_test 1l;
+  let c2 = collision_test 2l;
+  let b0 = early_return_bool 0l;
+  let b1 = early_return_bool 1l;
+  let b2 = early_return_bool 2l;
+  let u0 = early_return_uint32 0ul;
+  let u1 = early_return_uint32 1ul;
+  let u2 = early_return_uint32 2ul;
+  let w0 = early_return_uint64 0UL;
+  let w1 = early_return_uint64 1UL;
+  let w2 = early_return_uint64 2UL;
+  let l0 = early_return_int64 0L;
+  let l1 = early_return_int64 1L;
+  let l2 = early_return_int64 2L;
   early_return_void 0l;
   early_return_void 1l;
   early_return_void 2l;
-  let e = side_effects () in
-  let p = early_return_struct 0l in
-  let q = early_return_struct 1l in
-  let r = early_return_struct 2l in
+  let e = side_effects ();
+  let p = early_return_struct 0l;
+  let q = early_return_struct 1l;
+  let r = early_return_struct 2l;
   unit_return ();
-  if i0 = 42l && i1 = 43l && i2 = 44l && n = 1l
-     && t0 = 42l && t1 = 7l && c0 = 42l && c1 = 43l && c2 = 44l
-     && b0 && not b1 && b2
-     && FStar.UInt32.eq u0 42ul && FStar.UInt32.eq u1 43ul && FStar.UInt32.eq u2 44ul
-     && FStar.UInt64.eq w0 42UL && FStar.UInt64.eq w1 43UL && FStar.UInt64.eq w2 44UL
-     && FStar.Int64.eq l0 42L && FStar.Int64.eq l1 43L && FStar.Int64.eq l2 44L
-     && e = 123l
-     && p.px = 1l && p.py = 2l && q.px = 3l && q.py = 4l && r.px = 5l && r.py = 6l
-  then 0l else 1l
+  let r0 = pulse_early_return 0l;
+  let r1 = pulse_early_return 3l;
+  if (i0 = 42l && i1 = 43l && i2 = 44l && n = 1l
+      && t0 = 42l && t1 = 7l && c0 = 42l && c1 = 43l && c2 = 44l
+      && b0 && not b1 && b2
+      && FStar.UInt32.eq u0 42ul && FStar.UInt32.eq u1 43ul && FStar.UInt32.eq u2 44ul
+      && FStar.UInt64.eq w0 42UL && FStar.UInt64.eq w1 43UL && FStar.UInt64.eq w2 44UL
+      && FStar.Int64.eq l0 42L && FStar.Int64.eq l1 43L && FStar.Int64.eq l2 44L
+      && e = 123l
+      && p.px = 1l && p.py = 2l && q.px = 3l && q.py = 4l && r.px = 5l && r.py = 6l
+      && r0 = 42l && r1 = 99l)
+  { 0l } else { 1l }
+}

@@ -30,8 +30,8 @@ def run(command, error=None):
 
 def extract(name, tag, *flags, error=None):
     if name == "GotoReturn":
-        flags += ("--custard_entry", "GotoReturn.pulse_early_return",
-                  "--custard_entry", "GotoReturn.no_early_return")
+        flags += ("--custard_entry", "GotoReturn.no_early_return",
+                  "--custard_entry", "GotoReturn.unit_return")
     path = out / (name + "-" + tag + ".c")
     command = fstar + [
         "--codegen", "C", "--custard_monomorphize_types", "true",
