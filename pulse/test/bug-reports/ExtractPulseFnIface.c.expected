@@ -5,9 +5,9 @@
 
 #include "internal/Prims.h"
 
-krml_checked_int_t ExtractPulseFnIface_pure_add(krml_checked_int_t x, krml_checked_int_t eta)
+krml_checked_int_t ExtractPulseFnIface_pure_add(krml_checked_int_t x, krml_checked_int_t y)
 {
-  return Prims_op_Addition(x, eta);
+  return Prims_op_Addition(x, y);
 }
 
 krml_checked_int_t ExtractPulseFnIface_pulse_read_ref(krml_checked_int_t *r)

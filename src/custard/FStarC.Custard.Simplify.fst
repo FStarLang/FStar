@@ -1670,9 +1670,33 @@ let eta_rename_decls (prog:program) : ML program =
     if fuel <= 0 || anon p' = anon p then p' else go (fuel - 1) p' in
   go (List.length prog) prog
 
+(* Section 30.16a (#4932).  A [Root]'s binders are its interface on a backend
+   whose functions have a fixed arity.  [--custard_entry] and
+   [--custard_entry_module] make a definition a root because something outside
+   the extracted program calls it, and that caller was written against the
+   F* signature: [eta_d g u] with two arguments.  Eta-reducing
+   [let eta_d g u = g u] to [let eta_d g = g] is sound as a function, but in C
+   it changes the prototype to one that takes [g] and returns it, and nothing
+   puts [u] back: [eta_expand_decl] reads the demand of a body headed by a
+   parameter off the program's own call sites (section 30.16), and a root has
+   none.  The caller links, gets a pointer for an integer, and [g] is never
+   called.
+
+   So a root keeps its binders on C, Cherry, KrmlC and KrmlRust.  OCaml and
+   F# are left as they were: their functions are curried, a caller applying
+   [eta_d g u] is served by [eta_d g] returning [g], and their output -- the
+   compiler's own extraction among it -- does not change.  Only the reduction
+   is skipped; a root whose body is an under-applied call is still expanded
+   by [eta_expand_decl] as before. *)
+let fixed_arity_backend () : ML bool =
+  Options.codegen_c () || List.mem (Options.codegen_name ()) ["KrmlC"; "KrmlRust"]
+
 let eta_reduce_decls (prog:program) : ML program =
+  let keep_binders (l:dlet) : ML bool =
+    fixed_arity_backend () && List.existsb Root? l.dl_flags in
   prog |> List.map (fun d ->
     match d with
+    | DLet l when keep_binders l -> d
     | DLet l ->
       let bs, body, ret, ef = eta_reduce l.dl_binders l.dl_body l.dl_ret l.dl_eff in
       DLet { l with dl_binders = bs; dl_body = body; dl_ret = ret; dl_eff = ef }

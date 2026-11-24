@@ -558,11 +558,12 @@ CNOGREP_ShiftLit = "return (40 << n);"
 # lowering section 25.3 keeps deliberately -- so the grep asserts that the
 # variable is still a variable and that its caller nonetheless takes both
 # arguments.  call_e is also a root, which is the shape that has no
-# over-application downstream to catch it.
+# over-application downstream to catch it; since section 30.16a a root is
+# not eta-reduced, so it keeps its own binder names.
 C_TESTS += CVarArity
 FLAGS_CVarArity = --custard_entry CVarArity.call_e
-CGREP_CVarArity = "(*CVarArity_e)(bool, bool);" "CVarArity_call_e(bool a, bool eta)" \
-                  "return CVarArity_e(a, eta);"
+CGREP_CVarArity = "(*CVarArity_e)(bool, bool);" "CVarArity_call_e(bool a, bool b)" \
+                  "return CVarArity_e(a, b);"
 CNOGREP_CVarArity = "CVarArity_e(a);"
 # CAbbrevArity's return type sits behind two abbreviations; the whole bug is
 # the leftover arrow in the declared result, so the greps are on the
@@ -621,6 +622,12 @@ CNOGREP_NameWidth = "tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tuple2_tup
 # not one, and calls its first through a function pointer.
 C_TESTS += EtaVar
 CGREP_EtaVar = "EtaVar_consume(uint32_t (*i)(uint32_t), uint32_t eta)"
+
+# Section 30.16a (#4932).  A root nothing in the program calls keeps both of
+# its parameters, and calls [g] rather than returning it.
+C_TESTS += EtaRoot
+FLAGS_EtaRoot = --custard_entry EtaRoot.eta_d
+CGREP_EtaRoot = "EtaRoot_eta_d(uint32_t (*g)(uint32_t), uint32_t u)" "return g(u);"
 
 # Section 30.14.  [impl] must appear once, not once per distinct dead argument,
 # and no [list] may reach C.
@@ -3075,7 +3082,7 @@ FLAGS_CNoUnfold = --custard_entry CNoUnfold.swap \
 CHGREP_CNoUnfold += "typedef uint32_t CNoUnfold_word;"
 CHGREP_CNoUnfold += "typedef CNoUnfold_word (*CNoUnfold_callback)(CNoUnfold_word);"
 CHGREP_CNoUnfold += "CNoUnfold_byte_pair CNoUnfold_swap(CNoUnfold_byte_pair p);"
-CHGREP_CNoUnfold += "CNoUnfold_word CNoUnfold_apply(CNoUnfold_callback f, CNoUnfold_word eta);"
+CHGREP_CNoUnfold += "CNoUnfold_word CNoUnfold_apply(CNoUnfold_callback f, CNoUnfold_word x);"
 CHGREP_CNoUnfold += "typedef uint16_t CNoUnfold_cli_word;"
 CHGREP_CNoUnfold += "CNoUnfold_cli_word CNoUnfold_cli_identity(CNoUnfold_cli_word x);"
 CHGREP_CNoUnfold += "typedef uint32_t CNoUnfoldIface_word;"
