@@ -1066,14 +1066,19 @@ let exn_rule (id:string) : ML (option rule) =
            is a failed match rather than a re-raise: [FStarC.Plugins.dynlink]
            turned every dynlink failure into "Pattern matching failed", and
            [try ... with] in F* source is this shape, since [ToSyntax]
-           desugars it to a [function] with no catch-all. *)
+           desugars it to a [function] with no catch-all.  Splicing drops
+           the binder [e], so a handler whose branches mention it is applied
+           instead. *)
         let branches =
           match h.e with
           | EFun ([b], body_h) ->
             (match body_h.e with
              | EMatch (scrut, brs) ->
                (match scrut.e with
-                | EVar x when x = b.b_name -> brs
+                | EVar x when x = b.b_name &&
+                              not (brs |> List.existsb (fun (_, g, br) ->
+                                     occurs x br ||
+                                     (match g with Some g -> occurs x g | None -> false))) -> brs
                 | _ -> [])
              | _ -> [])
           | _ -> [] in

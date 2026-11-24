@@ -22,7 +22,20 @@ let run (n:int) : ML string =
                      | Bad (s, k) -> s ^ string_of_int k
                      | _ -> "other")
 
+(* The handler's branches use its binder [e] while another [e] is in scope at
+   the [try]: they must see the exception caught, not the outer [e]. *)
+let payload (e:exn) : int = match e with Bad (_, k) -> k | _ -> 0
+
+let rebind () : ML string =
+  let e = Bad ("outer", 5) in
+  let r = try_with (fun () -> raise (Bad ("inner", 2)))
+                   (fun e -> match e with
+                             | Bad (_, k) -> payload e + k
+                             | _ -> 0) in
+  string_of_int r ^ " " ^ string_of_int (payload e)
+
 let main () : ML unit =
   print_string (run 7); print_string " ";
   print_string (run 0); print_string " ";
-  print_string (run (-3)); print_string "\n"
+  print_string (run (-3)); print_string "\n";
+  print_string (rebind ()); print_string "\n"
