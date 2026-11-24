@@ -2780,6 +2780,11 @@ CNOGREP_Macro += "Macro_major_type_uint64"
 # constant expression and a global initialized from one needs no startup
 # assignment.
 CGREP_Macro += "uint8_t Macro_table = MACRO_MAX_SIMPLE_VALUE;"
+# Section 68.  A [@@Comment] on a macro is written before its [#define]:
+# karamel does, and 3D puts a module's doc comment on its first declaration,
+# which is often a [#define].
+CHGREP_Macro += "/* the largest simple value */"
+CGREP_Macro += "/* the internal limit */"
 CNOGREP_Macro += "custard_init_globals"
 # EverParse's section 65.1.  The three uses, compiled rather than grepped, in
 # a separate translation unit that sees only the generated header -- which is

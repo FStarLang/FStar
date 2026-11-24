@@ -16236,6 +16236,12 @@ or a macro whose uppercase form is an existing C name in the unit, are reported
 as an export collision rather than left to the C compiler, which would see only
 the token that survived substitution.
 
+A `[@@Comment]` on a macro is written as a block comment just before its
+`#define`, in the header for a public macro and in the source for a private
+one, as for a function and as karamel writes it. 3D relies on this: it puts a
+module's doc comment on the module's first declaration, which is often a
+`#define`. Tests: `Macro` in `tests/custard/Makefile`.
+
 ### 68.3  And a macro must actually be constant
 
 Error 389 fires when the body is not a constant expression.  This is not

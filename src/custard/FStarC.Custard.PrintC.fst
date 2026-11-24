@@ -7146,7 +7146,8 @@ let print_program (base:string) (cu:unit_info) (p:program)
     match d with
     (* A public one is in the header, which this source includes; repeating it
        here would be a redefinition. *)
-    | DLet l when is_macro l -> if is_public l then [] else [guarded l (prologue_of l ^ macro_decl l)]
+    | DLet l when is_macro l ->
+      if is_public l then [] else [guarded l (comment_of l ^ prologue_of l ^ macro_decl l)]
     (* Split, every file declares it and the first one defines it. *)
     | DLet l when Nil? l.dl_binders && !split_out ->
       if is_public l then [] else [guarded l (prologue_of l ^ global_extern l)]
@@ -7161,8 +7162,11 @@ let print_program (base:string) (cu:unit_info) (p:program)
     match d with
     (* Section 68.  A [#define] and nothing else: it has no linkage, so an
        [extern] declaration beside it would declare a different object, and
-       the macro would then rewrite that declaration's own name. *)
-    | DLet l when is_public l && is_macro l -> [guarded l (prologue_of l ^ macro_decl l)]
+       the macro would then rewrite that declaration's own name.  A
+       [@@Comment] goes before it, as karamel writes it and as a function
+       definition gets it. *)
+    | DLet l when is_public l && is_macro l ->
+      [guarded l (comment_of l ^ prologue_of l ^ macro_decl l)]
     | DLet l when is_public l && Nil? l.dl_binders ->
       [guarded l (prologue_of l ^ global_extern l)]
     | DLet l when is_public l ->
