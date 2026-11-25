@@ -142,13 +142,7 @@ val preprocess_with (tau : term -> Tac term) : Tot unit
  * and prove the equality. *)
 val postprocess_with (tau : unit -> Tac unit) : Tot unit
 
-(* Similar semantics to [postprocess_with], but the metaprogram only
- * runs before extraction, and hence typechecking and the logical
- * environment should not be affected at all. *)
-val postprocess_for_extraction_with (tau : unit -> Tac unit) : Tot unit
-
-(* When using [postprocess_with] or [postprocess_for_extraction_with]
- * this flag indicates that the type of the definition should also be
+(* When using [postprocess_with] this flag indicates that the type of the definition should also be
  * processed with the same tactic. *)
 val postprocess_type : unit
 

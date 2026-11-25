@@ -99,7 +99,8 @@ let t0 : float =
   (BatUnix.gettimeofday ())
 
 let initial_range (filename : string) : FStarC_Range_Type.range =
-  (FStarC_Range_Type.mk_range filename (FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero) (FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero))
+  (let tmp = (FStarC_Find.source_file_name filename) in
+  (FStarC_Range_Type.mk_range tmp (FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero) (FStarC_Range_Type.mk_pos Prims.int_one Prims.int_zero)))
 
 let interactive_protocol_vernum : Prims.int =
   (Prims.of_int (3))
@@ -284,7 +285,7 @@ let string_of_repl_task (t : repl_task) : string =
     | (LDInterfaceOfCurrentFile (intf)) -> (let tmp = (string_of_timed_fname intf) in
       (FStarC_Format.fmt1 "LDInterfaceOfCurrentFile %s" tmp))
     | (PushFragment ((FStar_Pervasives.Inl (frag)), tmp, tmp1, tmp2)) -> (FStarC_Format.fmt1 "PushFragment { code = %s }" (frag).FStarC_Parser_Frontend.frag_text)
-    | (PushFragment ((FStar_Pervasives.Inr (d)), tmp, tmp1, deps)) -> (let tmp2 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_174 d) in
+    | (PushFragment ((FStar_Pervasives.Inr (d)), tmp, tmp1, deps)) -> (let tmp2 = (FStarC_Parser_AST.fStarC_Class_Show_show__decl_176 d) in
       let tmp3 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 deps) in
       (FStarC_Format.fmt2 "PushFragment { decl = %s; deps=%s }" tmp2 tmp3))
     | Noop -> "Noop {}"

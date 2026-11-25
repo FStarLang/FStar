@@ -252,7 +252,7 @@ let new_uvar reason wl r gamma binders k should_check meta : ML (ctx_uvar & term
          ctx_uvar_meta=meta;
        } in
     check_uvar_ctx_invariant reason r true gamma binders;
-    let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
+    let t = mk (Tm_uvar (ctx_uvar, {subst_lists=[]; subst_use_range=NoUseRange})) r in
     let imp = { imp_reason = reason
               ; imp_tm     = t
               ; imp_uvar   = ctx_uvar
@@ -410,7 +410,7 @@ let term_to_string t : ML _
     | Tm_uvar (u, s) ->
       Format.fmt3 "%s%s %s"
             (show u)
-            ("@" ^ show (fst s))
+            ("@" ^ show s.subst_lists)
             (show args)
     | _ -> show t
 
@@ -827,7 +827,13 @@ let flex_uvar (Flex (_, u, _))  = u
 let flex_uvar_has_meta_tac u : ML _
   =
   match u.ctx_uvar_meta with
-  | Some (Ctx_uvar_meta_tac _) -> true
+  | Some (Ctx_uvar_meta_tac _)
+  | Some (Ctx_uvar_meta_tc _) -> true
+  | _ -> false
+
+let is_tc_uvar (u:ctx_uvar) : bool =
+  match u.ctx_uvar_meta with
+  | Some (Ctx_uvar_meta_tc _) -> true
   | _ -> false
 
 let flex_t_to_string flex : ML _ =
@@ -899,7 +905,7 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
     in
     let head, args = U.head_and_args_full t0 in
     match (SS.compress head).n with
-    | Tm_uvar (uv, ([], _)) ->
+    | Tm_uvar (uv, {subst_lists=[]}) ->
       (* No subst, nothing to do *)
       t0, wl
 
@@ -1765,14 +1771,20 @@ let quasi_pattern env (f:flex_t) : ML (option (binders & typ)) =
       let formals, t_res = U.arrow_formals t_hd in
       aux [] formals t_res args
 
-let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : ML term =
+(* Solve a uvar with a meta argument: run its tactic, or resolve its
+   typeclass constraint.  Returns the solution, and the implicits it
+   introduced. *)
+let run_meta_arg_tac (env:env_t) (ctx_u:ctx_uvar) : ML (term & list implicit) =
   match ctx_u.ctx_uvar_meta with
   | Some (Ctx_uvar_meta_tac tau) ->
     let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
     if !dbg_Tac then
       Format.print1 "Running tactic for meta-arg %s\n" (show ctx_u);
     Errors.with_ctx "Running tactic for meta-arg"
-      (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau (pos ctx_u))
+      (fun () -> env.synth_hook env (U.ctx_uvar_typ ctx_u) tau (pos ctx_u)), []
+  | Some (Ctx_uvar_meta_tc scope) ->
+    let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
+    env.tc_resolve env scope (U.ctx_uvar_typ ctx_u) (pos ctx_u)
   | _ ->
     failwith "run_meta_arg_tac must have been called with a uvar that has a meta tac"
 
@@ -3171,7 +3183,7 @@ let rec solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:(flex_t & (subst_ts
       //and avoid abstracting over the binders in the uvar,
       //which leads to big perf wins in some cases (esp. in Pulse)
       let is_subst_noop (subst:subst_ts) rhs =
-        match fst subst with
+        match subst.subst_lists with
         | [] | [[]] -> true
         | _ -> 
           names_subset_binders (Free.names rhs) ctx_uv.ctx_uvar_binders &&
@@ -3273,10 +3285,11 @@ let rec solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : ML solution =
 
     let run_meta_arg_tac_and_try_again (flex:flex_t) =
       let uv = flex_uvar flex in
-      let t = run_meta_arg_tac env uv in
+      let t, imps = run_meta_arg_tac env uv in
       if !dbg_Rel then
         Format.print2 "solve_t_flex_flex: solving meta arg uvar %s with %s\n" (show uv) (show t);
       set_uvar env uv None t;
+      let wl = {wl with wl_implicits = wl.wl_implicits ++ Listlike.from_list imps} in
       solve (attempt [orig] wl) in
 
     match p_rel orig with
@@ -5126,17 +5139,9 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
     imps_l
     |> List.collect
           (fun i ->
-            match i.imp_uvar.ctx_uvar_meta with
-            | Some (Ctx_uvar_meta_tac tac) ->
-              let head, _ = U.head_and_args_full tac in
-              if U.is_fvar PC.tcresolve_lid head
-              then (
-                let goal_type = U.ctx_uvar_typ i.imp_uvar in
-                let uvs = Free.uvars goal_type in
-                elems uvs
-              )
-              else []
-            | _ -> []) |> Setlike.from_list
+            if is_tc_uvar i.imp_uvar
+            then elems (Free.uvars (U.ctx_uvar_typ i.imp_uvar))
+            else []) |> Setlike.from_list
    in
    let wl = { wl_of_guard env (to_list g.deferred)
               with defer_ok=defer_ok
@@ -5688,6 +5693,130 @@ let is_tac_implicit_resolved (env:env) (i:implicit) : ML bool =
     |> Setlike.for_all (fun uv -> Allow_unresolved? (U.ctx_uvar_should_check uv))
 
 
+let resolve_closed_typeclass_implicits (env:env) (bound_of : bool -> term -> ML (option term)) (g:guard_t) : ML guard_t =
+  let is_candidate (imp:implicit) : ML bool =
+    is_tc_uvar imp.imp_uvar && unresolved imp.imp_uvar
+  in
+  (* An input of the class that is still a uvar may be bounded by a
+     ground type through a deferred subtyping constraint, e.g. [x] was
+     checked against [?p]. Solve the uvar to its bound so the goal can be
+     resolved now. Returns whether the goal is now closed modulo fundeps. *)
+  (* Only classes with fundeps whose output is still unknown are resolved
+     eagerly: that is what lets the output type flow into later arguments.
+     Universe uvars in the inputs are never pinned, so such goals wait. *)
+  let pin_inputs (typ:typ) : ML bool =
+    let hd, cargs = U.head_and_args_full typ in
+    let has_univ_uvars (t:term) = not (Setlike.is_empty (Free.univs t)) in
+    match (U.un_uinst hd).n with
+    | Tm_fvar fv ->
+      let fds = class_fundeps env fv.fv_name in
+      let inputs_have_univ_uvars () =
+        List.existsb (fun b -> b)
+          (List.mapi (fun i (a, _) -> not (List.mem i fds) && has_univ_uvars a) cargs)
+      in
+      let output_open () =
+        List.existsb (fun b -> b)
+          (List.mapi (fun i (a, _) -> List.mem i fds && has_free_uvars a) cargs)
+      in
+      if Nil? fds || not (output_open ()) || inputs_have_univ_uvars () then false else
+      if not (typeclass_goal_is_open env typ) then true else
+      (* The input may be a uvar, or a rigid type whose arguments are uvars,
+         e.g. [cell ?a ?i] for the type of a data constructor application
+         [Cell x i]: pin each such uvar to its bound.  Only a uvar that is
+         the whole input is pinned to the base type of its bound (ground or
+         not): an argument [x : vec t{p}] has an instance at [vec t].  A
+         nested one
+         keeps the refinement: [Cell x (i:nat)] has an instance at
+         [cell _ nat].  A uvar without a ground bound may still have a
+         rigid one with uvars, e.g. [?p] bounded by [cell ?a ?i]: pin it to
+         that, and the nested uvars in turn.  A uvar may also be bounded by
+         another uvar, e.g. in [id x], the type [?c] of the application is
+         bounded by the type argument [?a] of [id], which is in turn
+         bounded by the type of [x]: pin the bounding uvar first, then
+         retry.  The fuel guards against cycles of bounds. *)
+      let rec pin (fuel:int) (top:bool) (a:term) : ML unit =
+        if fuel > 0 && has_free_uvars a then
+          let base (b:term) : ML term =
+            if top then fst (base_and_refinement_maybe_delta false env b) else b
+          in
+          match bound_of true a with
+          | Some b -> ignore (teq_nosmt env a (base b))
+          | None ->
+            let pin_args (t:term) : ML unit =
+              let hd, args = U.head_and_args_full (SS.compress t) in
+              match (U.un_uinst (SS.compress hd)).n with
+              | Tm_fvar _ -> List.iter (fun (x, _) -> pin fuel false x) args
+              | _ -> ()
+            in
+            match bound_of false a with
+            | Some b ->
+              let b = base b in
+              (match (U.un_uinst (SS.compress (fst (U.head_and_args_full (SS.compress b))))).n with
+               | Tm_fvar _ ->
+                 (match teq_nosmt env a b with
+                  | Some _ -> pin_args a
+                  | None -> ())
+               | Tm_uvar _ ->
+                 pin (fuel - 1) top b;
+                 if not (has_free_uvars b) then pin (fuel - 1) top a
+               | _ -> ())
+            | None -> pin_args a
+      in
+      let rec go (i:int) (cargs:list arg) : ML unit =
+        match cargs with
+        | [] -> ()
+        | (a, _) :: rest ->
+          if not (List.mem i fds) then pin 8 true a;
+          go (i + 1) rest
+      in
+      go 0 cargs;
+      not (typeclass_goal_is_open env typ)
+    | _ -> false
+  in
+  let try_solve (imp:implicit) : ML (option (list implicit)) =
+    let ctx_u = imp.imp_uvar in
+    let tx = UF.new_transaction () in
+    let errs, rest, r = Errors.catch_errors_aux (fun () ->
+      if not (pin_inputs (U.ctx_uvar_typ ctx_u)) then None else
+      let t, imps = run_meta_arg_tac env ctx_u in
+      let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
+      match teq_nosmt env t imp.imp_tm with
+      | None -> None
+      | Some g ->
+        (* The output may still mention arguments of the instance that only
+           occur there, e.g. [#p] in an instance at [x:d{p x} -> c]: they are
+           determined by the actual output type, which a later argument may
+           provide.  Fixing the output now would only leave a subtyping
+           constraint, which does not solve them, so wait. *)
+        if Setlike.is_empty (Free.uvars (U.ctx_uvar_typ ctx_u))
+        then Some (imps @ Listlike.to_list g.implicits)
+        else None)
+    in
+    match errs, r with
+    | [], Some (Some extra) ->
+      UF.commit tx;
+      Errors.add_issues rest;
+      Some extra
+    | _ ->
+      (* Leave it to [resolve_implicits], which will report any error. *)
+      UF.rollback tx;
+      None
+  in
+  if Options.Ext.enabled "compat:no_eager_tcresolve" then g else
+  let imps = Listlike.to_list g.implicits in
+  if not (List.existsb is_candidate imps) then g else
+  let rec go (acc : list implicit) (imps : list implicit) : ML (list implicit) =
+    match imps with
+    | [] -> List.rev acc
+    | imp :: tl ->
+      if is_candidate imp then
+        match try_solve imp with
+        | Some extra -> go (List.rev extra @ acc) tl
+        | None -> go (imp :: acc) tl
+      else go (imp :: acc) tl
+  in
+  { g with implicits = Listlike.from_list (go [] imps) }
+
 (* How eagerly [resolve_implicits'] runs meta-arg tactics on open goals.
    - Defer_open: defer a goal if its type or its context has free uvars.
    - Defer_open_typ: run goals whose type is closed (modulo the fundeps of
@@ -5707,48 +5836,9 @@ type defer_open_metas_t =
 let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
   : ML (list (implicit & implicit_checking_status)) =
   
-  (* Meta argument cache: during a single run of this resolve_implicits' function
-  we keep track of all results of the "cacheable" tactics that are used for meta
-  arguments. The only cacheable tactic, for now, is tcresolve. Before trying to run
-  it, we check the cache to see if we have already solved a problem in the same environment
-  and for the same uvar type (in this case, the constraint). If so, we just take that result.
-
-  This is pretty conservative. e.g. in
-    f (1 + 1);
-    g (1 + 1)
-  we cannot reuse the solution for each +, since there is an extra unit binder when
-  we check `g ...`. But it does lead to big gains in expressions like `1 + 1 + 1 ...`. *)
-  let cacheable tac =
-    (* Detect either an unapplied tcresolve or an eta expanded variant. This is
-    mostly in support of solve, which has to be written eta expanded. *)
-    (U.is_fvar PC.tcresolve_lid tac) || (
-      match (SS.compress tac).n with
-      | Tm_abs {body} ->
-        let hd, args = U.head_and_args_full body in
-        U.is_fvar PC.tcresolve_lid hd && List.length args = 1
-      | _ -> false
-    )
-  in
-  (* tcresolve is also the only tactic we ever run for an open problem. *)
-  let meta_tac_allowed_for_open_problem tac = cacheable tac in
-  let __meta_arg_cache : ref (list (term & env_t & typ & term)) = mk_ref [] in
-  let meta_arg_cache_result (tac : term) (e : env_t) (ty : term) (res : term) : ML unit =
-    __meta_arg_cache := (tac, e, ty, res) :: !__meta_arg_cache
-  in
-  let meta_arg_cache_lookup (tac : term) (e : env_t) (ty : term) : ML (option term) =
-    let rec aux l : ML (option term) =
-      match l with
-      | [] -> None
-      | (tac', e', ty', res') :: l' ->
-        if U.term_eq tac tac'
-           && FStarC.Common.eq_list U.eq_binding e.gamma e'.gamma
-           && U.term_eq ty ty'
-        then Some res'
-        else aux l'
-    in
-    aux !__meta_arg_cache
-  in
-  (* / cache *) 
+  (* Typeclass resolution is the only meta argument we ever run for an open
+     problem. *)
+  let meta_allowed_for_open_problem (u:ctx_uvar) = is_tc_uvar u in
 
   let rec until_fixpoint (acc : tagged_implicits & (*changed:*)bool & (*defer_open_metas:*)defer_open_metas_t )
                          (implicits:Env.implicits) 
@@ -5814,7 +5904,6 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
         until_fixpoint (out, true, defer_open_metas) tl
 
       | _ when unresolved ctx_u && flex_uvar_has_meta_tac ctx_u ->
-        let Some (Ctx_uvar_meta_tac tac) = ctx_u.ctx_uvar_meta in
         let env = { env with gamma = ctx_u.ctx_uvar_gamma } in
         (* A [requires] clause desugars to an implicit [squash] binder, so the
            type of a meta arg -- a typeclass goal, typically -- now routinely
@@ -5862,7 +5951,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
            uvars, e.g. [showable (list ?e)] and [listlike ?e (t a)] from
            [show (to_list l)]. *)
         let typ_is_open =
-          if cacheable tac
+          if is_tc_uvar ctx_u
           then typeclass_goal_is_open env typ
           else has_free_uvars typ
         in
@@ -5879,30 +5968,19 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
           if !dbg_Rel || !dbg_Imps then
             Format.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
-        ) else if is_open && not (meta_tac_allowed_for_open_problem tac)
+        ) else if is_open && not (meta_allowed_for_open_problem ctx_u)
             && not (Options.Ext.enabled "compat:open_metas") then ( // i.e. compat option unset
           (* If the tactic is not explicitly whitelisted to run with open problems,
           then defer. *)
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
         ) else (
-          let solve_with (t:term) =
-            let extra =
-              match teq_nosmt env t tm with
-              | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
-              | Some g -> Listlike.to_list g.implicits
-            in
-            until_fixpoint (out, true, defer_open_metas) (extra @ tl)
+          let t, imps = run_meta_arg_tac env ctx_u in
+          let extra =
+            match teq_nosmt env t tm with
+            | None -> failwith "resolve_implicits: unifying with an unresolved uvar failed?"
+            | Some g -> Listlike.to_list g.implicits
           in
-          if cacheable tac then
-            match meta_arg_cache_lookup tac env typ with
-            | Some res -> solve_with res
-            | None ->
-              let t = run_meta_arg_tac env ctx_u in
-              meta_arg_cache_result tac env typ t;
-              solve_with t
-          else
-            let t = run_meta_arg_tac env ctx_u in
-            solve_with t
+          until_fixpoint (out, true, defer_open_metas) (imps @ extra @ tl)
         )
 
       | _ when unresolved ctx_u ->

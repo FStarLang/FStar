@@ -168,6 +168,7 @@ let check_arg_qual (a:aqual) (b:bqual)
   : result unit
   = match b with
     | Some (Implicit _)
+    | Some TcArg
     | Some (Meta _) ->
       begin
       match a with

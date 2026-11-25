@@ -92,21 +92,99 @@ let reaches (tbl:HashTable.t string dtype) (target:string) (t:cty) : ML bool =
        end)) in
   go t
 
+(* At most this many words, a record on a cycle may still be unboxed. *)
+let small_record_words : int = 2
+
+(* A record, or a variant of one constructor -- a tuple is one: a value of
+   it is its fields and nothing else. *)
+let single_cell (b:tydef) : bool =
+  match b with
+  | TRecord _ -> true
+  | TVariant [_] -> true
+  | _ -> false
+
 let boxed_types (p:program) : ML (list string) =
   let tbl = type_table p in
-  p |> List.collect (fun d ->
+  let bx : HashTable.t string bool = HashTable.create 50 in
+  let cands = p |> List.collect (fun d ->
     match d with
     | DType dt when (TVariant? dt.dt_body || TRecord? dt.dt_body) ->
       let k = string_of_name dt.dt_name in
-      if has_flag dt.dt_flags CherryBoxed ||
-         field_types dt.dt_body |> List.existsb (reaches tbl k) then [k] else []
-    | _ -> [])
+      if has_flag dt.dt_flags CherryBoxed then (HashTable.add bx k true; [])
+      else if field_types dt.dt_body |> List.existsb (reaches tbl k)
+      then (HashTable.add bx k true; if single_cell dt.dt_body then [dt] else [])
+      else []
+    | _ -> []) in
+  (* Boxing every type on a cycle boxes more than it has to: one boxed type
+     on each cycle is enough to give the others a size.  A small record on a
+     cycle through a boxed variant -- the [term & aqual] of an argument list,
+     reached again through the term -- is then one allocation per value
+     where the cell holding it already is one.  So a record of at most
+     [small_record_words] words comes out of the boxed set when every cycle
+     through it still passes through another boxed type.  Taking one record
+     at a time keeps that true of the ones taken before it. *)
+  let rec cycle_free (target:string) (seen:HashTable.t string bool) (t:cty) : ML bool =
+    by_value t |> List.for_all (fun n ->
+      n <> target &&
+      (HashTable.mem bx n || HashTable.mem seen n ||
+       (HashTable.add seen n true;
+        match HashTable.try_find tbl n with
+        | Some d -> field_types d.dt_body |> List.for_all (cycle_free target seen)
+        | None -> true))) in
+  let rec words (t:cty) : ML int =
+    match t with
+    | TUnit -> 0
+    | TAny -> 2
+    | TTuple ts -> List.fold_left (fun a t -> a + words t) 0 ts
+    | TApp (n, _) ->
+      let k = string_of_name n in
+      if is_iarray_name n || HashTable.mem bx k || k = "Prims.int" || k = "Prims.string" then 1
+      else (match HashTable.try_find tbl k with
+            | Some d ->
+              (match d.dt_body with
+               | TRecord fs -> List.fold_left (fun a (_, t) -> a + words t) 0 fs
+               | TAbbrev c -> words c
+               | TVariant [(_, fs)] -> List.fold_left (fun a (_, t) -> a + words t) 0 fs
+               | TVariant _ -> small_record_words + 1
+               | TAbstract -> 1)
+            | None -> 1)
+    | _ -> 1 in
+  (* A record no function takes or returns by value -- the payload record of
+     a constructor, [Tm_app {hd; arg; arg1}] -- lives only in the cell of a
+     boxed type, and is never copied whatever its size: unboxing it saves
+     its own allocation for nothing. *)
+  let roots : HashTable.t string bool = HashTable.create 500 in
+  let root (t:cty) : ML unit = by_value t |> List.iter (fun n -> HashTable.add roots n true) in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l -> l.dl_binders |> List.iter (fun (b:binder) -> root b.b_ty); root l.dl_ret
+    | _ -> ());
+  let root_names = HashTable.keys roots in
+  let passed (target:string) : ML bool =
+    let seen : HashTable.t string bool = HashTable.create 50 in
+    let rec go (n:string) : ML bool =
+      n = target ||
+      (not (HashTable.mem bx n) && not (HashTable.mem seen n) &&
+       (HashTable.add seen n true;
+        match HashTable.try_find tbl n with
+        | Some d -> field_types d.dt_body |> List.existsb (fun t -> by_value t |> List.existsb go)
+        | None -> false)) in
+    root_names |> List.existsb go in
+  cands |> List.iter (fun (dt:dtype) ->
+    let k = string_of_name dt.dt_name in
+    HashTable.remove bx k;
+    let fs = field_types dt.dt_body in
+    if not (fs |> List.for_all (cycle_free k (HashTable.create 20)))
+       || (List.fold_left (fun a t -> a + words t) 0 fs > small_record_words && passed k)
+    then HashTable.add bx k true);
+  HashTable.keys bx
 
 (* The types the runtime (ulib/c/cherry.h) represents as counted cells. *)
 let runtime_types : list string = ["Prims.int"; "Prims.string"; iarray_key]
 
-(* The operands a [Dyn] operation takes owned: the value [mk] wraps. *)
-let dyn_owns (f:string) : list bool = if f = "mk" then [true] else []
+(* The operands a [Dyn] operation takes owned: the value [mk] wraps, and
+   the [dyn] [get] unwraps, whose payload it moves out. *)
+let dyn_owns (f:string) : list bool = [true]
 
 (* The operands an immutable array operation (Syntax.IArr) takes owned: the
    array an update or a push changes in place when it can, and the value it
@@ -816,8 +894,15 @@ let names (o:owned) : ML (list string) = List.map fst o
 
 let var (x:string) (t:cty) : expr = mk (EVar x) t E_Pure
 
-let rc_op (op:op) (x:string) (t:cty) : expr =
-  mk (EOp ({ po_op = op; po_ty = None }, [var x t])) TUnit E_Impure
+(* The variables bound by [RefPeek r], with [r]: what releases them is
+   [RefUnpeek r]. *)
+let peeked : ref (list (string & expr)) = mk_ref []
+
+let rc_op (op:op) (x:string) (t:cty) : ML expr =
+  match op, List.tryFind (fun (y, _) -> y = x) !peeked with
+  | RcDec, Some (_, r) ->
+    mk (EOp ({ po_op = RefUnpeek; po_ty = None }, [r; var x t])) TUnit E_Impure
+  | _ -> mk (EOp ({ po_op = op; po_ty = None }, [var x t])) TUnit E_Impure
 
 let seq (a b:expr) : expr = mk (ESeq (a, b)) b.ty (join_eff a.eff b.eff)
 
@@ -914,6 +999,48 @@ let unboxed_record (t:cty) : ML bool =
     HashTable.mem !record_tbl (string_of_name n)
   | _ -> false
 
+(* A match on a tuple of variables, [match a, b with ...], whose branches
+   all take the tuple apart (cherry.md, "Matching on a tuple"): for each
+   branch, the variables each component's pattern binds.  Such a tuple is
+   only a view of [a] and [b], which the match borrows: it is not counted,
+   and what a component's pattern binds is borrowed from that component. *)
+let is_tuple_ctor (c:name) : ML bool =
+  c.ns = ["FStar"; "Pervasives"; "Native"] &&
+  String.length c.id > 7 && String.substring c.id 0 7 = "Mktuple"
+
+let rec tuple_parts (n:int) (p:pat) : ML (option (list (list string))) =
+  match p with
+  | PWild ->
+    let rec nils (k:int) : ML (list (list string)) = if k <= 0 then [] else [] :: nils (k - 1) in
+    Some (nils n)
+  | PTuple ps when List.length ps = n -> Some (List.map pat_vars ps)
+  | PCtor (c, ps) when List.length ps = n && is_tuple_ctor c -> Some (List.map pat_vars ps)
+  | POr (q :: qs) ->
+    List.fold_left (fun (acc:option (list (list string))) (q:pat) ->
+      match acc, tuple_parts n q with
+      | Some a, Some b -> Some (List.map2 (fun x y -> x @ y) a b)
+      | _ -> None) (tuple_parts n q) qs
+  | _ -> None
+
+let tuple_view (sc:expr) (brs:list branch) : ML (option (list expr & list (list (list string)))) =
+  let comps : option (list expr) =
+    match sc.e, sc.ty with
+    | ETuple es, _ -> Some es
+    | ECtor (c, es), TApp (n, [])
+      when is_tuple_ctor c && not (HashTable.mem !boxed_tbl (string_of_name n)) -> Some es
+    | _ -> None in
+  match comps with
+  | Some es when Cons? es && es |> List.for_all (fun (a:expr) ->
+                     EVar? a.e || (is_atom a && not (is_np a.ty))) ->
+    let n = List.length es in
+    let parts = brs |> List.map (fun ((p, g, b):branch) ->
+      if Some? g then None else
+      match p with
+      | PVar v when not (List.mem v (fv b)) -> tuple_parts n PWild
+      | _ -> tuple_parts n p) in
+    if List.for_all Some? parts then Some (es, List.map Some?.v parts) else None
+  | _ -> None
+
 let rec set_nth (i:int) (x:bool) (l:list bool) : ML (list bool) =
   match l with
   | [] -> []
@@ -944,6 +1071,96 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       HashTable.add fixed f (bs |> List.map (fun (i, b) -> is_np b.b_ty && Some? (mode i)));
       HashTable.add tbl f (bs |> List.map (fun (i, b) ->
         not (is_np b.b_ty) || (match mode i with Some o -> o | None -> false))));
+  (* Where the tail-call rule applies (cherry.md, "Borrow inference"): a tail
+     call from [f] to [g] that passes an owned value to a borrowed parameter
+     makes [g] take it owned only if the call can be part of a loop of tail
+     calls -- [g] reaches [f] back through saturated tail calls (they are in
+     one strongly connected component), or [g]'s tail calls can reach a call
+     of a closure or of something whose body is not here.  Otherwise the call
+     becomes an ordinary one followed by a release, which costs a frame that
+     no chain of tail calls from [g] can come back to, so only boundedly many
+     pile up; and a leaf such as an equality test called in tail position
+     with a fresh value does not make every caller give up its argument. *)
+  let def_tbl : HashTable.t string dlet = HashTable.create 50 in
+  defs |> List.iter (fun (l:dlet) -> HashTable.add def_tbl (string_of_name l.dl_name) l);
+  (* The definitions [e] calls in tail position, and whether it calls
+     anything else there. *)
+  let rec tail_calls (e:expr) (acc:list string & bool) : ML (list string & bool) =
+    match e.e with
+    | ELet (_, _, _, b) | ESeq (_, b) -> tail_calls b acc
+    | EIf (_, t, f) -> tail_calls f (tail_calls t acc)
+    | EMatch (_, brs) -> List.fold_left (fun acc ((_, _, b):branch) -> tail_calls b acc) acc brs
+    | EApp (hd, args) ->
+      let (cs, esc) = acc in
+      (match hd.e with
+       | EQual (g, _) ->
+         let gs = string_of_name g in
+         if HashTable.mem !extern_tbl gs then acc else
+         (match HashTable.try_find def_tbl gs with
+          | Some l ->
+            let n = List.length l.dl_binders in
+            if List.length args = n then (gs :: cs, esc)
+            else if List.length args < n then acc
+            else (cs, true)
+          | None -> (cs, true))
+       | _ -> (cs, true))
+    | _ -> acc in
+  let tcalls : HashTable.t string (list string) = HashTable.create 50 in
+  let escapes : HashTable.t string bool = HashTable.create 50 in
+  let callers : HashTable.t string (list string) = HashTable.create 50 in
+  defs |> List.iter (fun (l:dlet) ->
+    let f = string_of_name l.dl_name in
+    let (cs, esc) = tail_calls l.dl_body ([], false) in
+    HashTable.add tcalls f cs;
+    if esc then HashTable.add escapes f true;
+    cs |> List.iter (fun g ->
+      HashTable.add callers g (f :: (match HashTable.try_find callers g with Some l -> l | None -> []))));
+  (* Whatever reaches an escaping definition through tail calls escapes. *)
+  let rec spread (work:list string) : ML unit =
+    match work with
+    | [] -> ()
+    | g :: rest ->
+      let fs = (match HashTable.try_find callers g with Some l -> l | None -> []) in
+      let fresh = fs |> List.filter (fun f -> not (HashTable.mem escapes f)) in
+      fresh |> List.iter (fun f -> HashTable.add escapes f true);
+      spread (fresh @ rest) in
+  spread (HashTable.fold escapes (fun f _ acc -> f :: acc) []);
+  (* The strongly connected components of the tail-call graph (Tarjan). *)
+  let comp : HashTable.t string int = HashTable.create 50 in
+  let index : HashTable.t string int = HashTable.create 50 in
+  let low : HashTable.t string int = HashTable.create 50 in
+  let on_stack : HashTable.t string bool = HashTable.create 50 in
+  let stack : ref (list string) = mk_ref [] in
+  let next = mk_ref 0 in
+  let get (t:HashTable.t string int) (v:string) : ML int =
+    match HashTable.try_find t v with Some i -> i | None -> 0 in
+  let rec strong (v:string) : ML unit =
+    HashTable.add index v !next; HashTable.add low v !next; next := !next + 1;
+    stack := v :: !stack; HashTable.add on_stack v true;
+    (match HashTable.try_find tcalls v with Some l -> l | None -> []) |> List.iter (fun w ->
+      if not (HashTable.mem index w) then begin
+        strong w;
+        if get low w < get low v then HashTable.add low v (get low w)
+      end else if HashTable.try_find on_stack w = Some true then
+        (if get index w < get low v then HashTable.add low v (get index w)));
+    if get low v = get index v then begin
+      let c = get index v in
+      let rec pop () : ML unit =
+        match !stack with
+        | w :: rest ->
+          stack := rest; HashTable.add on_stack w false; HashTable.add comp w c;
+          if w <> v then pop ()
+        | [] -> () in
+      pop ()
+    end in
+  defs |> List.iter (fun (l:dlet) ->
+    let v = string_of_name l.dl_name in
+    if not (HashTable.mem index v) then strong v);
+  let keeps_tail (f g:string) : ML bool =
+    HashTable.mem escapes g || not (HashTable.mem def_tbl g) ||
+    (match HashTable.try_find comp f, HashTable.try_find comp g with
+     | Some a, Some b -> a = b
+     | _ -> true) in
   let changed = mk_ref true in
   let own (f:string) (i:int) : ML unit =
     if (match HashTable.try_find fixed f with
@@ -959,6 +1176,13 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
      calls") instead of one followed by their release. *)
   let rec own_from (f:string) (k n:int) : ML unit =
     if k < n then (own f k; own_from f (k + 1) n) in
+  (* Only where that call can be part of a loop of tail calls, as in
+     [keeps_tail]: when [f]'s tail calls can reach a closure call or an
+     unknown definition.  Otherwise the entry point releases the borrowed
+     arguments after an ordinary call, and the direct calls of [f] -- of a
+     leaf such as [lid_equals], passed around as a closure -- stay cheap. *)
+  let own_closure (f:string) (k n:int) : ML unit =
+    if HashTable.mem escapes f || not (HashTable.mem def_tbl f) then own_from f k n in
   let visit (l:dlet) : ML unit =
     let me = string_of_name l.dl_name in
     let params = l.dl_binders |> List.mapi (fun i b -> (b.b_name, i)) in
@@ -1005,14 +1229,14 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
                 if List.length args = List.length bs then
                   args |> List.iteri (fun i (a:expr) ->
                     if List.nth fl i then own_arg a
-                    else if tail && is_np a.ty then
+                    else if tail && is_np a.ty && keeps_tail me gs then
                       (match a.e with
                        | EVar y -> if is_owned_var bf y then own gs i
                        | EQual _ -> ()
                        | _ -> own gs i))
                 else begin
                   List.iter own_arg args;
-                  own_from gs (List.length args) (List.length bs)
+                  own_closure gs (List.length args) (List.length bs)
                 end
               | _ ->
                 (* A global holding a closure. *)
@@ -1040,6 +1264,18 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
         go' bf tail b
       | ESeq (a, b) -> go false a; go tail b
       | EIf (c, t, f) -> go false c; go tail t; go tail f
+      | EMatch (sc, brs) when Some? (tuple_view sc brs) ->
+        let Some (es, parts) = tuple_view sc brs in
+        List.iter (go false) es;
+        List.zip brs parts |> List.iter (fun ((br:branch), (vss:list (list string))) ->
+          let (p, _, b) = br in
+          let vs = pat_vars p in
+          let bf = List.filter (fun y -> not (List.mem y vs)) bf in
+          let bf = List.zip es vss |> List.fold_left (fun bf ((a:expr), (vs:list string)) ->
+                     match a.e with
+                     | EVar y when is_np a.ty && not (is_owned_var bf y) -> vs @ bf
+                     | _ -> bf) bf in
+          go' bf tail b)
       | EMatch (sc, brs) ->
         go false sc;
         (* A parameter matched in a branch that stops needing it, there
@@ -1097,7 +1333,7 @@ let infer_borrows (p:program) (pinned:dlet -> ML (option (list bool))) : ML unit
       (* A definition used as a value is a closure too. *)
       | EQual (g, _) ->
         (match HashTable.try_find !fn_tbl (string_of_name g) with
-         | Some (bs, _) -> own_from (string_of_name g) 0 (List.length bs)
+         | Some (bs, _) -> own_closure (string_of_name g) 0 (List.length bs)
          | None -> ())
       | EVar y when tail && List.existsb (fun (z, _) -> z = y) !fields_of -> own_arg e
       | _ -> () in
@@ -1312,6 +1548,38 @@ let rec reuse_at_death (x:string) (wt:cty) (old:name) (ps:list pat) (e:expr) : M
                   eff = E_Impure }
   | _ -> None
 
+(* Can [x], read out of an ML reference that outlives [e], be peeked at
+   rather than counted for [e]?  Up to its last use, [e] has to use it only
+   as the array that an immutable array's [index] or [length] borrows, and
+   nothing in [e] before then may write the reference, or make it shared:
+   it calls no function but an external whose arguments hold no reference,
+   writes no reference and builds no closure.  Nor does [e] bind [x]
+   again. *)
+let rec peek_ok (x:string) (e:expr) : ML bool =
+  let ok_arg (a:expr) : ML bool =
+    (not (is_np a.ty) ||
+     (match a.ty with
+      | TApp ({ ns = ["Prims"]; id = id }, []) -> id = "int" || id = "string"
+      | _ -> false)) && peek_ok x a in
+  match e.e with
+  | EVar y -> y <> x
+  | EOp ({ po_op = IArr f }, a :: rest) when f = "index" || f = "length" ->
+    (match a.e with EVar y when y = x -> true | _ -> peek_ok x a) &&
+    List.for_all (peek_ok x) rest
+  | EApp ({ e = EQual (f, _) }, args) ->
+    let k = string_of_name f in
+    not (HashTable.mem !fn_tbl k) && HashTable.mem !extern_tbl k &&
+    List.for_all ok_arg args
+  | EApp _ | EFun _ -> false
+  | EOp ({ po_op = BufWrite }, _) | EOp ({ po_op = RefSet }, _) -> false
+  | ELet (y, _, _, _) when y = x -> false
+  (* Past [x]'s last use, [x] is unpeeked: what follows may do anything. *)
+  | ELet (_, _, e1, e2) when not (List.mem x (fv e2)) -> peek_ok x e1
+  | ESeq (e1, e2) when not (List.mem x (fv e2)) -> peek_ok x e1
+  | EMatch (_, brs) | ETry (_, brs)
+    when brs |> List.existsb (fun (p, _, _) -> List.mem x (pat_vars p)) -> false
+  | _ -> not (exists_child (fun c -> not (peek_ok x c)) e)
+
 (* -------------------------------------------------------------------- *)
 (* The pass                                                             *)
 (* -------------------------------------------------------------------- *)
@@ -1336,6 +1604,34 @@ let exn_pending : expr =
   mk (EOp ({ po_op = ExnPending; po_ty = None }, []))
      (TApp ({ ns = ["Prims"]; id = "bool"; spec = None }, [])) E_Pure
 
+(* The variables borrowed from an owned one, each with that owned one, its
+   root (cherry.md, "Borrowing from an owned value"): a field of an owned
+   boxed value, and what is read out of such a field, is not counted, and
+   the root stays alive for as long as any of them is used. *)
+let aliases : ref (list (string & string)) = mk_ref []
+
+let root_of (x:string) : ML (option string) =
+  match List.tryFind (fun (y, _) -> y = x) !aliases with
+  | Some (_, r) -> Some r
+  | None -> None
+
+(* [xs] and the roots of the aliases among them: what [xs] keeps alive. *)
+let with_roots (xs:list string) : ML (list string) =
+  if Nil? !aliases then xs else
+  xs @ List.collect (fun x -> match root_of x with Some r -> [r] | None -> []) xs
+
+(* Run [f] with [xs] borrowed from [r] (or from [r]'s root, when [r] is an
+   alias itself); [r = None] runs it unchanged. *)
+let with_aliases (#a:Type) (r:option string) (xs:list string) (f:unit -> ML a) : ML a =
+  match r with
+  | None -> f ()
+  | Some r ->
+    let saved = !aliases in
+    aliases := List.map (fun x -> (x, r)) xs @ saved;
+    let res = f () in
+    aliases := saved;
+    res
+
 (* Run [f] in a non-tail position, with [o] held by its continuation. *)
 let inner (#a:Type) (o:owned) (f:unit -> ML a) : ML a =
   let h = !held in
@@ -1352,7 +1648,7 @@ let inner (#a:Type) (o:owned) (f:unit -> ML a) : ML a =
    value it returns is owned by its consumer.  Every other variable of
    non-plain type is borrowed. *)
 let rec rc (o:owned) (e:expr) : ML expr =
-  let live = fv e in
+  let live = with_roots (fv e) in
   let dead, o = List.partition (fun (x, _) -> not (List.mem x live)) o in
   decs dead (rc_live o e)
 
@@ -1363,7 +1659,10 @@ and rc_live (o:owned) (e:expr) : ML expr =
   let is_owned (x:string) : bool = List.mem x owned_names in
   match e.e with
   | EVar x ->
-    if is_np e.ty && not (is_owned x) then seq (rc_op RcInc x e.ty) e else e
+    (* An alias releases the root it kept alive once it has its own
+       reference. *)
+    let roots = o |> List.filter (fun (y, _) -> y <> x) in
+    if is_np e.ty && not (is_owned x) then seq (rc_op RcInc x e.ty) (decs roots e) else e
   (* A function's name, as a value, is a closure that is never freed, and a
      global's value is persistent once it is computed: neither is counted. *)
   | EQual (f, _) when TArrow? e.ty && HashTable.mem !fn_tbl (string_of_name f) -> e
@@ -1407,15 +1706,48 @@ and rc_live (o:owned) (e:expr) : ML expr =
      outlives this scope, as the fields a match binds are. *)
   | ELet (x, t, { e = EProj ({ e = EVar y }, _, _) }, e2) when is_np t && not (is_owned y) ->
     let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
-    let_ x t e1 (rc o e2)
+    let_ x t e1 (with_aliases (root_of y) [x] (fun () -> rc o e2))
+  (* So is a field of an owned boxed value, which then stays alive for as
+     long as the field is used (cherry.md, "Borrowing from an owned
+     value").  Not a peeked one: [peek_ok] checked its uses, not the
+     field's. *)
+  | ELet (x, t, { e = EProj ({ e = EVar y; ty = TApp (n, []) }, _, _) }, e2)
+    when is_np t && is_owned y && x <> y && HashTable.mem !boxed_tbl (string_of_name n) &&
+         not (List.mem y (List.map fst !peeked)) ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let_ x t e1 (with_aliases (Some y) [x] (fun () -> rc o e2))
   | ELet (x, t, { e = EProj (a, tn, f) }, e2) when is_np t && EProj? a.e ->
     let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
     let z = fresh () in
     rc_live o (let_ z a.ty a { e with e = ELet (x, t, { e1 with e = EProj (var z a.ty, tn, f) }, e2) })
 
+  (* A read of a borrowed reference that the scope only borrows in turn
+     (peek_ok) is not counted: the reference keeps the value alive. *)
+  | ELet (x, t, { e = EOp ({ po_op = BufRead }, [rv; _]) }, e2)
+    when is_np t && is_ml_ref rv.ty && EVar? rv.e && not (is_owned (EVar?._0 rv.e)) &&
+         EVar?._0 rv.e <> x && peek_ok x e2 ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let saved = !peeked in
+    peeked := (x, rv) :: saved;
+    (* Unpeeking [x] reads [rv], so an alias [rv] keeps its root alive. *)
+    let e2' = with_aliases (root_of (EVar?._0 rv.e)) [x] (fun () -> rc ((x, t) :: o) e2) in
+    peeked := saved;
+    let_ x t { e1 with e = EOp ({ po_op = RefPeek; po_ty = None }, [rv]); eff = E_Impure } e2'
+  (* So is a reference in a field of a borrowed value: named first, it is a
+     borrowed variable. *)
+  | ELet (x, t, { e = EOp ({ po_op = BufRead }, [rv; i]) }, e2)
+    when is_np t && is_ml_ref rv.ty && EProj? rv.e &&
+         (match rv.e with EProj ({ e = EVar y }, _, _) -> not (is_owned y) && y <> x | _ -> false) &&
+         peek_ok x e2 ->
+    let e1 = (match e.e with ELet (_, _, e1, _) -> e1 | _ -> e) in
+    let op = (match e1.e with EOp (op, _) -> op | _ -> { po_op = BufRead; po_ty = None }) in
+    let z = fresh () in
+    rc_live o (let_ z rv.ty rv
+      { e with e = ELet (x, t, { e1 with e = EOp (op, [var z rv.ty; i]) }, e2) })
+
   | ELet (x, t, e1, e2) ->
-    let fv2 = without [x] (fv e2) in
-    let fv1 = fv e1 in
+    let fv2 = with_roots (without [x] (fv e2)) in
+    let fv1 = with_roots (fv e1) in
     let o1, o2 = List.partition (fun (y, _) ->
                    List.mem y fv1 && not (List.mem y fv2)) o in
     let e1' = inner o2 (fun () -> rc o1 e1) in
@@ -1429,7 +1761,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
     rc_live o (let_ (fresh ()) a.ty a b)
   | ESeq (a, b) when is_np a.ty -> rc_live o (let_ (fresh ()) a.ty a b)
   | ESeq (a, b) ->
-    let fvb = fv b in
+    let fvb = with_roots (fv b) in
     let o1, o2 = List.partition (fun (y, _) -> not (List.mem y fvb)) o in
     let a' = inner o2 (fun () -> rc o1 a) in
     seq a' (rc o2 b)
@@ -1449,6 +1781,21 @@ and rc_live (o:owned) (e:expr) : ML expr =
   | EOp ({ po_op = Or }, [a; b]) when not (is_atom b) ->
     rc_live o { e with e = EIf (a, mk (EConst (CBool true)) e.ty E_Pure, b) }
 
+  | EMatch (s, brs) when Some? (tuple_view s brs) ->
+    let Some (es, parts) = tuple_view s brs in
+    let x = fresh () in
+    let brs = List.zip brs parts |> List.map (fun ((br:branch), (vss:list (list string))) ->
+      let (p, g, b) = br in
+      let rec under (l:list (expr & list string)) : ML expr =
+        match l with
+        | [] -> rc o b
+        | (a, vs) :: rest ->
+          match a.e with
+          | EVar y when is_np a.ty && Cons? vs ->
+            with_aliases (if is_owned y then Some y else root_of y) vs (fun () -> under rest)
+          | _ -> under rest in
+      (p, g, under (List.zip es vss))) in
+    let_ x s.ty s { e with e = EMatch (var x s.ty, brs); eff = E_Impure }
   | EMatch (s, brs) when not (EVar? s.e) ->
     if is_atom s && not (is_np s.ty) then
       { e with e = EMatch (s, List.map (rc_branch o None s.ty) brs); eff = E_Impure }
@@ -1629,7 +1976,7 @@ and rc_live (o:owned) (e:expr) : ML expr =
     (* The call itself is not tested like other calls: the test follows.
        On an exception its result is no value, so only the other branch
        owns it. *)
-    let fvk = fv caught in
+    let fvk = with_roots (fv caught) in
     let o1, o2 = List.partition (fun (y, _) -> not (List.mem y fvk)) o in
     let s' = inner o2 (fun () -> tail := true; rc o1 s) in
     let ro = if is_np e.ty then (r, e.ty) :: o2 else o2 in
@@ -1648,10 +1995,10 @@ and call (o:owned) (owns:option (list bool)) (args:list expr) (node:expr)
     match owns with
     | None -> true
     | Some fl -> i < List.length fl && List.nth fl i in
-  let borrowed_vars = args |> List.mapi (fun i (a:expr) ->
+  let borrowed_vars = with_roots (args |> List.mapi (fun i (a:expr) ->
     match a.e with
     | EVar y when not (owned_at i) -> [y]
-    | _ -> []) |> List.flatten in
+    | _ -> []) |> List.flatten) in
   let remaining = mk_ref (names o) in
   let extra = args |> List.mapi (fun i (a:expr) ->
     match a.e with
@@ -1661,9 +2008,13 @@ and call (o:owned) (owns:option (list bool)) (args:list expr) (node:expr)
       else [(y, a.ty)]
     | _ -> []) |> List.flatten in
   let left = o |> List.filter (fun (y, _) -> List.mem y !remaining) in
+  (* A root that only its aliases among the owned operands keep alive is
+     released once they have their references, before the node, which can
+     then still be a tail call. *)
+  let early, left = List.partition (fun (y, _) -> not (List.mem y borrowed_vars)) left in
   let raises = may_raise node in
   let node = if owns = Some [] then node else { node with eff = E_Impure } in
-  let call = incs extra node in
+  let call = incs extra (decs early node) in
   (* A call that may raise is tested, unless it is the function's result,
      which its caller tests: on an exception what the call did not take is
      released, the result (which is no value) is not, and the function
@@ -1715,7 +2066,10 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
   let p, g, b = br in
   if Some? g then unsupported "a pattern guard" else
   let binds = pat_binds p st in
-  let live = without (pat_vars p) (fv b) in
+  (* What a match on an alias binds is borrowed from its root as well. *)
+  let r = (match sc with Some (x, false) -> root_of x | _ -> None) in
+  with_aliases r (pat_vars p) (fun () ->
+  let live = without (pat_vars p) (with_roots (fv b)) in
   let fvb = fv b in
   let dead = o |> List.filter (fun (y, _) -> not (List.mem y live)) in
   let keep = o |> List.filter (fun (y, _) -> List.mem y live) in
@@ -1770,7 +2124,7 @@ and rc_branch (o:owned) (sc:option (string & bool)) (st:cty) (br:branch) : ML br
           let reset = mk (EOp ({ po_op = Reset (c, kept); po_ty = None }, [var x st])) st E_Impure in
           (p, g, decs dead_other (let_ w st reset body'))
         | None -> plain ())
-     | _ -> plain ())
+     | _ -> plain ()))
 
 let run_let (l:dlet) : ML dlet =
   current := string_of_name l.dl_name;
@@ -1904,11 +2258,103 @@ let derecord (bx:HashTable.t string bool) (p:program) : ML program =
    field at their own position of one variable [x] of the same type as are
    not, the constructor becomes an [Update] of [x], which changes [x] in
    place when it is unique instead of building a cell and counting every
-   field it keeps. *)
+   field it keeps.  An unboxed record built from fields of one variable [x]
+   of its type becomes a match on [x] that binds the fields kept, with the
+   new values bound first: when [x] is owned and dies there, the match moves
+   the kept fields out of it ([take_fields]) instead of counting them. *)
 let record_updates (p:program) : ML program =
+  let n = mk_ref 0 in
+  let name () : ML string = n := !n + 1; "cherry_upd" ^ string_of_int !n in
   let rec go (e:expr) : ML expr =
     let e = map_children go e in
     match e.e with
+    | ERecord (rn, fes) when unboxed_record e.ty ->
+      let src (fa:string & expr) : option string =
+        match fa with
+        | (f, { e = EProj ({ e = EVar x; ty = t }, _, g) }) when g = f && t = e.ty -> Some x
+        | _ -> None in
+      let rfs = (match HashTable.try_find !record_tbl (string_of_name rn) with Some fs -> fs | None -> []) in
+      (* Whether [a] reads [x] only through fields of a plain type. *)
+      let rec plain_reads (x:string) (a:expr) : ML bool =
+        match a.e with
+        | EProj ({ e = EVar y }, _, g) when y = x ->
+          (match List.tryFind (fun (f, _) -> f = g) rfs with
+           | Some (_, t) -> not (is_np t)
+           | None -> false)
+        | EVar y -> y <> x
+        | _ -> let ok = mk_ref true in
+               ignore (map_children (fun c -> (if not (plain_reads x c) then ok := false); c) a);
+               !ok in
+      (match List.tryFind Some? (List.map src fes) with
+       | Some (Some x)
+           when List.length fes = List.length rfs &&
+                (let nk = List.length (List.filter (fun fa -> src fa = Some x) fes) in
+                 2 * nk >= List.length fes) &&
+                fes |> List.for_all (fun fa -> src fa = Some x || plain_reads x (snd fa)) ->
+         (* Most fields kept, and the new values read no counted field of
+            [x]: an in-place [Update] of a copy of [x], which C compiles to a
+            block copy and a store per new value. *)
+         let changed = rfs |> List.mapi (fun i (f, _) -> (i, f)) |> List.collect (fun (i, f) ->
+                         match List.tryFind (fun (g, _) -> g = f) fes with
+                         | Some fa when src fa <> Some x -> [(i, snd fa)]
+                         | _ -> []) in
+         if List.length changed + List.length (List.filter (fun fa -> src fa = Some x) fes) <> List.length fes
+         then e else
+         { e with e = EOp ({ po_op = Update (rn, List.map fst changed); po_ty = None },
+                           mk (EVar x) e.ty E_Pure :: List.map snd changed) }
+       | Some (Some x) ->
+         let fes = fes |> List.map (fun (f, a) ->
+                     (f, a, (if src (f, a) = Some x then Inl (name ()) else Inr (name ())))) in
+         let changed = fes |> List.collect (fun (_, a, v) -> match v with Inr _ -> [a] | Inl _ -> []) in
+         (* The new values read the fields of [x] they need off the match
+            too, when [x] occurs in them only free and projected. *)
+         let read = mk_ref [] in
+         let rec occ (a:expr) : ML unit =
+           (match a.e with
+            | EProj ({ e = EVar y }, _, g) when y = x ->
+              if not (List.mem g !read) then read := g :: !read
+            | EVar y when y = x -> read := "" :: !read
+            | _ -> ignore (map_children (fun c -> occ c; c) a)) in
+         let count (a:expr) : ML int = List.length (List.filter (fun y -> y = x) (fv a)) in
+         let rec raw (a:expr) : ML int =
+           match a.e with
+           | EVar y -> if y = x then 1 else 0
+           | _ -> let n = mk_ref 0 in ignore (map_children (fun c -> n := !n + raw c; c) a); !n in
+         List.iter occ changed;
+         let inner = not (List.mem "" !read) &&
+                     List.for_all (fun a -> raw a = count a) changed in
+         let extra = if not inner then [] else
+                     !read |> List.collect (fun g ->
+                       if fes |> List.existsb (fun (f, _, v) -> f = g && Inl? v) then [] else
+                       match List.tryFind (fun (f, _) -> f = g) rfs with
+                       | Some (_, t) -> [(g, name (), t)]
+                       | None -> []) in
+         let pv (g:string) : ML (option (string & cty)) =
+           match List.tryFind (fun (f, _, v) -> f = g && Inl? v) fes with
+           | Some (_, a, Inl v) -> Some (v, a.ty)
+           | _ -> (match List.tryFind (fun (f, _, _) -> f = g) extra with
+                   | Some (_, v, t) -> Some (v, t)
+                   | None -> None) in
+         let rec sub (a:expr) : ML expr =
+           let a = map_children sub a in
+           match a.e with
+           | EProj ({ e = EVar y }, _, g) when y = x ->
+             (match pv g with Some (v, t) -> mk (EVar v) t E_Pure | None -> a)
+           | _ -> a in
+         let body = mk (ERecord (rn, fes |> List.map (fun (f, (a:expr), v) ->
+                      (f, mk (EVar (match v with Inl v | Inr v -> v)) a.ty E_Pure)))) e.ty E_Pure in
+         let lets (b:expr) : ML expr =
+           List.fold_right (fun (_, (a:expr), v) (b:expr) ->
+             match v with
+             | Inr t -> let a = if inner then sub a else a in
+                        mk (ELet (t, a.ty, a, b)) e.ty (join_eff a.eff b.eff)
+             | Inl _ -> b) fes b in
+         let pat = PRecord (rn, (fes |> List.collect (fun (f, _, v) ->
+                     match v with Inl v -> [(f, PVar v)] | Inr _ -> [])) @
+                     (extra |> List.map (fun (g, v, _) -> (g, PVar v)))) in
+         let m (b:expr) = mk (EMatch (mk (EVar x) e.ty E_Pure, [(pat, None, b)])) e.ty b.eff in
+         if inner then m (lets body) else lets (m body)
+       | _ -> e)
     | ECtor (cn, args) when Cons? args ->
       (match HashTable.try_find !ctor_tbl (string_of_name cn) with
        | Some fs when List.length fs = List.length args && same_boxed e.ty e.ty ->
@@ -1977,6 +2423,69 @@ let tv_any_decl (d:decl) : ML decl =
                   dl_body = tv_any_expr l.dl_body }
   | _ -> d
 
+(* --custard_type_stats: for every counted record and variant, how many
+   references a value of it holds by value (each one an inc or dec when the
+   value is copied or dropped), its approximate size in 8-byte words, how many
+   function parameters and results take it by value, and, for a boxed type,
+   the same counts for its heap cell.  A large unboxed type with many
+   parameters is a candidate for [@@cherry_boxed] (cherry.md, "Inductive
+   types"). *)
+let type_stats (p:program) : ML unit =
+  let tbl = type_table p in
+  let memo : HashTable.t string (int & int) = HashTable.create 50 in
+  let add2 ((a, b):int & int) ((c, d):int & int) : int & int = (a + c, b + d) in
+  let rec size (t:cty) : ML (int & int) =
+    match t with
+    | TAny -> (1, 2)
+    | TArrow _ | TExn | TRef (RGc, _) -> (1, 1)
+    | TTuple ts -> List.fold_left add2 (0, 0) (List.map size ts)
+    | TUnit -> (0, 0)
+    | TApp (n, _) ->
+      let k = string_of_name n in
+      if is_iarray_name n || HashTable.mem !boxed_tbl k || List.mem k runtime_types then (1, 1)
+      else (match HashTable.try_find memo k with
+            | Some r -> r
+            | None ->
+              match HashTable.try_find tbl k with
+              | Some d -> let r = body_size d.dt_body in HashTable.add memo k r; r
+              | None -> (0, 1))
+    | _ -> (0, 1)
+  and body_size (b:tydef) : ML (int & int) =
+    match b with
+    | TAbbrev c -> size c
+    | TRecord fs -> List.fold_left add2 (0, 0) (fs |> List.map (fun (_, t) -> size t))
+    | TVariant cs ->
+      let ss = cs |> List.map (fun (_, fs) ->
+                 List.fold_left add2 (0, 0) (fs |> List.map (fun (_, t) -> size t))) in
+      List.fold_left (fun (a, b) (c, d) -> ((if c > a then c else a), (if d > b then d else b))) (0, 0) ss
+      |> (fun (c, w) -> (c, w + 1))
+    | TAbstract -> (0, 1) in
+  let params : HashTable.t string int = HashTable.create 50 in
+  let note (t:cty) : ML unit =
+    by_value t |> List.iter (fun k ->
+      HashTable.add params k (1 + (match HashTable.try_find params k with Some n -> n | None -> 0))) in
+  p |> List.iter (fun d ->
+    match d with
+    | DLet l -> l.dl_binders |> List.iter (fun (b:binder) -> note b.b_ty); note l.dl_ret
+    | _ -> ());
+  let rows = p |> List.collect (fun d ->
+    match d with
+    | DType dt when (TRecord? dt.dt_body || TVariant? dt.dt_body)
+                 && HashTable.mem !np_tbl (string_of_name dt.dt_name) ->
+      let k = string_of_name dt.dt_name in
+      let boxed = HashTable.mem !boxed_tbl k in
+      let (c, w) = if boxed then (1, 1) else size (TApp (dt.dt_name, [])) in
+      let cell = if boxed then Some (body_size dt.dt_body) else None in
+      let n = match HashTable.try_find params k with Some n -> n | None -> 0 in
+      [(c, w, n, cell, k)]
+    | _ -> []) in
+  let rows = rows |> List.sortWith (fun (c1, _, n1, _, k1) (c2, _, n2, _, k2) ->
+    if c1 <> c2 then c2 - c1 else if n1 <> n2 then n2 - n1 else String.compare k1 k2) in
+  FStarC.Format.print_string "Cherry type statistics (counted references, words, parameters and results by value, boxed cell):\n";
+  rows |> List.iter (fun (c, w, n, cell, k) ->
+    FStarC.Format.print5 "%s\t%s\t%s\t%s\t%s\n" (string_of_int c) (string_of_int w) (string_of_int n)
+      (match cell with Some (cc, cw) -> "boxed " ^ string_of_int cc ^ "/" ^ string_of_int cw | None -> "-") k)
+
 let run (p:program) : ML program =
   co_counter := 0;
   let p = raise_failures p in
@@ -1987,6 +2496,7 @@ let run (p:program) : ML program =
   let bx = HashTable.create 50 in
   boxed_types p |> List.iter (fun k -> HashTable.add bx k true);
   boxed_tbl := bx;
+  if Options.custard_type_stats () then type_stats p;
   let p = derecord bx p in
   let ct = HashTable.create 50 in
   let rt = HashTable.create 50 in

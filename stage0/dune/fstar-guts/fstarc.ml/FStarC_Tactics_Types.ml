@@ -40,7 +40,8 @@ type proofstate = {
 type ref_proofstate = (proofstate ref)
 
 let goal_witness (g : goal) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
-  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_uvar ((g).goal_ctx_uvar, ([], FStarC_Syntax_Syntax.NoUseRange))) FStarC_Range_Type.dummyRange)
+  (FStarC_Syntax_Syntax.mk (FStarC_Syntax_Syntax.Tm_uvar ((g).goal_ctx_uvar, { FStarC_Syntax_Syntax.subst_lists = [];
+    subst_use_range = FStarC_Syntax_Syntax.NoUseRange })) FStarC_Range_Type.dummyRange)
 
 let goal_env (g : goal) : FStarC_TypeChecker_Env.env =
   (g).goal_main_env
@@ -133,7 +134,6 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env) (i : FStarC_TypeChecker_
     use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
     is_iface = (env).FStarC_TypeChecker_Env.is_iface;
     admit = (env).FStarC_TypeChecker_Env.admit;
-    phase1 = (env).FStarC_TypeChecker_Env.phase1;
     failhard = (env).FStarC_TypeChecker_Env.failhard;
     flychecking = (env).FStarC_TypeChecker_Env.flychecking;
     uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
@@ -161,6 +161,7 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env) (i : FStarC_TypeChecker_
     strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
     disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
     erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+    spec_arg_tab = (env).FStarC_TypeChecker_Env.spec_arg_tab;
     enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
     unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
     erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
@@ -169,7 +170,12 @@ let goal_of_implicit (env : FStarC_TypeChecker_Env.env) (i : FStarC_TypeChecker_
     iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
     iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
     iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
-    iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids } (i).FStarC_TypeChecker_Common.imp_uvar tmp false (i).FStarC_TypeChecker_Common.imp_reason))
+    iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids;
+    tc_global = (env).FStarC_TypeChecker_Env.tc_global;
+    tc_scope = (env).FStarC_TypeChecker_Env.tc_scope;
+    tc_scope_gamma = (env).FStarC_TypeChecker_Env.tc_scope_gamma;
+    tc_class_of_typ = (env).FStarC_TypeChecker_Env.tc_class_of_typ;
+    tc_resolve = (env).FStarC_TypeChecker_Env.tc_resolve } (i).FStarC_TypeChecker_Common.imp_uvar tmp false (i).FStarC_TypeChecker_Common.imp_reason))
 
 let goal_of_ctx_uvar (g : goal) (ctx_u : FStarC_Syntax_Syntax.ctx_uvar) : goal =
   { goal_main_env = (g).goal_main_env;

@@ -92,11 +92,11 @@ let expected_ghost_expression (rng : FStarC_Range_Type.range) (e : (FStarC_Synta
 let expected_pure_expression (rng : FStarC_Range_Type.range) (e : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) (reason : (string) option) : 'a =
   (u___expected_eff_expression "pure" rng e c reason)
 
-let ill_kinded_type : (PPrint.document) list =
-  (FStarC_Errors_Msg.mkmsg "Ill-kinded type")
-
 let exhaustiveness_check : (PPrint.document) list =
   ((FStarC_Errors_Msg.text "Patterns are incomplete") :: [])
+
+let ill_kinded_type : (PPrint.document) list =
+  (FStarC_Errors_Msg.mkmsg "Ill-kinded type")
 
 let warn_top_level_effect (rng : FStarC_Range_Type.range) : unit =
   (FStarC_Errors.fStarC_Errors_log_issue__range_string rng FStarC_Errors_Codes.Warning_TopLevelEffect "Top-level let-bindings must be total; this term may have effects")

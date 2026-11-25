@@ -1037,6 +1037,9 @@ let tcresolve_lid : FStarC_Ident.lident =
 let tcclass_lid : FStarC_Ident.lident =
   (fstar_tactics_lid' ("Typeclasses" :: ("tcclass" :: [])))
 
+let tcfundeps_lid : FStarC_Ident.lident =
+  (fstar_tactics_lid' ("Typeclasses" :: ("fundeps" :: [])))
+
 let tcmethod_lid : FStarC_Ident.lident =
   (fstar_tactics_lid' ("Typeclasses" :: ("tcmethod" :: [])))
 
@@ -1087,9 +1090,6 @@ let postprocess_type : FStarC_Ident.lident =
 
 let preprocess_with : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("preprocess_with" :: [])))))
-
-let postprocess_extr_with : FStarC_Ident.lident =
-  (p2l ("FStar" :: ("Tactics" :: ("Effect" :: ("postprocess_for_extraction_with" :: [])))))
 
 let term_lid : FStarC_Ident.lident =
   (p2l ("FStar" :: ("Stubs" :: ("Reflection" :: ("Types" :: ("term" :: []))))))
@@ -1229,10 +1229,6 @@ let extract_as_impure_effect_lid : FStarC_Ident.lident =
 let primitive_pure_lid : FStarC_Ident.lident =
   effect_Tot_lid
 
-let is_name (lid : FStarC_Ident.lident) : bool =
-  (let c = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) Prims.int_zero) in
-  (FStarC_Util.is_upper c))
-
 let sli (l : FStarC_Ident.lident) : string =
   (let tmp = (FStarC_Options.print_real_names ()) in
   (if tmp then (FStarC_Ident.string_of_lid l) else (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l))))
@@ -1261,26 +1257,30 @@ let const_to_string (x : FStarC_Const.sconst) : string =
 let is_pure_effect_lid (l : FStarC_Ident.lident) : bool =
   (((FStarC_Ident.lid_equals l effect_Tot_lid) || (FStarC_Ident.lid_equals l effect_PURE_lid)) || (FStarC_Ident.lid_equals l effect_Pure_lid))
 
-let is_tot_lid (l : FStarC_Ident.lident) : bool =
-  (FStarC_Ident.lid_equals l primitive_pure_lid)
-
-let is_ghost_effect_lid (l : FStarC_Ident.lident) : bool =
-  (((FStarC_Ident.lid_equals l effect_GTot_lid) || (FStarC_Ident.lid_equals l effect_GHOST_lid)) || (FStarC_Ident.lid_equals l effect_Ghost_lid))
-
-let match_returns_def_name : string =
-  (Prims.strcat FStarC_Ident.reserved_prefix "_ret_")
-
 let primitive_ghost_lid : FStarC_Ident.lident =
   effect_GTot_lid
 
 let is_gtot_lid (l : FStarC_Ident.lident) : bool =
   (FStarC_Ident.lid_equals l primitive_ghost_lid)
 
+let is_tot_lid (l : FStarC_Ident.lident) : bool =
+  (FStarC_Ident.lid_equals l primitive_pure_lid)
+
 let ef_base (tmp : unit) : (string) list =
   ("FStar" :: ("All" :: []))
 
 let effect_ML_lid (tmp : unit) : FStarC_Ident.lident =
   (p2l (BatList.append (ef_base ()) ("ML" :: [])))
+
+let is_name (lid : FStarC_Ident.lident) : bool =
+  (let c = ((fun s i -> BatUChar.code (BatUTF8.get s (Z.to_int i))) (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid lid)) Prims.int_zero) in
+  (FStarC_Util.is_upper c))
+
+let is_ghost_effect_lid (l : FStarC_Ident.lident) : bool =
+  (((FStarC_Ident.lid_equals l effect_GTot_lid) || (FStarC_Ident.lid_equals l effect_GHOST_lid)) || (FStarC_Ident.lid_equals l effect_Ghost_lid))
+
+let match_returns_def_name : string =
+  (Prims.strcat FStarC_Ident.reserved_prefix "_ret_")
 
 let is_ndet_effect_lid (l : FStarC_Ident.lident) : bool =
   (((FStarC_Ident.lid_equals l effect_NDET_lid) || (FStarC_Ident.lid_equals l effect_Ndet_lid)) || (FStarC_Ident.lid_equals l effect_Nd_lid))

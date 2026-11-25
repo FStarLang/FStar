@@ -359,6 +359,9 @@ let ref_Q_Equality : refl_constant =
 let ref_Q_Meta : refl_constant =
   (fstar_refl_data_const "Q_Meta")
 
+let ref_Q_TcArg : refl_constant =
+  (fstar_refl_data_const "Q_TcArg")
+
 let fstar_syntax_syntax_const (s : (string) list) : refl_constant =
   (let lid = (fstar_syntax_syntax_lid s) in
   let tmp = (FStarC_Syntax_Syntax.tdataconstr lid) in

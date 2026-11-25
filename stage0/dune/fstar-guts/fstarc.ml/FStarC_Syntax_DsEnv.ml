@@ -50,11 +50,39 @@ and env = {
   no_prelude : bool;
 }
 
-let ugly_sigelt_to_string_hook : ((FStarC_Syntax_Syntax.sigelt -> string) ref) =
-  (ref (fun tmp -> ""))
-
 let new_sigmap (tmp : unit) : ('tmp) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
+
+let default_ds_hooks : dsenv_hooks =
+  { ds_push_open_hook = (fun tmp tmp1 -> ());
+    ds_push_include_hook = (fun tmp tmp1 -> ());
+    ds_push_module_abbrev_hook = (fun tmp tmp1 tmp2 -> ()) }
+
+let empty_env (deps : FStarC_Parser_Dep.deps) : env =
+  (let tmp = (new_sigmap ()) in
+  let tmp1 = (new_sigmap ()) in
+  let tmp2 = (new_sigmap ()) in
+  let tmp3 = (new_sigmap ()) in
+  { curmodule = None;
+    curmonad = None;
+    modules = [];
+    scope_mods = [];
+    iface_scope_mods = [];
+    exported_ids = tmp;
+    trans_exported_ids = tmp1;
+    includes = tmp2;
+    sigaccum = [];
+    sigmap = tmp3;
+    iface = false;
+    admitted_iface = false;
+    expect_typ = false;
+    syntax_only = false;
+    ds_hooks = default_ds_hooks;
+    dep_graph = deps;
+    no_prelude = false })
+
+let ugly_sigelt_to_string_hook : ((FStarC_Syntax_Syntax.sigelt -> string) ref) =
+  (ref (fun tmp -> ""))
 
 let empty_include_smap : ((((FStarC_Ident.lident * FStarC_Syntax_Syntax.restriction)) list ref)) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (new_sigmap ())
@@ -390,34 +418,6 @@ let find_binders_for_datacons : (env -> (FStarC_Ident.lident -> ((FStarC_Ident.i
 
 let stack : ((env) list ref) =
   (ref [])
-
-let default_ds_hooks : dsenv_hooks =
-  { ds_push_open_hook = (fun tmp tmp1 -> ());
-    ds_push_include_hook = (fun tmp tmp1 -> ());
-    ds_push_module_abbrev_hook = (fun tmp tmp1 tmp2 -> ()) }
-
-let empty_env (deps : FStarC_Parser_Dep.deps) : env =
-  (let tmp = (new_sigmap ()) in
-  let tmp1 = (new_sigmap ()) in
-  let tmp2 = (new_sigmap ()) in
-  let tmp3 = (new_sigmap ()) in
-  { curmodule = None;
-    curmonad = None;
-    modules = [];
-    scope_mods = [];
-    iface_scope_mods = [];
-    exported_ids = tmp;
-    trans_exported_ids = tmp1;
-    includes = tmp2;
-    sigaccum = [];
-    sigmap = tmp3;
-    iface = false;
-    admitted_iface = false;
-    expect_typ = false;
-    syntax_only = false;
-    ds_hooks = default_ds_hooks;
-    dep_graph = deps;
-    no_prelude = false })
 
 let is_abbrev (env : env) (lid : FStarC_Ident.lident) : ((FStarC_Ident.ident) list) option =
   (List.find_map (fun tmp -> (match tmp with
@@ -1454,7 +1454,7 @@ let fStarC_Class_Show_show__env (tmp : env) : string =
   let tmp2 = (BatList.map (fun x -> (match x with
       | (u__1, u__2) -> u__1
     )) (tmp).modules) in
-  let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_98 tmp2) in
+  let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_106 tmp2) in
   let tmp4 = (fStarC_Class_Show_show__list_scope_mod (tmp).scope_mods) in
   (FStarC_Format.fmt3 "DsEnv { curmod=%s; All mods: %s\nScope mods: %s\n }" tmp1 tmp3 tmp4))
 

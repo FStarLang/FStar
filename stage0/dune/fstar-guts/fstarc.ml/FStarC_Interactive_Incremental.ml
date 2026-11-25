@@ -15,7 +15,7 @@ let dbg : (bool ref) =
 
 let parse_code (st : FStarC_Interactive_Ide_Types.repl_state) (lang : (string) option) (code : string) : FStarC_Parser_Frontend.parse_result =
   (let rng = (FStarC_Interactive_Ide_Types.initial_range (st).FStarC_Interactive_Ide_Types.repl_fname) in
-  (FStarC_Parser_Frontend.parse lang (FStarC_Parser_Frontend.Incremental ({ FStarC_Parser_Frontend.frag_fname = (FStarC_Range_Ops.file_of_range rng);
+  (FStarC_Parser_Frontend.parse lang (FStarC_Parser_Frontend.Incremental ({ FStarC_Parser_Frontend.frag_fname = (st).FStarC_Interactive_Ide_Types.repl_fname;
     frag_text = code;
     frag_line = (FStarC_Range_Ops.line_of_pos (FStarC_Range_Ops.start_of_range rng));
     frag_col = (FStarC_Range_Ops.col_of_pos (FStarC_Range_Ops.start_of_range rng)) }))))

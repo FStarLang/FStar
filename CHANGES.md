@@ -57,6 +57,12 @@ Guidelines for the changelog:
   * The F# library (`fsharp/base`, `ulibfs`) and Pulse's `pulse2rust` are
     removed. The F# backend still exists (`--codegen FSharp`).
 
+  * The attributes `FStar.Attributes.CNoInline` and
+    `FStar.Tactics.Effect.postprocess_for_extraction_with` are removed;
+    Custard silently ignored both (issues #4867, #4901). Use
+    `postprocess_with` (which also affects typechecking) or
+    `normalize_for_extraction` instead of `postprocess_for_extraction_with`.
+
   * The OCaml library `fstar.lib` no longer contains OCaml extracted from
     ulib; it holds only the hand-written realizations in `ulib/ml/app`
     (now including `FStar_SizeT`). Custard compiles the rest of ulib into
@@ -223,11 +229,13 @@ Guidelines for the changelog:
     Resolution filters the candidates by arity, then by the type of each
     explicit argument, then by the expected type; it eliminates a candidate
     only when its type definitely does not fit, comparing types by their head
-    symbol alone and allowing for the coercions F* inserts. Whatever survives,
-    the innermost is taken, which is the answer scope-order resolution would
-    have given, so a program that typechecked before still typechecks and still
-    means the same thing. Operators participate on the same terms, `( + )`
-    being simply the name `op_Plus`.
+    symbol alone and allowing for the coercions F* inserts. Where the type of
+    an argument has a known head, candidates whose formal at that position also
+    has a known head are preferred over those whose formal is, say, a type
+    variable, as they are more specific. Whatever survives, the innermost is
+    taken, which is the answer scope-order resolution would have given.
+    Operators participate on the same terms, `( + )` being simply the name
+    `op_Plus`.
 
     `--ext fstar:overload=off` restores the old behaviour.
     `--ext fstar:overload=strict` reports error 362 wherever more than one
@@ -263,6 +271,16 @@ Guidelines for the changelog:
     parametric polymorphism.
 
 ## Pulse
+
+  * `x |-> y` no longer relies on `has_pts_to` instances for `erased r`,
+    `frac r` and `Seq.lseq a n` (which needed the now-removed `noinst`
+    attribute). Instead, `has_pts_to p ?r` is resolved from `p` before `y` is
+    checked, so `y : erased r` gets a `reveal` and `y : lseq a n` is accepted
+    by subtyping; and `x |-> Frac f v` is a separate overload of `( |-> )`,
+    defined in `Pulse.Class.PtsTo.FracOp` and chosen by the type of its
+    argument. Source syntax is unchanged. The class itself now lives in
+    `Pulse.Class.PtsTo.Base` (re-exported by `Pulse.Class.PtsTo`). Instances
+    of `has_pts_to` must be determined by the pointer type alone.
 
   * A Pulse conditional whose postcondition is annotated may now also carry a
     `requires` clause, which restricts the annotation to a part of the context:
@@ -466,6 +484,41 @@ Guidelines for the changelog:
     and `eliminate _ /\ _` to `assert (p /\ q); e`.
 
 ## Tactics & Reflection
+
+  * Typeclass constraints are now resolved as soon as the arguments that are
+    not functional dependencies of the class are known, while checking an
+    application, rather than only after all arguments are checked. So in
+    `f #p #r {| c p r |} (x:p) (y:r)` with `[@@fundeps [1]]` on `c`, `r` is
+    known when `y` is checked, and coercions (e.g. `reveal`) apply to `y`.
+    Likewise, a data constructor applied at a known expected type with the
+    same head, e.g. `Frac f v` at `frac (seq t)`, has its type parameters
+    fixed by the expected type before its arguments are checked (when its
+    result type does not depend on them), so `v : erased (seq t)` is revealed.
+    `--ext compat:no_eager_tcresolve` restores the old behaviour for both.
+
+    The `FStar.Tactics.Typeclasses.noinst` attribute is removed: instance
+    search should be determined by the non-fundep arguments alone. Remove the
+    attribute together with the instances that needed it; see
+    `Pulse.Class.PtsTo` for an example.
+
+  * Typeclass resolution is now implemented natively in the typechecker
+    (`FStarC.TypeChecker.TcResolve`) instead of as a tactic. It only builds
+    the instance; the refinements it relies on are checked afterwards like
+    any other implicit. Results are cached by goal, with the functional
+    dependencies of the class erased (e.g. `has_pts_to (ref int) _`) and
+    modulo universe unification variables, so that searches through
+    hierarchies with many diamonds no longer take exponential time (#2612).
+    The cache is invalidated when an instance is added or when a variable whose
+    type is a class (a local instance) is pushed. Whether a variable is a
+    local instance is decided when it is pushed: in `fun x -> ...` where the
+    type of `x` is still unknown, `x` is not a local instance; annotate it.
+    `FStar.Tactics.Typeclasses.tcresolve` is kept and calls the new primitive
+    `tcresolve_native`.
+
+    Typeclass arguments have a new binder qualifier, reflected as `Q_TcArg`
+    in `FStar.Stubs.Reflection.V2.Data.aqualv`; they used to be reflected as
+    `Q_Meta (`tcresolve)`. Tactics that match on `Q_Meta` to recognize
+    typeclass arguments should also handle `Q_TcArg`.
 
   * PR https://github.com/FStarLang/FStar/pull/4374 adds a new case
     `C_MachineInt of int -> int_signedness -> int_width -> vconst` to the

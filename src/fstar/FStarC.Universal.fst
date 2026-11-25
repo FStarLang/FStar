@@ -700,6 +700,8 @@ let init_env deps : ML TcEnv.env =
         (NBE.normalize
           (FStarC.Tactics.Interpreter.primitive_steps ()))
         core_check
+        FStarC.TypeChecker.TcResolve.class_of_typ
+        FStarC.TypeChecker.TcResolve.resolve
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook       = FStarC.Tactics.Hooks.synthesize } in

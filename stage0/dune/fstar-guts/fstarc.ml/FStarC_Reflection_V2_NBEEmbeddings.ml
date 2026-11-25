@@ -84,10 +84,14 @@ let e_aqualv : (FStarC_Reflection_V2_Data.aqualv) FStarC_TypeChecker_NBETerm.emb
         let tmp1 = (FStarC_TypeChecker_NBETerm.as_arg tmp) in
         let tmp2 = (tmp1 :: []) in
         (mkConstruct (FStarC_Reflection_V2_Constants.ref_Q_Meta).FStarC_Reflection_V2_Constants.fv [] tmp2))
+      | FStarC_Reflection_V2_Data.Q_Equality -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Q_Equality).FStarC_Reflection_V2_Constants.fv [] [])
+      | FStarC_Reflection_V2_Data.Q_TcArg -> (mkConstruct (FStarC_Reflection_V2_Constants.ref_Q_TcArg).FStarC_Reflection_V2_Constants.fv [] [])
     )) in
   let unembed_aqualv = (fun cb t -> (match (t).FStarC_TypeChecker_NBETerm.nbe_t with
       | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_Explicit).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Q_Explicit))
       | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_Implicit).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Q_Implicit))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_Equality).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Q_Equality))
+      | (FStarC_TypeChecker_NBETerm.Construct (fv, [], [])) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_TcArg).FStarC_Reflection_V2_Constants.lid) -> (Some (FStarC_Reflection_V2_Data.Q_TcArg))
       | (FStarC_TypeChecker_NBETerm.Construct (fv, [], ((t1, tmp) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv (FStarC_Reflection_V2_Constants.ref_Q_Meta).FStarC_Reflection_V2_Constants.lid) -> (let tmp1 = (FStarC_TypeChecker_NBETerm.unembed e_term cb t1) in
         (match tmp1 with
           | (Some (x)) -> (Some ((FStarC_Reflection_V2_Data.Q_Meta (x))))

@@ -68,7 +68,7 @@ let rng_included r1 r2 =
 let string_of_pos pos =
     Format.fmt2 "%s,%s" (show (pos_line pos)) (show (pos_col pos))
 let file_of_range r = r.def_range.file_name
-let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = Filepath.basename f}}
+let set_file_of_range r (f:string) = {r with def_range = {r.def_range with file_name = f}}
 let string_of_rng r =
     Format.fmt3 "%s(%s-%s)" r.file_name (string_of_pos r.start_pos) (string_of_pos r.end_pos)
 let string_of_def_range r = string_of_rng r.def_range
@@ -154,7 +154,7 @@ components. *)
 let refind_rng (r:rng) =
   { r with file_name =
       if Options.Ext.enabled "fstar:no_absolute_paths"
-      then r.file_name (* already a basename *)
+      then r.file_name (* already include-relative *)
       else FStarC.Find.refind_file r.file_name
   }
 

@@ -139,6 +139,7 @@ let e_aqualv =
       | Data.Q_Meta t ->
           S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed #_ #e_term rng t)]
                       Range.dummyRange
+      | Data.Q_TcArg -> ref_Q_TcArg.t
       in { r with pos = rng }
     in
     let unembed_aqualv (t : term) : ML (option aqualv) =
@@ -148,6 +149,7 @@ let e_aqualv =
       | _ when S.fv_eq_lid fv ref_Q_Implicit.lid -> run args (pure Data.Q_Implicit)
       | _ when S.fv_eq_lid fv ref_Q_Equality.lid -> run args (pure Data.Q_Equality)
       | _ when S.fv_eq_lid fv ref_Q_Meta.lid -> run args (Data.Q_Meta <$$> e_term)
+      | _ when S.fv_eq_lid fv ref_Q_TcArg.lid -> run args (pure Data.Q_TcArg)
       | _ -> None
     in
     mk_emb embed_aqualv unembed_aqualv fstar_refl_aqualv_fv

@@ -40,7 +40,6 @@ module Range = FStarC.Range
 module E = FStarC.Errors
 module Basic = FStarC.Tactics.V2.Basic
 module TM = FStarC.Tactics.Monad
-module WeakMemo = Pulse.RuntimeUtils.WeakMemo
 open Pulse.RuntimeUtils.Types
 
 (* This unit is checked with --lax, so the equality proof is trivial. *)
@@ -72,35 +71,18 @@ let ctxt_elt_as_string (sr : ctx_elt) : ML string =
   | None -> s
   | Some r -> "@" ^ Range.string_of_range r ^ ": " ^ s
 
+(* The same (often very long) context is passed to with_context on every call
+   into the F* typechecker, so rendering every element on every call would be
+   quadratic overall.  Instead, each element is rendered once, here, and its
+   string is consed onto the (shared) rendered strings of the parent. *)
 let extend_context (tag:string) (r:option range) (ctx:context) : context =
-  co ((tag, (co r <: option Range.range)) :: (co ctx <: list ctx_elt))
-
-(* The rendered strings of a context, memoized per context.  Contexts are
-   immutable lists extended by consing (extend_context), and the same (often
-   very long) context is passed to with_context on every call into the F*
-   typechecker, so rendering every element on every call would be quadratic
-   overall.  The memo table has weak keys, so that dead contexts can be
-   collected; the cached strings are exactly those computed by
-   ctxt_elt_as_string. *)
-#push-options "--warn_error -272" //intentional top-level effect
-let ctx_memo : (list ctx_elt -> ML (option (list string))) & (list ctx_elt -> list string -> ML unit) =
-  WeakMemo.create ()
-#pop-options
-
-let rec context_strings (c:list ctx_elt) : ML (list string) =
-  match c with
-  | [] -> []
-  | sr::tl ->
-    match fst ctx_memo c with
-    | Some ss -> ss
-    | None ->
-      let ss = ctxt_elt_as_string sr :: context_strings tl in
-      snd ctx_memo c ss;
-      ss
+  let c : context_repr = co ctx in
+  let s = ml_tot (fun () -> ctxt_elt_as_string (tag, co r)) in
+  co { elts = (tag, r) :: c.elts; rendered = s :: c.rendered }
 
 let with_context (c:context) (f:unit -> T.Tac 'a) : T.Tac 'a =
   mk_tac (fun ps ->
-    E.with_ctxs (context_strings (co c)) (fun _ -> run_tac f ps))
+    E.with_ctxs (co c <: context_repr).rendered (fun _ -> run_tac f ps))
 
 let with_error_bound (r:range) (f:unit -> T.Tac 'a) : T.Tac 'a =
   mk_tac (fun ps -> E.with_error_bound (rr r) (fun _ -> run_tac f ps))
@@ -133,7 +115,7 @@ let with_extv (k v : string) (f:unit -> T.Tac 'a) : T.Tac 'a =
 
 let print_context (c:context) : T.Tac string =
   mk_tac (fun _ ->
-    String.concat "\n>" (List.map ctxt_elt_as_string (co c <: list ctx_elt)))
+    String.concat "\n>" (co c <: context_repr).rendered)
 
 let debug_at_level_no_module (s:string) : bool =
   ml_tot (fun () -> !(Debug.get_toggle s))

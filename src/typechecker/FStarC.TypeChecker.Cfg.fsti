@@ -36,6 +36,10 @@ open FStarC.Class.Deq
 module S  = FStarC.Syntax.Syntax
 module I  = FStarC.Ident
 
+(* 176 bytes unboxed, and built by a fold over the steps of every
+   normalizer call: boxed under Cherry, so that the fold updates one cell in
+   place rather than copying the record in and out of each step. *)
+[@@FStar.Attributes.cherry_boxed]
 type fsteps = {
      beta : bool;
      iota : bool;
@@ -105,6 +109,7 @@ type cfg = {
      debug: debug_switches;
      delta_level: list Env.delta_level;  // Controls how much unfolding of definitions should be performed
      primitive_steps:PSMap.t primitive_step;
+     env_dependent_steps:bool;            // also use [Primops.env_dependent_ops tcenv], below [primitive_steps]
      strong : bool;                       // under a binder
      memoize_lazy : bool;     (* What exactly is this? Seems to be always true now. *)
      normalize_pure_lets: bool;

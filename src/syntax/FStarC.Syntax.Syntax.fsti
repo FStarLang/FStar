@@ -183,6 +183,19 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of term
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@@ defer_to ...] notation *)
+  | Ctx_uvar_meta_tc of tc_scope (* A typeclass argument, resolved in the given scope *)
+(* The typeclass scope of a context: the local instances, and the cache of
+   resolved goals.  Local instances are the variables whose type was a class
+   when they were pushed (most recent first).  Pushing one allocates a new
+   cache.  The cache maps a goal, deeply compressed and with its functional
+   dependencies replaced by [Tm_unknown] and its universe unification
+   variables by [U_unknown], to its solution (if any) together with the
+   solved goal type, where universe unification variables are abstracted
+   by the listed universe names. *)
+and tc_scope = {
+  tc_locals : list bv;
+  tc_cache  : ref (FStarC.HashMap.t term (option (list univ_name & term & typ)));
+}
 and ctx_uvar_and_subst = ctx_uvar & subst_ts
 
 and uvar_decoration = {
@@ -362,8 +375,13 @@ and unresolved_constructor = {
 and lbname = either bv fv
 and letbindings = bool & list letbinding        (* let recs may have more than one element; top-level lets have lidents *)
                                                 (* boolean true indicates rec *)
-and subst_ts = list (list subst_elt)            (* A composition of parallel substitutions *)
-             & maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
+(* A record rather than a pair: Custard lays a tuple-typed constructor field
+   out inline, and the abbreviation is unfolded inside this recursive group,
+   so as a pair every read of [Tm_delayed]'s [substs] would rebuild it. *)
+and subst_ts = {
+  subst_lists : list (list subst_elt);     (* A composition of parallel substitutions *)
+  subst_use_range : maybe_set_use_range;   (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
+}
 and subst_elt =
    | DB of int & bv                            (* DB i bv: replace a bound variable with index i with name bv                 *)
    | DT of int & term                          (* DT i t: replace a bound variable with index i for term *)
@@ -453,6 +471,7 @@ and binder_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
   | Meta of term     //meta-argument that specifies a tactic term
   | Equality
+  | TcArg            //typeclass argument, solved by instance resolution
 and bqual = option binder_qualifier
 and arg_qualifier = {
   aqual_implicit : bool;

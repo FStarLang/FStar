@@ -623,7 +623,6 @@ that are now pinned down and will not silently regress.
   (`ExtUIntMask`), including that `gte_mask` is an unsigned comparison and that
   the "true" result really is all-ones rather than merely non-zero — the tests
   use the masks as masks (`x &^ eq_mask a b`) rather than just comparing them.
-  The `[@ CNoInline ]` attribute they carry does not disturb extraction.
 * **`minus`** (two's complement negation of an unsigned value) on OCaml and C,
   including `minus 0 = 0` and `x + minus x = 0`.
 * **Rotations** on OCaml (`ExtUIntRotate`), including the `s = 0` case; see

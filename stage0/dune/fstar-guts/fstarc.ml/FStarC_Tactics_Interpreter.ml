@@ -60,7 +60,6 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
         use_eq_strict = (tmp).FStarC_TypeChecker_Env.use_eq_strict;
         is_iface = (tmp).FStarC_TypeChecker_Env.is_iface;
         admit = (tmp).FStarC_TypeChecker_Env.admit;
-        phase1 = (tmp).FStarC_TypeChecker_Env.phase1;
         failhard = (tmp).FStarC_TypeChecker_Env.failhard;
         flychecking = (tmp).FStarC_TypeChecker_Env.flychecking;
         uvar_subtyping = (tmp).FStarC_TypeChecker_Env.uvar_subtyping;
@@ -88,6 +87,7 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
         strict_args_tab = (tmp).FStarC_TypeChecker_Env.strict_args_tab;
         disc_proj_tab = (tmp).FStarC_TypeChecker_Env.disc_proj_tab;
         erasable_types_tab = (tmp).FStarC_TypeChecker_Env.erasable_types_tab;
+        spec_arg_tab = (tmp).FStarC_TypeChecker_Env.spec_arg_tab;
         enable_defer_to_tac = (tmp).FStarC_TypeChecker_Env.enable_defer_to_tac;
         unif_allow_ref_guards = (tmp).FStarC_TypeChecker_Env.unif_allow_ref_guards;
         erase_erasable_args = (tmp).FStarC_TypeChecker_Env.erase_erasable_args;
@@ -96,7 +96,12 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
         iface_todo = (tmp).FStarC_TypeChecker_Env.iface_todo;
         iface_hidden = (tmp).FStarC_TypeChecker_Env.iface_hidden;
         iface_lids = (tmp).FStarC_TypeChecker_Env.iface_lids;
-        iface_val_lids = (tmp).FStarC_TypeChecker_Env.iface_val_lids });
+        iface_val_lids = (tmp).FStarC_TypeChecker_Env.iface_val_lids;
+        tc_global = (tmp).FStarC_TypeChecker_Env.tc_global;
+        tc_scope = (tmp).FStarC_TypeChecker_Env.tc_scope;
+        tc_scope_gamma = (tmp).FStarC_TypeChecker_Env.tc_scope_gamma;
+        tc_class_of_typ = (tmp).FStarC_TypeChecker_Env.tc_class_of_typ;
+        tc_resolve = (tmp).FStarC_TypeChecker_Env.tc_resolve });
       all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
       goals = (ps).FStarC_Tactics_Types.goals;
       smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
@@ -133,7 +138,6 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
         use_eq_strict = (tmp).FStarC_TypeChecker_Env.use_eq_strict;
         is_iface = (tmp).FStarC_TypeChecker_Env.is_iface;
         admit = (tmp).FStarC_TypeChecker_Env.admit;
-        phase1 = (tmp).FStarC_TypeChecker_Env.phase1;
         failhard = (tmp).FStarC_TypeChecker_Env.failhard;
         flychecking = (tmp).FStarC_TypeChecker_Env.flychecking;
         uvar_subtyping = (tmp).FStarC_TypeChecker_Env.uvar_subtyping;
@@ -161,6 +165,7 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
         strict_args_tab = (tmp).FStarC_TypeChecker_Env.strict_args_tab;
         disc_proj_tab = (tmp).FStarC_TypeChecker_Env.disc_proj_tab;
         erasable_types_tab = (tmp).FStarC_TypeChecker_Env.erasable_types_tab;
+        spec_arg_tab = (tmp).FStarC_TypeChecker_Env.spec_arg_tab;
         enable_defer_to_tac = (tmp).FStarC_TypeChecker_Env.enable_defer_to_tac;
         unif_allow_ref_guards = (tmp).FStarC_TypeChecker_Env.unif_allow_ref_guards;
         erase_erasable_args = (tmp).FStarC_TypeChecker_Env.erase_erasable_args;
@@ -169,7 +174,12 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
         iface_todo = (tmp).FStarC_TypeChecker_Env.iface_todo;
         iface_hidden = (tmp).FStarC_TypeChecker_Env.iface_hidden;
         iface_lids = (tmp).FStarC_TypeChecker_Env.iface_lids;
-        iface_val_lids = (tmp).FStarC_TypeChecker_Env.iface_val_lids });
+        iface_val_lids = (tmp).FStarC_TypeChecker_Env.iface_val_lids;
+        tc_global = (tmp).FStarC_TypeChecker_Env.tc_global;
+        tc_scope = (tmp).FStarC_TypeChecker_Env.tc_scope;
+        tc_scope_gamma = (tmp).FStarC_TypeChecker_Env.tc_scope_gamma;
+        tc_class_of_typ = (tmp).FStarC_TypeChecker_Env.tc_class_of_typ;
+        tc_resolve = (tmp).FStarC_TypeChecker_Env.tc_resolve });
       all_implicits = (ps1).FStarC_Tactics_Types.all_implicits;
       goals = (ps1).FStarC_Tactics_Types.goals;
       smt_goals = (ps1).FStarC_Tactics_Types.smt_goals;
@@ -204,7 +214,7 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
       let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tmp4) in
       (FStarC_Format.print1 "Assigning irrelevant goal %s\n" tmp5)) else ());
       let tmp4 = (FStarC_Tactics_Types.goal_witness g) in
-      let tmp5 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_teq_nosmt_force (FStarC_Tactics_Types.goal_env g) tmp4 FStarC_Syntax_Util.exp_unit) in
+      let tmp5 = (FStarC_TypeChecker_Rel.teq_nosmt_force (FStarC_Tactics_Types.goal_env g) tmp4 FStarC_Syntax_Util.exp_unit) in
       (if tmp5 then () else (let tmp6 = (FStarC_Tactics_Types.goal_witness g) in
       let tmp7 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tmp6) in
       let tmp8 = (FStarC_Format.fmt1 "Irrelevant tactic witness does not unify with (): %s" tmp7) in
@@ -219,12 +229,12 @@ let run_unembedded_tactic_on_ps (rng_call : FStarC_Range_Type.range) (rng_goal :
           univ_ineqs = (FStarC_TypeChecker_Env.trivial_guard).FStarC_TypeChecker_Common.univ_ineqs;
           univ_ineqs1 = (FStarC_TypeChecker_Env.trivial_guard).FStarC_TypeChecker_Common.univ_ineqs1;
           implicits = tmp4 } in
-      let g1 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_solve_deferred_constraints env g) in
+      let g1 = (FStarC_TypeChecker_Rel.solve_deferred_constraints env g) in
       let tmp5 = (!(dbg_Tac)) in
       (if tmp5 then (let tmp6 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) (ps3).FStarC_Tactics_Types.all_implicits)) in
       let tmp7 = (FStarC_TypeChecker_Common.fStarC_Class_Show_show__list_implicit (ps3).FStarC_Tactics_Types.all_implicits) in
       (FStarC_Format.print2 "Checked %s implicits (1): %s\n" tmp6 tmp7)) else ());
-      let tagged_implicits = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_resolve_implicits_tac env g1) in
+      let tagged_implicits = (FStarC_TypeChecker_Rel.resolve_implicits_tac env g1) in
       let tmp6 = (!(dbg_Tac)) in
       (if tmp6 then (let tmp7 = (FStarC_Class_Show.fStarC_Class_Show_show__int_16 ((fun l -> Z.of_int (BatList.length l)) (ps3).FStarC_Tactics_Types.all_implicits)) in
       let tmp8 = (FStarC_TypeChecker_Common.fStarC_Class_Show_show__list_implicit (ps3).FStarC_Tactics_Types.all_implicits) in
@@ -333,11 +343,7 @@ let unembed_tactic_0 (eb : ('u___b) FStarC_Syntax_Embeddings_Base.embedding) (em
     | (Some (b)) -> b
     | None -> (let h_result = (t_head_of result) in
       let found = (ref false) in
-      (ignore (FStarC_Syntax_Visit.visit_term false (fun t -> ((match (t).FStarC_Syntax_Syntax.n with
-        | (FStarC_Syntax_Syntax.Tm_fvar (fv)) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.admit_lid) -> ((found) := true)
-        | tmp3 -> ()
-      );
-      t)) h_result));
+      (ignore ((FStarC_Syntax_Visit.fStarC_Syntax_Visit_f_term__10 found true) h_result));
       let tmp3 = (!(found)) in
       let maybe_admit_tip = (if tmp3 then (PPrint.string "The term contains an `admit`, which will not reduce. Did you mean `tadmit()`?") else PPrint.empty) in
       let tmp4 = (FStarC_Syntax_Print.fStarC_Class_PP_pp__syntax_term' h_result) in
@@ -359,15 +365,18 @@ let run_tactic_on_ps' (rng_call : FStarC_Range_Type.range) (rng_goal : FStarC_Ra
   (if tmp then (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' tactic) in
   let tmp2 = (FStarC_Class_Show.fStarC_Class_Show_show__bool tactic_already_typed) in
   (FStarC_Format.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n" tmp1 tmp2)) else ());
-  let g = (if tactic_already_typed then FStarC_TypeChecker_Env.trivial_guard else (let tmp1 = (FStarC_Syntax_Embeddings_Base.type_of e_arg) in
-    let tmp2 = (FStarC_Syntax_Embeddings_Base.type_of e_res) in
-    let tmp3 = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_tactic tmp1 tmp2 env tactic) in
-    (match tmp3 with
-      | (tmp4, tmp5, g) -> g
-    ))) in
+  let a = (FStarC_Syntax_Embeddings_Base.type_of e_arg) in
+  let b = (FStarC_Syntax_Embeddings_Base.type_of e_res) in
+  (if (not tactic_already_typed) then (FStarC_TypeChecker_CoreCheck.check_or_elaborate env (fun tmp1 -> (let tmp2 = (FStarC_TypeChecker_CoreCheck.elaborate env (FStarC_TypeChecker_TcTerm.tc_tactic a b) tactic) in
+  (match tmp2 with
+    | (tau, tmp3) -> (let tmp4 = (FStarC_Syntax_Syntax.t_tac_of a b) in
+      (FStarC_TypeChecker_CoreCheck.check_term env "this tactic" tau tmp4 true))
+  ))) (fun tmp1 -> (let tmp2 = (FStarC_TypeChecker_TcTerm.tc_tactic a b env tactic) in
+  (match tmp2 with
+    | (tmp3, tmp4, g) -> (FStarC_TypeChecker_Rel.force_trivial_guard env g)
+  )))) else ());
   let tmp1 = (!(dbg_Tac)) in
   (if tmp1 then (FStarC_Format.print_string "}\n") else ());
-  (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard env g);
   (FStarC_Errors.stop_if_err ());
   let tau = (unembed_tactic_1 e_arg e_res tactic FStarC_Syntax_Embeddings_Base.id_norm_cb) in
   (run_unembedded_tactic_on_ps rng_call rng_goal background arg tau ps))

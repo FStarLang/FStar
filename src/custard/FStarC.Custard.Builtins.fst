@@ -399,7 +399,13 @@ let float_probed  : HashTable.t string bool   = HashTable.create 10
 let float_probe : ref (list string -> ML (option fwidth)) =
   mk_ref (fun _ -> None)
 
+(* {!builtin_rule}'s answers for names not in {!table}, which follow from the
+   name's shape, the command line, and the two settings below.  Asked for
+   every name extraction meets, often many times over. *)
+let shape_rules : HashTable.t string (option rule) = HashTable.create 1000
+
 let set_float_probe (f : list string -> ML (option fwidth)) : ML unit =
+  HashTable.clear shape_rules;
   float_probe := f
 
 let float_of_module (ns : list string) : ML (option fwidth) =
@@ -1075,14 +1081,33 @@ let exn_rule (id:string) : ML (option rule) =
            is a failed match rather than a re-raise: [FStarC.Plugins.dynlink]
            turned every dynlink failure into "Pattern matching failed", and
            [try ... with] in F* source is this shape, since [ToSyntax]
-           desugars it to a [function] with no catch-all. *)
+           desugars it to a [function] with no catch-all.
+
+           The branches may still mention the handler's binder, in a guard or
+           a body, and splicing them would leave it free -- or captured by
+           whatever outer variable has its name.  Such a handler keeps its
+           match, under a branch that binds the binder to the exception, with
+           a final branch that re-raises it so that an unmatched exception
+           still propagates. *)
+        let mentions (v:string) (brs:list branch) : ML bool =
+          brs |> List.existsb (fun (_, g, e) ->
+            occurs v e || (match g with Some g -> occurs v g | None -> false)) in
+        let catch_all (brs:list branch) : ML bool =
+          brs |> List.existsb (fun (p, g, _) ->
+            None? g && (match p with PWild | PVar _ -> true | _ -> false)) in
         let branches =
           match h.e with
           | EFun ([b], body_h) ->
             (match body_h.e with
              | EMatch (scrut, brs) ->
                (match scrut.e with
-                | EVar x when x = b.b_name -> brs
+                | EVar x when x = b.b_name ->
+                  if not (mentions x brs) then brs
+                  else
+                    let brs =
+                      if catch_all brs then brs
+                      else brs @ [(PWild, None, mk (ERaise scrut) body_h.ty E_Impure)] in
+                    [(PVar x, None, { body_h with e = EMatch (scrut, brs); eff = E_Impure })]
                 | _ -> [])
              | _ -> [])
           | _ -> [] in
@@ -1273,9 +1298,27 @@ let is_stub_module (ns : list string) : bool =
    second [Stop], raises that one, and the compiler's handler does not catch
    it.  The failure is a Pulse tactic reporting
    [Custard_FStarC_Tactics_Common.FStarC_Tactics_Common_Stop] as an error
-   message.  [UEnv.new_mlpath_of_lident] carries the same entry. *)
+   message.  [UEnv.new_mlpath_of_lident] carries the same entry.
+
+   [FStar.Stubs.Reflection.Types] has no compiler module at all: its abstract
+   types are the compiler's syntax, which [FStarC_Reflection_Types.ml] says
+   with OCaml abbreviations.  Without these entries a backend that does not
+   compile that file (Cherry) has nothing to lay the types out with. *)
 let stub_aliases : list (string & string) = [
   "FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop";
+  "FStar.Stubs.Reflection.Types.namedv", "FStarC.Syntax.Syntax.bv";
+  "FStar.Stubs.Reflection.Types.bv", "FStarC.Syntax.Syntax.bv";
+  "FStar.Stubs.Reflection.Types.binder", "FStarC.Syntax.Syntax.binder";
+  "FStar.Stubs.Reflection.Types.term", "FStarC.Syntax.Syntax.term";
+  "FStar.Stubs.Reflection.Types.env", "FStarC.TypeChecker.Env.env";
+  "FStar.Stubs.Reflection.Types.fv", "FStarC.Syntax.Syntax.fv";
+  "FStar.Stubs.Reflection.Types.comp", "FStarC.Syntax.Syntax.comp";
+  "FStar.Stubs.Reflection.Types.sigelt", "FStarC.Syntax.Syntax.sigelt";
+  "FStar.Stubs.Reflection.Types.ctx_uvar_and_subst", "FStarC.Syntax.Syntax.ctx_uvar_and_subst";
+  "FStar.Stubs.Reflection.Types.letbinding", "FStarC.Syntax.Syntax.letbinding";
+  "FStar.Stubs.Reflection.Types.ident", "FStarC.Ident.ident";
+  "FStar.Stubs.Reflection.Types.universe_uvar", "FStarC.Syntax.Syntax.universe_uvar";
+  "FStar.Stubs.Reflection.Types.universe", "FStarC.Syntax.Syntax.universe";
 ]
 
 (* Issue #4692.  [FStarC.NormSteps] is not a stub but a copy: the compiler
@@ -1481,7 +1524,9 @@ let is_known_krml_model_op (ns : list string) (id : string) : ML bool =
    {!is_interface_only_module}.  Set by [Extract.init]. *)
 let realized_deps : ref (option FStarC.Parser.Dep.deps) = mk_ref None
 
-let set_deps (d : FStarC.Parser.Dep.deps) : ML unit = realized_deps := Some d
+let set_deps (d : FStarC.Parser.Dep.deps) : ML unit =
+  HashTable.clear shape_rules;
+  realized_deps := Some d
 
 (* Section 8.2.  A module with an interface and no implementation is realized
    by hand, as it was for ML extraction: there is no F* code to compile, so
@@ -1585,6 +1630,8 @@ let is_type_only_realized_module (ns : list string) : ML bool =
    implementations, [FStar.Pprint-c.cherry.fst] and
    [FStar.String-c.cherry.fst], which target selection picks. *)
 let cherry_source_modules : list (list string) = [
+  (* [FStar.Issue-c.cherry.fst], with the compiler's issue type. *)
+  ["FStar"; "Issue"];
   ["FStar"; "List"];
   ["FStar"; "List"; "Tot"; "Base"];
   ["FStar"; "Option"];
@@ -1605,6 +1652,8 @@ let cherry_source_modules : list (list string) = [
   ["FStarC"; "SmallInt"];
   ["FStarC"; "String"];
   ["FStarC"; "StringBuffer"];
+  (* [FStar.Stubs.Tactics.Unseal], whose interface defines [unseal]. *)
+  ["FStarC"; "Tactics"; "Unseal"];
   ["FStarC"; "Time"];
   ["FStarC"; "Timing"];
   ["FStarC"; "Util"];
@@ -1737,61 +1786,91 @@ let dyn_rule (id:string) : ML (option rule) =
   | "undyn" -> prim "get" (fun t -> t)
   | _ -> None
 
+(* [FStar.Sealed] is realized by [FStar_Sealed.ml], where a [sealed a] is the
+   [a] itself and every operation is the identity or an application.  Cherry
+   has no OCaml to link, and the type is [assume]d, so there is no F* source
+   to compile either: the rules say the same thing as the realization. *)
+let sealed_rule (id:string) : ML (option rule) =
+  let ty (ts:list cty) (i:int) : ML cty =
+    if List.length ts > i then List.nth ts i else TAny in
+  match id with
+  | "sealed" -> Some (Rule_type (fun ts -> ty ts 0))
+  | "seal" | "unseal" ->
+    Some (Rule_prim (1, fun _ args ->
+      match args with
+      | [x] -> x
+      | _ -> failwith "FStar.Sealed applied to the wrong number of arguments"))
+  | "map_seal" | "bind_seal" ->
+    Some (Rule_prim (2, fun ts args ->
+      match args with
+      | [x; f] -> mk (EApp (f, [x])) (ty ts 1) E_Impure
+      | _ -> failwith "FStar.Sealed applied to the wrong number of arguments"))
+  | _ -> None
+
+let shape_rule (l:Ident.lident) : ML (option rule) =
+  let path = Ident.path_of_lid l in
+  match List.rev path with
+  | id :: rev_ns ->
+    let ns = no_fstar_stubs (List.rev rev_ns) in
+    (match machine_int_of_module ns with
+     | Some sw -> machine_int_rule sw id
+     | None ->
+       match float_of_module ns with
+       | Some fw -> float_rule fw id
+       | None ->
+       if ns = ["Prims"] then prims_rule id
+       (* [FStar.Pervasives] is also a *realized* module, so this has to
+          fall through rather than shadow: [pervasives_rule] claims one
+          name, and everything else in the module -- [Mkdtuple3] and
+          friends -- still has to reach [is_realized_module] below. *)
+       else if ns = ["FStar"; "Pervasives"] && Some? (pervasives_rule id)
+       then pervasives_rule id
+       (* Section 119.  [FStar.Int.Cast.Full] is [FStar.Int.Cast] with
+          the conversions that mention 128 bits; the names are spelled
+          the same way and [int_cast_rule] reads them the same way. *)
+       else if ns = ["FStar"; "Int"; "Cast"] ||
+               ns = ["FStar"; "Int"; "Cast"; "Full"]
+       then int_cast_rule id
+       else if ns = ["FStar"; "All"] || ns = ["FStarC"; "Effect"]
+       then (match ref_rule id with
+             | Some r -> Some r
+             | None ->
+               (match exn_rule id with
+                | Some r -> Some r
+                | None -> pulse_rule ns id))
+       else if ns = ["FStar"; "Custard"] then custard_rule id
+       else if ns = ["FStar"; "Exn"] then exn_rule id
+       else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
+               Some? (list_coercion_rule id)
+       then list_coercion_rule id
+       else if Options.custard_cherry () &&
+               (ns = ["FStar"; "ImmutableArray"; "Base"] ||
+                ns = ["FStar"; "ImmutableArray"]) &&
+               Some? (iarray_rule id)
+       then iarray_rule id
+       else if ns = ["FStar"; "Dyn"] && Some? (dyn_rule id)
+       then dyn_rule id
+       else if Options.custard_cherry () && ns = ["FStar"; "Sealed"] &&
+               Some? (sealed_rule id)
+       then sealed_rule id
+       (* A rule for one name beats the module-wide [Rule_realized], as
+          for every family above. *)
+       else if Some? (pulse_rule ns id) then pulse_rule ns id
+       else if is_realized_module ns &&
+               not (Options.custard_cherry () && is_cherry_source_module ns)
+       then Some Rule_realized
+       else None)
+  | [] -> None
+
 let builtin_rule (l:Ident.lident) : ML rule =
+  let key = Ident.string_of_lid l in
   let r =
-    match HashTable.try_find table (Ident.string_of_lid l) with
+    match HashTable.try_find table key with
     | Some r -> Some r
     | None ->
-      let path = Ident.path_of_lid l in
-      match List.rev path with
-      | id :: rev_ns ->
-        let ns = no_fstar_stubs (List.rev rev_ns) in
-        (match machine_int_of_module ns with
-         | Some sw -> machine_int_rule sw id
-         | None ->
-           match float_of_module ns with
-           | Some fw -> float_rule fw id
-           | None ->
-           if ns = ["Prims"] then prims_rule id
-           (* [FStar.Pervasives] is also a *realized* module, so this has to
-              fall through rather than shadow: [pervasives_rule] claims one
-              name, and everything else in the module -- [Mkdtuple3] and
-              friends -- still has to reach [is_realized_module] below. *)
-           else if ns = ["FStar"; "Pervasives"] && Some? (pervasives_rule id)
-           then pervasives_rule id
-           (* Section 119.  [FStar.Int.Cast.Full] is [FStar.Int.Cast] with
-              the conversions that mention 128 bits; the names are spelled
-              the same way and [int_cast_rule] reads them the same way. *)
-           else if ns = ["FStar"; "Int"; "Cast"] ||
-                   ns = ["FStar"; "Int"; "Cast"; "Full"]
-           then int_cast_rule id
-           else if ns = ["FStar"; "All"] || ns = ["FStarC"; "Effect"]
-           then (match ref_rule id with
-                 | Some r -> Some r
-                 | None ->
-                   (match exn_rule id with
-                    | Some r -> Some r
-                    | None -> pulse_rule ns id))
-           else if ns = ["FStar"; "Custard"] then custard_rule id
-           else if ns = ["FStar"; "Exn"] then exn_rule id
-           else if ns = ["FStar"; "List"; "Tot"; "Base"] &&
-                   Some? (list_coercion_rule id)
-           then list_coercion_rule id
-           else if Options.custard_cherry () &&
-                   (ns = ["FStar"; "ImmutableArray"; "Base"] ||
-                    ns = ["FStar"; "ImmutableArray"]) &&
-                   Some? (iarray_rule id)
-           then iarray_rule id
-           else if ns = ["FStar"; "Dyn"] && Some? (dyn_rule id)
-           then dyn_rule id
-           (* A rule for one name beats the module-wide [Rule_realized], as
-              for every family above. *)
-           else if Some? (pulse_rule ns id) then pulse_rule ns id
-           else if is_realized_module ns &&
-                   not (Options.custard_cherry () && is_cherry_source_module ns)
-           then Some Rule_realized
-           else None)
-      | [] -> None
+      match HashTable.try_find shape_rules key with
+      | Some r -> r
+      | None -> let r = shape_rule l in HashTable.add shape_rules key r; r
   in
   match r with
   | Some r -> r

@@ -73,6 +73,7 @@ instance tac_showable_aqualv : tac_showable aqualv = {
          | Q_Implicit -> "Q_Implicit"
          | Q_Meta t -> "Q_Meta " ^ show t
          | Q_Equality -> "Q_Equality"
+         | Q_TcArg -> "Q_TcArg"
 }
 instance tac_showable_st_term : tac_showable st_term = {
   show = st_term_to_string;

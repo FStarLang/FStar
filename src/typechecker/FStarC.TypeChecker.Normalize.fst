@@ -613,8 +613,9 @@ let is_empty = function
     | _ -> false
 
 let lookup_bvar (env : env) x =
-    try (List.nth env x.index)._2
-    with _ -> failwith (Format.fmt2 "Failed to find %s\nEnv is %s\n" (show x) (show env))
+    match FStarC.Common.nth_opt env x.index with
+    | Some (_, c, _) -> c
+    | None -> failwith (Format.fmt2 "Failed to find %s\nEnv is %s\n" (show x) (show env))
 
 (* The pure counterpart of one of the built-in spellings of the ghost effect.
    [None] for anything else -- in particular for a user-defined abbreviation of
@@ -657,10 +658,9 @@ let norm_universe cfg (env:env) u : ML universe =
         match u with
           | U_bvar x ->
             begin
-              let vo =
-                try Some ((List.nth env x)._2)
-                with _ -> None
-              in
+              let vo = match FStarC.Common.nth_opt env x with
+                       | Some (_, c, _) -> Some c
+                       | None -> None in
               match vo with
               | Some (Univ u) ->
                 if !dbg_univ_norm then
@@ -950,7 +950,8 @@ let reduce_primops norm_cb cfg (env:env) tm : ML (term & bool) =
 
 let reduce_equality norm_cb cfg tm =
     reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
-                              primitive_steps=simplification_steps cfg.tcenv}) tm
+                              primitive_steps=simplification_steps cfg.tcenv;
+                              env_dependent_steps=false}) tm
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
@@ -2578,24 +2579,6 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : ML (term & 
             || (Ident.lid_equals l PC.bool_lid)
             || (Ident.lid_equals l PC.string_lid)
             || (Ident.lid_equals l PC.exn_lid)
-        (* [x:t{x == e}] is inhabited by [e] whenever [t] is.  That singleton
-           shape is what [assume_result_eq_pure_term] gives the result type of a
-           pure term now that a computation has no postcondition to record it
-           in, so it turns up on the result type of any definition ending in a
-           literal. *)
-        | Tm_refine {b; phi} when clearly_inhabited b.sort ->
-            let bv, phi = SS.open_term_bv b phi in
-            let is_name (t:term) : ML bool =
-              match (SS.compress t).n with
-              | Tm_name bv' -> S.bv_eq bv bv'
-              | _ -> false in
-            let hd, args = U.head_and_args_full phi in
-            (match (U.un_uinst hd).n, args with
-             | Tm_fvar fv, [_; (lhs, _); (rhs, _)]
-                 when S.fv_eq_lid fv PC.eq2_lid ->
-               (is_name lhs && not (FStarC.Class.Setlike.mem bv (Free.names rhs))) ||
-               (is_name rhs && not (FStarC.Class.Setlike.mem bv (Free.names lhs)))
-             | _ -> false)
         | _ -> false
     in
     let simplify arg = (simp_t (fst arg), arg) in
@@ -3541,7 +3524,24 @@ let non_info_norm env t =
                ForExtraction //and refinement types
                ]
   in
-  non_informative env (normalize steps env t)
+  (* An application of an inductive or of a [new] type is already in head
+     normal form, and [non_informative] only looks at the head, so the
+     normalizer call can be skipped.  This is the common case in extraction,
+     which asks this question about every type it meets. *)
+  let rigid_head () : ML bool =
+    let hd, _ = U.head_and_args_full t in
+    match (U.un_uinst (SS.compress hd)).n with
+    | Tm_fvar fv ->
+      (match Env.lookup_qname env fv.fv_name with
+       | Some (Inr ({sigel = Sig_inductive_typ _; sigattrs}, _), _) ->
+         None? (find_map sigattrs Parser.Const.ExtractAs.is_extract_as_attr)
+       | Some (Inr ({sigel = Sig_declare_typ _; sigquals; sigattrs}, _), _) ->
+         List.existsb New? sigquals &&
+         None? (find_map sigattrs Parser.Const.ExtractAs.is_extract_as_attr)
+       | _ -> false)
+    | _ -> false in
+  if rigid_head () then non_informative env t
+  else non_informative env (normalize steps env t)
 
 (*
  * Ghost T to Pure T promotion

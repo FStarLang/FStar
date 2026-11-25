@@ -58,7 +58,7 @@ let db_to_string bv : ML string = (string_of_id bv.ppname) ^ "@" ^ show bv.index
 let filter_imp aq : ML bool =
    (* keep typeclass args *)
    match aq with
-   | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> true
+   | Some TcArg -> true
    | Some (Implicit _)
    | Some (Meta _) -> false
    | _ -> true
@@ -198,7 +198,7 @@ let rec term_to_string x : ML string =
           | _ -> ""
         in
         pref ^ fv_to_string f
-      | Tm_uvar (u, ([], _)) ->
+      | Tm_uvar (u, {subst_lists=[]}) ->
         if Options.print_bound_var_types()
         && Options.print_effect_args()
         then ctx_uvar_to_string_aux true u
@@ -206,7 +206,7 @@ let rec term_to_string x : ML string =
       | Tm_uvar (u, s) ->
         if Options.print_bound_var_types()
         && Options.print_effect_args()
-        then Format.fmt2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string (fst s) |> String.concat "; ")
+        then Format.fmt2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string s.subst_lists |> String.concat "; ")
         else "?" ^ (show <| Unionfind.uvar_id u.ctx_uvar_head)
       | Tm_constant c ->    const_to_string c
       | Tm_type u ->        if (Options.print_universes()) then Format.fmt1 "Type u#(%s)" (univ_to_string u) else "Type"
@@ -370,7 +370,7 @@ and bqual_to_string' s (q:bqual) : ML string = match q with
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "$" ^ s
-  | Some (Meta t) when SU.is_fvar C.tcresolve_lid t -> "{|" ^ s ^ "|}"
+  | Some TcArg -> "{|" ^ s ^ "|}"
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 

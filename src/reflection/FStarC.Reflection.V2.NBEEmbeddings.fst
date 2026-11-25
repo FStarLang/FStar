@@ -150,11 +150,15 @@ let e_aqualv =
         | Data.Q_Explicit -> mkConstruct ref_Q_Explicit.fv [] []
         | Data.Q_Implicit -> mkConstruct ref_Q_Implicit.fv [] []
         | Data.Q_Meta t   -> mkConstruct ref_Q_Meta.fv [] [as_arg (embed e_term cb t)]
+        | Data.Q_Equality -> mkConstruct ref_Q_Equality.fv [] []
+        | Data.Q_TcArg    -> mkConstruct ref_Q_TcArg.fv [] []
     in
     let unembed_aqualv cb (t : t) : ML (option aqualv) =
         match t.nbe_t with
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_Q_Explicit.lid -> Some Data.Q_Explicit
         | Construct (fv, [], []) when S.fv_eq_lid fv ref_Q_Implicit.lid -> Some Data.Q_Implicit
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Q_Equality.lid -> Some Data.Q_Equality
+        | Construct (fv, [], []) when S.fv_eq_lid fv ref_Q_TcArg.lid -> Some Data.Q_TcArg
         | Construct (fv, [], [(t, _)]) when S.fv_eq_lid fv ref_Q_Meta.lid ->
             Option.bind (unembed e_term cb t) (fun t ->
             Some (Data.Q_Meta t))

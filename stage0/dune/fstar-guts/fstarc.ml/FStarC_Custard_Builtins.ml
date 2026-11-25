@@ -17,6 +17,9 @@ type rule =
 let table : (rule) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (100))))
 
+let shape_rules : ((rule) option) FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.t =
+  (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.create (FStarC_SmallInt.of_int (Prims.of_int (1000))))
+
 let no_fstar_stubs (ns : (string) list) : (string) list =
   (match ns with
     | ("FStar" :: ("NormSteps" :: rest)) -> ("FStarC" :: ("NormSteps" :: rest))
@@ -806,6 +809,31 @@ let dyn_rule (id : string) : (rule) option =
     | tmp -> None
   ))
 
+let sealed_rule (id : string) : (rule) option =
+  (let ty = (fun ts i -> (if (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) ts) i) then ((fun l i -> BatList.nth l (Z.to_int i)) ts i) else FStarC_Custard_Syntax.TAny)) in
+  (match id with
+    | "sealed" -> (Some ((Rule_type ((fun ts -> (ty ts Prims.int_zero))))))
+    | "seal" -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | (x :: []) -> x
+        | tmp1 -> (FStarC_Effect.failwith "FStar.Sealed applied to the wrong number of arguments")
+      ))))))
+    | "unseal" -> (Some ((Rule_prim (Prims.int_one, (fun tmp args -> (match args with
+        | (x :: []) -> x
+        | tmp1 -> (FStarC_Effect.failwith "FStar.Sealed applied to the wrong number of arguments")
+      ))))))
+    | "map_seal" -> (Some ((Rule_prim ((Prims.of_int (2)), (fun ts args -> (match args with
+        | (x :: (f :: [])) -> (let tmp = (ty ts Prims.int_one) in
+          (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EApp (f, (x :: []))) tmp FStarC_Custard_Syntax.E_Impure))
+        | tmp -> (FStarC_Effect.failwith "FStar.Sealed applied to the wrong number of arguments")
+      ))))))
+    | "bind_seal" -> (Some ((Rule_prim ((Prims.of_int (2)), (fun ts args -> (match args with
+        | (x :: (f :: [])) -> (let tmp = (ty ts Prims.int_one) in
+          (FStarC_Custard_Syntax.mk (FStarC_Custard_Syntax.EApp (f, (x :: []))) tmp FStarC_Custard_Syntax.E_Impure))
+        | tmp -> (FStarC_Effect.failwith "FStar.Sealed applied to the wrong number of arguments")
+      ))))))
+    | tmp -> None
+  ))
+
 let realized_modules : ((string) list) list =
   (("FStar" :: ("Dyn" :: [])) :: (("FStar" :: ("List" :: [])) :: (("FStar" :: ("List" :: ("Tot" :: ("Base" :: [])))) :: (("FStar" :: ("Pervasives" :: [])) :: (("FStar" :: ("Pervasives" :: ("Native" :: []))) :: (("FStar" :: ("Int8" :: [])) :: (("FStar" :: ("Int16" :: [])) :: (("FStar" :: ("Int32" :: [])) :: (("FStar" :: ("Int64" :: [])) :: (("FStar" :: ("UInt8" :: [])) :: (("FStar" :: ("UInt16" :: [])) :: (("FStar" :: ("UInt32" :: [])) :: (("FStar" :: ("UInt64" :: [])) :: (("FStarC" :: ("Reflection" :: ("Types" :: []))) :: (("FStarC" :: ("Tactics" :: ("Unseal" :: []))) :: (("Prims" :: []) :: (("Pulse" :: ("Lib" :: ("SpinLock" :: []))) :: [])))))))))))))))))
 
@@ -848,69 +876,86 @@ let is_realized_module (ns : (string) list) : bool =
   (if tmp3 then (BatList.exists (fun m -> ((=) m ns)) cherry_realized_modules) else false))))
 
 let cherry_source_modules : ((string) list) list =
-  (("FStar" :: ("List" :: [])) :: (("FStar" :: ("List" :: ("Tot" :: ("Base" :: [])))) :: (("FStar" :: ("Option" :: [])) :: (("FStar" :: ("Pprint" :: [])) :: (("FStar" :: ("String" :: [])) :: (("FStarC" :: ("Array" :: [])) :: (("FStarC" :: ("BaseTypes" :: [])) :: (("FStarC" :: ("Filepath" :: [])) :: (("FStarC" :: ("Format" :: [])) :: (("FStarC" :: ("Getopt" :: [])) :: (("FStarC" :: ("Hash" :: [])) :: (("FStarC" :: ("Int" :: ("Extra" :: []))) :: (("FStarC" :: ("Json" :: [])) :: (("FStarC" :: ("List" :: [])) :: (("FStarC" :: ("Platform" :: ("Base" :: []))) :: (("FStarC" :: ("Plugins" :: ("Base" :: []))) :: (("FStarC" :: ("Pprint" :: [])) :: (("FStarC" :: ("SmallInt" :: [])) :: (("FStarC" :: ("String" :: [])) :: (("FStarC" :: ("StringBuffer" :: [])) :: (("FStarC" :: ("Time" :: [])) :: (("FStarC" :: ("Timing" :: [])) :: (("FStarC" :: ("Util" :: [])) :: [])))))))))))))))))))))))
+  (("FStar" :: ("Issue" :: [])) :: (("FStar" :: ("List" :: [])) :: (("FStar" :: ("List" :: ("Tot" :: ("Base" :: [])))) :: (("FStar" :: ("Option" :: [])) :: (("FStar" :: ("Pprint" :: [])) :: (("FStar" :: ("String" :: [])) :: (("FStarC" :: ("Array" :: [])) :: (("FStarC" :: ("BaseTypes" :: [])) :: (("FStarC" :: ("Filepath" :: [])) :: (("FStarC" :: ("Format" :: [])) :: (("FStarC" :: ("Getopt" :: [])) :: (("FStarC" :: ("Hash" :: [])) :: (("FStarC" :: ("Int" :: ("Extra" :: []))) :: (("FStarC" :: ("Json" :: [])) :: (("FStarC" :: ("List" :: [])) :: (("FStarC" :: ("Platform" :: ("Base" :: []))) :: (("FStarC" :: ("Plugins" :: ("Base" :: []))) :: (("FStarC" :: ("Pprint" :: [])) :: (("FStarC" :: ("SmallInt" :: [])) :: (("FStarC" :: ("String" :: [])) :: (("FStarC" :: ("StringBuffer" :: [])) :: (("FStarC" :: ("Tactics" :: ("Unseal" :: []))) :: (("FStarC" :: ("Time" :: [])) :: (("FStarC" :: ("Timing" :: [])) :: (("FStarC" :: ("Util" :: [])) :: [])))))))))))))))))))))))))
 
 let is_cherry_source_module (ns : (string) list) : bool =
   (BatList.exists (fun m -> ((=) m ns)) cherry_source_modules)
 
+let shape_rule (l : FStarC_Ident.lident) : (rule) option =
+  (let path = (FStarC_Ident.path_of_lid l) in
+  (match (BatList.rev path) with
+    | (id :: rev_ns) -> (let ns = (no_fstar_stubs (BatList.rev rev_ns)) in
+      let tmp = (machine_int_of_module ns) in
+      (match tmp with
+        | (Some (sw)) -> (machine_int_rule sw id)
+        | None -> (let tmp1 = (float_of_module ns) in
+          (match tmp1 with
+            | (Some (fw)) -> (float_rule fw id)
+            | None -> (if ((=) ns ("Prims" :: [])) then (prims_rule id) else (let tmp2 = (if ((=) ns ("FStar" :: ("Pervasives" :: []))) then (let tmp2 = (pervasives_rule id) in
+                (match tmp2 with
+                  | (Some (v)) -> true
+                  | tmp3 -> false
+                )) else false) in
+              (if tmp2 then (pervasives_rule id) else (if (((=) ns ("FStar" :: ("Int" :: ("Cast" :: [])))) || ((=) ns ("FStar" :: ("Int" :: ("Cast" :: ("Full" :: [])))))) then (int_cast_rule id) else (if (((=) ns ("FStar" :: ("All" :: []))) || ((=) ns ("FStarC" :: ("Effect" :: [])))) then (let tmp3 = (ref_rule id) in
+              (match tmp3 with
+                | (Some (r)) -> (Some (r))
+                | None -> (let tmp4 = (exn_rule id) in
+                  (match tmp4 with
+                    | (Some (r)) -> (Some (r))
+                    | None -> (pulse_rule ns id)
+                  ))
+              )) else (if ((=) ns ("FStar" :: ("Custard" :: []))) then (custard_rule id) else (if ((=) ns ("FStar" :: ("Exn" :: []))) then (exn_rule id) else (let tmp3 = (if ((=) ns ("FStar" :: ("List" :: ("Tot" :: ("Base" :: []))))) then (let tmp3 = (list_coercion_rule id) in
+                (match tmp3 with
+                  | (Some (v)) -> true
+                  | tmp4 -> false
+                )) else false) in
+              (if tmp3 then (list_coercion_rule id) else (let tmp4 = (FStarC_Options.custard_cherry ()) in
+              let tmp5 = (if tmp4 then (((=) ns ("FStar" :: ("ImmutableArray" :: ("Base" :: [])))) || ((=) ns ("FStar" :: ("ImmutableArray" :: [])))) else false) in
+              let tmp6 = (if tmp5 then (let tmp6 = (iarray_rule id) in
+                (match tmp6 with
+                  | (Some (v)) -> true
+                  | tmp7 -> false
+                )) else false) in
+              (if tmp6 then (iarray_rule id) else (let tmp7 = (if ((=) ns ("FStar" :: ("Dyn" :: []))) then (let tmp7 = (dyn_rule id) in
+                (match tmp7 with
+                  | (Some (v)) -> true
+                  | tmp8 -> false
+                )) else false) in
+              (if tmp7 then (dyn_rule id) else (let tmp8 = (FStarC_Options.custard_cherry ()) in
+              let tmp9 = (if tmp8 then ((=) ns ("FStar" :: ("Sealed" :: []))) else false) in
+              let tmp10 = (if tmp9 then (let tmp10 = (sealed_rule id) in
+                (match tmp10 with
+                  | (Some (v)) -> true
+                  | tmp11 -> false
+                )) else false) in
+              (if tmp10 then (sealed_rule id) else (let tmp11 = (pulse_rule ns id) in
+              let tmp12 = (match tmp11 with
+                  | (Some (v)) -> true
+                  | tmp12 -> false
+                ) in
+              (if tmp12 then (pulse_rule ns id) else (let tmp13 = (is_realized_module ns) in
+              let tmp14 = (if tmp13 then (let tmp14 = (FStarC_Options.custard_cherry ()) in
+                let tmp15 = (if tmp14 then (is_cherry_source_module ns) else false) in
+                (not tmp15)) else false) in
+              (if tmp14 then (Some (Rule_realized)) else None)))))))))))))))))))
+          ))
+      ))
+    | [] -> None
+  ))
+
 exception No_custard_rule
 
 let builtin_rule (l : FStarC_Ident.lident) : rule =
-  (let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt table (FStarC_Ident.string_of_lid l)) in
+  (let key = (FStarC_Ident.string_of_lid l) in
+  let tmp = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt table key) in
   let r = (match tmp with
       | (Some (r)) -> (Some (r))
-      | None -> (let path = (FStarC_Ident.path_of_lid l) in
-        (match (BatList.rev path) with
-          | (id :: rev_ns) -> (let ns = (no_fstar_stubs (BatList.rev rev_ns)) in
-            let tmp1 = (machine_int_of_module ns) in
-            (match tmp1 with
-              | (Some (sw)) -> (machine_int_rule sw id)
-              | None -> (let tmp2 = (float_of_module ns) in
-                (match tmp2 with
-                  | (Some (fw)) -> (float_rule fw id)
-                  | None -> (if ((=) ns ("Prims" :: [])) then (prims_rule id) else (let tmp3 = (if ((=) ns ("FStar" :: ("Pervasives" :: []))) then (let tmp3 = (pervasives_rule id) in
-                      (match tmp3 with
-                        | (Some (v)) -> true
-                        | tmp4 -> false
-                      )) else false) in
-                    (if tmp3 then (pervasives_rule id) else (if (((=) ns ("FStar" :: ("Int" :: ("Cast" :: [])))) || ((=) ns ("FStar" :: ("Int" :: ("Cast" :: ("Full" :: [])))))) then (int_cast_rule id) else (if (((=) ns ("FStar" :: ("All" :: []))) || ((=) ns ("FStarC" :: ("Effect" :: [])))) then (let tmp4 = (ref_rule id) in
-                    (match tmp4 with
-                      | (Some (r)) -> (Some (r))
-                      | None -> (let tmp5 = (exn_rule id) in
-                        (match tmp5 with
-                          | (Some (r)) -> (Some (r))
-                          | None -> (pulse_rule ns id)
-                        ))
-                    )) else (if ((=) ns ("FStar" :: ("Custard" :: []))) then (custard_rule id) else (if ((=) ns ("FStar" :: ("Exn" :: []))) then (exn_rule id) else (let tmp4 = (if ((=) ns ("FStar" :: ("List" :: ("Tot" :: ("Base" :: []))))) then (let tmp4 = (list_coercion_rule id) in
-                      (match tmp4 with
-                        | (Some (v)) -> true
-                        | tmp5 -> false
-                      )) else false) in
-                    (if tmp4 then (list_coercion_rule id) else (let tmp5 = (FStarC_Options.custard_cherry ()) in
-                    let tmp6 = (if tmp5 then (((=) ns ("FStar" :: ("ImmutableArray" :: ("Base" :: [])))) || ((=) ns ("FStar" :: ("ImmutableArray" :: [])))) else false) in
-                    let tmp7 = (if tmp6 then (let tmp7 = (iarray_rule id) in
-                      (match tmp7 with
-                        | (Some (v)) -> true
-                        | tmp8 -> false
-                      )) else false) in
-                    (if tmp7 then (iarray_rule id) else (let tmp8 = (if ((=) ns ("FStar" :: ("Dyn" :: []))) then (let tmp8 = (dyn_rule id) in
-                      (match tmp8 with
-                        | (Some (v)) -> true
-                        | tmp9 -> false
-                      )) else false) in
-                    (if tmp8 then (dyn_rule id) else (let tmp9 = (pulse_rule ns id) in
-                    let tmp10 = (match tmp9 with
-                        | (Some (v)) -> true
-                        | tmp10 -> false
-                      ) in
-                    (if tmp10 then (pulse_rule ns id) else (let tmp11 = (is_realized_module ns) in
-                    let tmp12 = (if tmp11 then (let tmp12 = (FStarC_Options.custard_cherry ()) in
-                      let tmp13 = (if tmp12 then (is_cherry_source_module ns) else false) in
-                      (not tmp13)) else false) in
-                    (if tmp12 then (Some (Rule_realized)) else None)))))))))))))))))
-                ))
-            ))
-          | [] -> None
+      | None -> (let tmp1 = (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.find_opt shape_rules key) in
+        (match tmp1 with
+          | (Some (r)) -> r
+          | None -> (let r = (shape_rule l) in
+            (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace shape_rules key r);
+            r)
         ))
     ) in
   (match r with
@@ -946,7 +991,8 @@ let register_rule (l : FStarC_Ident.lident) (eta : rule) : unit =
   (FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.replace table (FStarC_Ident.string_of_lid l) eta)
 
 let set_float_probe (f : ((string) list -> (FStarC_Custard_Syntax.fwidth) option)) : unit =
-  ((float_probe) := f)
+  ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.clear shape_rules);
+  ((float_probe) := f))
 
 let fwidth_of_attributes (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : (FStarC_Custard_Syntax.fwidth) option =
   (let tmp = (FStarC_Syntax_Util.has_attribute attrs FStarC_Parser_Const.custard_bfloat16_attr) in
@@ -965,7 +1011,8 @@ let fwidth_of_attributes (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Sy
   ))))
 
 let set_deps (d : FStarC_Parser_Dep.deps) : unit =
-  ((realized_deps) := (Some (d)))
+  ((FStarC_HashTable.FStarC_HashTable_hashtbl_make__0.clear shape_rules);
+  ((realized_deps) := (Some (d))))
 
 let fstarc_mirror_of (ns : (string) list) : ((string) list) option =
   (match ns with
@@ -980,7 +1027,7 @@ let is_stub_module (ns : (string) list) : bool =
   )
 
 let stub_aliases : ((string * string)) list =
-  (("FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop") :: [])
+  (("FStar.Stubs.Tactics.Common.Stop", "FStarC.Errors.Stop") :: (("FStar.Stubs.Reflection.Types.namedv", "FStarC.Syntax.Syntax.bv") :: (("FStar.Stubs.Reflection.Types.bv", "FStarC.Syntax.Syntax.bv") :: (("FStar.Stubs.Reflection.Types.binder", "FStarC.Syntax.Syntax.binder") :: (("FStar.Stubs.Reflection.Types.term", "FStarC.Syntax.Syntax.term") :: (("FStar.Stubs.Reflection.Types.env", "FStarC.TypeChecker.Env.env") :: (("FStar.Stubs.Reflection.Types.fv", "FStarC.Syntax.Syntax.fv") :: (("FStar.Stubs.Reflection.Types.comp", "FStarC.Syntax.Syntax.comp") :: (("FStar.Stubs.Reflection.Types.sigelt", "FStarC.Syntax.Syntax.sigelt") :: (("FStar.Stubs.Reflection.Types.ctx_uvar_and_subst", "FStarC.Syntax.Syntax.ctx_uvar_and_subst") :: (("FStar.Stubs.Reflection.Types.letbinding", "FStarC.Syntax.Syntax.letbinding") :: (("FStar.Stubs.Reflection.Types.ident", "FStarC.Ident.ident") :: (("FStar.Stubs.Reflection.Types.universe_uvar", "FStarC.Syntax.Syntax.universe_uvar") :: (("FStar.Stubs.Reflection.Types.universe", "FStarC.Syntax.Syntax.universe") :: []))))))))))))))
 
 let string_arg (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (string) option =
   (let tmp = (FStarC_Syntax_Subst.compress t) in

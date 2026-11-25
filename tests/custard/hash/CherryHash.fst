@@ -1,7 +1,7 @@
 module CherryHash
 
-(* FStarC.Hash-c.cherry.fst.  [of_string] is 64-bit FNV-1a, masked to 63
-   bits (the vectors for "", "a" and "foobar" are the published FNV-1a ones);
+(* FStarC.Hash-c.cherry.fst.  [of_string] is [cherry_str_hash], masked to
+   63 bits (the vectors are those of its definition in ulib/c/cherry.c);
    [mix], [cmp_hash] and [of_int] on small integers agree with the OCaml
    build. *)
 open FStar.All
@@ -15,10 +15,11 @@ let s (h:H.hash_code) : string = H.string_of_hash_code h
 
 let main () : ML FStar.UInt32.t =
   let ok = true in
-  let ok = check "of_string \"\"" (s (H.of_string "")) "-3750763034362895579" && ok in
-  let ok = check "of_string a" (s (H.of_string "a")) "3414815163700866188" && ok in
-  let ok = check "of_string foobar" (s (H.of_string "foobar")) "402018224477661160" && ok in
-  let ok = check "of_string utf8" (s (H.of_string "αβγ")) "-2780791940798783629" && ok in
+  let ok = check "of_string \"\"" (s (H.of_string "")) "2062761817371520746" && ok in
+  let ok = check "of_string a" (s (H.of_string "a")) "-1631658829101846308" && ok in
+  let ok = check "of_string foobar" (s (H.of_string "foobar")) "-1613525723349264762" && ok in
+  let ok = check "of_string utf8" (s (H.of_string "αβγ")) "-385670916043690937" && ok in
+  let ok = check "of_string long" (s (H.of_string "FStarC.TypeChecker.Env")) "-3353525574844366251" && ok in
   let ok = check "of_int 42" (s (H.of_int 42)) "42" && ok in
   let ok = check "of_int -1" (s (H.of_int (-1))) "-1" && ok in
   let ok = check "of_int max" (s (H.of_int 4611686018427387903)) "4611686018427387903" && ok in

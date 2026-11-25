@@ -137,10 +137,23 @@ let iface_only : HashTable.t string unit = HashTable.create 10
 
 let loaded_files : HashTable.t string unit = HashTable.create 100
 
+(* Whether [m] has an implementation for the current target.  [module_is_loaded]
+   asks this for every name extraction resolves, and the dependency graph and
+   target are fixed for the run, so the answer is cached per module. *)
+let has_impl_memo : HashTable.t string bool = HashTable.create 100
+
+let has_impl (deps:Dep.deps) (m':string) : ML bool =
+  match HashTable.try_find has_impl_memo m' with
+  | Some b -> b
+  | None ->
+    let b = Some? (Dep.implementation_of deps (Dep.module_key_for_target deps (Options.codegen_target ()) m')) in
+    HashTable.add has_impl_memo m' b;
+    b
+
 let module_is_loaded (deps:Dep.deps) (env:TcEnv.env) (m:string) : ML bool =
   let m' = String.lowercase m in
   let want_impl =
-    Some? (Dep.implementation_of deps (Dep.module_key_for_target deps (Options.codegen_target ()) m))
+    has_impl deps m'
     && None? (HashTable.try_find iface_only m') in
   loaded env m want_impl
 

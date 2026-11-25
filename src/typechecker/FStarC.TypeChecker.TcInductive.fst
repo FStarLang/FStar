@@ -240,6 +240,7 @@ the projectors and discriminators. We always make them implicit, but
 the argument already had a meta-qualifier, we must retain it. See bug #2591. *)
 let mk_implicit : bqual -> bqual = function
   | Some (Meta q) -> Some (Meta q)
+  | Some TcArg -> Some TcArg
   | _ -> Some (Implicit false)
 
 (* 2. Checking each datacon *)

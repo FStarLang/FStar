@@ -984,9 +984,32 @@ let rec reduce (x:expr) : ML expr =
         application moves. *)
      | EMatch (scrut, brs) when args |> List.for_all is_atomic
                              && brs |> List.existsb (fun (_, _, bd) -> EFun? bd.e) ->
-       let brs = brs |> List.map (fun (p, gd, bd) ->
-         (p, gd, { x with e = EApp (bd, args) })) in
+       (* An application typed [any] says nothing about an arm whose arrow
+          says more: the call of one arm's lambda may be typed [any] because
+          another arm calls a definition not extracted yet, and beta hands
+          its type on to the body -- an unboxed [bool] typed [any]. *)
+       let rec peel (n:int) (t:cty) : option cty =
+         if n = 0 then Some t else
+         match t with
+         | TArrow (_, _, r) -> peel (n - 1) r
+         | _ -> None in
+       let arm_ty (bd:expr) : cty =
+         if not (TAny? x.ty) then x.ty else
+         match peel (List.length args) bd.ty with
+         | Some t -> t
+         | None -> x.ty in
+       let brs = brs |> List.map (fun (p, gd, (bd:expr)) ->
+         (p, gd, { x with e = EApp (bd, args); ty = arm_ty bd })) in
        reduce { x with e = EMatch (scrut, brs) }
+     (* Cherry: [(f a) b] is [f a b], which the printer splits by [f]'s
+        arity again; otherwise [f a] builds a partial application only to
+        apply it at once.  Inlining makes these: [lookup_opt s c = c
+        (get_option s)] given [c = as_option (as_list as_string)].  [b] must
+        be pure, since it now runs before the call of [f a] if that call is
+        saturated. *)
+     | EApp (f, a) when Options.custard_cherry () && EQual? f.e
+                     && args |> List.for_all (fun (e:expr) -> is_pure e.eff) ->
+       { x with e = EApp (f, a @ args) }
      | _ -> { x with e = EApp (h, args) })
 
   | EMatch (scrut, brs) ->
@@ -1208,7 +1231,12 @@ let rec inline_expr (tbl : HashTable.t string (list string & list binder & expr)
    karamel backends a definition keeps its [unit] binders (Mono's rule 1),
    and a [fn f (_:unit) : t = (x:_) ...] forwarding to [g x] would otherwise
    be reduced to [f () = g] and expanded back under [g]'s binder names rather
-   than its own -- the same function, renamed. *)
+   than its own -- the same function, renamed.
+
+   Under Cherry the other arguments must be atoms.  Reducing
+   [mk_Tm_delayed lr pos = mk (Tm_delayed ..) pos] would leave a definition
+   that builds a partial application of [mk], allocated and then applied at
+   every call, and that [eta_expand] does not undo, since its body computes. *)
 
 let rec split_last (es:list 'a) : ML (option (list 'a & 'a)) =
   match es with
@@ -1227,7 +1255,9 @@ let rec eta_reduce (bs:list binder) (body:expr) (ret:cty) (ef:eff)
      | Some (args', { e = EVar v }) when v = b.b_name
                                       && is_pure f.eff
                                       && not (occurs v f)
-                                      && not (args' |> List.existsb (occurs v)) ->
+                                      && not (args' |> List.existsb (occurs v))
+                                      && not (Options.custard_cherry ()
+                                              && not (List.for_all is_atomic args')) ->
        let ret' = TArrow (b.b_ty, ef, ret) in
        let body' = match args' with
                    | [] -> { f with ty = ret' }
@@ -1397,7 +1427,12 @@ let rec expr_uses (acc : HashTable.t string int) (x:expr) : ML unit =
   let sub (es:list expr) : ML unit = List.iter (expr_uses acc) es in
   match x.e with
   | EApp ({ e = EQual (n, _) }, es) -> note n (List.length es); sub es
-  | EQual (n, _) -> note n 0
+  (* A bare address pins the arity in C, where it is a function pointer of
+     that type; Cherry builds a closure instead, which any arity can back.
+     Pinning there kept [let compare s1 s2 = S.compare s1 s2] at the one
+     binder [eta_reduce] left it, because of a [sort_with compare]
+     elsewhere, and every direct call allocated a partial application. *)
+  | EQual (n, _) -> if not (Options.custard_cherry ()) then note n 0
   (* Every other use is final, so nothing below the first two cases needs to
      be distinguished -- only visited. *)
   | _ -> iter_children (expr_uses acc) x
@@ -1463,8 +1498,17 @@ let eta_expand_decl (tbl : HashTable.t string int) (uses : HashTable.t string in
          absorb (n - List.length lbs) (bs @ lbs) lbody ret' ef'
        | None -> (bs, body, ret, ef))
     | _ -> (bs, body, ret, ef) in
+  (* Cherry calls a function with fewer arguments than it takes by building
+     a partial application (cherry.md), so a caller that supplies fewer does
+     not bound the expansion there: it is the callers that supply them all
+     whose calls would otherwise build a closure and then call it.  A
+     single [List.existsb (fv_eq_lid fv) lids] kept [fv_eq_lid fv lid] at
+     the one binder [eta_reduce] left it, and every full call allocated. *)
+  let bounding_uses (n:name) : ML (option int) =
+    if Options.custard_cherry () then None
+    else HashTable.try_find uses (string_of_name n) in
   let absorb_room =
-    match HashTable.try_find uses (string_of_name l.dl_name) with
+    match bounding_uses l.dl_name with
     | Some k -> let r = k - List.length l.dl_binders in if r < 0 then 0 else r
     | None -> arrow_arity l.dl_ret in
   let abs_bs, abs_body, abs_ret, abs_ef =
@@ -1503,7 +1547,7 @@ let eta_expand_decl (tbl : HashTable.t string int) (uses : HashTable.t string in
            let have = arrow_arity l.dl_ret in
            let room =
              (* Never past what the callers ask for. *)
-             match HashTable.try_find uses (string_of_name l.dl_name) with
+             match bounding_uses l.dl_name with
              | Some k -> if k - List.length l.dl_binders < 0
                          then 0 else k - List.length l.dl_binders
              | None -> have in
@@ -1770,13 +1814,35 @@ let is_identity (dl:dlet) : ML bool =
    | [b], EVar v -> b.b_name = v
    | _ -> false)
 
+(* Under Cherry, a definition whose body reads a field (or a chain of fields)
+   of its one parameter, [let sigtab env = env.sigtab], is inlined as well.
+   The call costs more than the read: the result is returned owned, so a
+   multi-reference record is inc'd field by field in the callee and dec'd
+   again in the caller, where the inlined read of a borrowed value costs
+   nothing.  The projection only exists once [depat] has run, so it is the
+   second [inline_decls] that finds these. *)
+let is_projector (dl:dlet) : ML bool =
+  let rec proj_of (v:string) (e:expr) : ML bool =
+    match e.e with
+    | EVar w -> w = v
+    | EProj (e, _, _) -> proj_of v e
+    | _ -> false in
+  Options.custard_cherry () &&
+  arrow_arity dl.dl_ret = 0 &&
+  not (dl.dl_flags |> List.existsb Rec?) &&
+  (match dl.dl_binders, dl.dl_body.e with
+   | [b], EProj (e, _, _) -> proj_of b.b_name e
+   | _ -> false)
+
+let inlined_unasked (dl:dlet) : ML bool = is_identity dl || is_projector dl
+
 let inline_decls (prog:program) : ML program =
   let tbl : HashTable.t string (list string & list binder & expr) = HashTable.create 50 in
   let used : HashTable.t string bool = HashTable.create 50 in
   let inl : HashTable.t string dlet = HashTable.create 50 in
   prog |> List.iter (fun d ->
     match d with
-    | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
+    | DLet dl when dl.dl_flags |> List.existsb Inline? || inlined_unasked dl ->
       HashTable.add inl (string_of_name dl.dl_name) dl
     | _ -> ());
   let visiting : HashTable.t string bool = HashTable.create 50 in
@@ -1794,7 +1860,7 @@ let inline_decls (prog:program) : ML program =
     end in
   prog |> List.iter (fun d ->
     match d with
-    | DLet dl when dl.dl_flags |> List.existsb Inline? || is_identity dl ->
+    | DLet dl when dl.dl_flags |> List.existsb Inline? || inlined_unasked dl ->
       fill (string_of_name dl.dl_name)
     | _ -> ());
   let prog = prog |> List.map (fun d ->
@@ -4384,7 +4450,7 @@ let run (imports:list decl) (vd:verdicts) (prog:program) : ML program =
      identity function is not something anyone writes on purpose. *)
   let prog =
     if prog |> List.existsb (fun d -> match d with
-                                      | DLet dl -> is_identity dl
+                                      | DLet dl -> inlined_unasked dl
                                       | _ -> false)
     then let prog = pass "inline_ids" inline_decls prog in
          pass "simpl_ids" simpl_all prog

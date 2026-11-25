@@ -46,6 +46,9 @@ let main () : U32.t =
   let p = { name = "Ann"; age = pow2 70 } in
   let ok_rec = greet p = "Hi Ann (1180591620717411303424)" && p.name = "Ann" in
   let ok_list = join ["a"; "bc"; p.name; repeat "-" 2] = "a,bc,Ann,--" in
+  (* Trigraphs: under -std=c11, ["??/"] would read as a backslash. *)
+  let ok_tri = String.length "??/" = 3 && sub_eq "a??=b" 1 2 "??" in
   if not ok_build then 1ul else if not ok_utf8 then 2ul else
   if not ok_cmp then 3ul else if not ok_pat then 4ul else
-  if not ok_rec then 5ul else if not ok_list then 6ul else 0ul
+  if not ok_rec then 5ul else if not ok_list then 6ul else
+  if not ok_tri then 7ul else 0ul

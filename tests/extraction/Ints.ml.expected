@@ -3,9 +3,9 @@
 
 let ints_test1 (x : Prims.int) : Prims.int =
   (match x with
-    | u__iconst0 when u__iconst0 = Prims.int_zero -> (Prims.of_int (-1))
-    | u__iconst0 when u__iconst0 = (Prims.of_int (123)) -> (Prims.of_int (321))
-    | u__iconst0 when u__iconst0 = (Prims.of_int (999999)) -> (Prims.of_int (888888))
+    | u__iconst0 when Z.equal u__iconst0 Prims.int_zero -> (Prims.of_int (-1))
+    | u__iconst0 when Z.equal u__iconst0 (Prims.of_int (123)) -> (Prims.of_int (321))
+    | u__iconst0 when Z.equal u__iconst0 (Prims.of_int (999999)) -> (Prims.of_int (888888))
     | x1 -> (Prims.op_Minus x1 Prims.int_one)
   )
 

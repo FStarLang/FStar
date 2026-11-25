@@ -4,14 +4,16 @@ backend, and prints a markdown table: the median wall-clock time of --runs
 runs, and the peak resident set size."""
 import argparse, os, resource, statistics, subprocess, sys, tempfile, time
 
-# Cherry with another malloc: [cherry+NAME] runs the Cherry executable with
-# the library given by --preload NAME=PATH in LD_PRELOAD.
+# Cherry links mimalloc.  [cherry+system] runs the Cherry executable built
+# with the system malloc, and [cherry+NAME] runs it with the library given by
+# --preload NAME=PATH in LD_PRELOAD.
 PRELOADS = {}
 
 def command(outdir, backend, bench):
     if "+" in backend:
         base, alloc = backend.split("+", 1)
-        return ["env", "LD_PRELOAD=" + PRELOADS[alloc]] + command(outdir, base, bench)
+        exe = [os.path.join(outdir, base, bench + ".system.exe")]
+        return exe if alloc == "system" else ["env", "LD_PRELOAD=" + PRELOADS[alloc]] + exe
     if backend == "cherry":
         return [os.path.join(outdir, "cherry", bench + ".exe")]
     if backend == "ocaml":

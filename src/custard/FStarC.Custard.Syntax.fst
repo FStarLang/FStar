@@ -462,6 +462,7 @@ let rec is_droppable (e:expr) : ML bool =
   | EOp ({ po_op = BufFree }, _) | EOp ({ po_op = BufBlit }, _)
   | EOp ({ po_op = RcInc }, _) | EOp ({ po_op = RcDec }, _)
   | EOp ({ po_op = RefNew }, _) | EOp ({ po_op = RefGet }, _) | EOp ({ po_op = RefSet }, _)
+  | EOp ({ po_op = RefPeek }, _) | EOp ({ po_op = RefUnpeek }, _)
   | EOp ({ po_op = Reset _ }, _) | EOp ({ po_op = Reuse _ }, _) | EOp ({ po_op = ResetFree }, _)
   | EOp ({ po_op = Update _ }, _)
   | EOp ({ po_op = IArr _ }, _) | EOp ({ po_op = Dyn _ }, _) | EOp ({ po_op = PBuf _ }, _)
@@ -528,6 +529,7 @@ let op_to_string (o:prim_op) : string =
    | Commented _ -> "comment"
    | RcInc -> "rc_inc" | RcDec -> "rc_dec"
    | RefNew -> "ref_new" | RefGet -> "ref_get" | RefSet -> "ref_set"
+   | RefPeek -> "ref_peek" | RefUnpeek -> "ref_unpeek"
    | Reset _ -> "reset" | Reuse _ -> "reuse" | ResetFree -> "reset_free"
    | Update _ -> "update"
    | IArr f -> "iarray_" ^ f

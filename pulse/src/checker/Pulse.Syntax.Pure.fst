@@ -145,6 +145,7 @@ let is_fvar (t:term) : option (R.name & list universe) =
 let readback_qual = function
   | R.Q_Implicit -> Some Implicit
   | R.Q_Meta t -> Some (Meta t)
+  | R.Q_TcArg -> Some TcArg
   | _ -> None
 
 let is_pure_app (t:term) : option (term & option qualifier & term) =

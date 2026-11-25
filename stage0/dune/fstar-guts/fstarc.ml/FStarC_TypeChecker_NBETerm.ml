@@ -169,142 +169,6 @@ let unembed (e : ('u___a) embedding) (eta : nbe_cbs) (eta1 : t) : ('u___a) optio
 let embed (e : ('u___a) embedding) (eta : nbe_cbs) (eta1 : 'u___a) : t =
   ((e).em eta eta1)
 
-let embed_as (ea : ('u___a) embedding) (ab : ('u___a -> 'u___b)) (ba : ('u___b -> 'u___a)) (ot : (t) option) : ('u___b) embedding =
-  (mk_emb (fun cbs x -> (embed ea cbs (ba x))) (fun cbs t -> (let tmp = (unembed ea cbs t) in
-  (match tmp with
-    | (Some (x)) -> (let tmp1 = (ab x) in
-      (Some (tmp1)))
-    | None -> None
-  ))) (fun tmp -> (match ot with
-    | (Some (t)) -> t
-    | None -> ((ea).typ ())
-  )) (ea).e_typ)
-
-let e_any : (t) embedding =
-  (let em = (fun u__cb a -> a) in
-  let un = (fun u__cb t -> (Some (t))) in
-  (mk_emb em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.term_lid [] [])) (fun tmp -> FStarC_Syntax_Syntax.ET_abstract)))
-
-let e_abstract_nbe_term : (t) embedding =
-  (embed_as e_any (fun x -> x) (fun x -> x) None)
-
-let e_bool : (bool) embedding =
-  (let em = (fun u__cb a -> (Constant ((Bool (a))))) in
-  let un = (fun u__cb t -> (match t with
-      | (Constant ((Bool (a)))) -> (Some (a))
-      | tmp -> None
-    )) in
-  (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.bool_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_bool)))
-
-let equal_if (tmp : bool) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (if tmp then FStarC_TypeChecker_TermEqAndSimplify.Equal else FStarC_TypeChecker_TermEqAndSimplify.Unknown)
-
-let eq_atom (a1 : atom) (a2 : atom) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (match (a1, a2) with
-    | ((Var (bv1)), (Var (bv2))) -> (equal_if (FStarC_Syntax_Syntax.bv_eq bv1 bv2))
-    | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-  )
-
-let eq_inj (r1 : FStarC_TypeChecker_TermEqAndSimplify.eq_result) (r2 : FStarC_TypeChecker_TermEqAndSimplify.eq_result) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (match (r1, r2) with
-    | (FStarC_TypeChecker_TermEqAndSimplify.Equal, FStarC_TypeChecker_TermEqAndSimplify.Equal) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
-    | (FStarC_TypeChecker_TermEqAndSimplify.NotEqual, tmp) -> FStarC_TypeChecker_TermEqAndSimplify.NotEqual
-    | (tmp, FStarC_TypeChecker_TermEqAndSimplify.NotEqual) -> FStarC_TypeChecker_TermEqAndSimplify.NotEqual
-    | (FStarC_TypeChecker_TermEqAndSimplify.Unknown, tmp) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-    | (tmp, FStarC_TypeChecker_TermEqAndSimplify.Unknown) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-  )
-
-let equal_iff (tmp : bool) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (if tmp then FStarC_TypeChecker_TermEqAndSimplify.Equal else FStarC_TypeChecker_TermEqAndSimplify.NotEqual)
-
-let eq_constant (c1 : constant) (c2 : constant) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (match (c1, c2) with
-    | (Unit, Unit) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
-    | ((Bool (b1)), (Bool (b2))) -> (equal_iff ((=) b1 b2))
-    | ((Int (i1)), (Int (i2))) -> (equal_iff ((=) i1 i2))
-    | ((String (s1, tmp)), (String (s2, tmp1))) -> (equal_iff ((=) s1 s2))
-    | ((Char (c11)), (Char (c21))) -> (equal_iff ((=) c11 c21))
-    | ((Range (r1)), (Range (r2))) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-    | ((Real (r1)), (Real (r2))) -> (equal_if ((=) r1 r2))
-    | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.NotEqual
-  )
-
-let mkAccuVar (v : FStarC_Syntax_Syntax.bv) : t =
-  (mk_rt (FStarC_Syntax_Syntax.range_of_bv v) (Accu ((Var (v)), [])))
-
-let rec eq_arg (env : FStarC_TypeChecker_Env.env) (a1 : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) (a2 : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (eq_t env (match a1 with
-    | (u__1, u__2) -> u__1
-  ) (match a2 with
-    | (u__1, u__2) -> u__1
-  ))
-
-and eq_args (env : FStarC_TypeChecker_Env.env) (as1 : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (as2 : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (match (as1, as2) with
-    | ([], []) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
-    | ((x :: xs), (y :: ys)) -> (let tmp = (eq_arg env x y) in
-      (match tmp with
-        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env xs ys)
-        | tmp1 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-      ))
-    | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-  )
-
-and eq_t (env : FStarC_TypeChecker_Env.env) (t1 : t) (t2 : t) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
-  (match ((t1).nbe_t, (t2).nbe_t) with
-    | ((Lam (tmp)), (Lam (tmp1))) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-    | ((Accu (a1, as1)), (Accu (a2, as2))) -> (let tmp = (eq_atom a1 a2) in
-      (match tmp with
-        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env as1 as2)
-        | tmp1 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-      ))
-    | ((Construct (v1, us1, args1)), (Construct (v2, us2, args2))) -> (if (FStarC_Syntax_Syntax.fv_eq v1 v2) then ((if ((<>) ((fun l -> Z.of_int (BatList.length l)) args1) ((fun l -> Z.of_int (BatList.length l)) args2)) then (FStarC_Effect.failwith "eq_t, different number of args on Construct") else ());
-      let tmp = (FStarC_TypeChecker_Env.num_datacon_non_injective_ty_params env (FStarC_Syntax_Syntax.lid_of_fv v1)) in
-      (match tmp with
-        | None -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-        | (Some (n)) -> (if (Prims.op_Less_Equals n ((fun l -> Z.of_int (BatList.length l)) args1)) then (let eq_args_ = (fun as1 as2 -> (BatList.fold_left2 (fun acc tmp1 tmp2 -> (match (tmp1, tmp2) with
-              | ((a1, tmp3), (a2, tmp4)) -> (let tmp5 = (eq_t env a1 a2) in
-                (eq_inj acc tmp5))
-            )) FStarC_TypeChecker_TermEqAndSimplify.Equal as1 as2)) in
-          let tmp1 = ((fun n l -> BatList.split_at (Z.to_int n) l) n args1) in
-          (match tmp1 with
-            | (parms1, args11) -> (let tmp2 = ((fun n l -> BatList.split_at (Z.to_int n) l) n args2) in
-              (match tmp2 with
-                | (parms2, args21) -> (eq_args_ args11 args21)
-              ))
-          )) else FStarC_TypeChecker_TermEqAndSimplify.Unknown)
-      )) else FStarC_TypeChecker_TermEqAndSimplify.NotEqual)
-    | ((FV (v1, us1, args1)), (FV (v2, us2, args2))) -> (if (FStarC_Syntax_Syntax.fv_eq v1 v2) then (let tmp = (FStarC_Syntax_Util.eq_univs_list us1 us2) in
-      let tmp1 = (equal_iff tmp) in
-      (match tmp1 with
-        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env args1 args2)
-        | tmp2 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-      )) else FStarC_TypeChecker_TermEqAndSimplify.Unknown)
-    | ((Constant (c1)), (Constant (c2))) -> (eq_constant c1 c2)
-    | ((Type_t (u1)), (Type_t (u2))) -> (let tmp = (FStarC_Syntax_Util.eq_univs u1 u2) in
-      (equal_iff tmp))
-    | ((Univ (u1)), (Univ (u2))) -> (let tmp = (FStarC_Syntax_Util.eq_univs u1 u2) in
-      (equal_iff tmp))
-    | ((Refinement (r1, t11)), (Refinement (r2, t21))) -> (let x = (FStarC_Syntax_Syntax.new_bv None FStarC_Syntax_Syntax.t_unit) in
-      let tmp = (t11 ()) in
-      let tmp1 = (match tmp with
-          | (u__1, u__2) -> u__1
-        ) in
-      let tmp2 = (t21 ()) in
-      let tmp3 = (match tmp2 with
-          | (u__1, u__2) -> u__1
-        ) in
-      let tmp4 = (eq_t env tmp1 tmp3) in
-      (match tmp4 with
-        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (let tmp5 = (r1 (mkAccuVar x)) in
-          let tmp6 = (r2 (mkAccuVar x)) in
-          (eq_t env tmp5 tmp6))
-        | tmp5 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-      ))
-    | (Unknown, Unknown) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
-    | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
-  )
-
 let e_string : (string) embedding =
   (let em = (fun u__cb s -> (Constant ((String (s, FStarC_Range_Type.dummyRange))))) in
   let un = (fun u__cb s -> (match s with
@@ -415,6 +279,14 @@ let e_int : (Prims.int) embedding =
     )) in
   (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.int_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_int)))
 
+let e_bool : (bool) embedding =
+  (let em = (fun u__cb a -> (Constant ((Bool (a))))) in
+  let un = (fun u__cb t -> (match t with
+      | (Constant ((Bool (a)))) -> (Some (a))
+      | tmp -> None
+    )) in
+  (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.bool_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_bool)))
+
 let e_char : (int) embedding =
   (let em = (fun u__cb c -> (Constant ((Char (c))))) in
   let un = (fun u__cb c -> (match c with
@@ -422,6 +294,25 @@ let e_char : (int) embedding =
       | tmp -> None
     )) in
   (mk_emb' em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.char_lid [] [])) (FStarC_Syntax_Embeddings_Base.emb_typ_of FStarC_Syntax_Embeddings.e_char)))
+
+let embed_as (ea : ('u___a) embedding) (ab : ('u___a -> 'u___b)) (ba : ('u___b -> 'u___a)) (ot : (t) option) : ('u___b) embedding =
+  (mk_emb (fun cbs x -> (embed ea cbs (ba x))) (fun cbs t -> (let tmp = (unembed ea cbs t) in
+  (match tmp with
+    | (Some (x)) -> (let tmp1 = (ab x) in
+      (Some (tmp1)))
+    | None -> None
+  ))) (fun tmp -> (match ot with
+    | (Some (t)) -> t
+    | None -> ((ea).typ ())
+  )) (ea).e_typ)
+
+let e_any : (t) embedding =
+  (let em = (fun u__cb a -> a) in
+  let un = (fun u__cb t -> (Some (t))) in
+  (mk_emb em un (fun tmp -> (lid_as_typ FStarC_Parser_Const.term_lid [] [])) (fun tmp -> FStarC_Syntax_Syntax.ET_abstract)))
+
+let e_abstract_nbe_term : (t) embedding =
+  (embed_as e_any (fun x -> x) (fun x -> x) None)
 
 let e_range : (FStarC_Range_Type.range) embedding =
   (let em = (fun cb r -> (Constant ((Range (r))))) in
@@ -654,6 +545,115 @@ let or_op (args : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : (t
         | tmp1 -> None
       ))
     | tmp -> (FStarC_Effect.failwith "Unexpected number of arguments")
+  )
+
+let equal_if (tmp : bool) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
+  (if tmp then FStarC_TypeChecker_TermEqAndSimplify.Equal else FStarC_TypeChecker_TermEqAndSimplify.Unknown)
+
+let eq_atom (a1 : atom) (a2 : atom) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
+  (match (a1, a2) with
+    | ((Var (bv1)), (Var (bv2))) -> (equal_if (FStarC_Syntax_Syntax.bv_eq bv1 bv2))
+    | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+  )
+
+let eq_inj (r1 : FStarC_TypeChecker_TermEqAndSimplify.eq_result) (r2 : FStarC_TypeChecker_TermEqAndSimplify.eq_result) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
+  (match (r1, r2) with
+    | (FStarC_TypeChecker_TermEqAndSimplify.Equal, FStarC_TypeChecker_TermEqAndSimplify.Equal) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
+    | (FStarC_TypeChecker_TermEqAndSimplify.NotEqual, tmp) -> FStarC_TypeChecker_TermEqAndSimplify.NotEqual
+    | (tmp, FStarC_TypeChecker_TermEqAndSimplify.NotEqual) -> FStarC_TypeChecker_TermEqAndSimplify.NotEqual
+    | (FStarC_TypeChecker_TermEqAndSimplify.Unknown, tmp) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+    | (tmp, FStarC_TypeChecker_TermEqAndSimplify.Unknown) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+  )
+
+let equal_iff (tmp : bool) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
+  (if tmp then FStarC_TypeChecker_TermEqAndSimplify.Equal else FStarC_TypeChecker_TermEqAndSimplify.NotEqual)
+
+let eq_constant (c1 : constant) (c2 : constant) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
+  (match (c1, c2) with
+    | (Unit, Unit) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
+    | ((Bool (b1)), (Bool (b2))) -> (equal_iff ((=) b1 b2))
+    | ((Int (i1)), (Int (i2))) -> (equal_iff ((=) i1 i2))
+    | ((String (s1, tmp)), (String (s2, tmp1))) -> (equal_iff ((=) s1 s2))
+    | ((Char (c11)), (Char (c21))) -> (equal_iff ((=) c11 c21))
+    | ((Range (r1)), (Range (r2))) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+    | ((Real (r1)), (Real (r2))) -> (equal_if ((=) r1 r2))
+    | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.NotEqual
+  )
+
+let mkAccuVar (v : FStarC_Syntax_Syntax.bv) : t =
+  (mk_rt (FStarC_Syntax_Syntax.range_of_bv v) (Accu ((Var (v)), [])))
+
+let rec eq_arg (env : FStarC_TypeChecker_Env.env) (a1 : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) (a2 : (t * (FStarC_Syntax_Syntax.arg_qualifier) option)) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
+  (eq_t env (match a1 with
+    | (u__1, u__2) -> u__1
+  ) (match a2 with
+    | (u__1, u__2) -> u__1
+  ))
+
+and eq_args (env : FStarC_TypeChecker_Env.env) (as1 : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) (as2 : ((t * (FStarC_Syntax_Syntax.arg_qualifier) option)) list) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
+  (match (as1, as2) with
+    | ([], []) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
+    | ((x :: xs), (y :: ys)) -> (let tmp = (eq_arg env x y) in
+      (match tmp with
+        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env xs ys)
+        | tmp1 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+      ))
+    | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+  )
+
+and eq_t (env : FStarC_TypeChecker_Env.env) (t1 : t) (t2 : t) : FStarC_TypeChecker_TermEqAndSimplify.eq_result =
+  (match ((t1).nbe_t, (t2).nbe_t) with
+    | ((Lam (tmp)), (Lam (tmp1))) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+    | ((Accu (a1, as1)), (Accu (a2, as2))) -> (let tmp = (eq_atom a1 a2) in
+      (match tmp with
+        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env as1 as2)
+        | tmp1 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+      ))
+    | ((Construct (v1, us1, args1)), (Construct (v2, us2, args2))) -> (if (FStarC_Syntax_Syntax.fv_eq v1 v2) then ((if ((<>) ((fun l -> Z.of_int (BatList.length l)) args1) ((fun l -> Z.of_int (BatList.length l)) args2)) then (FStarC_Effect.failwith "eq_t, different number of args on Construct") else ());
+      let tmp = (FStarC_TypeChecker_Env.num_datacon_non_injective_ty_params env (FStarC_Syntax_Syntax.lid_of_fv v1)) in
+      (match tmp with
+        | None -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+        | (Some (n)) -> (if (Prims.op_Less_Equals n ((fun l -> Z.of_int (BatList.length l)) args1)) then (let eq_args_ = (fun as1 as2 -> (BatList.fold_left2 (fun acc tmp1 tmp2 -> (match (tmp1, tmp2) with
+              | ((a1, tmp3), (a2, tmp4)) -> (let tmp5 = (eq_t env a1 a2) in
+                (eq_inj acc tmp5))
+            )) FStarC_TypeChecker_TermEqAndSimplify.Equal as1 as2)) in
+          let tmp1 = ((fun n l -> BatList.split_at (Z.to_int n) l) n args1) in
+          (match tmp1 with
+            | (parms1, args11) -> (let tmp2 = ((fun n l -> BatList.split_at (Z.to_int n) l) n args2) in
+              (match tmp2 with
+                | (parms2, args21) -> (eq_args_ args11 args21)
+              ))
+          )) else FStarC_TypeChecker_TermEqAndSimplify.Unknown)
+      )) else FStarC_TypeChecker_TermEqAndSimplify.NotEqual)
+    | ((FV (v1, us1, args1)), (FV (v2, us2, args2))) -> (if (FStarC_Syntax_Syntax.fv_eq v1 v2) then (let tmp = (FStarC_Syntax_Util.eq_univs_list us1 us2) in
+      let tmp1 = (equal_iff tmp) in
+      (match tmp1 with
+        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (eq_args env args1 args2)
+        | tmp2 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+      )) else FStarC_TypeChecker_TermEqAndSimplify.Unknown)
+    | ((Constant (c1)), (Constant (c2))) -> (eq_constant c1 c2)
+    | ((Type_t (u1)), (Type_t (u2))) -> (let tmp = (FStarC_Syntax_Util.eq_univs u1 u2) in
+      (equal_iff tmp))
+    | ((Univ (u1)), (Univ (u2))) -> (let tmp = (FStarC_Syntax_Util.eq_univs u1 u2) in
+      (equal_iff tmp))
+    | ((Refinement (r1, t11)), (Refinement (r2, t21))) -> (let x = (FStarC_Syntax_Syntax.new_bv None FStarC_Syntax_Syntax.t_unit) in
+      let tmp = (t11 ()) in
+      let tmp1 = (match tmp with
+          | (u__1, u__2) -> u__1
+        ) in
+      let tmp2 = (t21 ()) in
+      let tmp3 = (match tmp2 with
+          | (u__1, u__2) -> u__1
+        ) in
+      let tmp4 = (eq_t env tmp1 tmp3) in
+      (match tmp4 with
+        | FStarC_TypeChecker_TermEqAndSimplify.Equal -> (let tmp5 = (r1 (mkAccuVar x)) in
+          let tmp6 = (r2 (mkAccuVar x)) in
+          (eq_t env tmp5 tmp6))
+        | tmp5 -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
+      ))
+    | (Unknown, Unknown) -> FStarC_TypeChecker_TermEqAndSimplify.Equal
+    | (tmp, tmp1) -> FStarC_TypeChecker_TermEqAndSimplify.Unknown
   )
 
 let atom_eq (a1 : atom) (a2 : atom) : bool =

@@ -177,14 +177,14 @@ and equal_letbinding (c:bool) l1 l2
 and equal_uvar (c:bool) x1 x2
   : ML bool
   =
-  let (u1, (s1, _)) = x1 in
-  let (u2, (s2, _)) = x2 in
+  let (u1, {subst_lists=s1}) = x1 in
+  let (u2, {subst_lists=s2}) = x2 in
   uvar_unique_id u1.ctx_uvar_head = uvar_unique_id u2.ctx_uvar_head &&
   equal_list (equal_list (equal_subst_elt c)) s1 s2
 
 and equal_subst_ts (c:bool) (s1 s2:subst_ts)
   : ML bool
-  = equal_list (equal_list (equal_subst_elt c)) (fst s1) (fst s2)
+  = equal_list (equal_list (equal_subst_elt c)) s1.subst_lists s2.subst_lists
 
 and equal_bv (c:bool) b1 b2
   : ML bool
@@ -259,6 +259,7 @@ and equal_binder_qualifier (c:bool) b1 b2
   match b1, b2 with
   | Implicit b1, Implicit b2 -> b1 = b2
   | Equality, Equality -> true
+  | TcArg, TcArg -> true
   | Meta t1, Meta t2 -> equal_term_c c t1 t2
   | _ -> false
 

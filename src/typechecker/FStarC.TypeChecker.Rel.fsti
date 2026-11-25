@@ -53,6 +53,14 @@ val head_matches_delta (env:env) (logical:bool) (smt_ok:bool) (t1 t2:typ) : ML (
 val flex_prob_closing         : env -> binders -> prob -> ML bool
 val simplify_vc               : full_norm_allowed:bool -> env -> term -> ML term (* the inner simplification of simplify_guard. *)
 val simplify_guard            : env -> guard_t -> ML guard_t
+(* The argument positions of a typeclass that are functional dependencies,
+   from its [@@Tactics.Typeclasses.fundeps [...]] attribute. *)
+val class_fundeps (env:env) (cls:Ident.lident) : ML (list int)
+
+(* Whether a typeclass goal has free uvars outside of the functional
+   dependencies of its class. *)
+val typeclass_goal_is_open (env:env) (typ:typ) : ML bool
+
 val print_pending_implicits: guard_t -> ML string
 val guard_to_string           : env -> guard_t -> ML string
 (* Rel is an elaborator: it solves unification variables, but it computes
@@ -87,11 +95,22 @@ In any case, if these functions return, they return a guard with guard_f = Trivi
 val discharge_guard           : env -> guard_t -> ML guard_t
 val discharge_guard_no_smt    : env -> guard_t -> ML guard_t
 val teq_nosmt        : env -> typ -> typ -> ML (option guard_t)
+
 val subtype_nosmt       : env -> typ -> typ -> ML (option guard_t)
 val try_subtype : env -> typ -> typ -> ML (option guard_t)
 (* Solve the implicits whose type has a single inhabitant (e.g. unit,
    squash); returns the implicits and whether any was solved. *)
 val try_solve_single_valued_implicits : env -> is_tac:bool -> Env.implicits -> ML (Env.implicits & bool)
+(* Run typeclass resolution now on the pending [tcresolve] implicits of the
+   guard whose goals are closed except at the functional dependencies of their
+   class, so that the fundeps are known when checking subsequent arguments.
+   An input of the class that is an unsolved uvar is first solved to the bound
+   given by [bound_of], if any (e.g. from a deferred subtyping constraint).
+   [bound_of true] only returns ground bounds; [bound_of false] may return a
+   bound with uvars, whose own uvars are then pinned in turn.
+   Goals that fail are kept for [resolve_implicits], which reports the error.
+   Disabled by [--ext compat:no_eager_tcresolve]. *)
+val resolve_closed_typeclass_implicits : env -> bound_of:(bool -> term -> ML (option term)) -> guard_t -> ML guard_t
 val resolve_implicits         : env -> guard_t -> ML guard_t
 val resolve_generalization_implicits : env -> guard_t -> ML guard_t
 val resolve_implicits_tac     : env -> guard_t -> ML tagged_implicits

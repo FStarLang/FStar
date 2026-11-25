@@ -1090,13 +1090,13 @@ let mkForall' (r : FStarC_Range_Type.range) (tmp : (((term) list) list * (Prims.
     | (pats, wopt, vars, body) -> (mkQuant' r (Forall, pats, wopt, vars, body))
   )
 
-let fStarC_Class_Show_show__term_145 (tmp : term) : string =
+let fStarC_Class_Show_show__term_146 (tmp : term) : string =
   (print_smt_term tmp)
 
 let fStarC_Class_Show_show__tuple2_term_term (tmp : (term * term)) : string =
   (match tmp with
-    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__term_145 x1) in
-      let tmp2 = (fStarC_Class_Show_show__term_145 x2) in
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__term_146 x1) in
+      let tmp2 = (fStarC_Class_Show_show__term_146 x2) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat ", " tmp3) in
       let tmp5 = (Prims.strcat tmp1 tmp4) in
@@ -1113,6 +1113,31 @@ let mk_decls_trivial (decls : (decl) list) : (decls_elt) list =
     )) decls) in
   let tmp1 = { sym_name = None; key = None; decls = decls; a_names = tmp } in
   (tmp1 :: []))
+
+let rec fStarC_AVLMap_fold__int_tuple2_bv_term_list_string (m : (Prims.int, (FStarC_Syntax_Syntax.bv * term)) FStarC_AVLMap.tree) (acc : (string) list) : (string) list =
+  (match m with
+    | FStarC_AVLMap.Leaf -> acc
+    | (FStarC_AVLMap.Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold__int_tuple2_bv_term_list_string l acc) in
+      let acc2 = (match value with
+          | (x, u__term) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__bv x) in
+            (tmp1 :: acc1))
+        ) in
+      (fStarC_AVLMap_fold__int_tuple2_bv_term_list_string r acc2))
+  )
+
+let fStarC_PIMap_fold__tuple2_bv_term_list_string (m : (Prims.int, (FStarC_Syntax_Syntax.bv * term)) FStarC_AVLMap.tree) (acc : (string) list) : (string) list =
+  (fStarC_AVLMap_fold__int_tuple2_bv_term_list_string m acc)
+
+let rec fStarC_AVLMap_fold__string_tree_int_tuple2_bv_term_list_string (m : (string, (Prims.int, (FStarC_Syntax_Syntax.bv * term)) FStarC_AVLMap.tree) FStarC_AVLMap.tree) (acc : (string) list) : (string) list =
+  (match m with
+    | FStarC_AVLMap.Leaf -> acc
+    | (FStarC_AVLMap.Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold__string_tree_int_tuple2_bv_term_list_string l acc) in
+      let acc2 = (fStarC_PIMap_fold__tuple2_bv_term_list_string value acc1) in
+      (fStarC_AVLMap_fold__string_tree_int_tuple2_bv_term_list_string r acc2))
+  )
+
+let fStarC_PSMap_fold__tree_int_tuple2_bv_term_list_string (m : (string, (Prims.int, (FStarC_Syntax_Syntax.bv * term)) FStarC_AVLMap.tree) FStarC_AVLMap.tree) (acc : (string) list) : (string) list =
+  (fStarC_AVLMap_fold__string_tree_int_tuple2_bv_term_list_string m acc)
 
 let mk_U_succ (u : term) : term =
   (mkApp ("U_succ", (u :: [])))

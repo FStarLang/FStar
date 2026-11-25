@@ -242,6 +242,22 @@ and env = {
   (* The subset of [iface_lids] that the interface declares with a `val`, i.e.
   the names the implementation is expected to define. *)
   iface_val_lids : RBSet.t lident;
+
+  (* Typeclass resolution.  [tc_global] is the scope of the top level: no
+  local instances, and a cache that is replaced whenever an instance is
+  added.  [tc_scope] is the scope of [tc_scope_gamma]; it is only valid if
+  that is physically [gamma] (see [tc_scope_of]): code that sets [gamma]
+  directly need not maintain it.  Pushing a variable whose type is a class
+  (as decided by [tc_class_of_typ] at that point) makes it a local instance
+  and allocates a new cache. *)
+  tc_global      : FStarC.Syntax.Syntax.tc_scope;
+  tc_scope       : FStarC.Syntax.Syntax.tc_scope;
+  tc_scope_gamma : list binding;
+  tc_class_of_typ : env -> typ -> ML (option lident); (* callback to [TcResolve.class_of_typ] *)
+  tc_resolve     : env -> FStarC.Syntax.Syntax.tc_scope -> typ -> Range.t -> ML (term & list implicit);
+    (* callback to [TcResolve.resolve]: solve a typeclass goal in [gamma],
+       returning the instance and the implicits it introduced; raises an
+       error on failure *)
 }
 and solver_depth_t = int & int & int
 and solver_t = {
@@ -284,6 +300,9 @@ val set_tc_hooks: env -> tcenv_hooks -> env
 val set_dep_graph: env -> FStarC.Parser.Dep.deps -> env
 
 val dep_graph: env -> FStarC.Parser.Dep.deps
+
+(* A fresh typeclass scope with these local instances and an empty cache. *)
+val new_tc_scope (locals:list bv) : ML tc_scope
 
 val with_restored_scope (e:env) (f:env -> ML ('a & env)) : ML ('a & env)
 (* Keeping track of declarations and definitions. This operates
@@ -347,7 +366,10 @@ val initial_env : FStarC.Parser.Dep.deps ->
                   (env -> term -> term -> ML bool) ->
                   solver_t -> lident ->
                   (list step -> env -> term -> ML term) ->
-                  core_check_t -> ML (env)
+                  core_check_t ->
+                  (env -> typ -> ML (option lident)) ->
+                  (env -> tc_scope -> typ -> Range.t -> ML (term & list implicit)) ->
+                  ML (env)
 
 (* Some utilities *)
 
@@ -610,7 +632,12 @@ val update_effect_lattice  : env -> src:lident -> tgt:lident -> ML (env)
 val add_lift              : env -> src:lident -> tgt:lident -> tscheme -> ML (env)
 val lookup_lift           : env -> src:lident -> tgt:lident -> ML (option tscheme)
 
-val push_bv               : env -> bv -> env
+(* The typeclass scope of [env.gamma]: [env.tc_scope] if it is up to date,
+   otherwise recomputed from [gamma] (with a fresh cache, unless there are no
+   local instances). *)
+val tc_scope_of (env:env) : ML tc_scope
+
+val push_bv               : env -> bv -> ML env
 
 val push_bvs              : env -> list bv -> ML (env)
 
@@ -618,7 +645,7 @@ val pop_bv                : env -> option (bv & env)
 
 val push_binders          : env -> binders -> ML (env)
 
-val push_let_binding      : env -> lbname -> tscheme -> env
+val push_let_binding      : env -> lbname -> tscheme -> ML env
 
 val push_univ_vars        : env -> univ_names -> ML (env)
 
@@ -724,7 +751,7 @@ val new_implicit_var_aux
   (unrefine:bool)
 : ML (term & (ctx_uvar & Range.t) & guard_t)
 
-val uvar_meta_for_binder (b:binder) : ML (option ctx_uvar_meta_t & (*should_unrefine:*)bool)
+val uvar_meta_for_binder (env:env) (b:binder) : ML (option ctx_uvar_meta_t & (*should_unrefine:*)bool)
 
 (* layered effect utils *)
 

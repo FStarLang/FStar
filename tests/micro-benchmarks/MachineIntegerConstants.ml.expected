@@ -27,8 +27,8 @@ let machineIntegerConstants_e_int64 (x : FStar_Int64.t) : FStar_Int64.t =
 
 let machineIntegerConstants_e_uint8 (x : FStar_UInt8.t) : FStar_UInt8.t =
   (match x with
-    | u__iconst0 when u__iconst0 = (FStar_UInt8.uint_to_t (Prims.of_int (22))) -> (FStar_UInt8.add (FStar_UInt8.uint_to_t (Prims.of_int (42))) x)
-    | tmp -> (FStar_UInt8.uint_to_t Prims.int_zero)
+    | (22 : FStar_UInt8.t) -> (FStar_UInt8.add (42 : FStar_UInt8.t) x)
+    | tmp -> (0 : FStar_UInt8.t)
   )
 
 let machineIntegerConstants_e_uint16 (x : FStar_UInt16.t) : FStar_UInt16.t =

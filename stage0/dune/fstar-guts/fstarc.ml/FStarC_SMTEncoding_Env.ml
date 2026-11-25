@@ -222,11 +222,12 @@ let gen_term_var (env : env_t) (x : FStarC_Syntax_Syntax.bv) : (string * FStarC_
   let ysym = (Prims.strcat "@x" tmp) in
   let y = (FStarC_SMTEncoding_Util.mkFreeV (FStarC_SMTEncoding_Term.mk_fv (ysym, FStarC_SMTEncoding_Term.Term_sort))) in
   let tmp1 = (add_bvar_binding (x, y) (env).bvar_bindings) in
-  let tmp2 = { bvar_bindings = tmp1;
+  let tmp2 = (FStarC_TypeChecker_Env.push_bv (env).tcenv x) in
+  let tmp3 = { bvar_bindings = tmp1;
       fvar_bindings = (env).fvar_bindings;
       fvar_bindings1 = (env).fvar_bindings1;
       depth = (Prims.op_Plus (env).depth Prims.int_one);
-      tcenv = (FStarC_TypeChecker_Env.push_bv (env).tcenv x);
+      tcenv = tmp2;
       warn = (env).warn;
       nolabels = (env).nolabels;
       use_zfuel_name = (env).use_zfuel_name;
@@ -234,7 +235,7 @@ let gen_term_var (env : env_t) (x : FStarC_Syntax_Syntax.bv) : (string * FStarC_
       current_module_name = (env).current_module_name;
       encoding_quantifier = (env).encoding_quantifier;
       global_cache = (env).global_cache } in
-  (ysym, y, tmp2))
+  (ysym, y, tmp3))
 
 let lookup_bvar_binding (env : env_t) (bv : FStarC_Syntax_Syntax.bv) : ((FStarC_Syntax_Syntax.bv * FStarC_SMTEncoding_Term.term)) option =
   (match (FStarC_PSMap.try_find (env).bvar_bindings (FStarC_Ident.string_of_id (bv).FStarC_Syntax_Syntax.ppname)) with
@@ -242,20 +243,28 @@ let lookup_bvar_binding (env : env_t) (bv : FStarC_Syntax_Syntax.bv) : ((FStarC_
     | None -> None
   )
 
+let rec fStarC_AVLMap_fold__string_fvar_binding_list_lident (m : (string, fvar_binding) FStarC_AVLMap.tree) (acc : (FStarC_Ident.lident) list) : (FStarC_Ident.lident) list =
+  (match m with
+    | FStarC_AVLMap.Leaf -> acc
+    | (FStarC_AVLMap.Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold__string_fvar_binding_list_lident l acc) in
+      let acc2 = ((value).fvar_lid :: acc1) in
+      (fStarC_AVLMap_fold__string_fvar_binding_list_lident r acc2))
+  )
+
+let fStarC_PSMap_fold__fvar_binding_list_lident (m : (string, fvar_binding) FStarC_AVLMap.tree) (acc : (FStarC_Ident.lident) list) : (FStarC_Ident.lident) list =
+  (fStarC_AVLMap_fold__string_fvar_binding_list_lident m acc)
+
 let print_env (e : env_t) : string =
-  (let bvars = (FStarC_PSMap.fold (e).bvar_bindings (fun u__k pi acc -> (FStarC_PIMap.fold pi (fun u__i tmp acc1 -> (match tmp with
-      | (x, u__term) -> (let tmp1 = (FStarC_Syntax_Print.fStarC_Class_Show_show__bv x) in
-        (tmp1 :: acc1))
-    )) acc)) []) in
-  let allvars = (FStarC_PSMap.fold (match ((e).fvar_bindings, (e).fvar_bindings1) with
+  (let bvars = (FStarC_SMTEncoding_Term.fStarC_PSMap_fold__tree_int_tuple2_bv_term_list_string (e).bvar_bindings []) in
+  let allvars = (fStarC_PSMap_fold__fvar_binding_list_lident (match ((e).fvar_bindings, (e).fvar_bindings1) with
       | (u__1, u__2) -> u__1
-    ) (fun u__k fvb acc -> ((fvb).fvar_lid :: acc)) []) in
+    ) []) in
   (ignore (match (BatList.rev allvars) with
     | [] -> ""
     | (l :: tmp) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident l) in
       (Prims.strcat "...," tmp1))
   ));
-  let tmp = (FStarC_Ident.fStarC_Class_Show_show__list_lident_98 allvars) in
+  let tmp = (FStarC_Ident.fStarC_Class_Show_show__list_lident_106 allvars) in
   let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 bvars) in
   (FStarC_Format.fmt2 "{allvars=%s; bvars=%s }" tmp tmp1))
 
@@ -411,11 +420,12 @@ let primitive_projector_by_pos (env : FStarC_TypeChecker_Env.env) (lid : FStarC_
 
 let push_term_var (env : env_t) (x : FStarC_Syntax_Syntax.bv) (t : FStarC_SMTEncoding_Term.term) : env_t =
   (let tmp = (add_bvar_binding (x, t) (env).bvar_bindings) in
+  let tmp1 = (FStarC_TypeChecker_Env.push_bv (env).tcenv x) in
   { bvar_bindings = tmp;
     fvar_bindings = (env).fvar_bindings;
     fvar_bindings1 = (env).fvar_bindings1;
     depth = (env).depth;
-    tcenv = (FStarC_TypeChecker_Env.push_bv (env).tcenv x);
+    tcenv = tmp1;
     warn = (env).warn;
     nolabels = (env).nolabels;
     use_zfuel_name = (env).use_zfuel_name;
@@ -503,11 +513,12 @@ let new_term_constant_from_string (env : env_t) (x : FStarC_Syntax_Syntax.bv) (s
   (let ysym = ((varops).mk_unique str) in
   let y = (FStarC_SMTEncoding_Util.mkApp (ysym, [])) in
   let tmp = (add_bvar_binding (x, y) (env).bvar_bindings) in
-  let tmp1 = { bvar_bindings = tmp;
+  let tmp1 = (FStarC_TypeChecker_Env.push_bv (env).tcenv x) in
+  let tmp2 = { bvar_bindings = tmp;
       fvar_bindings = (env).fvar_bindings;
       fvar_bindings1 = (env).fvar_bindings1;
       depth = (env).depth;
-      tcenv = (FStarC_TypeChecker_Env.push_bv (env).tcenv x);
+      tcenv = tmp1;
       warn = (env).warn;
       nolabels = (env).nolabels;
       use_zfuel_name = (env).use_zfuel_name;
@@ -515,7 +526,7 @@ let new_term_constant_from_string (env : env_t) (x : FStarC_Syntax_Syntax.bv) (s
       current_module_name = (env).current_module_name;
       encoding_quantifier = (env).encoding_quantifier;
       global_cache = (env).global_cache } in
-  (ysym, y, tmp1))
+  (ysym, y, tmp2))
 
 let fStarC_Class_Show_show__fvar_binding (tmp : fvar_binding) : string =
   (fvb_to_string tmp)
@@ -550,6 +561,19 @@ let reset_current_module_fvbs (env : env_t) : env_t =
     current_module_name = (env).current_module_name;
     encoding_quantifier = (env).encoding_quantifier;
     global_cache = (env).global_cache }
+
+let rec fStarC_AVLMap_fold__string_fvar_binding_tree_string_fvar_binding (tmp : FStarC_Syntax_Syntax.modul) (m : (string, fvar_binding) FStarC_AVLMap.tree) (acc : (string, fvar_binding) FStarC_AVLMap.tree) : (string, fvar_binding) FStarC_AVLMap.tree =
+  (match m with
+    | FStarC_AVLMap.Leaf -> acc
+    | (FStarC_AVLMap.Node (l, key, value, r, tmp1)) -> (let acc1 = (fStarC_AVLMap_fold__string_fvar_binding_tree_string_fvar_binding tmp l acc) in
+      let tmp2 = (FStarC_Ident.lid_of_ids (FStarC_Ident.ns_of_lid (value).fvar_lid)) in
+      let tmp3 = (FStarC_Ident.lid_equals tmp2 (tmp).FStarC_Syntax_Syntax.name) in
+      let acc2 = (if tmp3 then acc1 else (FStarC_PSMap.add acc1 key value)) in
+      (fStarC_AVLMap_fold__string_fvar_binding_tree_string_fvar_binding tmp r acc2))
+  )
+
+let fStarC_PSMap_fold__fvar_binding_tree_string_fvar_binding (tmp : FStarC_Syntax_Syntax.modul) (m : (string, fvar_binding) FStarC_AVLMap.tree) (acc : (string, fvar_binding) FStarC_AVLMap.tree) : (string, fvar_binding) FStarC_AVLMap.tree =
+  (fStarC_AVLMap_fold__string_fvar_binding_tree_string_fvar_binding tmp m acc)
 
 let get_current_module_fvbs (env : env_t) : (fvar_binding) list =
   (match ((env).fvar_bindings, (env).fvar_bindings1) with

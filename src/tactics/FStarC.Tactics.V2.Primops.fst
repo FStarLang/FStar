@@ -111,6 +111,7 @@ let ops = [
   mk_tac_step_2 0 "tcc" tcc tcc;
   mk_tac_step_2 0 "tc"  tc tc;
   mk_tac_step_1 0 "unshelve" unshelve unshelve;
+  mk_tac_step_1 0 "tcresolve_native" tcresolve_native tcresolve_native;
 
   mk_tac_step_2 1 "unquote"
     #e_any #RE.e_term #e_any

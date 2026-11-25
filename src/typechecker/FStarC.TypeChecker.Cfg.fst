@@ -269,7 +269,6 @@ let prim_from_list (l : list primitive_step) : ML prim_step_set =
 
 (* Turn the lists into psmap sets, for efficiency of lookup *)
 let built_in_primitive_steps = prim_from_list built_in_primitive_steps_list
-let env_dependent_ops env : ML prim_step_set = prim_from_list (env_dependent_ops env)
 let simplification_steps env : ML (PSMap.t primitive_step) = prim_from_list (simplification_ops_list env)
 
 instance showable_cfg : showable cfg = {
@@ -284,7 +283,12 @@ instance showable_cfg : showable cfg = {
 let cfg_env cfg = cfg.tcenv
 
 let find_prim_step cfg fv : ML (option primitive_step) =
-    match PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name) with
+    let r =
+      match PSMap.try_find cfg.primitive_steps (I.string_of_lid fv.fv_name) with
+      | None when cfg.env_dependent_steps -> Primops.env_dependent_op cfg.tcenv fv.fv_name
+      | r -> r
+    in
+    match r with
     | Some ps when ps.unrepresentable_result && not cfg.steps.unrepresentable_primops -> None
     | r -> r
 
@@ -384,6 +388,10 @@ let cached_steps : unit -> ML prim_step_set =
             (merge_steps (retrieve_plugins ())
                 (retrieve_extra_steps ()))
         in
+        (* The env-dependent steps take precedence over these; leave
+           them out so [find_prim_step] falls through to them. *)
+        let steps = List.fold_left (fun m l -> PSMap.remove m (I.string_of_lid l))
+                      steps Primops.env_dependent_op_lids in
         memo := steps;
         extendable_primops_dirty := false;
         steps
@@ -421,7 +429,8 @@ let config' psteps s e : ML cfg =
         | [] -> [Env.NoDelta]
         | _ -> d in
     let steps = to_fsteps s |> add_nbe in
-    let psteps = add_steps (merge_steps (env_dependent_ops e) (cached_steps ())) psteps in
+    (* The env-dependent steps are looked up lazily, see [find_prim_step]. *)
+    let psteps = add_steps (cached_steps ()) psteps in
     let dbg_flag = List.contains NormDebug s in
     {
       tcenv = e;
@@ -445,6 +454,7 @@ let config' psteps s e : ML cfg =
       steps = steps;
       delta_level = d;
       primitive_steps = psteps;
+      env_dependent_steps = true;
       strong = false;
       memoize_lazy = true;
       normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();

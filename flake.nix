@@ -8,12 +8,17 @@
       url = "github:FStarLang/karamel/fstar2";
       flake = false;
     };
+    mimalloc-src = {
+      url = "github:microsoft/mimalloc/v3.6.1";
+      flake = false;
+    };
   };
 
   outputs =
     {
       flake-utils,
       karamel-src,
+      mimalloc-src,
       nixpkgs,
       self,
     }:
@@ -47,7 +52,7 @@
         };
 
         fstar = ocamlPackages.callPackage ./.nix/fstar.nix {
-          inherit version z3 ocamlLibraryPath karamel-src;
+          inherit version z3 ocamlLibraryPath karamel-src mimalloc-src;
           karamelOcamlDeps = karamelDrv.propagatedBuildInputs;
         };
 

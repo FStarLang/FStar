@@ -101,6 +101,7 @@ let rec elaborate_pat env p : ML pat = //Adds missing implicit patterns to const
               end
 
             | (_, Some (Implicit _))
+            | (_, Some TcArg)
             | (_, Some (Meta _)) when p_imp ->
                 (p, true)::aux formals' pats'
 
@@ -109,6 +110,7 @@ let rec elaborate_pat env p : ML pat = //Adds missing implicit patterns to const
                 let p = maybe_dot inaccessible a (range_of_lid fv.fv_name) in
                 (p, true)::aux formals' pats
 
+            | (_, Some TcArg)
             | (_, Some (Meta _)) ->
                 let a = Syntax.new_bv (Some p.p) tun in
                 let p = maybe_dot false a (range_of_lid fv.fv_name) in

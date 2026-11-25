@@ -201,8 +201,7 @@ flag when `compress_uvars` is set
 
 **Terms not checked again.** These are justified otherwise:
 
-* The result of postprocessing (`postprocess_with`,
-  `postprocess_for_extraction_with`) is justified by the equality proof the
+* The result of postprocessing (`postprocess_with`) is justified by the equality proof the
   tactic must produce.
 * Typed splices that claim their result is already checked
   (`checked = true`, e.g. Pulse) are trusted. This rests on the type of

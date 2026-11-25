@@ -51,7 +51,7 @@ let no_free_vars : (FStarC_Syntax_Syntax.free_vars * (FStarC_Ident.lident) FStar
   (let tmp = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__bv_list_bv ()) in
   let tmp1 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__ctx_uvar_list_ctx_uvar ()) in
   let tmp2 = (FStarC_Syntax_Syntax.fStarC_Class_Setlike_empty__tuple3_p_uvar_rec_option_version_range ()) in
-  let tmp3 = (FStarC_Ident.fStarC_Class_Setlike_empty__ident_list_ident ()) in
+  let tmp3 = (FStarC_FlatSet.fStarC_Class_Setlike_empty__ident_list_ident ()) in
   let tmp4 = { FStarC_Syntax_Syntax.free_names = tmp;
       free_uvars = tmp1;
       free_univs = tmp2;
@@ -93,7 +93,7 @@ let singleton_univ_name (x : FStarC_Ident.ident) : (FStarC_Syntax_Syntax.free_va
   (let tmp = (match no_free_vars with
       | (u__1, u__2) -> u__1
     ) in
-  let tmp1 = (FStarC_Ident.fStarC_Class_Setlike_singleton__ident_list_ident x) in
+  let tmp1 = (FStarC_FlatSet.fStarC_Class_Setlike_singleton__ident_list_ident x) in
   let tmp2 = { FStarC_Syntax_Syntax.free_names = (tmp).FStarC_Syntax_Syntax.free_names;
       free_uvars = (tmp).FStarC_Syntax_Syntax.free_uvars;
       free_univs = (tmp).FStarC_Syntax_Syntax.free_univs;
@@ -196,7 +196,7 @@ and free_names_and_uvs' (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.
   (match (t).FStarC_Syntax_Syntax.n with
     | (FStarC_Syntax_Syntax.Tm_delayed (tmp)) -> (FStarC_Effect.failwith "Impossible")
     | (FStarC_Syntax_Syntax.Tm_name (x)) -> (singleton_bv x)
-    | (FStarC_Syntax_Syntax.Tm_uvar (uv, (s, tmp))) -> (let tmp1 = (singleton_uv uv) in
+    | (FStarC_Syntax_Syntax.Tm_uvar (uv, { FStarC_Syntax_Syntax.subst_lists = s; subst_use_range = tmp; _ })) -> (let tmp1 = (singleton_uv uv) in
       let tmp2 = (if ((=) use_cache Full) then (let tmp2 = (ctx_uvar_typ uv) in
         (free_names_and_uvars tmp2 use_cache)) else no_free_vars) in
       (op_Plus_Plus tmp1 tmp2))

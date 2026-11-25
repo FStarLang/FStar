@@ -45,6 +45,7 @@ let rec aqual_eq (a1 : FStarC_Reflection_V2_Data.aqualv) (a2 : FStarC_Reflection
     | (FStarC_Reflection_V2_Data.Q_Explicit, FStarC_Reflection_V2_Data.Q_Explicit) -> (fun tmp -> true)
     | (FStarC_Reflection_V2_Data.Q_Equality, FStarC_Reflection_V2_Data.Q_Equality) -> (fun tmp -> true)
     | ((FStarC_Reflection_V2_Data.Q_Meta (m1)), (FStarC_Reflection_V2_Data.Q_Meta (m2))) -> (term_eq m1 m2)
+    | (FStarC_Reflection_V2_Data.Q_TcArg, FStarC_Reflection_V2_Data.Q_TcArg) -> (fun tmp -> true)
     | tmp -> (fun tmp1 -> false)
   )
 

@@ -3,8 +3,9 @@
 #
 #   make            build every benchmark with every backend
 #   make bench      build, then time them (RUNS=5 runs each; median time
-#                   and peak RSS), printing a markdown table; Cherry also
-#                   runs with mimalloc and jemalloc where installed
+#                   and peak RSS), printing a markdown table; Cherry links
+#                   mimalloc, and also runs with the system malloc, and with
+#                   the mimalloc and jemalloc shared libraries where installed
 #
 # BACKENDS selects a subset (cherry ocaml fsharp); F# is left out when no
 # .NET 10 SDK is installed.  Each program checks its own result and exits
@@ -21,15 +22,16 @@ else
 BACKENDS ?= cherry ocaml fsharp
 endif
 
-# Cherry is also run with these mallocs, when they are installed, through
-# LD_PRELOAD: the runtime allocates every cell with malloc, so the allocator
-# is a large part of its time.
+# Cherry links mimalloc statically (cherry.md, Allocation).  It is also built
+# with the system malloc (cherry+system), which is also run with these mallocs,
+# when they are installed, through LD_PRELOAD: the runtime allocates every
+# cell with malloc, so the allocator is a large part of its time.
 LIBDIRS = /usr/lib/x86_64-linux-gnu /usr/lib64 /usr/lib /usr/local/lib
 MIMALLOC ?= $(firstword $(wildcard $(addsuffix /libmimalloc.so*,$(LIBDIRS))))
 JEMALLOC ?= $(firstword $(wildcard $(addsuffix /libjemalloc.so*,$(LIBDIRS))))
 PRELOADS = $(if $(MIMALLOC),mimalloc=$(MIMALLOC)) $(if $(JEMALLOC),jemalloc=$(JEMALLOC))
 RUN_BACKENDS ?= $(filter cherry,$(BACKENDS)) \
-  $(if $(filter cherry,$(BACKENDS)),$(foreach p,$(PRELOADS),cherry+$(firstword $(subst =, ,$(p))))) \
+  $(if $(filter cherry,$(BACKENDS)),cherry+system $(foreach p,$(PRELOADS),cherry+$(firstword $(subst =, ,$(p))))) \
   $(filter-out cherry,$(BACKENDS))
 
 RUNS ?= 5
@@ -49,8 +51,19 @@ $(OUTPUT_DIR)/cherry/%.c: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	$(FSTAR) --codegen Cherry \
 	  --custard_main $*.main $*.fst -o $@
 
-$(OUTPUT_DIR)/cherry/%.exe: $(OUTPUT_DIR)/cherry/%.c
+$(OUTPUT_DIR)/cherry/mimalloc.o:
+	$(call msg, "CC", mimalloc)
+	@mkdir -p $(dir $@)
+	$(Q)$(CHERRY_CC) -std=c11 $(CHERRY_CFLAGS) -I$(CHERRY_INC)/mimalloc/include \
+	  -c $(CHERRY_INC)/cherry_mimalloc.c -o $@
+
+$(OUTPUT_DIR)/cherry/%.exe: $(OUTPUT_DIR)/cherry/%.c $(OUTPUT_DIR)/cherry/mimalloc.o
 	$(call msg, "CC", $*)
+	$(Q)$(CHERRY_CC) -std=c11 $(CHERRY_CFLAGS) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c \
+	  $(OUTPUT_DIR)/cherry/mimalloc.o -pthread -o $@
+
+$(OUTPUT_DIR)/cherry/%.system.exe: $(OUTPUT_DIR)/cherry/%.c
+	$(call msg, "CC", $*.system)
 	$(Q)$(CHERRY_CC) -std=c11 $(CHERRY_CFLAGS) -I$(CHERRY_INC) $< $(CHERRY_INC)/cherry.c -o $@
 
 $(OUTPUT_DIR)/ocaml/%.ml: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
@@ -74,7 +87,7 @@ $(OUTPUT_DIR)/fs/%.built: $(CACHE_DIR)/%.fst.checked $(FSTAR_EXE)
 	  || { cat build.log; false; }
 	$(Q)touch $@
 
-exe_cherry = $(OUTPUT_DIR)/cherry/$(1).exe
+exe_cherry = $(OUTPUT_DIR)/cherry/$(1).exe $(OUTPUT_DIR)/cherry/$(1).system.exe
 exe_ocaml  = $(OUTPUT_DIR)/ocaml/$(1).exe
 exe_fsharp = $(OUTPUT_DIR)/fs/$(1).built
 

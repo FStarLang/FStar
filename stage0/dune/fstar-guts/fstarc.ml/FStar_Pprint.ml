@@ -13,12 +13,6 @@ let blank (n : Prims.int) : PPrint.document =
 let prefix (n : Prims.int) (b : Prims.int) (eta : PPrint.document) (eta1 : PPrint.document) : PPrint.document =
   (PPrint.prefix (Z.to_int n) (Z.to_int b) eta eta1)
 
-let pretty_string (rfrac : float) (width : Prims.int) (eta : PPrint.document) : string =
-  ((fun rfrac width doc -> let buf = Buffer.create 0 in PPrint.ToBuffer.pretty rfrac width buf doc; Buffer.contents buf) rfrac (Z.to_int width) eta)
-
-let render (doc : PPrint.document) : string =
-  (pretty_string (1.0) (Prims.of_int (80)) doc)
-
 let soft_surround (n : Prims.int) (b : Prims.int) (eta : PPrint.document) (eta1 : PPrint.document) (eta2 : PPrint.document) : PPrint.document =
   (PPrint.soft_surround (Z.to_int n) (Z.to_int b) eta eta1 eta2)
 
@@ -39,6 +33,12 @@ let infix (n : Prims.int) (b : Prims.int) (eta : PPrint.document) (eta1 : PPrint
 
 let doc_of_bool (b : bool) : PPrint.document =
   (PPrint.string (if b then "true" else "false"))
+
+let pretty_string (rfrac : float) (width : Prims.int) (eta : PPrint.document) : string =
+  ((fun rfrac width doc -> let buf = Buffer.create 0 in PPrint.ToBuffer.pretty rfrac width buf doc; Buffer.contents buf) rfrac (Z.to_int width) eta)
+
+let render (doc : PPrint.document) : string =
+  (pretty_string (1.0) (Prims.of_int (80)) doc)
 
 let surround (n : Prims.int) (b : Prims.int) (eta : PPrint.document) (eta1 : PPrint.document) (eta2 : PPrint.document) : PPrint.document =
   (PPrint.surround (Z.to_int n) (Z.to_int b) eta eta1 eta2)

@@ -361,7 +361,7 @@ let bqual_to_string' (s : string) (b : (FStarC_Syntax_Syntax.binder_qualifier) o
     | (Some ((FStarC_Syntax_Syntax.Implicit (false)))) -> (Prims.strcat "#" s)
     | (Some ((FStarC_Syntax_Syntax.Implicit (true)))) -> (Prims.strcat "#." s)
     | (Some (FStarC_Syntax_Syntax.Equality)) -> (Prims.strcat "$" s)
-    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) when (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t) -> (Prims.strcat "{|" (Prims.strcat s "|}"))
+    | (Some (FStarC_Syntax_Syntax.TcArg)) -> (Prims.strcat "{|" (Prims.strcat s "|}"))
     | (Some ((FStarC_Syntax_Syntax.Meta (t)))) -> (let tmp = (term_to_string t) in
       let tmp1 = (Prims.strcat tmp (Prims.strcat "]" s)) in
       (Prims.strcat "#[" tmp1))
@@ -470,10 +470,6 @@ let fStarC_Class_Show_show__list_list_subst_elt (tmp : ((FStarC_Syntax_Syntax.su
 let comp_to_string' (env : FStarC_Syntax_DsEnv.env) (c : (FStarC_Syntax_Syntax.comp_typ) FStarC_Syntax_Syntax.syntax) : string =
   (let tmp = (FStarC_Options.ugly ()) in
   (if tmp then (FStarC_Syntax_Print_Ugly.comp_to_string c) else (FStarC_Syntax_Print_Pretty.comp_to_string' env c)))
-
-let fStarC_Class_Show_show__clist_universe (tmp : (FStarC_Syntax_Syntax.universe) FStarC_CList.clist) : string =
-  (let tmp1 = (FStarC_CList.fStarC_Class_Listlike_to_list__universe_clist_universe tmp) in
-  (fStarC_Class_Show_show__list_universe tmp1))
 
 let fStarC_Class_Show_show__tuple2_tuple3_p_uvar_rec_version_range_string (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range) * string)) : string =
   (match tmp with
@@ -593,31 +589,6 @@ let args_to_string (args : (((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.s
     )) args) in
   (BatString.concat " " tmp))
 
-let fStarC_Class_Show_show__option_syntax_term'_99 (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : string =
-  (match tmp with
-    | None -> "None"
-    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x) in
-      (Prims.strcat "Some " tmp1))
-  )
-
-let rec fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_101 (l : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
-  (match l with
-    | [] -> ""
-    | (x :: []) -> (fStarC_Class_Show_show__ctx_uvar x)
-    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__ctx_uvar x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_101 xs) in
-      let tmp2 = (Prims.strcat ", " tmp1) in
-      (Prims.strcat tmp tmp2))
-  )
-
-let fStarC_Class_Show_show__list_ctx_uvar_101 (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_101 tmp) in
-  let tmp2 = (Prims.strcat tmp1 "]") in
-  (Prims.strcat "[" tmp2))
-
-let fStarC_Class_Show_show__list_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
-  (fStarC_Class_Show_show__list_ctx_uvar_101 tmp)
-
 let rec fStarC_Class_Show_show__show_list_aux__list_syntax_term' (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
   (match l with
     | [] -> ""
@@ -633,27 +604,6 @@ let fStarC_Class_Show_show__list_syntax_term' (tmp : ((FStarC_Syntax_Syntax.term
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
-let fStarC_Class_Show_show__tuple3_p_uvar_rec_option_version_range (tmp : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
-  (fStarC_Class_Show_show__universe (FStarC_Syntax_Syntax.U_unif ((match tmp with (custard_tup, _, _) -> custard_tup), (match tmp with (_, custard_tup, _) -> custard_tup), (match tmp with (_, _, custard_tup) -> custard_tup))))
-
-let rec fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_rec_version_range_104 (l : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
-  (match l with
-    | [] -> ""
-    | (x :: []) -> (fStarC_Class_Show_show__tuple3_p_uvar_rec_option_version_range x)
-    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__tuple3_p_uvar_rec_option_version_range x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_rec_version_range_104 xs) in
-      let tmp2 = (Prims.strcat ", " tmp1) in
-      (Prims.strcat tmp tmp2))
-  )
-
-let fStarC_Class_Show_show__list_tuple3_p_uvar_rec_version_range_104 (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_rec_version_range_104 tmp) in
-  let tmp2 = (Prims.strcat tmp1 "]") in
-  (Prims.strcat "[" tmp2))
-
-let fStarC_Class_Show_show__list_tuple3_p_uvar_rec_version_range (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
-  (fStarC_Class_Show_show__list_tuple3_p_uvar_rec_version_range_104 tmp)
-
 let fStarC_Class_PP_pp__option_arg_qualifier (tmp : (FStarC_Syntax_Syntax.arg_qualifier) option) : PPrint.document =
   (let tmp1 = (fStarC_Class_Show_show__option_arg_qualifier tmp) in
   (PPrint.arbitrary_string tmp1))
@@ -667,6 +617,62 @@ let fStarC_Class_Show_show__option_binder_qualifier (tmp : (FStarC_Syntax_Syntax
     | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__binder_qualifier x) in
       (Prims.strcat "Some " tmp1))
   )
+
+let fStarC_Class_Show_show__tuple2_unit_option_syntax (tmp : (unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__unit x1) in
+      let tmp2 = (fStarC_Class_Show_show__option_syntax_term' x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
+
+let fStarC_Class_Show_show__option_syntax_term'_107 (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option) : string =
+  (match tmp with
+    | None -> "None"
+    | (Some (x)) -> (let tmp1 = (fStarC_Class_Show_show__syntax_term' x) in
+      (Prims.strcat "Some " tmp1))
+  )
+
+let rec fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_109 (l : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__ctx_uvar x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__ctx_uvar x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_109 xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_ctx_uvar_109 (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_ctx_uvar_109 tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__list_ctx_uvar (tmp : (FStarC_Syntax_Syntax.ctx_uvar) list) : string =
+  (fStarC_Class_Show_show__list_ctx_uvar_109 tmp)
+
+let fStarC_Class_Show_show__tuple3_p_uvar_rec_option_version_range (tmp : (int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) : string =
+  (fStarC_Class_Show_show__universe (FStarC_Syntax_Syntax.U_unif ((match tmp with (custard_tup, _, _) -> custard_tup), (match tmp with (_, custard_tup, _) -> custard_tup), (match tmp with (_, _, custard_tup) -> custard_tup))))
+
+let rec fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_rec_version_range_111 (l : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
+  (match l with
+    | [] -> ""
+    | (x :: []) -> (fStarC_Class_Show_show__tuple3_p_uvar_rec_option_version_range x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__tuple3_p_uvar_rec_option_version_range x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_rec_version_range_111 xs) in
+      let tmp2 = (Prims.strcat ", " tmp1) in
+      (Prims.strcat tmp tmp2))
+  )
+
+let fStarC_Class_Show_show__list_tuple3_p_uvar_rec_version_range_111 (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple3_p_uvar_rec_version_range_111 tmp) in
+  let tmp2 = (Prims.strcat tmp1 "]") in
+  (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__list_tuple3_p_uvar_rec_version_range (tmp : ((int * FStarC_Syntax_Syntax.version * FStarC_Range_Type.range)) list) : string =
+  (fStarC_Class_Show_show__list_tuple3_p_uvar_rec_version_range_111 tmp)
 
 let lbname_to_string (tmp : (FStarC_Syntax_Syntax.bv, FStarC_Syntax_Syntax.fv) FStar_Pervasives.either) : string =
   (match tmp with
@@ -740,16 +746,6 @@ let fStarC_Class_PP_pp__list_qualifier (tmp : (FStarC_Syntax_Syntax.qualifier) l
   (let tmp1 = (FStarC_Pprint.flow_map (PPrint.(^^) PPrint.semi (FStar_Pprint.break_ Prims.int_one)) fStarC_Class_PP_pp__qualifier tmp) in
   (FStarC_Class_PP.gbrackets tmp1))
 
-let fStarC_Class_Show_show__tuple2_unit_option_syntax (tmp : (unit * ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) option)) : string =
-  (match tmp with
-    | (x1, x2) -> (let tmp1 = (FStarC_Class_Show.fStarC_Class_Show_show__unit x1) in
-      let tmp2 = (fStarC_Class_Show_show__option_syntax_term' x2) in
-      let tmp3 = (Prims.strcat tmp2 ")") in
-      let tmp4 = (Prims.strcat ", " tmp3) in
-      let tmp5 = (Prims.strcat tmp1 tmp4) in
-      (Prims.strcat "(" tmp5))
-  )
-
 let fStarC_Class_Show_show__tuple2_bv_syntax_term' (tmp : (FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
   (match tmp with
     | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__bv x1) in
@@ -775,7 +771,7 @@ let fStarC_Class_Show_show__list_tuple2_bv_syntax (tmp : ((FStarC_Syntax_Syntax.
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 
-let fStarC_Class_Show_show__tuple2_bv_syntax_term'_132 (tmp : (FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
+let fStarC_Class_Show_show__tuple2_bv_syntax_term'_133 (tmp : (FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) : string =
   (match tmp with
     | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__bv x1) in
       let tmp2 = (fStarC_Class_Show_show__syntax_term' x2) in
@@ -785,20 +781,30 @@ let fStarC_Class_Show_show__tuple2_bv_syntax_term'_132 (tmp : (FStarC_Syntax_Syn
       (Prims.strcat "(" tmp5))
   )
 
-let rec fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_131 (l : ((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : string =
+let rec fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_132 (l : ((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : string =
   (match l with
     | [] -> ""
-    | (x :: []) -> (fStarC_Class_Show_show__tuple2_bv_syntax_term'_132 x)
-    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__tuple2_bv_syntax_term'_132 x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_131 xs) in
+    | (x :: []) -> (fStarC_Class_Show_show__tuple2_bv_syntax_term'_133 x)
+    | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__tuple2_bv_syntax_term'_133 x) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_132 xs) in
       let tmp2 = (Prims.strcat ", " tmp1) in
       (Prims.strcat tmp tmp2))
   )
 
-let fStarC_Class_Show_show__list_tuple2_bv_syntax_131 (tmp : ((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_131 tmp) in
+let fStarC_Class_Show_show__list_tuple2_bv_syntax_132 (tmp : ((FStarC_Syntax_Syntax.bv * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_tuple2_bv_syntax_132 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
+
+let fStarC_Class_Show_show__tuple2_ctx_uvar_range (tmp : (FStarC_Syntax_Syntax.ctx_uvar * FStarC_Range_Type.range)) : string =
+  (match tmp with
+    | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__ctx_uvar x1) in
+      let tmp2 = (FStarC_Range_Ops.fStarC_Class_Show_show__range x2) in
+      let tmp3 = (Prims.strcat tmp2 ")") in
+      let tmp4 = (Prims.strcat ", " tmp3) in
+      let tmp5 = (Prims.strcat tmp1 tmp4) in
+      (Prims.strcat "(" tmp5))
+  )
 
 let modul_to_string (m : FStarC_Syntax_Syntax.modul) : string =
   (let tmp = (FStarC_Ident.fStarC_Class_Show_show__lident (m).FStarC_Syntax_Syntax.name) in
@@ -809,18 +815,18 @@ let modul_to_string (m : FStarC_Syntax_Syntax.modul) : string =
 let fStarC_Class_Show_show__modul (tmp : FStarC_Syntax_Syntax.modul) : string =
   (modul_to_string tmp)
 
-let rec fStarC_Class_Show_show__show_list_aux__list_syntax_term'_175 (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
+let rec fStarC_Class_Show_show__show_list_aux__list_syntax_term'_177 (l : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
   (match l with
     | [] -> ""
     | (x :: []) -> (fStarC_Class_Show_show__syntax_term' x)
     | (x :: xs) -> (let tmp = (fStarC_Class_Show_show__syntax_term' x) in
-      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_syntax_term'_175 xs) in
+      let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_syntax_term'_177 xs) in
       let tmp2 = (Prims.strcat ", " tmp1) in
       (Prims.strcat tmp tmp2))
   )
 
-let fStarC_Class_Show_show__list_syntax_term'_175 (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
-  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_syntax_term'_175 tmp) in
+let fStarC_Class_Show_show__list_syntax_term'_177 (tmp : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) : string =
+  (let tmp1 = (fStarC_Class_Show_show__show_list_aux__list_syntax_term'_177 tmp) in
   let tmp2 = (Prims.strcat tmp1 "]") in
   (Prims.strcat "[" tmp2))
 

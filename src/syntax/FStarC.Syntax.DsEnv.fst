@@ -138,6 +138,9 @@ instance _: showable exported_id_kind = {
 
 type exported_id_set = exported_id_kind -> ref string_set
 
+(* Large and passed around much more often than built: boxed under Cherry,
+   so that passing it is passing a pointer. *)
+[@@FStar.Attributes.cherry_boxed]
 type env = {
   curmodule:            option lident;                   (* name of the module being desugared *)
   curmonad:             option ident;                    (* current monad being desugared *)

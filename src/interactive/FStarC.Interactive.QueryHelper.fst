@@ -77,18 +77,18 @@ let symlookup tcenv symbol pos_opt requested_info =
       match TcErr.info_at_pos tcenv file row col with
       | Some info -> Some info
       | None ->
-        (* The identifier-info table is keyed by the file name as it appears in
-           ranges, which is a basename. Clients are not obliged to send one:
-           fstar-mode sends the name it was given, while the VS Code extension
-           sends an absolute path or a "file://" URI. Neither of those matches,
-           so without this every lookup from that client misses the table and
-           is answered by the scope-order fallback below -- which for an
-           overloaded name is the wrong candidate. Retrying on the basename
-           accepts all three forms; [basename] also strips a URI scheme, since
-           it keeps only what follows the last separator. *)
-        let base = Filepath.basename file in
-        if base = file then None
-        else TcErr.info_at_pos tcenv base row col) in
+        (* The identifier-info table is keyed by filenames as stored in ranges,
+           which are include-relative. Clients can send other forms: fstar-mode
+           passes the name it was given, while VS Code sends an absolute path or
+           a "file://" URI. Retry with the parser's filename convention so a
+           mismatch does not fall through to scope-order resolution, which can
+           select the wrong overload. *)
+        let path =
+          Option.dflt file (Parser.AST.strip_prefix "file://" file)
+        in
+        let source_name = Find.source_file_name path in
+        if source_name = file then None
+        else TcErr.info_at_pos tcenv source_name row col) in
 
   (* [info_at_pos] reports the name the typechecker resolved the occurrence
      to, so it is exact and needs no caveat. It answers only for a position

@@ -129,7 +129,7 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : ML free_vars_and_fvars 
       | Tm_name x ->
         singleton_bv x
 
-      | Tm_uvar (uv, (s, _)) ->
+      | Tm_uvar (uv, {subst_lists=s}) ->
         singleton_uv uv ++
         (if use_cache = Full
          then free_names_and_uvars (ctx_uvar_typ uv) use_cache
