@@ -186,6 +186,10 @@ native-cherry: $(OUTPUT_DIR)/native-cherry-O0.exe $(OUTPUT_DIR)/native-cherry-O2
 # These are independent compiler invocations, not a split of one whole-program
 # extraction. The client must import the library's native ABI through its .cui.
 NATIVE_EXPORTS := $(foreach e,choose deliver invoke,--custard_entry Example.Effects.NativeBoundary.$(e))
+# Native functions return Rules.outcome data, so a polymorphic native export is
+# subject to Cherry's usual restriction on polymorphic datatypes instantiated at
+# a type variable. Export only the concrete instances; clients specialize choose.
+NATIVE_C_EXPORTS := $(foreach e,deliver invoke,--custard_entry Example.Effects.NativeBoundary.$(e))
 NATIVE_ML_SPLIT := $(OUTPUT_DIR)/native-ocaml-split
 NATIVE_C_SPLIT := $(OUTPUT_DIR)/native-cherry-split
 
@@ -207,7 +211,7 @@ $(NATIVE_ML_SPLIT)/native.exe: $(NATIVE_ML_SPLIT)/Native_boundary.ml $(NATIVE_ML
 $(NATIVE_C_SPLIT)/Native_boundary.cui $(NATIVE_C_SPLIT)/Native_boundary.c $(NATIVE_C_SPLIT)/Native_boundary.h &: $(NATIVE_BOUNDARY) $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
 	mkdir -p $(NATIVE_C_SPLIT)
 	$(FSTAR) --codegen Cherry --custard_monomorphize_types true \
-	  --custard_unit Native_boundary $(NATIVE_EXPORTS) --odir $(NATIVE_C_SPLIT) $<
+	  --custard_unit Native_boundary $(NATIVE_C_EXPORTS) --odir $(NATIVE_C_SPLIT) $<
 
 $(NATIVE_C_SPLIT)/Native_runtime.c $(NATIVE_C_SPLIT)/Native_runtime.h &: $(NATIVE_CHECKED) $(NATIVE_C_SPLIT)/Native_boundary.cui $(EFFECTS_CHECKED) $(FSTAR_EXE) Makefile
 	$(FSTAR) --codegen Cherry --custard_monomorphize_types true \

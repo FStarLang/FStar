@@ -344,11 +344,8 @@ let rec st_term_to_string' (level:string) (t:st_term)
       sprintf "raise %s" (term_to_string arg)
     | Tm_NativeRaise { arg } ->
       sprintf "native_raise %s" (term_to_string arg)
-    | Tm_NativeScope { body } -> st_term_to_string' level body
-    | Tm_NativeTry { body; handler } ->
-      sprintf "native_try { %s } catch { %s }"
-        (st_term_to_string' (indent level) body)
-        (st_term_to_string' (indent level) handler)
+    | Tm_NativeScope { body } ->
+      sprintf "native_scope { %s }" (st_term_to_string' (indent level) body)
     | Tm_ExceptionScope { normal; exceptional; body } ->
       sprintf "%s raises %s { %s }" (comp_to_string normal)
         (term_to_string exceptional) (st_term_to_string' (indent level) body)
@@ -436,7 +433,6 @@ let tag_of_st_term (t:st_term) =
   | Tm_Raise _ -> "Tm_Raise"
   | Tm_NativeRaise _ -> "Tm_NativeRaise"
   | Tm_NativeScope _ -> "Tm_NativeScope"
-  | Tm_NativeTry _ -> "Tm_NativeTry"
   | Tm_ExceptionScope _ -> "Tm_ExceptionScope"
   | Tm_Try _ -> "Tm_Try"
   | Tm_Defer _ -> "Tm_Defer"
@@ -485,7 +481,6 @@ let print_st_head (t:st_term)
   | Tm_Raise _ -> "Raise"
   | Tm_NativeRaise _ -> "NativeRaise"
   | Tm_NativeScope _ -> "NativeScope"
-  | Tm_NativeTry _ -> "NativeTry"
   | Tm_ExceptionScope _ -> "ExceptionScope"
   | Tm_Try _ -> "Try"
   | Tm_Defer _ -> "Defer"
@@ -517,7 +512,6 @@ let rec print_skel (t:st_term) =
   | Tm_Raise _ -> "Raise"
   | Tm_NativeRaise _ -> "NativeRaise"
   | Tm_NativeScope {body} -> Printf.sprintf "(NativeScope %s)" (print_skel body)
-  | Tm_NativeTry {body;handler} -> Printf.sprintf "(NativeTry %s %s)" (print_skel body) (print_skel handler)
   | Tm_ExceptionScope {body} -> Printf.sprintf "(ExceptionScope %s)" (print_skel body)
   | Tm_Try {body;handler} -> Printf.sprintf "(Try %s %s)" (print_skel body) (print_skel handler)
   | Tm_Defer {body} -> Printf.sprintf "(Defer %s)" (print_skel body)

@@ -455,9 +455,8 @@ let rec freevars_st (t:st_term)
     | Tm_Raise { arg } -> freevars arg
     | Tm_NativeRaise { exn_ty; result_ty; arg } ->
       freevars exn_ty ++ freevars result_ty ++ freevars arg
-    | Tm_NativeScope { body } -> freevars_st body
-    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
-      freevars exn_ty ++ freevars result_ty ++ freevars_st body ++ freevars_st handler
+    | Tm_NativeScope { exn_ty; result_ty; body } ->
+      freevars exn_ty ++ freevars result_ty ++ freevars_st body
 
     | Tm_ExceptionScope { normal; exceptional; body } ->
       freevars_comp normal ++ freevars exceptional ++ freevars_st body
@@ -663,9 +662,8 @@ let rec ln_st' (t:st_term) (i:int)
     | Tm_Raise { arg } -> ln' arg i
     | Tm_NativeRaise { exn_ty; result_ty; arg } ->
       ln' exn_ty i && ln' result_ty i && ln' arg i
-    | Tm_NativeScope { body } -> ln_st' body i
-    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
-      ln' exn_ty i && ln' result_ty i && ln_st' body i && ln_st' handler (i+1)
+    | Tm_NativeScope { exn_ty; result_ty; body } ->
+      ln' exn_ty i && ln' result_ty i && ln_st' body i
 
     | Tm_ExceptionScope { normal; exceptional; body } ->
       ln_c' normal i && ln' exceptional i && ln_st' body i
@@ -950,10 +948,9 @@ let rec subst_st_term (t:st_term) (ss:subst)
       Tm_Raise { arg=subst_term arg ss }
     | Tm_NativeRaise { exn_ty; result_ty; arg } ->
       Tm_NativeRaise { exn_ty=subst_term exn_ty ss; result_ty=subst_term result_ty ss; arg=subst_term arg ss }
-    | Tm_NativeScope { body } -> Tm_NativeScope { body=subst_st_term body ss }
-    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
-      Tm_NativeTry { exn_ty=subst_term exn_ty ss; result_ty=subst_term result_ty ss;
-                    body=subst_st_term body ss; handler=subst_st_term handler (shift_subst ss) }
+    | Tm_NativeScope { exn_ty; result_ty; body } ->
+      Tm_NativeScope { exn_ty=subst_term exn_ty ss; result_ty=subst_term result_ty ss;
+                       body=subst_st_term body ss }
 
     | Tm_ExceptionScope { normal; exceptional; body } ->
       Tm_ExceptionScope { normal=subst_comp normal ss; exceptional=subst_term exceptional ss;

@@ -8,6 +8,7 @@ module N = Example.Effects.Native
 module X = Example.Effects.NativeExtraction
 module E = Pulse.Lib.Effects.Rules
 module H = Example.Effects.NativeStress
+module A = Example.Effects.NativeAbi
 
 fn early (b:bool)
   returns x:int
@@ -183,7 +184,8 @@ divergent fn test ()
   let r = (match raw with | E.Normal _ -> false | E.Raised value -> value);
   let s = X.handled_bool true;
   let t = X.handled_bool false;
-  (a = 7 && b = 9 && c = 7 && d = 9 && e = 7 &&
+  let abi = A.test ();
+  (abi && a = 7 && b = 9 && c = 7 && d = 9 && e = 7 &&
    f = 7 && g = 9 && h = 11 && i = 9 &&
    j = 7 && k = 1 && l = 1 && m = 50 && n = 5 && o = 17 &&
    p = "ownedowned" && q = "ownedowned" && r && s && not t)

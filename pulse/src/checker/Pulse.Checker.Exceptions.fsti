@@ -11,9 +11,11 @@ module T = FStar.Tactics.V2
 
    Normal x transfers q x; Raised e transfers r e. Inside a function, Raised
    exits are checked against lexical goto labels, including the cleanup
-   obligations of scopes crossed by the jump. These outcomes and exception
-   labels are proof-only: the checked result retains Tm_NativeRaise,
-   Tm_NativeScope, and Tm_NativeTry for native runtime extraction.
+   obligations of scopes crossed by the jump. The checked outcome values and
+   matches are retained at runtime: functions exchange ordinary outcome data.
+   Only the jump to an exception label is lowered to a host exception
+   (Tm_NativeRaise), caught by the innermost Tm_NativeScope of the same
+   function body. No host exception crosses a function boundary.
 
    The checker callback checks generated returns, matches, and raises using the
    same rules as source terms. Passing it explicitly avoids a module dependency

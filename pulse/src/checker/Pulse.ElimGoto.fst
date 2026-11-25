@@ -142,7 +142,7 @@ let rec conditionalize (g: env) (t: st_term) (cond: cond_params) : T.Tac (option
   // Exceptions must have lowered it to labels, gotos, and outcome matches.
   | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
     fail g (Some t.range) "Internal error: exceptions must be checked before eliminating jumps"
-  | Tm_NativeRaise _ | Tm_NativeScope _ | Tm_NativeTry _ ->
+  | Tm_NativeRaise _ | Tm_NativeScope _ ->
     fail g (Some t.range) "Internal error: native exceptions require native jump extraction"
   | Tm_Return ..
   | Tm_Abs ..
@@ -337,7 +337,7 @@ let rec elim_gotos (g: env) (t: st_term) : T.Tac st_term =
   // unsupported runtime exception to silently retain for extraction.
   | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
     fail g (Some t.range) "Internal error: exceptions must be checked before eliminating jumps"
-  | Tm_NativeRaise _ | Tm_NativeScope _ | Tm_NativeTry _ ->
+  | Tm_NativeRaise _ | Tm_NativeScope _ ->
     fail g (Some t.range) "Internal error: native exceptions require native jump extraction"
   | Tm_Return ..
   | Tm_IntroPure ..

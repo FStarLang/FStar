@@ -238,3 +238,76 @@ fn exn_known_cases_are_not_exhaustive (error:exn)
     N.RetryLater _ -> { () }
   }
 }
+
+// Invariant bodies are atomic closures: they neither inherit the exception
+// exit nor permit raising.
+[@@expect_failure [228]]
+fn raise_in_invariant (i:iname)
+  requires inv i emp
+  ensures inv i emp
+  raises (fun (_:nat) -> inv i emp)
+{
+  with_invariants unit emp_inames i emp emp (fun _ -> emp) fn _ {
+    raise 1
+  }
+}
+
+// try is rejected in ghost and atomic code exactly as raise is.
+[@@expect_failure [228]]
+ghost fn ghost_try ()
+{
+  try raises (fun (_:nat) -> emp) { () } catch { _ -> { () } }
+}
+
+[@@expect_failure [228]]
+atomic fn atomic_try ()
+{
+  try raises (fun (_:nat) -> emp) { () } catch { _ -> { () } }
+}
+
+// The payload must satisfy the declared exceptional post.
+[@@expect_failure [19]]
+fn payload_refinement ()
+  raises (fun (e:int) -> pure (e > 0))
+{
+  raise 0
+}
+
+// The innermost exception destination wins regardless of payload type: an int
+// cannot be raised past a try whose payload type is bool.
+[@@expect_failure [189]]
+fn innermost_destination_wins ()
+  raises (fun (_:int) -> emp)
+{
+  try raises (fun (_:bool) -> emp)
+  { raise 1 }
+  catch { _ -> { () } }
+}
+
+// A literal catch clause leaves other payloads to the implicit forwarding
+// branch, which must still reach a destination accepting them.
+[@@expect_failure [19]]
+fn partial_literal_catch ()
+{
+  try raises (fun (e:int) -> pure (e == 9 \/ e == 10))
+  { raise 10 }
+  catch { 9 -> { () } }
+}
+
+// Payload and result types are restricted to Type0.
+[@@expect_failure [189]]
+fn large_payload ()
+  raises (fun (_:Type0) -> emp)
+{
+  raise int
+}
+
+// Calling through an F* function type preserves native splitting: the callee's
+// possible exception must be handled even though no Pulse fn type is written.
+[@@expect_failure [19]]
+fn native_via_fstar_arrow
+  (f: unit -> stt (E.native_outcome int unit) emp
+        (fun v -> E.exit_post (fun (_:unit) -> emp) (fun (_:int) -> emp) v))
+{
+  f ()
+}

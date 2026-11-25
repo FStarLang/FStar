@@ -45,7 +45,7 @@ let rec uses_native_exceptions (p:st_term) : Tot bool =
   let native ty = Some? (Pulse.Checker.Exceptions.outcome_types ty) in
   match p.term with
   | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ -> true
-  | Tm_NativeRaise _ | Tm_NativeScope _ | Tm_NativeTry _ -> true
+  | Tm_NativeRaise _ | Tm_NativeScope _ -> true
   | Tm_ForwardJumpLabel { body; post } ->
     native (comp_res post) || uses_native_exceptions body
   | Tm_Return { expected_type } -> native expected_type
@@ -81,6 +81,41 @@ and uses_native_exceptions_branches (bs:list branch) : Tot bool =
   match bs with
   | [] -> false
   | b::bs -> uses_native_exceptions b.e || uses_native_exceptions_branches bs
+
+// Does p contain a native raise targeting the innermost enclosing scope? Such
+// raises are never under a nested scope (which catches them) or under a nested
+// function body (which has its own scope). A scope without such a raise needs
+// no host exception handler: its body already returns outcome data.
+let rec raises_to_scope (p:st_term) : Tot bool =
+  match p.term with
+  | Tm_NativeRaise _ -> true
+  | Tm_NativeScope _ | Tm_Abs _ -> false
+  | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ -> true
+  | Tm_ForwardJumpLabel { body }
+  | Tm_TotBind { body }
+  | Tm_WithLocal { body }
+  | Tm_WithLocalArray { body }
+  | Tm_PragmaWithOptions { body } -> raises_to_scope body
+  | Tm_Bind { head; body } -> raises_to_scope head || raises_to_scope body
+  | Tm_ST { args } -> raises_to_scope_list args
+  | Tm_If { b; then_; else_ } ->
+    raises_to_scope b || raises_to_scope then_ || raises_to_scope else_
+  | Tm_Match { sc; brs } -> raises_to_scope sc || raises_to_scope_branches brs
+  | Tm_While { condition; body } -> raises_to_scope condition || raises_to_scope body
+  | Tm_Defer { handler; body } -> raises_to_scope handler || raises_to_scope body
+  | Tm_ProofHintWithBinders { t } -> raises_to_scope t
+  | Tm_Return _ | Tm_IntroPure _ | Tm_ElimExists _ | Tm_IntroExists _
+  | Tm_Rewrite _ | Tm_Admit _ | Tm_Unreachable _ | Tm_Goto _ -> false
+
+and raises_to_scope_list (ps:list st_term) : Tot bool =
+  match ps with
+  | [] -> false
+  | p::ps -> raises_to_scope p || raises_to_scope_list ps
+
+and raises_to_scope_branches (bs:list branch) : Tot bool =
+  match bs with
+  | [] -> false
+  | b::bs -> raises_to_scope b.e || raises_to_scope_branches bs
 
 let name = ppname & nat
 
@@ -213,11 +248,8 @@ let rec simplify_st_term (g:env) (e:st_term) : T.Tac st_term =
   | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
     T.fail "Internal error: unchecked exception syntax in simplification"
   | Tm_NativeRaise _ -> e
-  | Tm_NativeScope { body } -> ret (Tm_NativeScope { body=simplify_st_term g body })
-  | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
-    let b = mk_binder_ppname exn_ty ppname_default in
-    ret (Tm_NativeTry { exn_ty; result_ty;
-                       body=simplify_st_term g body; handler=with_open b handler })
+  | Tm_NativeScope { exn_ty; result_ty; body } ->
+    ret (Tm_NativeScope { exn_ty; result_ty; body=simplify_st_term g body })
   | Tm_Return _
   | Tm_IntroPure _
   | Tm_ElimExists _
@@ -329,10 +361,8 @@ let rec erase_ghost_subterms (g:env) (p:st_term) : T.Tac st_term =
     | Tm_Raise _ | Tm_ExceptionScope _ | Tm_Try _ ->
       T.fail "Internal error: unchecked exception syntax in erasure"
     | Tm_NativeRaise _ -> p
-    | Tm_NativeScope { body } -> ret (Tm_NativeScope { body=erase_ghost_subterms g body })
-    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
-      ret (Tm_NativeTry { exn_ty; result_ty; body=erase_ghost_subterms g body;
-                         handler=open_erase_close g (mk_binder_ppname exn_ty ppname_default) handler })
+    | Tm_NativeScope { exn_ty; result_ty; body } ->
+      ret (Tm_NativeScope { exn_ty; result_ty; body=erase_ghost_subterms g body })
     | Tm_IntroPure _
     | Tm_ElimExists _
     | Tm_IntroExists _ 
@@ -525,23 +555,22 @@ let rec extract_dv native g (p:st_term) : T.Tac R.term =
       let packed = runtime_app ["FStar"; "Dyn"; "mkdyn"] [exn_ty] [arg] in
       runtime_raise result_ty
         (runtime_app ["Pulse"; "Lib"; "NativeExceptions"; "NativeException"] [] [packed])
-    | Tm_NativeScope { body } -> extract_dv native g body
-    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
-      let body = extract_dv native g body in
-      let b = mk_binder_ppname exn_ty ppname_default in
-      let g', payload = extend_env'_binder g b in
-      let handler = extract_dv native g' (open_st_term_nv handler payload) in
-      let unpack = runtime_app ["FStar"; "Dyn"; "undyn"] [exn_ty] [runtime_bv0] in
-      let handler = ECL.mk_let (extract_dv_binder b None) unpack (close_term handler payload._2) in
-      // Only Pulse's payload channel is caught. Lexical returns/breaks and
-      // foreign host exceptions must unwind through this handler unchanged.
+    | Tm_NativeScope { exn_ty; result_ty; body } ->
+      let body' = extract_dv native g body in
+      if not (raises_to_scope body) then body' else
+      // The body already returns outcome data; additionally convert raises
+      // targeting this scope into Raised. Lexical returns/breaks and foreign
+      // host exceptions must unwind through this handler unchanged.
+      let outcome = runtime_app ["Pulse"; "Lib"; "Effects"; "Rules"; "outcome"] [] [exn_ty; result_ty] in
+      let raised = runtime_app ["Pulse"; "Lib"; "Effects"; "Rules"; "Raised"] [exn_ty; result_ty]
+        [runtime_app ["FStar"; "Dyn"; "undyn"] [exn_ty] [runtime_bv0]] in
       let branches = [
         R.Pat_Cons (R.pack_fv ["Pulse"; "Lib"; "NativeExceptions"; "NativeException"]) None
-          [R.Pat_Var (T.seal runtime_dyn) (T.seal "_payload"), false], handler;
+          [R.Pat_Var (T.seal runtime_dyn) (T.seal "_payload"), false], ECL.mk_return raised;
         R.Pat_Var (T.seal runtime_exn) (T.seal "_other"),
-          runtime_raise result_ty runtime_bv0
+          runtime_raise outcome runtime_bv0
       ] in
-      runtime_try result_ty body
+      runtime_try outcome body'
         (mk_abs (runtime_binder runtime_exn "_caught") (R.pack_ln (R.Tv_Match runtime_bv0 None branches)))
     | Tm_IntroPure _
     | Tm_ElimExists _

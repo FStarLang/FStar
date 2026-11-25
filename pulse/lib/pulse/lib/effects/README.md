@@ -165,7 +165,9 @@ The tree derivation supplies the reference proof rules without changing this ABI
 
 Native contracts retain the transparent alias `Rules.native_outcome exn a`.
 The checker recognizes that spelling and splits calls even outside exception
-scopes; ignoring a result must not swallow a possible exception. Raw
+scopes; ignoring a result must not swallow a possible exception. Extracted
+native functions return this outcome as ordinary data; a host exception is
+used only from a raise to its enclosing scope within one function. Raw
 `Rules.outcome` computations remain ordinary data, including inside native
 code. Higher-order native contracts should use `fn ... raises ...`.
 Raw semantic callbacks need literal `stt`/`stt_div` types for Pulse readback;
@@ -180,7 +182,7 @@ locals; a handler still inside that scope retains access to them.
 annotations cover protected normal completion and catch results. Pattern facts
 mask handled payloads; an implicit fallback forwards unmatched ones. Nested
 forwarding requires compatible payload types, with no inserted embeddings,
-even for an unreachable fallback. The shared extensible `exn` type provides
+even for an unreachable fallback; a catch-all clause suppresses the fallback. The shared extensible `exn` type provides
 the conventional common payload type.
 
 Raising is stateful, not ghost or atomic. Clauses run outside their own catch

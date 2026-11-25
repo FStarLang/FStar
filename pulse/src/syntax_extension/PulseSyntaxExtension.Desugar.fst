@@ -786,11 +786,16 @@ let rec desugar_stmt' (env:env_t) (s:Sugar.stmt)
       let env', bv = push_bv env payload in
       let payload_term = PSP.term_of_nvar (ppname_of_id payload, bv.index) in
       let! handlers = handlers |> mapM (desugar_branch env') in
-      let fallback = mk_branch (pat_var "_" s.range)
-        (swr (Tm_Raise {arg=payload_term}) s.range) false in
+      // Forward payloads no clause matches. Omit the forwarding clause after
+      // an irrefutable one: it is dead, yet would still be checked against
+      // the outer destination, whose payload type may differ.
+      let irrefutable (b:branch) = match b.pat with | Pat_Var _ _ -> true | _ -> false in
+      let fallback =
+        if L.existsb irrefutable handlers then []
+        else [mk_branch (pat_var "_" s.range) (swr (Tm_Raise {arg=payload_term}) s.range) false] in
       let handler = swr (Tm_Match {
         sc=swr (PSBuild.tm_return PSP.tm_unknown false payload_term) s.range;
-        returns_=None; brs=handlers@[fallback] }) s.range in
+        returns_=None; brs=handlers@fallback }) s.range in
       let handler = PSN.close_st_term handler bv.index in
       return (swr (Tm_Try { normal; exceptional; body; handler }) s.range)
 

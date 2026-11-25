@@ -534,7 +534,7 @@ let rec check
 
       | Tm_Defer _ ->
         Defer.check g pre post_hint res_ppname t check
-      | Tm_NativeRaise _ | Tm_NativeScope _ | Tm_NativeTry _ ->
+      | Tm_NativeRaise _ | Tm_NativeScope _ ->
         fail g (Some t.range) "Internal error: checked native exception syntax passed to the source checker"
     in
 

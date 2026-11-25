@@ -256,12 +256,10 @@ let rec close_open_inverse_st'  (t:st_term)
       close_open_inverse' exn_ty x i;
       close_open_inverse' result_ty x i;
       close_open_inverse' arg x i
-    | Tm_NativeScope { body } -> close_open_inverse_st' body x i
-    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+    | Tm_NativeScope { exn_ty; result_ty; body } ->
       close_open_inverse' exn_ty x i;
       close_open_inverse' result_ty x i;
-      close_open_inverse_st' body x i;
-      close_open_inverse_st' handler x (i + 1)
+      close_open_inverse_st' body x i
 
     | Tm_ExceptionScope { normal; exceptional; body } ->
       close_open_inverse_comp' normal x i;

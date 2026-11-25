@@ -315,11 +315,9 @@ let rec eq_st_term (t1 t2:st_term)
     | Tm_NativeRaise { exn_ty=e1; result_ty=r1; arg=a1 },
       Tm_NativeRaise { exn_ty=e2; result_ty=r2; arg=a2 } ->
       eq_tm e1 e2 && eq_tm r1 r2 && eq_tm a1 a2
-    | Tm_NativeScope { body=b1 }, Tm_NativeScope { body=b2 } ->
-      eq_st_term b1 b2
-    | Tm_NativeTry { exn_ty=e1; result_ty=r1; body=b1; handler=h1 },
-      Tm_NativeTry { exn_ty=e2; result_ty=r2; body=b2; handler=h2 } ->
-      eq_tm e1 e2 && eq_tm r1 r2 && eq_st_term b1 b2 && eq_st_term h1 h2
+    | Tm_NativeScope { exn_ty=e1; result_ty=r1; body=b1 },
+      Tm_NativeScope { exn_ty=e2; result_ty=r2; body=b2 } ->
+      eq_tm e1 e2 && eq_tm r1 r2 && eq_st_term b1 b2
 
     | Tm_ExceptionScope { normal=n1; exceptional=r1; body=b1 },
       Tm_ExceptionScope { normal=n2; exceptional=r2; body=b2 } ->

@@ -759,18 +759,17 @@ let pulse_rule (ns : list string) (id : string) : ML (option rule) =
     | _ -> TAny in
   let c_only = Options.codegen () = Some Options.C in
   match ns, id with
-  // Only the reserved native ABI erases its outcome wrapper. The ordinary
-  // effects-library outcome datatype must keep both constructors as data.
-  | ["Pulse"; "Lib"; "Effects"; "Rules"], "native_outcome" ->
-    Some (Rule_type (fun tys ->
-      if not (Options.codegen () = Some Options.OCaml ||
-              Options.codegen () = Some Options.FSharp ||
-              Options.custard_cherry ()) then
-        FStarC.Errors.raise_error0 FStarC.Errors.Fatal_ExtractionUnsupported
-          [FStarC.Errors.Msg.text "Native Pulse exceptions require OCaml, FSharp, or Cherry; standalone C is not supported."];
-      match tys with
-      | [_; a] -> a
-      | _ -> failwith "Custard: malformed native_outcome type"))
+  // Native raises functions return ordinary outcome data at every function
+  // boundary, so OCaml, F#, and Cherry extract the alias like any other type
+  // abbreviation. Their bodies still use host exceptions internally, which
+  // standalone C cannot express: refuse the reserved ABI there up front.
+  | ["Pulse"; "Lib"; "Effects"; "Rules"], "native_outcome"
+      when not (Options.codegen () = Some Options.OCaml ||
+                Options.codegen () = Some Options.FSharp ||
+                Options.custard_cherry ()) ->
+    Some (Rule_type (fun _ ->
+      FStarC.Errors.raise_error0 FStarC.Errors.Fatal_ExtractionUnsupported
+        [FStarC.Errors.Msg.text "Native Pulse exceptions require OCaml, FSharp, or Cherry; standalone C is not supported."]))
   | ["Pulse"; "Lib"; "Dv"], "goto_label" ->
     Some (Rule_type (fun tys -> TArrow (elt_of tys, E_Impure, TUnit)))
 

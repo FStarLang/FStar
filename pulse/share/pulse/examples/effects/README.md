@@ -22,7 +22,8 @@ Start with `Core`, `Exception`, and `Nested`, then `Graded` and `Rules`.
 | [`Example.Effects.Rules.fst`](Example.Effects.Rules.fst) | Tree-derived two-exit bind, frame, partial handling and re-raising, local reclamation on both exits, and divergent callbacks. Verification only. |
 | [`Example.Effects.Rejected.fst`](Example.Effects.Rejected.fst) | Twelve expected failures covering ownership, operation kinds, unresolved effects, framing, and grades. Not an executable test module. |
 | [`Example.Effects.Native.fst`](Example.Effects.Native.fst) | Native raises contracts, partial catches, re-raising, exact state transfers, framing, local reclamation, cleanup, loops, recursion, and higher-order calls. Verification only. |
-| [`Example.Effects.NativeRejected.fst`](Example.Effects.NativeRejected.fst) | Expected rejections for lost ownership, unhandled calls, incomplete handlers, escaping cleanup, invalid local reclamation, and ghost/atomic raises. Verification only. |
+| [`Example.Effects.NativeRejected.fst`](Example.Effects.NativeRejected.fst) | Expected rejections for lost ownership, unhandled calls, incomplete handlers, escaping cleanup, invalid local reclamation, ghost/atomic raises and trys, payload typing, and calls through F* arrow types. Verification only. |
+| [`Example.Effects.NativeAbi.fst`](Example.Effects.NativeAbi.fst) | Runtime regressions for the native calling convention: `native_outcome` aliasing, raw/native callback confusion, polymorphic intermediaries, owned payloads, and raises from hoisted expressions, loop conditions, and nested catch clauses. Called from `NativeRuntime.test`. |
 | [`Example.Effects.NativeExtraction.fst`](Example.Effects.NativeExtraction.fst) | Standalone-C refusals for implicit native calls and nonraising native scopes, with raw outcome data as an extractable control. |
 | [`Example.Effects.NativeNoExtract.fst`](Example.Effects.NativeNoExtract.fst) | The `pulse.noextract` debugging option must refuse native extraction, including from a checked file. |
 | [`Example.Effects.NativeRuntime.fst`](Example.Effects.NativeRuntime.fst) | Native runtime regressions: early return, non-unit cleanup results, unwinding, separate control exits, locally handled cleanup, extensible and managed payloads, re-raising, recursion, higher-order calls, loops, framing, and raw outcome data. |
@@ -82,7 +83,9 @@ throughput benchmarks.
 
 `NativeBoundary.choose` is used at record, string, and integer types.
 Its concrete `deliver` wrapper forces Cherry's record calls across the unit
-boundary; other polymorphic instantiations may be specialized in the client.
+boundary; other polymorphic instantiations are specialized in the client.
+(The Cherry split does not export `choose` itself: its outcome result is a
+datatype instantiated at a type variable, which Cherry cannot export.)
 `NativeBoundary.invoke` calls a closure capturing a reference and managed
 payload; its exceptional ownership crosses the interface while a separate
 cell remains framed. A user exception named `NativeException` deliberately
@@ -128,12 +131,13 @@ read them together with their callers, rather than as independent examples.
 | Source definitions to locate in the snapshots | What to review |
 | --- | --- |
 | `NativeExtraction.handled_bool` | OCaml raises the `Pulse_Lib_NativeExceptions_NativeException` carrier and uses `try ... with`. Cherry constructs the exception, calls `cherry_raise`, tests `CHERRY_EXN_PENDING()`, takes the exception, checks its descriptor, and unboxes its payload. Both return an ordinary `bool`. |
-| `NativeRuntime.early`, `return_through_try` | The ordinary result is an integer, not an outcome. `ControlFlow` carries lexical returns on a separate channel; the user catch cannot intercept them. The result slot starts at `None` and is written before the control exception is raised. |
+| `NativeRuntime.early`, `return_through_try` | The OCaml and F# drivers call `early` directly and receive `Normal 7` or `Raised 9` as data. `ControlFlow` carries lexical returns on a separate channel; the user catch cannot intercept them. The result slot starts at `None` and is written before the control exception is raised. |
 | `NativeRuntime.cleanup`, `cleanup_return` | Normal completion preserves the body result. Exceptional completion frees the box and re-raises the saved exception; an early return crosses the same cleanup. In OCaml, `B.free` becomes `()` because references are garbage collected; Cherry emits `cherry_pbuf1_free`. |
 | `NativeRuntime.cleanup_handles` | Cleanup catches a local Boolean exception and a local loop break without losing the pending integer exception. Follow `_cexn` through cleanup to its final re-raise. |
 | `NativeRuntime.reraises`, `Native.reraised` | A handler can translate or re-raise a payload without catching its own raise. The stateful example updates the owned cell before re-raising and before final recovery. |
 | `NativeRuntime.stack_payload`, `return_payload` | Dynamically allocated strings survive boxing and unwinding. Cherry drops the scoped local's owned value before leaving on an exception, and drops the return slot after acquiring its result. |
-| `NativeRuntime.recurse`, `Native.invoke`, `Native.locally_defined` | Recursive and higher-order calls use the normal-result ABI, with exceptions propagated by the backend rather than outcome matching. |
+| `NativeRuntime.recurse`, `Native.invoke`, `Native.locally_defined` | Recursive and higher-order calls return outcome data; each frame matches it and re-raises to its own scope. No host exception crosses a call. |
+| `NativeAbi.polymorphic_intermediary`, `native_as_raw`, `raw_as_native` | A generic function instantiated at `native_outcome`, and callbacks whose type spelling differs from the callee's, run exactly as verified. |
 | `NativeStress.nested`, `loop_exits`, `return_handled`, `unwind` | Each exit must execute the same cleanup calls in the driver-observed order, exactly once. User handlers must not catch lexical control exits. Recursive calls are not tail calls: each frame still owes cleanup. |
 | `NativeStress.captured`, `NativeBoundary.choose`, `invoke` | Managed payloads and closures survive boxing and cross-module calls. Compare the whole-program snapshots with `_output/native-ocaml-split/` and `_output/native-cherry-split/` to review imported calls and shared exception identity. |
 | `NativeExtraction.raw_outcome` | This deliberately remains an ordinary tagged datatype. Its `Normal`/`Raised` constructors in the snapshots and header are not the native exception ABI. |

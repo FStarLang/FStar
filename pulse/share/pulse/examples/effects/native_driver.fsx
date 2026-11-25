@@ -1,7 +1,12 @@
 #load "FStarCustard.fs"
 #load "Native_runtime.fs"
 
-let (_ : bigint) = Native_runtime.example_Effects_NativeRuntime_early true
+// Native functions return ordinary outcome data at their boundary.
+match Native_runtime.example_Effects_NativeRuntime_early true,
+      Native_runtime.example_Effects_NativeRuntime_early false with
+| Native_runtime.Pulse_Lib_Effects_Rules_Normal x,
+  Native_runtime.Pulse_Lib_Effects_Rules_Raised e when x = 7I && e = 9I -> ()
+| _ -> failwith "native Pulse outcome ABI regression"
 if not (Native_runtime.example_Effects_NativeRuntime_test ()) then
     failwith "native Pulse exception regression"
 let trace = ResizeArray<uint32>()

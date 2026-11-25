@@ -341,14 +341,13 @@ type st_term' =
     }
   // Checked runtime nodes. The checker first discharges the two-exit/goto
   // obligations; these nodes preserve host control flow for extraction.
+  // A native raise transfers control to the innermost enclosing NativeScope
+  // of the SAME function body; it never unwinds across a function boundary.
   | Tm_NativeRaise { exn_ty:term; result_ty:term; arg:term }
-  | Tm_NativeScope { body:st_term }
-  | Tm_NativeTry {
-      exn_ty:term;
-      result_ty:term;
-      body:st_term;
-      handler:st_term; // payload bound at index 0
-    }
+  // body computes outcome exn result_ty, ending in Normal. At runtime the
+  // scope also converts a raise targeting it into Raised, so every native
+  // function and try body yields ordinary outcome data at its boundary.
+  | Tm_NativeScope { exn_ty:term; result_ty:term; body:st_term }
 and st_term = {
     term : st_term';
     range : range;

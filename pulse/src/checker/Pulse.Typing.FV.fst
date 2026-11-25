@@ -240,12 +240,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_term' exn_ty x i;
       freevars_close_term' result_ty x i;
       freevars_close_term' arg x i
-    | Tm_NativeScope { body } -> freevars_close_st_term' body x i
-    | Tm_NativeTry { exn_ty; result_ty; body; handler } ->
+    | Tm_NativeScope { exn_ty; result_ty; body } ->
       freevars_close_term' exn_ty x i;
       freevars_close_term' result_ty x i;
-      freevars_close_st_term' body x i;
-      freevars_close_st_term' handler x (i + 1)
+      freevars_close_st_term' body x i
 
     | Tm_ExceptionScope { normal; exceptional; body } ->
       freevars_close_comp normal x i;

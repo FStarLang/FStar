@@ -14,9 +14,13 @@ The implementation has two central ideas:
    computation returning a tagged outcome. Its postcondition describes
    ownership on either exit. Lexical forward-jump destinations enforce the
    existing obligations for scopes crossed by an exceptional exit.
-2. For extraction, the reserved native outcome type becomes the normal result
-   type. Checked raises and handlers become `ERaise` and `ETry`, not executable
-   outcome matches or the old flag-based goto lowering.
+2. For extraction, the checked terms are the runtime terms: native functions
+   return ordinary outcome data, and each call is followed by its checked
+   outcome match. Only the jump from a raise to its lexical exception scope
+   becomes a host exception (`ERaise`), caught by that scope's `ETry` in the
+   **same** function body. Host exceptions never cross a function boundary,
+   so the runtime cannot disagree with the logic about which code a raise
+   skips, whatever F* does to the result type.
 
 The checker does not construct or interpret effect trees. The graded effects
 library provides a reference model and derives corresponding two-exit rules;
@@ -31,7 +35,7 @@ The following paths are relative to the repository root.
 | --- | --- |
 | Surface syntax and dependency scanning | [`PulseSyntaxExtension.Sugar.fst`](../../pulse/src/syntax_extension/PulseSyntaxExtension.Sugar.fst), [`Grammar.fst`](../../pulse/src/syntax_extension/PulseSyntaxExtension.Grammar.fst) |
 | Declaration, lambda, and statement lowering | [`PulseSyntaxExtension.Desugar.fst`](../../pulse/src/syntax_extension/PulseSyntaxExtension.Desugar.fst): `lower_raises`, `wrap_exception_body`, `desugar_stmt'` |
-| Checker AST | [`Pulse.Syntax.Base.fsti`](../../pulse/src/checker/Pulse.Syntax.Base.fsti): source `Tm_Raise`, `Tm_ExceptionScope`, `Tm_Try`; checked `Tm_NativeRaise`, `Tm_NativeScope`, `Tm_NativeTry` |
+| Checker AST | [`Pulse.Syntax.Base.fsti`](../../pulse/src/checker/Pulse.Syntax.Base.fsti): source `Tm_Raise`, `Tm_ExceptionScope`, `Tm_Try`; checked `Tm_NativeRaise`, `Tm_NativeScope` |
 | Exception checking | [`Pulse.Checker.Exceptions.fst`](../../pulse/src/checker/Pulse.Checker.Exceptions.fst): `posts`, `check_scope`, `check_raise`, `unwrap`, `check_try` |
 | Stateful call integration | [`Pulse.Checker.ST.fst`](../../pulse/src/checker/Pulse.Checker.ST.fst): `check` |
 | Dispatch and payload evaluation | [`Pulse.Checker.fst`](../../pulse/src/checker/Pulse.Checker.fst): `maybe_elaborate_stateful_head`, `check` |
@@ -139,6 +143,17 @@ every raw `outcome` would change control-flow behavior. This is a checker and
 extraction ABI convention, not a nominal distinction enforced by F*'s type
 system. Use raw `outcome` for explicitly constructed outcome data.
 
+The distinction matters only for checking. At runtime both spellings denote
+the same datatype, so nothing breaks when F* unfolds the alias or a
+polymorphic function is instantiated at it. For instance, a generic
+`apply (f: fn () returns x:t ...)` instantiated at `t := native_outcome exn
+a` does not split its callback's result, yet runs exactly as verified: the
+callback returns its `Raised` value as data, `apply` continues, and its
+caller splits the value. An earlier design erased `native_outcome exn a` to
+`a` and let host exceptions unwind across calls; such programs then skipped
+code that the proof had executed. `Example.Effects.NativeAbi` keeps these
+cases as runtime regressions.
+
 The library's `stt_exn` and `stt_exn_div` aliases use raw `outcome`, deliberately.
 For higher-order native callbacks, use `fn ... raises ...` types. Raw semantic
 callbacks can instead expose literal `stt`/`stt_div` types for Pulse readback;
@@ -220,8 +235,10 @@ match caught {
 }
 ```
 
-The fallback is always appended. Exhaustiveness comes from proving this
-forwarding path unreachable when necessary, not from dropping it.
+The fallback is appended unless some clause has an irrefutable variable or
+wildcard pattern, after which it would be dead. Otherwise exhaustiveness comes
+from proving this forwarding path unreachable when necessary, not from
+dropping it.
 Try blocks also work as binding initializers.
 
 ### AST binding invariants
@@ -256,7 +273,7 @@ post hints: the original normal contract and the outcome contract.
 3. Checks the body against the **normal** post hint.
 4. On normal completion, returns `Normal x` against the outcome post hint.
 5. Closes the proof scope and emits `Tm_NativeScope` containing the checked
-   normal-result body, without the proof-only `Normal` wrapper.
+   composition, including its `Normal` wrapper.
 
 The label contract is constructed by `goto_comp_of_block_comp` in
 [`Pulse.Typing.fst`](../../pulse/src/checker/Pulse.Typing.fst). For a block
@@ -290,13 +307,17 @@ raise e  ==>  Goto.check (goto L (Raised e))
 
 Concretely, `Goto.check_native_raise` shares `Goto.check`'s payload,
 unreachable-post, and exact ownership checks, but returns `Tm_NativeRaise`.
-The logical exception label is not an executable goto destination.
+The exception label is implemented by the innermost enclosing
+`Tm_NativeScope`, which catches the raise and yields `Raised e`. Nested
+functions clear goto labels (`Checker.Abs`), so this scope is always in the
+same function body as the raise.
 
 There is no search by payload type or constructor. Labels are lexical; no
 implicit embedding from one payload type to another is inserted.
 
 With **no** exception destination, `check_raise` requires a proof of
-`squash False` and calls `Pulse.Lib.Core.unreachable`. This supports impossible
+`squash False` and calls the ghost `Pulse.Lib.Core.unreachable`; the prover
+then closes the branch with `Tm_Unreachable`, a runtime abort. This supports impossible
 fallback branches and provably nonraising calls outside exception scopes.
 A reachable unhandled raise is a verification failure, not a runtime escape
 or a silently discarded outcome.
@@ -322,9 +343,9 @@ Raised e: r e ** F   -> raise e to the nearest lexical destination
 `unwrap` uses `Checker.Match.check`, substituting `Normal x` into the checked
 call's postcondition to construct the normal post hint. It does not erase
 payload-dependent facts or restart from the pre-call state.
-After checking this split, the runtime term is just the original call result:
-the extracted callee returns `a` normally or throws. The proof-only match must
-not be executed against the native result, nor may the call be evaluated twice.
+The checked match is also the runtime term: the callee returns outcome data,
+`Normal x` continues with `x`, and `Raised e` raises to the caller's own
+nearest scope (or is an unreachable branch).
 
 The split is unconditional on the existence of an exception scope and on
 whether the caller uses the value. In particular, `let _ = f (); ...` and a
@@ -346,10 +367,9 @@ clause that raises again targets the enclosing exception destination, not
 itself. It may change the state or translate the payload, provided it
 establishes the outer exceptional contract.
 
-The checked runtime `Tm_NativeTry` keeps the protected normal-result body and
-the checked `Raised` branch. Substituting `Raised payload` into the checked
-match selects that branch during Custard simplification; it does not allocate
-an outcome at runtime.
+At runtime the try is exactly this checked composition: the protected
+`Tm_NativeScope` yields outcome data, and the match dispatches it. The
+handler therefore runs after the protected scope has been exited.
 
 The payload match generated by desugaring uses the ordinary match checker's
 ordered-pattern facts. In
@@ -373,8 +393,9 @@ an exclusion fact; it does not enumerate every remaining constructor.
 
 Forwarding still typechecks the original payload against the outer
 destination's type, even on an impossible fallback. Nested payload types must
-therefore be compatible; dead-code reasoning does not synthesize a sum
-injection or exception translation.
+therefore be compatible unless a catch-all clause makes forwarding
+syntactically dead (then no fallback is generated); dead-code reasoning does
+not synthesize a sum injection or exception translation.
 
 ## 6. Ownership, locals, and cleanup
 
@@ -530,14 +551,26 @@ result with cleanup's unit value.
 
 ### Result and exception representations
 
-Custard's `pulse_rule` maps `Rules.native_outcome exn a` to runtime `a`.
-Ordinary `Rules.outcome` remains an ordinary datatype; the tree interpreter's
-ABI is unchanged. Native function arguments, recursive calls, and callbacks
-must consistently use this reserved native ABI.
+`Rules.native_outcome exn a` extracts as the ordinary `Rules.outcome exn a`
+datatype: every native function, callback, and recursive call returns
+`Normal x` or `Raised e` as data, and callers run their checked outcome match.
+Host code can call a native entry point and inspect the result directly (see
+the native drivers). Standalone C still rejects the type, via a Custard
+`pulse_rule`, because the bodies use host exceptions internally.
 
 `Tm_NativeRaise` boxes its checked payload with `FStar.Dyn.mkdyn` and raises
-`Pulse.Lib.NativeExceptions.NativeException`. `Tm_NativeTry` catches exactly
-this wrapper and unboxes at its checked payload type with `FStar.Dyn.undyn`.
+`Pulse.Lib.NativeExceptions.NativeException`. `Tm_NativeScope` catches exactly
+this wrapper, unboxes at its checked payload type with `FStar.Dyn.undyn`, and
+returns `Raised payload`; other host exceptions pass through. Since a raise
+always targets the innermost scope of its own function, the unboxing type is
+the one used for boxing. A scope with no raise targeting it
+(`Extract.Main.raises_to_scope`) is extracted without a handler.
+
+The cost is one outcome allocation per native call (OCaml/F#), one host
+handler per raising function or try, and a raise per propagated exception
+(propagation is by match-and-reraise in each frame, not by unwinding through
+frames). A future fast path could call known native functions directly when
+the callee's ABI is statically known.
 This works for integers, booleans, and user-extensible `exn` values alike.
 Source catch patterns still operate on the original payload. Even a payload
 whose type is `exn` is wrapped; it cannot impersonate a compiler control exit.
@@ -623,7 +656,12 @@ This is separate from the five-case tree-interpreter runtime demonstration.
 break, and continue paths, 257-frame unwinding, and 1,000 repeated exceptions.
 `NativeBoundary.fsti`/`.fst` exercise a polymorphic native ABI and callbacks
 capturing managed payloads and owned state, including real separate Custard
-compilation for OCaml and Cherry. The driver-private observer does not require
+compilation for OCaml and Cherry. (Cherry cannot export a polymorphic
+function over a datatype instantiated at a type variable, so the Cherry split
+exports only the concrete instances; clients specialize `choose`.)
+`NativeAbi` covers result-type aliasing, raw/native callback confusion,
+polymorphic intermediaries, owned payloads, and raises from hoisted
+expression positions, loop conditions, and nested catch clauses. The driver-private observer does not require
 discarding Pulse permissions or adding axioms.
 
 | Invariant | Representative definitions |
@@ -635,7 +673,9 @@ discarding Pulse permissions or adding axioms.
 | Cleanup may handle locally but not escape | `deferred_free`, `cleanup_handles_locally`, `cleanup_local_loop`; rejections: `escaping_cleanup`, `cleanup_call_escapes`, `cleanup_return_abandons_exception` |
 | Function boundaries and higher-order contracts | `invoke`, `locally_defined`, `countdown`; rejection: `captured_exception_exit` |
 | Outcome data is not automatically a control effect | `raw_raise`, `raw_outcome` |
-| Raising is not divergence or a ghost effect | `maybe_value`; rejections: `catch_is_not_termination`, `ghost_raise`, `atomic_raise` |
+| Raising is not divergence or a ghost effect | `maybe_value`; rejections: `catch_is_not_termination`, `ghost_raise`, `atomic_raise`, `ghost_try`, `atomic_try`, `raise_in_invariant` |
+| Runtime agrees with the logic across aliasing and instantiation | `NativeAbi.split_constructed`, `catch_constructed`, `native_as_raw`, `raw_as_native`, `polymorphic_intermediary`; rejection: `native_via_fstar_arrow` |
+| Innermost destination and payload typing | `NativeAbi.nested_payload_types`; rejections: `innermost_destination_wins`, `payload_refinement`, `partial_literal_catch`, `large_payload` |
 | Stateful payloads, loops, and ordinary return | `raise_read`, `loop_exit`, `skipped_write`, `early_return` |
 | Open exception identity and residual forwarding | `exn_nested`, `exn_reraised`, `exn_later_extension`; rejection: `exn_known_cases_are_not_exhaustive` |
 
@@ -665,7 +705,7 @@ positive control. It also checks that `pulse.noextract` cannot bypass the
 native lowering, from either source or a persisted checked file.
 
 For changes to this implementation, preserve the `native_outcome` recognition
-boundary, the handler's binding depth, unconditional splitting of native
-calls, exact ownership transfer at jumps, and lexical cleanup/function
-boundaries. Check these invariants before attributing a failure to SMT:
+boundary, unconditional splitting of native calls, exact ownership transfer
+at jumps, lexical cleanup/function boundaries, and above all the runtime
+invariant that host exceptions never leave the function that raised them. Check these invariants before attributing a failure to SMT:
 each determines which control paths and resources the proof actually sees.
