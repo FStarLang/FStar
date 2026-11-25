@@ -711,6 +711,8 @@ let krml_op (o : FStarC_Custard_Syntax.op) : FStarC_Custard_KrmlAst.op =
     | FStarC_Custard_Syntax.RefNew -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | FStarC_Custard_Syntax.RefGet -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | FStarC_Custard_Syntax.RefSet -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
+    | FStarC_Custard_Syntax.RefPeek -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
+    | FStarC_Custard_Syntax.RefUnpeek -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | (FStarC_Custard_Syntax.Reset (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | (FStarC_Custard_Syntax.Reuse (u__1, u__2)) -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")
     | FStarC_Custard_Syntax.ResetFree -> (FStarC_Effect.failwith "Custard: reference counting is not a karamel operator")

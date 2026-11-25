@@ -131,7 +131,6 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env) (check_kind : FStarC_Inter
     use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
     is_iface = (env).FStarC_TypeChecker_Env.is_iface;
     admit = tmp;
-    phase1 = (env).FStarC_TypeChecker_Env.phase1;
     failhard = (env).FStarC_TypeChecker_Env.failhard;
     flychecking = (env).FStarC_TypeChecker_Env.flychecking;
     uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
@@ -159,6 +158,7 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env) (check_kind : FStarC_Inter
     strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
     disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
     erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+    spec_arg_tab = (env).FStarC_TypeChecker_Env.spec_arg_tab;
     enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
     unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
     erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
@@ -167,7 +167,12 @@ let set_check_kind (env : FStarC_TypeChecker_Env.env) (check_kind : FStarC_Inter
     iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
     iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
     iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
-    iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids })
+    iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids;
+    tc_global = (env).FStarC_TypeChecker_Env.tc_global;
+    tc_scope = (env).FStarC_TypeChecker_Env.tc_scope;
+    tc_scope_gamma = (env).FStarC_TypeChecker_Env.tc_scope_gamma;
+    tc_class_of_typ = (env).FStarC_TypeChecker_Env.tc_class_of_typ;
+    tc_resolve = (env).FStarC_TypeChecker_Env.tc_resolve })
 
 let push_repl (msg : string) (push_kind_opt : (FStarC_Interactive_Ide_Types.push_kind) option) (task : FStarC_Interactive_Ide_Types.repl_task) (st : FStarC_Interactive_Ide_Types.repl_state) : FStarC_Interactive_Ide_Types.repl_state =
   (let tmp = (snapshot_env (st).FStarC_Interactive_Ide_Types.repl_env msg) in

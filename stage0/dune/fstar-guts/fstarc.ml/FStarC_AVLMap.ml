@@ -9,13 +9,6 @@ type ('k, 'v) tree =
 let empty (v : unit) : ('k, 'v) tree =
   Leaf
 
-let rec find (c : ('k -> ('k -> int))) (key : 'k) (m : ('k, 'v) tree) : ('v) option =
-  (match m with
-    | Leaf -> None
-    | (Node (l, k', v', r, tmp)) -> (let o = (c key k') in
-      (if ((=) o 0) then (Some (v')) else (if ((<) o 0) then (find c key l) else (find c key r))))
-  )
-
 let height (m : ('k, 'v) tree) : int =
   (match m with
     | Leaf -> 0
@@ -43,35 +36,28 @@ let bal (l : ('k, 'v) tree) (key : 'k) (value : 'v) (r : ('k, 'v) tree) : ('k, '
     | Leaf -> (node l key value r)
   ) else (Node (l, key, value, r, ((+) (FStarC_SmallInt.max hl hr) 1))))))
 
-let rec add (c : ('k -> ('k -> int))) (key : 'k) (value : 'v) (m : ('k, 'v) tree) : ('k, 'v) tree =
-  (match m with
-    | Leaf -> (Node (Leaf, key, value, Leaf, 1))
-    | (Node (l, k', v', r, h)) -> (let o = (c key k') in
-      (if ((=) o 0) then (Node (l, key, value, r, h)) else (if ((<) o 0) then (bal (add c key value l) k' v' r) else (bal l k' v' (add c key value r)))))
-  )
-
-let rec iter (f : ('k -> ('v -> unit))) (m : ('k, 'v) tree) : unit =
+let rec fStarC_AVLMap_iter__string_ref_bool (m : (string, (bool ref)) tree) : unit =
   (match m with
     | Leaf -> ()
-    | (Node (l, key, value, r, tmp)) -> ((iter f l);
-      (f key value);
-      (iter f r))
+    | (Node (l, key, value, r, tmp)) -> ((fStarC_AVLMap_iter__string_ref_bool l);
+      ((value) := false);
+      (fStarC_AVLMap_iter__string_ref_bool r))
   )
 
-let rec fold_pure (f : ('k -> ('v -> ('a -> 'a)))) (m : ('k, 'v) tree) (acc : 'a) : 'a =
+let rec fStarC_AVLMap_fold_pure__string_list_string (m : (string, 'u___value) tree) (acc : (string) list) : (string) list =
   (match m with
     | Leaf -> acc
-    | (Node (l, key, value, r, tmp)) -> (let acc1 = (fold_pure f l acc) in
-      let acc2 = (f key value acc1) in
-      (fold_pure f r acc2))
+    | (Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold_pure__string_list_string l acc) in
+      let acc2 = (key :: acc1) in
+      (fStarC_AVLMap_fold_pure__string_list_string r acc2))
   )
 
-let rec fold (f : ('k -> ('v -> ('a -> 'a)))) (m : ('k, 'v) tree) (acc : 'a) : 'a =
+let rec fStarC_AVLMap_iter__string_ref_bool_1 (m : (string, (bool ref)) tree) : unit =
   (match m with
-    | Leaf -> acc
-    | (Node (l, key, value, r, tmp)) -> (let acc1 = (fold f l acc) in
-      let acc2 = (f key value acc1) in
-      (fold f r acc2))
+    | Leaf -> ()
+    | (Node (l, key, value, r, tmp)) -> ((fStarC_AVLMap_iter__string_ref_bool_1 l);
+      ((value) := true);
+      (fStarC_AVLMap_iter__string_ref_bool_1 r))
   )
 
 let rec pop_min (l : ('k, 'v) tree) (key : 'k) (value : 'v) (r : ('k, 'v) tree) : ('k * 'v * ('k, 'v) tree) =
@@ -93,10 +79,37 @@ let concat (l : ('k, 'v) tree) (r : ('k, 'v) tree) : ('k, 'v) tree =
       ))
   )
 
-let rec remove (c : ('k -> ('k -> int))) (key : 'k) (m : ('k, 'v) tree) : ('k, 'v) tree =
+let rec fStarC_AVLMap_fold__string_ref_bool_list_tuple2_string_bool (m : (string, (bool ref)) tree) (acc : ((string * bool)) list) : ((string * bool)) list =
   (match m with
-    | Leaf -> Leaf
-    | (Node (l, k', v', r, tmp)) -> (let o = (c key k') in
-      (if ((=) o 0) then (concat l r) else (if ((<) o 0) then (bal (remove c key l) k' v' r) else (bal l k' v' (remove c key r)))))
+    | Leaf -> acc
+    | (Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold__string_ref_bool_list_tuple2_string_bool l acc) in
+      let tmp1 = (!(value)) in
+      let tmp2 = (key, tmp1) in
+      let acc2 = (tmp2 :: acc1) in
+      (fStarC_AVLMap_fold__string_ref_bool_list_tuple2_string_bool r acc2))
+  )
+
+let rec fStarC_AVLMap_fold__string_list_tuple2_string_string (m : (string, string) tree) (acc : ((string * string)) list) : ((string * string)) list =
+  (match m with
+    | Leaf -> acc
+    | (Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold__string_list_tuple2_string_string l acc) in
+      let acc2 = ((key, value) :: acc1) in
+      (fStarC_AVLMap_fold__string_list_tuple2_string_string r acc2))
+  )
+
+let rec fStarC_AVLMap_fold__string_list_string (m : (string, 'u___a) tree) (acc : (string) list) : (string) list =
+  (match m with
+    | Leaf -> acc
+    | (Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold__string_list_string l acc) in
+      let acc2 = (key :: acc1) in
+      (fStarC_AVLMap_fold__string_list_string r acc2))
+  )
+
+let rec fStarC_AVLMap_fold__string_list (m : (string, 'u___a) tree) (acc : ('u___a) list) : ('u___a) list =
+  (match m with
+    | Leaf -> acc
+    | (Node (l, key, value, r, tmp)) -> (let acc1 = (fStarC_AVLMap_fold__string_list l acc) in
+      let acc2 = (value :: acc1) in
+      (fStarC_AVLMap_fold__string_list r acc2))
   )
 

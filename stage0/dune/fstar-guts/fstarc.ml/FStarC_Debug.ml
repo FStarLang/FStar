@@ -24,7 +24,7 @@ let disable_all (tmp : unit) : unit =
   (((anyref) := false);
   ((dbg_level) := Prims.int_zero);
   let tmp1 = (!(toggle_list)) in
-  (FStarC_PSMap.iter tmp1 (fun k r -> ((r) := false))))
+  (FStarC_PSMap.fStarC_PSMap_iter__ref_bool tmp1))
 
 let list_all_toggles (tmp : unit) : (string) list =
   (let tmp1 = (!(toggle_list)) in
@@ -34,7 +34,7 @@ let set_debug_all (tmp : unit) : unit =
   (((u__debug_all) := true);
   ((dbg_level) := (Prims.of_int (4)));
   let tmp1 = (!(toggle_list)) in
-  (FStarC_PSMap.iter tmp1 (fun k r -> ((r) := true))))
+  (FStarC_PSMap.fStarC_PSMap_iter__ref_bool_1 tmp1))
 
 let enable (tmp : unit) : unit =
   ((anyref) := true)
@@ -92,9 +92,7 @@ let any (tmp : unit) : bool =
 
 let snapshot (tmp : unit) : saved_state =
   (let tmp1 = (!(toggle_list)) in
-  let tmp2 = (FStarC_PSMap.fold tmp1 (fun k r acc -> (let tmp2 = (!(r)) in
-    let tmp3 = (k, tmp2) in
-    (tmp3 :: acc))) []) in
+  let tmp2 = (FStarC_PSMap.fStarC_PSMap_fold__ref_bool_list_tuple2_string_bool tmp1 []) in
   let tmp3 = (!(anyref)) in
   let tmp4 = (!(u__debug_all)) in
   let tmp5 = (!(dbg_level)) in
@@ -102,7 +100,7 @@ let snapshot (tmp : unit) : saved_state =
 
 let restore (s : saved_state) : unit =
   (let tmp = (!(toggle_list)) in
-  (FStarC_PSMap.iter tmp (fun k r -> ((r) := false)));
+  (FStarC_PSMap.fStarC_PSMap_iter__ref_bool tmp);
   (BatList.iter (fun tmp1 -> (match tmp1 with
     | (k, b) -> (let r = (get_toggle k) in
       ((r) := b))

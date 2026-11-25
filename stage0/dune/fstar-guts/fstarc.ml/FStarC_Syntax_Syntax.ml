@@ -86,6 +86,7 @@ and binder_qualifier =
   | Implicit of bool
   | Meta of (term') syntax
   | Equality
+  | TcArg
 
 
 and binder = {
@@ -189,9 +190,15 @@ and binding =
   | Binding_univ of FStarC_Ident.ident
 
 
+and tc_scope = {
+  tc_locals : (bv) list;
+  tc_cache : ((Prims.int, (((term') syntax * (((FStarC_Ident.ident) list * (term') syntax * (term') syntax)) option)) list) FStarC_AVLMap.tree ref);
+}
+
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of (term') syntax
   | Ctx_uvar_meta_attr of (term') syntax
+  | Ctx_uvar_meta_tc of tc_scope
 
 
 and ctx_uvar = {
@@ -214,10 +221,14 @@ and subst_elt =
   | UD of FStarC_Ident.ident * Prims.int
 
 
+and subst_ts = {
+  subst_lists : ((subst_elt) list) list;
+  subst_use_range : maybe_set_use_range;
+}
+
 and term'__Tm_delayed__payload = {
   tm : (term') syntax;
-  substs : ((subst_elt) list) list;
-  substs1 : maybe_set_use_range;
+  substs : subst_ts;
 }
 
 and metadata =
@@ -286,7 +297,7 @@ and term' =
   | Tm_match of term'__Tm_match__payload
   | Tm_ascribed of term'__Tm_ascribed__payload
   | Tm_let of term'__Tm_let__payload
-  | Tm_uvar of ctx_uvar * (((subst_elt) list) list * maybe_set_use_range)
+  | Tm_uvar of ctx_uvar * subst_ts
   | Tm_delayed of term'__Tm_delayed__payload
   | Tm_meta of term'__Tm_meta__payload
   | Tm_lazy of lazyinfo
@@ -406,6 +417,7 @@ let hash_bqual (bq : binder_qualifier) : int =
     | (Implicit (false)) -> (hc (Prims.of_int (421)))
     | (Meta (t)) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (431))) (t).hash_code)
     | Equality -> (hc (Prims.of_int (433)))
+    | TcArg -> (hc (Prims.of_int (439)))
   )
 
 let hash_of (t : ('u___a) syntax) : int =
@@ -438,17 +450,13 @@ let hash_rc (rc : residual_comp) : int =
 let mix4 (a : int) (b : int) (c : int) (d : int) : int =
   ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) a ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) b ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) c d)))
 
-type arg = ((term') syntax * (arg_qualifier) option)
-
 let hash_arg_qualifier (aq : arg_qualifier) : int =
   (let tmp = (hash_list hash_of (aq).aqual_attributes) in
   ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hash_bool (aq).aqual_implicit) tmp))
 
-let hash_arg (a : ((term') syntax * (arg_qualifier) option)) : int =
-  (match a with
-    | (t, aq) -> (let tmp = (hash_option hash_arg_qualifier aq) in
-      ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (t).hash_code tmp))
-  )
+let hash_arg_parts (t : (term') syntax) (aq : (arg_qualifier) option) : int =
+  (let tmp = (hash_option hash_arg_qualifier aq) in
+  ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (t).hash_code tmp))
 
 type match_returns_ascription = (binder * (((term') syntax, (comp_typ) syntax) FStar_Pervasives.either * ((term') syntax) option * bool))
 
@@ -527,6 +535,13 @@ let hash_lb (lb : letbinding) : int =
   let tmp8 = ((hc (Prims.of_int (79))) :: tmp7) in
   (mix_all tmp8))
 
+type arg = ((term') syntax * (arg_qualifier) option)
+
+let hash_arg (a : ((term') syntax * (arg_qualifier) option)) : int =
+  (match a with
+    | (t, aq) -> (hash_arg_parts t aq)
+  )
+
 let hash_meta_source_info (m : meta_source_info) : int =
   (match m with
     | Sequence -> (hc (Prims.of_int (1049)))
@@ -576,7 +591,7 @@ let hash_term' (t : term') : int =
     | (Tm_arrow ({ b = b; comp = comp; _ })) -> (let tmp = (hash_binder b) in
       (mix3 (hc (Prims.of_int (23))) tmp (comp).hash_code))
     | (Tm_refine ({ b = b; phi = phi; _ })) -> (mix3 (hc (Prims.of_int (29))) (hash_bv b) (phi).hash_code)
-    | (Tm_app ({ hd = hd; arg = u__1; arg1 = u__2; _ })) -> (let tmp = (hash_arg (u__1, u__2)) in
+    | (Tm_app ({ hd = hd; arg = t1; arg1 = aq; _ })) -> (let tmp = (hash_arg_parts t1 aq) in
       (mix3 (hc (Prims.of_int (31))) (hd).hash_code tmp))
     | (Tm_match ({ scrutinee = scrutinee; ret_opt = ret_opt; brs = brs; rc_opt = rc_opt; _ })) -> (let tmp = (hash_option hash_match_returns ret_opt) in
       let tmp1 = (hash_list hash_branch brs) in
@@ -593,7 +608,7 @@ let hash_term' (t : term') : int =
       (match tmp1 with
         | (u, tmp2, tmp3) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (53))) (hc (FStarC_Unionfind.puf_unique_id u)))
       ))
-    | (Tm_delayed ({ tm = tm; substs = u__1; substs1 = u__2; _ })) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (59))) (tm).hash_code)
+    | (Tm_delayed ({ tm = tm; substs = tmp; _ })) -> ((fun (a:int) (b:int) -> let k = b * 0x1bd1e9955bd1e995 in let k = k lxor (k lsr 31) in let k = k * 0x1bd1e9955bd1e995 in (a lxor k) * 0x1bd1e9955bd1e995) (hc (Prims.of_int (59))) (tm).hash_code)
     | (Tm_meta ({ tm = tm; meta = meta; _ })) -> (let tmp = (hash_meta meta) in
       (mix3 (hc (Prims.of_int (61))) (tm).hash_code tmp))
     | (Tm_lazy (tmp)) -> (hc (Prims.of_int (67)))
@@ -792,21 +807,15 @@ let is_ident_allowed_by_restriction : (FStarC_Ident.ident -> (restriction -> (FS
   (FStarC_Format.print_string tmp9)) else ());
   result)))
 
-type comp = (comp_typ) syntax
-
 type uvar = (int * version * FStarC_Range_Type.range)
 
-type subst_ts = (((subst_elt) list) list * maybe_set_use_range)
-
-let mk_Tm_delayed (lr : ((term') syntax * (((subst_elt) list) list * maybe_set_use_range))) : (FStarC_Range_Type.range -> (term') syntax) =
-  (mk (Tm_delayed ((let fld = (match lr with
-      | (u__1, u__2) -> u__2
-    ) in
-  ({ tm = (match lr with
+let mk_Tm_delayed (lr : ((term') syntax * subst_ts)) : (FStarC_Range_Type.range -> (term') syntax) =
+  (mk (Tm_delayed (({ tm = (match lr with
       | (u__1, u__2) -> u__1
     );
-    substs = (match fld with (custard_tup, _) -> custard_tup);
-    substs1 = (match fld with (_, custard_tup) -> custard_tup) } : term'__Tm_delayed__payload)))))
+    substs = (match lr with
+      | (u__1, u__2) -> u__2
+    ) } : term'__Tm_delayed__payload))))
 
 let set_range_of_bv (x : bv) (r : FStarC_Range_Type.range) : bv =
   { ppname = (FStarC_Ident.set_id_range r (x).ppname);
@@ -840,6 +849,8 @@ let bv_to_name (bv : bv) : (term') syntax =
 
 type universe_uvar = (int * version * FStarC_Range_Type.range) [@@deriving yojson]
 
+type comp = (comp_typ) syntax
+
 let hash_comp' (c : comp_typ) : int =
   (let tmp = (hash_list hash_flag (c).flags) in
   (mix4 (hc (Prims.of_int (823))) (hash_lid (c).effect_name) ((c).result_typ).hash_code tmp))
@@ -872,10 +883,6 @@ let on_antiquoted (f : ((term') syntax -> (term') syntax)) (qi : quoteinfo) : qu
 
 let mk_comp' (c : comp_typ) (r : FStarC_Range_Type.range) : (comp_typ) syntax =
   (mk_comp_ c r)
-
-type binders = (binder) list
-
-type typ = (term') syntax
 
 type sigelt'__Sig_inductive_typ__payload = {
   lid : FStarC_Ident.lident;
@@ -1046,6 +1053,58 @@ and sigelt = {
   sigopts : (FStar_VConfig.vconfig) option;
 }
 
+type modul = {
+  name : FStarC_Ident.lident;
+  declarations : (sigelt) list;
+  is_interface : bool;
+}
+
+let null_id : FStarC_Ident.ident =
+  (FStarC_Ident.mk_ident ("_", FStarC_Range_Type.dummyRange))
+
+let is_null_bv (b : bv) : bool =
+  ((=) (FStarC_Ident.string_of_id (b).ppname) (FStarC_Ident.string_of_id null_id))
+
+let fStarC_Class_Tagged_tag_of__syntax_term' (tmp : (term') syntax) : string =
+  (match (tmp).n with
+    | (Tm_bvar (tmp1)) -> "Tm_bvar"
+    | (Tm_name (tmp1)) -> "Tm_name"
+    | (Tm_fvar (tmp1)) -> "Tm_fvar"
+    | (Tm_uinst (u__1, u__2)) -> "Tm_uinst"
+    | (Tm_constant (tmp1)) -> "Tm_constant"
+    | (Tm_type (tmp1)) -> "Tm_type"
+    | (Tm_quoted (tmp1, { qkind = Quote_static; antiquotations = u__1; antiquotations1 = u__2; _ })) -> "Tm_quoted(static)"
+    | (Tm_quoted (tmp1, { qkind = Quote_dynamic; antiquotations = u__1; antiquotations1 = u__2; _ })) -> "Tm_quoted(dynamic)"
+    | (Tm_abs (tmp1)) -> "Tm_abs"
+    | (Tm_arrow (tmp1)) -> "Tm_arrow"
+    | (Tm_refine (tmp1)) -> "Tm_refine"
+    | (Tm_app (tmp1)) -> "Tm_app"
+    | (Tm_match (tmp1)) -> "Tm_match"
+    | (Tm_ascribed (tmp1)) -> "Tm_ascribed"
+    | (Tm_let (tmp1)) -> "Tm_let"
+    | (Tm_uvar (u__1, u__2)) -> "Tm_uvar"
+    | (Tm_delayed (tmp1)) -> "Tm_delayed"
+    | (Tm_meta (tmp1)) -> "Tm_meta"
+    | Tm_unknown -> "Tm_unknown"
+    | (Tm_lazy (tmp1)) -> "Tm_lazy"
+  )
+
+let mk_Total (t : (term') syntax) : (comp_typ) syntax =
+  (mk_Comp { effect_name = FStarC_Parser_Const.primitive_pure_lid;
+    result_typ = t;
+    flags = [];
+    source_effect_name = FStarC_Parser_Const.primitive_pure_lid })
+
+let is_null_binder (b : binder) : bool =
+  (is_null_bv (b).binder_bv)
+
+let fStarC_Class_HasRange_pos__syntax_term' (tmp : (term') syntax) : FStarC_Range_Type.range =
+  (tmp).pos
+
+type binders = (binder) list
+
+type typ = (term') syntax
+
 type letbindings = (bool * (letbinding) list)
 
 type formula = (term') syntax
@@ -1058,35 +1117,17 @@ type module_abbrev = (FStarC_Ident.ident * FStarC_Ident.lident)
 
 type sigelts = (sigelt) list
 
-type modul = {
-  name : FStarC_Ident.lident;
-  declarations : (sigelt) list;
-  is_interface : bool;
-}
-
-let mk_Total (t : (term') syntax) : (comp_typ) syntax =
-  (mk_Comp { effect_name = FStarC_Parser_Const.primitive_pure_lid;
-    result_typ = t;
-    flags = [];
-    source_effect_name = FStarC_Parser_Const.primitive_pure_lid })
-
 let fvar_with_dd (l : FStarC_Ident.lident) (dq : (fv_qual) option) : (term') syntax =
   (fv_to_tm (lid_and_dd_as_fv l dq))
 
 let iarg (t : (term') syntax) : ((term') syntax * (arg_qualifier) option) =
   (t, (Some ({ aqual_implicit = true; aqual_attributes = [] })))
 
-let fv_eq_lid (fv : fv) : (FStarC_Ident.lident -> bool) =
-  (FStarC_Ident.lid_equals (fv).fv_name)
-
-let null_id : FStarC_Ident.ident =
-  (FStarC_Ident.mk_ident ("_", FStarC_Range_Type.dummyRange))
-
-let is_null_bv (b : bv) : bool =
-  ((=) (FStarC_Ident.string_of_id (b).ppname) (FStarC_Ident.string_of_id null_id))
-
 let lid_of_fv (fv : fv) : FStarC_Ident.lident =
   (fv).fv_name
+
+let fv_eq_lid (fv : fv) : (FStarC_Ident.lident -> bool) =
+  (FStarC_Ident.lid_equals (fv).fv_name)
 
 let is_teff (t : (term') syntax) : bool =
   (match (t).n with
@@ -1238,41 +1279,13 @@ let new_univ_name (ropt : (FStarC_Range_Type.range) option) : FStarC_Ident.ident
   let tmp2 = (tmp1, (range_of_ropt ropt)) in
   (FStarC_Ident.mk_ident tmp2))
 
-let fStarC_Class_Tagged_tag_of__syntax_term' (tmp : (term') syntax) : string =
-  (match (tmp).n with
-    | (Tm_bvar (tmp1)) -> "Tm_bvar"
-    | (Tm_name (tmp1)) -> "Tm_name"
-    | (Tm_fvar (tmp1)) -> "Tm_fvar"
-    | (Tm_uinst (u__1, u__2)) -> "Tm_uinst"
-    | (Tm_constant (tmp1)) -> "Tm_constant"
-    | (Tm_type (tmp1)) -> "Tm_type"
-    | (Tm_quoted (tmp1, { qkind = Quote_static; antiquotations = u__1; antiquotations1 = u__2; _ })) -> "Tm_quoted(static)"
-    | (Tm_quoted (tmp1, { qkind = Quote_dynamic; antiquotations = u__1; antiquotations1 = u__2; _ })) -> "Tm_quoted(dynamic)"
-    | (Tm_abs (tmp1)) -> "Tm_abs"
-    | (Tm_arrow (tmp1)) -> "Tm_arrow"
-    | (Tm_refine (tmp1)) -> "Tm_refine"
-    | (Tm_app (tmp1)) -> "Tm_app"
-    | (Tm_match (tmp1)) -> "Tm_match"
-    | (Tm_ascribed (tmp1)) -> "Tm_ascribed"
-    | (Tm_let (tmp1)) -> "Tm_let"
-    | (Tm_uvar (u__1, u__2)) -> "Tm_uvar"
-    | (Tm_delayed (tmp1)) -> "Tm_delayed"
-    | (Tm_meta (tmp1)) -> "Tm_meta"
-    | Tm_unknown -> "Tm_unknown"
-    | (Tm_lazy (tmp1)) -> "Tm_lazy"
-  )
-
-let is_null_binder (b : binder) : bool =
-  (is_null_bv (b).binder_bv)
-
-let fStarC_Class_HasRange_pos__syntax_term' (tmp : (term') syntax) : FStarC_Range_Type.range =
-  (tmp).pos
-
 type delta_depth =
   | Delta_constant_at_level of Prims.int
   | Delta_equational_at_level of Prims.int
   | Delta_abstract of delta_depth
   [@@deriving yojson]
+
+type gamma = (binding) list
 
 let fStarC_Class_Deq_op_Equals_Question__lazy_kind (tmp : lazy_kind) (tmp1 : lazy_kind) : bool =
   (match (tmp, tmp1) with
@@ -1356,25 +1369,6 @@ let fStarC_Class_Deq_eqList__lident (xs : (FStarC_Ident.lident) list) (ys : (FSt
 
 let fStarC_Class_Deq_op_Equals_Question__list_lident (tmp : (FStarC_Ident.lident) list) (ys : (FStarC_Ident.lident) list) : bool =
   (fStarC_Class_Deq_eqList__lident tmp ys)
-
-let fv_eq (fv1 : fv) (fv2 : fv) : bool =
-  (FStarC_Ident.lid_equals (fv1).fv_name (fv2).fv_name)
-
-let rec eq_pat (p1 : (pat') withinfo_t) (p2 : (pat') withinfo_t) : bool =
-  (match ((p1).v, (p2).v) with
-    | ((Pat_constant (c1)), (Pat_constant (c2))) -> (FStarC_Const.eq_const c1 c2)
-    | ((Pat_cons (fv1, us1, as1)), (Pat_cons (fv2, us2, as2))) -> (if ((fv_eq fv1 fv2) && ((=) ((fun l -> Z.of_int (BatList.length l)) as1) ((fun l -> Z.of_int (BatList.length l)) as2))) then (let tmp = (BatList.for_all2 (fun tmp tmp1 -> (match (tmp, tmp1) with
-          | ((p11, b1), (p21, b2)) -> (if ((=) b1 b2) then (eq_pat p11 p21) else false)
-        )) as1 as2) in
-      (if tmp then (match (us1, us2) with
-        | (None, None) -> true
-        | ((Some (us11)), (Some (us21))) -> ((=) ((fun l -> Z.of_int (BatList.length l)) us11) ((fun l -> Z.of_int (BatList.length l)) us21))
-        | tmp1 -> false
-      ) else false)) else false)
-    | ((Pat_var (tmp)), (Pat_var (tmp1))) -> true
-    | ((Pat_dot_term (tmp)), (Pat_dot_term (tmp1))) -> true
-    | (tmp, tmp1) -> false
-  )
 
 let t_list_of (t : (term') syntax) : (term') syntax =
   (let tmp = (tabbrev FStarC_Parser_Const.list_lid) in
@@ -1499,6 +1493,25 @@ let fStarC_Class_Deq_op_Equals_Question__option_list_lident (tmp : ((FStarC_Iden
     | (tmp2, tmp3) -> false
   )
 
+let fv_eq (fv1 : fv) (fv2 : fv) : bool =
+  (FStarC_Ident.lid_equals (fv1).fv_name (fv2).fv_name)
+
+let rec eq_pat (p1 : (pat') withinfo_t) (p2 : (pat') withinfo_t) : bool =
+  (match ((p1).v, (p2).v) with
+    | ((Pat_constant (c1)), (Pat_constant (c2))) -> (FStarC_Const.eq_const c1 c2)
+    | ((Pat_cons (fv1, us1, as1)), (Pat_cons (fv2, us2, as2))) -> (if ((fv_eq fv1 fv2) && ((=) ((fun l -> Z.of_int (BatList.length l)) as1) ((fun l -> Z.of_int (BatList.length l)) as2))) then (let tmp = (BatList.for_all2 (fun tmp tmp1 -> (match (tmp, tmp1) with
+          | ((p11, b1), (p21, b2)) -> (if ((=) b1 b2) then (eq_pat p11 p21) else false)
+        )) as1 as2) in
+      (if tmp then (match (us1, us2) with
+        | (None, None) -> true
+        | ((Some (us11)), (Some (us21))) -> ((=) ((fun l -> Z.of_int (BatList.length l)) us11) ((fun l -> Z.of_int (BatList.length l)) us21))
+        | tmp1 -> false
+      ) else false)) else false)
+    | ((Pat_var (tmp)), (Pat_var (tmp1))) -> true
+    | ((Pat_dot_term (tmp)), (Pat_dot_term (tmp1))) -> true
+    | (tmp, tmp1) -> false
+  )
+
 let rec mk_Tm_abs (bs : (binder) list) (body : (term') syntax) (rc : (residual_comp) option) (p : FStarC_Range_Type.range) : (term') syntax =
   (match bs with
     | [] -> body
@@ -1514,13 +1527,6 @@ let extend_app_n (t : (term') syntax) (args : (((term') syntax * (arg_qualifier)
 
 let extend_app (t : (term') syntax) (arg : ((term') syntax * (arg_qualifier) option)) (p : FStarC_Range_Type.range) : (term') syntax =
   (extend_app_n t (arg :: []) p)
-
-let null_binder (t : (term') syntax) : binder =
-  (let tmp = (null_bv t) in
-  (mk_binder tmp))
-
-let withinfo (v : 'u___a) (r : FStarC_Range_Type.range) : ('u___a) withinfo_t =
-  { v = v; p = r }
 
 let rec mk_Tm_arrow (bs : (binder) list) (c : (comp_typ) syntax) (p : FStarC_Range_Type.range) : (term') syntax =
   (match bs with
@@ -1548,6 +1554,16 @@ let range_of_lbname (l : (bv, fv) FStar_Pervasives.either) : FStarC_Range_Type.r
 let fStarC_Class_HasRange_setPos__syntax_term' (tmp : FStarC_Range_Type.range) (tmp1 : (term') syntax) : (term') syntax =
   { n = (tmp1).n; pos = tmp; hash_code = (tmp1).hash_code }
 
+let fStarC_Class_Setlike_is_empty__bv_list_bv (tmp : (bv) list) : bool =
+  (FStarC_FlatSet.is_empty tmp)
+
+let null_binder (t : (term') syntax) : binder =
+  (let tmp = (null_bv t) in
+  (mk_binder tmp))
+
+let withinfo (v : 'u___a) (r : FStarC_Range_Type.range) : ('u___a) withinfo_t =
+  { v = v; p = r }
+
 let sli (l : FStarC_Ident.lident) : string =
   (let tmp = (FStarC_Options.print_real_names ()) in
   (if tmp then (FStarC_Ident.string_of_lid l) else (FStarC_Ident.string_of_id (FStarC_Ident.ident_of_lid l))))
@@ -1571,6 +1587,7 @@ let is_bqual_implicit_or_meta (tmp : (binder_qualifier) option) : bool =
   (match tmp with
     | (Some ((Implicit (tmp1)))) -> true
     | (Some ((Meta (tmp1)))) -> true
+    | (Some (TcArg)) -> true
     | tmp1 -> false
   )
 
@@ -1585,15 +1602,13 @@ let uu___is_Unresolved_name (projectee : fv_qual) : bool =
 
 type antiquotations = (Prims.int * ((term') syntax) list)
 
-type ctx_uvar_and_subst = (ctx_uvar * (((subst_elt) list) list * maybe_set_use_range))
+type ctx_uvar_and_subst = (ctx_uvar * subst_ts)
 
 type formulae = ((term') syntax) list
 
 type freenames = (bv) list
 
 type freenames_l = (bv) list
-
-type gamma = (binding) list
 
 type path = (string) list
 
@@ -1615,9 +1630,6 @@ let rec fStarC_FlatSet_remove__bv (x : bv) (s : (bv) list) : (bv) list =
 let fStarC_Class_Setlike_remove__bv_list_bv (tmp : bv) (s : (bv) list) : (bv) list =
   (fStarC_FlatSet_remove__bv tmp s)
 
-let fStarC_Class_Setlike_is_empty__bv_list_bv (tmp : (bv) list) : bool =
-  (FStarC_FlatSet.is_empty tmp)
-
 let fStarC_Class_HasRange_pos__ctx_uvar (tmp : ctx_uvar) : FStarC_Range_Type.range =
   (tmp).ctx_uvar_range
 
@@ -1636,9 +1648,6 @@ let fStarC_Class_Setlike_is_empty__ctx_uvar_list_ctx_uvar (tmp : (ctx_uvar) list
 let fStarC_Class_Setlike_for_all__ctx_uvar_list_ctx_uvar (tmp : (ctx_uvar -> bool)) (s : (ctx_uvar) list) : bool =
   (FStarC_FlatSet.for_all tmp s)
 
-let imp_tag : binder_qualifier =
-  (Implicit (false))
-
 let fStarC_Class_Show_show__tuple2_option_delta_depth_option_delta_depth (tmp : ((delta_depth) option * (delta_depth) option)) : string =
   (match tmp with
     | (x1, x2) -> (let tmp1 = (fStarC_Class_Show_show__option_delta_depth x1) in
@@ -1647,6 +1656,15 @@ let fStarC_Class_Show_show__tuple2_option_delta_depth_option_delta_depth (tmp : 
       let tmp4 = (Prims.strcat ", " tmp3) in
       let tmp5 = (Prims.strcat tmp1 tmp4) in
       (Prims.strcat "(" tmp5))
+  )
+
+let imp_tag : binder_qualifier =
+  (Implicit (false))
+
+let uu___is_New (projectee : qualifier) : bool =
+  (match projectee with
+    | New -> true
+    | tmp -> false
   )
 
 let fStarC_Class_Setlike_is_empty__tuple3_p_uvar_rec_option_version_range (tmp : ((int * version * FStarC_Range_Type.range)) list) : bool =
@@ -1674,6 +1692,12 @@ let t_tac_of (a : (term') syntax) (b : (term') syntax) : (term') syntax =
   let tmp1 = (mk_Tm_uinst tmp (U_zero :: (U_zero :: []))) in
   (mk_Tm_app tmp1 ((as_arg a) :: ((as_arg b) :: [])) FStarC_Range_Type.dummyRange))
 
+let fStarC_FlatSet_inter__bv (s1 : (bv) list) (s2 : (bv) list) : (bv) list =
+  (BatList.filter (fun y -> (fStarC_FlatSet_mem__bv y s2)) s1)
+
+let fStarC_Class_Setlike_inter__bv_list_bv (tmp : (bv) list) (s2 : (bv) list) : (bv) list =
+  (fStarC_FlatSet_inter__bv tmp s2)
+
 let mk_GTotal (t : (term') syntax) : (comp_typ) syntax =
   (mk_Comp { effect_name = FStarC_Parser_Const.primitive_ghost_lid;
     result_typ = t;
@@ -1686,14 +1710,24 @@ let is_bqual_implicit (tmp : (binder_qualifier) option) : bool =
     | tmp1 -> false
   )
 
-let fStarC_FlatSet_inter__bv (s1 : (bv) list) (s2 : (bv) list) : (bv) list =
-  (BatList.filter (fun y -> (fStarC_FlatSet_mem__bv y s2)) s1)
-
-let fStarC_Class_Setlike_inter__bv_list_bv (tmp : (bv) list) (s2 : (bv) list) : (bv) list =
-  (fStarC_FlatSet_inter__bv tmp s2)
-
 let fStarC_Class_HasRange_pos__binder (tmp : binder) : FStarC_Range_Type.range =
   (fStarC_Class_HasRange_pos__bv (tmp).binder_bv)
+
+let rec fStarC_AVLMap_fold__int_list_tuple2 (tmp : ((term') syntax -> ('v -> ('u___a -> 'u___a)))) (m : (Prims.int, (((term') syntax * 'v)) list) FStarC_AVLMap.tree) (acc : 'u___a) : 'u___a =
+  (match m with
+    | FStarC_AVLMap.Leaf -> acc
+    | (FStarC_AVLMap.Node (l, key, value, r, tmp1)) -> (let acc1 = (fStarC_AVLMap_fold__int_list_tuple2 tmp l acc) in
+      let acc2 = (BatList.fold_left (fun a tmp2 -> (match tmp2 with
+          | (k, v) -> (tmp k v a)
+        )) acc1 value) in
+      (fStarC_AVLMap_fold__int_list_tuple2 tmp r acc2))
+  )
+
+let fStarC_PIMap_fold__list_tuple2 (tmp : ((term') syntax -> ('v -> ('u___a -> 'u___a)))) (m : (Prims.int, (((term') syntax * 'v)) list) FStarC_AVLMap.tree) (acc : 'u___a) : 'u___a =
+  (fStarC_AVLMap_fold__int_list_tuple2 tmp m acc)
+
+let fStarC_HashMap_fold__syntax_term' (f : ((term') syntax -> ('v -> ('u___a -> 'u___a)))) (m : (Prims.int, (((term') syntax * 'v)) list) FStarC_AVLMap.tree) (acc : 'u___a) : 'u___a =
+  (fStarC_PIMap_fold__list_tuple2 f m acc)
 
 let mk_Tac (t : (term') syntax) : (comp_typ) syntax =
   (mk_Comp { effect_name = FStarC_Parser_Const.effect_TAC_lid;
@@ -2062,7 +2096,7 @@ let is_internal_qualifier (q : qualifier) : bool =
     | tmp -> false
   )
 
-let fStarC_Class_Show_show__restriction_155 (tmp : restriction) : string =
+let fStarC_Class_Show_show__restriction_157 (tmp : restriction) : string =
   (match tmp with
     | Unrestricted -> "Unrestricted"
     | (AllowList (l)) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__list_tuple2_ident_option l) in
@@ -2072,7 +2106,7 @@ let fStarC_Class_Show_show__restriction_155 (tmp : restriction) : string =
 let fStarC_Class_Show_show__tuple2_lident_restriction (tmp : (FStarC_Ident.lident * restriction)) : string =
   (match tmp with
     | (x1, x2) -> (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__lident x1) in
-      let tmp2 = (fStarC_Class_Show_show__restriction_155 x2) in
+      let tmp2 = (fStarC_Class_Show_show__restriction_157 x2) in
       let tmp3 = (Prims.strcat tmp2 ")") in
       let tmp4 = (Prims.strcat ", " tmp3) in
       let tmp5 = (Prims.strcat tmp1 tmp4) in
@@ -2105,13 +2139,14 @@ let mod_name (m : modul) : FStarC_Ident.lident =
   (m).name
 
 let lookup_aq (bv : bv) (aq : (Prims.int * ((term') syntax) list)) : (term') syntax =
-  (try ((fun l i -> BatList.nth l (Z.to_int i)) (match aq with
+  (match (FStarC_Common.nth_opt (match aq with
     | (u__1, u__2) -> u__2
   ) (Prims.op_Plus (Prims.op_Minus (Prims.op_Minus ((fun l -> Z.of_int (BatList.length l)) (match aq with
     | (u__1, u__2) -> u__2
   )) Prims.int_one) (bv).index) (match aq with
     | (u__1, u__2) -> u__1
   ))) with
-    | u__cexn -> (FStarC_Effect.failwith "antiquotation out of bounds")
+    | (Some (t)) -> t
+    | None -> (FStarC_Effect.failwith "antiquotation out of bounds")
   )
 

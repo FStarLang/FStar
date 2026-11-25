@@ -1066,14 +1066,33 @@ let exn_rule (id:string) : ML (option rule) =
            is a failed match rather than a re-raise: [FStarC.Plugins.dynlink]
            turned every dynlink failure into "Pattern matching failed", and
            [try ... with] in F* source is this shape, since [ToSyntax]
-           desugars it to a [function] with no catch-all. *)
+           desugars it to a [function] with no catch-all.
+
+           The branches may still mention the handler's binder, in a guard or
+           a body, and splicing them would leave it free -- or captured by
+           whatever outer variable has its name.  Such a handler keeps its
+           match, under a branch that binds the binder to the exception, with
+           a final branch that re-raises it so that an unmatched exception
+           still propagates. *)
+        let mentions (v:string) (brs:list branch) : ML bool =
+          brs |> List.existsb (fun (_, g, e) ->
+            occurs v e || (match g with Some g -> occurs v g | None -> false)) in
+        let catch_all (brs:list branch) : ML bool =
+          brs |> List.existsb (fun (p, g, _) ->
+            None? g && (match p with PWild | PVar _ -> true | _ -> false)) in
         let branches =
           match h.e with
           | EFun ([b], body_h) ->
             (match body_h.e with
              | EMatch (scrut, brs) ->
                (match scrut.e with
-                | EVar x when x = b.b_name -> brs
+                | EVar x when x = b.b_name ->
+                  if not (mentions x brs) then brs
+                  else
+                    let brs =
+                      if catch_all brs then brs
+                      else brs @ [(PWild, None, mk (ERaise scrut) body_h.ty E_Impure)] in
+                    [(PVar x, None, { body_h with e = EMatch (scrut, brs); eff = E_Impure })]
                 | _ -> [])
              | _ -> [])
           | _ -> [] in

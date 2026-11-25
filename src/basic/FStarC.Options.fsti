@@ -228,6 +228,7 @@ val custard_init_locals         : unit    -> ML string
 (* "no", "return" or "goto". *)
 val custard_early_return        : unit    -> ML string
 val custard_line_comments       : unit    -> ML bool
+val custard_no_banner           : unit    -> ML bool
 val custard_main                : unit    -> ML (option string)
 val custard_dump_ir             : unit    -> ML bool
 val custard_dump_specializations: unit    -> ML bool

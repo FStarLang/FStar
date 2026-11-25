@@ -2,7 +2,7 @@
 [@@@ocaml.warning "-3-5-8-11-20-26-27-28-32-33-34-35-37-39-50-57-60-69-70"]
 
 let cache_version_number : Prims.int =
-  (Prims.of_int (102))
+  (Prims.of_int (103))
 
 let dbg : (bool ref) =
   (FStarC_Debug.get_toggle "CheckedFiles")
@@ -231,7 +231,9 @@ let load_module_from_cache_internal : (bool -> (FStarC_Parser_Dep.deps -> (strin
       let suppress_warning = (if tmp2 then true else (!(already_failed))) in
       let tmp3 = (if (not suppress_warning) then true else (!(dbg))) in
       (if tmp3 then (((already_failed) := true);
-      (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document (FStarC_Range_Type.mk_range fn1 (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero) (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero)) FStarC_Errors_Codes.Warning_CachedFile ((FStarC_Errors_Msg.text (FStarC_Format.fmt3 "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)" cache_file1 msg fn1)) :: []))) else ()))) in
+      let tmp4 = (FStarC_Find.source_file_name fn1) in
+      let tmp5 = (FStarC_Range_Type.mk_range tmp4 (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero) (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero)) in
+      (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document tmp5 FStarC_Errors_Codes.Warning_CachedFile ((FStarC_Errors_Msg.text (FStarC_Format.fmt3 "Unable to load %s since %s; will recheck %s (suppressing this warning for further modules)" cache_file1 msg fn1)) :: []))) else ()))) in
     let tmp2 = (load_checked_file_with_tc_result deps fn1 cache_file) in
     (match tmp2 with
       | (FStar_Pervasives.Inl (msg)) -> ((fail msg cache_file);
@@ -332,7 +334,9 @@ let store_module_to_cache (env : FStarC_TypeChecker_Env.env) (file_name : string
         | (FStar_Pervasives.Inl (msg)) -> (let tmp8 = (!(dbg)) in
           (if tmp8 then (let tmp9 = (FStarC_Class_Show.fStarC_Class_Show_show__list_string_29 deps_of_fn) in
           (FStarC_Format.print2 "FAILING to store cache file for %s, with deps %s\n" file_name tmp9)) else ());
-          (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document (FStarC_Range_Type.mk_range file_name (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero) (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero)) FStarC_Errors_Codes.Warning_FileNotWritten ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Checked file %s was not written." cache_file)) :: ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (PPrint.string "Reason:") (FStarC_Errors_Msg.text msg)) :: []))))
+          let tmp9 = (FStarC_Find.source_file_name file_name) in
+          let tmp10 = (FStarC_Range_Type.mk_range tmp9 (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero) (FStarC_Range_Type.mk_pos Prims.int_zero Prims.int_zero)) in
+          (FStarC_Errors.fStarC_Errors_log_issue__range_list_ocaml_document tmp10 FStarC_Errors_Codes.Warning_FileNotWritten ((FStarC_Errors_Msg.text (FStarC_Format.fmt1 "Checked file %s was not written." cache_file)) :: ((FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (PPrint.string "Reason:") (FStarC_Errors_Msg.text msg)) :: []))))
       ))
   ))) else ()))
 

@@ -99,32 +99,38 @@ let rec traverse (f : (pol -> (FStarC_TypeChecker_Env.env -> ((FStarC_Syntax_Syn
           | ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_fvar (fv)); pos = tmp4; hash_code = tmp5; _ }, ((p, tmp6) :: ((q, tmp7) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.imp_lid) -> (let tmp8 = (FStarC_Syntax_Util.mk_squash p) in
             let x = (FStarC_Syntax_Syntax.new_bv None tmp8) in
             let r1 = (traverse f (flip pol) e p) in
-            let r2 = (traverse f pol (FStarC_TypeChecker_Env.push_bv e x) q) in
-            (comb2 (fun l r -> (let tmp9 = (FStarC_Syntax_Util.mk_imp l r) in
-            (tmp9).FStarC_Syntax_Syntax.n)) r1 r2))
+            let tmp9 = (FStarC_TypeChecker_Env.push_bv e x) in
+            let r2 = (traverse f pol tmp9 q) in
+            (comb2 (fun l r -> (let tmp10 = (FStarC_Syntax_Util.mk_imp l r) in
+            (tmp10).FStarC_Syntax_Syntax.n)) r1 r2))
           | ({ FStarC_Syntax_Syntax.n = (FStarC_Syntax_Syntax.Tm_fvar (fv)); pos = tmp4; hash_code = tmp5; _ }, ((p, tmp6) :: ((q, tmp7) :: []))) when (FStarC_Syntax_Syntax.fv_eq_lid fv FStarC_Parser_Const.iff_lid) -> (let tmp8 = (FStarC_Syntax_Util.mk_squash p) in
             let xp = (FStarC_Syntax_Syntax.new_bv None tmp8) in
             let tmp9 = (FStarC_Syntax_Util.mk_squash q) in
             let xq = (FStarC_Syntax_Syntax.new_bv None tmp9) in
-            let r1 = (traverse f Both (FStarC_TypeChecker_Env.push_bv e xq) p) in
-            let r2 = (traverse f Both (FStarC_TypeChecker_Env.push_bv e xp) q) in
+            let tmp10 = (FStarC_TypeChecker_Env.push_bv e xq) in
+            let r1 = (traverse f Both tmp10 p) in
+            let tmp11 = (FStarC_TypeChecker_Env.push_bv e xp) in
+            let r2 = (traverse f Both tmp11 q) in
             (match (r1, r2) with
-              | ((Unchanged (tmp10)), (Unchanged (tmp11))) -> (comb2 (fun l r -> (let tmp12 = (FStarC_Syntax_Util.mk_iff l r) in
-                (tmp12).FStarC_Syntax_Syntax.n)) r1 r2)
-              | tmp10 -> (let tmp11 = (explode r1) in
-                (match tmp11 with
-                  | (pn, pp, gs1) -> (let tmp12 = (explode r2) in
-                    (match tmp12 with
-                      | (qn, qp, gs2) -> (let tmp13 = (FStarC_Syntax_Util.mk_imp pn qp) in
-                        let tmp14 = (FStarC_Syntax_Util.mk_imp qn pp) in
-                        let t1 = (FStarC_Syntax_Util.mk_conj tmp13 tmp14) in
+              | ((Unchanged (tmp12)), (Unchanged (tmp13))) -> (comb2 (fun l r -> (let tmp14 = (FStarC_Syntax_Util.mk_iff l r) in
+                (tmp14).FStarC_Syntax_Syntax.n)) r1 r2)
+              | tmp12 -> (let tmp13 = (explode r1) in
+                (match tmp13 with
+                  | (pn, pp, gs1) -> (let tmp14 = (explode r2) in
+                    (match tmp14 with
+                      | (qn, qp, gs2) -> (let tmp15 = (FStarC_Syntax_Util.mk_imp pn qp) in
+                        let tmp16 = (FStarC_Syntax_Util.mk_imp qn pp) in
+                        let t1 = (FStarC_Syntax_Util.mk_conj tmp15 tmp16) in
                         (Simplified ((t1).FStarC_Syntax_Syntax.n, (BatList.append gs1 gs2))))
                     ))
                 ))
             ))
           | (hd, args) -> (let r0 = (traverse f pol e hd) in
             let r1 = (BatList.fold_right (fun tmp4 r -> (match tmp4 with
-                | (a, q) -> (let r' = (traverse f pol e a) in
+                | (a, q) -> (let r' = (match q with
+                      | (Some ({ FStarC_Syntax_Syntax.aqual_implicit = true; aqual_attributes = tmp5; _ })) -> (tpure a)
+                      | tmp5 -> (traverse f pol e a)
+                    ) in
                   (comb2 (fun a1 args1 -> ((a1, q) :: args1)) r' r))
               )) args (tpure [])) in
             (comb2 (fun hd1 args1 -> (let tmp4 = (FStarC_Syntax_Syntax.mk_Tm_app hd1 args1 (t).FStarC_Syntax_Syntax.pos) in
@@ -252,7 +258,7 @@ let by_tactic_interp (pol : pol) (e : FStarC_TypeChecker_Env.env) (t : (FStarC_S
               let goal = (FStarC_Syntax_Util.mk_squash tmp7) in
               let tmp8 = (run_tactic_on_typ (tactic).FStarC_Syntax_Syntax.pos (tm).FStarC_Syntax_Syntax.pos tactic e goal) in
               (match tmp8 with
-                | (gs, tmp9) -> (let tagged_imps = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_resolve_implicits_tac e g_imp) in
+                | (gs, tmp9) -> (let tagged_imps = (FStarC_TypeChecker_Rel.resolve_implicits_tac e g_imp) in
                   (FStarC_Tactics_Interpreter.report_implicits (tm).FStarC_Syntax_Syntax.pos tagged_imps);
                   (Simplified (uvtm, gs)))
               ))
@@ -322,8 +328,8 @@ let find_user_tac_for_attr (env : FStarC_TypeChecker_Env.env) (a : (FStarC_Synta
 let handle_smt_goal (env : FStarC_TypeChecker_Env.env) (goal : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : ((FStarC_TypeChecker_Env.env * (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax)) list =
   (let tmp = (FStarC_TypeChecker_Common.check_trivial goal) in
   (match tmp with
-    | FStarC_TypeChecker_Common.Trivial -> ((env, goal) :: [])
-    | (FStarC_TypeChecker_Common.NonTrivial (goal1)) -> (let tmp1 = (FStarC_Syntax_Syntax.tconst FStarC_Parser_Const.handle_smt_goals_attr) in
+    | FStarC_TypeChecker_CommonBase.Trivial -> ((env, goal) :: [])
+    | (FStarC_TypeChecker_CommonBase.NonTrivial (goal1)) -> (let tmp1 = (FStarC_Syntax_Syntax.tconst FStarC_Parser_Const.handle_smt_goals_attr) in
       let tmp2 = (find_user_tac_for_attr env tmp1) in
       (match tmp2 with
         | (Some (tac)) -> (let tau = (match (tac).FStarC_Syntax_Syntax.sigel with
@@ -358,8 +364,8 @@ let synthesize (env : FStarC_TypeChecker_Env.env) (typ : (FStarC_Syntax_Syntax.t
         | (Some (vc)) -> (let tmp4 = (!(dbg_Tac)) in
           (if tmp4 then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
           (FStarC_Format.print1 "Synthesis left a goal: %s\n" tmp5)) else ());
-          let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_Common.NonTrivial (vc))) in
-          (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
+          let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_CommonBase.NonTrivial (vc))) in
+          (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
         | None -> (FStarC_Errors.fStarC_Errors_raise_error__syntax_term'_string typ FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "synthesis left open goals")
       ))) gs);
       w)
@@ -387,8 +393,8 @@ let solve_implicits (env : FStarC_TypeChecker_Env.env) (tau : (FStarC_Syntax_Syn
     | (Some (vc)) -> (let tmp5 = (!(dbg_Tac)) in
       (if tmp5 then (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
       (FStarC_Format.print1 "Synthesis left a goal: %s\n" tmp6)) else ());
-      (if (not (env).FStarC_TypeChecker_Env.admit) then (let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_Common.NonTrivial (vc))) in
-      (FStarC_Profiling.profile (fun tmp6 -> (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard)) None "FStarC.TypeChecker.Hooks.force_trivial_guard")) else ()))
+      (if (not (env).FStarC_TypeChecker_Env.admit) then (let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_CommonBase.NonTrivial (vc))) in
+      (FStarC_Profiling.profile (fun tmp6 -> (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard)) None "FStarC.TypeChecker.Hooks.force_trivial_guard")) else ()))
     | None -> (FStarC_TypeChecker_Env.fStarC_Errors_raise_error__env_string env FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "synthesis left open goals")
   ))) gs))))))))
 
@@ -402,218 +408,230 @@ let rec us_equals (us : (FStarC_Ident.ident) list) (vs : (FStarC_Ident.ident) li
   )
 
 let splice (env : FStarC_TypeChecker_Env.env) (quals : (FStarC_Syntax_Syntax.qualifier) list) (attrs : ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) list) (is_typed : bool) (lids : (FStarC_Ident.lident) list) (tau : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (rng : FStarC_Range_Type.range) : (FStarC_Syntax_Syntax.sigelt) list =
-  (FStarC_Errors.with_ctx "While running splice with a tactic" (fun tmp -> (if (env).FStarC_TypeChecker_Env.flychecking then [] else (let tmp1 = (if is_typed then (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_check_tot_or_gtot_term env tau FStarC_Syntax_Util.t_dsl_tac_typ None) else (FStarC_TypeChecker_Primops.fStarC_TypeChecker_TcTerm_tc_tactic FStarC_Syntax_Syntax.t_unit FStarC_Syntax_Syntax.t_decls env tau)) in
-  (match tmp1 with
-    | (tau1, tmp2, g) -> ((FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard env g);
-      let ps = (FStarC_Tactics_V2_Basic.proofstate_of_goals (tau1).FStarC_Syntax_Syntax.pos env [] []) in
-      let ps1 = { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
-          all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
-          goals = (ps).FStarC_Tactics_Types.goals;
-          smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
-          splice_quals = quals;
-          splice_attrs = attrs;
-          depth = (ps).FStarC_Tactics_Types.depth;
-          u___dump = (ps).FStarC_Tactics_Types.u___dump;
-          psc = (ps).FStarC_Tactics_Types.psc;
-          entry_range = (ps).FStarC_Tactics_Types.entry_range;
-          guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
-          freshness = (ps).FStarC_Tactics_Types.freshness;
-          tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
-          local_state = (ps).FStarC_Tactics_Types.local_state;
-          urgency = (ps).FStarC_Tactics_Types.urgency;
-          dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure } in
-      let tmp3 = (if is_typed then (if (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) lids) Prims.int_one) then (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_98 lids) in
-        let tmp4 = (FStarC_Format.fmt1 "Typed splice: unexpected lids length (> 1) (%s)" tmp3) in
-        (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp4)) else (let tmp3 = (if (match lids with
-            | [] -> true
-            | tmp3 -> false
-          ) then (None, None) else (let tmp3 = (FStarC_TypeChecker_Env.try_lookup_val_decl env (BatList.hd lids)) in
+  (FStarC_Errors.with_ctx "While running splice with a tactic" (fun tmp -> (if (env).FStarC_TypeChecker_Env.flychecking then [] else (let tc = (fun env1 tau1 -> (if is_typed then (FStarC_TypeChecker_TcTerm.tc_check_tot_or_gtot_term env1 tau1 FStarC_Syntax_Util.t_dsl_tac_typ None) else (FStarC_TypeChecker_TcTerm.tc_tactic FStarC_Syntax_Syntax.t_unit FStarC_Syntax_Syntax.t_decls env1 tau1))) in
+  let tau1 = (FStarC_TypeChecker_CoreCheck.check_or_elaborate env (fun tmp1 -> (let tmp2 = (FStarC_TypeChecker_CoreCheck.elaborate env tc tau) in
+    (match tmp2 with
+      | (tau1, tmp3) -> (let t = (if is_typed then FStarC_Syntax_Util.t_dsl_tac_typ else (FStarC_Syntax_Syntax.t_tac_of FStarC_Syntax_Syntax.t_unit FStarC_Syntax_Syntax.t_decls)) in
+        (FStarC_TypeChecker_CoreCheck.check_term env "the tactic of this splice" tau1 t true);
+        tau1)
+    ))) (fun tmp1 -> (let tmp2 = (tc env tau) in
+    (match tmp2 with
+      | (tau1, tmp3, g) -> ((FStarC_TypeChecker_Rel.force_trivial_guard env g);
+        tau1)
+    )))) in
+  let ps = (FStarC_Tactics_V2_Basic.proofstate_of_goals (tau1).FStarC_Syntax_Syntax.pos env [] []) in
+  let ps1 = { FStarC_Tactics_Types.main_context = (ps).FStarC_Tactics_Types.main_context;
+      all_implicits = (ps).FStarC_Tactics_Types.all_implicits;
+      goals = (ps).FStarC_Tactics_Types.goals;
+      smt_goals = (ps).FStarC_Tactics_Types.smt_goals;
+      splice_quals = quals;
+      splice_attrs = attrs;
+      depth = (ps).FStarC_Tactics_Types.depth;
+      u___dump = (ps).FStarC_Tactics_Types.u___dump;
+      psc = (ps).FStarC_Tactics_Types.psc;
+      entry_range = (ps).FStarC_Tactics_Types.entry_range;
+      guard_policy = (ps).FStarC_Tactics_Types.guard_policy;
+      freshness = (ps).FStarC_Tactics_Types.freshness;
+      tac_verb_dbg = (ps).FStarC_Tactics_Types.tac_verb_dbg;
+      local_state = (ps).FStarC_Tactics_Types.local_state;
+      urgency = (ps).FStarC_Tactics_Types.urgency;
+      dump_on_failure = (ps).FStarC_Tactics_Types.dump_on_failure } in
+  let tmp1 = (if is_typed then (if (Prims.op_Greater ((fun l -> Z.of_int (BatList.length l)) lids) Prims.int_one) then (let tmp1 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_106 lids) in
+    let tmp2 = (FStarC_Format.fmt1 "Typed splice: unexpected lids length (> 1) (%s)" tmp1) in
+    (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp2)) else (let tmp1 = (if (match lids with
+        | [] -> true
+        | tmp1 -> false
+      ) then (None, None) else (let tmp1 = (FStarC_TypeChecker_Env.try_lookup_val_decl env (BatList.hd lids)) in
+      (match tmp1 with
+        | None -> (None, None)
+        | (Some (((uvs, tval), tmp2))) -> (let tmp3 = (FStarC_Syntax_Subst.open_univ_vars uvs tval) in
           (match tmp3 with
-            | None -> (None, None)
-            | (Some (((uvs, tval), tmp4))) -> (let tmp5 = (FStarC_Syntax_Subst.open_univ_vars uvs tval) in
-              (match tmp5 with
-                | (uvs1, tval1) -> ((Some (tval1)), (Some (uvs1)))
-              ))
-          ))) in
-        (match tmp3 with
-          | (val_t, uv_t) -> (let tmp4 = (FStarC_Tactics_Interpreter.run_tactic_on_ps (tau1).FStarC_Syntax_Syntax.pos (tau1).FStarC_Syntax_Syntax.pos false (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_env (FStarC_Syntax_Embeddings.e_option uu___0)) ({ FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
-                range = (env).FStarC_TypeChecker_Env.range;
-                curmodule = (env).FStarC_TypeChecker_Env.curmodule;
-                gamma = [];
-                gamma_sig = (env).FStarC_TypeChecker_Env.gamma_sig;
-                gamma_cache = (env).FStarC_TypeChecker_Env.gamma_cache;
-                modules = (env).FStarC_TypeChecker_Env.modules;
-                expected_typ = (env).FStarC_TypeChecker_Env.expected_typ;
-                sigtab = (env).FStarC_TypeChecker_Env.sigtab;
-                attrtab = (env).FStarC_TypeChecker_Env.attrtab;
-                instantiate_imp = (env).FStarC_TypeChecker_Env.instantiate_imp;
-                effects = (env).FStarC_TypeChecker_Env.effects;
-                generalize = (env).FStarC_TypeChecker_Env.generalize;
-                letrecs = (env).FStarC_TypeChecker_Env.letrecs;
-                rec_names = (env).FStarC_TypeChecker_Env.rec_names;
-                top_level = (env).FStarC_TypeChecker_Env.top_level;
-                check_uvars = (env).FStarC_TypeChecker_Env.check_uvars;
-                use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
-                is_iface = (env).FStarC_TypeChecker_Env.is_iface;
-                admit = (env).FStarC_TypeChecker_Env.admit;
-                phase1 = (env).FStarC_TypeChecker_Env.phase1;
-                failhard = (env).FStarC_TypeChecker_Env.failhard;
-                flychecking = (env).FStarC_TypeChecker_Env.flychecking;
-                uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
-                intactics = (env).FStarC_TypeChecker_Env.intactics;
-                nocoerce = (env).FStarC_TypeChecker_Env.nocoerce;
-                tc_term = (env).FStarC_TypeChecker_Env.tc_term;
-                typeof_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
-                universe_of = (env).FStarC_TypeChecker_Env.universe_of;
-                typeof_well_typed_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
-                teq_nosmt_force = (env).FStarC_TypeChecker_Env.teq_nosmt_force;
-                subtype_nosmt_force = (env).FStarC_TypeChecker_Env.subtype_nosmt_force;
-                qtbl_name_and_index = (env).FStarC_TypeChecker_Env.qtbl_name_and_index;
-                qtbl_name_and_index1 = (env).FStarC_TypeChecker_Env.qtbl_name_and_index1;
-                fv_delta_depths = (env).FStarC_TypeChecker_Env.fv_delta_depths;
-                proof_ns = (env).FStarC_TypeChecker_Env.proof_ns;
-                synth_hook = (env).FStarC_TypeChecker_Env.synth_hook;
-                try_solve_implicits_hook = (env).FStarC_TypeChecker_Env.try_solve_implicits_hook;
-                splice = (env).FStarC_TypeChecker_Env.splice;
-                mpreprocess = (env).FStarC_TypeChecker_Env.mpreprocess;
-                postprocess = (env).FStarC_TypeChecker_Env.postprocess;
-                identifier_info = (env).FStarC_TypeChecker_Env.identifier_info;
-                tc_hooks = (env).FStarC_TypeChecker_Env.tc_hooks;
-                dsenv = (env).FStarC_TypeChecker_Env.dsenv;
-                nbe = (env).FStarC_TypeChecker_Env.nbe;
-                strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
-                disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
-                erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
-                enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
-                unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
-                erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
-                core_check = (env).FStarC_TypeChecker_Env.core_check;
-                missing_decl = (env).FStarC_TypeChecker_Env.missing_decl;
-                iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
-                iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
-                iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
-                iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids }, val_t) (FStarC_Syntax_Embeddings.e_tuple3 (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple3 FStarC_Syntax_Embeddings.e_bool FStarC_Reflection_V2_Embeddings.e_sigelt (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string uu___0)))) (FStarC_Syntax_Embeddings.e_tuple3 FStarC_Syntax_Embeddings.e_bool FStarC_Reflection_V2_Embeddings.e_sigelt (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string uu___0))) (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple3 FStarC_Syntax_Embeddings.e_bool FStarC_Reflection_V2_Embeddings.e_sigelt (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string uu___0))))) tau1 true ps1) in
-            (match tmp4 with
-              | (gs, (sig_blobs_before, sig_blob, sig_blobs_after)) -> ((match (uv_t, sig_blob) with
-                  | ((Some (uv_t1)), (true, { FStarC_Syntax_Syntax.sigel = sigel; sigrng = tmp5; sigquals = tmp6; sigmeta = tmp7; sigattrs = tmp8; sigopens_and_abbrevs = tmp9; sigopts = tmp10; _ }, tmp11)) -> (let actual_uv = (match sigel with
-                        | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp12, ({ FStarC_Syntax_Syntax.lbname = tmp13; lbunivs = lbunivs; lbtyp = tmp14; lbeff = tmp15; lbdef = tmp16; lbattrs = tmp17; lbpos = tmp18; _ } :: [])); lids = tmp19; _ })) -> lbunivs
-                        | tmp12 -> []
-                      ) in
-                    (if (not (us_equals uv_t1 actual_uv)) then (let tmp12 = (FStarC_Ident.fStarC_Class_Show_show__lident (BatList.hd lids)) in
-                    let tmp13 = (FStarC_Ident.fStarC_Class_Show_show__list_ident_67 actual_uv) in
-                    let tmp14 = (FStarC_Ident.fStarC_Class_Show_show__list_ident_67 uv_t1) in
-                    let tmp15 = (FStarC_Format.fmt3 "Typed splice: val declaration for %s is universe polymorphic in %s, expected %s" tmp12 tmp13 tmp14) in
-                    (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp15)) else ()))
-                  | tmp5 -> ()
-                );
-                let sig_blobs = (BatList.append sig_blobs_before (sig_blob :: sig_blobs_after)) in
-                let sigelts = (BatList.map (fun tmp5 -> (match tmp5 with
-                    | (checked, se, blob_opt) -> { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
-                        sigrng = (se).FStarC_Syntax_Syntax.sigrng;
-                        sigquals = (se).FStarC_Syntax_Syntax.sigquals;
-                        sigmeta = (let tmp6 = (se).FStarC_Syntax_Syntax.sigmeta in
-                        { FStarC_Syntax_Syntax.sigmeta_active = (tmp6).FStarC_Syntax_Syntax.sigmeta_active;
-                          sigmeta_fact_db_ids = (tmp6).FStarC_Syntax_Syntax.sigmeta_fact_db_ids;
-                          sigmeta_admit = (tmp6).FStarC_Syntax_Syntax.sigmeta_admit;
-                          sigmeta_spliced = (tmp6).FStarC_Syntax_Syntax.sigmeta_spliced;
-                          sigmeta_already_checked = checked;
-                          sigmeta_extension_decl = (tmp6).FStarC_Syntax_Syntax.sigmeta_extension_decl;
-                          sigmeta_extension_data = (match blob_opt with
-                            | (Some ((s, blob))) -> ((s, (Obj.magic (blob))) :: [])
-                            | None -> []
-                          );
-                          sigmeta_type_constructor = (tmp6).FStarC_Syntax_Syntax.sigmeta_type_constructor });
-                        sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
-                        sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
-                        sigopts = (se).FStarC_Syntax_Syntax.sigopts }
-                  )) sig_blobs) in
-                (gs, sigelts))
-            ))
-        ))) else (FStarC_Tactics_Interpreter.run_tactic_on_ps (tau1).FStarC_Syntax_Syntax.pos (tau1).FStarC_Syntax_Syntax.pos false FStarC_Syntax_Embeddings.e_unit () (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_sigelt) tau1 true ps1)) in
-      (match tmp3 with
-        | (gs, sigelts) -> (let proc_lb = (fun lb -> (match lb with
-              | { FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv)); lbunivs = tmp4; lbtyp = tmp5; lbeff = tmp6; lbdef = lbdef; lbattrs = tmp7; lbpos = tmp8; _ } -> (let tmp9 = (List.find_opt (fun i -> (FStarC_Ident.lid_equals i (fv).FStarC_Syntax_Syntax.fv_name)) lids) in
-                let r = (match tmp9 with
-                    | (Some (i)) -> (FStarC_Ident.fStarC_Class_HasRange_pos__lident i)
-                    | tmp10 -> rng
+            | (uvs1, tval1) -> ((Some (tval1)), (Some (uvs1)))
+          ))
+      ))) in
+    (match tmp1 with
+      | (val_t, uv_t) -> (let tmp2 = (FStarC_Tactics_Interpreter.run_tactic_on_ps (tau1).FStarC_Syntax_Syntax.pos (tau1).FStarC_Syntax_Syntax.pos false (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Reflection_V2_Embeddings.e_env (FStarC_Syntax_Embeddings.e_option uu___0)) ({ FStarC_TypeChecker_Env.solver = (env).FStarC_TypeChecker_Env.solver;
+            range = (env).FStarC_TypeChecker_Env.range;
+            curmodule = (env).FStarC_TypeChecker_Env.curmodule;
+            gamma = [];
+            gamma_sig = (env).FStarC_TypeChecker_Env.gamma_sig;
+            gamma_cache = (env).FStarC_TypeChecker_Env.gamma_cache;
+            modules = (env).FStarC_TypeChecker_Env.modules;
+            expected_typ = (env).FStarC_TypeChecker_Env.expected_typ;
+            sigtab = (env).FStarC_TypeChecker_Env.sigtab;
+            attrtab = (env).FStarC_TypeChecker_Env.attrtab;
+            instantiate_imp = (env).FStarC_TypeChecker_Env.instantiate_imp;
+            effects = (env).FStarC_TypeChecker_Env.effects;
+            generalize = (env).FStarC_TypeChecker_Env.generalize;
+            letrecs = (env).FStarC_TypeChecker_Env.letrecs;
+            rec_names = (env).FStarC_TypeChecker_Env.rec_names;
+            top_level = (env).FStarC_TypeChecker_Env.top_level;
+            check_uvars = (env).FStarC_TypeChecker_Env.check_uvars;
+            use_eq_strict = (env).FStarC_TypeChecker_Env.use_eq_strict;
+            is_iface = (env).FStarC_TypeChecker_Env.is_iface;
+            admit = (env).FStarC_TypeChecker_Env.admit;
+            failhard = (env).FStarC_TypeChecker_Env.failhard;
+            flychecking = (env).FStarC_TypeChecker_Env.flychecking;
+            uvar_subtyping = (env).FStarC_TypeChecker_Env.uvar_subtyping;
+            intactics = (env).FStarC_TypeChecker_Env.intactics;
+            nocoerce = (env).FStarC_TypeChecker_Env.nocoerce;
+            tc_term = (env).FStarC_TypeChecker_Env.tc_term;
+            typeof_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_tot_or_gtot_term;
+            universe_of = (env).FStarC_TypeChecker_Env.universe_of;
+            typeof_well_typed_tot_or_gtot_term = (env).FStarC_TypeChecker_Env.typeof_well_typed_tot_or_gtot_term;
+            teq_nosmt_force = (env).FStarC_TypeChecker_Env.teq_nosmt_force;
+            subtype_nosmt_force = (env).FStarC_TypeChecker_Env.subtype_nosmt_force;
+            qtbl_name_and_index = (env).FStarC_TypeChecker_Env.qtbl_name_and_index;
+            qtbl_name_and_index1 = (env).FStarC_TypeChecker_Env.qtbl_name_and_index1;
+            fv_delta_depths = (env).FStarC_TypeChecker_Env.fv_delta_depths;
+            proof_ns = (env).FStarC_TypeChecker_Env.proof_ns;
+            synth_hook = (env).FStarC_TypeChecker_Env.synth_hook;
+            try_solve_implicits_hook = (env).FStarC_TypeChecker_Env.try_solve_implicits_hook;
+            splice = (env).FStarC_TypeChecker_Env.splice;
+            mpreprocess = (env).FStarC_TypeChecker_Env.mpreprocess;
+            postprocess = (env).FStarC_TypeChecker_Env.postprocess;
+            identifier_info = (env).FStarC_TypeChecker_Env.identifier_info;
+            tc_hooks = (env).FStarC_TypeChecker_Env.tc_hooks;
+            dsenv = (env).FStarC_TypeChecker_Env.dsenv;
+            nbe = (env).FStarC_TypeChecker_Env.nbe;
+            strict_args_tab = (env).FStarC_TypeChecker_Env.strict_args_tab;
+            disc_proj_tab = (env).FStarC_TypeChecker_Env.disc_proj_tab;
+            erasable_types_tab = (env).FStarC_TypeChecker_Env.erasable_types_tab;
+            spec_arg_tab = (env).FStarC_TypeChecker_Env.spec_arg_tab;
+            enable_defer_to_tac = (env).FStarC_TypeChecker_Env.enable_defer_to_tac;
+            unif_allow_ref_guards = (env).FStarC_TypeChecker_Env.unif_allow_ref_guards;
+            erase_erasable_args = (env).FStarC_TypeChecker_Env.erase_erasable_args;
+            core_check = (env).FStarC_TypeChecker_Env.core_check;
+            missing_decl = (env).FStarC_TypeChecker_Env.missing_decl;
+            iface_todo = (env).FStarC_TypeChecker_Env.iface_todo;
+            iface_hidden = (env).FStarC_TypeChecker_Env.iface_hidden;
+            iface_lids = (env).FStarC_TypeChecker_Env.iface_lids;
+            iface_val_lids = (env).FStarC_TypeChecker_Env.iface_val_lids;
+            tc_global = (env).FStarC_TypeChecker_Env.tc_global;
+            tc_scope = (env).FStarC_TypeChecker_Env.tc_scope;
+            tc_scope_gamma = (env).FStarC_TypeChecker_Env.tc_scope_gamma;
+            tc_class_of_typ = (env).FStarC_TypeChecker_Env.tc_class_of_typ;
+            tc_resolve = (env).FStarC_TypeChecker_Env.tc_resolve }, val_t) (FStarC_Syntax_Embeddings.e_tuple3 (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple3 FStarC_Syntax_Embeddings.e_bool FStarC_Reflection_V2_Embeddings.e_sigelt (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string uu___0)))) (FStarC_Syntax_Embeddings.e_tuple3 FStarC_Syntax_Embeddings.e_bool FStarC_Reflection_V2_Embeddings.e_sigelt (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string uu___0))) (FStarC_Syntax_Embeddings.e_list (FStarC_Syntax_Embeddings.e_tuple3 FStarC_Syntax_Embeddings.e_bool FStarC_Reflection_V2_Embeddings.e_sigelt (FStarC_Syntax_Embeddings.e_option (FStarC_Syntax_Embeddings.e_tuple2 FStarC_Syntax_Embeddings.e_string uu___0))))) tau1 true ps1) in
+        (match tmp2 with
+          | (gs, (sig_blobs_before, sig_blob, sig_blobs_after)) -> ((match (uv_t, sig_blob) with
+              | ((Some (uv_t1)), (true, { FStarC_Syntax_Syntax.sigel = sigel; sigrng = tmp3; sigquals = tmp4; sigmeta = tmp5; sigattrs = tmp6; sigopens_and_abbrevs = tmp7; sigopts = tmp8; _ }, tmp9)) -> (let actual_uv = (match sigel with
+                    | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (tmp10, ({ FStarC_Syntax_Syntax.lbname = tmp11; lbunivs = lbunivs; lbtyp = tmp12; lbeff = tmp13; lbdef = tmp14; lbattrs = tmp15; lbpos = tmp16; _ } :: [])); lids = tmp17; _ })) -> lbunivs
+                    | tmp10 -> []
                   ) in
-                let fv1 = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_setPos__fv r fv) in
-                { FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv1));
-                  lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
-                  lbtyp = (lb).FStarC_Syntax_Syntax.lbtyp;
-                  lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
-                  lbdef = (lb).FStarC_Syntax_Syntax.lbdef;
-                  lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
-                  lbpos = (lb).FStarC_Syntax_Syntax.lbpos })
-            )) in
-          let sigelts1 = (BatList.map (fun se -> (match (se).FStarC_Syntax_Syntax.sigel with
-              | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, lbs); lids = lids1; _ })) -> (let tmp4 = (BatList.map proc_lb lbs) in
-                let tmp5 = (is_rec, tmp4) in
-                let tmp6 = ({ FStarC_Syntax_Syntax.lbs = tmp5; lids = lids1 } : FStarC_Syntax_Syntax.sigelt'__Sig_let__payload) in
-                let tmp7 = (FStarC_Syntax_Syntax.Sig_let (tmp6)) in
-                { FStarC_Syntax_Syntax.sigel = tmp7;
-                  sigrng = (se).FStarC_Syntax_Syntax.sigrng;
-                  sigquals = (se).FStarC_Syntax_Syntax.sigquals;
-                  sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
-                  sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
-                  sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
-                  sigopts = (se).FStarC_Syntax_Syntax.sigopts })
-              | tmp4 -> se
-            )) sigelts) in
-          (FStarC_Options.with_saved_options (fun tmp4 -> (BatList.iter (fun g1 -> ((FStarC_Options.set (FStarC_Tactics_Types.goal_opts g1));
-          let tmp5 = (FStarC_Tactics_Types.goal_type g1) in
-          let tmp6 = (getprop (FStarC_Tactics_Types.goal_env g1) tmp5) in
-          (match tmp6 with
-            | (Some (vc)) -> (let tmp7 = (!(dbg_Tac)) in
-              (if tmp7 then (let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
-              (FStarC_Format.print1 "Splice left a goal: %s\n" tmp8)) else ());
-              let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_Common.NonTrivial (vc))) in
-              (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard (FStarC_Tactics_Types.goal_env g1) guard))
-            | None -> (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "splice left open goals")
-          ))) gs)));
-          let lids' = ((fun f l -> BatList.flatten (BatList.map f l)) FStarC_Syntax_Util.lids_of_sigelt sigelts1) in
-          (BatList.iter (fun lid -> (let tmp4 = (List.find_opt (FStarC_Ident.lid_equals lid) lids') in
-          (match tmp4 with
-            | None when (not (env).FStarC_TypeChecker_Env.flychecking) -> (let tmp5 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
-              let tmp6 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_98 lids') in
-              let tmp7 = (FStarC_Format.fmt2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" tmp5 tmp6) in
-              (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_SplicedUndef tmp7))
-            | tmp5 -> ()
-          ))) lids);
-          let tmp4 = (!(dbg_Tac)) in
-          (if tmp4 then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_sigelt sigelts1) in
-          (FStarC_Format.print1 "splice: got decls = {\n\n%s\n\n}\n" tmp5)) else ());
-          let sigelts2 = (BatList.map (fun se -> ((match (se).FStarC_Syntax_Syntax.sigel with
-              | (FStarC_Syntax_Syntax.Sig_datacon (tmp5)) -> (let tmp6 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
-                let tmp7 = (PPrint.string tmp6) in
-                let tmp8 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic returned bad sigelt:") tmp7) in
-                let tmp9 = (tmp8 :: ((FStarC_Errors_Msg.text "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt.") :: [])) in
-                (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_BadSplice tmp9))
-              | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp5)) -> (let tmp6 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
-                let tmp7 = (PPrint.string tmp6) in
-                let tmp8 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic returned bad sigelt:") tmp7) in
-                let tmp9 = (tmp8 :: ((FStarC_Errors_Msg.text "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt.") :: [])) in
-                (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_BadSplice tmp9))
-              | tmp5 -> ()
+                (if (not (us_equals uv_t1 actual_uv)) then (let tmp10 = (FStarC_Ident.fStarC_Class_Show_show__lident (BatList.hd lids)) in
+                let tmp11 = (FStarC_Ident.fStarC_Class_Show_show__list_ident_67 actual_uv) in
+                let tmp12 = (FStarC_Ident.fStarC_Class_Show_show__list_ident_67 uv_t1) in
+                let tmp13 = (FStarC_Format.fmt3 "Typed splice: val declaration for %s is universe polymorphic in %s, expected %s" tmp10 tmp11 tmp12) in
+                (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Error_BadSplice tmp13)) else ()))
+              | tmp3 -> ()
             );
-            { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
-              sigrng = rng;
+            let sig_blobs = (BatList.append sig_blobs_before (sig_blob :: sig_blobs_after)) in
+            let sigelts = (BatList.map (fun tmp3 -> (match tmp3 with
+                | (checked, se, blob_opt) -> { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
+                    sigrng = (se).FStarC_Syntax_Syntax.sigrng;
+                    sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+                    sigmeta = (let tmp4 = (se).FStarC_Syntax_Syntax.sigmeta in
+                    { FStarC_Syntax_Syntax.sigmeta_active = (tmp4).FStarC_Syntax_Syntax.sigmeta_active;
+                      sigmeta_fact_db_ids = (tmp4).FStarC_Syntax_Syntax.sigmeta_fact_db_ids;
+                      sigmeta_admit = (tmp4).FStarC_Syntax_Syntax.sigmeta_admit;
+                      sigmeta_spliced = (tmp4).FStarC_Syntax_Syntax.sigmeta_spliced;
+                      sigmeta_already_checked = checked;
+                      sigmeta_extension_decl = (tmp4).FStarC_Syntax_Syntax.sigmeta_extension_decl;
+                      sigmeta_extension_data = (match blob_opt with
+                        | (Some ((s, blob))) -> ((s, (Obj.magic (blob))) :: [])
+                        | None -> []
+                      );
+                      sigmeta_type_constructor = (tmp4).FStarC_Syntax_Syntax.sigmeta_type_constructor });
+                    sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
+                    sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+                    sigopts = (se).FStarC_Syntax_Syntax.sigopts }
+              )) sig_blobs) in
+            (gs, sigelts))
+        ))
+    ))) else (FStarC_Tactics_Interpreter.run_tactic_on_ps (tau1).FStarC_Syntax_Syntax.pos (tau1).FStarC_Syntax_Syntax.pos false FStarC_Syntax_Embeddings.e_unit () (FStarC_Syntax_Embeddings.e_list FStarC_Reflection_V2_Embeddings.e_sigelt) tau1 true ps1)) in
+  (match tmp1 with
+    | (gs, sigelts) -> (let proc_lb = (fun lb -> (match lb with
+          | { FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv)); lbunivs = tmp2; lbtyp = tmp3; lbeff = tmp4; lbdef = lbdef; lbattrs = tmp5; lbpos = tmp6; _ } -> (let tmp7 = (List.find_opt (fun i -> (FStarC_Ident.lid_equals i (fv).FStarC_Syntax_Syntax.fv_name)) lids) in
+            let r = (match tmp7 with
+                | (Some (i)) -> (FStarC_Ident.fStarC_Class_HasRange_pos__lident i)
+                | tmp8 -> rng
+              ) in
+            let fv1 = (FStarC_Syntax_Syntax.fStarC_Class_HasRange_setPos__fv r fv) in
+            { FStarC_Syntax_Syntax.lbname = (FStar_Pervasives.Inr (fv1));
+              lbunivs = (lb).FStarC_Syntax_Syntax.lbunivs;
+              lbtyp = (lb).FStarC_Syntax_Syntax.lbtyp;
+              lbeff = (lb).FStarC_Syntax_Syntax.lbeff;
+              lbdef = (lb).FStarC_Syntax_Syntax.lbdef;
+              lbattrs = (lb).FStarC_Syntax_Syntax.lbattrs;
+              lbpos = (lb).FStarC_Syntax_Syntax.lbpos })
+        )) in
+      let sigelts1 = (BatList.map (fun se -> (match (se).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_let ({ FStarC_Syntax_Syntax.lbs = (is_rec, lbs); lids = lids1; _ })) -> (let tmp2 = (BatList.map proc_lb lbs) in
+            let tmp3 = (is_rec, tmp2) in
+            let tmp4 = ({ FStarC_Syntax_Syntax.lbs = tmp3; lids = lids1 } : FStarC_Syntax_Syntax.sigelt'__Sig_let__payload) in
+            let tmp5 = (FStarC_Syntax_Syntax.Sig_let (tmp4)) in
+            { FStarC_Syntax_Syntax.sigel = tmp5;
+              sigrng = (se).FStarC_Syntax_Syntax.sigrng;
               sigquals = (se).FStarC_Syntax_Syntax.sigquals;
               sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
               sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
               sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
-              sigopts = (se).FStarC_Syntax_Syntax.sigopts })) sigelts1) in
-          (if is_typed then () else (BatList.iter (fun se -> (BatList.iter (fun q -> (if (FStarC_Syntax_Syntax.is_internal_qualifier q) then (let tmp5 = (FStarC_Syntax_Print.fStarC_Class_Show_show__qualifier q) in
-          let tmp6 = (FStarC_Format.fmt1 "The qualifier %s is internal." tmp5) in
-          let tmp7 = (FStarC_Errors_Msg.text tmp6) in
-          let tmp8 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
-          let tmp9 = (PPrint.arbitrary_string tmp8) in
-          let tmp10 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "It cannot be attached to spliced declaration:") tmp9) in
-          let tmp11 = (tmp10 :: []) in
-          let tmp12 = (tmp7 :: tmp11) in
-          (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_InternalQualifier tmp12)) else ())) (se).FStarC_Syntax_Syntax.sigquals)) sigelts2));
-          sigelts2)
-      ))
+              sigopts = (se).FStarC_Syntax_Syntax.sigopts })
+          | tmp2 -> se
+        )) sigelts) in
+      (FStarC_Options.with_saved_options (fun tmp2 -> (BatList.iter (fun g -> ((FStarC_Options.set (FStarC_Tactics_Types.goal_opts g));
+      let tmp3 = (FStarC_Tactics_Types.goal_type g) in
+      let tmp4 = (getprop (FStarC_Tactics_Types.goal_env g) tmp3) in
+      (match tmp4 with
+        | (Some (vc)) -> (let tmp5 = (!(dbg_Tac)) in
+          (if tmp5 then (let tmp6 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
+          (FStarC_Format.print1 "Splice left a goal: %s\n" tmp6)) else ());
+          let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_CommonBase.NonTrivial (vc))) in
+          (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
+        | None -> (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "splice left open goals")
+      ))) gs)));
+      let lids' = ((fun f l -> BatList.flatten (BatList.map f l)) FStarC_Syntax_Util.lids_of_sigelt sigelts1) in
+      (BatList.iter (fun lid -> (let tmp2 = (List.find_opt (FStarC_Ident.lid_equals lid) lids') in
+      (match tmp2 with
+        | None when (not (env).FStarC_TypeChecker_Env.flychecking) -> (let tmp3 = (FStarC_Ident.fStarC_Class_Show_show__lident lid) in
+          let tmp4 = (FStarC_Ident.fStarC_Class_Show_show__list_lident_106 lids') in
+          let tmp5 = (FStarC_Format.fmt2 "Splice declared the name %s but it was not defined.\nThose defined were: %s" tmp3 tmp4) in
+          (FStarC_Errors.fStarC_Errors_raise_error__range_string rng FStarC_Errors_Codes.Fatal_SplicedUndef tmp5))
+        | tmp3 -> ()
+      ))) lids);
+      let tmp2 = (!(dbg_Tac)) in
+      (if tmp2 then (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__list_sigelt sigelts1) in
+      (FStarC_Format.print1 "splice: got decls = {\n\n%s\n\n}\n" tmp3)) else ());
+      let sigelts2 = (BatList.map (fun se -> ((match (se).FStarC_Syntax_Syntax.sigel with
+          | (FStarC_Syntax_Syntax.Sig_datacon (tmp3)) -> (let tmp4 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
+            let tmp5 = (PPrint.string tmp4) in
+            let tmp6 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic returned bad sigelt:") tmp5) in
+            let tmp7 = (tmp6 :: ((FStarC_Errors_Msg.text "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt.") :: [])) in
+            (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_BadSplice tmp7))
+          | (FStarC_Syntax_Syntax.Sig_inductive_typ (tmp3)) -> (let tmp4 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
+            let tmp5 = (PPrint.string tmp4) in
+            let tmp6 = (PPrint.(^/^) (FStarC_Errors_Msg.text "Tactic returned bad sigelt:") tmp5) in
+            let tmp7 = (tmp6 :: ((FStarC_Errors_Msg.text "If you wanted to splice an inductive type, call `pack` providing a `Sg_Inductive` to get a proper sigelt.") :: [])) in
+            (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_BadSplice tmp7))
+          | tmp3 -> ()
+        );
+        { FStarC_Syntax_Syntax.sigel = (se).FStarC_Syntax_Syntax.sigel;
+          sigrng = rng;
+          sigquals = (se).FStarC_Syntax_Syntax.sigquals;
+          sigmeta = (se).FStarC_Syntax_Syntax.sigmeta;
+          sigattrs = (se).FStarC_Syntax_Syntax.sigattrs;
+          sigopens_and_abbrevs = (se).FStarC_Syntax_Syntax.sigopens_and_abbrevs;
+          sigopts = (se).FStarC_Syntax_Syntax.sigopts })) sigelts1) in
+      (if is_typed then () else (BatList.iter (fun se -> (BatList.iter (fun q -> (if (FStarC_Syntax_Syntax.is_internal_qualifier q) then (let tmp3 = (FStarC_Syntax_Print.fStarC_Class_Show_show__qualifier q) in
+      let tmp4 = (FStarC_Format.fmt1 "The qualifier %s is internal." tmp3) in
+      let tmp5 = (FStarC_Errors_Msg.text tmp4) in
+      let tmp6 = (FStarC_Syntax_Print.sigelt_to_string_short se) in
+      let tmp7 = (PPrint.arbitrary_string tmp6) in
+      let tmp8 = (FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one (FStarC_Errors_Msg.text "It cannot be attached to spliced declaration:") tmp7) in
+      let tmp9 = (tmp8 :: []) in
+      let tmp10 = (tmp5 :: tmp9) in
+      (FStarC_Errors.fStarC_Errors_raise_error__range_list_ocaml_document rng FStarC_Errors_Codes.Error_InternalQualifier tmp10)) else ())) (se).FStarC_Syntax_Syntax.sigquals)) sigelts2));
+      sigelts2)
   )))))
 
 let mpreprocess (env : FStarC_TypeChecker_Env.env) (tau : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) (tm : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax =
@@ -637,11 +655,11 @@ let postprocess (env : FStarC_TypeChecker_Env.env) (tau : (FStarC_Syntax_Syntax.
             | (Some (vc)) -> (let tmp7 = (!(dbg_Tac)) in
               (if tmp7 then (let tmp8 = (FStarC_Syntax_Print.fStarC_Class_Show_show__syntax_term' vc) in
               (FStarC_Format.print1 "Postprocessing left a goal: %s\n" tmp8)) else ());
-              let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_Common.NonTrivial (vc))) in
-              (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
+              let guard = (FStarC_TypeChecker_Env.guard_of_guard_formula (FStarC_TypeChecker_CommonBase.NonTrivial (vc))) in
+              (FStarC_TypeChecker_Rel.force_trivial_guard (FStarC_Tactics_Types.goal_env g) guard))
             | None -> (FStarC_Errors.fStarC_Errors_raise_error__syntax_term'_string typ FStarC_Errors_Codes.Fatal_OpenGoalsInSynthesis "postprocessing left open goals")
           ))) gs);
-          let tagged_imps = (FStarC_TypeChecker_Primops.fStarC_TypeChecker_Rel_resolve_implicits_tac env g_imp) in
+          let tagged_imps = (FStarC_TypeChecker_Rel.resolve_implicits_tac env g_imp) in
           (FStarC_Tactics_Interpreter.report_implicits (tm).FStarC_Syntax_Syntax.pos tagged_imps);
           uvtm)
       ))

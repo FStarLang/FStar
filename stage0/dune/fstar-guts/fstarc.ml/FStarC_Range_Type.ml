@@ -52,9 +52,7 @@ let set_use_range (r2 : range) (use_rng : rng) : range =
     use_range = use_rng } else r2)
 
 let mk_rng (file_name : string) (start_pos : Prims.int) (end_pos : Prims.int) : rng =
-  { file_name = (FStarC_Filepath.basename file_name);
-    start_pos = start_pos;
-    end_pos = end_pos }
+  { file_name = file_name; start_pos = start_pos; end_pos = end_pos }
 
 let max (i : Prims.int) (j : Prims.int) : Prims.int =
   (if (Prims.op_Less i j) then j else i)

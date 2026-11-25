@@ -8,6 +8,9 @@ let empty_env : FStarC_Syntax_DsEnv.env =
 let noenv (f : (FStarC_Syntax_DsEnv.env -> 'u___a)) : 'u___a =
   (f empty_env)
 
+let passes : (((FStarC_Syntax_DsEnv.env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> FStarC_Parser_AST.term))) list ref) =
+  (ref [])
+
 exception SkipResugar
 
 let rec resugar_term'__aux (passes_ : ((FStarC_Syntax_DsEnv.env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> FStarC_Parser_AST.term))) list) (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
@@ -18,9 +21,6 @@ let rec resugar_term'__aux (passes_ : ((FStarC_Syntax_DsEnv.env -> ((FStarC_Synt
       )
   )
 
-let passes : (((FStarC_Syntax_DsEnv.env -> ((FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax -> FStarC_Parser_AST.term))) list ref) =
-  (ref [])
-
 let resugar_term' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
   (let tmp = (!(passes)) in
   (resugar_term'__aux tmp env t))
@@ -30,7 +30,7 @@ let resugar_bqual (env : FStarC_Syntax_DsEnv.env) (q : (FStarC_Syntax_Syntax.bin
     | None -> None
     | (Some ((FStarC_Syntax_Syntax.Implicit (b)))) -> (Some (FStarC_Parser_AST.Implicit))
     | (Some (FStarC_Syntax_Syntax.Equality)) -> (Some (FStarC_Parser_AST.Equality))
-    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) when (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t) -> (Some (FStarC_Parser_AST.TypeClassArg))
+    | (Some (FStarC_Syntax_Syntax.TcArg)) -> (Some (FStarC_Parser_AST.TypeClassArg))
     | (Some ((FStarC_Syntax_Syntax.Meta (t)))) -> (let tmp = (resugar_term' env t) in
       let tmp1 = (FStarC_Parser_AST.Meta (tmp)) in
       (Some (tmp1)))
@@ -58,6 +58,10 @@ let resugar_binder' (env : FStarC_Syntax_DsEnv.env) (b : FStarC_Syntax_Syntax.bi
 let resugar_binder (b : FStarC_Syntax_Syntax.binder) (r : FStarC_Range_Type.range) : FStarC_Parser_AST.binder =
   (let tmp = (noenv resugar_binder') in
   (tmp b r))
+
+let resugar_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
+  (let tmp = (noenv resugar_term') in
+  (tmp t))
 
 let serialize_machine_integer_desc (tmp : (FStarC_Const.signedness * FStarC_Const.width)) : (string) list =
   (match tmp with
@@ -154,7 +158,7 @@ let rec resugar_universe (u : FStarC_Syntax_Syntax.universe) (r : FStarC_Range_T
 
 let is_imp_bqual (a : (FStarC_Syntax_Syntax.binder_qualifier) option) : bool =
   (match a with
-    | (Some ((FStarC_Syntax_Syntax.Meta (t)))) when (FStarC_Syntax_Util.is_fvar FStarC_Parser_Const.tcresolve_lid t) -> false
+    | (Some (FStarC_Syntax_Syntax.TcArg)) -> false
     | (Some ((FStarC_Syntax_Syntax.Implicit (tmp)))) -> true
     | (Some ((FStarC_Syntax_Syntax.Meta (tmp)))) -> true
     | tmp -> false
@@ -1321,10 +1325,6 @@ let resugar_term_base' (env : FStarC_Syntax_DsEnv.env) (t : (FStarC_Syntax_Synta
 
 let uu___0 : unit =
   (register_pass resugar_term_base')
-
-let resugar_term (t : (FStarC_Syntax_Syntax.term') FStarC_Syntax_Syntax.syntax) : FStarC_Parser_AST.term =
-  (let tmp = (noenv resugar_term') in
-  (tmp t))
 
 let resugar_pat (p : (FStarC_Syntax_Syntax.pat') FStarC_Syntax_Syntax.withinfo_t) (branch_bv : (FStarC_Syntax_Syntax.bv) list) : FStarC_Parser_AST.pattern =
   (let tmp = (noenv resugar_pat') in

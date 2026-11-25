@@ -35,25 +35,27 @@ let get (name : string) : counter =
 let children : (Prims.int ref) =
   (ref Prims.int_zero)
 
-let timed (name : string) (f : (unit -> 'u___a)) : 'u___a =
-  (let tmp = (is_enabled ()) in
-  let tmp1 = (not tmp) in
-  (if tmp1 then (f ()) else (let c = (get name) in
+let timed_on (name : string) (f : (unit -> 'u___a)) : 'u___a =
+  (let c = (get name) in
   let saved = (!(children)) in
   ((children) := Prims.int_zero);
-  let tmp2 = (FStarC_Timing.record_ns f) in
-  (match tmp2 with
+  let tmp = (FStarC_Timing.record_ns f) in
+  (match tmp with
     | (res, elapsed) -> (let mine = (!(children)) in
       ((children) := (Prims.op_Plus saved elapsed));
-      let tmp3 = (!((c).c_time)) in
-      let tmp4 = (Prims.op_Plus tmp3 elapsed) in
-      let tmp5 = (Prims.op_Minus tmp4 mine) in
-      (((c).c_time) := tmp5);
-      let tmp6 = (!((c).c_calls)) in
-      let tmp7 = (Prims.op_Plus tmp6 Prims.int_one) in
-      (((c).c_calls) := tmp7);
+      let tmp1 = (!((c).c_time)) in
+      let tmp2 = (Prims.op_Plus tmp1 elapsed) in
+      let tmp3 = (Prims.op_Minus tmp2 mine) in
+      (((c).c_time) := tmp3);
+      let tmp4 = (!((c).c_calls)) in
+      let tmp5 = (Prims.op_Plus tmp4 Prims.int_one) in
+      (((c).c_calls) := tmp5);
       res)
-  ))))
+  ))
+
+let timed (name : string) (f : (unit -> 'u___a)) : 'u___a =
+  (let tmp = (is_enabled ()) in
+  (if tmp then (timed_on name f) else (f ())))
 
 let report (tmp : unit) : unit =
   (let tmp1 = (is_enabled ()) in

@@ -317,14 +317,13 @@ let uvar_env (x1 : FStarC_TypeChecker_Env.env) (ty : ((FStarC_Syntax_Syntax.term
 let var_retype (x1 : FStarC_Reflection_V2_Data.binding) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (FStarC_Tactics_V2_Basic.var_retype x1)
 
-let with_compat_pre_core (n : Prims.int) (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___a))) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___a) =
-  (let tmp = (f ()) in
-  (FStarC_Tactics_V2_Basic.with_compat_pre_core n tmp))
-
 let with_error_context (s : string) (f : (unit -> ((FStarC_Tactics_Types.proofstate ref) -> 'u___c))) : ((FStarC_Tactics_Types.proofstate ref) -> 'u___c) =
   (let tmp = (f ()) in
   (FStarC_Tactics_V2_Basic.with_error_context () () s tmp))
 
 let write (x1 : ('tmp ref)) (x : 'tmp) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
   (FStarC_Tactics_V2_Basic.write x1 x)
+
+let tcresolve_native (x1 : unit) : ((FStarC_Tactics_Types.proofstate ref) -> unit) =
+  (FStarC_Tactics_V2_Basic.tcresolve_native ())
 

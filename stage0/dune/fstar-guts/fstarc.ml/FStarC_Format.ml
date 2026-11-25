@@ -70,17 +70,17 @@ let print_warning (s : string) : unit =
 let print1_error (a : string) (b : string) : unit =
   (print_error (fmt1 a b))
 
-let print1 (spec : string) (arg1 : string) : unit =
-  (print_string (fmt1 spec arg1))
-
-let print3_error (a : string) (b : string) (c : string) (d : string) : unit =
-  (print_error (fmt3 a b c d))
-
 let fmt4 (spec : string) (arg1 : string) (arg2 : string) (arg3 : string) (arg4 : string) : string =
   (fmt spec (arg1 :: (arg2 :: (arg3 :: (arg4 :: [])))))
 
 let fmt5 (spec : string) (arg1 : string) (arg2 : string) (arg3 : string) (arg4 : string) (arg5 : string) : string =
   (fmt spec (arg1 :: (arg2 :: (arg3 :: (arg4 :: (arg5 :: []))))))
+
+let print1 (spec : string) (arg1 : string) : unit =
+  (print_string (fmt1 spec arg1))
+
+let print3_error (a : string) (b : string) (c : string) (d : string) : unit =
+  (print_error (fmt3 a b c d))
 
 let print2 (spec : string) (arg1 : string) (arg2 : string) : unit =
   (print_string (fmt2 spec arg1 arg2))
