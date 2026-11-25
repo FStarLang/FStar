@@ -16,6 +16,7 @@ module S = FStarC.Syntax.Syntax
 module U = FStarC.Syntax.Util
 
 open FStarC.Class.Show
+open FStarC.Class.Setlike
 
 let should_unfold (allow_strict : bool) cfg should_reify fv qninfo : ML should_unfold_res =
     let attrs =
@@ -97,8 +98,18 @@ let should_unfold (allow_strict : bool) cfg should_reify fv qninfo : ML should_u
         once
 
     | Some (Inr ({sigattrs=attrs}, _), _), _ when cfg.steps.for_extraction && Some? (BU.find_map attrs Parser.Const.ExtractAs.is_extract_as_attr) ->
-        log_unfolding cfg (fun () -> Format.print_string " >> Has extract_as attribute and we're extracting, unfold!");
-        yes
+        let impl = Some?.v (BU.find_map attrs Parser.Const.ExtractAs.is_extract_as_attr) in
+        // The replacement, not the proof term, determines whether unfolding recurses.
+        // A recursive source definition may still have a nonrecursive replacement.
+        if not cfg.steps.zeta && not cfg.steps.zeta_full
+           && mem (S.lid_of_fv fv) (Syntax.Free.fvars impl)
+        then (
+            log_unfolding cfg (fun () -> Format.print_string " >> Recursive extract_as but we're not doing Zeta, not unfolding\n");
+            no
+        ) else (
+            log_unfolding cfg (fun () -> Format.print_string " >> Has extract_as attribute and we're extracting, unfold!");
+            yes
+        )
 
     // Recursive lets may only be unfolded when Zeta is on
     | Some (Inr ({sigquals=qs; sigel=Sig_let {lbs=(is_rec, _)}}, _), _), _ when

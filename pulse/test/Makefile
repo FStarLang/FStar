@@ -3,6 +3,8 @@ SUBDIRS += error_messages
 SUBDIRS += nolib
 SUBDIRS += pool
 
+BUILD += InlineRecursion.fst
+
 PULSE_ROOT ?= ..
 include $(PULSE_ROOT)/mk/test.mk
 
@@ -28,3 +30,9 @@ include $(PULSE_ROOT)/mk/custard-test.mk
 CUSTARD_CFLAGS += -Wno-error=unused-but-set-variable
 
 KRML_FLAGS = -ccopt -Wno-error=unused-but-set-variable
+
+# A recursive extract_as must remain a call when extraction disables zeta.
+$(OUTPUT_DIR)/InlineRecursion.ml:
+	$(call msg, "CUSTARD", InlineRecursion)
+	timeout 60 $(FSTAR) $< --codegen OCaml \
+	  --custard_entry_module InlineRecursion -o $@
