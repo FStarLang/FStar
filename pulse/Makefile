@@ -59,6 +59,10 @@ lib-common: .force
 lib-core: lib-common .force
 	$(MAKE) -f mk/lib-core.mk
 
+.PHONY: lib-extrinsic
+lib-extrinsic: .force
+	$(MAKE) -f mk/lib-extrinsic.mk
+
 lib-pulse: plugin lib-common .force
 	$(MAKE) -f mk/lib-pulse.mk
 
@@ -100,6 +104,7 @@ clean:
 	$(MAKE) -f mk/plugin.mk clean
 	$(MAKE) -f mk/lib-pulse.mk clean
 	$(MAKE) -f mk/lib-core.mk clean
+	$(MAKE) -f mk/lib-extrinsic.mk clean
 	$(MAKE) -f mk/lib-common.mk clean
 
 .PHONY: test-pulse
