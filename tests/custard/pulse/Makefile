@@ -16,6 +16,11 @@ $(OUTPUT_DIR)/hoist-locals.checked: $(addprefix $(CACHE_DIR)/, HoistArrays.fst.c
 	$(Q)CC="$(CC)" CXX="$(CXX)" python3 ../hoistlocals.py $(OUTPUT_DIR)/hoist-locals -- $(FSTAR)
 	$(Q)touch $@
 
+all: $(OUTPUT_DIR)/early-return.checked
+$(OUTPUT_DIR)/early-return.checked: $(addprefix $(CACHE_DIR)/, EarlyReturnVla.fst.checked GotoReturn.fst.checked) $(FSTAR_EXE) ../earlyreturn.py GotoReturn_stubs.h
+	$(Q)CC="$(CC)" CXX="$(CXX)" python3 ../earlyreturn.py $(OUTPUT_DIR)/early-return -- $(FSTAR)
+	$(Q)touch $@
+
 all: $(OUTPUT_DIR)/init-locals.checked
 $(OUTPUT_DIR)/init-locals.checked: $(addprefix $(CACHE_DIR)/, HoistArrays.fst.checked HoistVla.fst.checked HoistVlaLate.fst.checked PulseBasic.fst.checked PulseClosure.fst.checked AllocOverflow.fst.checked ArrInit.fst.checked) $(FSTAR_EXE) ../initlocals.py
 	$(Q)CC="$(CC)" CXX="$(CXX)" python3 ../initlocals.py $(OUTPUT_DIR)/init-locals -- $(FSTAR)

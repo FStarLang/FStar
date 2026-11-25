@@ -200,6 +200,7 @@ let defaults = [
   ("custard_static_header"                     , Bool false);
   ("custard_hoist_locals"                      , Bool false);
   ("custard_init_locals"                       , String "no");
+  ("custard_early_return"                      , String "no");
   ("custard_line_comments"                     , Bool false);
   ("custard_no_banner"                         , Bool false);
   ("custard_main"                              , Unset);
@@ -476,6 +477,7 @@ let get_custard_c_no_prefix     ()      = lookup_opt "custard_c_no_prefix"      
 let get_custard_static_header   ()      = lookup_opt "custard_static_header"    as_bool
 let get_custard_hoist_locals    ()      = lookup_opt "custard_hoist_locals"     as_bool
 let get_custard_init_locals     ()      = lookup_opt "custard_init_locals"      as_string
+let get_custard_early_return    ()      = lookup_opt "custard_early_return"     as_string
 let get_custard_line_comments   ()      = lookup_opt "custard_line_comments"    as_bool
 let get_custard_no_banner       ()      = lookup_opt "custard_no_banner"        as_bool
 let get_custard_main            ()      = lookup_opt "custard_main"             (as_option as_string)
@@ -912,6 +914,21 @@ ones. Runs after --custard_hoist_locals, so declarations it moves are \
 zero-initialized too, and their original initialization stays an assignment \
 at its execution point. A variable-length array can be initialized only in \
 c23 mode. Not implemented for Cherry or other code generators.");
+
+  ( noshort,
+    "custard_early_return",
+    EnumStr ["no"; "return"; "goto"],
+    text "With --codegen C, choose how a function returns from a conditional \
+in tail position. no: every branch ends with its own return. return: when \
+the then-branch returns, the else-branch follows the if instead of being \
+nested in an else, as krml's -fnoreturn-else does; a void function returns \
+explicitly from the then-branch. goto: as return, and in a function with an \
+early return, every return assigns a result variable and jumps to one exit \
+label at the end of the function, as krml's -goto_for_early_return does. In \
+goto mode, a variable-length array, or a declaration with an initializer, \
+at the top level of a function after its first early return is an error, \
+since the jump would skip it; --custard_hoist_locals moves declarations out \
+of the way. Not implemented for Cherry or other code generators.");
 
   ( noshort,
     "custard_line_comments",
@@ -2318,6 +2335,7 @@ let custard_c_no_prefix          () = get_custard_c_no_prefix ()
 let custard_static_header        () = get_custard_static_header ()
 let custard_hoist_locals         () = get_custard_hoist_locals ()
 let custard_init_locals          () = get_custard_init_locals ()
+let custard_early_return         () = get_custard_early_return ()
 let custard_line_comments        () = get_custard_line_comments ()
 let custard_no_banner            () = get_custard_no_banner ()
 let custard_main                 () = get_custard_main ()

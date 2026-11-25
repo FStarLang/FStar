@@ -3244,6 +3244,81 @@ Nothing else changes. The option applies to every Custard backend.
 Tests: `NoBanner` in `tests/custard/Makefile`, on the OCaml, C, Cherry and F#
 legs. The F# leg checks every file in the output directory.
 
+### 6.5 Early returns
+
+`--custard_early_return {no,return,goto}` (default `no`) selects how a C
+function returns from the branches of an `if`, or of the `if`/`else if` chain
+of a `match`, that ends the function. It is the Custard counterpart of krml's
+`-fnoreturn-else` (`return`) and `-fnoreturn-else -goto_for_early_return`
+(`goto`). With `no`, the output is unchanged: each arm returns in its own
+`else` block.
+
+- `return`: every tested arm returns from its block, and the last arm follows
+  the `if` without an `else`, one level less indented:
+
+  ```c
+    if (x == 0) {
+      return f(1);
+    }
+    return f(3);
+  ```
+
+  In a `void` function, a tested arm ends with an explicit `return;` when
+  code follows the `if`. A branch with nothing to do is not flattened (`if
+  (b) { ... }`, or `if (!(b)) { ... }` for an empty `then` arm), since it does
+  not return early.
+- `goto`: as `return`, and each function with at least one early return gets a
+  single exit. It declares `T result = <zero>;` first; each return writes
+  `result = v;`, and early ones then `goto exit;`. The function ends with
+  `exit: return result;`. A `void` function has no result variable: an early
+  return is a bare `goto exit;`, and the function ends with `exit: return;`,
+  as krml prints it. A function without an early return is unchanged. Both
+  names are fresh: a local already named `result` or `exit` makes them
+  `result_1` / `exit_1`.
+
+Custard returns early only from such tail branches: loops are left with
+`break`, and a Pulse `return` becomes a flag. So `goto` without
+`return` would change nothing, which is why it is one three-valued option.
+The zero of `result` is the one of section 6.2 (`c99` spelling); with
+`--custard_init_locals`, that pass supplies it in its own mode. Self tail
+calls (`goto custard_tail`) and TRMC are unaffected.
+
+`goto` mode rejects a function (error 368) where the jump to `exit` would
+skip a declaration in the label's scope, i.e. a top-level declaration after
+the first early return:
+
+- a variable-length array: C forbids jumping into its scope. Use `return`
+  mode, or fixed-size storage;
+- a declaration with an initializer, including a C++ reference binding:
+  C++ forbids jumping past it. `--custard_hoist_locals` (section 6.1) moves
+  such declarations, without their initializers, to the top of the function,
+  so the usual combination is `goto` with hoisting.
+
+Declarations inside blocks are left before any jump, and are fine. Both
+modes also check that local names are unique in each function that has a
+flattened arm, since flattening widens the scope of the last arm's
+declarations (a duplicate is a compiler bug, error 368). Cherry and the other
+backends reject any mode other than `no`.
+
+Implementation: a `c_body` node `CExit (ind, value, jump)` stands for a
+return in `goto` mode, so that the guards see it after hoisting and zero
+initialization. `finish` produces it for a `D_Return` destination. `emit`
+(for `if`) and `emit_match` flatten the tested arms when the destination is
+`D_Return`, emitting them with `in_early` set. A `CExit` emitted there marks
+the function as having an early return. `let_decl` then declares `result`
+and the label, and clears the jump of the final `CExit`. Without an early
+return, each `CExit` renders as a plain `return`.
+
+Tests: `tests/custard/earlyreturn.py`, run from `tests/custard`
+(`EarlyReturn`, `EarlyReturnLate`) and `tests/custard/pulse`
+(`EarlyReturnVla`, and `GotoReturn`, a port of karamel's
+`test/pulse/GotoReturn.fst` checked in `goto` mode, alone and with hoisting or
+line comments). It checks that `no` is the default output, that flattened
+functions have no `else`, and the shape of the `goto` output. It also checks
+that functions without early returns are unchanged, the errors of both
+guards, and that the other backends reject the option. Each output is
+compiled as C11 and C++17 with `-Wall -Wextra -Werror` and run.
+
 ## 7. Effects and purity
 
 The custom-rule table of §8 is a *value*-level mechanism: it says what a call
