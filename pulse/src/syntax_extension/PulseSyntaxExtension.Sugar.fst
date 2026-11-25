@@ -43,6 +43,7 @@ type computation_annot' =
   | Preserves of slprop
   | Requires of slprop
   | Ensures of slprop
+  | Raises of A.term
   | Returns of option ident & A.term
   | Opens of A.term
 
@@ -62,8 +63,24 @@ type parsed_annots = {
   postcondition: slprop;
   return_name: ident;
   return_type: A.term;
-  opens: option A.term
+  opens: option A.term;
+  raises: option A.term
 }
+
+// Shared by declarations and higher-order computation types. The generated
+// result binder must not capture names in either user-written postcondition.
+let outcome_spec (r:rng) (name:ident) (ty post exceptional:A.term)
+  : ML (ident & A.term & A.term) =
+  let app f args = A.mkApp f (List.Tot.map (fun a -> a, A.Nothing) args) r in
+  let rules s = A.mk_term (A.Var (lid_of_path ["Pulse"; "Lib"; "Effects"; "Rules"; s] r)) r A.Expr in
+  let p = A.mk_pattern (A.PatVar (name, None, [])) r in
+  let p = A.mk_pattern (A.PatAscribed (p, (ty, None))) r in
+  let q = A.mk_term (A.Abs ([p], post)) r A.Expr in
+  let result = FStarC.Ident.gen' "outcome" r in
+  let result_tm = A.mk_term (A.Var (lid_of_ids [result])) r A.Expr in
+  result,
+  app (rules "native_outcome") [A.mk_term A.Wild r A.Expr; ty],
+  app (rules "exit_post") [q; exceptional; result_tm]
 
 type mut_or_ref =
   | MUT | REF
@@ -196,6 +213,14 @@ type stmt' =
       arg: option A.term;
     }
 
+  | Raise { arg:A.term }
+
+  | Try {
+      contract:computation_type;
+      body:stmt;
+      handlers:list (bool & A.pattern & stmt);
+    }
+
   | Defer {
       handler_pre: slprop;
       defer_handler: stmt;
@@ -281,6 +306,8 @@ let tag_of_stmt (s:stmt) : string =
   | ProofHintWithBinders {} -> "ProofHintWithBinders"
   | ForwardJumpLabel {} -> "ForwardJumpLabel"
   | Goto {} -> "Goto"
+  | Raise {} -> "Raise"
+  | Try {} -> "Try"
   | Defer {} -> "Defer"
 
 instance tagged_stmt : Class.Tagged.tagged stmt = {
@@ -383,6 +410,10 @@ let rec stmt_to_string (s:stmt) : ML string =
       "pre", A.term_to_string handler_pre;
       "handler", stmt_to_string defer_handler;
     ]
+  | Raise { arg } -> "Raise " ^ A.term_to_string arg
+  | Try { body; handlers } ->
+    "Try " ^ stmt_to_string body ^ " catch " ^
+    FStarC.Common.string_of_list branch_to_string handlers
 
 and branch_to_string (b:bool & A.pattern & stmt) : ML string =
   let (norw, p, s) = b in
@@ -468,6 +499,7 @@ and eq_annot (a1 a2:computation_annot) : ML bool =
   | Preserves s1, Preserves s2 -> eq_slprop s1 s2
   | Requires s1, Requires s2 -> eq_slprop s1 s2
   | Ensures s1, Ensures s2 -> eq_slprop s1 s2
+  | Raises s1, Raises s2 -> AD.eq_term s1 s2
   | Returns (i1, t1), Returns (i2, t2) -> eq_opt eq_ident i1 i2 && AD.eq_term t1 t2
   | Opens t1, Opens t2 -> AD.eq_term t1 t2
   | _, _ -> false
@@ -522,6 +554,10 @@ and eq_stmt' (s1 s2:stmt') : ML bool =
     eq_stmt b1 b2 && eq_ident l1 l2 && eq_opt eq_ensures_slprop p1 p2
   | Goto { lbl=l1; arg=a1 }, Goto { lbl=l2; arg=a2 } ->
     eq_ident l1 l2 && eq_opt AD.eq_term a1 a2
+  | Raise { arg=a1 }, Raise { arg=a2 } -> AD.eq_term a1 a2
+  | Try { contract=c1; body=b1; handlers=h1 }, Try { contract=c2; body=b2; handlers=h2 } ->
+    eq_computation_type c1 c2 && eq_stmt b1 b2 &&
+    forall2 (fun (n1,p1,s1) (n2,p2,s2) -> n1=n2 && AD.eq_pattern p1 p2 && eq_stmt s1 s2) h1 h2
   | Defer { handler_pre=p1; defer_handler=h1 }, Defer { handler_pre=p2; defer_handler=h2 } ->
     eq_slprop p1 p2 && eq_stmt h1 h2
   | Return { arg=a1 }, Return { arg=a2 } ->
@@ -617,6 +653,9 @@ and scan_annot cbs (a : computation_annot) : ML unit =
   | Preserves s -> scan_slprop cbs s
   | Requires s -> scan_slprop cbs s
   | Ensures s -> scan_slprop cbs s
+  | Raises s ->
+    cbs.scan_term (A.mk_term (A.Var (lid_of_path ["Pulse"; "Lib"; "Effects"; "Rules"; "native_outcome"] s.range)) s.range A.Expr);
+    cbs.scan_term s
   | Returns (i, t) -> cbs.scan_term t
   | Opens t -> cbs.scan_term t
 and scan_slprop (cbs:A.dep_scan_callbacks) (s:slprop) : ML unit =
@@ -670,6 +709,11 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) : ML unit =
     iopt (scan_ensures_slprop cbs) post
   | Goto { lbl; arg } ->
     iopt cbs.scan_term arg
+  | Raise { arg } -> cbs.scan_term arg
+  | Try { contract; body; handlers } ->
+    scan_computation_type cbs contract;
+    scan_stmt cbs body;
+    iter (fun (_, p, s) -> cbs.scan_pattern p; scan_stmt cbs s) handlers
   | Defer { handler_pre; defer_handler } ->
     scan_slprop cbs handler_pre;
     scan_stmt cbs defer_handler

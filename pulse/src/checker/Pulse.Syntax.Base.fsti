@@ -309,11 +309,45 @@ type st_term' =
       lbl: term; // either var or named
       arg: term;
     }
+  // Transient exception syntax: Pulse.Checker.Exceptions eliminates all three
+  // nodes before extraction. No lexical label is bound here; the checker
+  // creates one after validating the two-exit contract.
+  | Tm_Raise {
+      // May contain stateful syntax until the checker's hoisting pass runs.
+      arg: term;
+    }
+  | Tm_ExceptionScope {
+      // The unwrapped result/post; the scope itself returns native_outcome.
+      normal: comp_st;
+      // A total payload -> slprop expression, not a closed spatial assertion.
+      exceptional: term;
+      body: st_term;
+    }
+  | Tm_Try {
+      // Shared normal result/post for the protected body and catch clauses.
+      normal: comp_st;
+      exceptional: term;
+      body: st_term;
+      // Payload bound at index 0 ONLY in handler. Desugaring supplies an
+      // ordered match and a fallback raise; the checker checks this outside
+      // the protected body's exception label so clauses can re-raise outward.
+      handler: st_term;
+    }
   | Tm_Defer {
+      result_ty: term; // unknown in source; filled by the checker
       handler_pre: slprop;
       handler: st_term;
       body: st_term;
     }
+  // Checked runtime nodes. The checker first discharges the two-exit/goto
+  // obligations; these nodes preserve host control flow for extraction.
+  // A native raise transfers control to the innermost enclosing NativeScope
+  // of the SAME function body; it never unwinds across a function boundary.
+  | Tm_NativeRaise { exn_ty:term; result_ty:term; arg:term }
+  // body computes outcome exn result_ty, ending in Normal. At runtime the
+  // scope also converts a raise targeting it into Raised, so every native
+  // function and try body yields ordinary outcome data at its boundary.
+  | Tm_NativeScope { exn_ty:term; result_ty:term; body:st_term }
 and st_term = {
     term : st_term';
     range : range;
@@ -463,4 +497,3 @@ let ppname_for_uvar (p : ppname) : T.Tac ppname =
   {
     p with name = T.seal ("?" ^ T.unseal p.name);
   }
-

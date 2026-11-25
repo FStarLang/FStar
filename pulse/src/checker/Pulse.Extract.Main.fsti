@@ -23,5 +23,8 @@ module T = FStar.Tactics.V2
 
 open Pulse.Typing.Env { env }
 
+// Inspect the checked tree before simplification erases exception scopes.
+val uses_native_exceptions (p:st_term) : Tot bool
+
 val extract_pulse_dv (g: env) (p:st_term) : T.Tac R.term
 val extract_dv_recursive (g: env) (p:st_term) (rec_name:R.fv) : T.Tac R.term
