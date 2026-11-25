@@ -68,10 +68,12 @@ val goal_context : goal_tree -> goal -> ML (list ctx_elt)
 val all_decls : goal_tree -> ML (list decl)
 
 (* [split_goals_under msg env bs q] is [split_goals msg env (forall bs. q)],
-   for binders [bs] open in [q], without building the closed formula. *)
+   for binders [bs] open in [q], without building the closed formula.  Each
+   binder comes with its sort normalized by [EncodeTerm.norm], which is what
+   its typing hypothesis encodes. *)
 val split_goals_under : option (unit -> ML string)
                      -> env_t
-                     -> bs:S.binders
+                     -> bs:list (S.binder & S.term)
                      -> q:S.term
                      -> ML (goal_tree & decls_t)
 
