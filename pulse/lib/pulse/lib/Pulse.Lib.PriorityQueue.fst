@@ -1121,6 +1121,7 @@ fn rec sift_down (#t:eqtype) {| total_order t |} (pq:rvec t) (idx:SZ.t) (len:SZ.
     ()
   } else {
     // Compute right directly from idx for SMT clarity
+    SZ.fits_lte (2 * SZ.v idx + 2) (2 * Seq.length s + 2);
     let right : SZ.t = SZ.add (SZ.mul 2sz idx) 2sz;
     assert (pure (SZ.v right == right_idx (SZ.v idx)));
     let current_val = RV.get pq idx;
