@@ -35,5 +35,22 @@ type sl_reponse = { slr_name: string;
                     slr_def: option string }
 
 val term_to_string : TcEnv.env -> Syntax.Syntax.term -> ML string
+
+(** The documentation attached to [lid] with the [FStar.Attributes.doc]
+    attribute, if any, with its lines joined by newlines.
+
+    [None] means "this name has no reportable documentation": it carries
+    no [doc] attribute, its payload has no non-blank text, or its payload
+    is not a literal list of string literals. The [lookup] request has no
+    per-field error channel -- [documentation] is a string or null -- so
+    all three answer null. Only the last is malformed; [--export_docs],
+    which does have somewhere to put a diagnostic, warns about it.
+
+    When an interface declares [lid], its declaration is consulted
+    directly. This makes both its text and its lack of text authoritative:
+    implementation-only documentation cannot leak through a merged
+    implementation sigelt. *)
+val docs_of_lid : TcEnv.env -> Ident.lident -> ML (option string)
+
 val symlookup : TcEnv.env -> string -> option position -> list string -> ML (option sl_reponse)
 val ck_completion : repl_state -> string -> ML (list CTable.completion_result)

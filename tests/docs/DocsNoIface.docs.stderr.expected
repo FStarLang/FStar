@@ -1,0 +1,10 @@
+* Warning 278 at DocsNoIface.fst(39,0-39,27):
+  - Ignoring a 'doc' attribute whose payload is not a literal list of string
+    literals.
+  - Payload: [DocsNoIface.greeting ^ ", world"]
+
+* Warning 278 at DocsNoIface.fst(44,0-44,28):
+  - Ignoring a 'doc' attribute whose payload is not a literal list of string
+    literals.
+  - Payload: DocsNoIface.lines
+
