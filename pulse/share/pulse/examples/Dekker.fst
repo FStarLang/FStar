@@ -2,7 +2,7 @@ module Dekker
 #lang-pulse
 open Pulse.Lib.Pervasives
 module GR = Pulse.Lib.GhostReference
-module R = Pulse.Lib.Reference
+module A = Pulse.Lib.Atomic
 open Pulse.Class.PtsTo
 
 (* Dekker's algorithm for mutual exclusion relies on sequential consistency
@@ -24,28 +24,8 @@ This is provable in Pulse with an invariant & ghost state
 *)
 
 
-// Some primitives for atomic read and write
-atomic
-fn read_atomic (r:R.ref bool) (#p:perm) (#v:erased bool)
-requires
-  r |-> Frac p v
-returns b:bool
-ensures
-  r |-> Frac p v
-ensures
-  pure (b == reveal v)
-{admit()}
-
-atomic
-fn write_atomic (r:R.ref bool) (b:bool)
-requires
-  exists* v. r |-> v
-ensures
-  r |-> b
-{ admit() }
-
 //The main invariant
-let dekker_inv (ra rb:R.ref bool) (ga gb:GR.ref bool) (p:slprop)
+let dekker_inv (ra rb:A.atomic_ref bool) (ga gb:GR.ref bool) (p:slprop)
 : slprop
 = exists* (va vb ua ub:bool).
     (ra |-> Frac 0.5R va) **
@@ -60,7 +40,7 @@ let dekker_inv (ra rb:R.ref bool) (ga gb:GR.ref bool) (p:slprop)
 
 ghost
 fn init_dekker_inv 
-      (ra rb:R.ref bool)
+      (ra rb:A.atomic_ref bool)
       (ga gb:GR.ref bool)
       (p:slprop)
 requires
@@ -78,14 +58,14 @@ ensures
   (ga |-> Frac 0.5R false) **
   (gb |-> Frac 0.5R false)
 {
-  R.share ra; R.share rb;
+  A.share ra; A.share rb;
   GR.share ga; GR.share gb;
   intro_cond_false emp p;
   fold (dekker_inv ra rb ga gb p);
   new_invariant (dekker_inv ra rb ga gb p);
 }
 
-fn procA (i:iname) (ra rb:R.ref bool) (ga gb:GR.ref bool) (p:slprop)
+fn procA (i:iname) (ra rb:A.atomic_ref bool) (ga gb:GR.ref bool) (p:slprop)
 preserves 
   inv i (dekker_inv ra rb ga gb p) //with the invariant
 requires
@@ -103,9 +83,9 @@ ensures
     (fun _ -> ra |-> Frac 0.5R true ** ga |-> Frac 0.5R false)
   fn _ {
     unfold dekker_inv;
-    R.gather ra;
-    write_atomic ra true;   // x := true
-    R.share ra;
+    A.gather ra;
+    A.store ra true;   // x := true
+    A.share ra;
     GR.gather ga;
     GR.share ga;
     fold (dekker_inv ra rb ga gb p);
@@ -116,8 +96,8 @@ ensures
       (cond b p emp))
   fn _ {
     unfold dekker_inv;
-    R.gather ra; R.share ra;
-    if (read_atomic rb)
+    A.gather ra; A.share ra;
+    if (A.load rb)
     { 
       fold (dekker_inv ra rb ga gb);
       fold cond false p emp;

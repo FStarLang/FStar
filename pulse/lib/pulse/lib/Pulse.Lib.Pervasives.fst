@@ -25,7 +25,6 @@ include Pulse.Lib.WithPure
 include Pulse.Lib.Array
 include Pulse.Lib.Reference
 include Pulse.Lib.Reference.Array
-include Pulse.Lib.Primitives // TODO: what if we want to support several architectures?
 include Pulse.Class.PtsTo
 include Pulse.Class.Duplicable
 include Pulse.Class.Introducable { intro }
@@ -35,6 +34,8 @@ include PulseCore.Observability
 include FStar.Ghost
 
 module GSet = FStar.GhostSet
+
+let cond b (p q:slprop) = if b then p else q
 
 (* Pulse will currently not recognize calls to anything other than
 top-level names, so this allows to force it. *)

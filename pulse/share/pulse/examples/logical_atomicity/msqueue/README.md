@@ -40,9 +40,9 @@ All module names here have the prefix
 
 ## Representation and abstract contract
 
-The queue uses an immutable arena of cells and UInt32 node IDs because Pulse's
-existing atomic primitives are UInt32-based. Each cell has an immutable value
-and an atomic next field. ID `0xffffffff` is null; node zero is the initial
+The queue uses an immutable arena of cells and UInt32 node IDs because
+`Pulse.Lib.Atomic` cells hold machine integers, not pointers. Each cell has an
+immutable value and an atomic next field (`Pulse.Lib.Atomic.atomic_box`). ID `0xffffffff` is null; node zero is the initial
 dummy. Enqueue consumes a **one-use node ticket**, backed by exclusive ownership
 of that node's next field, and an associated payload resource `P value`.
 
@@ -69,7 +69,7 @@ order to understand why the implementation satisfies them:
 | --- | --- | --- |
 | 1 | [Model](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Model.fst) | Pure append-only history, monotone head/tail indices, and correspondence between physical transitions and FIFO sequence operations. |
 | 2 | [Storage](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Storage.fst) | Focus/restore physical links, consume exclusive node tickets, prove freshness from ownership, and collect live payload resources. |
-| 3 | [Atomics interface](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Atomics.fsti) | Exact load and weak-CAS contracts supplied by existing Pulse primitives; failure need not imply a value mismatch. |
+| 3 | [Atomics interface](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Atomics.fsti) | Exact load and weak-CAS contracts over `Pulse.Lib.Atomic` boxes; failure need not imply a value mismatch. |
 | 4 | [State](Pulse.Lib.LogicalAtomicity.Example.MSQueue.State.fst) | Connect physical pointers and links, authoritative history, payload ownership, and a client model half-reference; justify stale observations and tail helping. |
 | 5 | [Actions](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Actions.fst) | Compose an open client AU with one implementation step, and defer its closing action until the implementation invariant is restored. |
 | 6 | [Enqueue](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Enqueue.fst) | Transfer the fresh node and payload at successful link CAS; restore all untransferred ownership on failure. |
@@ -161,15 +161,16 @@ The runtime reuses the native lock, fork, and sleep realizations from the
 existing task-pool tests. For queue atomics, read these files together:
 
 * [Atomics-model.fst](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Atomics-model.fst)
-  verifies the wrapper against existing Pulse primitive contracts.
+  verifies the wrapper against `Pulse.Lib.Atomic` box operations.
 * [Atomics-ocaml.fst](Pulse.Lib.LogicalAtomicity.Example.MSQueue.Atomics-ocaml.fst)
   has verified bodies but selects handwritten externals for extraction.
-* [MSQueue_atomics.ml](MSQueue_atomics.ml) implements those externals with
-  a mutex around each load/CAS, not an entire queue operation, and injects
-  permitted spurious CAS failures.
+* [MSQueue_atomics.ml](MSQueue_atomics.ml) implements those externals
+  lock-free over OCaml `Atomic.t` (the extracted `atomic_box`): `Atomic.get`
+  for loads and a value-comparing `Atomic.compare_and_set` loop for CAS. It
+  also injects permitted spurious CAS failures.
 
-This backend tests concurrent safety, **not lock-free execution**. The
-handwritten target realization remains a runtime trust boundary; verifying
+These tests exercise concurrent safety; they are not a lock-freedom proof or
+benchmark. The handwritten target realization remains a runtime trust boundary; verifying
 the F* wrapper does not prove the OCaml code correct.
 
 The handwritten OCaml harness is also not verified. It must respect erased

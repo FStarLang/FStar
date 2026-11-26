@@ -25,7 +25,7 @@ is provided. See README.md in the foundation directory for scope/references.
 *)
 
 open Pulse.Lib.Pervasives
-module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module G = Pulse.Lib.GhostReference
 module MR = Pulse.Lib.MonotonicGhostRef
 module U32 = FStar.UInt32
@@ -113,8 +113,8 @@ atomic fn link_opened (#cells:N.arena) (q:Q.queue cells) (p:U32.t -> slprop)
       let next:erased (Q.history cells) = hide (H.append s n);
       rewrite N.rest cells s.H.nodes old.H.tail
         as N.rest cells s.H.nodes (S.length s.H.nodes - 1);
-      rewrite B.pts_to (N.at cells tail).N.next n
-        as B.pts_to (N.at cells (S.index s.H.nodes (S.length s.H.nodes - 1))).N.next n;
+      rewrite AT.box_pts_to (N.at cells tail).N.next n
+        as AT.box_pts_to (N.at cells (S.index s.H.nodes (S.length s.H.nodes - 1))).N.next n;
       N.append_link cells s.H.nodes n;
       rewrite N.links cells (S.append s.H.nodes (S.create 1 n)) as N.links cells next.H.nodes;
       MR.update q.Q.core.Q.history next;
@@ -145,8 +145,8 @@ atomic fn link_opened (#cells:N.arena) (q:Q.queue cells) (p:U32.t -> slprop)
       true
     } else {
       elim_cond_false _ _ _;
-      rewrite B.pts_to (N.at cells tail).N.next (N.successor cells s.H.nodes old.H.tail)
-        as B.pts_to (N.at cells (S.index s.H.nodes old.H.tail)).N.next
+      rewrite AT.box_pts_to (N.at cells tail).N.next (N.successor cells s.H.nodes old.H.tail)
+        as AT.box_pts_to (N.at cells (S.index s.H.nodes old.H.tail)).N.next
           (N.successor cells s.H.nodes old.H.tail);
       N.restore cells s.H.nodes old.H.tail;
       fold Q.model q xs;

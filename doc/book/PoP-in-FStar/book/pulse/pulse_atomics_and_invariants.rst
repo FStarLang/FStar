@@ -35,33 +35,35 @@ We've learned so far about :ref:`two kinds of Pulse computations
     type.
 
 Pulse offers a third kind of computation, *atomic* computations, with
-the ``stt_atomic`` computation type. Here is the signature of
-``read_atomic`` and ``write_atomic`` from ``Pulse.Lib.Reference``:
+the ``stt_atomic`` computation type. The library ``Pulse.Lib.Atomic``
+(which we refer to as ``A`` below) provides atomic references,
+``A.atomic_ref t``, for a handful of base types ``t`` (``bool``, machine
+integers, and ``SizeT.t``). Here are the signatures of its ``load`` and
+``store`` operations:
 
 .. code-block:: pulse
 
    atomic
-   fn read_atomic (r:ref U32.t) (#n:erased U32.t) (#p:perm)
-   requires pts_to r #p n
-   returns x:U32.t
-   ensures pts_to r #p n ** pure (reveal n == x)
+   fn load (r:atomic_ref t) (#p:perm) (#v:erased t)
+   preserves r |-> Frac p v
+   returns x:t
+   ensures rewrites_to x (reveal v)
 
 .. code-block:: pulse   
 
    atomic
-   fn write_atomic (r:ref U32.t) (x:U32.t) (#n:erased U32.t)
-   requires pts_to r n
-   ensures pts_to r x
+   fn store (r:atomic_ref t) (x:t) (#v:erased t)
+   requires r |-> v
+   ensures r |-> x
 
-The ``atomic`` annotation on these functions claims that reading and
-writing 32-bit integers can be done in a single atomic step of
-computation.
-
-This is an assumption about the target architecture on which a Pulse
-program is executed. It may be that on some machines, 32-bit values
-cannot be read or written atomically. So, when using atomic
-operations, you should be careful to check that it is safe to assume
-that these operations truly are atomic.
+The ``atomic`` annotation on these functions claims that loading and
+storing values can be done in a single atomic step of computation.
+This is justified by how ``atomic_ref`` is compiled: to an
+``_Atomic(t)`` in C and to an ``Atomic.t`` in OCaml, whose operations
+are sequentially consistent atomic operations. ``Pulse.Lib.Atomic``
+also offers ``exchange``, ``compare_exchange``, and, on unsigned
+integers, ``fetch_add`` and friends, as well as ``atomic_box t``, a
+heap-allocated atomic cell.
 
 Pulse also provides a way for you to declare that other operations are
 atomic, e.g., maybe your machine supports 64-bit or 128-bit atomic
@@ -308,7 +310,7 @@ So, let's try again:
 
 * The ghost step ``unfold owns`` unfolds it to its definition.
 
-* Then, we do a single atomic action, ``write_atomic``. 
+* Then, we do a single atomic action, ``A.store``.
 
 * And follow it up with a ``fold owns``, another ghost step.
 
@@ -440,13 +442,13 @@ All of the following are available in Pulse.Lib.Core:
     (requires forall x. timeless (p x))
     (ensures timeless (op_exists_Star p))
 
-And in Pulse.Lib.Reference, we have:
+And in Pulse.Lib.Atomic, we have:
 
 .. code-block:: fstar
 
-   val pts_to_timeless (#a:Type) (r:ref a) (p:perm) (x:a) 
-   : Lemma (timeless (pts_to r #p x))
-           [SMTPat (timeless (pts_to r #p x))]
+   val pts_to_timeless (#t:Type0) (r:atomic_ref t) (p:perm) (v:t)
+   : Lemma (timeless (pts_to r #p v))
+           [SMTPat (timeless (pts_to r #p v))]
 
 For timeless predicates, the ``later`` modality can be eliminated trivially
 without requiring a credit.
@@ -479,7 +481,7 @@ First, we prove that ``owns`` is timeless:
 
    .. code-block:: fstar
 
-      let owns (x:ref U32.t) : timeless_slprop = exists* v. pts_to x v
+      let owns (x:A.atomic_ref U32.t) : timeless_slprop = exists* v. x |-> v
 
 Next, we can revise ``update_ref_atomic`` to use ``later_elim_timeless``, rather
 than requiring a later credit.
@@ -524,7 +526,8 @@ This is okay, since a non-atomic computation can never appear within a
 ``with_invariants`` block---so, there's no fear of an ``stt``
 computation causing an unsound double opening. Attempting to use a
 non-atomic computation in a ``with_invariants`` block produces an
-error, as shown below.
+error. In particular, a sequence of two atomic steps is not itself
+atomic, as shown below.
 
 
 .. literalinclude:: ../code/pulse/PulseTutorial.AtomicsAndInvariants.fst
@@ -534,5 +537,6 @@ error, as shown below.
 
 .. code-block::
 
-   - This computation is not atomic nor ghost. `with_invariants`
-     blocks can only contain atomic computations.
+   - Cannot compose computations in this atomic block:
+   - This computation has effect: ‘stt_atomic emp_inames’
+   - The continuation has effect: ‘stt_atomic emp_inames’

@@ -18,15 +18,16 @@ module Bug.Invariants
 #lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
+module A = Pulse.Lib.Atomic
 
 
 atomic
 fn return_atomic
-      (x:ref U32.t)
+      (x:A.atomic_ref U32.t)
 preserves pts_to x 1ul
 returns n:U32.t
 {
-    read_atomic x;
+    A.load x;
 }
 
 
@@ -98,19 +99,19 @@ returns x:bool
 
 
 fn return_with_invariant2
-      (x:ref U32.t)
+      (x:A.atomic_ref U32.t)
       (i:iname)
 preserves inv i (pts_to x 1ul)
 returns _:U32.t
 {
     with_invariants U32.t emp_inames i (pts_to x 1ul) emp (fun _ -> emp) fn _ {
-        read_atomic x
+        A.load x
     }
 }
 
 
 
-fn test_invariant_annot (x:ref U32.t) (i:iname) (y:ref U32.t)
+fn test_invariant_annot (x:A.atomic_ref U32.t) (i:iname) (y:ref U32.t)
 preserves inv i (pts_to x 0ul)
 requires pts_to y 'w
 ensures pts_to y 0ul
@@ -119,7 +120,7 @@ ensures pts_to y 0ul
         with_invariants U32.t emp_inames i (pts_to x 0ul)
             (pts_to y 'w)
             (fun r -> pure (r == 0ul) ** pts_to y 'w) fn _ {
-            read_atomic x
+            A.load x
         };
     y := n;
 }

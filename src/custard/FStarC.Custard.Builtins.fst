@@ -1389,12 +1389,10 @@ let realized_modules : list (list string) = [
   ["FStarC"; "Reflection"; "Types"];
   ["FStarC"; "Tactics"; "Unseal"];
   ["Prims"];
-  (* Section 128.  Pulse's lock, which must never be compiled from its F*
-     source: [Pulse.Lib.Primitives.cas] is a *specification* -- a read
-     followed by a write, atomic in Pulse's semantics and not atomic at all
-     once it is C or OCaml -- so the compiled spin lock locks nothing.  The
-     realization is [Pulse_Lib_SpinLock.ml] over OCaml's [Mutex] and
-     [Pulse_Lib_SpinLock.c] over [pthread_mutex_t]. *)
+  (* Section 128.  Pulse's lock, realized by hand rather than compiled from
+     its F* model ([Pulse.Lib.SpinLock-model.fst], a busy-waiting loop over
+     [Pulse.Lib.Atomic]).  The realization is [Pulse_Lib_SpinLock.ml] over
+     OCaml's [Mutex] and [Pulse_Lib_SpinLock.c] over [pthread_mutex_t]. *)
   ["Pulse"; "Lib"; "SpinLock"];
 ]
 

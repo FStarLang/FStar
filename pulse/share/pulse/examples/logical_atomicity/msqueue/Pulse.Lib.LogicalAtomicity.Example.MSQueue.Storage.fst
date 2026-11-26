@@ -4,7 +4,7 @@ module Pulse.Lib.LogicalAtomicity.Example.MSQueue.Storage
 (**
 Intrusive arena storage and ownership accounting for the FIFO proof.
 
-Existing Pulse CAS primitives operate on UInt32, so nodes are indexed by
+Pulse atomic cells hold machine integers, not pointers, so nodes are indexed by
 UInt32 IDs in an immutable list of cells rather than by a new pointer-CAS
 axiom. Each cell has an immutable value and an atomic next field. A ticket
 owns that next field exclusively at null and is consumed on first linking.
@@ -22,15 +22,14 @@ enable persistent history observations without prophecies or ABA handling.
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.ForEvery
-module B = Pulse.Lib.Box
-module R = Pulse.Lib.Reference
+module AT = Pulse.Lib.Atomic
 module U32 = FStar.UInt32
 module L = FStar.List.Tot
 module S = FStar.Seq
 module H = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Model
 
-(** Immutable cell metadata; only the boxed next field is mutated. *)
-noeq type cell = { next:B.box U32.t; value:U32.t }
+(** Immutable cell metadata; only the atomic next field is mutated. *)
+noeq type cell = { next:AT.atomic_box U32.t; value:U32.t }
 (** Nonempty arena with enough UInt32 space to keep null outside valid IDs.
 The type alone does not grant ownership of any contained next field. *)
 type arena = cells:list cell { 0 < L.length cells /\ L.length cells < 4294967295 }
@@ -51,7 +50,7 @@ let successor (cells:arena) (ns:S.seq (id cells)) (k:nat { k < S.length ns }) =
 supports the finite multiplicative-quantifier combinators below. *)
 let link (cells:arena) (ns:S.seq (id cells)) (k:nat) =
   if k < S.length ns
-  then B.pts_to (at cells (S.index ns k)).next (successor cells ns k)
+  then AT.box_pts_to (at cells (S.index ns k)).next (successor cells ns k)
   else emp
 
 (** Separating ownership of every physical link in the retained history.
@@ -65,12 +64,12 @@ let rest (cells:arena) (ns:S.seq (id cells)) (k:nat) =
 
 (** One-use enqueue permission. A linked node's next field stays in links
 forever, even if it is null or its payload has already been dequeued. *)
-let ticket (cells:arena) (n:id cells) = B.pts_to (at cells n).next null
+let ticket (cells:arena) (n:id cells) = AT.box_pts_to (at cells n).next null
 
 (** Physical box ownership is transferable across worker localities. *)
 instance send_link cells ns k : is_send (link cells ns k) =
   if k < S.length ns
-  then B.is_send_pts_to (at cells (S.index ns k)).next #1.0R (successor cells ns k)
+  then AT.is_send_box_pts_to (at cells (S.index ns k)).next #1.0R (successor cells ns k)
   else is_send_placeless emp
 
 (** Transferability of the entire finite separating collection of links. *)
@@ -82,24 +81,24 @@ instance send_links cells ns : is_send (links cells ns) =
 ghost fn focus (cells:arena) (ns:S.seq (id cells)) (k:nat { k < S.length ns })
   requires links cells ns
   ensures rest cells ns k **
-    B.pts_to (at cells (S.index ns k)).next (successor cells ns k)
+    AT.box_pts_to (at cells (S.index ns k)).next (successor cells ns k)
 {
   unfold links;
   forevery_remove' #nat (fun j -> j < S.length ns) (link cells ns) k;
   fold rest cells ns k;
   rewrite link cells ns k as
-    B.pts_to (at cells (S.index ns k)).next (successor cells ns k);
+    AT.box_pts_to (at cells (S.index ns k)).next (successor cells ns k);
 }
 
 (** Reinsert a focused field whose value still agrees with the same history.
 Successful linking instead uses append_link for the extended history. *)
 ghost fn restore (cells:arena) (ns:S.seq (id cells)) (k:nat { k < S.length ns })
   requires rest cells ns k **
-    B.pts_to (at cells (S.index ns k)).next (successor cells ns k)
+    AT.box_pts_to (at cells (S.index ns k)).next (successor cells ns k)
   ensures links cells ns
 {
   unfold rest;
-  rewrite B.pts_to (at cells (S.index ns k)).next (successor cells ns k)
+  rewrite AT.box_pts_to (at cells (S.index ns k)).next (successor cells ns k)
     as link cells ns k;
   forevery_insert #(nat) #(fun j -> j < S.length ns /\ j =!= k) (link cells ns) k;
   forevery_refine_ext #nat (fun j -> j < S.length ns) (link cells ns);
@@ -113,7 +112,7 @@ ghost fn singleton (cells:arena) (n:id cells)
 {
   unfold ticket;
   forevery_intro_false #nat (link cells (S.create 1 n));
-  rewrite B.pts_to (at cells n).next null as link cells (S.create 1 n) 0;
+  rewrite AT.box_pts_to (at cells n).next null as link cells (S.create 1 n) 0;
   forevery_insert #nat #(fun _ -> False) (link cells (S.create 1 n)) 0;
   forevery_refine_ext #nat (fun j -> j < S.length (S.create 1 n))
     (link cells (S.create 1 n));
@@ -135,9 +134,8 @@ ghost fn ticket_is_fresh (cells:arena) (ns:S.seq (id cells)) (n:id cells)
     focus cells ns k;
     unfold ticket;
     rewrite each (S.index ns k) as n;
-    B.gather (at cells n).next;
-    B.to_ref_pts_to (at cells n).next;
-    R.pts_to_perm_bound (B.box_to_ref (at cells n).next);
+    AT.gather_box (at cells n).next;
+    AT.box_pts_to_perm_bound (at cells n).next;
     assert pure False;
     unreachable ();
   }
@@ -149,7 +147,7 @@ separately proves pure history validity and updates payload/model ownership. *)
 ghost fn append_link (cells:arena) (ns:S.seq (id cells) { 0 < S.length ns })
   (n:id cells)
   requires rest cells ns (S.length ns - 1) **
-    B.pts_to (at cells (S.index ns (S.length ns - 1))).next n **
+    AT.box_pts_to (at cells (S.index ns (S.length ns - 1))).next n **
     ticket cells n
   ensures links cells (S.append ns (S.create 1 n))
 {
@@ -158,13 +156,13 @@ ghost fn append_link (cells:arena) (ns:S.seq (id cells) { 0 < S.length ns })
   forevery_ext
     (fun (j:nat { j < S.length ns /\ j =!= (S.length ns - 1 <: nat) }) -> link cells ns j)
     (fun j -> link cells ns' j);
-  rewrite B.pts_to (at cells (S.index ns (S.length ns - 1))).next n
+  rewrite AT.box_pts_to (at cells (S.index ns (S.length ns - 1))).next n
     as link cells ns' (S.length ns - 1);
   forevery_insert #nat #(fun j -> j < S.length ns /\ j =!= (S.length ns - 1 <: nat))
     (link cells ns') (S.length ns - 1);
   forevery_refine_ext #nat (fun j -> j < S.length ns) (link cells ns');
   unfold ticket;
-  rewrite B.pts_to (at cells n).next null as link cells ns' (S.length ns);
+  rewrite AT.box_pts_to (at cells n).next null as link cells ns' (S.length ns);
   forevery_insert #nat #(fun j -> j < S.length ns) (link cells ns') (S.length ns);
   forevery_refine_ext #nat (fun j -> j < S.length ns') (link cells ns');
   fold links cells ns';

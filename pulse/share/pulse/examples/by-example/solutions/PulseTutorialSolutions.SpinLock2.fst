@@ -1,7 +1,7 @@
 module PulseTutorialSolutions.SpinLock2
 #lang-pulse
 open Pulse.Lib.Pervasives
-module Box = Pulse.Lib.Box
+module A = Pulse.Lib.Atomic
 module U32 = FStar.UInt32
 module GR = Pulse.Lib.GhostReference
 
@@ -9,16 +9,16 @@ module GR = Pulse.Lib.GhostReference
 let maybe (b:bool) (p:slprop) =
     if b then p else emp
 
-let lock_inv (r:ref U32.t) (gr:GR.ref U32.t) (p:slprop) =
+let lock_inv (r:A.atomic_ref U32.t) (gr:GR.ref U32.t) (p:slprop) =
   exists* v perm. 
-    pts_to r v **
+    (r |-> v) **
     GR.pts_to gr #perm v **
     maybe (v = 0ul) p **
     pure (if v=0ul then perm == 1.0R else perm == 0.5R)
 
 noeq
 type lock (p:slprop) = {
-  r:ref U32.t;
+  r:A.atomic_ref U32.t;
   gr:GR.ref U32.t;
   i:inv (lock_inv r gr p);
 }
@@ -31,13 +31,13 @@ fn new_lock (p:slprop)
 requires p
 returns l:lock p
 {
-   let r = Box.alloc 0ul;
+   let r = A.alloc_box 0ul;
    let gr = GR.alloc 0ul;
-   Box.to_ref_pts_to r;
+   A.to_ref_pts_to r;
    fold (maybe (0ul = 0ul) p);
-   fold (lock_inv (Box.box_to_ref r) gr p);
-   let i = new_invariant (lock_inv (Box.box_to_ref r) gr p);
-   let l = { r = Box.box_to_ref r; gr; i };
+   fold (lock_inv (A.box_to_ref r) gr p);
+   let i = new_invariant (lock_inv (A.box_to_ref r) gr p);
+   let l = { r = A.box_to_ref r; gr; i };
    l
 }
 
@@ -54,10 +54,9 @@ ensures locked l
     ensures maybe b (p ** locked l) 
     { 
       unfold lock_inv;
-      let b = cas l.r 0ul 1ul;
+      let b = A.compare_exchange l.r 0ul 1ul;
       if b
       { 
-        elim_cond_true _ _ _;
         with _b. rewrite (maybe _b p) as p;
         fold (maybe false p);
         rewrite (maybe false p) as (maybe (1ul = 0ul) p);
@@ -71,7 +70,6 @@ ensures locked l
       }
       else
       {
-        elim_cond_false _ _ _;
         fold (lock_inv l.r l.gr p);
         fold (maybe false p);
         false
@@ -92,7 +90,7 @@ requires locked l
     unfold locked;
     GR.gather l.gr;
     with _b _q. rewrite (maybe _b _q) as emp;
-    write_atomic l.r 0ul;
+    A.store l.r 0ul;
     open GR;
     l.gr := 0ul;
     fold (maybe (0ul = 0ul) p);
@@ -127,10 +125,9 @@ ensures locked l
       ensures pts_to acquired false
       { 
         unfold lock_inv;
-        let b = cas l.r 0ul 1ul;
+        let b = A.compare_exchange l.r 0ul 1ul;
         if b
         { 
-            elim_cond_true _ _ _;
             with _b. rewrite (maybe _b p) as p;
             fold (maybe false p);
             rewrite (maybe false p) as (maybe (1ul = 0ul) p);
@@ -144,7 +141,6 @@ ensures locked l
         }
         else
         {
-            elim_cond_false _ _ _;
             fold (lock_inv l.r l.gr p);
             fold (maybe false p);
             false

@@ -1,8 +1,7 @@
 (* The realization of Pulse.Lib.SpinLock.  Custard treats the module as
    realized and compiles none of it (doc/ref/custard.md section 128): its F*
-   definition is built on Pulse.Lib.Primitives.cas, which is a *specification*
-   -- a read followed by a write, atomic in Pulse's semantics and not atomic
-   at all once it is OCaml -- so the compiled spin lock would lock nothing.
+   model, Pulse.Lib.SpinLock-model.fst, is a busy-waiting loop over
+   Pulse.Lib.Atomic, and a blocking mutex is the better runtime lock.
 
    A lock is a Mutex.t.  The C realization is
    Pulse_Lib_SpinLock.c over pthread_mutex_t. *)

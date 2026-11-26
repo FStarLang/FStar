@@ -9,7 +9,7 @@ module Tank = Pulse.Lib.Tank
 
 // For this example: we assume we have an atomic operation
 // to increment a ref nat
-// We could use a ref U32 and use Pulse.Lib.Primitives
+// We could use an atomic_ref U32 and Pulse.Lib.Atomic.fetch_add
 // but that adds needless noise, unrelated to the main point
 // of this example
 

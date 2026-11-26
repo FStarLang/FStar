@@ -2,12 +2,13 @@ module PulseTutorialExercies.AtomicsAndInvariants
 #lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
+module A = Pulse.Lib.Atomic
 
-let owns (x:ref U32.t) = exists* v. pts_to x v
+let owns (x:A.atomic_ref U32.t) = exists* v. x |-> v
 
 
-fn create_invariant (r:ref U32.t) (v:erased U32.t)
-requires pts_to r v
+fn create_invariant (r:A.atomic_ref U32.t) (v:erased U32.t)
+requires r |-> v
 returns i:inv (owns r)
 {
     fold owns;
@@ -17,12 +18,12 @@ returns i:inv (owns r)
 
 
 atomic
-fn update_ref_atomic (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
+fn update_ref_atomic (r:A.atomic_ref U32.t) (i:inv (owns r)) (v:U32.t)
 opens [i]
 {
   with_invariants i {    //owns r
-     unfold owns;        //ghost step;  exists* u. pts_to r u
-     write_atomic r v;   //atomic step; pts_to r v
+     unfold owns;        //ghost step;  exists* u. r |-> u
+     A.store r v;        //atomic step; r |-> v
      fold owns;          //ghost step;  owns r
   }
 }
@@ -30,20 +31,20 @@ opens [i]
 
 
 ghost
-fn pts_to_dup_impossible #a (x:ref a)
-preserves pts_to x 'v
-preserves pts_to x 'u
+fn pts_to_dup_impossible (#a: Type0) (x:A.atomic_ref a)
+preserves x |-> 'v
+preserves x |-> 'u
 ensures pure False
 {
-    gather x;
-    pts_to_perm_bound x;
-    share x;    
+    A.gather x;
+    A.pts_to_perm_bound x;
+    A.share x;    
 }
 
 
 [@@expect_failure]
 
-fn double_open_bad (r:ref U32.t) (i:inv (owns r))
+fn double_open_bad (r:A.atomic_ref U32.t) (i:inv (owns r))
 ensures pure False
 {
     with_invariants i {
@@ -60,11 +61,11 @@ ensures pure False
 
 
 
-fn update_ref (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
+fn update_ref (r:A.atomic_ref U32.t) (i:inv (owns r)) (v:U32.t)
 {                    
   with_invariants i {    //owns r
-     unfold owns;        //ghost step;  exists* u. pts_to r u
-     write_atomic r v;   //atomic step; pts_to r v
+     unfold owns;        //ghost step;  exists* u. r |-> u
+     A.store r v;        //atomic step; r |-> v
      fold owns;          //ghost step;  owns r
   }
 }
@@ -72,11 +73,12 @@ fn update_ref (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
 
 [@@expect_failure]
  
-fn update_ref_fail (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
+fn update_ref_fail (r:A.atomic_ref U32.t) (i:inv (owns r)) (v:U32.t)
 {
   with_invariants i {
     unfold owns;
-    r := v; //not atomic
+    A.store r 0ul;
+    A.store r v; //two atomic steps are not atomic
     fold owns;
   }
 }
@@ -84,13 +86,13 @@ fn update_ref_fail (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
 
 
 
-let readable (r:ref U32.t) = exists* p v. pts_to r #p v
+let readable (r:A.atomic_ref U32.t) = exists* p v. r |-> Frac p v
 
 //Finish the implementation of this function
 //hint: you also need to adjust the spec slightly
  //split_readable$
 atomic
-fn split_readable (r:ref U32.t) (i:inv (readable r))
+fn split_readable (r:A.atomic_ref U32.t) (i:inv (readable r))
 ensures readable r
 {
   admit()

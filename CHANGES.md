@@ -272,6 +272,32 @@ Guidelines for the changelog:
 
 ## Pulse
 
+  * New `Pulse.Lib.Atomic` (issue #4671): sequentially consistent atomic
+    cells over `bool`, `UInt8`..`UInt64`, `Int8`..`Int64` and `SizeT`, with
+    `load`, `store`, `exchange`, strong `compare_exchange`, and, on unsigned
+    integers, `fetch_add`/`sub`/`and`/`or`/`xor`.  `atomic_box t` is a
+    heap-allocated cell and `atomic_ref t` a reference to one.  On C they are
+    `_Atomic(t)` (include `share/pulse/runtime/Pulse_Lib_Atomic_runtime.h`);
+    on OCaml, `t Atomic.t`.  On C only, `Pulse.Lib.Atomic.Ref` turns any
+    `ref (atomic_t t)` (a local, an array element, ...) into an
+    `atomic_ref t`.
+
+  * Breaking: `Pulse.Lib.Primitives` (and its C header
+    `Pulse_Lib_Primitives_runtime.h`) is removed, and `Pulse.Lib.Pervasives`
+    no longer includes it; use `Pulse.Lib.Atomic` instead.  Migrate cells
+    from `ref U32.t`/`Box.box U32.t` to `atomic_ref U32.t`/`atomic_box U32.t`
+    (allocate boxes with `alloc_box`), and replace `read_atomic[_box]`,
+    `write_atomic[_box]` and `cas[_box]` with `load[_box]`, `store[_box]` and
+    `compare_exchange[_box]`.  The new CAS postcondition is an `if ok then ..
+    else ..`, eliminated by branching on `ok`, so drop the `elim_cond_true` /
+    `elim_cond_false` that followed `cas`; its failure case also proves the
+    values differ.  `cond`, `elim_cond_*` and `intro_cond_*` are now defined
+    in `Pulse.Lib.Pervasives`.
+
+  * Custard: `[@@custard_extern]` on a type abbreviation now makes it an
+    external type, like on an `assume val`, so that a target-tagged
+    implementation can realize an abstract type of its interface.
+
   * `x |-> y` no longer relies on `has_pts_to` instances for `erased r`,
     `frac r` and `Seq.lseq a n` (which needed the now-removed `noinst`
     attribute). Instead, `has_pts_to p ?r` is resolved from `p` before `y` is

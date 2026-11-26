@@ -26,16 +26,16 @@ open Pulse.Lib.Pervasives
 module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module T = Pulse.Lib.LogicalAtomicity.Triple
-module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module G = Pulse.Lib.GhostReference
 module U32 = FStar.UInt32
 
 (** Abstract pre-state: full ownership of the counter at n, normally kept
 in a client invariant and lent only during one AU attempt. *)
-let alpha (r:B.box U32.t) (n:U32.t) = B.pts_to r n
+let alpha (r:AT.atomic_box U32.t) (n:U32.t) = AT.box_pts_to r n
 (** Abstract transition: increment modulo 2^32. The logical result is unit;
 the old state n indexes the client postcondition and returned runtime value. *)
-let beta (r:B.box U32.t) (n:U32.t) (_:unit) = alpha r (U32.add_mod n 1ul)
+let beta (r:AT.atomic_box U32.t) (n:U32.t) (_:unit) = alpha r (U32.add_mod n 1ul)
 (** Retryable client obligation, with a credit cost chosen by its constructor. *)
 let update r inner credits (phi:U32.t -> slprop) =
   A.atomic_update emp_inames inner credits (alpha r) (beta r) (fun n _ -> phi n)
@@ -56,7 +56,7 @@ atomic fn read_opened r inner credits phi
   unfold A.opened;
   with n. _;
   unfold alpha r n;
-  let v = read_atomic_box r;
+  let v = AT.load_box r;
   fold alpha r n;
   fold A.opened emp_inames inner (alpha r) (update r inner credits phi) (beta r) (fun n _ -> phi n);
   fold opened r inner credits phi;
@@ -65,7 +65,7 @@ atomic fn read_opened r inner credits phi
 
 (** Open, load once, and abort before returning to ordinary code. Even an
 aborted read spends its credits; no physical rollback is needed. *)
-val read_attempt (r:B.box U32.t) (inner:inames) (credits:nat) (phi:U32.t -> slprop)
+val read_attempt (r:AT.atomic_box U32.t) (inner:inames) (credits:nat) (phi:U32.t -> slprop)
   : stt_atomic U32.t all_inames (update r inner credits phi ** later_credit credits)
       (fun _ -> update r inner credits phi)
 let read_attempt r inner credits phi
@@ -91,16 +91,14 @@ atomic fn cas_opened r inner credits phi (expected:U32.t)
   unfold A.opened;
   with n. _;
   unfold alpha r n;
-  let ok = cas_box r expected (U32.add_mod expected 1ul);
+  let ok = AT.compare_exchange_box r expected (U32.add_mod expected 1ul);
   if ok {
-    elim_cond_true _ _ _;
     rewrite each n as expected;
     fold alpha r (U32.add_mod expected 1ul);
     fold beta r expected ();
     fold closing r inner credits phi expected;
     true
   } else {
-    elim_cond_false _ _ _;
     fold alpha r n;
     fold A.opened emp_inames inner (alpha r) (update r inner credits phi) (beta r) (fun n _ -> phi n);
     fold opened r inner credits phi;
@@ -110,7 +108,7 @@ atomic fn cas_opened r inner credits phi (expected:U32.t)
 
 (** Close the CAS attempt by commit on success or abort on failure. Only the
 success branch returns phi expected; the failure branch can retry. *)
-val try_attempt (r:B.box U32.t) (inner:inames) (credits:nat) (phi:U32.t -> slprop) (expected:U32.t)
+val try_attempt (r:AT.atomic_box U32.t) (inner:inames) (credits:nat) (phi:U32.t -> slprop) (expected:U32.t)
   : stt_atomic bool all_inames (update r inner credits phi ** later_credit credits)
       (fun ok -> if ok then phi expected else update r inner credits phi)
 let try_attempt r inner credits phi expected
@@ -131,7 +129,7 @@ let try_attempt r inner credits phi expected
 (** Exported logically atomic operation. Returning old entails phi old for
 the state of the SUCCESSFUL CAS, regardless of earlier stale loads. Buy
 separate credits for the load and CAS openings on every iteration. *)
-divergent fn rec fetch_add (r:B.box U32.t) (inner:inames) (credits:nat) (phi:U32.t -> slprop)
+divergent fn rec fetch_add (r:AT.atomic_box U32.t) (inner:inames) (credits:nat) (phi:U32.t -> slprop)
   requires update r inner credits phi
   returns old:U32.t
   ensures phi old
@@ -156,12 +154,12 @@ let client_post g n = G.pts_to g #0.5R 1ul ** pure (n == 0ul)
 the physical increment. Agreement proves old = 0, not just memory safety.
 The invariant/counter remain allocated; this client does not reclaim them. *)
 divergent fn client_once ()
-  returns result:(B.box U32.t & U32.t)
+  returns result:(AT.atomic_box U32.t & U32.t)
   ensures exists* i g.
     inv i (T.payload (alpha (fst result)) (residual g)) **
     G.pts_to g #0.5R 1ul ** pure (snd result == 0ul)
 {
-  let r = B.alloc 0ul;
+  let r = AT.alloc_box 0ul;
   let g = G.alloc 0ul;
   G.share g;
   fold alpha r 0ul;

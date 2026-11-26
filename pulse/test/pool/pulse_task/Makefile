@@ -27,9 +27,9 @@ $(OUTPUT_DIR)/Quicksort_Task.ml: $(ALL_CHECKED_FILES)
 	  --custard_entry Quicksort.Task.quicksort \
 	  $(CACHE_DIR)/Quicksort.Task.fst.checked -o $@
 
-# Pulse.Lib.SpinLock must never be compiled from its F* source: its cas is a
-# specification, and the compiled lock locks nothing.  Custard treats the
-# module as realized (section 128) and this is the realization; the other two
+# Pulse.Lib.SpinLock is not compiled from its F* model (a busy-waiting loop):
+# Custard treats the module as realized (section 128) and this is the
+# realization, over OCaml's Mutex; the other two
 # are the primitives Pulse declares and does not define.
 REALIZATIONS := $(PULSE_ROOT)/lib/pulse/lib/ml/Pulse_Lib_SpinLock.ml \
                 ml/Pulse_Lib_Core.ml ml/Pulse_Lib_Sleep.ml

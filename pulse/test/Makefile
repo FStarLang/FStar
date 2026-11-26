@@ -27,4 +27,8 @@ include $(PULSE_ROOT)/mk/custard-test.mk
 # needed, which is what the KRML_FLAGS line below is for.
 CUSTARD_CFLAGS += -Wno-error=unused-but-set-variable
 
+# AtomicTest and AtomicRefTest use Pulse.Lib.Atomic, whose C realization is a
+# header in the runtime directory.
+CUSTARD_CFLAGS += -I$(PULSE_ROOT)/share/pulse/runtime
+
 KRML_FLAGS = -ccopt -Wno-error=unused-but-set-variable

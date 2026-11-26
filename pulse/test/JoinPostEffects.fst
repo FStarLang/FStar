@@ -2,9 +2,8 @@ module JoinPostEffects
 #lang-pulse
 open Pulse
 open Pulse.Lib.Reference
-open Pulse.Lib.Primitives
 module GR = Pulse.Lib.GhostReference
-module B = Pulse.Lib.Box
+module A = Pulse.Lib.Atomic
 module U32 = FStar.UInt32
 
 (* The effect of an `if` that is not the last statement, and whose
@@ -166,29 +165,29 @@ ghost fn ghost_stt_branch (b:bool) (r:ref int)
 
 (* Atomic *)
 
-atomic fn atomic_writes_differ (b:bool) (r:B.box U32.t)
+atomic fn atomic_writes_differ (b:bool) (r:A.atomic_box U32.t)
   requires r |-> 0ul
   ensures exists* v. r |-> v
 {
-  if (b) { write_atomic_box r 1ul } else { write_atomic_box r 2ul };
+  if (b) { A.store_box r 1ul } else { A.store_box r 2ul };
   ()
 }
 
-atomic fn atomic_and_ghost (b:bool) (r:B.box U32.t) (g:GR.ref int)
+atomic fn atomic_and_ghost (b:bool) (r:A.atomic_box U32.t) (g:GR.ref int)
   requires (r |-> 0ul) ** GR.pts_to g 0
   ensures exists* v w. (r |-> v) ** GR.pts_to g w
 {
-  if (b) { write_atomic_box r 1ul } else { GR.(g := 1) };
+  if (b) { A.store_box r 1ul } else { GR.(g := 1) };
   ()
 }
 
 (* An unobservable conditional followed by an observable step. *)
-atomic fn atomic_unobservable (b:bool) (r:B.box U32.t) (g:GR.ref int)
+atomic fn atomic_unobservable (b:bool) (r:A.atomic_box U32.t) (g:GR.ref int)
   requires (r |-> 0ul) ** GR.pts_to g 0
   ensures exists* v w. (r |-> v) ** GR.pts_to g w
 {
   if (b) { bump g } else { () };
-  write_atomic_box r 5ul
+  A.store_box r 5ul
 }
 
 (* A ghost branch with an informative result and an unobservable branch: the
@@ -204,23 +203,23 @@ ghost fn ghost_and_unobservable (b:bool) (x:erased int) (g:GR.ref int)
 
 (* ... but not with an observable branch. *)
 [@@expect_failure [228]]
-atomic fn atomic_ghost_informative (b:bool) (x:erased int) (r:B.box U32.t)
+atomic fn atomic_ghost_informative (b:bool) (x:erased int) (r:A.atomic_box U32.t)
   requires r |-> 0ul
   returns y:int
   ensures exists* v. r |-> v
 {
-  let y = if (b) { leak x } else { write_atomic_box r 1ul; 0 };
+  let y = if (b) { leak x } else { A.store_box r 1ul; 0 };
   y
 }
 
 (* Two observable steps. *)
 [@@expect_failure [228]]
-atomic fn atomic_two_observable (b:bool) (r:B.box U32.t)
+atomic fn atomic_two_observable (b:bool) (r:A.atomic_box U32.t)
   requires r |-> 0ul
   ensures exists* v. r |-> v
 {
-  if (b) { write_atomic_box r 1ul } else { write_atomic_box r 2ul };
-  write_atomic_box r 3ul
+  if (b) { A.store_box r 1ul } else { A.store_box r 2ul };
+  A.store_box r 3ul
 }
 
 [@@expect_failure [228]]
@@ -250,12 +249,12 @@ fn stt_and_ghost (b:bool) (r:GR.ref int) (s:ref int)
   s := 5
 }
 
-fn stt_atomic_branch (b:bool) (r:B.box U32.t)
+fn stt_atomic_branch (b:bool) (r:A.atomic_box U32.t)
   requires r |-> 0ul
   ensures exists* v. r |-> v
 {
-  if (b) { write_atomic_box r 1ul } else { () };
-  let x = read_atomic_box r;
+  if (b) { A.store_box r 1ul } else { () };
+  let x = A.load_box r;
   ()
 }
 

@@ -24,6 +24,7 @@ from their ordinary sequential-looking specifications.
 
 open Pulse.Lib.Pervasives
 module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module U32 = FStar.UInt32
 module S = FStar.Seq
 module N = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Storage
@@ -128,17 +129,17 @@ divergent fn fifo_ownership ()
     Q.is_queue q (payload a b) ** Q.model q S.empty **
     pure (values == (101ul, 202ul))
 {
-  let dummy = B.alloc N.null;
-  let first = B.alloc N.null;
-  let second = B.alloc N.null;
+  let dummy = AT.alloc_box N.null;
+  let first = AT.alloc_box N.null;
+  let second = AT.alloc_box N.null;
   let cells:N.arena = [
     { N.next=dummy; N.value=0ul };
     { N.next=first; N.value=11ul };
     { N.next=second; N.value=22ul }
   ];
-  rewrite B.pts_to dummy N.null as N.ticket cells 0ul;
-  rewrite B.pts_to first N.null as N.ticket cells 1ul;
-  rewrite B.pts_to second N.null as N.ticket cells 2ul;
+  rewrite AT.box_pts_to dummy N.null as N.ticket cells 0ul;
+  rewrite AT.box_pts_to first N.null as N.ticket cells 1ul;
+  rewrite AT.box_pts_to second N.null as N.ticket cells 2ul;
   let a = B.alloc 101ul;
   let b = B.alloc 202ul;
   let q = Q.create cells (payload a b);
@@ -201,17 +202,17 @@ divergent fn delayed_tail ()
   ensures exists* (cells:N.arena) (q:Q.queue cells).
     Q.is_queue q (fun _ -> emp) ** Q.model q S.empty
 {
-  let dummy = B.alloc N.null;
-  let first = B.alloc N.null;
-  let second = B.alloc N.null;
+  let dummy = AT.alloc_box N.null;
+  let first = AT.alloc_box N.null;
+  let second = AT.alloc_box N.null;
   let cells:N.arena = [
     { N.next=dummy; N.value=0ul };
     { N.next=first; N.value=11ul };
     { N.next=second; N.value=22ul }
   ];
-  rewrite B.pts_to dummy N.null as N.ticket cells 0ul;
-  rewrite B.pts_to first N.null as N.ticket cells 1ul;
-  rewrite B.pts_to second N.null as N.ticket cells 2ul;
+  rewrite AT.box_pts_to dummy N.null as N.ticket cells 0ul;
+  rewrite AT.box_pts_to first N.null as N.ticket cells 1ul;
+  rewrite AT.box_pts_to second N.null as N.ticket cells 2ul;
   let q = Q.create cells (fun _ -> emp);
   D.from_owned (Q.model q) (E.beta q 1ul) S.empty;
   rewrite A.atomic_update emp_inames emp_inames 0 (Q.model q) (E.beta q 1ul)
@@ -240,17 +241,17 @@ divergent fn stale_tail_retry ()
   ensures exists* (cells:N.arena) (q:Q.queue cells).
     Q.is_queue q (fun _ -> emp) ** Q.model q S.empty
 {
-  let dummy = B.alloc N.null;
-  let first = B.alloc N.null;
-  let second = B.alloc N.null;
+  let dummy = AT.alloc_box N.null;
+  let first = AT.alloc_box N.null;
+  let second = AT.alloc_box N.null;
   let cells:N.arena = [
     { N.next=dummy; N.value=0ul };
     { N.next=first; N.value=11ul };
     { N.next=second; N.value=22ul }
   ];
-  rewrite B.pts_to dummy N.null as N.ticket cells 0ul;
-  rewrite B.pts_to first N.null as N.ticket cells 1ul;
-  rewrite B.pts_to second N.null as N.ticket cells 2ul;
+  rewrite AT.box_pts_to dummy N.null as N.ticket cells 0ul;
+  rewrite AT.box_pts_to first N.null as N.ticket cells 1ul;
+  rewrite AT.box_pts_to second N.null as N.ticket cells 2ul;
   let q = Q.create cells (fun _ -> emp);
   let stale = Q.read_pointer q (fun _ -> emp) false;
   enqueue_owned q (fun _ -> emp) 1ul;

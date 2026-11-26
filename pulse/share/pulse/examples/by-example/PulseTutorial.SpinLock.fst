@@ -19,7 +19,7 @@ module PulseTutorial.SpinLock
 
 open Pulse.Lib.Pervasives
 
-module B = Pulse.Lib.Box
+module A = Pulse.Lib.Atomic
 
 module U32 = FStar.UInt32
 
@@ -27,12 +27,12 @@ module U32 = FStar.UInt32
 let maybe (b:bool) (p:slprop) =
   if b then p else emp
 
-let lock_inv (r:B.box U32.t) (p:slprop) : slprop =
-  exists* v. B.pts_to r v ** maybe (v = 0ul) p
+let lock_inv (r:A.atomic_box U32.t) (p:slprop) : slprop =
+  exists* v. (r |-> v) ** maybe (v = 0ul) p
 
 noeq
 type lock = {
-  r:B.box U32.t;
+  r:A.atomic_box U32.t;
   i:iname;
 }
 
@@ -59,7 +59,7 @@ requires p
 returns l:lock
 ensures lock_alive l p
 {
-   let r = B.alloc 0ul;
+   let r = A.alloc_box 0ul;
    fold (maybe (0ul = 0ul) p);
    fold (lock_inv r p);
    let i = new_invariant (lock_inv r p);
@@ -86,10 +86,9 @@ ensures p
       emp (fun b -> maybe b p) fn _ {
       unfold lock_inv;
       with vv. assert l.r |-> vv;
-      let b = cas_box l.r 0ul 1ul;
+      let b = A.compare_exchange_box l.r 0ul 1ul;
       if b
       { 
-        elim_cond_true _ _ _;
         rewrite each vv as 0ul;
         fold (maybe false p);
         rewrite (maybe false p) as (maybe (1ul = 0ul) p);
@@ -98,7 +97,6 @@ ensures p
       }
       else
       {
-        elim_cond_false _ _ _;
         fold (lock_inv l.r p);
         fold (maybe false p);
         false
@@ -118,7 +116,7 @@ requires p
   unfold lock_alive;
   with_invariants unit emp_inames l.i (lock_inv l.r p) p (fun _ -> emp) fn _ {
     unfold lock_inv;
-    write_atomic_box l.r 0ul;
+    A.store_box l.r 0ul;
     drop_ (maybe _ _); //maybe release without acquire
     fold (maybe (0ul = 0ul) p);
     fold (lock_inv l.r p);
