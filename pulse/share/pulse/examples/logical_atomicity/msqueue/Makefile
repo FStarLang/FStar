@@ -18,7 +18,7 @@ $(OUTPUT_DIR)/MSQueueClients.ml: $(ALL_CHECKED_FILES)
 $(OUTPUT_DIR)/MSQueueConcurrent.ml: $(ALL_CHECKED_FILES)
 	$(FSTAR_EXE) --silent --include $(CACHE_DIR) Pulse.Lib.LogicalAtomicity.Example.MSQueue.Concurrent.fst --codegen OCaml --custard_entry_module Pulse.Lib.LogicalAtomicity.Example.MSQueue.Concurrent -o $@
 
-# Queue atomics have their own mutex-backed boundary documented in that file.
+# Queue atomics have their own Atomic.t-based boundary documented in that file.
 REALIZATIONS := $(PULSE_ROOT)/lib/pulse/lib/ml/Pulse_Lib_SpinLock.ml \
 	$(PULSE_ROOT)/test/pool/pulse_task/ml/Pulse_Lib_Core.ml \
 	$(PULSE_ROOT)/test/pool/pulse_task/ml/Pulse_Lib_Sleep.ml \

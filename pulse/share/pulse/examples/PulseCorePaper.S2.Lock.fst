@@ -18,23 +18,14 @@ module PulseCorePaper.S2.Lock
 #lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-module Box = Pulse.Lib.Box
-
-module B = Pulse.Lib.Box
-assume
-val cas_box_alt (r:B.box U32.t) (u v:U32.t) (#i:erased U32.t)
-  : stt_atomic bool #Observable emp_inames 
-    (pts_to r i)
-    (fun b ->
-      if b then (pts_to r v ** pure (reveal i == u)) 
-           else (pts_to r i))
+module A = Pulse.Lib.Atomic
 
 noeq
-type lock = { r:Pulse.Lib.Box.box U32.t; i:iname }
+type lock = { r:A.atomic_box U32.t; i:iname }
 [@@pulse_unfold]
 let maybe b p = if b then p else emp
 [@@pulse_unfold]
-let lock_inv r p : slprop = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
+let lock_inv (r:A.atomic_box U32.t) p : slprop = exists* v. (r |-> v) ** (maybe (v = 0ul) p)
 [@@pulse_unfold]
 let protects l p = inv l.i (lock_inv l.r p)
 
@@ -50,7 +41,7 @@ requires p
 returns l:lock
 ensures protects l p
 {
-   let r = Box.alloc 0ul; 
+   let r = A.alloc_box 0ul; 
    let i = new_invariant (lock_inv r p);
    ({r; i})
 }
@@ -66,7 +57,7 @@ requires p
   fn _ {
     with v. assert l.r |-> v;
     drop_ (maybe (v = 0ul) _);
-    Pulse.Lib.Primitives.write_atomic_box l.r 0ul;
+    A.store_box l.r 0ul;
   }
 }
 
@@ -80,8 +71,8 @@ ensures p
     with_invariants bool emp_inames l.i (lock_inv l.r p)
       emp (fun retry -> cond retry emp p)
   fn _ {
-    with v. assert (pts_to l.r v);
-    let b = cas_box_alt l.r 0ul 1ul;
+    with v. assert (l.r |-> v);
+    let b = A.compare_exchange_box l.r 0ul 1ul;
     if b {
       rewrite each v as 0ul;
       rewrite p as cond false emp p;

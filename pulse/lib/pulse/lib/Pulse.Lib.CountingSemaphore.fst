@@ -19,8 +19,8 @@ open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module Tank = Pulse.Lib.Tank
 #lang-pulse
-open Pulse.Lib.Primitives
-module B = Pulse.Lib.Box
+
+module A = Pulse.Lib.Atomic
 module CInv = Pulse.Lib.CancellableInvariant
 
 let rec is_send_replicate_aux (p: slprop) (i: nat) (inst: is_send p) : Tot (is_send (replicate p i)) (decreases i) =
@@ -31,7 +31,7 @@ let rec is_send_replicate_aux (p: slprop) (i: nat) (inst: is_send p) : Tot (is_s
 instance is_send_replicate p i {| inst: is_send p |} : is_send (replicate p i) = is_send_replicate_aux p i inst
 
 noeq type sem (p: slprop) : Type0 = {
-  counter: B.box U32.t;
+  counter: A.atomic_box U32.t;
   ptank: Tank.tank (U32.v sem_max);
   i: CInv.cinv;
 }
@@ -39,7 +39,7 @@ noeq type sem (p: slprop) : Type0 = {
 let permit_tank #p (s: sem p) : Tank.tank (U32.v sem_max) = s.ptank
 
 (** Full invariant *)
-let sem_inv (p: slprop) (counter: B.box U32.t) (ptank: Tank.tank (U32.v sem_max)) : slprop =
+let sem_inv (p: slprop) (counter: A.atomic_box U32.t) (ptank: Tank.tank (U32.v sem_max)) : slprop =
   exists* (n: U32.t).
     counter |-> n **
     replicate p (U32.v n) **
@@ -147,7 +147,7 @@ fn new_sem (p: slprop) (n: U32.t)
   ensures sem_alive s
   ensures permit s (U32.v sem_max - U32.v n)
 {
-  let counter = B.alloc n;
+  let counter = A.alloc_box n;
   let ptank = Tank.alloc (U32.v sem_max);
   // ptank owns sem_max initially
   // We need to split: owns ptank (U32.v n) for invariant, owns ptank (sem_max - n) for permit
@@ -190,7 +190,7 @@ fn read_counter (#p: slprop) (#f: perm) (s: sem p)
       
       with n. _;
       
-      let v = read_atomic_box s.counter;
+      let v = A.load_box s.counter;
       
       fold (sem_inv p s.counter s.ptank);
       CInv.pack_cinv_vp s.i;
@@ -227,7 +227,7 @@ fn read_counter_for_release (#p: slprop) (#f: perm) (s: sem p) (#perm_amt: erase
       // Since perm_amt > 0, U32.v n < sem_max
       Tank.share s.ptank #perm_amt #(U32.v n);
       
-      let v = read_atomic_box s.counter;
+      let v = A.load_box s.counter;
       
       fold (sem_inv p s.counter s.ptank);
       CInv.pack_cinv_vp s.i;
@@ -269,10 +269,9 @@ fn try_acquire_many (#p: slprop) (#f: perm) (s: sem p) (n: U32.t)
         with counter_val. _;
         
         // Try CAS from v to new_v
-        let b = cas_box s.counter v new_v;
+        let b = A.compare_exchange_box s.counter v new_v;
         
         if b {
-          elim_cond_true b _ _;
           // CAS succeeded: counter was v (== counter_val), now is new_v
           // We have: replicate p (U32.v counter_val) and Tank.owns s.ptank (U32.v counter_val)
           // We need to split off: replicate p (U32.v n) and Tank.owns s.ptank (U32.v n)
@@ -294,7 +293,6 @@ fn try_acquire_many (#p: slprop) (#f: perm) (s: sem p) (n: U32.t)
           fold (cond true (Tank.owns s.ptank (U32.v n) ** replicate p (U32.v n)) emp);
           true
         } else {
-          elim_cond_false b _ _;
           // CAS failed
           fold (sem_inv p s.counter s.ptank);
           CInv.pack_cinv_vp s.i;
@@ -356,10 +354,9 @@ fn rec release_loop (#p: slprop) (#f: perm) (s: sem p)
       
       with n. _;
       
-      let b = cas_box s.counter v new_v;
+      let b = A.compare_exchange_box s.counter v new_v;
       
       if b {
-        elim_cond_true b _ _;
         // CAS succeeded: n was v, counter is now new_v = v + 1
         // We have: replicate p (U32.v n) and n == v (since CAS succeeded)
         // We need: replicate p (U32.v new_v) = replicate p (U32.v v + 1)
@@ -385,7 +382,6 @@ fn rec release_loop (#p: slprop) (#f: perm) (s: sem p)
         fold (cond true emp (Tank.owns s.ptank 1 ** p));
         true
       } else {
-        elim_cond_false b _ _;
         // CAS failed
         fold (sem_inv p s.counter s.ptank);
         CInv.pack_cinv_vp s.i;
@@ -446,7 +442,7 @@ fn free (#p: slprop) (s: sem p)
   unfold (sem_inv p s.counter s.ptank);
   with n. _;
   
-  B.free s.counter;
+  A.free_box s.counter;
   
   drop_ (replicate p (U32.v n));
   drop_ (Tank.owns s.ptank (U32.v n))

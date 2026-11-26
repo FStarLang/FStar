@@ -23,7 +23,7 @@ not wait-freedom, lock-freedom, or eventual success under spurious failure.
 *)
 
 open Pulse.Lib.Pervasives
-module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module G = Pulse.Lib.GhostReference
 module MR = Pulse.Lib.MonotonicGhostRef
 module U32 = FStar.UInt32
@@ -105,8 +105,8 @@ atomic fn read_opened (#cells:N.arena) (q:Q.queue cells) (p:U32.t -> slprop)
     N.focus cells s.H.nodes old.H.head;
     rewrite each (S.index s.H.nodes old.H.head) as head;
     let next = Atom.read (N.at cells head).N.next;
-    rewrite B.pts_to (N.at cells head).N.next (N.successor cells s.H.nodes old.H.head)
-      as B.pts_to (N.at cells (S.index s.H.nodes old.H.head)).N.next
+    rewrite AT.box_pts_to (N.at cells head).N.next (N.successor cells s.H.nodes old.H.head)
+      as AT.box_pts_to (N.at cells (S.index s.H.nodes old.H.head)).N.next
         (N.successor cells s.H.nodes old.H.head);
     N.restore cells s.H.nodes old.H.head;
     MR.take_snapshot q.Q.core.Q.history s;

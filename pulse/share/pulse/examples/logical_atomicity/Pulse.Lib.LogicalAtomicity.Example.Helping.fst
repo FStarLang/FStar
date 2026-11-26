@@ -28,6 +28,7 @@ module C = Pulse.Lib.LogicalAtomicity.Example.Counter
 module T = Pulse.Lib.LogicalAtomicity.Triple
 module S = Pulse.Lib.SendableTrade
 module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module G = Pulse.Lib.GhostReference
 module L = Pulse.Lib.SpinLock
 module Task = Pulse.Lib.Task
@@ -75,7 +76,7 @@ instance send_body status result ticket r inner credits phi
 request plus a half-ticket. Losing helpers acquire no operation capability. *)
 divergent fn claim (#p:perm)
   (lock:L.lock) (status:B.box phase) (result:B.box U32.t) (ticket:G.ref phase)
-  (r:B.box U32.t) inner credits phi
+  (r:AT.atomic_box U32.t) inner credits phi
   preserves L.lock_alive lock #p (body status result ticket r inner credits phi)
   returns won:bool
   ensures cond won (request r inner credits phi ** G.pts_to ticket #0.5R Running) emp
@@ -106,7 +107,7 @@ divergent fn claim (#p:perm)
 the result, and transfer phi into Done for the caller to collect. *)
 divergent fn complete (#p:perm)
   (lock:L.lock) (status:B.box phase) (result:B.box U32.t) (ticket:G.ref phase)
-  (r:B.box U32.t) inner credits phi (old:U32.t)
+  (r:AT.atomic_box U32.t) inner credits phi (old:U32.t)
   preserves L.lock_alive lock #p (body status result ticket r inner credits phi)
   requires G.pts_to ticket #0.5R Running ** phi old
 {
@@ -129,7 +130,7 @@ divergent fn complete (#p:perm)
 The caller's continuation runs on this helper, not on the waiting caller. *)
 divergent fn help (#p:perm)
   (lock:L.lock) (status:B.box phase) (result:B.box U32.t) (ticket:G.ref phase)
-  (r:B.box U32.t) inner credits phi
+  (r:AT.atomic_box U32.t) inner credits phi
   preserves L.lock_alive lock #p (body status result ticket r inner credits phi)
 {
   let won = claim lock status result ticket r inner credits phi;
@@ -148,7 +149,7 @@ divergent fn help (#p:perm)
 descriptor reclamation. The recursive wait has no fairness guarantee. *)
 divergent fn rec await (#p:perm)
   (lock:L.lock) (status:B.box phase) (result:B.box U32.t) (ticket:G.ref phase)
-  (r:B.box U32.t) inner credits phi
+  (r:AT.atomic_box U32.t) inner credits phi
   preserves L.lock_alive lock #p (body status result ticket r inner credits phi)
   returns old:U32.t
   ensures phi old ** G.pts_to ticket #0.5R Taken
@@ -187,12 +188,12 @@ instance send_delivered g payload n : is_send (delivered g payload n) =
 phi, join both, and reclaim descriptor and payload. The postcondition proves
 old = 0 and ghost value = 1; it does not promise that scheduling terminates. *)
 divergent fn two_helpers ()
-  returns answer:(B.box U32.t & U32.t)
+  returns answer:(AT.atomic_box U32.t & U32.t)
   ensures exists* i g.
     inv i (T.payload (C.alpha (fst answer)) (C.residual g)) **
     G.pts_to g #0.5R 1ul ** pure (snd answer == 0ul)
 {
-  let r = B.alloc 0ul;
+  let r = AT.alloc_box 0ul;
   let g = G.alloc 0ul;
   G.share g;
   fold C.alpha r 0ul;

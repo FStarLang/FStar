@@ -19,12 +19,12 @@ open Pulse.Lib.Pervasives
 module M = Pulse.Lib.Core
 module A = Pulse.Lib.LogicalAtomicity.Atomic
 module T = Pulse.Lib.LogicalAtomicity.Triple
-module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module G = Pulse.Lib.GhostReference
 module U32 = FStar.UInt32
 
 (** Counter ownership exposed by the AU at its current value. *)
-let alpha r (n:U32.t) = B.pts_to r n
+let alpha r (n:U32.t) = AT.box_pts_to r n
 (** Preserve the value and certify that the returned observation equals it. *)
 let beta r (n:U32.t) (v:U32.t) = alpha r n ** pure (v == n)
 (** Client AU with one credit per opening; the state n indexes phi. *)
@@ -39,7 +39,7 @@ let closing r inner phi n =
 
 (** Perform the sole observable step and establish beta without mutation.
 The postcondition equates the abstract-state witness with the runtime value. *)
-atomic fn read_opened (r:B.box U32.t) inner phi
+atomic fn read_opened (r:AT.atomic_box U32.t) inner phi
   requires opened r inner phi
   returns v:U32.t
   ensures closing r inner phi v ** beta r v v
@@ -48,8 +48,7 @@ atomic fn read_opened (r:B.box U32.t) inner phi
   unfold A.opened;
   with n. _;
   unfold alpha r n;
-  let v = read_atomic_box r;
-  rewrite each n as v;
+  let v = AT.load_box r;
   fold alpha r v;
   fold beta r v v;
   fold closing r inner phi v;
@@ -58,7 +57,7 @@ atomic fn read_opened (r:B.box U32.t) inner phi
 
 (** Open the client invariant, read, and commit before returning the value.
 Unlike Counter.read_attempt, this consumes the AU and delivers phi. *)
-val read_attempt (r:B.box U32.t) (inner:inames) (phi:U32.t -> slprop)
+val read_attempt (r:AT.atomic_box U32.t) (inner:inames) (phi:U32.t -> slprop)
   : stt_atomic U32.t all_inames (update r inner phi ** later_credit 1) (fun v -> phi v)
 let read_attempt r inner phi
   : stt_atomic U32.t all_inames (update r inner phi ** later_credit 1) (fun v -> phi v) =
@@ -71,7 +70,7 @@ let read_attempt r inner phi
               (A.commit emp_inames inner (alpha r) (update r inner phi) (beta r) (fun n _ -> phi n) v v))))
 
 (** Public read wrapper supplies the one opening credit required by its AU. *)
-fn read (r:B.box U32.t) inner phi
+fn read (r:AT.atomic_box U32.t) inner phi
   requires update r inner phi
   returns v:U32.t
   ensures phi v
@@ -89,12 +88,12 @@ let observed g n = G.pts_to g #0.5R 37ul ** pure (n == 37ul)
 (** A usable client theorem: the result is 37, not merely some UInt32.
 The private ghost half rules out any other value at commitment. *)
 fn client ()
-  returns result:(B.box U32.t & U32.t)
+  returns result:(AT.atomic_box U32.t & U32.t)
   ensures exists* i g.
     inv i (T.payload (alpha (fst result)) (residual g)) **
     G.pts_to g #0.5R 37ul ** pure (snd result == 37ul)
 {
-  let r = B.alloc 37ul;
+  let r = AT.alloc_box 37ul;
   let g = G.alloc 37ul;
   G.share g;
   fold alpha r 37ul;

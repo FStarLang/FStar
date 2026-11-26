@@ -100,8 +100,12 @@ A model must be a `-model.fst` whenever compiling it would be wrong, so that
 no extraction can ever pick it up.  In Pulse, e.g., `Pulse.Lib.Reference`,
 `Box`, `Vec`, `Array.Core`, `ArrayPtr` and `Comment` are compiled by
 Custard's extraction rules, `Pulse.Lib.SpinLock` is realized by hand, and
-`Pulse.Lib.Primitives` (whose model `cas` is a read followed by a write) is
-realized in C by `pulse/share/pulse/runtime/Pulse_Lib_Primitives_runtime.h`
-(there is no OCaml realization).  Executable code
+`Pulse.Lib.Atomic` (whose model `compare_exchange` is a read followed by a
+write, atomic only in Pulse's semantics) has a model and one
+implementation per backend: `Pulse.Lib.Atomic-c.fst` and
+`Pulse.Lib.Atomic-ocaml.fst` are the model with `custard_extern` attributes,
+which map its types to `_Atomic(t)` and `Atomic.t` and its operations to
+`Pulse_Lib_Atomic_runtime.h` and OCaml's `Atomic`.  `Pulse.Lib.Atomic.Ref`
+has no OCaml implementation, so it is only available on C.  Executable code
 derived from such primitives lives in the `.fsti` as `inline_for_extraction`
 definitions.

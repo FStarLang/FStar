@@ -18,6 +18,7 @@ module CustomSyntax
 #lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Par
+module A = Pulse.Lib.Atomic
 module U32 = FStar.UInt32
 
 assume val p : slprop
@@ -118,22 +119,22 @@ fn intro_pure_example (r:ref U32.t)
 
 
 
-fn if_example (r:ref U32.t)
+fn if_example (r:A.atomic_ref U32.t)
               (n:(n:erased U32.t{U32.v (reveal n) == 1}))
               (b:bool)
    requires 
-     pts_to r n
+     r |-> n
    ensures
-     pts_to r (U32.add (reveal n) 2ul)
+     r |-> U32.add (reveal n) 2ul
 {
-   let x = read_atomic r;
+   let x = A.load r;
    if b
    {
-     r := U32.add x 2ul
+     A.store r (U32.add x 2ul)
    }
    else
    {
-     write_atomic r 3ul
+     A.store r 3ul
    }
 }
 

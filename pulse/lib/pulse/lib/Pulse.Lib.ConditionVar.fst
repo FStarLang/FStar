@@ -16,17 +16,18 @@
 
 module Pulse.Lib.ConditionVar
 #lang-pulse
+
 open Pulse.Lib.Pervasives
 open Pulse.Lib.SendableTrade
 module U32 = FStar.UInt32
 open Pulse.Lib.ForEvery
 open Pulse.Lib.ForEvery.Range
 module SLT = Pulse.Lib.SLPropTable
-module Box = Pulse.Lib.Box
+module A = Pulse.Lib.Atomic
 
 noeq
 type cvar_t_core = {
-  r: Box.box U32.t;
+  r: A.atomic_box U32.t;
   tab : SLT.table
 }
 
@@ -90,7 +91,7 @@ let cvar_inv (b: cvar_t_core) (p:slprop)
 = exists* n preds v.
     SLT.is_table b.tab n **
     stored_predicates b.tab n 0.5R preds **
-    Box.pts_to b.r #0.5R v **
+    A.box_pts_to b.r #0.5R v **
     pure (Seq.length preds == n) **
     maybe_holds v p preds
 
@@ -119,14 +120,14 @@ fn create (p:slprop) {| is_send p |}
   ensures send c p
   ensures recv c p
 {
-  let r = Box.alloc 0ul;
+  let r = A.alloc_box 0ul;
   let tab = SLT.create ();
   SLT.alloc tab p;
   SLT.share tab 0 0.5R 0.5R;
   rewrite (SLT.pts_to tab 0 #0.5R p)
       as (predicate_at tab 0.5R (singleton p) 0);
   range_singleton_intro (predicate_at tab 0.5R (singleton p)) 0;
-  Box.share r;
+  A.share_box r;
   intro (p @==> istar (singleton p)) fn _ {
     sendable_intro p #_;
     rewrite sendable p as index_preds (singleton p) 0;
@@ -163,18 +164,18 @@ ensures
   unfold send;
   unfold cvar;
   with_invariants_a unit emp_inames b.i (cvar_inv b.core p)
-    (p ** Box.pts_to b.core.r #0.5R 0ul) (fun _ -> emp) fn _
+    (p ** A.box_pts_to b.core.r #0.5R 0ul) (fun _ -> emp) fn _
   {
      unfold cvar_inv;
-     Box.gather b.core.r;
+     A.gather_box b.core.r;
      with v preds. unfold (maybe_holds (reveal v) p preds);
      assert rewrites_to v 0ul;
-     write_atomic_box b.core.r 1ul;
+     A.store_box b.core.r 1ul;
      elim_trade p (istar preds);
      fold (maybe_holds 1ul p preds);
-     Box.share b.core.r;
+     A.share_box b.core.r;
      fold (cvar_inv b.core p);
-     drop_ (Box.pts_to b.core.r #0.5R _)
+     drop_ (A.box_pts_to b.core.r #0.5R _)
   };
 }
 
@@ -253,7 +254,7 @@ ensures
       fn _
     {
       unfold cvar_inv;
-      let vv = read_atomic_box b.core.r;
+      let vv = A.load_box b.core.r;
       if (vv = 0ul)
       {
         fold (cvar_inv b.core q);

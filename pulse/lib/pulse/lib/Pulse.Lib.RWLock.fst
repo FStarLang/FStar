@@ -19,12 +19,11 @@ open PulseCore.FractionalPermission
 #lang-pulse
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.Primitives
 open Pulse.Lib.CancellableInvariant
 open Pulse.Lib.Fractional
 
 module U32 = FStar.UInt32
-module B = Pulse.Lib.Box
+module A = Pulse.Lib.Atomic
 module GR = Pulse.Lib.GhostReference
 module CInv = Pulse.Lib.CancellableInvariant
 module GFT = Pulse.Lib.GhostFractionalTable
@@ -350,12 +349,12 @@ let ghost_counter_perm (n:U32.t) : perm =
   if n = writer_sentinel then 0.5R else 1.0R
 
 let rwlock_inv_aux (pred : perm -> slprop)
-                   (counter : B.box U32.t)
+                   (counter : A.atomic_box U32.t)
                    (ghost_counter: GR.ref U32.t)
                    (perm_table : GFT.table frac)
 : slprop
 = exists* (n : U32.t) (table_size : nat) (entries:index_set) (spec:table_spec) (f:perm). 
-    B.pts_to counter n ** //counter is the actual physical counter on which do atomic operations
+    A.box_pts_to counter n ** //counter is the actual physical counter on which do atomic operations
     GR.pts_to ghost_counter #(ghost_counter_perm n) n ** //ghost witness of counter value, only half when writer locks
     GFT.is_table perm_table table_size ** //permission to the table itself, allcoated up to table_size
     (forall+ (k:nat{0 <= k /\ k < table_size}). owns_half_table_entry perm_table spec k) ** //half permission to all the table entries up to table size
@@ -363,7 +362,7 @@ let rwlock_inv_aux (pred : perm -> slprop)
     table_relation n table_size entries spec f ///pure relation tying it all together
 
 let rwlock_inv (pred : perm -> slprop)
-               (counter : B.box U32.t)
+               (counter : A.atomic_box U32.t)
                (ghost_counter: GR.ref U32.t)
                (perm_table : GFT.table frac)
 : slprop
@@ -375,7 +374,7 @@ let rwlock_inv (pred : perm -> slprop)
 
 noeq
 type rwlock_rec (pred : perm -> slprop) = {
-  counter : B.box U32.t;
+  counter : A.atomic_box U32.t;
   ghost_counter: GR.ref U32.t;
   perm_table : GFT.table frac;
   cinv : cinv;
@@ -419,7 +418,7 @@ fn create (#pred : perm -> slprop) {| d: fractional pred |} (_u : unit)
   ensures is_rwlock l #1.0R
 {
   // Allocate the physical counter initialized to 0
-  let counter = B.alloc 0ul;
+  let counter = A.alloc_box 0ul;
   
   // Allocate ghost state for the counter
   let ghost_counter = GR.alloc #U32.t 0ul;
@@ -525,10 +524,9 @@ fn try_acquire_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
       unfold (table_relation n table_size entries spec f);
       
       // Try CAS from expected to expected+1
-      let b = cas_box l.counter expected new_count;
+      let b = A.compare_exchange_box l.counter expected new_count;
       
       if b {
-        elim_cond_true _ _ _;
         // CAS succeeded! n was expected, now new_count
         rewrite each n as expected;
         
@@ -602,7 +600,6 @@ fn try_acquire_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
              as (cond true (reader_parts l half_f ** pred half_f) emp);
         (true, half_f)
       } else {
-        elim_cond_false _ _ _;
         // CAS failed - refold invariant
         fold (table_relation n table_size entries spec f);
         fold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
@@ -646,7 +643,7 @@ fn read_counter (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:perm)
       
       with n table_size entries spec f. _;
       
-      let v = read_atomic_box l.counter;
+      let v = A.load_box l.counter;
       
       fold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
       fold (rwlock_inv pred l.counter l.ghost_counter l.perm_table);
@@ -685,7 +682,7 @@ fn read_counter_for_release (#pred : perm -> slprop) {| fractional pred |} (#per
       unfold (table_relation n table_size entries spec avail);
       
       // Read the counter
-      let v = read_atomic_box l.counter;
+      let v = A.load_box l.counter;
       
       // Prove v > 0 and v < writer_sentinel using the reader token
       GFT.in_bounds l.perm_table;
@@ -707,7 +704,7 @@ fn read_counter_for_release (#pred : perm -> slprop) {| fractional pred |} (#per
       // And table_spec_well_formed
       counter_bounds_with_reader n table_size entries spec avail reader_pos;
       // Now we have: U32.v n > 0 /\ n <> writer_sentinel
-      // Since v = n (from read_atomic_box), U32.v v > 0 /\ v <> writer_sentinel
+      // Since v = n (from load_box), U32.v v > 0 /\ v <> writer_sentinel
       assert (pure (U32.v v > 0 /\ U32.v v < U32.v writer_sentinel));
       
       // Split back for the invariant
@@ -810,10 +807,9 @@ fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
       unfold (table_relation n table_size entries spec avail);
       
       // Try CAS from expected to new_count
-      let cas_result = cas_box l.counter expected new_count;
+      let cas_result = A.compare_exchange_box l.counter expected new_count;
       
       if cas_result {
-        elim_cond_true _ _ _;
         // CAS succeeded! n was expected, now new_count
         rewrite each n as expected;
         
@@ -909,7 +905,6 @@ fn try_release_reader_at (#pred : perm -> slprop) {| fractional pred |} (#perm_l
         rewrite emp as (cond true emp (GFT.pts_to l.perm_table reader_pos #0.5R f ** pred f ** pure (f >. 0.0R)));
         true
       } else {
-        elim_cond_false _ _ _;
         // CAS failed - refold invariant
         fold (table_relation n table_size entries spec avail);
         fold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
@@ -991,10 +986,9 @@ fn rec acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock
       unfold (table_relation n table_size entries spec f);
       
       // Try CAS from 0 to writer_sentinel
-      let b = cas_box l.counter 0ul writer_sentinel;
+      let b = A.compare_exchange_box l.counter 0ul writer_sentinel;
       
       if b {
-        elim_cond_true _ _ _;
         // CAS succeeded! n was 0, now writer_sentinel
         rewrite each n as 0ul;
         
@@ -1034,7 +1028,6 @@ fn rec acquire_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock
              as (if true then GR.pts_to l.ghost_counter #0.5R writer_sentinel ** pred 1.0R else emp);
         true
       } else {
-        elim_cond_false _ _ _;
         // CAS failed - refold invariant
         fold (table_relation n table_size entries spec f);
         fold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
@@ -1092,7 +1085,7 @@ fn release_writer (#pred : perm -> slprop) {| fractional pred |} (#perm_lock:per
     GR.gather l.ghost_counter;
     
     // Write counter back to 0
-    write_atomic_box l.counter 0ul;
+    A.store_box l.counter 0ul;
     GR.(l.ghost_counter := 0ul);
     
     // ghost_counter_perm 0ul = 1.0R
@@ -1142,10 +1135,9 @@ fn try_free (#pred : perm -> slprop) {| fractional pred |} (l : rwlock pred)
       unfold (table_relation n table_size entries spec f);
       
       // Try CAS from 0 to writer_sentinel to acquire exclusive ownership
-      let b = cas_box l.counter 0ul writer_sentinel;
+      let b = A.compare_exchange_box l.counter 0ul writer_sentinel;
       
       if b {
-        elim_cond_true _ _ _;
         // CAS succeeded! n was 0, now writer_sentinel
         rewrite each n as 0ul;
         
@@ -1184,7 +1176,6 @@ fn try_free (#pred : perm -> slprop) {| fractional pred |} (l : rwlock pred)
         fold (cond true (GR.pts_to l.ghost_counter #0.5R writer_sentinel ** pred 1.0R) emp);
         true
       } else {
-        elim_cond_false _ _ _;
         // CAS failed - refold invariant
         fold (table_relation n table_size entries spec f);
         fold (rwlock_inv_aux pred l.counter l.ghost_counter l.perm_table);
@@ -1215,7 +1206,7 @@ fn try_free (#pred : perm -> slprop) {| fractional pred |} (l : rwlock pred)
     unfold (table_relation writer_sentinel table_size entries spec f);
     
     // Free the physical counter
-    B.free l.counter;
+    A.free_box l.counter;
     
     // Gather ghost_counter to full permission and free it
     rewrite (GR.pts_to l.ghost_counter #(ghost_counter_perm writer_sentinel) writer_sentinel)

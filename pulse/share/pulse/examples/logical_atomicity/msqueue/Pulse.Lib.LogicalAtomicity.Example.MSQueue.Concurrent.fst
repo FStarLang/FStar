@@ -26,6 +26,7 @@ records logical completion without stopping its native worker threads.
 
 open Pulse.Lib.Pervasives
 module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module U32 = FStar.UInt32
 module S = FStar.Seq
 module N = Pulse.Lib.LogicalAtomicity.Example.MSQueue.Storage
@@ -239,17 +240,17 @@ divergent fn two_producers_two_consumers_in_pool (pool:Task.pool)
   returns result:run_result
   ensures shared result.queue result.model_inv
 {
-  let dummy = B.alloc N.null;
-  let first = B.alloc N.null;
-  let second = B.alloc N.null;
+  let dummy = AT.alloc_box N.null;
+  let first = AT.alloc_box N.null;
+  let second = AT.alloc_box N.null;
   let cells:N.arena = [
     { N.next=dummy; N.value=0ul };
     { N.next=first; N.value=11ul };
     { N.next=second; N.value=22ul }
   ];
-  rewrite B.pts_to dummy N.null as N.ticket cells 0ul;
-  rewrite B.pts_to first N.null as N.ticket cells 1ul;
-  rewrite B.pts_to second N.null as N.ticket cells 2ul;
+  rewrite AT.box_pts_to dummy N.null as N.ticket cells 0ul;
+  rewrite AT.box_pts_to first N.null as N.ticket cells 1ul;
+  rewrite AT.box_pts_to second N.null as N.ticket cells 2ul;
   let q = Q.create cells resource;
   let i = share_model q;
   let a = B.alloc 0ul;

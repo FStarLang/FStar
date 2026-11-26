@@ -2,9 +2,9 @@ module Pulse.Lib.LogicalAtomicity.Example.CachedWaitFree.Atomics
 #lang-pulse
 
 (**
-Sequentially consistent single-cell primitives. As in Pulse.Lib.Primitives,
-as_atomic lifts the exclusively owned sequential model. The strong exchange
-returns the old value: unlike cas_box, failure proves a mismatch.
+Sequentially consistent single-cell primitives. as_atomic lifts the
+exclusively owned sequential model. The strong exchange returns the old
+value, so failure proves a mismatch.
 
 The explicit OCaml externs must synchronize EACH primitive, not a complete
 big-atomic operation. Mathematical naturals avoid counter wraparound.

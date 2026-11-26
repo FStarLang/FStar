@@ -11,7 +11,7 @@
    cover a forced delayed-tail schedule, repeated verified four-worker clients,
    and native 4-producer/4-consumer batches.
 
-   Queue primitives use the mutex-backed MSQueue_atomics realization.
+   Queue primitives use the lock-free Atomic.t-based MSQueue_atomics realization.
    Stress/permutation checks are not an exhaustive linearizability test,
    weak-memory validation, liveness proof, or lock-freedom benchmark. In
    particular, the concurrent F* harness does not itself prove the returned
@@ -35,7 +35,7 @@ let try_consume = MQ.pulse_Lib_LogicalAtomicity_Example_MSQueue_Concurrent_try_c
    directly; uniqueness of producer IDs below supplies the ticket discipline. *)
 let make_queue count =
   let cells = List.init (count + 1) (fun n ->
-    { MQ.next = ref (u32 "4294967295"); value = u32 (string_of_int n) }) in
+    { MQ.next = Atomic.make (u32 "4294967295"); value = u32 (string_of_int n) }) in
   let q = MQ.pulse_Lib_LogicalAtomicity_Example_MSQueue_State_create cells () in
   cells, q
 

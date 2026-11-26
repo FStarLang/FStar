@@ -4,33 +4,38 @@ module Pulse.Lib.LogicalAtomicity.Example.MSQueue.Atomics
 (**
 Semantic implementation of the queue's atomic wrapper API.
 
-Each body delegates to an existing verified Pulse box primitive with the
-same resource contract. This file establishes the wrapper at the model
-level; it is not the selected native concurrent realization. In particular,
-a verified primitive specification alone does not make an arbitrary
-read/compare/write target lowering safe under OCaml domain interleavings.
-See Atomics-ocaml.fst and MSQueue_atomics.ml for that separate trust boundary.
+Each body delegates to a `Pulse.Lib.Atomic` box operation. This file
+establishes the wrapper at the model level; it is not the selected native
+concurrent realization. See Atomics-ocaml.fst and MSQueue_atomics.ml for
+that separate trust boundary.
 *)
 
 open Pulse.Lib.Pervasives
-module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module U32 = FStar.UInt32
 
-(** Reuse the primitive's exact-value, fraction-preserving load rule. *)
-atomic fn read (r:B.box U32.t) (#n:erased U32.t) (#p:perm)
-  preserves B.pts_to r #p n
+(** Reuse the library's exact-value, fraction-preserving load rule. *)
+atomic fn read (r:AT.atomic_box U32.t) (#n:erased U32.t) (#p:perm)
+  preserves AT.box_pts_to r #p n
   returns value:U32.t
   ensures pure (value == reveal n)
 {
-  read_atomic_box r
+  AT.load_box r
 }
 
-(** Reuse the primitive CAS rule, including its permitted spurious failure.
-No stronger failure implication is introduced by this wrapper. *)
-atomic fn cas (r:B.box U32.t) (expected desired:U32.t) (#n:erased U32.t)
-  requires B.pts_to r n
+(** Weaken the library's strong compare-exchange: its failure-implies-
+inequality fact is dropped, so callers must tolerate spurious failure. *)
+atomic fn cas (r:AT.atomic_box U32.t) (expected desired:U32.t) (#n:erased U32.t)
+  requires AT.box_pts_to r n
   returns ok:bool
-  ensures cond ok (B.pts_to r desired ** pure (reveal n == expected)) (B.pts_to r n)
+  ensures cond ok (AT.box_pts_to r desired ** pure (reveal n == expected)) (AT.box_pts_to r n)
 {
-  cas_box r expected desired
+  let ok = AT.compare_exchange_box r expected desired;
+  if ok {
+    intro_cond_true (AT.box_pts_to r desired ** pure (reveal n == expected)) (AT.box_pts_to r n);
+    true
+  } else {
+    intro_cond_false (AT.box_pts_to r desired ** pure (reveal n == expected)) (AT.box_pts_to r n);
+    false
+  }
 }

@@ -24,7 +24,7 @@ operation's client continuation (compare the separate Helping example).
 *)
 
 open Pulse.Lib.Pervasives
-module B = Pulse.Lib.Box
+module AT = Pulse.Lib.Atomic
 module G = Pulse.Lib.GhostReference
 module MR = Pulse.Lib.MonotonicGhostRef
 module U32 = FStar.UInt32
@@ -40,11 +40,11 @@ are more precise and always return an ID. *)
 type pointer (cells:N.arena) =
   n:U32.t { n == N.null \/ U32.v n < FStar.List.Tot.length cells }
 
-(** Physical pointer boxes and ghost authorities. The history authority
+(** Physical atomic pointer cells and ghost authorities. The history authority
 supports stale snapshots; the model reference supports client agreement. *)
 noeq type core (cells:N.arena) = {
-  head:B.box U32.t;
-  tail:B.box U32.t;
+  head:AT.atomic_box U32.t;
+  tail:AT.atomic_box U32.t;
   history:MR.mref (H.advances #(N.id cells));
   model:G.ref (S.seq U32.t);
 }
@@ -56,8 +56,8 @@ let contents (#cells:N.arena) (s:history cells) = H.contents (N.value cells) s
 model half, retained physical links, and ownership of only the LIVE payloads.
 Dequeue removes a payload here without releasing its node's physical link. *)
 let state (#cells:N.arena) (c:core cells) (p:U32.t -> slprop) (s:history cells) =
-  B.pts_to c.head (S.index s.H.nodes s.H.head) **
-  B.pts_to c.tail (S.index s.H.nodes s.H.tail) **
+  AT.box_pts_to c.head (S.index s.H.nodes s.H.head) **
+  AT.box_pts_to c.tail (S.index s.H.nodes s.H.tail) **
   MR.pts_to c.history #1.0R s **
   G.pts_to c.model #0.5R (contents s) **
   N.links cells s.H.nodes **
@@ -112,8 +112,8 @@ fn create (cells:N.arena) (p:U32.t -> slprop)
   returns q:queue cells
   ensures is_queue q p ** model q S.empty
 {
-  let head = B.alloc 0ul;
-  let tail = B.alloc 0ul;
+  let head = AT.alloc_box 0ul;
+  let tail = AT.alloc_box 0ul;
   let history = MR.alloc #(H.state (N.id cells)) #H.advances (H.singleton 0ul);
   let g = G.alloc #(S.seq U32.t) S.empty;
   G.share g;
@@ -192,8 +192,8 @@ fn read_successor (#cells:N.arena) (q:queue cells) (p:U32.t -> slprop) (tail:N.i
     N.focus cells s.H.nodes old.H.tail;
     rewrite each (S.index s.H.nodes old.H.tail) as tail;
     let n = Atom.read (N.at cells tail).N.next;
-    rewrite B.pts_to (N.at cells tail).N.next (N.successor cells s.H.nodes old.H.tail)
-      as B.pts_to (N.at cells (S.index s.H.nodes old.H.tail)).N.next
+    rewrite AT.box_pts_to (N.at cells tail).N.next (N.successor cells s.H.nodes old.H.tail)
+      as AT.box_pts_to (N.at cells (S.index s.H.nodes old.H.tail)).N.next
         (N.successor cells s.H.nodes old.H.tail);
     N.restore cells s.H.nodes old.H.tail;
     MR.take_snapshot q.core.history s;

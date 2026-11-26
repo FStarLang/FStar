@@ -5600,6 +5600,26 @@ and is_realized_value (st:state) (l:Ident.lident) (se:sigelt) : ML bool =
             (Builtins.no_fstar_stubs
                (Ident.ns_of_lid l |> List.map Ident.string_of_id)))
 
+(* The kind of [l], when its declaration [se] can be an external *type*: an
+   [assume val], or a type abbreviation.  The second is how a target-tagged
+   implementation ([M-c.fst], see doc/ref/targets.md) realizes an abstract
+   type of its interface: it has to *define* what [M.fsti] declares, so it
+   cannot say [assume val], and the definition it gives is the model the
+   module's own bodies are checked against.  Clients only see the interface,
+   so nothing outside [M] can have unfolded it. *)
+and extern_type_kind (st:state) (l:Ident.lident) (se:option sigelt) : ML (option term) =
+  match se with
+  | Some { sigel = Sig_declare_typ {t} } ->
+    if is_type_sig st t then Some t else None
+  | Some { sigel = Sig_let {lbs=(false, lbs)} } ->
+    (match lbs |> List.tryFind (fun lb ->
+             match lb.lbname with
+             | Inr fv -> Ident.lid_equals (S.lid_of_fv fv) l
+             | Inl _ -> false) with
+     | Some lb when is_type_sig st lb.lbtyp -> Some lb.lbtyp
+     | _ -> None)
+  | _ -> None
+
 (* Whether the definition [se] of [l] is extracted as an external value. *)
 and is_external_value (st:state) (l:Ident.lident) (se:sigelt) : ML bool =
   let rule = match Builtins.rule_of_attributes se.sigattrs with
@@ -5650,18 +5670,13 @@ and extract_lid (st:state) (l:Ident.lident) (nm:name) (margs:list (int & term))
              that are specialized away (section 133)." ]
    | _ -> ());
   let d = (match rule with
-  | Some (Builtins.Rule_extern x) when (match se with
-                                        | Some { sigel = Sig_declare_typ {t} } ->
-                                          is_type_sig st t
-                                        | _ -> false) ->
+  | Some (Builtins.Rule_extern x) when Some? (extern_type_kind st l se) ->
     (* An external *type*: [Spec.Hash.Definitions.hash_alg] is a C enum the
        hand-written HACL headers declare, and [FStar.Bytes.bytes] a struct
        krmllib declares.  There is nothing to emit -- the declaration exists
        only so that uses have a name -- but the arity still has to be right,
        or a use carrying type arguments would not be the same constructor. *)
-    let t = (match se with
-             | Some { sigel = Sig_declare_typ {t} } -> t
-             | _ -> failwith "unreachable") in
+    let t = Some?.v (extern_type_kind st l se) in
     let bs, _ = U.arrow_formals t in
     (* Section 69.  A template keeps every binder, since a use of it carries
        every argument; without a template only the type parameters survive,

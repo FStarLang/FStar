@@ -23759,6 +23759,12 @@ OCaml's `Mutex`, and its C build passes karamel `-library
 Pulse.Lib.SpinLock` --- and the quicksort over Custard's output raced and
 reported its result unsorted.
 
+(Later, `Pulse.Lib.Primitives` was removed and the spin lock's model,
+now `Pulse.Lib.SpinLock-model.fst`, rewritten over `Pulse.Lib.Atomic`
+(§137), whose operations stay atomic once compiled.  The realization below
+is kept: a blocking mutex is a better runtime lock than a busy-waiting
+loop.)
+
 Custard already has the mechanism, and it is not a rewrite rule: §8.2's
 *realized module*.  A realization replaces the F\* module, values
 included, on the grounds that where there is a hand-written
@@ -24495,6 +24501,33 @@ typedef struct custard_closure { void (*code)(void); } custard_closure;
 `tests/custard/pulse/PulseClosure.fst` covers the arities, effects and
 captures above, plus a combinator that builds a closure from two others, on
 C, Cherry and OCaml.  `PulseClosureEscape.fst` pins the refusal.
+
+# 137 An external type an implementation defines
+
+A target-tagged implementation (doc/ref/targets.md) realizes the abstract
+types of its interface, and it cannot do so with an `assume val`: `M-c.fst`
+has to *define* what `M.fsti` declares (a second declaration of the same name
+is error 22).  So `[@@custard_extern]` now also makes an external type of a
+non-recursive type abbreviation, exactly as of an `assume val` of the same
+type: the definition is the model that the module's own bodies are checked
+against, and is not extracted.
+
+```fstar
+(* Pulse.Lib.Atomic-c.fst *)
+[@@custard_extern "_Atomic({0})"; custard_c_header "Pulse_Lib_Atomic_runtime.h"]
+let atomic_t t = t
+let atomic_ref t = R.ref (atomic_t t)          (* _Atomic(T) * *)
+
+(* Pulse.Lib.Atomic-ocaml.fst *)
+[@@custard_extern "Atomic.t"]
+let atomic_ref t = R.ref (atomic_t t)          (* (T) Atomic.t *)
+```
+
+Clients only see the interface, so nothing outside the module can have
+unfolded the abbreviation; inside it, the bodies that are extracted should
+annotate `atomic_t t` where inference could pick the equal `t`.  The check is
+`extern_type_kind` in `FStarC.Custard.Extract`; `pulse/test/AtomicTest.fst`
+and `AtomicRefTest.fst` cover both backends.
 
 | M | Deliverable | Notes |
 | --- | --- | --- |

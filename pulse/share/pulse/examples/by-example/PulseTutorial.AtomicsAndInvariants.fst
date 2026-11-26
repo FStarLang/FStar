@@ -18,21 +18,22 @@ module PulseTutorial.AtomicsAndInvariants
 #lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
+module A = Pulse.Lib.Atomic
 
 //owns$
-let owns (x:ref U32.t) : timeless_slprop = exists* v. pts_to x v
+let owns (x:A.atomic_ref U32.t) : timeless_slprop = exists* v. x |-> v
 //end owns$
 
 //owns_timeless$
-let owns_timeless (x:ref U32.t)
+let owns_timeless (x:A.atomic_ref U32.t)
 : squash (timeless (owns x))
 = ()
 //end owns_timeless$
 
 //create_invariant$
 ghost
-fn create_invariant (r:ref U32.t) (v:erased U32.t)
-requires pts_to r v
+fn create_invariant (r:A.atomic_ref U32.t) (v:erased U32.t)
+requires r |-> v
 returns i:iname
 ensures inv i (owns r)
 {
@@ -43,15 +44,15 @@ ensures inv i (owns r)
 
 //update_ref_atomic$
 atomic
-fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
+fn update_ref_atomic (r:A.atomic_ref U32.t) (i:iname) (v:U32.t)
 preserves inv i (owns r)
 requires later_credit 1
 opens [i]
 {
   with_invariants_a unit emp_inames i (owns r) emp (fun _ -> emp)
   fn _ { // owns r
-     unfold owns;        //ghost step;  exists* u. pts_to r u
-     write_atomic r v;   //atomic step; pts_to r v
+     unfold owns;        //ghost step;  exists* u. r |-> u
+     A.store r v;        //atomic step; r |-> v
      fold owns;          //ghost step;  owns r
   } // inv i (owns r)
 }
@@ -59,20 +60,20 @@ opens [i]
 
 [@@allow_ambiguous]
 ghost
-fn pts_to_dup_impossible u#a (#a: Type u#a) (x:ref a)
-preserves pts_to x 'v
-preserves pts_to x 'u
+fn pts_to_dup_impossible (#a: Type0) (x:A.atomic_ref a)
+preserves x |-> 'v
+preserves x |-> 'u
 ensures pure False
 {
-    gather x;
-    pts_to_perm_bound x;
-    share x;    
+    A.gather x;
+    A.pts_to_perm_bound x;
+    A.share x;
 }
 
 
 //double_open_bad$
 [@@expect_failure [19]]
-fn double_open_bad (r:ref U32.t) (i:iname)
+fn double_open_bad (r:A.atomic_ref U32.t) (i:iname)
 requires inv i (owns r)
 ensures pure False
 {
@@ -91,7 +92,7 @@ ensures pure False
 //end double_open_bad$
 
 //update_ref$
-fn update_ref (r:ref U32.t) (i:iname) (v:U32.t)
+fn update_ref (r:A.atomic_ref U32.t) (i:iname) (v:U32.t)
 preserves inv i (owns r)
 {                    
   later_credit_buy 1;
@@ -101,22 +102,23 @@ preserves inv i (owns r)
 
 //update_ref_fail$
 [@@expect_failure [228]]
-fn update_ref_fail (r:ref U32.t) (i:iname) (v:U32.t)
+fn update_ref_fail (r:A.atomic_ref U32.t) (i:iname) (v:U32.t)
 preserves inv i (owns r)
 {
   with_invariants unit emp_inames i (owns r) emp (fun _ -> emp) fn _ {
     unfold owns;
-    r := v; //not atomic
+    A.store r 0ul;
+    A.store r v; //two atomic steps are not atomic
     fold owns;
   }
 }
 //end update_ref_fail$
 
-let readable (r:ref U32.t) : timeless_slprop  = exists* p v. pts_to r #p v
+let readable (r:A.atomic_ref U32.t) : timeless_slprop  = exists* p v. r |-> Frac p v
 
 ghost
-fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
-  requires pts_to r #p v
+fn intro_readable (r:A.atomic_ref U32.t) (p:perm) (v:U32.t)
+  requires r |-> Frac p v
   ensures  readable r
 {
   fold readable
@@ -125,7 +127,7 @@ fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
 
 //split_readable$
 ghost
-fn split_readable (r:ref U32.t) (i:iname)
+fn split_readable (r:A.atomic_ref U32.t) (i:iname)
 preserves inv i (readable r)
 requires later_credit 1
 ensures readable r
@@ -133,8 +135,8 @@ opens [i]
 {
   with_invariants_g unit emp_inames i (readable r) emp (fun _ -> readable r) fn _ {
         unfold readable;
-        with p v. assert (pts_to r #p v);
-        share r;
+        with p v. assert (r |-> Frac p v);
+        A.share r;
         (* just folding readable would now be ambiguous, need the explicit intro. *)
         // fold readable;
         // fold readable;

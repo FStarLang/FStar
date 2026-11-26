@@ -58,7 +58,7 @@ allocated ``l:lock``
 
 Some notes on the implementation:
 
-* We heap allocate a reference using ``Box.alloc``, since clearly,
+* We heap allocate an atomic cell using ``A.alloc_box``, since clearly,
   the lock has to live beyond the scope of this function's activation.
 
 * We use ``new_invariant`` to create an ``inv i (lock_inv r p)``, and
@@ -97,29 +97,26 @@ going to keep looping until such time as a CAS on the reference in the
 lock succeeds, allowing us to pull out ``p`` and return it to the
 caller.
 
-The type of a compare-and-swap is shown below, from
-Pulse.Lib.Reference:
-
-.. code-block:: fstar
-
-   let cond b (p q:slprop) = if b then p else q
+The type of a compare-and-swap on an atomic box is shown below, from
+``Pulse.Lib.Atomic``:
 
 .. code-block:: pulse
 
    atomic
-   fn cas_box (r:Box.box U32.t) (u v:U32.t) (#i:erased U32.t)
-   requires Box.pts_to r i
-   returns b:bool
-   ensures cond b (Box.pts_to r v ** pure (reveal i == u)) 
-                  (Box.pts_to r i)
+   fn compare_exchange_box (b:atomic_box t) (expected desired:t) (#v:erased t)
+   requires b |-> v
+   returns ok:bool
+   ensures (if ok then (b |-> desired) ** pure (reveal v == expected)
+            else (b |-> v) ** pure (reveal v =!= expected))
 
+The specification of ``compare_exchange_box b u v`` says that we can try
+to atomically update ``b`` from ``u`` to ``v``. If the operation
+succeeds, we learn that the initial value of ``b`` was equal to ``u``;
+otherwise, ``b`` is unchanged and its value differs from ``u``. Pulse
+eliminates the ``if`` in the postcondition when we branch on ``ok``.
 
-The specification of ``cas_box r u v`` says that we can try to atomically
-update ``r`` from ``u`` to ``v``, and if the operation succeeds, we
-learn that the initial value (``i``) of ``r`` was equal to ``u``.
-                  
-Using ``cas_box``, we can implement ``acquire`` using a tail-recursive
-function:
+Using ``compare_exchange_box``, we can implement ``acquire`` using a
+tail-recursive function:
 
 .. literalinclude:: ../code/pulse/PulseTutorial.SpinLock.fst
    :language: pulse
@@ -132,16 +129,16 @@ The main part of the implementation is the ``with_invariants`` block.
   l.r p) ** maybe b p``, signifying that after a single ``cas``, we
   may have ``p`` if the ``cas`` succeeded, while maintaining the invariant.
 
-* We open ``l.i`` to get ``lock_inv``, and then try a ``cas_box l.r 0ul 1ul``
+* We open ``l.i`` to get ``lock_inv``, and then try a ``A.compare_exchange_box l.r 0ul 1ul``
 
-* If the ``cas_box`` succeeds, we know that the lock was initially in
+* If the ``compare_exchange_box`` succeeds, we know that the lock was initially in
   the ``0ul`` state. So, from ``lock_inv`` we have ``p``, and we can
   "take it out" of the lock and return it out of block as ``maybe true
   p``. And, importantly, we can trivially restore the ``lock_inv``,
   since we know its currently value is ``1ul``, i.e., ``maybe (1ul =
   0ul) _ == emp``.
 
-* If the ``cas_box`` fails, we just restore ``lock_inv`` and return
+* If the ``compare_exchange_box`` fails, we just restore ``lock_inv`` and return
   false.
 
 Outside the ``with_invariants`` block, if the CAS succeeded, then
