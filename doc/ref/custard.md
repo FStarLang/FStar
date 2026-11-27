@@ -10071,6 +10071,31 @@ over-applies.
 `tests/custard/EtaVar.fst`, which emits
 `EtaVar_consume(uint32_t (*i)(uint32_t), uint32_t eta)` and runs.
 
+### 30.16a A root keeps its binders
+
+Issue #4932.  The rule above is right for a definition the program calls, and
+wrong for a root nothing in the program calls.  `let eta_d (g: U32.t -> U32.t)
+(u: U32.t) = g u`, named by `--custard_entry` or `--custard_entry_module`, was
+shortened to `eta_d g = g`, no call site asked for `u`, and the C function came
+out as `uint32_t (*EtaRoot_eta_d(uint32_t (*g)(uint32_t)))(uint32_t) { return
+g; }` on both C paths.  A root is a root because a caller outside the
+extracted program calls it, and that caller was written against the F\*
+signature.  A caller declaring that signature itself links, receives a
+pointer for an integer, and `g` is never called; one including the generated
+header is rejected for passing too many arguments.
+
+Expansion cannot repair this after the fact: once the binder is gone, the
+definition's arity is no longer known, and the arity of its result type is no
+substitute -- a root whose F\* type returns a function would gain a
+parameter.  So `eta_reduce_decls` skips a `Root` on the backends whose
+functions have a fixed arity: C, Cherry, KrmlC and KrmlRust.  OCaml and F\#
+still reduce it, since their functions are curried and the reduced form
+serves the same calls; leaving them alone also keeps the compiler's own
+extraction unchanged.
+
+`tests/custard/EtaRoot.fst`, which emits
+`EtaRoot_eta_d(uint32_t (*g)(uint32_t), uint32_t u)` calling `g(u)`.
+
 ### 30.17 A value that is small only because it is shared
 
 Round 34.  `CDDLTest.Test.bundle_signoutputargs` still fails, and the
